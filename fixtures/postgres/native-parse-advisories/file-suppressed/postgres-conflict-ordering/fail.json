@@ -1,0 +1,16 @@
+{
+  "rules": [
+    {
+      "rule": "postgres-conflict-ordering",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "*.sql"
+        ],
+        "unanalyzableSql": "fail",
+        "schemaCatalogPath": "schema.json"
+      }
+    }
+  ]
+}

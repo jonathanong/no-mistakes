@@ -5,6 +5,7 @@ A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configurat
 Flags executed PostgreSQL SQL that takes a `FOR UPDATE` lock with a multi-row
 predicate (`IN` or `= ANY`) but no `ORDER BY` and no `SKIP LOCKED`. Two
 transactions that lock the same rows in opposite order can deadlock (ABBA).
+SQL whitespace and comments between `FOR` and `UPDATE` do not exempt the lock.
 
 The rule consumes request-prepared PostgreSQL embedded-SQL facts and
 `extract_locking_select_metadata`. It does not re-parse TypeScript in the rule
@@ -65,7 +66,8 @@ export function lockRows(ids: string[]) {
 Fix: add `ORDER BY` so every locker visits rows in the same order, add
 `SKIP LOCKED` when skipping already-locked rows is correct, or put
 `/* deadlock-safe: ... */` or `-- deadlock-safe` in a comment within 200
-bytes before the call when a unique key makes the lock single-row.
+bytes before the call when a unique key makes the lock single-row. A marker must
+be in an actual comment; comment-like text inside a JS or SQL string is inert.
 
 ```ts
 query(`SELECT * FROM t WHERE id = ANY($1) ORDER BY id FOR UPDATE`);

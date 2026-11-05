@@ -4,6 +4,7 @@ pub(super) use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId
 pub(super) use std::path::{Path, PathBuf};
 
 /// A uniquely resolved local export imported by `importer` under `local`.
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct UniqueExport {
     pub producer: PathBuf,
     pub exported: String,
@@ -115,8 +116,8 @@ fn unique_from_imports(
         return None;
     };
     Some(UniqueExport {
-        producer: producer.clone(),
-        exported: exported.to_string(),
+        producer: producer.producer.clone(),
+        exported: producer.exported.clone(),
     })
 }
 
@@ -126,7 +127,7 @@ fn defining_modules(
     file: &Path,
     exported: &str,
     visited: &mut Vec<(PathBuf, String)>,
-) -> Vec<PathBuf> {
+) -> Vec<UniqueExport> {
     let key = (file.to_path_buf(), exported.to_string());
     if visited.contains(&key) {
         return Vec::new();
@@ -138,8 +139,11 @@ fn defining_modules(
     if ts.parse_error.is_some() || ts.operational_error.is_some() {
         return Vec::new();
     }
-    if local_export(&ts.exported_bindings, exported) {
-        return vec![file.to_path_buf()];
+    if let Some(local) = local_export(&ts.exported_bindings, exported) {
+        return vec![UniqueExport {
+            producer: file.to_path_buf(),
+            exported: local.to_string(),
+        }];
     }
     if let Some(binding) = ts
         .exported_bindings
@@ -160,7 +164,7 @@ fn unique_import_definitions(
     file: &Path,
     exported: &str,
     visited: &mut Vec<(PathBuf, String)>,
-) -> Vec<PathBuf> {
+) -> Vec<UniqueExport> {
     let mut producers = Vec::new();
     for target in import_files(graph, file) {
         producers.extend(defining_modules(graph, facts, &target, exported, visited));
@@ -184,8 +188,9 @@ fn import_files(graph: &DepGraph, importer: &Path) -> Vec<PathBuf> {
         .collect()
 }
 
-fn local_export(bindings: &[ExportedBinding], imported: &str) -> bool {
+fn local_export<'a>(bindings: &'a [ExportedBinding], imported: &str) -> Option<&'a str> {
     bindings
         .iter()
-        .any(|binding| binding.specifier.is_none() && binding.exported == imported)
+        .find(|binding| binding.specifier.is_none() && binding.exported == imported)
+        .map(|binding| binding.local.as_str())
 }

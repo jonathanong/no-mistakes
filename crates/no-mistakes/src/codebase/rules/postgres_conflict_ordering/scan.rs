@@ -10,7 +10,7 @@ use super::{CompiledOptions, RULE_ID};
 use crate::codebase::postgres::{
     recovered_sql_needs_insert_check, EmbeddedSqlCall, EmbeddedSqlKind,
 };
-use crate::codebase::rules::postgres_lock_ordering::directive::has_safe_directive;
+use crate::codebase::rules::postgres_lock_ordering::directive::has_safe_variant_directive;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{Context, Result};
@@ -66,9 +66,10 @@ pub(super) fn scan_with_sources(
                         })
                 })
         {
-            if has_safe_directive(
+            if has_safe_variant_directive(
                 &source,
-                call.line,
+                file.call_spans.get(call_index).map_or(0, |span| span.0),
+                &file.source_comment_spans,
                 call.sql_text.as_deref().unwrap_or_default(),
                 &opts.safe_directive,
             ) {
@@ -170,7 +171,7 @@ pub(super) fn scan_with_sources(
             }
         }
     }
-    sql_sources::scan(root, opts, files, sources, catalog, &mut findings)?;
+    sql_sources::scan(root, opts, files, sources, catalog, &mut findings, facts)?;
     findings.sort();
     Ok(findings)
 }

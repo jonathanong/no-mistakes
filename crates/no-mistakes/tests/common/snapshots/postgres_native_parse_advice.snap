@@ -1,0 +1,1873 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "applications": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-bounded-statements application \"advisory-one\" (#0) has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-bounded-statements application \"advisory-two\" (#1) has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query.ts",
+          "line": 2,
+          "message": "query.ts:2: postgres-bounded-statements application #0 has unresolved SQL for select: invalid-sql",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(\"INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;\");",
+          "target": "select"
+        },
+        {
+          "file": "query.ts",
+          "line": 2,
+          "message": "query.ts:2: postgres-conflict-ordering application #0 has unresolved SQL for canonical-conflict-order: invalid-sql",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "query(\"INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;\");",
+          "target": "canonical-conflict-order"
+        },
+        {
+          "file": "query.ts",
+          "line": 2,
+          "message": "query.ts:2: postgres-explicit-columns application #0 has unresolved SQL for returning-star, select-star: invalid-sql",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "query(\"INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;\");",
+          "target": "returning-star, select-star"
+        },
+        {
+          "file": "query.ts",
+          "line": 2,
+          "message": "query.ts:2: postgres-required-predicates application #0 has unresolved SQL for relation:items:column:active: invalid-sql",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "query(\"INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;\");",
+          "target": "relation:items:column:active"
+        },
+        {
+          "file": "query.ts",
+          "line": 2,
+          "message": "query.ts:2: postgres-sql-shape-policy application #0 has unresolved SQL for not-in-subquery: invalid-sql",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "query(\"INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;\");",
+          "target": "not-in-subquery"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "embedded_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query.ts",
+          "line": 2,
+          "message": "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "query(\"INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;\");",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "query.ts",
+          "line": 2,
+          "message": "query.ts:2: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(\"INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 2,
+          "message": "query.ts:2: SQL could not be analyzed for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "query(\"INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 2,
+          "message": "query.ts:2: SQL could not be analyzed for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "query(\"INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 2,
+          "message": "query.ts:2: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "query(\"INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;\");",
+          "target": "not-in-subquery"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file-suppressed_postgres-bounded-statements_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file-suppressed_postgres-bounded-statements_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file-suppressed_postgres-bounded-statements_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-bounded-statements: intentional synthetic unsupported SQL",
+          "target": "postgres-bounded-statements"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file-suppressed_postgres-conflict-ordering_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file-suppressed_postgres-conflict-ordering_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file-suppressed_postgres-conflict-ordering_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "directive for `postgres-conflict-ordering` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-conflict-ordering: intentional synthetic unsupported SQL",
+          "target": "postgres-conflict-ordering"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file-suppressed_postgres-explicit-columns_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file-suppressed_postgres-explicit-columns_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file-suppressed_postgres-explicit-columns_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "directive for `postgres-explicit-columns` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-explicit-columns: intentional synthetic unsupported SQL",
+          "target": "postgres-explicit-columns"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file-suppressed_postgres-required-predicates_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file-suppressed_postgres-required-predicates_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file-suppressed_postgres-required-predicates_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-required-predicates: intentional synthetic unsupported SQL",
+          "target": "postgres-required-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file-suppressed_postgres-sql-shape-policy_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file-suppressed_postgres-sql-shape-policy_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file-suppressed_postgres-sql-shape-policy_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "directive for `postgres-sql-shape-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-sql-shape-policy: intentional synthetic unsupported SQL",
+          "target": "postgres-sql-shape-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "inline-suppressed_postgres-bounded-statements_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "inline-suppressed_postgres-bounded-statements_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "inline-suppressed_postgres-bounded-statements_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING; -- no-mistakes-disable-line postgres-bounded-statements: intentional synthetic unsupported SQL",
+          "target": "postgres-bounded-statements"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "inline-suppressed_postgres-conflict-ordering_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "inline-suppressed_postgres-conflict-ordering_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "inline-suppressed_postgres-conflict-ordering_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "directive for `postgres-conflict-ordering` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING; -- no-mistakes-disable-line postgres-conflict-ordering: intentional synthetic unsupported SQL",
+          "target": "postgres-conflict-ordering"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "inline-suppressed_postgres-explicit-columns_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "inline-suppressed_postgres-explicit-columns_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "inline-suppressed_postgres-explicit-columns_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "directive for `postgres-explicit-columns` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING; -- no-mistakes-disable-line postgres-explicit-columns: intentional synthetic unsupported SQL",
+          "target": "postgres-explicit-columns"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "inline-suppressed_postgres-required-predicates_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "inline-suppressed_postgres-required-predicates_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "inline-suppressed_postgres-required-predicates_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING; -- no-mistakes-disable-line postgres-required-predicates: intentional synthetic unsupported SQL",
+          "target": "postgres-required-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "inline-suppressed_postgres-sql-shape-policy_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "inline-suppressed_postgres-sql-shape-policy_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "inline-suppressed_postgres-sql-shape-policy_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "directive for `postgres-sql-shape-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING; -- no-mistakes-disable-line postgres-sql-shape-policy: intentional synthetic unsupported SQL",
+          "target": "postgres-sql-shape-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line-suppressed_postgres-bounded-statements_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line-suppressed_postgres-bounded-statements_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line-suppressed_postgres-bounded-statements_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements: intentional synthetic unsupported SQL",
+          "target": "postgres-bounded-statements"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line-suppressed_postgres-conflict-ordering_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line-suppressed_postgres-conflict-ordering_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line-suppressed_postgres-conflict-ordering_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "directive for `postgres-conflict-ordering` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-conflict-ordering: intentional synthetic unsupported SQL",
+          "target": "postgres-conflict-ordering"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line-suppressed_postgres-explicit-columns_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line-suppressed_postgres-explicit-columns_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line-suppressed_postgres-explicit-columns_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "directive for `postgres-explicit-columns` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-explicit-columns: intentional synthetic unsupported SQL",
+          "target": "postgres-explicit-columns"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line-suppressed_postgres-required-predicates_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line-suppressed_postgres-required-predicates_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line-suppressed_postgres-required-predicates_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: intentional synthetic unsupported SQL",
+          "target": "postgres-required-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line-suppressed_postgres-sql-shape-policy_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line-suppressed_postgres-sql-shape-policy_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line-suppressed_postgres-sql-shape-policy_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "directive for `postgres-sql-shape-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-sql-shape-policy: intentional synthetic unsupported SQL",
+          "target": "postgres-sql-shape-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "mixed_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-bounded-statements application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-conflict-ordering application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed for canonical conflict ordering",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-explicit-columns application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-required-predicates application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-sql-shape-policy application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.active",
+          "line": 2,
+          "message": "case.sql:2: SELECT on items does not constrain required column active",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "items"
+        },
+        {
+          "file": "case.sql",
+          "line": 2,
+          "message": "case.sql:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "case.sql",
+          "line": 2,
+          "message": "case.sql:2: SELECT * reads every column of items, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "items"
+        },
+        {
+          "file": "case.sql",
+          "line": 2,
+          "message": "case.sql:2: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "table:items"
+        },
+        {
+          "file": "case.sql",
+          "line": 3,
+          "message": "multi-row ON CONFLICT DO NOTHING needs an explicit conflict target; targetless DO NOTHING can arbitrate different unique or exclusion constraints",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items(id) VALUES (1),(2) ON CONFLICT DO NOTHING;",
+          "target": "targetless-arbiter"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.active",
+          "line": 2,
+          "message": "case.sql:2: SELECT on items does not constrain required column active",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "items"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SQL could not be analyzed for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SQL could not be analyzed for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "case.sql",
+          "line": 2,
+          "message": "case.sql:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "case.sql",
+          "line": 2,
+          "message": "case.sql:2: SELECT * reads every column of items, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "items"
+        },
+        {
+          "file": "case.sql",
+          "line": 2,
+          "message": "case.sql:2: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "table:items"
+        },
+        {
+          "file": "case.sql",
+          "line": 3,
+          "message": "multi-row ON CONFLICT DO NOTHING needs an explicit conflict target; targetless DO NOTHING can arbitrate different unique or exclusion constraints",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items(id) VALUES (1),(2) ON CONFLICT DO NOTHING;",
+          "target": "targetless-arbiter"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.active",
+          "line": 2,
+          "message": "case.sql:2: SELECT on items does not constrain required column active",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "items"
+        },
+        {
+          "file": "case.sql",
+          "line": 2,
+          "message": "case.sql:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "case.sql",
+          "line": 2,
+          "message": "case.sql:2: SELECT * reads every column of items, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "items"
+        },
+        {
+          "file": "case.sql",
+          "line": 2,
+          "message": "case.sql:2: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "table:items"
+        },
+        {
+          "file": "case.sql",
+          "line": 3,
+          "message": "multi-row ON CONFLICT DO NOTHING needs an explicit conflict target; targetless DO NOTHING can arbitrate different unique or exclusion constraints",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items(id) VALUES (1),(2) ON CONFLICT DO NOTHING;",
+          "target": "targetless-arbiter"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "native_globs_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: postgres-bounded-statements application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: postgres-conflict-ordering application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed for canonical conflict ordering",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: postgres-explicit-columns application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: postgres-required-predicates application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: postgres-sql-shape-policy application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: postgres-bounded-statements application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: postgres-conflict-ordering application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed for canonical conflict ordering",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: postgres-explicit-columns application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: postgres-required-predicates application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: postgres-sql-shape-policy application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: postgres-bounded-statements application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: postgres-conflict-ordering application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed for canonical conflict ordering",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: postgres-explicit-columns application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: postgres-required-predicates application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: postgres-sql-shape-policy application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "native_globs_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query",
+          "line": 1,
+          "message": "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: SQL could not be analyzed for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: SQL could not be analyzed for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: SQL could not be analyzed for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: SQL could not be analyzed for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: SQL could not be analyzed for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: SQL could not be analyzed for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "not-in-subquery"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "native_globs_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no_newline_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-bounded-statements application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-conflict-ordering application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed for canonical conflict ordering",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-explicit-columns application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-required-predicates application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-sql-shape-policy application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no_newline_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SQL could not be analyzed for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SQL could not be analyzed for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no_newline_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "parse_only_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-bounded-statements application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-conflict-ordering application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed for canonical conflict ordering",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-explicit-columns application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-required-predicates application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-sql-shape-policy application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "parse_only_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SQL could not be analyzed for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SQL could not be analyzed for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "parse_only_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "same_line_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-bounded-statements application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING; INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-conflict-ordering application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed for canonical conflict ordering",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING; INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-explicit-columns application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING; INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-required-predicates application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING; INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: postgres-sql-shape-policy application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING; INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "same_line_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING; INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SQL could not be analyzed for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING; INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SQL could not be analyzed for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING; INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING; INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING; INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "same_line_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "valid_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.active",
+          "line": 1,
+          "message": "case.sql:1: SELECT on items does not constrain required column active",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "items"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SELECT * reads every column of items, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "items"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "table:items"
+        },
+        {
+          "file": "case.sql",
+          "line": 2,
+          "message": "multi-row ON CONFLICT DO NOTHING needs an explicit conflict target; targetless DO NOTHING can arbitrate different unique or exclusion constraints",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items(id) VALUES (1),(2) ON CONFLICT DO NOTHING;",
+          "target": "targetless-arbiter"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "valid_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.active",
+          "line": 1,
+          "message": "case.sql:1: SELECT on items does not constrain required column active",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "items"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SELECT * reads every column of items, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "items"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "table:items"
+        },
+        {
+          "file": "case.sql",
+          "line": 2,
+          "message": "multi-row ON CONFLICT DO NOTHING needs an explicit conflict target; targetless DO NOTHING can arbitrate different unique or exclusion constraints",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items(id) VALUES (1),(2) ON CONFLICT DO NOTHING;",
+          "target": "targetless-arbiter"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "valid_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.active",
+          "line": 1,
+          "message": "case.sql:1: SELECT on items does not constrain required column active",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "items"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SELECT * reads every column of items, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "items"
+        },
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "case.sql:1: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM items WHERE id NOT IN (SELECT id FROM items);",
+          "target": "table:items"
+        },
+        {
+          "file": "case.sql",
+          "line": 2,
+          "message": "multi-row ON CONFLICT DO NOTHING needs an explicit conflict target; targetless DO NOTHING can arbitrate different unique or exclusion constraints",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items(id) VALUES (1),(2) ON CONFLICT DO NOTHING;",
+          "target": "targetless-arbiter"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

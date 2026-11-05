@@ -21,7 +21,7 @@ fn findings_for_call(
     opts: &CompiledOptions,
     catalog: Option<&crate::codebase::postgres::SchemaCatalog>,
 ) -> Vec<RuleFinding> {
-    super::scan::findings_for_prepared_call(file, source, call, opts, catalog, None)
+    super::scan::findings_for_prepared_call(file, source, call, opts, catalog, None, None)
 }
 
 fn fixture_root() -> PathBuf {

@@ -136,6 +136,16 @@ pub(super) fn scan(
                     &mut dedup,
                 );
             }
+            if opts.advise_unanalyzable && profile.is_none() {
+                crate::codebase::rules::native_sql_advice::record_parse_failures(
+                    facts,
+                    RULE_ID,
+                    &opts.embedded,
+                    &rel,
+                    source.as_deref().unwrap_or_default(),
+                    file,
+                );
+            }
             fragment_findings.push_parse_failures(
                 &rel,
                 &mut findings,

@@ -1,0 +1,87 @@
+{
+  "rules": [
+    {
+      "rule": "postgres-bounded-statements",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "query.SQL",
+          "query.pgsql",
+          "query"
+        ],
+        "unanalyzableSql": "fail",
+        "schemaCatalogPath": "schema.json",
+        "statements": [
+          "select"
+        ]
+      }
+    },
+    {
+      "rule": "postgres-conflict-ordering",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "query.SQL",
+          "query.pgsql",
+          "query"
+        ],
+        "unanalyzableSql": "fail",
+        "schemaCatalogPath": "schema.json"
+      }
+    },
+    {
+      "rule": "postgres-explicit-columns",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "query.SQL",
+          "query.pgsql",
+          "query"
+        ],
+        "unanalyzableSql": "fail",
+        "schemaCatalogPath": "schema.json",
+        "maxColumns": 0
+      }
+    },
+    {
+      "rule": "postgres-required-predicates",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "query.SQL",
+          "query.pgsql",
+          "query"
+        ],
+        "unanalyzableSql": "fail",
+        "relations": [
+          {
+            "table": "items",
+            "requireColumns": [
+              "active"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "rule": "postgres-sql-shape-policy",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "query.SQL",
+          "query.pgsql",
+          "query"
+        ],
+        "unanalyzableSql": "fail",
+        "bannedShapes": [
+          "not-in-subquery"
+        ]
+      }
+    }
+  ]
+}

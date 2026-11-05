@@ -1,0 +1,68 @@
+{
+  "rules": [
+    {
+      "rule": "postgres-bounded-statements",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "*.sql"
+        ],
+        "unanalyzableSql": "advise",
+        "schemaCatalogPath": "schema.json",
+        "statements": [
+          "select"
+        ]
+      },
+      "name": "advisory-one"
+    },
+    {
+      "rule": "postgres-bounded-statements",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "*.sql"
+        ],
+        "unanalyzableSql": "advise",
+        "schemaCatalogPath": "schema.json",
+        "statements": [
+          "select"
+        ]
+      },
+      "name": "advisory-two"
+    },
+    {
+      "rule": "postgres-bounded-statements",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "*.sql"
+        ],
+        "unanalyzableSql": "fail",
+        "schemaCatalogPath": "schema.json",
+        "statements": [
+          "select"
+        ]
+      },
+      "name": "reporting"
+    },
+    {
+      "rule": "postgres-bounded-statements",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "*.sql"
+        ],
+        "unanalyzableSql": "ignore",
+        "schemaCatalogPath": "schema.json",
+        "statements": [
+          "select"
+        ]
+      },
+      "name": "ignored"
+    }
+  ]
+}

@@ -220,6 +220,12 @@ Following recall over precision ([how analysis works](../../README.md#how-analys
 
   Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
 
+
+Unparseable native `INSERT ... ON CONFLICT` statements selected by `sqlInclude`
+emit non-failing advisories under `unanalyzableSql: advise`, including when no
+executor calls are selected. Valid sibling statements still receive ordinary
+conflict-ordering findings.
+
 ## Dynamic SQL and suppression
 
 Each complete [SQL alternative](../postgres-facts.md#finite-sql-alternatives)

@@ -1,4 +1,4 @@
-use super::{analysis, has_safe_directive, CompiledOptions, RULE_ID};
+use super::{analysis, has_safe_variant_directive, CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
     combine_sql_verdicts, sql_evidence_for_call, EmbeddedSqlCall, EmbeddedSqlFileFacts,
@@ -23,9 +23,10 @@ pub(super) fn record(
         return;
     }
     for (call_index, original) in embedded.calls.iter().enumerate() {
-        let exempt = has_safe_directive(
+        let exempt = has_safe_variant_directive(
             source,
-            original.line,
+            embedded.call_spans[call_index].0,
+            &embedded.source_comment_spans,
             original.sql_text.as_deref().unwrap_or_default(),
             &opts.safe_directive,
         );
@@ -33,12 +34,18 @@ pub(super) fn record(
         let mut residual_reasons = Vec::new();
         let mut positive_survives_unknown = false;
         for (version_index, version) in original.statement_calls().enumerate() {
+            let safe = has_safe_variant_directive(
+                source,
+                embedded.call_spans[call_index].0,
+                &embedded.source_comment_spans,
+                version.sql_text.as_deref().unwrap_or_default(),
+                &opts.safe_directive,
+            );
             let judgment = judge(
                 file,
-                source,
+                safe,
                 &version,
                 prepared.get(&(call_index, version_index)).copied(),
-                opts,
                 catalog,
             );
             positive_survives_unknown |= judgment.status == SqlVerdictStatus::Violation
@@ -111,14 +118,13 @@ pub(super) fn record(
 
 fn judge(
     file: &str,
-    source: &str,
+    safe: bool,
     call: &EmbeddedSqlCall,
     prepared: Option<&SqlStatementFileFacts>,
-    opts: &CompiledOptions,
     catalog: &SchemaCatalog,
 ) -> SqlBranchJudgment {
     let sql = call.sql_text.as_deref().unwrap_or_default();
-    if has_safe_directive(source, call.line, sql, &opts.safe_directive) {
+    if safe {
         return SqlBranchJudgment::clear();
     }
     if call.kind == EmbeddedSqlKind::Dynamic && call.variants.is_empty() {

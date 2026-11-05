@@ -320,6 +320,11 @@ Following recall over precision ([how analysis works](../../README.md#how-analys
 
   Definite violations remain findings under every policy, including `ignore`; a known star found on one helper path is not hidden by an uncertain sibling path. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names. Low may report uncertainty that max resolves, so compare definite findings separately from residual diagnostics.
 
+
+Native SQL parse failures selected by this rule remain visible as non-failing
+advisories under `unanalyzableSql: advise`, including when no executor calls
+are selected. Valid sibling statements still receive ordinary rule findings.
+
 ## Suppression
 
 SQL and TypeScript honor `-- no-mistakes-disable-line`,

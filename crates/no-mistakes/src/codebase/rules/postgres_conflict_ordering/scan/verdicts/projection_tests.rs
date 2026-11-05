@@ -13,7 +13,7 @@ fn omitted_non_insert_facts_preserve_valid_and_malformed_policy_verdicts() {
         &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
     let mut malformed = 0;
-    for call in &embedded.calls {
+    for (index, call) in embedded.calls.iter().enumerate() {
         let sql = call.sql_text.as_deref().unwrap();
         if crate::codebase::postgres::may_have_insert_conflict(sql) {
             continue;
@@ -28,8 +28,15 @@ fn omitted_non_insert_facts_preserve_valid_and_malformed_policy_verdicts() {
             })
             .unwrap();
             let catalog = SchemaCatalog::default();
-            let before = judge("query.ts", &source, call, Some(&full), &opts, &catalog);
-            let after = judge("query.ts", &source, call, None, &opts, &catalog);
+            let safe = has_safe_variant_directive(
+                &source,
+                embedded.call_spans[index].0,
+                &embedded.source_comment_spans,
+                sql,
+                &opts.safe_directive,
+            );
+            let before = judge("query.ts", safe, call, Some(&full), &catalog);
+            let after = judge("query.ts", safe, call, None, &catalog);
             // This is a conflict-policy proof, not a claim that SQL is valid.
             // The existing policy already clears non-INSERT text before parsing.
             assert_eq!(before.status, SqlVerdictStatus::ProvenClear, "{mode}");

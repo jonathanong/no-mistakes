@@ -1,0 +1,17 @@
+{
+  "rules": [
+    {
+      "rule": "postgres-explicit-columns",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "*.sql"
+        ],
+        "unanalyzableSql": "fail",
+        "schemaCatalogPath": "schema.json",
+        "maxColumns": 0
+      }
+    }
+  ]
+}
