@@ -82,9 +82,12 @@ LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` 
   only preceding FROM sources; a later source with the same column name cannot hide that
   outer read.
 - A column compared with a column of another bounded relation is pinned too, so a bound
-  propagates across joins on unique keys to a fixed point: with `o.id = $1`, the account
-  `a.id = o.account_id` is bounded, and its profile `p.account_id = a.id` after it. A join on
-  a column that is not a whole key ends the chain (an account has many orders). `ON` pins
+  propagates across joins on unique keys to a fixed point: with `i.id = $1`,
+  `f.id = i.feed_id` is bounded, followed by `t.id = f.topic_id`. Additional `AND`
+  conjuncts in `ON`, such as `f.deleted_at IS NULL`, `t.deleted_at IS NULL`, or
+  `z.status = $2`, only narrow the key lookup. A join on a column that is not a
+  whole key does not bound that relation. An unbounded driving relation remains
+  reported. `ON` pins
   only the side an outer join can null-extend, never the preserved side, and a `WHERE` on the
   null-extended side is not assumed to turn the join inner: a `LEFT JOIN` with its key
   pinned only in `WHERE` reports the preserved relation. `JOIN … USING (col)` pins the same

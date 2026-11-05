@@ -1,0 +1,278 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "items": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "feed_id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "deleted_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "items_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "feeds": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "topic_id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "deleted_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "feeds_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "topics": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "deleted_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "topics_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "accounts": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "authorization_id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "status": {
+          "dataType": "integer",
+          "nullable": false
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "accounts_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "authorizations": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "status": {
+          "dataType": "integer",
+          "nullable": false
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "authorizations_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "participants": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": false
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "participants_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "users": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "deleted_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "users_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

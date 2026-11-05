@@ -380,6 +380,13 @@ as `table:accounts`. Independent statements remain separate, even on the same
 source line. SQL alternatives from one executor statement share the union of
 their roots, with one report per root.
 
+With `severity: advisory`, the same granularity applies: each unbounded relation
+produces one non-failing advisory. For example, `FROM items i CROSS JOIN feeds f`
+produces separate `SELECT can return every row of items` and `SELECT can return
+every row of feeds` messages. Advisory counts can therefore increase compared
+with a single grouped `statement can scan unbounded rows` report for the same
+statement; the number of analyzed statements has not increased.
+
 Direct SQL and local executor SQL place each finding at that relation's line.
 For SQL imported or appended from another file, each root is attributed to the
 executing caller and its message names the contributing fragment line. Callers
