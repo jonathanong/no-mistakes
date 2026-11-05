@@ -65,7 +65,9 @@ pub(super) fn check_source(
             violations.entry(line_no).or_insert(&source[start..end]);
         }
     };
-    collect_matches(&YAML_FRAGMENT, 0, source);
+    for (index, line) in source.lines().enumerate() {
+        collect_matches(&YAML_FRAGMENT, line_starts[index], line);
+    }
     let assertions: Vec<usize> = source
         .match_indices("expect(")
         .map(|(offset, _)| offset)
