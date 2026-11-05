@@ -136,7 +136,7 @@ pub(super) fn scan(
                     &mut dedup,
                 );
             }
-            if opts.advise_unanalyzable {
+            if opts.advise_unanalyzable && profile.is_none() {
                 crate::codebase::rules::native_sql_advice::record_parse_failures(
                     facts,
                     RULE_ID,

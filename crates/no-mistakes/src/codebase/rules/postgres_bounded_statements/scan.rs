@@ -28,6 +28,7 @@ pub(super) fn scan(
     let catalog = inputs.catalog;
     let mut views = ViewBounds::compile(&opts.view_bounds, catalog)?;
     views.keys = super::column_bounds::ColumnBounds::compile(&opts.column_bounds, catalog)?;
+    let native_statement_count = inputs.native_statement_count;
     let statements = inputs.statements;
     let embedded = inputs.embedded;
     let mut findings = crate::codebase::rules::PostgresFindings::default();
@@ -49,10 +50,10 @@ pub(super) fn scan(
         }
     }
     let mut groups = groups::Groups::default();
-    for file in statements {
+    for (file_index, file) in statements.into_iter().enumerate() {
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path);
-        if opts.advise_unanalyzable {
+        if opts.advise_unanalyzable && file_index < native_statement_count {
             crate::codebase::rules::native_sql_advice::record_parse_failures(
                 prepared,
                 RULE_ID,

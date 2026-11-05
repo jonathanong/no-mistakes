@@ -11,9 +11,7 @@ pub(super) fn record_parse_failures(
     source: &str,
     statements: &SqlStatementFileFacts,
 ) {
-    if !statements.parse_failed
-        || statements.path.extension().and_then(|ext| ext.to_str()) != Some("sql")
-    {
+    if !statements.parse_failed {
         return;
     }
     let advice = NativeSqlAdvice::new(source);

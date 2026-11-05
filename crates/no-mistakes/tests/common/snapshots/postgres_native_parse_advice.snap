@@ -1076,6 +1076,284 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "native_globs_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: postgres-bounded-statements application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: postgres-conflict-ordering application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed for canonical conflict ordering",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: postgres-explicit-columns application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: postgres-required-predicates application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: postgres-sql-shape-policy application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: postgres-bounded-statements application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: postgres-conflict-ordering application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed for canonical conflict ordering",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: postgres-explicit-columns application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: postgres-required-predicates application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: postgres-sql-shape-policy application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: postgres-bounded-statements application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: postgres-conflict-ordering application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed for canonical conflict ordering",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: postgres-explicit-columns application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: postgres-required-predicates application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: postgres-sql-shape-policy application #0 has unresolved SQL for native-sql-parse: SQL could not be analyzed",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "native-sql-parse"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "native_globs_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query",
+          "line": 1,
+          "message": "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: SQL could not be analyzed for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: SQL could not be analyzed for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query",
+          "line": 1,
+          "message": "query:1: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: SQL could not be analyzed for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: SQL could not be analyzed for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.SQL",
+          "line": 1,
+          "message": "query.SQL:1: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: SQL could not be analyzed for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: SQL could not be analyzed for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.pgsql",
+          "line": 1,
+          "message": "query.pgsql:1: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;",
+          "target": "not-in-subquery"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "native_globs_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "no_newline_advise": {
     "exitCode": 0,
     "report": {

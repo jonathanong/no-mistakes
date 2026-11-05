@@ -32,6 +32,7 @@ pub(super) fn scan(
     for path in &sql_paths {
         statements.extend(context.postgres_statements(path, None)?.iter());
     }
+    let native_statement_count = statements.len();
     for path in files
         .iter()
         .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
@@ -71,10 +72,10 @@ pub(super) fn scan(
             }
         }
     }
-    for file in statements {
+    for (file_index, file) in statements.into_iter().enumerate() {
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path);
-        if opts.advise_unanalyzable {
+        if opts.advise_unanalyzable && file_index < native_statement_count {
             crate::codebase::rules::native_sql_advice::record_parse_failures(
                 context,
                 RULE_ID,

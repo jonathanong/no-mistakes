@@ -218,6 +218,11 @@ Following recall over precision ([how analysis works](../../README.md#how-analys
 
 The finding target is taken from the enabled `bannedShapes`.
 
+
+Native SQL parse failures selected by this rule remain visible as non-failing
+advisories under `unanalyzableSql: advise`, including when no executor calls
+are selected. Valid sibling statements still receive ordinary rule findings.
+
 ## Suppression
 
 Use `no-mistakes-disable-next-line postgres-sql-shape-policy` immediately
@@ -233,7 +238,3 @@ relation filters; [`postgres-idempotent-insert`](postgres-idempotent-insert.md)
 covers replay-safe INSERT.
 
 See [additional shape coverage](postgres-sql-shape-policy-coverage.md).
-
-Included native SQL parse failures remain visible as non-failing advisories under
-`unanalyzableSql: advise`, including when no executor calls are selected. Valid
-sibling statements still receive ordinary rule findings.

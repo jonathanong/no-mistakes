@@ -299,6 +299,11 @@ Following recall over precision ([how analysis works](../../README.md#how-analys
 
   Definite violations remain findings under every policy, including `ignore`; a known missing predicate found on one helper path is not hidden by an uncertain sibling path. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names. Low may report uncertainty that max resolves, so compare definite findings separately from residual diagnostics.
 
+
+Native SQL parse failures selected by this rule remain visible as non-failing
+advisories under `unanalyzableSql: advise`, including when no executor calls
+are selected. Valid sibling statements still receive ordinary rule findings.
+
 ## Suppression
 
 SQL findings honor `no-mistakes-disable-next-line postgres-required-predicates`,
@@ -313,7 +318,3 @@ SQL recovered from an imported helper is reported in the helper's module at the 
 [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) bans correlated
 `EXISTS` set operations; [`postgres-idempotent-insert`](postgres-idempotent-insert.md)
 covers replay-safe INSERT.
-
-Included native SQL parse failures remain visible as non-failing advisories under
-`unanalyzableSql: advise`, including when no executor calls are selected. Valid
-sibling statements still receive ordinary rule findings.

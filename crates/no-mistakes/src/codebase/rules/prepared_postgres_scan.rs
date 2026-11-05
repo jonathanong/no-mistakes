@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 
 pub(crate) struct PreparedSqlInputs<'a> {
     pub(crate) catalog: &'a SchemaCatalog,
+    pub(crate) native_statement_count: usize,
     pub(crate) statements: Vec<&'a SqlStatementFileFacts>,
     pub(crate) embedded: Vec<&'a EmbeddedSqlFileFacts>,
 }
@@ -28,6 +29,7 @@ pub(crate) fn collect_prepared_sql_inputs<'a>(
     for path in &paths {
         statements.extend(prepared.postgres_statements(path, None)?.iter());
     }
+    let native_statement_count = statements.len();
     for path in files
         .iter()
         .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
@@ -41,6 +43,7 @@ pub(crate) fn collect_prepared_sql_inputs<'a>(
     }
     Ok(PreparedSqlInputs {
         catalog,
+        native_statement_count,
         statements,
         embedded,
     })

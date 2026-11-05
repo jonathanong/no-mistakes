@@ -220,6 +220,12 @@ Following recall over precision ([how analysis works](../../README.md#how-analys
 
   Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
 
+
+Unparseable native `INSERT ... ON CONFLICT` statements selected by `sqlInclude`
+emit non-failing advisories under `unanalyzableSql: advise`, including when no
+executor calls are selected. Valid sibling statements still receive ordinary
+conflict-ordering findings.
+
 ## Dynamic SQL and suppression
 
 Each complete [SQL alternative](../postgres-facts.md#finite-sql-alternatives)
@@ -295,7 +301,3 @@ in the JSON but fail closed for canonical proof. Deferrable unique indexes canno
 be conflict arbiters, although supported valid keys can still prove lock order.
 An ordering catalog declares its coverage and cannot satisfy rules requiring
 complete schema metadata; a complete catalog satisfies every catalog rule.
-
-Included native SQL parse failures remain visible as non-failing advisories under
-`unanalyzableSql: advise`, including when no executor calls are selected. Valid
-sibling statements still receive ordinary rule findings.

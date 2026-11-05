@@ -16,6 +16,7 @@ fn native_parse_advice_check_json_snapshot() {
         ("no_newline", "no-newline"),
         ("valid", "valid-only"),
         ("embedded", "embedded"),
+        ("native_globs", "native-globs"),
         ("same_line", "same-line-failures"),
     ] {
         for policy in ["fail", "advise", "ignore"] {
