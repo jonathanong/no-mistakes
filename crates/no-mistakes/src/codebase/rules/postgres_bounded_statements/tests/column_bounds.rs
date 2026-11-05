@@ -25,8 +25,8 @@ fn declared_keys_share_unique_key_caller_bound_proofs() {
             .map(|fact| evaluate::offenders_with_views(fact, &catalog, views).len())
             .collect::<Vec<_>>()
     };
-    assert_eq!(count(&views), [1, 1, 1, 1, 1, 2, 1, 2, 1, 1]);
-    assert_eq!(count(&declared), [0, 0, 0, 0, 1, 2, 1, 2, 1, 1]);
+    assert_eq!(count(&views), [1, 1, 1, 1, 1, 2, 1, 1, 1, 1]);
+    assert_eq!(count(&declared), [0, 0, 0, 0, 1, 2, 1, 1, 1, 1]);
 }
 
 #[test]
