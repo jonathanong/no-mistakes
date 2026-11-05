@@ -168,18 +168,15 @@ fn required_file_exists_but_unreadable_skips_content_checks() {
 }
 
 #[test]
-fn required_substring_spec_for_different_file_is_skipped() {
-    // The substring spec targets "OTHER.md" but we're checking "README.md".
-    // The inner `if spec.file != *req_file { continue; }` branch must fire.
+fn required_substring_spec_is_checked_without_required_file_entry() {
     let root = case_root("required-substring-spec-for-different-file-is-skipped");
     let config = config_with_rule(
         "requiredFiles: [README.md]\nrequiredSubstrings:\n  - file: OTHER.md\n    substring: something",
     );
     let findings = check_with_files(&root, &config, &[root.join("README.md")]).unwrap();
-    assert!(
-        findings.is_empty(),
-        "substring spec for a different file should be skipped"
-    );
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, "OTHER.md");
+    assert_eq!(findings[0].message, "file not found or untracked");
 }
 
 #[test]
