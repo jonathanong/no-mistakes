@@ -18,6 +18,21 @@ pub(super) fn suppressed(
     }) {
         return vec![false; query.items.len()];
     }
+    let drivers: Vec<bool> = query
+        .items
+        .iter()
+        .enumerate()
+        .map(|(index, item)| {
+            clean_driver(item, catalog)
+                && match &item.kind {
+                    SqlBoundItemKind::Table(_) => true,
+                    SqlBoundItemKind::Query(_) => nested[index]
+                        .as_ref()
+                        .is_some_and(|inner| inner.bounded || !inner.offenders.is_empty()),
+                    _ => false,
+                }
+        })
+        .collect();
     let dependencies: Vec<Option<Vec<usize>>> = query
         .items
         .iter()
@@ -43,20 +58,7 @@ pub(super) fn suppressed(
                     && matches!(&pin.source, SqlPinSource::Items(source)
                     if source.len() == 1
                         && source[0] != item_index
-                        && match query.items.get(source[0]) {
-                            Some(peer) if peer.possible_temporary.as_ref().is_some_and(|candidate|
-                                candidate.uncertain_lifetime) => false,
-                            Some(peer) if matches!(&peer.kind, SqlBoundItemKind::Table(name)
-                                if catalog.bounded_relation(name).is_some()) => true,
-                            Some(peer) if matches!(&peer.kind, SqlBoundItemKind::Query(_)) => {
-                                !peer.lateral
-                                    && !reads_outer(&peer.lateral_reads, catalog)
-                                    && !qualified::reads_outer(&peer.lateral_qualified_reads, catalog)
-                                    && nested[source[0]].as_ref().is_some_and(|inner|
-                                        inner.bounded || !inner.offenders.is_empty())
-                            }
-                            _ => false,
-                        })
+                        && drivers.get(source[0]) == Some(&true))
             });
             if lookup.pins.is_empty() {
                 return None;
@@ -108,6 +110,31 @@ pub(super) fn suppressed(
                 )
         })
         .collect()
+}
+
+fn clean_driver(
+    item: &crate::codebase::postgres::statements::SqlBoundItem,
+    catalog: &SchemaCatalog,
+) -> bool {
+    if item.lateral
+        || reads_outer(&item.lateral_reads, catalog)
+        || qualified::reads_outer(&item.lateral_qualified_reads, catalog)
+        || item
+            .possible_temporary
+            .as_ref()
+            .is_some_and(|candidate| candidate.uncertain_lifetime)
+    {
+        return false;
+    }
+    match &item.kind {
+        SqlBoundItemKind::Table(name) => catalog.bounded_relation(name).is_some(),
+        SqlBoundItemKind::Query(inner) => inner
+            .items
+            .iter()
+            .all(|source| clean_driver(source, catalog)),
+        SqlBoundItemKind::Other => true,
+        SqlBoundItemKind::Opaque => false,
+    }
 }
 
 fn reaches(

@@ -104,7 +104,9 @@ LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` 
   table joins retain their ordinary findings; that opaque source cannot explain
   which base relation drives the work. A correlated `LATERAL` source, an unknown
   catalog relation, or a relation with uncertain temporary shadowing cannot act
-  as a lookup driver either.
+  as a lookup driver either. A derived source containing an opaque row producer
+  cannot lend its projected column as lookup evidence merely because another
+  table inside that source has a reportable read.
 - For `UPDATE` and `DELETE`, the target relation is bounded. A CTE or subquery that picks
   the target rows with a `LIMIT` bounds it when the target's key is matched against it
   (`FROM c WHERE t.id = c.id`, or `WHERE t.id IN (SELECT id … LIMIT n)`). `ctid` identifies
