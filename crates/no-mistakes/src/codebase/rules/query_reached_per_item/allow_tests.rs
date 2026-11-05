@@ -7,6 +7,7 @@ use crate::codebase::ts_source::facts::TsFactPlan;
 
 enum Scenario {
     Narrowed,
+    NarrowedGraph,
     Failed,
     Missing,
 }
@@ -41,6 +42,7 @@ fn assert_audit_silent(scenario: Scenario) {
     );
     match scenario {
         Scenario::Narrowed => facts.files = vec![files[1].clone()],
+        Scenario::NarrowedGraph => facts.graph_files = vec![files[1].clone()],
         Scenario::Missing => {
             assert!(facts.ts.remove(&files[1]).is_some());
         }
@@ -72,4 +74,9 @@ fn a_failed_supporting_fact_cannot_prove_an_allowance_stale() {
 #[test]
 fn missing_supporting_facts_cannot_prove_an_allowance_stale() {
     assert_audit_silent(Scenario::Missing);
+}
+
+#[test]
+fn primary_facts_outside_the_query_graph_are_not_audited() {
+    assert_audit_silent(Scenario::NarrowedGraph);
 }

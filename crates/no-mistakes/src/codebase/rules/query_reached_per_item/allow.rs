@@ -23,11 +23,14 @@ pub(super) fn finish(
     }) {
         return Vec::new();
     }
+    let graph_files =
+        crate::codebase::check_facts::PathMembership::new(facts.graph_file_universe());
     let checked = facts
         .files()
         .iter()
         .filter(|file| {
-            filter.is_match(file)
+            graph_files.contains(file)
+                && filter.is_match(file)
                 && facts.get_ts_facts(file).is_some_and(|facts| {
                     facts.parse_error.is_none() && facts.operational_error.is_none()
                 })
