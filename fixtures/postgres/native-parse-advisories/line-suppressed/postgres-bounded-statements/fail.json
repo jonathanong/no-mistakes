@@ -1,0 +1,19 @@
+{
+  "rules": [
+    {
+      "rule": "postgres-bounded-statements",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "*.sql"
+        ],
+        "unanalyzableSql": "fail",
+        "schemaCatalogPath": "schema.json",
+        "statements": [
+          "select"
+        ]
+      }
+    }
+  ]
+}

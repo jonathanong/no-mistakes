@@ -233,3 +233,7 @@ relation filters; [`postgres-idempotent-insert`](postgres-idempotent-insert.md)
 covers replay-safe INSERT.
 
 See [additional shape coverage](postgres-sql-shape-policy-coverage.md).
+
+Included native SQL parse failures remain visible as non-failing advisories under
+`unanalyzableSql: advise`, including when no executor calls are selected. Valid
+sibling statements still receive ordinary rule findings.

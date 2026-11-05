@@ -295,3 +295,7 @@ in the JSON but fail closed for canonical proof. Deferrable unique indexes canno
 be conflict arbiters, although supported valid keys can still prove lock order.
 An ordering catalog declares its coverage and cannot satisfy rules requiring
 complete schema metadata; a complete catalog satisfies every catalog rule.
+
+Included native SQL parse failures remain visible as non-failing advisories under
+`unanalyzableSql: advise`, including when no executor calls are selected. Valid
+sibling statements still receive ordinary rule findings.

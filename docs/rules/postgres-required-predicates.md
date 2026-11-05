@@ -313,3 +313,7 @@ SQL recovered from an imported helper is reported in the helper's module at the 
 [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) bans correlated
 `EXISTS` set operations; [`postgres-idempotent-insert`](postgres-idempotent-insert.md)
 covers replay-safe INSERT.
+
+Included native SQL parse failures remain visible as non-failing advisories under
+`unanalyzableSql: advise`, including when no executor calls are selected. Valid
+sibling statements still receive ordinary rule findings.

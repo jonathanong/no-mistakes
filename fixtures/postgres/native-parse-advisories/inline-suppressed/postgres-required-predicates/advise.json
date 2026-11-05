@@ -1,0 +1,23 @@
+{
+  "rules": [
+    {
+      "rule": "postgres-required-predicates",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "*.sql"
+        ],
+        "unanalyzableSql": "advise",
+        "relations": [
+          {
+            "table": "items",
+            "requireColumns": [
+              "active"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

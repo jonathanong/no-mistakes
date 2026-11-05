@@ -474,3 +474,7 @@ that statement-start directive.
 ## Related rules
 
 See [related behavior](postgres-bounded-statements-related.md) and [continued cases](postgres-bounded-statements-related-more.md).
+
+Included native SQL parse failures remain visible as non-failing advisories under
+`unanalyzableSql: advise`, including when no executor calls are selected. Valid
+sibling statements still receive ordinary rule findings.

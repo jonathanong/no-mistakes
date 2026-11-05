@@ -1,0 +1,18 @@
+{
+  "rules": [
+    {
+      "rule": "postgres-sql-shape-policy",
+      "scope": "repository",
+      "options": {
+        "executorNames": [],
+        "sqlInclude": [
+          "*.sql"
+        ],
+        "unanalyzableSql": "advise",
+        "bannedShapes": [
+          "not-in-subquery"
+        ]
+      }
+    }
+  ]
+}

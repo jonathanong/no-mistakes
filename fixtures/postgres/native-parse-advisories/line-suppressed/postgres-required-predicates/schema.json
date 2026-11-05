@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "items": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false
+        },
+        "active": {
+          "dataType": "boolean",
+          "nullable": false
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    }
+  }
+}

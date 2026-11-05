@@ -15,13 +15,15 @@ pub(super) fn scan(
     sources: &crate::codebase::ts_source::SourceStore,
     prepared: Option<&dyn SqlFactContext>,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
+    let prepared =
+        prepared.ok_or_else(|| anyhow::anyhow!("prepared PostgreSQL facts are required"))?;
     let inputs = crate::codebase::rules::collect_prepared_sql_inputs(
         root,
         files,
         &opts.schema,
         &opts.schema_catalog_path,
         &opts.embedded,
-        prepared,
+        Some(prepared),
     )?;
     let catalog = inputs.catalog;
     let mut views = ViewBounds::compile(&opts.view_bounds, catalog)?;
@@ -30,7 +32,7 @@ pub(super) fn scan(
     let embedded = inputs.embedded;
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
-    if let Some(prepared) = prepared.filter(|facts| facts.wants_sql_verdicts()) {
+    if prepared.wants_sql_verdicts() {
         verdicts::record(root, opts, &embedded, catalog, &views, prepared)?;
     }
     for file in embedded {
@@ -50,6 +52,16 @@ pub(super) fn scan(
     for file in statements {
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path);
+        if opts.advise_unanalyzable {
+            crate::codebase::rules::native_sql_advice::record_parse_failures(
+                prepared,
+                RULE_ID,
+                &opts.embedded,
+                &rel,
+                source.as_deref().unwrap_or_default(),
+                file,
+            );
+        }
         if opts.fail_unanalyzable && file.parse_failed {
             for (site, line) in file.parse_failure_sites() {
                 dedup.push(

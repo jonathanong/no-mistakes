@@ -1,0 +1,1 @@
+INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING;

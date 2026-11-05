@@ -170,7 +170,7 @@ pub(super) fn scan_with_sources(
             }
         }
     }
-    sql_sources::scan(root, opts, files, sources, catalog, &mut findings)?;
+    sql_sources::scan(root, opts, files, sources, catalog, &mut findings, facts)?;
     findings.sort();
     Ok(findings)
 }

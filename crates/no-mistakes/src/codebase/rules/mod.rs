@@ -46,6 +46,7 @@ pub mod markdown_mermaid_validation;
 pub mod markdown_reachability;
 pub(crate) mod markdown_scope;
 pub mod markdown_structure_budget;
+mod native_sql_advice;
 pub mod nextjs_no_api_routes;
 pub mod nextjs_no_caching;
 pub mod nextjs_redirect_destinations;

@@ -14,22 +14,42 @@ pub(super) fn scan(
     sources: &SourceStore,
     catalog: &SchemaCatalog,
     findings: &mut PostgresFindings,
+    facts: &dyn crate::codebase::check_facts::SqlFactContext,
 ) -> Result<()> {
     if let Some(sql_sources) = &opts.sql_sources {
         for path in postgres_sql_paths(root, files, sql_sources)? {
             let rel = relative_slash_path(root, &path);
             let source = crate::codebase::rules::read_source(sources, &path).unwrap_or_default();
+            let advice = opts
+                .advise_unanalyzable
+                .then(|| crate::codebase::rules::native_sql_advice::NativeSqlAdvice::new(&source));
             for (line, statement) in analysis::sql_statements(&source) {
                 if has_safe_directive(statement, 1, statement, &opts.safe_directive) {
                     continue;
                 }
-                findings.extend(analysis::findings_for_sql(
+                let checked = analysis::findings_for_sql(
                     &rel,
                     line as usize,
                     statement,
                     catalog,
-                    opts.fail_unanalyzable,
-                ));
+                    opts.fail_unanalyzable || opts.advise_unanalyzable,
+                );
+                for finding in checked {
+                    if let (Some(advice), Some("unanalyzable-sql")) =
+                        (&advice, finding.target.as_deref())
+                    {
+                        advice.record(
+                            facts,
+                            super::RULE_ID,
+                            &opts.embedded,
+                            &rel,
+                            finding.line,
+                            "SQL could not be analyzed for canonical conflict ordering",
+                        );
+                    } else {
+                        findings.push(finding);
+                    }
+                }
             }
         }
     }

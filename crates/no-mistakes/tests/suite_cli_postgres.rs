@@ -222,5 +222,10 @@ mod cli_check_sql_policy_effort;
 #[path = "cli_postgres_snapshot_declared_functions.rs"]
 mod cli_postgres_snapshot_declared_functions;
 
+#[path = "cli_postgres_snapshot_executor_recall.rs"]
+mod cli_postgres_snapshot_executor_recall;
 #[path = "cli_postgres_snapshot_function_locations.rs"]
 mod cli_postgres_snapshot_function_locations;
+
+#[path = "cli_postgres_snapshot_native_advice.rs"]
+mod cli_postgres_snapshot_native_advice;

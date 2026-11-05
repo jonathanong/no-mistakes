@@ -343,3 +343,7 @@ see [suppression hygiene](../configuration/suppressions.md).
 `postgres-required-predicates` requires predicates on named columns.
 `postgres-sql-shape-policy` bans selected query shapes. This rule only cares
 about star projections and `RETURNING *`.
+
+Included native SQL parse failures remain visible as non-failing advisories under
+`unanalyzableSql: advise`, including when no executor calls are selected. Valid
+sibling statements still receive ordinary rule findings.

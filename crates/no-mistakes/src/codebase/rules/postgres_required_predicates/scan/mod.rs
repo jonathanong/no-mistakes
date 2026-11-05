@@ -4,7 +4,7 @@ mod check;
 mod columns;
 mod verdicts;
 
-use super::CompiledOptions;
+use super::{CompiledOptions, RULE_ID};
 use crate::codebase::ts_source::relative_slash_path;
 use std::path::{Path, PathBuf};
 
@@ -74,6 +74,16 @@ pub(super) fn scan(
     for file in statements {
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path);
+        if opts.advise_unanalyzable {
+            crate::codebase::rules::native_sql_advice::record_parse_failures(
+                context,
+                RULE_ID,
+                &opts.embedded,
+                &rel,
+                source.as_deref().unwrap_or_default(),
+                file,
+            );
+        }
         if opts.fail_unanalyzable && file.parse_failed {
             for (site, line) in file.parse_failure_sites() {
                 dedup.push(
