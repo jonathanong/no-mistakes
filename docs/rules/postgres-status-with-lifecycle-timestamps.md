@@ -226,3 +226,8 @@ stale allow entry.
 `postgres-table-shape` checks a named table concept's columns and keys.
 This rule looks only for a stored status column sitting beside lifecycle
 timestamps in the same schema catalog.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

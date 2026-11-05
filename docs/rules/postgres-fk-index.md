@@ -172,3 +172,8 @@ policy.
 [`postgres-require-fk-on-delete`](postgres-require-fk-on-delete.md) makes the
 delete action explicit; [`postgres-redundant-index`](postgres-redundant-index.md)
 prevents the new index from duplicating a wider one.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

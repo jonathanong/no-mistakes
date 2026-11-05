@@ -113,3 +113,5 @@ include:
   "@acme/pnpm-policy":
     - packages
 ```
+
+Unused explicit exception entries produce non-failing `unused-allow-entry` advisories when their complete selector scope was checked. Remove stale entries; narrowed or unproven scopes stay silent. An entry is used only when it suppresses a finding, and overlapping exceptions are all credited.

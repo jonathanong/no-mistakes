@@ -1,5 +1,6 @@
 pub mod advisory_rules;
 pub mod agents_md_max_size;
+pub(crate) mod allow_audit;
 pub mod analysis_policy;
 pub mod banned_paths;
 pub mod banned_renamed_files;

@@ -1,0 +1,6 @@
+rules:
+  - rule: test-email-domain-policy
+    scope: repository
+    options:
+      bannedDomains: [example.com]
+      allowedEmailPatterns: ['used@example.com', 'used@.*', 'safe@example.org']

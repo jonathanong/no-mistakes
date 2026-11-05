@@ -33,7 +33,21 @@ pub(super) fn scan(
     for table_indexes in indexes.values() {
         findings.extend(scan_table(table_indexes, opts, sources, &mut used));
     }
-    findings.extend(stale_allowlist(opts, &used));
+    let checked = facts
+        .iter()
+        .filter(|file| file.unanalyzable_statements.is_empty())
+        .map(|file| file.path.clone())
+        .collect::<Vec<_>>();
+    let scope = super::super::allow_audit::CheckedScope::new(root, Some(sources), &checked);
+    if !opts.schema.sql_include.is_empty()
+        && opts
+            .schema
+            .sql_include
+            .iter()
+            .all(|pattern| scope.glob(pattern))
+    {
+        findings.extend(stale_allowlist(opts, &used));
+    }
     Ok(findings)
 }
 

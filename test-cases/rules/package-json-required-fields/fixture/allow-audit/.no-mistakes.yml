@@ -1,0 +1,7 @@
+rules:
+  - rule: package-json-required-fields
+    scope: repository
+    exclude: [broken/**]
+    options:
+      requireScopedName: true
+      unscopedNameExceptions: [used, used, '@scope/safe']

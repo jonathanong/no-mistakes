@@ -158,3 +158,8 @@ Next to a tsconfig whose `include` is `["src"]`, neither file is a finding.
 [`tsconfig-gate-coverage`](tsconfig-gate-coverage.md) checks CI and local
 typecheck registration; [`tsconfig-alias-folder-mapping`](tsconfig-alias-folder-mapping.md)
 checks alias targets.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

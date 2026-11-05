@@ -193,3 +193,8 @@ matches no finding is reported as
 `postgres-object-naming` checks the name of an enum type once you add one.
 `postgres-column-naming` checks foreign-key column names on the lookup table
 that replaces the text column.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

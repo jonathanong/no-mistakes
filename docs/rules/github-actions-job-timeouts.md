@@ -207,3 +207,8 @@ covers nested action limits.
 Use `no-mistakes-disable-next-line github-actions-job-timeouts` for a one-job
 exception or `no-mistakes-disable-file` for an exceptional workflow. Prefer a
 reasoned `allow` entry when only a known job needs a higher cap.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

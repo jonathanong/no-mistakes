@@ -257,3 +257,5 @@ fn absolute_root_path_resolves() {
 mod config_path;
 mod globs;
 mod prepared_support;
+
+mod allowance_audit;

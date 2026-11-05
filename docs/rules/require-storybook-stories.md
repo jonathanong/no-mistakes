@@ -285,3 +285,8 @@ one-off, with the reason in the comment.
 [`required-companion-imports`](required-companion-imports.md) enforces a direct
 companion import contract; [`playwright-coverage`](playwright-coverage.md)
 covers runtime routes and selectors instead of stories.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

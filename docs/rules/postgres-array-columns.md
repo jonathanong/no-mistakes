@@ -132,3 +132,8 @@ stale finding, and the column finding stays.
 `postgres-finite-text-columns` catches a text column that a `CHECK` has
 already pinned to a fixed set. `postgres-column-naming` checks the names of
 the foreign-key columns that replace a `uuid[]`.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

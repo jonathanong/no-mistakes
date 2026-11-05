@@ -193,3 +193,8 @@ nothing is reported as a stale allow entry.
 `postgres-column-requires-trigger` reads trigger definitions from the same
 schema catalog. This rule reads function bodies and does not compare them to
 the triggers that call them.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

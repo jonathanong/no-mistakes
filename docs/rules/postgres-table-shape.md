@@ -387,3 +387,8 @@ stale allow entry.
 `postgres-column-requires-trigger` matches one trigger to one column.
 `postgres-required-comments` reads comments from the same catalog. This rule
 checks the whole table shape: columns, keys, triggers, and banned names.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

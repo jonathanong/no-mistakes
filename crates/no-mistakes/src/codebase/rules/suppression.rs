@@ -117,6 +117,9 @@ fn markdown_prose(file: &str) -> bool {
 }
 
 fn finding_is_suppressed(source: &str, finding: &RuleFinding) -> bool {
+    if finding.rule == super::allow_audit::RULE_ID {
+        return false;
+    }
     let line = finding.line.try_into().ok();
     crate::codebase::ts_source::has_disable_file_comment(source, &finding.rule)
         || line.is_some_and(|line| {
@@ -137,6 +140,10 @@ fn matching_directive(
     file: &str,
 ) -> Option<SuppressionDirective> {
     use crate::codebase::ts_source::DisableDirective;
+
+    if rule == super::allow_audit::RULE_ID {
+        return None;
+    }
 
     match crate::codebase::ts_source::matching_disable_directive_tracking(
         source,

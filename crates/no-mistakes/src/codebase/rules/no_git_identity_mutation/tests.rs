@@ -166,3 +166,51 @@ fn has_shell_shebang_none() {
     assert!(!has_shell_shebang("echo hi\n"));
     assert!(!has_shell_shebang(""));
 }
+
+fn allow_audit_config() -> NoMistakesConfig {
+    NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(
+                "conditionallyAllowedWorkflows: ['dirty.yml', '*dirty.yml', 'clean.yml']",
+            )
+            .unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    }
+}
+
+#[test]
+fn allow_audit_tracks_raw_findings_and_all_overlapping_entries() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/no-git-identity-mutation/fixture/allow-audit");
+    let files = vec![root.join("dirty.yml"), root.join("clean.yml")];
+    let sources = super::super::source_store_for_files(&files);
+    let findings =
+        check_with_files_and_sources(&root, &allow_audit_config(), &files, &sources).unwrap();
+    let stale: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding.rule == "unused-allow-entry")
+        .collect();
+    assert_eq!(stale.len(), 1, "{findings:?}");
+    assert_eq!(stale[0].target.as_deref(), Some("clean.yml"));
+    assert_eq!(findings.len(), 1, "{findings:?}");
+}
+
+#[test]
+fn allow_audit_requires_the_full_application_universe() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/no-git-identity-mutation/fixture/allow-audit");
+    let inventory = vec![root.join("dirty.yml"), root.join("clean.yml")];
+    let sources = super::super::source_store_for_files(&inventory);
+    let config = config_with_options("conditionallyAllowedWorkflows: ['*.yml']");
+    let findings = check_with_files_and_sources(&root, &config, &inventory[1..], &sources).unwrap();
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.rule != "unused-allow-entry"),
+        "{findings:?}"
+    );
+}

@@ -1,0 +1,11 @@
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [source.ts]
+      forbiddenFiles: [target.ts, clean.ts]
+      exceptions:
+        - roots: [source.ts]
+          allowedFiles: [target.ts, clean.ts]
+        - roots: [source.ts]
+          allowedFiles: [target.ts]

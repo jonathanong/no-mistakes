@@ -1,0 +1,5 @@
+rules:
+  - rule: no-test-git-sha
+    scope: repository
+    options:
+      allowedContexts: ['intentional', 'intent.*', 'clean']

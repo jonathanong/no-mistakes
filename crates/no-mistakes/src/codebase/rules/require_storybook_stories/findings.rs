@@ -59,10 +59,14 @@ pub(super) fn stale_or_blank_allow_findings(
     component_keys: &HashSet<String>,
     _allow_files: &GlobMatcher,
     shared: &CheckFactMap,
+    scope: Option<&super::super::allow_audit::CheckedScope>,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     for (key, reason) in &opts.allow_components {
-        if reason.trim().is_empty() || !component_keys.contains(key) {
+        let file = key.split_once('#').map_or(key.as_str(), |(file, _)| file);
+        let eligible = scope
+            .is_none_or(|scope| scope.exact(&relative_slash_path(root, &project_root.join(file))));
+        if reason.trim().is_empty() || (eligible && !component_keys.contains(key)) {
             findings.push(component_allow_finding(root, project_root, key, reason));
         }
     }
@@ -77,7 +81,11 @@ pub(super) fn stale_or_blank_allow_findings(
             path.starts_with(project_root)
                 && matcher.is_match(&relative_slash_path(project_root, path))
         });
-        if !matched {
+        if !matched
+            && scope.is_none_or(|scope| {
+                scope.glob(&relative_slash_path(root, &project_root.join(pattern)))
+            })
+        {
             findings.push(file_allow_finding(
                 pattern,
                 "does not match any project file",
@@ -117,4 +125,16 @@ fn file_allow_finding(pattern: &str, reason: &str) -> RuleFinding {
         import: None,
         target: None,
     }
+}
+
+pub(super) fn allow_scope(
+    root: &Path,
+    sources: &crate::codebase::ts_source::SourceStore,
+    components: &[super::types::Component],
+) -> super::super::allow_audit::CheckedScope {
+    let files = components
+        .iter()
+        .map(|component| component.file.clone())
+        .collect::<Vec<_>>();
+    super::super::allow_audit::CheckedScope::new(root, Some(sources), &files)
 }

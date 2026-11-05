@@ -112,3 +112,8 @@ Use `no-mistakes-disable-next-line github-actions-test-timeout-literals` or
 `no-mistakes-disable-file` for a one-off test exception.
 Line and next-line suppressions require an exact finding line.
 Use file suppression when the exception applies to the full file.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

@@ -70,9 +70,15 @@ pub(super) fn scan(
             });
         }
     }
+    let checked = facts
+        .iter()
+        .filter(|file| file.unanalyzable_statements.is_empty())
+        .map(|file| sql_rel(root, &file.path))
+        .collect::<BTreeSet<_>>();
     findings.extend(
         remaining_allowed_migrations
             .iter()
+            .filter(|migration| checked.contains(&migration.path))
             .map(stale_allowed_migration),
     );
     Ok(findings)

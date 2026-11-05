@@ -103,6 +103,12 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
                 root, config, files, sources,
             )
         }
+        FILE_EXTENSION_POLICY => {
+            file_extension_policy::check_with_files_and_sources(root, config, files, sources)
+        }
+        LOCKFILE_ALLOWLIST => {
+            lockfile_allowlist::check_with_files_and_sources(root, config, files, sources)
+        }
         WORKSPACE_PACKAGE_CYCLES => {
             workspace_package_cycles::check_with_files_and_sources(root, config, files, sources)
         }

@@ -324,3 +324,67 @@ fn prefilter_skips_files_without_bind_or_listen() {
         "JS/TS files without listen or a backslash must skip the AST scan"
     );
 }
+
+#[test]
+fn allow_audit_tracks_overlaps_and_stale_entries() {
+    let root = fixture("allow-audit");
+    let findings = run_deferred(&root, "allow: ['dirty.py', '*dirty.py', 'clean.py']", false);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].rule, "unused-allow-entry");
+    assert_eq!(findings[0].target.as_deref(), Some("clean.py"));
+}
+
+#[test]
+fn allow_audit_is_silent_when_glob_scope_is_partial() {
+    let root = fixture("allow-audit");
+    let files = vec![root.join("clean.py")];
+    let inventory = vec![root.join("clean.py"), root.join("dirty.py")];
+    let sources = super::super::source_store_for_files(&inventory);
+    let findings = check_with_files_sources_and_deferred_suppression(
+        &root,
+        &config("allow: ['*.py']"),
+        &files,
+        &sources,
+        false,
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn allow_audit_counts_findings_before_inline_suppression() {
+    let findings = run_deferred(&fixture("allow-audit"), "allow: ['suppressed.py']", false);
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.rule != "unused-allow-entry"),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn allow_audit_is_silent_for_failed_reads() {
+    let root = fixture("allow-audit");
+    let files = vec![root.join("missing.py")];
+    let sources = super::super::source_store_for_files(&files);
+    let findings = check_with_files_sources_and_deferred_suppression(
+        &root,
+        &config("allow: ['missing.py']"),
+        &files,
+        &sources,
+        false,
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn allow_audit_is_silent_for_parse_failures() {
+    let findings = run_deferred(&fixture("allow-audit"), "allow: ['broken.ts']", false);
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.rule != "unused-allow-entry"),
+        "{findings:?}"
+    );
+}

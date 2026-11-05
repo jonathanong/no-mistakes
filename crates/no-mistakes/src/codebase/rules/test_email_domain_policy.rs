@@ -15,7 +15,12 @@ thread_local! {
 
 mod domain;
 mod encoding;
+mod scan;
+use super::allow_audit::ExceptionAudit;
 use domain::{banned_domain_needles, email_domain, message, normalize_domain};
+use scan::check_file_with_sources;
+#[cfg(test)]
+use scan::scan_email_lines;
 
 pub const RULE_ID: &str = "test-email-domain-policy";
 
@@ -43,6 +48,7 @@ struct CompiledOptions {
     banned_domains: HashSet<String>,
     domain_needles: Vec<Box<[u8]>>,
     allowed: Vec<Regex>,
+    audit: Option<ExceptionAudit>,
     extensions: Vec<String>,
     replacement: Option<String>,
 }
@@ -79,7 +85,27 @@ pub(crate) fn check_with_files_and_sources(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan_with_sources(root, &opts, &files, sources)
+            if opts.banned_domains.as_ref().is_none_or(Vec::is_empty) {
+                return Ok(Vec::new());
+            }
+            let mut compiled = compile_options(&opts)?;
+            compiled.audit = Some(ExceptionAudit::new(
+                root,
+                config,
+                rule,
+                sources,
+                "allowedEmailPatterns",
+                &opts.allowed_email_patterns,
+            ));
+            let mut findings: Vec<_> = files
+                .par_iter()
+                .flat_map(|path| check_file_with_sources(root, path, &compiled, sources))
+                .collect();
+            findings.extend(compiled.audit.as_ref().unwrap().finish(sources, |path| {
+                let rel = relative_slash_path(root, path);
+                compiled.extensions.iter().any(|ext| rel.ends_with(ext))
+            }));
+            Ok(findings)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -87,6 +113,7 @@ pub(crate) fn check_with_files_and_sources(
     Ok(findings)
 }
 
+#[cfg(test)]
 fn scan_with_sources(
     root: &Path,
     opts: &Options,
@@ -122,6 +149,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         .collect();
     let domain_needles = banned_domain_needles(&banned_domains);
     Ok(CompiledOptions {
+        audit: None,
         email: Regex::new(EMAIL_PATTERN).expect("email regex is valid"),
         banned_domains,
         domain_needles,
@@ -137,59 +165,6 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         extensions,
         replacement: opts.replacement.clone(),
     })
-}
-
-fn check_file_with_sources(
-    root: &Path,
-    path: &Path,
-    opts: &CompiledOptions,
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Vec<RuleFinding> {
-    let rel = relative_slash_path(root, path);
-    if !opts.extensions.iter().any(|ext| rel.ends_with(ext)) {
-        return Vec::new();
-    }
-    let Some(content) = super::read_source(sources, path) else {
-        return Vec::new();
-    };
-    if !opts.domain_needles.is_empty()
-        && !content.contains('&')
-        && super::byte_prefilter::is_ascii(content.as_bytes())
-        && !super::byte_prefilter::contains_any_ascii_ignore_case(
-            content.as_bytes(),
-            &opts.domain_needles,
-        )
-    {
-        PREFILTER_SKIPS.with(|skips| skips.set(skips.get() + 1));
-        return Vec::new();
-    }
-    scan_email_lines(&rel, &content, opts)
-}
-
-fn scan_email_lines(rel: &str, content: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
-    let mut findings = Vec::new();
-    for (index, line) in content.lines().enumerate() {
-        let decoded = encoding::decode(line);
-        for found in opts.email.find_iter(&decoded.text) {
-            let matched = decoded.original(line, found.range());
-            if opts.allowed.iter().any(|allowed| allowed.is_match(matched)) {
-                continue;
-            }
-            let domain = email_domain(found.as_str());
-            if !opts.banned_domains.contains(&domain) {
-                continue;
-            }
-            findings.push(RuleFinding {
-                rule: RULE_ID.to_string(),
-                file: rel.to_string(),
-                line: index + 1,
-                message: message(rel, &domain, opts.replacement.as_deref()),
-                import: Some(matched.to_string()),
-                target: Some(domain),
-            });
-        }
-    }
-    findings
 }
 
 #[cfg(test)]

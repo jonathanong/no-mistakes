@@ -38,7 +38,7 @@ export interface CheckReport {
    */
   unprovenMemberQuerySql?: number;
   /**
-   * Non-failing advice, including default unused/invalid disable-directive diagnostics and
+   * Non-failing advice, including unused-allow-entry and default unused/invalid disable-directive diagnostics and
    * the `rules`/`codebase` findings of rule applications configured with `severity: advisory`.
    */
   advisories: RuleFinding[];

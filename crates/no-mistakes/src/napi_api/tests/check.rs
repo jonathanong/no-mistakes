@@ -30,6 +30,8 @@ mod check_redirect_suppression;
 mod check_suppression;
 #[path = "check_suppression_audit.rs"]
 mod check_suppression_audit;
+#[path = "check_unused_allow_entries.rs"]
+mod check_unused_allow_entries;
 #[path = "check_unused_disable_directives.rs"]
 mod check_unused_disable_directives;
 

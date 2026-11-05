@@ -12,6 +12,8 @@ thread_local! {
     pub(super) static PREFILTER_SKIPS: Cell<u32> = const { Cell::new(0) };
 }
 
+use super::allow_audit::ExceptionAudit;
+
 pub const RULE_ID: &str = "no-test-git-sha";
 
 #[derive(Deserialize, Default)]
@@ -22,6 +24,7 @@ pub(crate) struct Options {
 }
 struct CompiledOptions {
     contexts: Vec<Regex>,
+    audit: Option<ExceptionAudit>,
     sha: Regex,
 }
 
@@ -49,7 +52,17 @@ pub(crate) fn check_with_files_and_sources(
         .rule_applications(RULE_ID)
         .into_par_iter()
         .map(|rule| {
-            let options = compile_options(rule.try_rule_options()?)?;
+            let raw: Options = rule.try_rule_options()?;
+            let audit = ExceptionAudit::new(
+                root,
+                config,
+                rule,
+                sources,
+                "allowedContexts",
+                &raw.allowed_contexts,
+            );
+            let mut options = compile_options(raw)?;
+            options.audit = Some(audit);
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
             let candidates: Vec<PathBuf> = all_files
@@ -61,10 +74,12 @@ pub(crate) fn check_with_files_and_sources(
                 .collect();
             let candidates =
                 super::path_filter::filter_rule_files(root, config, rule, &candidates)?;
-            Ok(candidates
+            let mut findings: Vec<_> = candidates
                 .par_iter()
                 .flat_map(|path| check_file(root, path, &options, sources))
-                .collect())
+                .collect();
+            findings.extend(options.audit.as_ref().unwrap().finish(sources, |_| true));
+            Ok(findings)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = results?.into_iter().flatten().collect();
@@ -83,6 +98,7 @@ fn compile_options(options: Options) -> Result<CompiledOptions> {
         .collect::<Result<_>>()?;
     Ok(CompiledOptions {
         contexts,
+        audit: None,
         sha: Regex::new(r"(?i)[0-9a-f]{40}").expect("SHA regex"),
     })
 }
@@ -96,6 +112,9 @@ fn check_file(
     let Some(content) = super::read_source(sources, path) else {
         return Vec::new();
     };
+    if let Some(audit) = &options.audit {
+        audit.checked(path);
+    }
     if !super::byte_prefilter::contains_hex_run(content.as_bytes(), 40) {
         PREFILTER_SKIPS.with(|skips| skips.set(skips.get() + 1));
         return Vec::new();
@@ -127,11 +146,11 @@ fn scan_sha_lines(
             if matches.is_empty() {
                 return Vec::new();
             }
-            if options
-                .contexts
-                .iter()
-                .any(|context| context.is_match(line_text))
-            {
+            let contexts = options.contexts.iter().map(|context| context.is_match(line_text));
+            let suppressed = if let Some(audit) = &options.audit {
+                audit.audit.usage.suppress(contexts)
+            } else { contexts.into_iter().any(|matched| matched) };
+            if suppressed {
                 return Vec::new();
             }
             matches

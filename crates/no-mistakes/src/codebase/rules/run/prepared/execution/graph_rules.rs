@@ -131,6 +131,7 @@ pub(super) fn graph_rule_findings(
                     config,
                     dependency_graph.expect("query-reached-per-item requires canonical graph"),
                     shared,
+                    sources,
                 )
             },
         )?);

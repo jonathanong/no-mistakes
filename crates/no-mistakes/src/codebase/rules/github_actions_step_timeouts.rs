@@ -118,20 +118,11 @@ fn scan_files(
         .map(|path| crate::codebase::ts_source::relative_slash_path(root, path))
         .collect();
     for key in opts.allow.keys() {
-        let Some(path) = selector_file(key) else {
+        if selector_file(key).is_none() {
             findings.push(yaml::finding(
                 key,
                 1,
                 format!("{key}: malformed {RULE_ID} allow selector; expected file#job#step"),
-                Some(key),
-            ));
-            continue;
-        };
-        if !present.contains(path) {
-            findings.push(yaml::finding(
-                path,
-                1,
-                format!("{path}: stale {RULE_ID} allow entry `{key}`"),
                 Some(key),
             ));
         }

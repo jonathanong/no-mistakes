@@ -7,13 +7,21 @@ use oxc_ast_visit::{walk, Visit};
 use oxc_span::SourceType;
 use std::path::Path;
 
+#[cfg(test)]
 pub(super) fn scan_lines(path: &Path, source: &str) -> Vec<usize> {
+    scan_lines_checked(path, source).0
+}
+
+pub(super) fn scan_lines_checked(path: &Path, source: &str) -> (Vec<usize>, bool) {
     let Ok(source_type) = SourceType::from_path(path) else {
-        return Vec::new();
+        return (Vec::new(), false);
     };
     let allocator = Allocator::default();
     let parsed = crate::ast::parse(path, &allocator, source, source_type);
-    collect_lines(source, &parsed.program)
+    (
+        collect_lines(source, &parsed.program),
+        parsed.diagnostics.is_empty(),
+    )
 }
 
 fn collect_lines(source: &str, program: &Program<'_>) -> Vec<usize> {

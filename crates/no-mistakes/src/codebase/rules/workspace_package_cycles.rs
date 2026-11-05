@@ -56,7 +56,45 @@ pub(crate) fn check_with_files_and_sources(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan_with_sources(root, &opts, &files, sources)
+            let audit = super::allow_audit::AllowAudit::new(
+                root,
+                config,
+                rule,
+                Some(sources),
+                "allowlist",
+                opts.allowlist.len(),
+            );
+            let mut findings = scan_with_sources(root, &opts, &files, sources)?;
+            findings.retain(|finding| {
+                !audit.usage.suppress(opts.allowlist.iter().map(|entry| {
+                    finding.target.as_ref().is_some_and(|target| {
+                        scc::canonical_cycle(target) == scc::canonical_cycle(entry)
+                    })
+                }))
+            });
+            let workspace = workspaces::load_from_source_store(root, sources)?;
+            let scope = super::allow_audit::CheckedScope::new(root, Some(sources), &files);
+            let complete = !workspace.packages.is_empty()
+                && workspace.packages.iter().all(|package| {
+                    let manifest = package.dir.join("package.json");
+                    scope.exact(&relative_slash_path(root, &manifest))
+                        && sources.parse_json_path(&manifest).is_ok()
+                });
+            findings.extend(audit.finish(
+                |index| {
+                    complete
+                        && scc::display_cycle(&scc::canonical_cycle(&opts.allowlist[index]))
+                            .iter()
+                            .all(|name| {
+                                workspace
+                                    .packages
+                                    .iter()
+                                    .any(|package| &package.name == name)
+                            })
+                },
+                |index| opts.allowlist[index].clone(),
+            ));
+            Ok(findings)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -81,18 +119,10 @@ fn scan_with_sources(
         .map(|pkg| (pkg.name.clone(), pkg.dir.clone()))
         .collect();
     let dependency_types = dependency_types(opts);
-    let allowlist: BTreeSet<String> = opts
-        .allowlist
-        .iter()
-        .map(|cycle| scc::canonical_cycle(cycle))
-        .collect();
     let graph = workspace_graph_with_sources(&workspace, &dependency_types, sources);
 
     let mut findings = Vec::new();
     for key in scc::cycle_keys(&graph) {
-        if allowlist.contains(&key) {
-            continue;
-        }
         let cycle = scc::display_cycle(&key);
         let first = cycle
             .first()

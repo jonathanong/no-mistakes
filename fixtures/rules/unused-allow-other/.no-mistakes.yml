@@ -1,0 +1,33 @@
+version: 2
+rules:
+  - rule: file-extension-policy
+    scope: repository
+    options:
+      scopes: [{path: ., bannedExtensions: [.js]}]
+      allowlist: [legacy.js, legacy.js, clean.ts, clean.d.ts]
+  - rule: file-extension-policy
+    name: outside-policy-scope
+    scope: repository
+    include: [clean.ts]
+    options:
+      scopes: [{path: elsewhere, bannedExtensions: [.js]}]
+      allowlist: [clean.ts]
+  - rule: lockfile-allowlist
+    scope: repository
+    options:
+      allowed: [package-lock.json, package-lock.json, pnpm-lock.yaml]
+  - rule: package-json-workspace-coverage
+    scope: repository
+    options:
+      packageRoots: [packages]
+      allowlist: [packages/a/package.json]
+  - rule: workspace-package-cycles
+    scope: repository
+    options:
+      allowlist: ['a -> b']
+  - rule: postgres-json-relation-ids
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      fingerprintNamePattern: '^never$'
+      allow: [{object: 'table:accounts', reason: legacy}]

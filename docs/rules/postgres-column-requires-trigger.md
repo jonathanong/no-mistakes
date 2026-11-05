@@ -158,3 +158,8 @@ matches nothing is reported as a stale allow entry.
 `postgres-conflict-ordering` and `postgres-lock-ordering` read the same schema
 catalog for indexes. This rule reads columns and trigger definitions from that
 catalog instead.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

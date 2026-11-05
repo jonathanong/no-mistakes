@@ -143,6 +143,7 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
     };
     let mut findings = Vec::new();
     findings.append(&mut namespace_findings);
+    let scope = super::findings::allow_scope(root, sources, &components);
     findings.extend(stale_or_blank_allow_findings(
         root,
         project_root,
@@ -150,6 +151,7 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
         &suppression_filtered_component_keys,
         &allow_files,
         shared,
+        Some(&scope),
     ));
     for component in components {
         if covered.contains(&component.key) || test_covered.contains(&component.key) {
@@ -183,10 +185,8 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
         findings.push(super::effort::missing(component));
     }
     findings.retain(|finding| rule_filter.is_match(&root.join(&finding.file)));
-    let mut diagnostics = AnalysisDiagnostics {
-        findings,
-        ..Default::default()
-    };
+    let mut diagnostics = AnalysisDiagnostics::default();
+    diagnostics.findings = findings;
     super::diagnostics::append_unanalyzable(
         &mut diagnostics,
         unanalyzable,

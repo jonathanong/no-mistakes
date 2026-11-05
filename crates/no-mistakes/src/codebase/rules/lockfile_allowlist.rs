@@ -27,7 +27,9 @@ pub(crate) struct Options {
 }
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
-    super::run_filesystem_rule(root, config, None, RULE_ID, scan)
+    let files =
+        crate::codebase::ts_source::discover_files(root, &config.filesystem.skip_directories);
+    check_with_files(root, config, &files)
 }
 
 pub(crate) fn check_with_files(
@@ -35,7 +37,54 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    super::run_filesystem_rule(root, config, Some(all_files), RULE_ID, scan)
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
+    let all: Result<Vec<Vec<RuleFinding>>> = config
+        .rule_applications(RULE_ID)
+        .into_par_iter()
+        .map(|rule| {
+            let opts: Options = rule.try_rule_options()?;
+            let files = super::selected_rule_files(root, config, rule, all_files)?;
+            let audit = super::allow_audit::AllowAudit::new(
+                root,
+                config,
+                rule,
+                Some(sources),
+                "allowed",
+                opts.allowed.len(),
+            );
+            let scope = super::allow_audit::CheckedScope::new(root, Some(sources), &files);
+            let matchers = opts
+                .allowed
+                .iter()
+                .map(|pattern| Glob::new(pattern).map(|glob| glob.compile_matcher()))
+                .collect::<Result<Vec<_>, _>>()?;
+            let mut findings = scan(root, &opts, &files, opts.allowed.is_empty())?;
+            findings.retain(|finding| {
+                !audit.usage.suppress(
+                    matchers
+                        .iter()
+                        .map(|matcher| matcher.is_match(&finding.file)),
+                )
+            });
+            findings.extend(audit.finish(
+                |index| scope.glob(&opts.allowed[index]),
+                |index| opts.allowed[index].clone(),
+            ));
+            Ok(findings)
+        })
+        .collect();
+    let mut findings = all?.into_iter().flatten().collect();
+    super::sort_findings(&mut findings);
+    Ok(findings)
 }
 
 fn build_glob_set(patterns: &[&str]) -> Result<GlobSet> {
@@ -46,7 +95,12 @@ fn build_glob_set(patterns: &[&str]) -> Result<GlobSet> {
     Ok(builder.build()?)
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+fn scan(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    apply_allow: bool,
+) -> Result<Vec<RuleFinding>> {
     let banned: HashSet<&str> = if opts.banned_basenames.is_empty() {
         DEFAULT_BANNED_BASENAMES.iter().copied().collect()
     } else {
@@ -72,7 +126,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
                 return Vec::new();
             }
             let rel = relative_slash_path(root, path);
-            if glob_set.is_match(&rel) {
+            if apply_allow && glob_set.is_match(&rel) {
                 return Vec::new();
             }
             vec![RuleFinding {

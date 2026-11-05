@@ -79,11 +79,12 @@ pub(crate) fn check_with_files_sources_and_facts(
         .into_par_iter()
         .map(|rule| {
             let opts: Options = rule.try_rule_options()?;
-            let compiled = compile::compile_options(&opts)?;
+            let mut compiled = compile::compile_options(&opts)?;
             if compiled.id_key_pattern.is_none() && compiled.fingerprint_name_pattern.is_none() {
                 return Ok(super::PostgresFindings::default());
             }
             let files = super::selected_rule_files(root, config, rule, all_files)?;
+            let scope = super::allow_audit::CheckedScope::new(root, Some(sources), &files);
             let sql_paths =
                 crate::codebase::postgres::postgres_sql_paths(root, &files, &compiled.schema)?;
             let sql = crate::codebase::check_facts::PathMembership::new(&sql_paths);
@@ -93,7 +94,34 @@ pub(crate) fn check_with_files_sources_and_facts(
                     compiled.includes(&relative_slash_path(root, path), sql.contains(path))
                 })
                 .collect::<Vec<_>>();
-            scan::scan(root, &compiled, &files, sources, facts)
+            let audit = super::allow_audit::AllowAudit::new(
+                root,
+                config,
+                rule,
+                Some(sources),
+                "allow",
+                opts.allow.len(),
+            );
+            compiled.allow.clear();
+            let mut findings = scan::scan(root, &compiled, &files, sources, facts)?;
+            findings.0.retain(|located| {
+                !audit.usage.suppress(opts.allow.iter().map(|entry| {
+                    located.finding.target.as_ref().is_some_and(|target| {
+                        entry.object == *target
+                            || target.strip_prefix("column:").is_some_and(|column| {
+                                entry
+                                    .object
+                                    .strip_prefix("table:")
+                                    .is_some_and(|table| column.starts_with(&format!("{table}.")))
+                            })
+                    })
+                }))
+            });
+            findings.extend(audit.finish(
+                |_| compiled.id_key_pattern.is_none() && scope.exact(&compiled.schema_catalog_path),
+                |index| opts.allow[index].object.clone(),
+            ));
+            Ok(findings)
         })
         .collect();
     let findings: super::PostgresFindings = all?.into_iter().flatten().collect();

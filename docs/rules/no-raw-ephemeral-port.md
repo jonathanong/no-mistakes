@@ -108,3 +108,9 @@ path list for known binders.
 
 [`test-no-dependency-pins`](test-no-dependency-pins.md) prevents brittle test
 assertions; this rule specifically protects runner-port allocation.
+
+An `allow` glob that matches only successfully checked files and suppresses no
+raw finding produces an `unused-allow-entry` advisory. Remove the stale entry.
+Overlapping entries are all considered used when they match a raw finding,
+even when an inline suppression also applies. Partial or uncertain scopes do
+not produce stale-entry advisories.

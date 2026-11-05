@@ -28,18 +28,33 @@ pub(super) fn check_file_with_prefilter(
     prefilter: bool,
 ) -> Vec<RuleFinding> {
     let rel = relative_slash_path(root, path);
-    if opts.allow.is_match(&rel) || (!is_tuple_bind_source(path) && !is_js_ts(path)) {
+    if !is_tuple_bind_source(path) && !is_js_ts(path) {
         return Vec::new();
     }
     let source = match super::super::source_access::checked_source(sources, path, root, RULE_ID) {
         Ok(source) => source,
-        Err(finding) => return vec![*finding],
+        Err(finding) => {
+            return if opts.allow.is_match(&rel) {
+                Vec::new()
+            } else {
+                vec![*finding]
+            }
+        }
     };
-    if !defer_suppression && crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID)
+    let (mut findings, checked) = collect_port_findings(path, &rel, &source, opts, prefilter);
+    if checked {
+        opts.allow.checked(path);
+    }
+    if opts.allow.suppress(&rel, !findings.is_empty())
+        || (!defer_suppression
+            && crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID))
     {
         return Vec::new();
     }
-    collect_port_findings(path, &rel, &source, opts, defer_suppression, prefilter)
+    if !defer_suppression {
+        super::super::suppress_rule_findings_with_source(&mut findings, &source);
+    }
+    findings
 }
 
 fn collect_port_findings(
@@ -47,9 +62,9 @@ fn collect_port_findings(
     rel: &str,
     source: &str,
     opts: &CompiledOptions,
-    defer_suppression: bool,
     prefilter: bool,
-) -> Vec<RuleFinding> {
+) -> (Vec<RuleFinding>, bool) {
+    let mut checked = true;
     let mut seen = BTreeSet::new();
     let mut findings = Vec::new();
     let bytes = source.as_bytes();
@@ -69,15 +84,14 @@ fn collect_port_findings(
         {
             LISTEN_PREFILTER_SKIPS.with(|skips| skips.set(skips.get() + 1));
         } else {
-            for line in super::ast::scan_lines(path, source) {
+            let (lines, parsed) = super::ast::scan_lines_checked(path, source);
+            checked = parsed;
+            for line in lines {
                 push_finding(&mut findings, &mut seen, rel, line, &opts.message);
             }
         }
     }
-    if !defer_suppression {
-        super::super::suppress_rule_findings_with_source(&mut findings, source);
-    }
-    findings
+    (findings, checked)
 }
 
 fn push_finding(

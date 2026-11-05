@@ -123,3 +123,8 @@ renamed or removed constraint makes the entry stale and reports it.
 [`postgres-fk-index`](postgres-fk-index.md) checks whether foreign keys have
 supporting indexes. [`postgres-array-columns`](postgres-array-columns.md) checks
 array-valued columns.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

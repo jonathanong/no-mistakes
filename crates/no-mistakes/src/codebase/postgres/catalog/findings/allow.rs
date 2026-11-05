@@ -26,24 +26,15 @@ impl AllowList {
         wrap: impl Fn(RuleFinding) -> T,
     ) -> Vec<T> {
         let path = slash_normalize(catalog_path);
-        let mut used = vec![false; self.entries.len()];
+        let used = crate::codebase::rules::allow_audit::AllowUsage::new(self.entries.len());
         findings.retain(|finding_value| {
             let Some(target) = finding(finding_value).target.as_deref() else {
                 return true;
             };
-            let mut matched = false;
-            for (index, entry) in self.entries.iter().enumerate() {
-                if entry.object == target {
-                    used[index] = true;
-                    matched = true;
-                }
-            }
-            !matched
+            !used.suppress(self.entries.iter().map(|entry| entry.object == target))
         });
-        for (entry, was_used) in self.entries.iter().zip(used) {
-            if was_used {
-                continue;
-            }
+        for index in used.unused() {
+            let entry = &self.entries[index];
             findings.push(wrap(RuleFinding {
                 rule: self.rule_id.clone(),
                 file: path.clone(),

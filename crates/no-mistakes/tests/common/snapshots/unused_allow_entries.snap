@@ -1,0 +1,261 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "csharp-no-async-void-delegate": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "csharp-no-async-void-delegate",
+          "line": 5,
+          "message": "stale csharp-no-async-void-delegate allow entry `clean.cs` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allow: ['dirty.cs', '*dirty.cs', 'clean.cs']",
+          "target": "clean.cs"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no-git-identity-mutation": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "no-git-identity-mutation",
+          "line": 5,
+          "message": "stale no-git-identity-mutation conditionallyAllowedWorkflows entry `clean.yml` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "conditionallyAllowedWorkflows: ['dirty.yml', '*dirty.yml', 'clean.yml']",
+          "target": "clean.yml"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no-raw-ephemeral-port": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "no-raw-ephemeral-port",
+          "line": 5,
+          "message": "stale no-raw-ephemeral-port allow entry `clean.py` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allow: ['dirty.py', '*dirty.py', 'clean.py']",
+          "target": "clean.py"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no-test-git-sha": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "no-test-git-sha",
+          "line": 5,
+          "message": "stale no-test-git-sha allowedContexts entry `clean` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allowedContexts: ['intentional', 'intent.*', 'clean']",
+          "target": "clean"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "other_lists": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "file-extension-policy",
+          "line": 7,
+          "message": "stale file-extension-policy allowlist entry `clean.ts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allowlist: [legacy.js, legacy.js, clean.ts, clean.d.ts]",
+          "target": "clean.ts"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "import": "lockfile-allowlist",
+          "line": 18,
+          "message": "stale lockfile-allowlist allowed entry `pnpm-lock.yaml` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allowed: [package-lock.json, package-lock.json, pnpm-lock.yaml]",
+          "target": "pnpm-lock.yaml"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "import": "package-json-workspace-coverage",
+          "line": 23,
+          "message": "stale package-json-workspace-coverage allowlist entry `packages/a/package.json` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allowlist: [packages/a/package.json]",
+          "target": "packages/a/package.json"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "import": "postgres-json-relation-ids",
+          "line": 33,
+          "message": "stale postgres-json-relation-ids allow entry `table:accounts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allow: [{object: 'table:accounts', reason: legacy}]",
+          "target": "table:accounts"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "import": "workspace-package-cycles",
+          "line": 27,
+          "message": "stale workspace-package-cycles allowlist entry `a -> b` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allowlist: ['a -> b']",
+          "target": "a -> b"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "package-json-required-fields": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "package-json-required-fields",
+          "line": 7,
+          "message": "stale package-json-required-fields unscopedNameExceptions entry `@scope/safe` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "unscopedNameExceptions: [used, used, '@scope/safe']",
+          "target": "@scope/safe"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "query": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "query-reached-per-item",
+          "line": 13,
+          "message": "stale query-reached-per-item allow entry `src/entry.mts#retired` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {file: src/entry.mts, callee: retired}",
+          "target": "src/entry.mts#retired"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "swift-no-raw-print": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "swift-no-raw-print",
+          "line": 5,
+          "message": "stale swift-no-raw-print allow entry `clean.swift` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allow: ['dirty.swift', '*dirty.swift', 'clean.swift']",
+          "target": "clean.swift"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "swift-viewmodel-main-actor": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "swift-viewmodel-main-actor",
+          "line": 5,
+          "message": "stale swift-viewmodel-main-actor allow entry `clean.swift` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allow: ['dirty.swift', '*dirty.swift', 'clean.swift']",
+          "target": "clean.swift"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "test-email-domain-policy": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "test-email-domain-policy",
+          "line": 6,
+          "message": "stale test-email-domain-policy allowedEmailPatterns entry `safe@example.org` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allowedEmailPatterns: ['used@example.com', 'used@.*', 'safe@example.org']",
+          "target": "safe@example.org"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

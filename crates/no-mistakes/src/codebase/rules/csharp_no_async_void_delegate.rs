@@ -1,4 +1,4 @@
-use super::path_filter::GlobMatcher;
+use super::masked_source::FileAllow;
 use super::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
@@ -28,7 +28,7 @@ pub(crate) struct Options {
 pub(super) struct CompiledOptions {
     pub(super) constructors: Vec<regex::Regex>,
     pub(super) methods: Vec<regex::Regex>,
-    pub(super) allow: GlobMatcher,
+    pub(super) allow: FileAllow,
     pub(super) message: String,
 }
 
@@ -43,7 +43,8 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let opts = compile_options(rule.try_rule_options()?)?;
+        let mut opts = compile_options(rule.try_rule_options()?)?;
+        opts.allow.setup(root, config, rule, sources);
         let files =
             super::selected_rule_files_matching(root, config, rule, all_files, is_csharp_file)?;
         findings.extend(super::scan_masked_files(
@@ -54,6 +55,7 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
             defer_suppression,
             scan::check_file,
         ));
+        findings.extend(opts.allow.finish(root, sources));
     }
     super::sort_findings(&mut findings);
     Ok(findings)
@@ -73,7 +75,7 @@ fn compile_options(opts: Options) -> Result<CompiledOptions> {
     Ok(CompiledOptions {
         constructors,
         methods,
-        allow: GlobMatcher::new(&opts.allow, &format!("{RULE_ID} allow"))?,
+        allow: FileAllow::new(&opts.allow, &format!("{RULE_ID} allow"))?,
         message: match opts.message.filter(|hint| !hint.is_empty()) {
             Some(hint) => format!("{DEFAULT_MESSAGE} {hint}"),
             None => DEFAULT_MESSAGE.to_string(),

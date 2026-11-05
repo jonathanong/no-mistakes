@@ -56,3 +56,13 @@ fn deferred_suppression_retains_findings_for_audit_reports() {
 }
 
 mod locations;
+
+#[test]
+fn allowances_for_unselected_workflows_are_not_stale() {
+    let findings = run_files(
+        "fail",
+        "allow: [{step: '.github/workflows/excluded.yml#test#1', reason: legacy}]",
+        &[],
+    );
+    assert!(findings.is_empty(), "{findings:?}");
+}

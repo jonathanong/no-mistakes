@@ -73,6 +73,7 @@ fn namespace_and_allow_findings_cover_non_matching_edges() {
         &HashSet::new(),
         &allow_files,
         &shared,
+        None,
     );
     assert!(findings.iter().any(|finding| finding
         .message

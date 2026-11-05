@@ -162,3 +162,8 @@ policy.
 
 [`postgres-fk-index`](postgres-fk-index.md) protects foreign-key probes, while
 [`postgres-no-add-column`](postgres-no-add-column.md) governs migration shape.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
