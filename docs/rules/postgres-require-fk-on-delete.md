@@ -114,10 +114,13 @@ This includes malformed body statements: an advisory means analysis is incomplet
 not that PostgreSQL accepts the SQL. Successfully parsed body statements still
 contribute facts and rule findings. At the top level, examples of complete forms
 that advise include the following; this list is not exhaustive. The recognizer
-also accepts complete
-forms such as `ALTER PUBLICATION name ADD TABLE table [, table ...]`,
-`ALTER PUBLICATION name DROP TABLE table [, table ...]`, and supported
-`REVOKE` statements. Malformed or unrecognized statements retain findings.
+also accepts additional complete forms, including:
+
+- `ALTER PUBLICATION name ADD TABLE table [, table ...]`
+- `ALTER PUBLICATION name DROP TABLE table [, table ...]`
+- Supported `REVOKE` statements.
+
+Malformed or unrecognized statements retain findings.
 
 - `REFRESH MATERIALIZED VIEW [CONCURRENTLY] view [WITH [NO] DATA]`
 - `CREATE PUBLICATION name FOR ALL TABLES`

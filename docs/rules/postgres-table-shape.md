@@ -92,7 +92,7 @@ A blank entry in `references` is a configuration error.
 A blank `type` is a configuration error.
 `bannedTablePatterns` apply whether or not a shape matches.
 `include`, `exclude`, and `projects` filter the catalog path.
-A non-empty rule `message` replaces the finding text and keeps the catalog path and `table:<name>` locator.
+A non-empty rule `message` replaces the text of policy findings and keeps the catalog path and locator. Stale allow-entry diagnostics retain their specific text.
 
 Findings use `table:<name>`. Shape texts start with `(shape <name>)`.
 
