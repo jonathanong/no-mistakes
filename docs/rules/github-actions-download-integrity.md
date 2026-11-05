@@ -236,6 +236,8 @@ jobs:
 literal `BASE_URL="https://example.invalid/base"` followed by `curl "$BASE_URL/tool.tgz"`
 is the same download. Two assignments, or `BASE_URL="$(...)"`, are not expanded.
 
+A checksum check whose arguments contain command substitution (`$(...)` or backticks), including inside double quotes, cannot establish static integrity verification. Use a literal checksum file or another statically analyzable check. Single-quoted substitution text is literal.
+
 ## Suppression
 
 Use a YAML comment. `no-mistakes-disable-next-line github-actions-download-integrity`

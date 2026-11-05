@@ -55,7 +55,7 @@ impl Consumed {
                 match class.preferred_path() {
                     Some(target) => consumed.insert(target),
                     None if class.is_unresolved_external() && external(&resolver, specifier) => {}
-                    None => consumed.unknown |= !specifier.starts_with(['.', '/']),
+                    None => consumed.unknown = true,
                 }
             }
         }

@@ -119,8 +119,19 @@ fn runtime_assets_match_whole_segments_of_literal_paths_only() {
     assert!(at(PathAnchor::Module, &["..", "db", "migrations-src"]).is_none());
     assert!(at(PathAnchor::Module, &["..", "db"]).is_none());
     assert!(at(PathAnchor::Module, &["..", "..", "..", "db", "migrations"]).is_none());
+    assert!(at(PathAnchor::Absolute, &["repo", "db", "migrations"]).is_some());
+    assert!(at(PathAnchor::Absolute, &["repo", "db", "migrations", "sub"]).is_some());
+    assert!(at(PathAnchor::Absolute, &["repo", "db", "migrations-src"]).is_none());
+    assert!(at(PathAnchor::Absolute, &["elsewhere", "db", "migrations"]).is_none());
     assert!(at(PathAnchor::Absolute, &["db", "migrations"]).is_none());
     assert!(at(PathAnchor::Temp, &["db", "migrations"]).is_none());
+    assert!(declared(
+        &origin(PathAnchor::Absolute, &["C:", "repo", "db", "migrations"]),
+        Path::new(r"C:\repo"),
+        file,
+        &assets,
+    )
+    .is_some());
     let mut dynamic = origin(PathAnchor::Cwd, &["db", "migrations"]);
     dynamic.dynamic = true;
     assert!(declared(&dynamic, root, file, &assets).is_none());

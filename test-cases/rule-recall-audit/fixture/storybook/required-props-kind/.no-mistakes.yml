@@ -1,0 +1,1 @@
+{"projects": {"web": {"root": "."}}, "rules": [{"rule": "require-storybook-stories", "projects": ["web"], "options": {"stories": ["missing/**/*.stories.tsx"], "includeAllReactNamedExports": true, "requiredProps": ["neverPresent"]}}]}

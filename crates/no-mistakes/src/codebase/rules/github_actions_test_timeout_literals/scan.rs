@@ -1,7 +1,7 @@
 use super::{CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::ts_source::relative_slash_path;
 use regex::Regex;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::sync::LazyLock;
 
@@ -49,8 +49,22 @@ pub(super) fn check_source(
     }
     let mut findings = Vec::new();
     let mut used_allow = BTreeSet::new();
-    for (index, line) in source.lines().enumerate() {
-        findings.extend(line_findings(rel, index + 1, line, opts, &mut used_allow));
+    let line_starts: Vec<usize> = std::iter::once(0)
+        .chain(source.match_indices('\n').map(|(offset, _)| offset + 1))
+        .collect();
+    let mut violations = BTreeMap::new();
+    for pattern in [&*YAML_FRAGMENT, &*TIMEOUT_EQUALITY, &*TIMEOUT_CONTAIN] {
+        for matched in pattern.find_iter(source) {
+            let line_no = line_starts.partition_point(|offset| *offset <= matched.start());
+            let start = line_starts[line_no - 1];
+            let end = source[matched.end()..]
+                .find('\n')
+                .map_or(source.len(), |i| matched.end() + i);
+            violations.entry(line_no).or_insert(&source[start..end]);
+        }
+    }
+    for (line_no, text) in violations {
+        findings.extend(line_findings(rel, line_no, text, opts, &mut used_allow));
     }
     findings.extend(stale_allow_findings(rel, opts, &used_allow));
     if !defer_suppression {

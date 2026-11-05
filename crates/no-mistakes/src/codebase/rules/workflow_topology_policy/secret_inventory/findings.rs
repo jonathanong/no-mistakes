@@ -10,7 +10,7 @@ pub(super) fn finding(path: &str, line: usize, message: String) -> RuleFinding {
         file: path.to_owned(),
         line,
         message,
-        ..super::super::finding(String::new())
+        ..super::super::finding(path, String::new())
     }
 }
 

@@ -20,12 +20,12 @@ pub(super) fn lint(
     let mut findings = Vec::new();
     for id in owners.keys() {
         if !policy.contains_key(*id) {
-            findings.push(finding(format!("concurrency intent missing: {id}")));
+            findings.push(finding(id, format!("concurrency intent missing: {id}")));
         }
     }
     for id in policy.keys() {
         if !owners.contains_key(id.as_str()) {
-            findings.push(finding(format!("concurrency intent stale: {id}")));
+            findings.push(finding(id, format!("concurrency intent stale: {id}")));
         }
     }
     for (id, intent) in policy {
@@ -64,17 +64,21 @@ fn compare(
         "coalesce-latest"
     };
     if pending != intent.pending {
-        findings.push(finding(format!(
-            "concurrency pending mismatch: {id}: expected {}, got {pending}",
-            intent.pending
-        )));
+        findings.push(finding(
+            id,
+            format!(
+                "concurrency pending mismatch: {id}: expected {}, got {pending}",
+                intent.pending
+            ),
+        ));
     }
     let cancellation = match &concurrency.effective.cancel_in_progress {
         ConcurrencyValue::Text(value) => {
             if !complete_expression(value) {
-                findings.push(finding(format!(
-                    "conditional cancel-in-progress expression invalid: {id}: {value}"
-                )));
+                findings.push(finding(
+                    id,
+                    format!("conditional cancel-in-progress expression invalid: {id}: {value}"),
+                ));
             }
             "conditional"
         }
@@ -82,18 +86,24 @@ fn compare(
         ConcurrencyValue::Bool(false) => "retain-running",
     };
     if cancellation != intent.cancellation {
-        findings.push(finding(format!(
-            "concurrency cancellation mismatch: {id}: expected {}, got {cancellation}",
-            intent.cancellation
-        )));
+        findings.push(finding(
+            id,
+            format!(
+                "concurrency cancellation mismatch: {id}: expected {}, got {cancellation}",
+                intent.cancellation
+            ),
+        ));
     }
     let actual = actual_scope(&concurrency.effective.group);
     if actual != intent.scope {
-        findings.push(finding(format!(
-            "concurrency scope mismatch: {id}: expected {}, got {}",
-            intent.scope.join(", "),
-            actual.join(", ")
-        )));
+        findings.push(finding(
+            id,
+            format!(
+                "concurrency scope mismatch: {id}: expected {}, got {}",
+                intent.scope.join(", "),
+                actual.join(", ")
+            ),
+        ));
     }
     findings
 }

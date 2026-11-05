@@ -1,0 +1,5 @@
+rules:
+  - rule: markdown-child-links
+    scope: repository
+    options:
+      groups: [{parents: [README.md], children: [child.md]}]

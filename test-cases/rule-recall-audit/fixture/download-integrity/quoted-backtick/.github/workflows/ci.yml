@@ -1,0 +1,7 @@
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl https://example.invalid/a.tgz
+          sha256sum -c "`cat name`"

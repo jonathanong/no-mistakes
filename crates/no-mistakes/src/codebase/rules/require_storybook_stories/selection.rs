@@ -50,7 +50,7 @@ pub(super) fn selected_components(
             continue;
         }
         let explicit = include.is_match(&project_file);
-        if should_skip_file(facts, opts, explicit, defer_suppression) {
+        if should_skip_file(facts, opts, defer_suppression) {
             continue;
         }
         if let Some(error) = &facts.parse_error {
@@ -104,19 +104,14 @@ pub(super) fn selected_components(
     (components, unanalyzable)
 }
 
-fn should_skip_file(
-    facts: &CheckFileFacts,
-    opts: &Options,
-    explicit: bool,
-    defer_suppression: bool,
-) -> bool {
+fn should_skip_file(facts: &CheckFileFacts, opts: &Options, defer_suppression: bool) -> bool {
     let Some(source) = facts.source.as_deref() else {
         return false;
     };
     // Aggregate checks must retain file-disabled components until the shared
     // suppression projection records their findings in the optional audit.
     (!defer_suppression && has_disable_file_comment(source, RULE_ID))
-        || (!explicit && !opts.required_props.is_empty() && !source_has_required_prop(source, opts))
+        || (!opts.required_props.is_empty() && !source_has_required_prop(source, opts))
 }
 
 fn is_index_or_private_file(path: &Path) -> bool {

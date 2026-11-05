@@ -55,11 +55,14 @@ fn scan_group(
         .into_iter()
         .filter(|child| !parents.iter().any(|parent| parent == child))
         .filter(|child| !linked.contains(*child))
-        .map(|child| missing_link(root, child, group.require_whole_file))
-        .collect())
+        .map(|child| {
+            let source = &facts.get_for_rule(child, RULE_ID)?.source;
+            Ok(missing_link(root, child, group.require_whole_file, source))
+        })
+        .collect::<Result<Vec<_>>>()?)
 }
 
-fn missing_link(root: &Path, child: &Path, require_whole_file: bool) -> RuleFinding {
+fn missing_link(root: &Path, child: &Path, require_whole_file: bool, source: &str) -> RuleFinding {
     let file = relative(root, child);
     let kind = if require_whole_file {
         "whole-file markdown link"
@@ -69,11 +72,36 @@ fn missing_link(root: &Path, child: &Path, require_whole_file: bool) -> RuleFind
     RuleFinding {
         rule: RULE_ID.to_string(),
         file: file.clone(),
-        line: 1,
+        line: first_content_line(source),
         message: format!(
             "{file} is not linked from a configured parent markdown file; add a {kind} to this file from a parent"
         ),
         import: None,
         target: Some(file),
     }
+}
+
+fn first_content_line(source: &str) -> usize {
+    let mut in_comment = false;
+    for (index, line) in source.lines().enumerate() {
+        let mut text = line.trim_start_matches('\u{feff}').trim();
+        loop {
+            if in_comment {
+                let Some((_, tail)) = text.split_once("-->") else {
+                    break;
+                };
+                text = tail.trim();
+                in_comment = false;
+            } else if let Some(tail) = text.strip_prefix("<!--") {
+                text = tail;
+                in_comment = true;
+            } else {
+                if !text.is_empty() {
+                    return index + 1;
+                }
+                break;
+            }
+        }
+    }
+    1
 }

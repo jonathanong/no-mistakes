@@ -23,10 +23,14 @@ pub(super) fn lint(topology: &WorkflowTopology) -> Vec<RuleFinding> {
         if ids.len() < 2 {
             continue;
         }
-        findings.push(finding(format!(
-            "concurrency group collision: {lowered}: {}",
-            ids.into_iter().collect::<Vec<_>>().join(", ")
-        )));
+        let owner = ids.first().cloned().unwrap_or_default();
+        findings.push(finding(
+            &owner,
+            format!(
+                "concurrency group collision: {lowered}: {}",
+                ids.into_iter().collect::<Vec<_>>().join(", ")
+            ),
+        ));
     }
     findings
 }

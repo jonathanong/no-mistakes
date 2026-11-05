@@ -1,0 +1,11 @@
+name: audit
+on: push
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo lint
+  test: # no-mistakes-disable-line workflow-topology-policy
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo test

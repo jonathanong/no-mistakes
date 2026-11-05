@@ -1,0 +1,1 @@
+{"projects": {"web": {"root": "."}}, "rules": [{"rule": "require-storybook-stories", "projects": ["web"], "options": {"include": ["src/**/*.tsx"]}}]}

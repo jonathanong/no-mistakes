@@ -100,6 +100,8 @@ Following [recall over precision](../../README.md#how-analysis-works), nothing t
 
 - This rule has no unanalyzable inputs: it judges literal test-timeout values in parsed workflow steps. Nothing is routed through `options.unanalyzable`.
 
+Equality and containment assertions may span lines. Their finding starts at `expect(`; a reasoned allow entry for a multiline assertion uses the exact reported `target`, preserving internal newlines. The target includes the full source lines enclosing the matched timeout expression.
+
 ## Suppression
 
 Use `no-mistakes-disable-next-line github-actions-test-timeout-literals` or

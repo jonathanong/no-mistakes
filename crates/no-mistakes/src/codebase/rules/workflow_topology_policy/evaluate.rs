@@ -131,25 +131,28 @@ fn inventory(topology: &WorkflowTopology, opts: &Options) -> Vec<RuleFinding> {
     }
     for (path, keys) in &actual {
         match opts.job_inventory.get(path) {
-            None => findings.push(finding(format!("workflow inventory missing: {path}"))),
+            None => findings.push(finding(path, format!("workflow inventory missing: {path}"))),
             Some(expected) => {
                 let mut expected = expected.clone();
                 expected.sort();
                 let mut got = keys.clone();
                 got.sort();
                 if expected != got {
-                    findings.push(finding(format!(
-                        "job inventory mismatch: {path}: expected {}, got {}",
-                        expected.join(", "),
-                        got.join(", ")
-                    )));
+                    findings.push(finding(
+                        path,
+                        format!(
+                            "job inventory mismatch: {path}: expected {}, got {}",
+                            expected.join(", "),
+                            got.join(", ")
+                        ),
+                    ));
                 }
             }
         }
     }
     for path in opts.job_inventory.keys() {
         if !actual.contains_key(path) {
-            findings.push(finding(format!("workflow inventory stale: {path}")));
+            findings.push(finding(path, format!("workflow inventory stale: {path}")));
         }
     }
     findings
@@ -159,12 +162,12 @@ fn job_presence(index: &Index<'_>, opts: &Options) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     for id in &opts.required_jobs {
         if !index.jobs.contains_key(id.as_str()) {
-            findings.push(finding(format!("required job missing: {id}")));
+            findings.push(finding(id, format!("required job missing: {id}")));
         }
     }
     for id in &opts.forbidden_jobs {
         if index.jobs.contains_key(id.as_str()) {
-            findings.push(finding(format!("forbidden job present: {id}")));
+            findings.push(finding(id, format!("forbidden job present: {id}")));
         }
     }
     findings
