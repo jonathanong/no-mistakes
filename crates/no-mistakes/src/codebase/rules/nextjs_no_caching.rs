@@ -2,6 +2,7 @@ mod rendering;
 use rendering::{findings_for_file, project_finding};
 
 use super::RuleFinding;
+use crate::codebase::dependencies::extract::is_indexable;
 use crate::codebase::ts_source::{
     has_disable_comment, has_disable_file_comment, relative_slash_path,
 };
@@ -73,6 +74,9 @@ pub(crate) fn diagnostics_with_facts_for_aggregate(
         );
         let filter = filter?;
         for path in shared.files() {
+            if !is_indexable(path) {
+                continue;
+            }
             let Some(facts) = shared.ts.get(path) else {
                 continue;
             };

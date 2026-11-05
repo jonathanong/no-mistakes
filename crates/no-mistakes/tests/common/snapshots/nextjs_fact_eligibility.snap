@@ -1,0 +1,174 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "api_dependencies": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pages/api/users.ts",
+          "line": 1,
+          "message": "Next.js API/server routes are disabled; move server endpoints out of the Next.js app",
+          "rule": "nextjs-no-api-routes",
+          "sourceLine": "export default function handler() {}"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "api_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pages/api/users.ts",
+          "line": 1,
+          "message": "Next.js API/server routes are disabled; move server endpoints out of the Next.js app",
+          "rule": "nextjs-no-api-routes",
+          "sourceLine": "export default function handler() {}"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "cache_only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "combined": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "combined_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "explicit_include": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "mixed_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "index.ts",
+          "line": 1,
+          "message": "fetch cache: \"force-cache\" is disabled; use uncached request-time data",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "export const value = fetch('/api/data', { cache: 'force-cache' });"
+        },
+        {
+          "file": "pages/api/users.ts",
+          "line": 1,
+          "message": "Next.js API/server routes are disabled; move server endpoints out of the Next.js app",
+          "rule": "nextjs-no-api-routes",
+          "sourceLine": "export default function handler() {}"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "index.ts",
+          "line": 1,
+          "message": "fetch cache: \"force-cache\" is disabled; use uncached request-time data",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "export const value = fetch('/api/data', { cache: 'force-cache' });"
+        },
+        {
+          "file": "pages/api/users.ts",
+          "line": 1,
+          "message": "Next.js API/server routes are disabled; move server endpoints out of the Next.js app",
+          "rule": "nextjs-no-api-routes",
+          "sourceLine": "export default function handler() {}"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "storybook": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "index.ts",
+          "line": 1,
+          "message": "fetch cache: \"force-cache\" is disabled; use uncached request-time data",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "export const value = fetch('/api/data', { cache: 'force-cache' });"
+        },
+        {
+          "file": "pages/api/users.ts",
+          "line": 1,
+          "message": "Next.js API/server routes are disabled; move server endpoints out of the Next.js app",
+          "rule": "nextjs-no-api-routes",
+          "sourceLine": "export default function handler() {}"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -16,7 +16,9 @@ project rather than the Next.js application.
 ## What it catches
 
 It reports App Router `route` files with supported JS/TS extensions under
-`app/` or `src/app/`, and files under `pages/api/` or `src/pages/api/`.
+`app/` or `src/app/`, and JS/TS source files under `pages/api/` or `src/pages/api/`.
+JSON, MDX, and other metadata are excluded even when another enabled rule
+prepares facts or source text for them.
 The check judges file paths and needs no AST parse of its own, so malformed
 route source still reports when no other configured check requires a parse.
 

@@ -1,0 +1,9 @@
+rules:
+  - rule: nextjs-no-caching
+    scope: repository
+    options:
+      effort: low
+  - rule: production-dependency-declarations
+    scope: repository
+    options:
+      workspaceRoots: ["."]

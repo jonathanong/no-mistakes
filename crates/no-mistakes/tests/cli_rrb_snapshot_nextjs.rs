@@ -101,3 +101,58 @@ fn server_route_client_boundary_json_matches_snapshot() {
         ],
     );
 }
+
+#[test]
+fn nextjs_fact_eligibility_json_matches_snapshot() {
+    let base = "codebase-analysis/nextjs-fact-eligibility/fixture";
+    assert_saved_fixture(
+        "nextjs_fact_eligibility",
+        &[
+            c(
+                "combined",
+                &format!("{base}/minimal"),
+                "../../config/combined.yml",
+            ),
+            c(
+                "cache_only",
+                &format!("{base}/minimal"),
+                "../../config/cache-only.yml",
+            ),
+            c(
+                "explicit_include",
+                &format!("{base}/minimal"),
+                "../../config/include.yml",
+            ),
+            c(
+                "combined_low",
+                &format!("{base}/minimal"),
+                "../../config/combined-low.yml",
+            ),
+            c(
+                "mixed_max",
+                &format!("{base}/mixed"),
+                "../../config/mixed.yml",
+            ),
+            c(
+                "mixed_low",
+                &format!("{base}/mixed"),
+                "../../config/mixed-low.yml",
+            ),
+            c(
+                "storybook",
+                &format!("{base}/mixed"),
+                "../../config/storybook.yml",
+            ),
+            c(
+                "api_only",
+                &format!("{base}/mixed"),
+                "../../config/api-only.yml",
+            ),
+            c(
+                "api_dependencies",
+                &format!("{base}/mixed"),
+                "../../config/api-dependencies.yml",
+            ),
+        ],
+    );
+}

@@ -1,0 +1,7 @@
+rules:
+  - rule: nextjs-no-api-routes
+    scope: repository
+  - rule: production-dependency-declarations
+    scope: repository
+    options:
+      workspaceRoots: ["."]
