@@ -51,7 +51,7 @@ fn scan_group(
             linked.insert(link.path);
         }
     }
-    Ok(children
+    children
         .into_iter()
         .filter(|child| !parents.iter().any(|parent| parent == child))
         .filter(|child| !linked.contains(*child))
@@ -59,7 +59,7 @@ fn scan_group(
             let source = &facts.get_for_rule(child, RULE_ID)?.source;
             Ok(missing_link(root, child, group.require_whole_file, source))
         })
-        .collect::<Result<Vec<_>>>()?)
+        .collect::<Result<Vec<_>>>()
 }
 
 fn missing_link(root: &Path, child: &Path, require_whole_file: bool, source: &str) -> RuleFinding {
