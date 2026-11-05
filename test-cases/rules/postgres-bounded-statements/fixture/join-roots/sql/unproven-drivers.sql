@@ -16,3 +16,11 @@ WITH RECURSIVE walk(id, user_id) AS (
   JOIN walk w ON p.id = w.user_id
 )
 SELECT id FROM walk;
+
+SELECT p.id
+FROM (
+  SELECT f.id
+  FROM app.rows() AS f(id)
+  CROSS JOIN genericitems i
+) q
+JOIN posts p ON p.id = q.id;
