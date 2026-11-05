@@ -6,5 +6,8 @@ allowBuilds:
 
 linkWorkspacePackages: true
 
+overrides:
+  minimatch: 11.0.4
+
 minimumReleaseAgeExclude:
   - pr-shepherd@1.0.0
