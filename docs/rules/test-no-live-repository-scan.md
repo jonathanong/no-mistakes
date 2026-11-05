@@ -17,9 +17,12 @@ rules:
         - file: tests/policy.test.ts
 ```
 
-Without `roots` the rule discovers Vitest test files using Vitest's default
-test-file patterns, including when no `tests.vitest` project is configured;
-this example names one file. `severity: advisory` is the recommended adoption
+Without `roots`, the default `[{ vitest: true }]` selector uses projects from
+Vitest config files discovered at the repository root (`vitest.config.*`,
+`vitest.workspace.*`, and `vitest.projects.*`). Explicit
+`tests.vitest.configs` remains authoritative when configured, and no
+`tests.vitest` entry is required for default config discovery; this example
+names one file. `severity: advisory` is the recommended adoption
 default: findings are listed without failing `check`. Remove it once the
 repository is clean.
 
@@ -33,7 +36,8 @@ fixture, or a directory the test created, is fine.
 
 ## What it catches
 
-Starting from the configured roots (every Vitest project by default), the rule
+Starting from the configured roots (every discovered or configured Vitest
+project by default), the rule
 follows the canonical call graph: the root files' own calls, their module scope,
 every function they reach, and the module scope of every module they import.
 At each reached call it reports a directory enumeration whose root is not
@@ -366,7 +370,7 @@ rules:
 
 - `roots` uses the [`forbidden-calls` root selectors](forbidden-calls.md#options-and-roots)
   (`vitest`, `glob`, `file`, `module`, `function`). Default: `[{ vitest: true }]`,
-  which needs `tests.vitest` configuration.
+  which uses discovered Vitest configs; `tests.vitest` configuration is optional.
 - `excludeRoots` removes matching files from the root set, as in `forbidden-calls`.
 - `fixtureDirs` lists path segments that mark bounded fixture input. It replaces
   the defaults. Entries are single segments without separators.

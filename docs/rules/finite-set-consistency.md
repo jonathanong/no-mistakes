@@ -220,9 +220,9 @@ targets only, so those views stay unchanged.
 Set `minSize` on any set when an empty extract must fail closed. `equal-set`
 treats two empty sets as equal, so a renamed pattern or missing directory
 would otherwise pass. When an extract has fewer members than `minSize`, the
-rule reports that set and still runs comparisons that use it. Suppressing the
-`minSize` finding does not suppress those comparison findings. `minSize`
-defaults to `0` and is kind-agnostic. Use `minSize: 1` for live inventories such as
+rule reports that set and skips comparisons that use it. Suppressing the
+`minSize` finding allows those comparisons to run against the extracted values.
+`minSize` defaults to `0` and is kind-agnostic. Use `minSize: 1` for live inventories such as
 skill-directory captures.
 
 `stripPrefix` and `excludePrefix` post-process a raw extraction and are
