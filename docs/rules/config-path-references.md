@@ -4,8 +4,10 @@ Validates path strings stored inside structured YAML or JSON config files.
 `keys` reads dotted string or string-array fields. `presets` extract the
 required path fields for well-known configs; interpretation of ignore patterns
 depends on the preset field. For example, Oxlint `overrides[].files` entries
-are checked as path references, including a leading `!` string. For Knip, a
-trailing `!` production marker is removed
+without unescaped `*`, `?`, or `{` are checked as path references, including a
+leading `!` string; entries with those unescaped glob characters are skipped.
+Backslash-escaped characters such as `\*` are treated as literal path
+characters and checked. For Knip, a trailing `!` production marker is removed
 from workspace `entry` and `project` paths before required-path validation;
 leading-negation selectors remain ignored.
 
