@@ -41,7 +41,7 @@ pub(super) fn suppressed(
                 return None;
             }
             let arrays = vec![true; lookup.pins.len()];
-            let subqueries = vec![None; lookup.pins.len()];
+            let subqueries = (0..lookup.pins.len()).map(|_| None).collect::<Vec<_>>();
             let prepared = keys::prepare(
                 &lookup,
                 item_index,
