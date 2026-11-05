@@ -1,6 +1,6 @@
 SELECT i.id
 FROM genericitems i
-JOIN users u ON u.email = i.email;
+JOIN users u ON u.handle = i.handle;
 
 SELECT p.id
 FROM posts p

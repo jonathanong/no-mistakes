@@ -10,7 +10,8 @@
         "tenant_id": { "dataType": "uuid", "nullable": false },
         "item_no": { "dataType": "integer", "nullable": false },
         "topic_id": { "dataType": "uuid", "nullable": true },
-        "email": { "dataType": "text", "nullable": false }
+        "email": { "dataType": "text", "nullable": false },
+        "handle": { "dataType": "text", "nullable": false }
       },
       "primaryKey": { "columns": ["id"] },
       "indexes": {
@@ -60,14 +61,6 @@
           "accessMethod": "btree", "unique": true, "primary": true, "constraintBacked": true,
           "valid": true, "ready": true, "live": true, "immediate": true, "predicate": null,
           "keys": [{ "column": "id", "expression": "id" }]
-        },
-        "posts_tenant_no_key": {
-          "accessMethod": "btree", "unique": true, "primary": false, "constraintBacked": true,
-          "valid": true, "ready": true, "live": true, "immediate": true, "predicate": null,
-          "keys": [
-            { "column": "tenant_id", "expression": "tenant_id" },
-            { "column": "post_no", "expression": "post_no" }
-          ]
         }
       }
     },
@@ -75,7 +68,8 @@
       "relationKind": "table",
       "columns": {
         "id": { "dataType": "uuid", "nullable": false },
-        "email": { "dataType": "text", "nullable": true }
+        "email": { "dataType": "text", "nullable": true },
+        "handle": { "dataType": "text", "nullable": false }
       },
       "primaryKey": { "columns": ["id"] },
       "indexes": {
@@ -88,6 +82,11 @@
           "accessMethod": "btree", "unique": true, "primary": false, "constraintBacked": true,
           "valid": true, "ready": true, "live": true, "immediate": true, "predicate": null,
           "keys": [{ "column": "email", "expression": "email" }]
+        },
+        "users_handle_key": {
+          "accessMethod": "btree", "unique": true, "primary": false, "constraintBacked": true,
+          "valid": true, "ready": true, "live": true, "immediate": true, "predicate": null,
+          "keys": [{ "column": "handle", "expression": "handle" }]
         }
       }
     }
