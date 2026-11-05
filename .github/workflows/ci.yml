@@ -1015,6 +1015,15 @@ jobs:
           RUSTFLAGS: ""
         run: cargo install cargo-codspeed --version 5.0.1 --locked
 
+      # rustc and ld peak near this runner's memory limit: see issue 3024.
+      - name: Add swap for the benchmark build
+        timeout-minutes: 2
+        run: >-
+          sudo fallocate -l 8G /swapfile-bench
+          && sudo chmod 600 /swapfile-bench
+          && sudo mkswap /swapfile-bench
+          && sudo swapon /swapfile-bench
+
       - name: Build CPU benchmarks
         timeout-minutes: 30
         run: >-
