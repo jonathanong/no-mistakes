@@ -1,0 +1,13 @@
+---
+source: crates/no-mistakes/tests/cli_pkgcfg_snapshot_version_pin_consistency.rs
+---
+{
+  "empty_options": {
+    "exitCode": 2,
+    "stderr": "error: version-pin-consistency: sourceFile is required and must not be empty\n"
+  },
+  "empty_source_file": {
+    "exitCode": 2,
+    "stderr": "error: version-pin-consistency: sourceFile is required and must not be empty\n"
+  }
+}

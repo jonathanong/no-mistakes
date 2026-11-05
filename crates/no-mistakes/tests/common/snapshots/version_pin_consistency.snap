@@ -198,30 +198,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
-  "empty_options": {
-    "exitCode": 0,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
-  },
-  "empty_source_file": {
-    "exitCode": 0,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
-  },
   "empty_toml": {
     "exitCode": 1,
     "report": {
