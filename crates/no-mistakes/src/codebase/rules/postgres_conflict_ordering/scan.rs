@@ -68,7 +68,7 @@ pub(super) fn scan_with_sources(
         {
             if has_safe_variant_directive(
                 &source,
-                file.call_spans[call_index].0,
+                file.call_spans.get(call_index).map_or(0, |span| span.0),
                 &file.source_comment_spans,
                 call.sql_text.as_deref().unwrap_or_default(),
                 &opts.safe_directive,
