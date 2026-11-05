@@ -82,3 +82,24 @@ fn postgres_no_mutable_sql_registry_check_json_snapshot() {
         .collect();
     assert_saved_fixture("postgres_no_mutable_sql_registry", &cases);
 }
+
+#[test]
+fn postgres_exported_pool_executor_configuration_check_json_snapshot() {
+    let rule = "postgres-no-mutable-sql-registry";
+    let root = rules_path(rule, "fixture", "exported-pool");
+    assert_saved_fixture(
+        "postgres_exported_pool_executor_configuration",
+        &[
+            (
+                "factory_and_type_names_only",
+                root.clone(),
+                rules_path(rule, "configs", "exported-pool.yml"),
+            ),
+            (
+                "declared_pool_values",
+                root,
+                rules_path(rule, "configs", "exported-pool-names.yml"),
+            ),
+        ],
+    );
+}

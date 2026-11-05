@@ -1,0 +1,19 @@
+version: 2
+rules:
+  - rule: postgres-no-mutable-sql-registry
+    scope: repository
+    options: &executors
+      importSpecifier: "@example/db"
+      executorFactoryNames: [Pool, makePool]
+      executorTypeNames: [Pool]
+      executorNames: [query, writePool, factoryPool]
+      unanalyzable: advise
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options: *executors
+  - rule: postgres-no-offset
+    scope: repository
+    options: *executors
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options: *executors

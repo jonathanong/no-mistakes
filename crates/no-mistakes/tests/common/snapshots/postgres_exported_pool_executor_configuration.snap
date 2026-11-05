@@ -1,0 +1,161 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "declared_pool_values": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/undeclared.ts",
+          "line": 3,
+          "message": "src/undeclared.ts:3: postgres-no-mutable-sql-registry application #0 has unresolved SQL for undeclared-executor-type: receiver `unknownPool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "unknownPool.query(\"/* users/load */ SELECT id FROM app.users WHERE id = $1\", [\"id\"]);",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "src/undeclared.ts",
+          "line": 3,
+          "message": "src/undeclared.ts:3: postgres-no-offset application #0 has unresolved SQL for undeclared-executor-type: receiver `unknownPool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-offset",
+          "sourceLine": "unknownPool.query(\"/* users/load */ SELECT id FROM app.users WHERE id = $1\", [\"id\"]);",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "src/undeclared.ts",
+          "line": 3,
+          "message": "src/undeclared.ts:3: postgres-no-unbounded-sql-identifier application #0 has unresolved SQL for undeclared-executor-type: receiver `unknownPool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "unknownPool.query(\"/* users/load */ SELECT id FROM app.users WHERE id = $1\", [\"id\"]);",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "src/undeclared.ts",
+          "line": 3,
+          "message": "src/undeclared.ts:3: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: receiver `unknownPool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "unknownPool.query(\"/* users/load */ SELECT id FROM app.users WHERE id = $1\", [\"id\"]);",
+          "target": "undeclared-executor-type"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "unprovenMemberQuerySql": 1,
+      "warnings": []
+    }
+  },
+  "factory_and_type_names_only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: postgres-no-mutable-sql-registry application #0 has unresolved SQL for undeclared-executor-type: receiver `writePool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "writePool.query(\"/* users/load */ SELECT id FROM app.users WHERE id = $1\", [id]);",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: postgres-no-offset application #0 has unresolved SQL for undeclared-executor-type: receiver `writePool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-offset",
+          "sourceLine": "writePool.query(\"/* users/load */ SELECT id FROM app.users WHERE id = $1\", [id]);",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: postgres-no-unbounded-sql-identifier application #0 has unresolved SQL for undeclared-executor-type: receiver `writePool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "writePool.query(\"/* users/load */ SELECT id FROM app.users WHERE id = $1\", [id]);",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: receiver `writePool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "writePool.query(\"/* users/load */ SELECT id FROM app.users WHERE id = $1\", [id]);",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: postgres-no-mutable-sql-registry application #0 has unresolved SQL for undeclared-executor-type: receiver `factoryPool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "factoryPool.query(\"/* users/load */ SELECT id FROM app.users WHERE id = $1\", [id]);",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: postgres-no-offset application #0 has unresolved SQL for undeclared-executor-type: receiver `factoryPool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-offset",
+          "sourceLine": "factoryPool.query(\"/* users/load */ SELECT id FROM app.users WHERE id = $1\", [id]);",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: postgres-no-unbounded-sql-identifier application #0 has unresolved SQL for undeclared-executor-type: receiver `factoryPool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "factoryPool.query(\"/* users/load */ SELECT id FROM app.users WHERE id = $1\", [id]);",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: receiver `factoryPool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "factoryPool.query(\"/* users/load */ SELECT id FROM app.users WHERE id = $1\", [id]);",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "src/undeclared.ts",
+          "line": 3,
+          "message": "src/undeclared.ts:3: postgres-no-mutable-sql-registry application #0 has unresolved SQL for undeclared-executor-type: receiver `unknownPool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "unknownPool.query(\"/* users/load */ SELECT id FROM app.users WHERE id = $1\", [\"id\"]);",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "src/undeclared.ts",
+          "line": 3,
+          "message": "src/undeclared.ts:3: postgres-no-offset application #0 has unresolved SQL for undeclared-executor-type: receiver `unknownPool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-offset",
+          "sourceLine": "unknownPool.query(\"/* users/load */ SELECT id FROM app.users WHERE id = $1\", [\"id\"]);",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "src/undeclared.ts",
+          "line": 3,
+          "message": "src/undeclared.ts:3: postgres-no-unbounded-sql-identifier application #0 has unresolved SQL for undeclared-executor-type: receiver `unknownPool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "unknownPool.query(\"/* users/load */ SELECT id FROM app.users WHERE id = $1\", [\"id\"]);",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "src/undeclared.ts",
+          "line": 3,
+          "message": "src/undeclared.ts:3: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: receiver `unknownPool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "unknownPool.query(\"/* users/load */ SELECT id FROM app.users WHERE id = $1\", [\"id\"]);",
+          "target": "undeclared-executor-type"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "unprovenMemberQuerySql": 3,
+      "warnings": []
+    }
+  }
+}
