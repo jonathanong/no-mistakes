@@ -27,9 +27,11 @@ surface and keep tests, source, and metadata in known directories.
 
 ## What it catches/requires
 
-Each configured package must contain the required root files and keep source
-files and subdirectories within the declared layout. Test patterns identify
-test files for the test-directory policy. `root` is lexically normalized before
+Each configured package must keep source files and subdirectories within the
+declared layout; `allowedRootFiles` permits root-level files but does not
+require them to exist. Use [`require-files-in-subdirs`](require-files-in-subdirs.md)
+to require named files. Test patterns identify test files for the
+test-directory policy. `root` is lexically normalized before
 it is compared to files, so `./packages` and `packages/../packages` select the
 same tree as `packages`. A root that normalizes outside the repository selects
 nothing.
@@ -61,8 +63,7 @@ These paths violate the configured root/subdirectory and extension policy.
 
 ## Fix
 
-Move files into an allowed directory, add an allowed root file only when it is
-part of the package contract, or adjust the package policy deliberately.
+Move files into an allowed directory or adjust the package policy deliberately.
 
 ## Analysis
 
