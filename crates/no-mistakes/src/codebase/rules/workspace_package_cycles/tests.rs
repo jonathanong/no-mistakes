@@ -231,3 +231,25 @@ fn stale_allowances_require_checked_files_and_raw_findings() {
     let findings = super::check_with_files(&root, &config, &[]).unwrap();
     assert!(findings.is_empty(), "{findings:?}");
 }
+
+#[test]
+fn cycle_and_allow_audits_construct_one_workspace() {
+    let saved =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/rules/unused-allow-other");
+    for allow in [false, true] {
+        let fixture = crate::test_support::materialize_saved_fixture(&saved);
+        let root = fixture.path();
+        let mut config = crate::config::v2::load_v2_config(root, None).unwrap();
+        config.rules.retain(|rule| rule.rule == RULE_ID);
+        if !allow {
+            config.rules[0].options["allowlist"] = serde_yaml::Value::Sequence(Vec::new());
+        }
+        let files = crate::codebase::ts_source::discover_files(root, &[]);
+        let sources = super::super::source_store_for_files(&files);
+        let (findings, loads) = workspaces::load_metrics_tests::count(root, || {
+            super::check_with_files_and_sources(root, &config, &files, &sources).unwrap()
+        });
+        assert_eq!(loads, 1);
+        assert_eq!(findings.len(), usize::from(allow));
+    }
+}
