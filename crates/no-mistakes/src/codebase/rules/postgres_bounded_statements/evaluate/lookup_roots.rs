@@ -1,5 +1,5 @@
 //! Project keyed lookup joins from the prepared statement pins and catalog keys.
-use super::{keys, Evaluation};
+use super::{keys, qualified, reads_outer, Evaluation};
 use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundQuery, SqlPinSource};
 use crate::codebase::postgres::SchemaCatalog;
 use std::collections::BTreeMap;
@@ -43,11 +43,18 @@ pub(super) fn suppressed(
                     && matches!(&pin.source, SqlPinSource::Items(source)
                     if source.len() == 1
                         && source[0] != item_index
-                        && match query.items.get(source[0]).map(|item| &item.kind) {
-                            Some(SqlBoundItemKind::Table(_)) => true,
-                            Some(SqlBoundItemKind::Query(_)) => nested[source[0]]
-                                .as_ref()
-                                .is_some_and(|inner| inner.bounded || !inner.offenders.is_empty()),
+                        && match query.items.get(source[0]) {
+                            Some(peer) if peer.possible_temporary.as_ref().is_some_and(|candidate|
+                                candidate.uncertain_lifetime) => false,
+                            Some(peer) if matches!(&peer.kind, SqlBoundItemKind::Table(name)
+                                if catalog.bounded_relation(name).is_some()) => true,
+                            Some(peer) if matches!(&peer.kind, SqlBoundItemKind::Query(_)) => {
+                                !peer.lateral
+                                    && !reads_outer(&peer.lateral_reads, catalog)
+                                    && !qualified::reads_outer(&peer.lateral_qualified_reads, catalog)
+                                    && nested[source[0]].as_ref().is_some_and(|inner|
+                                        inner.bounded || !inner.offenders.is_empty())
+                            }
                             _ => false,
                         })
             });
