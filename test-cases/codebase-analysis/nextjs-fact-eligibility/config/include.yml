@@ -1,0 +1,8 @@
+rules:
+  - rule: nextjs-no-caching
+    scope: repository
+    include: ["**/*.{ts,tsx,js,jsx,mts,cts,mjs,cjs}"]
+  - rule: production-dependency-declarations
+    scope: repository
+    options:
+      workspaceRoots: ["."]

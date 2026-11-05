@@ -1,0 +1,13 @@
+projects:
+  web:
+    type: nextjs
+    root: .
+rules:
+  - rule: nextjs-no-caching
+    scope: repository
+  - rule: nextjs-no-api-routes
+    scope: repository
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      stories: ["**/*.mdx"]

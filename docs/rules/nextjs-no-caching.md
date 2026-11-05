@@ -36,7 +36,9 @@ There are no rule-local options. The shared `options.effort` and
 `options.unanalyzable` settings apply. The rule
 uses the selected project and the shared rule
 `include`/`exclude` path filters; its Next.js cache patterns are fixed by the
-analyzer.
+analyzer. Only TypeScript and JavaScript source files are eligible; JSON, MDX,
+and other metadata remain outside this rule even when another enabled rule
+prepares facts for them.
 
 ## Analysis
 

@@ -66,6 +66,9 @@ fn finding_for_file(
 }
 
 pub(crate) fn is_nextjs_api_route(path: &Path, target_roots: &[PathBuf]) -> bool {
+    if !is_indexable(path) {
+        return false;
+    }
     target_roots.iter().any(|target_root| {
         let Ok(rel) = path.strip_prefix(target_root) else {
             return false;

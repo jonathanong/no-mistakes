@@ -221,3 +221,45 @@ fn nextjs_redirect_low_mixed_literals_stay_checked_under_unanalyzable() {
         }
     }
 }
+
+#[test]
+fn widened_fact_plans_preserve_nextjs_source_eligibility() {
+    let base = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/nextjs-fact-eligibility");
+    for (scenario, config_name, expected) in [
+        ("minimal", "combined", 0),
+        ("minimal", "cache-only", 0),
+        ("minimal", "include", 0),
+        ("minimal", "combined-low", 0),
+        ("mixed", "mixed", 2),
+        ("mixed", "mixed-low", 2),
+        ("mixed", "storybook", 2),
+        ("mixed", "api-only", 1),
+        ("mixed", "api-dependencies", 1),
+    ] {
+        let out = Command::new(bin())
+            .args(["check", "--root"])
+            .arg(base.join("fixture").join(scenario))
+            .arg("--config")
+            .arg(base.join("config").join(format!("{config_name}.yml")))
+            .args(["--format", "json"])
+            .output()
+            .unwrap();
+        let report: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+        assert_eq!(
+            out.status.code(),
+            Some(i32::from(expected > 0)),
+            "{config_name}: {report}"
+        );
+        assert_eq!(
+            report["warnings"],
+            serde_json::json!([]),
+            "{config_name}: {report}"
+        );
+        let rules = report["rules"].as_array().unwrap();
+        assert_eq!(rules.len(), expected, "{config_name}: {report}");
+        assert!(rules
+            .iter()
+            .all(|finding| finding["file"].as_str().unwrap().ends_with(".ts")));
+    }
+}
