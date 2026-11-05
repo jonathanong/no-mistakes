@@ -1,0 +1,3 @@
+rules:
+  - rule: postgres-redundant-index
+    scope: repository

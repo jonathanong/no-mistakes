@@ -32,6 +32,10 @@ fn every_option_error_is_reported() {
             "option allow: invalid object ref nope",
         ),
         (
+            "schemaCatalogPath: schema.json\nallow:\n  - object: 'table:records'\n    reason: because\n",
+            "option allow: invalid object ref table:records",
+        ),
+        (
             "schemaCatalogPath: schema.json\nallow:\n  - object: 'column:a.b'\n    reason: one\n  - object: 'column:a.b'\n    reason: two\n",
             "option allow: duplicate entry column:a.b",
         ),

@@ -39,6 +39,7 @@ pub struct SqlIndexParam {
 pub struct SqlDropIndexMetadata {
     pub name: String,
     pub line: usize,
+    pub source_order: usize,
 }
 
 /// One `CREATE INDEX` or unique/primary-key covering index.
@@ -55,6 +56,7 @@ pub struct SqlCreateIndexMetadata {
     pub not_null_predicate_column: Option<String>,
     pub predicate_key: Option<String>,
     pub line: usize,
+    pub source_order: usize,
 }
 
 impl Default for SqlCreateIndexMetadata {
@@ -71,6 +73,7 @@ impl Default for SqlCreateIndexMetadata {
             not_null_predicate_column: None,
             predicate_key: None,
             line: 1,
+            source_order: 0,
         }
     }
 }

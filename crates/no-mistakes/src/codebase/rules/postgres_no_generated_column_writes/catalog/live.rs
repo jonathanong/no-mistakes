@@ -29,11 +29,15 @@ pub(crate) fn tables_before<'a>(
     schema: &[&'a SqlSchemaFileFacts],
     path: &Path,
     line: usize,
+    column: usize,
 ) -> LiveTables<'a> {
-    replay(schema, Some((path, line)))
+    replay(schema, Some((path, line, column)))
 }
 
-fn replay<'a>(schema: &[&'a SqlSchemaFileFacts], cutoff: Option<(&Path, usize)>) -> LiveTables<'a> {
+fn replay<'a>(
+    schema: &[&'a SqlSchemaFileFacts],
+    cutoff: Option<(&Path, usize, usize)>,
+) -> LiveTables<'a> {
     let mut tables = BTreeMap::new();
     let mut ordered: Vec<_> = schema.iter().collect();
     ordered.sort_by(|left, right| {
@@ -43,8 +47,12 @@ fn replay<'a>(schema: &[&'a SqlSchemaFileFacts], cutoff: Option<(&Path, usize)>)
         )
     });
     for file in ordered {
-        let target = cutoff.filter(|(path, _)| file.path == *path);
-        apply_file(&mut tables, file, target.map(|(_, line)| line));
+        let target = cutoff.filter(|(path, _, _)| file.path == *path);
+        apply_file(
+            &mut tables,
+            file,
+            target.map(|(_, line, column)| (line, column)),
+        );
         if target.is_some() {
             break;
         }
@@ -52,7 +60,11 @@ fn replay<'a>(schema: &[&'a SqlSchemaFileFacts], cutoff: Option<(&Path, usize)>)
     tables
 }
 
-fn apply_file<'a>(tables: &mut LiveTables<'a>, file: &'a SqlSchemaFileFacts, limit: Option<usize>) {
+fn apply_file<'a>(
+    tables: &mut LiveTables<'a>,
+    file: &'a SqlSchemaFileFacts,
+    limit: Option<(usize, usize)>,
+) {
     if !file.table_events_collected {
         // Public Rust callers can supply the original facts without ordered events.
         for table in &file.tables {
@@ -77,7 +89,7 @@ fn apply_file<'a>(tables: &mut LiveTables<'a>, file: &'a SqlSchemaFileFacts, lim
         return;
     }
     for event in &file.table_events {
-        if limit.is_some_and(|line| !event.precedes_write(line)) {
+        if limit.is_some_and(|(line, column)| !event.precedes_write(line, column)) {
             continue;
         }
         apply_event(tables, event);

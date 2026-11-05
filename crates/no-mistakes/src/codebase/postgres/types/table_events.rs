@@ -12,6 +12,7 @@ pub enum SqlTableSchemaEvent {
         source_order: Vec<usize>,
         /// 1-based physical line where the statement starts (0 when unknown).
         line: usize,
+        position_column: usize,
         table: String,
         relation_key: String,
         unqualified_table: String,
@@ -23,6 +24,7 @@ pub enum SqlTableSchemaEvent {
         source_order: Vec<usize>,
         /// 1-based physical line where the statement starts (0 when unknown).
         line: usize,
+        position_column: usize,
         table: String,
         relation_key: String,
         unqualified_table: String,
@@ -32,6 +34,7 @@ pub enum SqlTableSchemaEvent {
         source_order: Vec<usize>,
         /// 1-based physical line where the statement starts (0 when unknown).
         line: usize,
+        position_column: usize,
         table: String,
         relation_key: String,
         unqualified_table: String,
@@ -57,8 +60,19 @@ impl SqlTableSchemaEvent {
 
     /// Whether this statement is treated as running before a write on `line`. Without
     /// columns, a same-line DROP is assumed to follow the write so the write stays checked.
-    pub(crate) fn precedes_write(&self, line: usize) -> bool {
-        self.line() < line || (self.line() == line && !matches!(self, Self::Drop { .. }))
+    pub(crate) fn precedes_write(&self, line: usize, column: usize) -> bool {
+        let event_column = match self {
+            Self::Create {
+                position_column, ..
+            }
+            | Self::AddColumn {
+                position_column, ..
+            }
+            | Self::Drop {
+                position_column, ..
+            } => *position_column,
+        };
+        self.line() < line || (self.line() == line && event_column < column)
     }
 
     pub(crate) fn line_mut(&mut self) -> &mut usize {

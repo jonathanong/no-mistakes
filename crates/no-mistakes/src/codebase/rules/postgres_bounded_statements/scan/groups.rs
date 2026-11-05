@@ -102,6 +102,14 @@ fn merge(
         }
     }
     let appended_call = append::only_appended(spans);
+    if spans.is_empty() && group.iter().all(|item| item.finding.file == executor) {
+        group.sort();
+        group.dedup_by(|left, right| {
+            left.finding.target == right.finding.target && left.finding.line == right.finding.line
+        });
+        output.0.extend(group);
+        return;
+    }
     if group.len() < 2 && (group.is_empty() || appended_call.is_none()) {
         output.0.extend(group);
         return;

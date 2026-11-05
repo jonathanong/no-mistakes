@@ -7,7 +7,7 @@ pub(crate) struct Positions(
     BTreeMap<(String, String), VecDeque<Vec<usize>>>,
     BTreeSet<Vec<usize>>,
     Vec<Marker>,
-    BTreeMap<Vec<usize>, usize>,
+    BTreeMap<Vec<usize>, (usize, usize)>,
 );
 
 impl Positions {
@@ -32,7 +32,9 @@ impl Positions {
             }
             positions.record(&code, &[ordinal]);
             let outer_line = start_line(&code);
-            positions.3.insert(vec![ordinal], outer_line);
+            positions
+                .3
+                .insert(vec![ordinal], (outer_line, start_column(&code)));
             if code.first().is_some_and(|token| word(token, "DO")) {
                 for token in &code {
                     if let Token::DollarQuotedString(body) = &token.token {
@@ -54,7 +56,7 @@ impl Positions {
                             positions.record(&code, &[ordinal, inner_ordinal]);
                             positions.3.insert(
                                 vec![ordinal, inner_ordinal],
-                                body_line + start_line(&code) - 1,
+                                (body_line + start_line(&code) - 1, start_column(&code)),
                             );
                         }
                     }
@@ -72,7 +74,11 @@ impl Positions {
     }
 
     pub(super) fn line(&self, order: &[usize]) -> usize {
-        self.3.get(order).copied().unwrap_or(0)
+        self.3.get(order).map_or(0, |position| position.0)
+    }
+
+    pub(super) fn column(&self, order: &[usize]) -> usize {
+        self.3.get(order).map_or(0, |position| position.1)
     }
 
     pub(super) fn executed(&self, order: &[usize]) -> bool {
@@ -177,4 +183,9 @@ fn object_name(tokens: &[&TokenWithSpan], mut cursor: usize) -> (String, usize) 
 fn start_line(code: &[&TokenWithSpan]) -> usize {
     code.first()
         .map_or(1, |token| token.span.start.line as usize)
+}
+
+fn start_column(code: &[&TokenWithSpan]) -> usize {
+    code.first()
+        .map_or(0, |token| token.span.start.column as usize)
 }

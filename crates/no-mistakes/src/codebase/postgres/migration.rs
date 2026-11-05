@@ -99,8 +99,8 @@ fn extract_parsed_migration_facts(
         .declared_identifiers
         .extend(identifier_locations.unparsed_declarations());
     let mut table_positions = table_events::Positions::new(sql);
-    for (index, statement) in statements.iter().enumerate() {
-        let locations = locating::Locations::new(tokens.get(index).copied().unwrap_or_default());
+    for (ordinal, statement) in statements.iter().enumerate() {
+        let locations = locating::Locations::new(tokens.get(ordinal).copied().unwrap_or_default());
         facts
             .declared_identifiers
             .extend(identifiers::collect(&mut identifier_locations, statement));
@@ -109,7 +109,9 @@ fn extract_parsed_migration_facts(
         table_events::record(statement, &mut table_positions, &mut facts.table_events);
         match statement {
             Statement::CreateIndex(index) => {
-                facts.indexes.push(indexes::from_create_index(line, index));
+                facts
+                    .indexes
+                    .push(indexes::from_create_index(line, ordinal, index));
             }
             Statement::Drop {
                 object_type: ObjectType::Index,
@@ -118,7 +120,7 @@ fn extract_parsed_migration_facts(
             } => {
                 facts
                     .dropped_indexes
-                    .extend(indexes::from_drop_index(line, names));
+                    .extend(indexes::from_drop_index(line, ordinal, names));
             }
             Statement::Drop {
                 object_type: ObjectType::Table,
@@ -127,7 +129,7 @@ fn extract_parsed_migration_facts(
             } => {
                 facts
                     .dropped_tables
-                    .extend(indexes::from_drop_table(line, names));
+                    .extend(indexes::from_drop_table(line, ordinal, names));
             }
             Statement::CreateTable(table) => {
                 let table_name = relation_name(&table.name);

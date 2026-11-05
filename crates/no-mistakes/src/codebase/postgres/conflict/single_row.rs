@@ -56,7 +56,7 @@ fn limits_to_one_row(query: &Query) -> bool {
     };
     limit.is_some_and(is_zero_or_one)
         || query.fetch.as_ref().is_some_and(|fetch| {
-            !fetch.percent && fetch.quantity.as_ref().is_none_or(is_zero_or_one)
+            !fetch.percent && !fetch.with_ties && fetch.quantity.as_ref().is_none_or(is_zero_or_one)
         })
 }
 

@@ -64,8 +64,10 @@ pub(super) fn scan(
             let snapshots = history
                 .map(|file| snapshots(&schema, file, statements, opts))
                 .unwrap_or_default();
-            let lookup = |line: usize| match history {
-                Some(file) => snapshots.get(&events_before(file, line)).unwrap_or(&finals),
+            let lookup = |line: usize, column: usize| match history {
+                Some(file) => snapshots
+                    .get(&events_before(file, line, column))
+                    .unwrap_or(&finals),
                 None => &finals,
             };
             let rel = relative_slash_path(root, path);

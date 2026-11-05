@@ -27,7 +27,8 @@ change precedence, such as `a AND (b OR c)`, and the order of conjuncts stay sig
 ### Single-row sources and constant keys
 
 A source that provably yields at most one row has no second writer order to disagree
-with, so it needs no `ORDER BY`. The rule accepts only these shapes:
+with, so it needs no `ORDER BY`. `FETCH FIRST 1 ROW WITH TIES` does not prove
+one row because tied rows can all be returned. The rule accepts only these shapes:
 
 - a `SELECT` without `FROM` whose select list holds literals, bound parameters, casts,
   scalar subqueries and a short list of scalar functions (`lower`, `upper`, `coalesce`,

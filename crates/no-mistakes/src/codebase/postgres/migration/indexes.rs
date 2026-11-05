@@ -7,6 +7,7 @@ use sqlparser::ast::{ColumnOption, IndexColumn, IndexType, ObjectName, TableCons
 
 pub(super) fn from_create_index(
     line: usize,
+    source_order: usize,
     index: &sqlparser::ast::CreateIndex,
 ) -> SqlCreateIndexMetadata {
     let name = index.name.as_ref().map(qualified_relation);
@@ -34,23 +35,33 @@ pub(super) fn from_create_index(
             .as_ref()
             .map(super::predicate::predicate_key),
         line,
+        source_order,
     }
 }
 
-pub(super) fn from_drop_index(line: usize, names: &[ObjectName]) -> Vec<SqlDropIndexMetadata> {
-    drop_names(names, line)
+pub(super) fn from_drop_index(
+    line: usize,
+    source_order: usize,
+    names: &[ObjectName],
+) -> Vec<SqlDropIndexMetadata> {
+    drop_names(names, line, source_order)
 }
 
-pub(super) fn from_drop_table(line: usize, names: &[ObjectName]) -> Vec<SqlDropIndexMetadata> {
-    drop_names(names, line)
+pub(super) fn from_drop_table(
+    line: usize,
+    source_order: usize,
+    names: &[ObjectName],
+) -> Vec<SqlDropIndexMetadata> {
+    drop_names(names, line, source_order)
 }
 
-fn drop_names(names: &[ObjectName], line: usize) -> Vec<SqlDropIndexMetadata> {
+fn drop_names(names: &[ObjectName], line: usize, source_order: usize) -> Vec<SqlDropIndexMetadata> {
     names
         .iter()
         .map(|name| SqlDropIndexMetadata {
             name: qualified_relation(name),
             line,
+            source_order,
         })
         .collect()
 }

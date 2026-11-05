@@ -1,5 +1,5 @@
 use super::Options;
-use crate::codebase::postgres::{require_catalog_path, AllowList};
+use crate::codebase::postgres::{require_catalog_path, AllowList, CatalogObjectRef};
 use anyhow::{bail, Result};
 
 pub(super) struct Compiled {
@@ -32,6 +32,17 @@ pub(super) fn compile(options: &Options, message: Option<String>) -> Result<Comp
             super::RULE_ID,
             overlap.join(", ")
         );
+    }
+    for entry in &options.allow {
+        if let Ok(object) = entry.object.parse::<CatalogObjectRef>() {
+            if !matches!(object, CatalogObjectRef::Column { .. }) {
+                bail!(
+                    "{} option allow: invalid object ref {} (expected column:<table>.<column>)",
+                    super::RULE_ID,
+                    entry.object
+                );
+            }
+        }
     }
     Ok(Compiled {
         never: options.never_allow_element_types.clone(),

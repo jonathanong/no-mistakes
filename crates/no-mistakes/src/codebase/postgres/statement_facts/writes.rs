@@ -4,6 +4,8 @@ pub struct SqlWriteFact {
     pub table: String,
     pub columns: SqlWriteColumns,
     pub line: usize,
+    pub column: usize,
+    pub column_keys: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

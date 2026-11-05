@@ -68,6 +68,8 @@ mod cli_postgres_snapshot_generated_column_writes;
 mod cli_postgres_snapshot_idempotent_insert;
 #[path = "cli_postgres_snapshot_identifier_length.rs"]
 mod cli_postgres_snapshot_identifier_length;
+#[path = "cli_postgres_snapshot_issue_3030_schema.rs"]
+mod cli_postgres_snapshot_issue_3030_schema;
 #[path = "cli_postgres_snapshot_json_relation_ids.rs"]
 mod cli_postgres_snapshot_json_relation_ids;
 #[path = "cli_postgres_snapshot_key_column_types.rs"]

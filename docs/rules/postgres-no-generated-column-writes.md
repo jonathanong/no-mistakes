@@ -22,6 +22,8 @@ generated-column message.
 Catalogs use the final CREATE/ALTER/DROP table state in migration-file and
 statement order, including statically recovered routine DDL. Dropping and
 recreating a table replaces its generated status and positional column order.
+Quoted column names retain their case: `normalized` and `"Normalized"` can be
+distinct columns of one table.
 
 ## Options and defaults
 

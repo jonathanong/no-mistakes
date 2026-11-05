@@ -16,7 +16,7 @@ pub(super) fn catalog_from_tables(
             .columns
             .iter()
             .filter(|column| column.generated)
-            .map(|column| column.name.to_ascii_lowercase())
+            .map(|column| column.name.to_string())
             .collect::<std::collections::BTreeSet<_>>();
         if generated.is_empty() {
             continue;
@@ -30,7 +30,7 @@ pub(super) fn catalog_from_tables(
                     table
                         .columns
                         .iter()
-                        .map(|column| column.name.to_ascii_lowercase())
+                        .map(|column| column.name.to_string())
                         .collect()
                 }),
             },

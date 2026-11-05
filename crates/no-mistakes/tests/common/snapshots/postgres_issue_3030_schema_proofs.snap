@@ -1,0 +1,185 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "bounded_roots": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query.sql",
+          "line": 2,
+          "message": "query.sql:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM accounts a",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 3,
+          "message": "query.sql:3: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "CROSS JOIN orders o;",
+          "target": "table:orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "conflict_only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "conflict_ties": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "multi-row ON CONFLICT DO NOTHING needs an explicit conflict target; targetless DO NOTHING can arbitrate different unique or exclusion constraints",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items(id) SELECT id FROM source ORDER BY kind FETCH FIRST 1 ROW WITH TIES ON CONFLICT DO NOTHING;",
+          "target": "targetless-arbiter"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "constraint_cross_schema": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "ALTER TABLE ADD CONSTRAINT body_check NOT VALID must have a matching VALIDATE CONSTRAINT",
+          "rule": "postgres-constraint-validate",
+          "sourceLine": "ALTER TABLE alpha.items ADD CONSTRAINT body_check CHECK (body <> '') NOT VALID;",
+          "target": "alpha.items.body_check"
+        },
+        {
+          "file": "case.sql",
+          "line": 2,
+          "message": "VALIDATE CONSTRAINT body_check has no matching named NOT VALID add",
+          "rule": "postgres-constraint-validate",
+          "sourceLine": "ALTER TABLE beta.items VALIDATE CONSTRAINT body_check;",
+          "target": "beta.items.body_check"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "constraint_matched_schema": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "generated_case": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.normalized",
+          "line": 3,
+          "message": "case.sql:3: do not write generated column `items.normalized`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE items SET normalized='manual';",
+          "target": "normalized"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "generated_chronology": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.normalized",
+          "line": 1,
+          "message": "case.sql:1: do not write generated column `items.normalized`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "CREATE TABLE items(note text, normalized text GENERATED ALWAYS AS(lower(note)) STORED); UPDATE items SET normalized='manual'; DROP TABLE items; CREATE TABLE items(note text, normalized text); UPDATE items SET normalized='manual';",
+          "target": "normalized"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "redundant_drop": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "redundant_live": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "items.short_idx: redundant index — its columns are a strict prefix of long_idx with the same predicate; drop it",
+          "rule": "postgres-redundant-index",
+          "sourceLine": "CREATE INDEX short_idx ON items (a); CREATE INDEX long_idx ON items (a,b);",
+          "target": "items.short_idx"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -14,6 +14,7 @@ struct LiveDrop {
     file: String,
     name: String,
     line: usize,
+    source_order: usize,
 }
 
 pub(super) fn scan(
@@ -103,14 +104,19 @@ fn live_indexes<'a>(
     for &file in schema {
         let rel = sql_rel(root, &file.path);
         for index in &file.indexes {
-            if dropped_later(index_drops, index.name.as_deref(), &rel, index.line)
-                || dropped_later(
-                    table_drops,
-                    Some(index.table_name.as_str()),
-                    &rel,
-                    index.line,
-                )
-            {
+            if dropped_later(
+                index_drops,
+                index.name.as_deref(),
+                &rel,
+                index.line,
+                index.source_order,
+            ) || dropped_later(
+                table_drops,
+                Some(index.table_name.as_str()),
+                &rel,
+                index.line,
+                index.source_order,
+            ) {
                 continue;
             }
             indexes
@@ -139,24 +145,31 @@ fn named_drops(
                 file: rel.clone(),
                 name: drop.name.clone(),
                 line: drop.line,
+                source_order: drop.source_order,
             })
         })
         .collect()
 }
 
-fn dropped_later(drops: &[LiveDrop], name: Option<&str>, file: &str, line: usize) -> bool {
+fn dropped_later(
+    drops: &[LiveDrop],
+    name: Option<&str>,
+    file: &str,
+    line: usize,
+    source_order: usize,
+) -> bool {
     let Some(name) = name else {
         return false;
     };
     drops
         .iter()
-        .any(|drop| drop.name == name && is_later(drop, file, line))
+        .any(|drop| drop.name == name && is_later(drop, file, line, source_order))
 }
 
-fn is_later(drop: &LiveDrop, index_file: &str, index_line: usize) -> bool {
+fn is_later(drop: &LiveDrop, index_file: &str, index_line: usize, source_order: usize) -> bool {
     match cmp_sql_rel(&drop.file, index_file) {
         Ordering::Greater => true,
-        Ordering::Equal => drop.line > index_line,
+        Ordering::Equal => (drop.line, drop.source_order) > (index_line, source_order),
         Ordering::Less => false,
     }
 }

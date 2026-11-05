@@ -1,5 +1,5 @@
 use crate::codebase::postgres::idents::ident_key;
-use sqlparser::ast::{ObjectName, ObjectNamePart, TableConstraint};
+use sqlparser::ast::{ObjectName, TableConstraint};
 
 pub(in crate::codebase::postgres::migration) fn constraint_name(
     constraint: &TableConstraint,
@@ -14,13 +14,12 @@ pub(in crate::codebase::postgres::migration) fn constraint_name(
 }
 
 pub(super) fn table_key(name: &ObjectName) -> String {
-    name.0
-        .iter()
-        .rev()
-        .find_map(|part| match part {
-            ObjectNamePart::Identifier(ident) => Some(ident_key(ident)),
-            _ => None,
-        })
+    crate::codebase::postgres::idents::object_name_identity(name)
+}
+
+pub(super) fn table_unqualified_key(name: &ObjectName) -> String {
+    crate::codebase::postgres::idents::object_name_ident(name)
+        .map(ident_key)
         .unwrap_or_default()
 }
 
