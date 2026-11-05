@@ -248,7 +248,6 @@ fn reachable_story_files_skip_unreadable_story_facts() {
     let stories = vec!["stories/**/*.stories.tsx".to_string()];
     let matcher = types::GlobMatcher::new(&stories).unwrap();
     let resolver = empty_resolver(&root);
-    let components = HashSet::new();
 
     let mut parse_error_facts = CheckFactMap {
         files: vec![story.clone()],
@@ -264,13 +263,8 @@ fn reachable_story_files_skip_unreadable_story_facts() {
         .collect(),
         ..Default::default()
     };
-    let files = coverage::reachable_story_files(
-        &root,
-        &parse_error_facts,
-        &matcher,
-        &resolver,
-        &components,
-    );
+    let files =
+        coverage::reachable_story_files(&root, &parse_error_facts, &matcher, &resolver, None);
     assert_eq!(files, [story.clone()].into_iter().collect());
 
     parse_error_facts.ts.insert(
@@ -281,22 +275,12 @@ fn reachable_story_files_skip_unreadable_story_facts() {
         }
         .into(),
     );
-    let files = coverage::reachable_story_files(
-        &root,
-        &parse_error_facts,
-        &matcher,
-        &resolver,
-        &components,
-    );
+    let files =
+        coverage::reachable_story_files(&root, &parse_error_facts, &matcher, &resolver, None);
     assert_eq!(files, [story.clone()].into_iter().collect());
 
     parse_error_facts.ts = Default::default();
-    let files = coverage::reachable_story_files(
-        &root,
-        &parse_error_facts,
-        &matcher,
-        &resolver,
-        &components,
-    );
+    let files =
+        coverage::reachable_story_files(&root, &parse_error_facts, &matcher, &resolver, None);
     assert_eq!(files, [story].into_iter().collect());
 }

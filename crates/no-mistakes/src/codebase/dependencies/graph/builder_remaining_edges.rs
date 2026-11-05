@@ -42,6 +42,7 @@ fn collect_remaining_edges(
         module_files: _,
         resolved_call_sites: _,
         opaque_external_members: _,
+        call_prerequisites: _,
         class_declarations: _,
     } = maps;
     let resolver = resolution.resolver;

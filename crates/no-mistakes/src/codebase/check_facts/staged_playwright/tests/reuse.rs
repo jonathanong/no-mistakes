@@ -306,3 +306,32 @@ fn collection_stats_and_keys_are_deterministic() {
     assert_eq!(forward.stats.parse_errors, reverse.stats.parse_errors);
     assert_eq!(keys(&forward), keys(&reverse));
 }
+
+#[test]
+fn config_graph_facts_are_collected_without_an_outer_ast_cache() {
+    assert!(!crate::ast::request_parse_cache_active());
+    let root = root();
+    let config = root.join("playwright.a.config.ts");
+    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(&root);
+    let mut settings = occurrence_settings(&[], &["data-testid"]);
+    settings.playwright_configs = vec![config.clone()];
+    let playwright = PlaywrightFactPlan::from_settings(
+        &root,
+        settings,
+        std::collections::HashMap::new(),
+        false,
+        &snapshot,
+    )
+    .unwrap();
+    let facts = collect_facts(
+        &["playwright.a.config.ts"],
+        &["playwright.a.config.ts"],
+        CheckFactPlan {
+            graph: TsFactPlan::imports(),
+            ..Default::default()
+        },
+        playwright,
+    );
+    assert!(facts.get_ts_facts(&config).is_some());
+    assert!(facts.ts.get(&config).unwrap().parsed);
+}

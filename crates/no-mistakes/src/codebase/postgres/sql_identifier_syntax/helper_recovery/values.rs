@@ -1,4 +1,7 @@
 //! Closed low-only evaluation: every call must resolve, including statements.
+mod cache;
+pub(super) use cache::Cache;
+use cache::Summary;
 mod abrupt;
 mod effects;
 mod execute;
@@ -17,7 +20,6 @@ use super::{
     ExecutionSite,
 };
 use crate::codebase::dependencies::extract::CallableId;
-use crate::fx::FxHashMap;
 use rustc_hash::FxHasher;
 use std::{
     hash::{Hash, Hasher},
@@ -51,17 +53,6 @@ impl Execution {
             start: self.start,
         }
     }
-}
-#[derive(Clone)]
-struct Summary {
-    args: Vec<Value>,
-    outcomes: Vec<Value>,
-    cost: Cost,
-    executed: Vec<Execution>,
-}
-#[derive(Default)]
-pub(super) struct Cache {
-    complete: FxHashMap<(Key, u64), Vec<Summary>>,
 }
 pub(super) struct Engine<'a> {
     catalog: &'a dyn Catalog,
@@ -107,6 +98,7 @@ impl<'a> Engine<'a> {
         }
         let failures = self.failures;
         let executed = self.executed.len();
+        let sources_before = self.cache.observed_sources.borrow().len();
         let before = self.budget.used();
         let before_bytes = self.budget.bytes();
         let mut hash = FxHasher::default();
@@ -128,6 +120,10 @@ impl<'a> Engine<'a> {
             self.budget.charge(summary.cost, self.stack.len()).ok()?;
             self.deepest = self.deepest.max(self.stack.len() + summary.cost.depth);
             self.executed.extend(summary.executed.clone());
+            self.cache
+                .observed_sources
+                .borrow_mut()
+                .extend(summary.failed_sources.iter().cloned());
             return Some(summary.outcomes.clone());
         }
         self.sql_bytes(args.iter().map(Value::bytes).sum())?;
@@ -168,6 +164,10 @@ impl<'a> Engine<'a> {
             sql_bytes: self.budget.bytes() - before_bytes,
         };
         if failures == self.failures {
+            let failed_sources = self.cache.observed_sources.borrow()[sources_before..]
+                .iter()
+                .cloned()
+                .collect();
             self.cache
                 .complete
                 .entry(cache_key)
@@ -177,6 +177,7 @@ impl<'a> Engine<'a> {
                     outcomes: outcomes.clone(),
                     cost,
                     executed: self.executed[executed..].to_vec(),
+                    failed_sources,
                 });
         }
         Some(outcomes)

@@ -14,7 +14,7 @@ mod react;
 mod tests;
 
 pub(crate) use filesystem::{filesystem_rules_configured, run_filesystem_rules_check_with_facts};
-pub(crate) use react::run_react_check;
+pub(crate) use react::run_react_check_with_session;
 
 mod types;
 pub(crate) use types::CheckTask;

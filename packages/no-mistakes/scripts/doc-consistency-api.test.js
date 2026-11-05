@@ -8,15 +8,6 @@ function optionsFor(name) {
   return { root, config: join(root, ".no-mistakes.yml") };
 }
 
-async function rejection(promise) {
-  try {
-    await promise;
-  } catch (error) {
-    return error;
-  }
-  throw new Error("expected rejection");
-}
-
 test(
   "doc-consistency shares async CJS/ESM/prepared pattern checks",
   { skip: !compiled },
@@ -54,25 +45,40 @@ test(
 );
 
 test(
-  "doc-consistency rejects an invalid pattern from CJS and ESM",
+  "doc-consistency reports an invalid pattern as incomplete from CJS and ESM",
   { skip: !compiled },
   async () => {
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
     const options = optionsFor("patterns-invalid");
-    const cjsError = await rejection(cjs.check(options));
-    const esmError = await rejection(esm.check(options));
-    const preparedError = await rejection(
-      cjs.analyzeProject({ ...options, reports: [{ type: "check" }] }),
-    );
-    const esmPreparedError = await rejection(
-      esm.analyzeProject({ ...options, reports: [{ type: "check" }] }),
-    );
-    for (const error of [cjsError, esmError, preparedError, esmPreparedError]) {
-      assert.match(String(error), /bannedPatterns\[0\]/);
-      assert.match(String(error), /invalid regex/);
+    const cjsReport = await cjs.check(options);
+    const esmReport = await esm.check(options);
+    const preparedReport = (
+      await cjs.analyzeProject({
+        ...options,
+        reports: [{ type: "check" }],
+      })
+    ).reports[0].result;
+    const esmPreparedReport = (
+      await esm.analyzeProject({
+        ...options,
+        reports: [{ type: "check" }],
+      })
+    ).reports[0].result;
+    const reports = [cjsReport, esmReport, preparedReport, esmPreparedReport];
+    for (const report of reports) {
+      assert.ok(report.incomplete?.length, "invalid scoped pattern must make the check incomplete");
+      assert.ok(
+        report.incomplete.some(
+          (failure) =>
+            failure.consumer === "doc-consistency" &&
+            failure.message.includes("bannedPatterns[0]") &&
+            failure.message.includes("invalid regex"),
+        ),
+      );
     }
-    assert.equal(String(cjsError), String(esmError));
-    assert.equal(String(preparedError), String(esmPreparedError));
+    assert.deepEqual(esmReport, cjsReport);
+    assert.deepEqual(preparedReport, cjsReport);
+    assert.deepEqual(esmPreparedReport, cjsReport);
   },
 );

@@ -47,6 +47,6 @@ fn check_with_optional_inferred(input: PreparedStorybookCheck<'_>) -> Result<Ana
         &resolver,
         inferred_roots,
         defer_suppression,
-        sources,
+        (sources, Some(session)),
     )
 }

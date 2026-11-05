@@ -120,3 +120,9 @@ mod reference_binding_index;
 
 #[path = "tests/root_scheduling.rs"]
 mod root_scheduling;
+
+#[path = "tests/source_prerequisites.rs"]
+mod source_prerequisites;
+
+#[path = "tests/event_prerequisites.rs"]
+mod event_prerequisites;

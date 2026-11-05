@@ -24,3 +24,27 @@ pub(super) fn runtime_edge_kinds() -> HashSet<EdgeKind> {
     .into_iter()
     .collect()
 }
+
+pub(super) fn require_sources<'a>(
+    graph: &crate::codebase::dependencies::graph::DepGraph,
+    files: impl IntoIterator<Item = &'a PathBuf>,
+) -> anyhow::Result<()> {
+    let files: std::collections::BTreeSet<_> = files.into_iter().collect();
+    for file in files {
+        if let Some(error) = graph.parse_error(file) {
+            return Err(crate::codebase::check_outcome::CheckInputFailure::source(
+                file.clone(),
+                format!(
+                    "{}: required source {} could not be analyzed: {error}",
+                    super::RULE_ID,
+                    file.display()
+                ),
+            )
+            .into());
+        }
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests;

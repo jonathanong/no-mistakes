@@ -59,13 +59,15 @@ pub(crate) fn run_all_with_options(
     let session = no_mistakes::codebase::analysis_session::AnalysisSession::new(
         no_mistakes::diagnostics::current(),
     );
-    run_all_with_session_options(
-        &session,
-        root,
-        config_path,
-        tsconfig_path,
-        include_suppressed,
-        include_runner_config_deadlines,
-        options,
-    )
+    no_mistakes::ast::with_request_parse_cache(|| {
+        run_all_with_session_options(
+            &session,
+            root,
+            config_path,
+            tsconfig_path,
+            include_suppressed,
+            include_runner_config_deadlines,
+            options,
+        )
+    })
 }

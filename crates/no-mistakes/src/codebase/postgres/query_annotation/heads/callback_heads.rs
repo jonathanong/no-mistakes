@@ -37,6 +37,12 @@ impl Pending {
     pub(crate) fn proven_executor(&self, summary: &Summary) -> Option<Span> {
         projected(&self.callbacks, &self.payloads, summary)
     }
+
+    pub(crate) fn affected_spans(&self) -> impl Iterator<Item = Span> + '_ {
+        self.callbacks
+            .iter()
+            .filter_map(|value| value.map(|(span, _)| span))
+    }
 }
 
 fn projected(

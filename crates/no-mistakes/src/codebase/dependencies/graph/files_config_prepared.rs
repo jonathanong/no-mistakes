@@ -2,6 +2,8 @@
 #[doc(hidden)]
 pub struct PreparedGraphConfig {
     options: Option<GraphConfigOptions>,
+    playwright_failed: bool,
+    playwright_preparation_failures: Vec<PlaywrightPreparationFailure>,
     playwright_settings: Vec<crate::playwright::config::Settings>,
     workspace: std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
     workflow_documents: Option<std::sync::Arc<crate::codebase::ci_workflows::ParsedWorkflowSet>>,
@@ -10,6 +12,19 @@ pub struct PreparedGraphConfig {
 }
 
 impl PreparedGraphConfig {
+    #[doc(hidden)]
+    pub fn disable_playwright(&mut self) {
+        self.playwright_failed = true;
+    }
+
+    pub(crate) fn effective_plan(&self, mut plan: GraphBuildPlan) -> GraphBuildPlan {
+        if self.playwright_failed {
+            plan.playwright_routes = false;
+            plan.playwright_selectors = false;
+        }
+        plan
+    }
+
     /// Build the Playwright fact scope required by prepared graph edge
     /// producers, merging one fact plan per resolved frontend app so a
     /// multi-app repository's route/selector facts all get collected
@@ -90,9 +105,13 @@ fn prepare_graph_config_inner(
     codebase_config: &crate::codebase::config::Config,
     config: &crate::config::v2::NoMistakesConfig,
     visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
-    test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
-    workspace: Option<std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>>,
+    preparation: PreparedGraphOptions,
 ) -> anyhow::Result<PreparedGraphConfig> {
+    let PreparedGraphOptions {
+        test_filter,
+        workspace,
+        partial,
+    } = preparation;
     let options = graph_plan_needs_config(plan).then(|| {
         graph_config_options_from_loaded_with_test_filter(
             root,
@@ -102,53 +121,13 @@ fn prepare_graph_config_inner(
             test_filter,
         )
     });
-    // One `Settings` per resolved frontend app, so a multi-`type: nextjs`-app
-    // repository builds route/selector edges for every app instead of
-    // erroring (no `cli_project` exists at this scope to bind an ambiguous
-    // app against) or silently using only whichever app sorted first (#624).
-    // `frontend_apps_or_default` never returns empty, so the pre-#624/#625
-    // zero-signal fallback (`default_frontend_root`) still applies via the
-    // single synthetic entry it produces.
-    //
-    // Resolving apps is skipped entirely when `has_v2_playwright_settings` is
-    // false: every per-app `settings_from_loaded_v2` call would collapse to
-    // the same app-agnostic `settings_from_defaults` fallback regardless of
-    // which app (if any) is named, so resolving the app set first would only
-    // discard the result unused — wasted work for every non-Playwright repo
-    // that still configures `type: nextjs` projects for other reasons.
-    let playwright_settings = if !(plan.playwright_routes || plan.playwright_selectors) {
-        Vec::new()
-    } else if crate::playwright::config::has_v2_playwright_settings(config) {
-        let apps = crate::config::v2::frontend_apps_or_default(
-            root,
-            config,
-            &visible_paths.paths_for(root),
-        );
-        let apps = apps?;
-        apps.iter()
-            .map(|app| {
-                crate::playwright::config::settings_from_loaded_v2(
-                    root,
-                    config,
-                    &[],
-                    None,
-                    app.project.clone(),
-                    visible_paths,
-                )
-            })
-            .collect::<anyhow::Result<Vec<_>>>()?
-    } else {
-        vec![crate::playwright::config::settings_from_loaded_v2(
-            root,
-            config,
-            &[],
-            None,
-            None,
-            visible_paths,
-        )?]
-    };
+    let (playwright_settings, playwright_preparation_failures) =
+        prepare_playwright_settings(root, plan, config, visible_paths, partial)?;
     Ok(PreparedGraphConfig {
         options,
+        playwright_failed: playwright_settings.is_empty()
+            && !playwright_preparation_failures.is_empty(),
+        playwright_preparation_failures,
         playwright_settings,
         workspace: workspace.unwrap_or_else(|| {
             std::sync::Arc::new(
@@ -175,3 +154,9 @@ pub fn ts_fact_plan_and_context_for_plan_with_prepared(
         ts_fact_context_from_options(root, plan, prepared.options.as_ref()),
     )
 }
+
+include!("files_config_prepared/partial.rs");
+
+include!("files_config_prepared/failure.rs");
+
+include!("files_config_prepared/settings.rs");

@@ -129,3 +129,22 @@ fn print_advisories_human(findings: &[RuleFinding]) {
         println!("advisory {} {}:{} {}", f.rule, f.file, f.line, f.message);
     }
 }
+
+pub(super) fn print_incomplete(results: &CheckResults) {
+    for failure in &results.incomplete {
+        let file = failure
+            .file
+            .as_ref()
+            .map(|file| format!(" {}", file.display()))
+            .unwrap_or_default();
+        let property = failure
+            .property
+            .as_ref()
+            .map(|property| format!(" [{property}]"))
+            .unwrap_or_default();
+        no_mistakes::diagnostics::print_stderr(format_args!(
+            "incomplete {}{file}{property}: {}",
+            failure.consumer, failure.message
+        ));
+    }
+}

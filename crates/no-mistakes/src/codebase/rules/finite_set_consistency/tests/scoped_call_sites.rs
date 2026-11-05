@@ -238,3 +238,37 @@ fn overwriting_scoped_calls_with_import_facts_removes_only_losing_coverage() {
         },
     ));
 }
+
+#[test]
+fn inventory_call_demand_preserves_project_scope_and_missing_source_identity() {
+    let root = call_literal_fixture_root("project-scope");
+    let app_a = root.join("packages/app-a/schedules.mts");
+    let app_b = root.join("packages/app-b/schedules.mts");
+    let inventory = FileInventory::from_paths(&[app_a.clone(), app_b.clone()]);
+    let mut config = call_literal_config("ai_agents.upsertJobScheduler");
+    for name in ["app-a", "app-b"] {
+        config.projects.insert(
+            name.into(),
+            Project {
+                root: Some(format!("packages/{name}")),
+                ..Default::default()
+            },
+        );
+    }
+    config.rules[0].scope = None;
+    config.rules[0].projects = vec!["app-a".into(), "app-b".into()];
+    let demands =
+        super::super::demand::call_site_fact_files_from_inventory(&root, &config, &inventory)
+            .unwrap();
+    assert_eq!(demands, vec![app_a.clone(), app_b]);
+    config.rules[0].projects = vec!["app-a".into()];
+    let demands =
+        super::super::demand::call_site_fact_files_from_inventory(&root, &config, &inventory)
+            .unwrap();
+    assert_eq!(demands, vec![app_a]);
+    let missing = FileInventory::from_paths(&[]);
+    let demands =
+        super::super::demand::call_site_fact_files_from_inventory(&root, &config, &missing)
+            .unwrap();
+    assert_eq!(demands, vec![root.join("schedules.mts")]);
+}

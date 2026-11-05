@@ -7,13 +7,6 @@ use crate::config::v2::Unanalyzable;
 use anyhow::Result;
 use std::path::Path;
 
-pub(super) fn with_findings(findings: Vec<RuleFinding>) -> AnalysisDiagnostics {
-    AnalysisDiagnostics {
-        findings,
-        ..Default::default()
-    }
-}
-
 pub(super) fn check_with_resolver(
     root: &Path,
     config: &NoMistakesConfig,
@@ -30,7 +23,7 @@ pub(super) fn check_with_resolver(
         resolver,
         inferred_roots,
         defer_suppression,
-        sources,
+        (sources, None),
     )
     .map(|diagnostics| diagnostics.findings)
 }
@@ -67,7 +60,7 @@ pub(super) fn malformed_finding(root: &Path, path: &Path, error: &str, kind: &st
         rule: super::RULE_ID.to_string(),
         file,
         line: 1,
-        message: format!("{kind} could not be analyzed{detail}, so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption."),
+        message: format!("{kind} could not be analyzed{detail}, so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope."),
         import: None,
         target: Some("unanalyzable".to_string()),
     }

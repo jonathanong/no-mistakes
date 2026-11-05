@@ -6,10 +6,10 @@ fn resolve_imported_call_target(
     resolver: &dyn ImportResolution,
     path: &std::path::Path,
     file: &CallableFileIndex,
-    call: (&str, &FunctionCall, &std::cell::RefCell<OpaqueExternalMembers>),
+    call: (&str, &FunctionCall, &std::cell::RefCell<OpaqueExternalMembers>, &std::cell::RefCell<FailedCallSources>),
     indexes: &CallableResolutionIndexes,
 ) -> Option<ResolvedCallTarget> {
-    let (callee, call, opaque_external_members) = call;
+    let (callee, call, opaque_external_members, prerequisites) = call;
     let (local, requested_export) = match callee.split_once('.') {
         Some((local, member)) if !member.contains('.') => (local, Some(member)),
         Some(_) => {
@@ -52,6 +52,9 @@ fn resolve_imported_call_target(
     let Some(target_path) = edge_inputs.graph_files.visible_path(&target_path) else {
         return Some(direct_target());
     };
+    if facts.get_ts_facts(target_path).is_some_and(|facts| facts.parse_error.is_some() || facts.operational_error.is_some()) {
+        prerequisites.borrow_mut().entry(call.offset).or_default().insert(target_path.to_path_buf());
+    }
     if let Some(member) = requested_export {
         if binding.kind != crate::codebase::dependencies::extract::ImportedBindingKind::Namespace {
             if let Some(resolved) = resolve_imported_class_static_member(
@@ -59,22 +62,25 @@ fn resolve_imported_call_target(
                 facts,
                 resolver,
                 file,
-                (callee, target_path, &binding.imported, member),
+                (callee, target_path, &binding.imported, member, call.offset, prerequisites),
                 indexes,
             ) {
                 return Some(resolved);
             }
         }
     }
-    Some(match resolve_exported_callable(
+    let mut trace = ExportResolutionTrace::default();
+    let resolved = resolve_exported_callable(
         edge_inputs,
         facts,
         resolver,
         target_path,
         &export,
         indexes,
-        &mut Vec::new(),
-    ) {
+        &mut trace,
+    );
+    if !trace.failures.is_empty() { prerequisites.borrow_mut().entry(call.offset).or_default().extend(trace.failures); }
+    Some(match resolved {
         ExportedCallableResolution::Callable(target_file, scope, callable_id) => {
             module_export_target(file, callee, Some((target_file, scope)), callable_id)
                 .expect("callee came from an imported binding")
@@ -123,11 +129,12 @@ fn resolve_imported_class_static_member(
     facts: &dyn TsFactLookup,
     resolver: &dyn ImportResolution,
     file: &CallableFileIndex,
-    call: (&str, &std::path::Path, &str, &str),
+    call: (&str, &std::path::Path, &str, &str, u32, &std::cell::RefCell<FailedCallSources>),
     indexes: &CallableResolutionIndexes,
 ) -> Option<ResolvedCallTarget> {
-    let (callee, target_path, base_export, member) = call;
-    let ExportedCallableResolution::Callable(target_file, _, Some(class_id)) =
+    let (callee, target_path, base_export, member, offset, prerequisites) = call;
+    let mut trace = ExportResolutionTrace::default();
+    let resolved =
         resolve_exported_callable(
             edge_inputs,
             facts,
@@ -135,9 +142,10 @@ fn resolve_imported_class_static_member(
             target_path,
             base_export,
             indexes,
-            &mut Vec::new(),
-        )
-    else {
+            &mut trace,
+        );
+    if !trace.failures.is_empty() { prerequisites.borrow_mut().entry(offset).or_default().extend(trace.failures); }
+    let ExportedCallableResolution::Callable(target_file, _, Some(class_id)) = resolved else {
         return None;
     };
     let target_index = indexes.file(facts, &target_file)?;

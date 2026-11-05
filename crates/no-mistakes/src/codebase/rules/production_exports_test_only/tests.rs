@@ -85,11 +85,24 @@ fn opaque_literal_selectors_only_make_their_target_modules_uncertain() {
 
 #[test]
 fn malformed_importer_diagnostics_preserve_known_test_only_exports() {
-    let found = findings("malformed");
-    assert!(found.iter().any(|row| row.file == "tests/broken.mts"));
-    assert!(found
+    let root = fixture("malformed");
+    assert!(run_check(&root, None, None)
+        .unwrap_err()
+        .to_string()
+        .contains("tests/broken.mts"));
+    let report = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        serde_json::json!({"root": root}).to_string(),
+    ))
+    .unwrap();
+    let report: serde_json::Value = serde_json::from_str(&report).unwrap();
+    let found = report["rules"].as_array().unwrap();
+    assert!(found.iter().any(|row| row["file"] == "tests/broken.mts"));
+    assert!(found.iter().any(|row| row["target"] == "value"));
+    assert!(report["incomplete"]
+        .as_array()
+        .unwrap()
         .iter()
-        .any(|row| row.target.as_deref() == Some("value")));
+        .any(|failure| failure["consumer"] == super::RULE_ID));
 }
 
 #[test]

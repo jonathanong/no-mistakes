@@ -16,7 +16,8 @@ fn empty_config_returns_no_language_queue_sites() {
         &session,
         &NoMistakesConfig::default(),
         None,
-    );
+    )
+    .unwrap();
     assert!(producers.is_empty());
     assert!(workers.is_empty());
 }
@@ -98,7 +99,8 @@ projects:
 "#,
     )
     .unwrap();
-    let (producers, workers) = language_queue_sites(Path::new("/repo"), &session, &config, None);
+    let (producers, workers) =
+        language_queue_sites(Path::new("/repo"), &session, &config, None).unwrap();
     assert!(producers.is_empty());
     assert!(workers.is_empty());
 }

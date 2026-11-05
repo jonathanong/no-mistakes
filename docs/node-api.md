@@ -65,6 +65,20 @@ const { analyzeProject } = require("no-mistakes");
 
 ## CLI Mapping
 
+`check()` and `{ type: "check" }` reports from `analyzeProject()` include an
+optional `CheckReport.incomplete` array when a requested consumer cannot finish
+because a prerequisite failed. Each exported `CheckFailure` identifies the
+consumer (a rule identifier, configured trait, or check domain), optional source file and
+configuration property, and diagnostic message. Successful consumers still
+return their findings. These failures are neither findings nor advisories and
+cannot be suppressed. The field is omitted when no prerequisite failures were
+captured; its absence does not mean arbitrary dynamic JavaScript configuration
+was evaluated. These isolated source or configuration failures resolve to the
+partial report rather than rejecting the API call. Global invocation or
+configuration errors that make the request unusable still reject the API call.
+The CLI reports incomplete consumers and exits 1 for the same isolated
+failures.
+
 A rule application with `severity: advisory` (see
 [rule applications](configuration/rules.md#severity)) moves that rule's
 findings from `CheckReport.rules` and `CheckReport.codebase` to
@@ -316,7 +330,7 @@ remain failures. See
 | `analyzeProject` | `analyzeProject(options)`; import `AnalyzeProjectReportType` for report `type` instead of indexing `AnalyzeProjectReportRequest['type']` |
 | `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)` |
 | `callSites` | `callSites(options)` |
-| `check` | `check(options)`; configured `forbidden-lint-suppressions` uses `checkJson` |
+| `check` | `check(options)`; configured `forbidden-lint-suppressions` uses `checkJson`; reports may include `CheckReport.incomplete` (`CheckFailure[]`) |
 | `ciEnv` | `ciEnv(options)` |
 | `ciImpact` | `ciImpact(options)` |
 | `ciTopology` | `ciTopology(options)` |

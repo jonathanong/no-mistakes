@@ -151,8 +151,16 @@ and [configuration](../configuration/README.md).
 `path-regex-capture` matches visible symlink paths, including directory-target
 links; see [finite-set-consistency](../rules/finite-set-consistency.md).
 
-If a configured check cannot run, `check` prints a warning to stderr, includes it
-in structured output as `warnings`, and exits nonzero.
+If a requested check consumer cannot finish because a prerequisite failed, `check`
+records a structured `incomplete` entry identifying the consumer and failure.
+Only consumers whose declared inputs need the failed source or configuration
+property are incomplete.
+Findings from other consumers whose prerequisites succeeded remain in the
+report, and the command exits 1. These failures cannot be suppressed and are
+not advisory findings. The `incomplete` field is omitted when no prerequisite
+failures were captured; absence does not prove arbitrary dynamic JavaScript
+configuration was evaluated. Global invocation or configuration errors that
+make the request unusable still fail with an error.
 
 Invalid rule option values are configuration errors, not implicit defaults.
 `check` exits with a diagnostic naming the rule application and the exact

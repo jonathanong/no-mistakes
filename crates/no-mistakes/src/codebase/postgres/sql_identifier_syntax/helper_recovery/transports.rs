@@ -6,7 +6,15 @@ use super::{
     values::{Cache, Engine},
     ApplicationKey, Recovered,
 };
-use crate::codebase::{check_facts::CheckFileFacts, ts_source::FileIdMap};
+use crate::codebase::{
+    check_facts::{
+        sql_source_prerequisites::{
+            source_demanded, source_failed, FailedSqlSources, SqlProjection, SqlSourceKey,
+        },
+        CheckFileFacts,
+    },
+    ts_source::FileIdMap,
+};
 use std::{
     collections::BTreeMap,
     path::{Path, PathBuf},
@@ -14,11 +22,13 @@ use std::{
 };
 
 type Update = (PathBuf, ApplicationKey, Span, Arc<Recovered>);
+type Failure = (PathBuf, ApplicationKey, Span, FailedSqlSources);
 pub(super) fn project(
     files: &FileIdMap<CheckFileFacts>,
     resolve: &dyn Fn(&str, &Path) -> Option<PathBuf>,
-) -> Vec<Update> {
+) -> (Vec<Update>, Vec<Failure>) {
     let mut updates = Vec::new();
+    let mut failures = Vec::new();
     for (path, file) in files {
         if file.parse_error.is_some() || file.ts.parse_error.is_some() {
             continue;
@@ -32,14 +42,25 @@ pub(super) fn project(
             let Some(executors) = models.executors.get(profile) else {
                 continue;
             };
+            let mut cache = Cache::default();
+            let observed = cache.observed_sources.clone();
+            let tracked_resolve = |specifier: &str, from: &Path| {
+                let target = resolve(specifier, from);
+                if let Some(path) = target
+                    .as_deref()
+                    .filter(|path| failed_source_is_demanded(files, path, &application))
+                {
+                    observed.borrow_mut().push(path.to_path_buf());
+                }
+                target
+            };
             let catalog = PreparedCatalog {
                 application: Some(&application),
                 files,
                 profile: Some(profile),
-                resolve,
+                resolve: &tracked_resolve,
             };
-            let mut cache = Cache::default();
-            let mut completed = BTreeMap::new();
+            let mut completed = BTreeMap::<Span, (Option<Arc<Recovered>>, FailedSqlSources)>::new();
             for call in calls {
                 if !matches!(call.input, Input::Unknown)
                     || models
@@ -66,7 +87,10 @@ pub(super) fn project(
                 let Some(owner) = owner else {
                     continue;
                 };
+                let mut call_failures = FailedSqlSources::new();
                 if callbacks::blocks(&catalog, path, &application, models, owner) {
+                    call_failures.extend(cache.take_observed_sources());
+                    push_failures(&mut failures, path, &application, call.span, call_failures);
                     continue;
                 }
                 if typed::accepts(
@@ -87,30 +111,67 @@ pub(super) fn project(
                             ..Default::default()
                         }),
                     ));
+                    call_failures.extend(cache.take_observed_sources());
+                    push_failures(&mut failures, path, &application, call.span, call_failures);
                     continue;
                 }
-                let recovered = completed.entry(owner.span).or_insert_with(|| {
-                    Engine::new(&catalog, &mut cache, Limits::default())
-                        .transport(path, owner, executors)
-                        .map(Arc::new)
-                });
+                let (recovered, cached_failures) = if let Some(cached) = completed.get(&owner.span)
+                {
+                    (cached.0.clone(), cached.1.clone())
+                } else {
+                    let mut engine = Engine::new(&catalog, &mut cache, Limits::default());
+                    let recovered = engine.transport(path, owner, executors).map(Arc::new);
+                    drop(engine);
+                    let sources = cache.take_observed_sources();
+                    completed.insert(owner.span, (recovered.clone(), sources.clone()));
+                    (recovered, sources)
+                };
+                call_failures.extend(cached_failures);
+                push_failures(&mut failures, path, &application, call.span, call_failures);
                 let Some(recovered) = recovered else {
                     continue;
                 };
                 if recovered.complete() || !recovered.alternatives.is_empty() {
-                    updates.push((
-                        path.clone(),
-                        application.clone(),
-                        call.span,
-                        Arc::clone(recovered),
-                    ));
+                    updates.push((path.clone(), application.clone(), call.span, recovered));
                 }
             }
         }
     }
-    updates
+    (updates, failures)
+}
+
+fn push_failures(
+    out: &mut Vec<Failure>,
+    owner: &Path,
+    application: &ApplicationKey,
+    span: Span,
+    failures: FailedSqlSources,
+) {
+    if !failures.is_empty() {
+        out.push((owner.to_path_buf(), application.clone(), span, failures));
+    }
+}
+
+fn failed_source_is_demanded(
+    files: &FileIdMap<CheckFileFacts>,
+    path: &Path,
+    application: &ApplicationKey,
+) -> bool {
+    if !source_failed(files, path) {
+        return false;
+    }
+    let key = SqlSourceKey::application(
+        SqlProjection::LowSyntax,
+        &application.profile,
+        &application.rule,
+        application.index,
+    );
+    source_demanded(files, path, &key)
 }
 
 mod typed;
 
 mod callbacks;
+
+#[cfg(test)]
+mod source_failure_tests;

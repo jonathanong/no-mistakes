@@ -494,3 +494,5 @@ fn repository_scoped_rule_uses_all_server_projects() {
 }
 
 mod non_source_files;
+
+mod prerequisites;

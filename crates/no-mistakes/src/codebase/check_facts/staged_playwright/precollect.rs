@@ -13,13 +13,16 @@ pub(super) fn cached_config_file_facts(
     playwright: &PlaywrightFactPlan,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> FileIdMap<super::super::CheckFileFacts> {
-    if !crate::ast::request_parse_cache_active() {
-        return FileIdMap::with_inventory(std::sync::Arc::clone(sources.inventory()));
-    }
     let universe = files.iter().chain(graph_files).collect::<HashSet<_>>();
     let collected = playwright
         .config_files()
         .iter()
+        .filter(|path| {
+            !plan
+                .integration_runner_configs
+                .as_ref()
+                .is_some_and(|runner| runner.contains(path))
+        })
         .filter(|path| universe.contains(path) || plan.legacy_symbol_paths.contains(*path))
         .filter_map(|path| {
             let source = sources.read_path(path).ok()?;

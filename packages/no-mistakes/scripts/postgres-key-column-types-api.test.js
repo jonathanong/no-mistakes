@@ -102,7 +102,7 @@ test(
 );
 
 test(
-  "compiled key-type checks reject catalog keys with empty column lists",
+  "compiled key-type checks report catalogs with empty column lists as incomplete",
   { skip: !compiled },
   async () => {
     const cjs = require("../index.js");
@@ -113,15 +113,24 @@ test(
       ["fail-empty-foreign", "foreign key orders.invalid_fkey has no columns"],
     ]) {
       const root = join(fixture, scenario);
-      const validate = (error) => {
-        assert.ok(error.message.includes("schemaCatalogPath schema.json"));
-        assert.ok(error.message.includes(detail));
-        assert.ok(error.message.includes("regenerate the schema catalog"));
-        return true;
-      };
-      await assert.rejects(cjs.check({ root }), validate);
-      await assert.rejects(esm.check({ root }), validate);
-      await assert.rejects(cjs.analyzeProject({ root, reports: [{ type: "check" }] }), validate);
+      const check = await cjs.check({ root });
+      const esmCheck = await esm.check({ root });
+      const prepared = (await cjs.analyzeProject({ root, reports: [{ type: "check" }] })).reports[0]
+        .result;
+      const esmPrepared = (await esm.analyzeProject({ root, reports: [{ type: "check" }] }))
+        .reports[0].result;
+      for (const report of [check, esmCheck, prepared, esmPrepared]) {
+        const failure = report.incomplete?.find(
+          (entry) => entry.consumer === "postgres-key-column-types",
+        );
+        assert.ok(failure, "invalid schema catalog must make the requested rule incomplete");
+        assert.ok(failure.message.includes("schemaCatalogPath schema.json"), failure.message);
+        assert.ok(failure.message.includes(detail), failure.message);
+        assert.ok(failure.message.includes("regenerate the schema catalog"), failure.message);
+      }
+      assert.deepEqual(esmCheck, check);
+      assert.deepEqual(prepared, check);
+      assert.deepEqual(esmPrepared, check);
     }
   },
 );

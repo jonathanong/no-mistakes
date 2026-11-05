@@ -8,6 +8,8 @@
 pub struct RuleDef {
     #[serde(skip)]
     pub resolved_analysis: Option<super::EffectiveRuleAnalysis>,
+    #[serde(skip)]
+    pub resolved_application_index: Option<usize>,
     pub name: Option<String>,
     pub rule: String,
     pub message: Option<String>,
@@ -55,6 +57,7 @@ impl Default for RuleDef {
     fn default() -> Self {
         Self {
             resolved_analysis: None,
+            resolved_application_index: None,
             name: None,
             rule: String::new(),
             message: None,

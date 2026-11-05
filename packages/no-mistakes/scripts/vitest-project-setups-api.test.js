@@ -318,12 +318,12 @@ for (const [config, expected] of [
     },
   );
 }
-for (const [config, expected] of [
-  [".no-mistakes-missing.yml", "missing from the analysis file inventory"],
-  [".no-mistakes-ignored.yml", "missing from the analysis file inventory"],
+for (const [config, setupFile] of [
+  [".no-mistakes-missing.yml", "test-helpers/missing.setup.mts"],
+  [".no-mistakes-ignored.yml", "ignored/visible-on-disk.setup.mts"],
 ]) {
   test(
-    `compiled CJS and ESM setup mock inventory warning: ${config}`,
+    `compiled CJS and ESM setup mock inventory prerequisite failure: ${config}`,
     { skip: !compiled, timeout: 20_000 },
     async () => {
       const cjs = require("../index.js");
@@ -332,9 +332,16 @@ for (const [config, expected] of [
       const invalid = await cjs.check(options);
       assert.deepEqual(await esm.check(options), invalid);
       assert.deepEqual(invalid.rules, []);
-      assert.ok(
-        invalid.warnings.some((warning) => warning.includes(expected)),
-        invalid.warnings,
+      assert.deepEqual(invalid.warnings, []);
+      assert.deepEqual(
+        invalid.incomplete,
+        [
+          {
+            consumer: "test-no-unmocked-dynamic-imports",
+            message: `tests.vitest.projects.web.setup_files path "${setupFile}" is missing from the analysis file inventory`,
+          },
+        ],
+        config,
       );
     },
   );

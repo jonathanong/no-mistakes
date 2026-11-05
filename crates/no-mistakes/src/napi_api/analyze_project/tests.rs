@@ -3,6 +3,9 @@ use super::*;
 use serde_json::{json, Value};
 use std::path::PathBuf;
 
+#[path = "tests/partial.rs"]
+mod partial;
+
 fn fixture_root(name: &str) -> String {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

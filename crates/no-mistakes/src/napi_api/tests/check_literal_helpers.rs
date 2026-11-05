@@ -96,9 +96,25 @@ fn malformed_literal_helper_identities_are_public_configuration_errors() {
         .join("sql-literal-helpers");
     for index in 0..7 {
         let request = serde_json::json!({"root":root,"config":root.join(format!(".no-mistakes-invalid-{index}.yml"))});
-        let error = check_json_impl(crate::napi_api::options::test_json_arg(request.to_string()))
-            .unwrap_err();
-        assert!(error.to_string().contains("sqlLiteralHelpers"), "{error}");
+        match check_json_impl(crate::napi_api::options::test_json_arg(request.to_string())) {
+            Err(error) => assert!(error.to_string().contains("sqlLiteralHelpers"), "{error}"),
+            Ok(output) => {
+                let report: serde_json::Value = serde_json::from_str(&output).unwrap();
+                assert!(
+                    report["incomplete"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .any(|failure| {
+                            failure["message"]
+                                .as_str()
+                                .unwrap()
+                                .contains("sqlLiteralHelpers")
+                        }),
+                    "{report}"
+                );
+            }
+        }
     }
 }
 

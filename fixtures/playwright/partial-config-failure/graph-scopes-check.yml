@@ -1,0 +1,38 @@
+projects:
+  good:
+    type: nextjs
+    root: good
+  broken:
+    type: nextjs
+    root: broken
+tests:
+  playwright:
+    configs: [playwright.projects.config.ts]
+    apps:
+      good:
+        project: good
+      broken:
+        project: broken
+rules:
+  - name: healthy graph
+    rule: forbidden-dependencies
+    projects: [good]
+    tests:
+      playwright: [good]
+    options:
+      relationships: [test, import]
+      roots: [good/graph.ts]
+      forbiddenFiles: [broken/**]
+  - name: failed graph
+    rule: forbidden-dependencies
+    projects: [broken]
+    tests:
+      playwright: [broken]
+    options:
+      relationships: [test, import]
+      roots: [broken/graph.ts]
+      forbiddenFiles: [good/**]
+  - rule: no-empty-or-comments-only-files
+    scope: repository
+    options:
+      extensions: [.txt]

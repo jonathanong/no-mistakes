@@ -1,0 +1,11 @@
+rules:
+  - rule: forbidden-lint-suppressions
+    scope: repository
+    options:
+      files: []
+      ruleIds: [no-console]
+  - rule: no-empty-or-comments-only-files
+    scope: repository
+    include: [empty.txt]
+    options:
+      extensions: [.txt]

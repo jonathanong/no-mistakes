@@ -1,7 +1,4 @@
-use super::{
-    complete_domain_checks, empty_results, fact_collection, finite_set_plan, prepared, results,
-    CheckResults,
-};
+use super::{empty_results, fact_collection, finite_set_plan, prepared, results, CheckResults};
 use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
 use anyhow::Result;
 use std::path::PathBuf;
@@ -26,6 +23,7 @@ pub(super) fn run_all_with_session_options(
 ) -> Result<CheckResults> {
     let include_sql_verdicts = options.include_sql_verdicts;
     let session = Arc::clone(session);
+    session.enable_partial_checks();
     no_mistakes::invocation::set_timeout_phase("check.prepare");
     no_mistakes::invocation::check_timeout()?;
     let root = root.canonicalize().unwrap_or(root);
@@ -52,7 +50,7 @@ pub(super) fn run_all_with_session_options(
         mut plan,
         prepared_graph,
         mut fact_demand,
-    } = setup::build(&root, &prepared, include_runner_config_deadlines)?;
+    } = setup::build(&session, &root, &prepared, include_runner_config_deadlines)?;
     let runner_deadline_plan = include_runner_config_deadlines
         .then(|| plan.integration_runner_configs.clone())
         .flatten();
@@ -111,7 +109,6 @@ pub(super) fn run_all_with_session_options(
         playwright_fact_plan.is_some(),
         dynamic_import_rules,
     );
-    // The deadline names the active phase without dropping files from the result.
     no_mistakes::invocation::set_timeout_phase("check.parse");
     no_mistakes::invocation::check_timeout()?;
     let ((fs_files, mut facts), facts_duration) =
@@ -165,12 +162,10 @@ pub(super) fn run_all_with_session_options(
             playwright_projects: prepared.playwright_projects.as_ref(),
             workflow_documents: prepared.workflow_documents.as_deref(),
             tsconfig_gate_project_inputs: prepared.tsconfig_gate_project_inputs.as_ref(),
-            // Ordinary checks preserve each domain's early suppression path;
-            // only audit requests need cross-domain suppression accounting.
             defer_suppression: include_suppressed || config.audits_disable_directives(),
         });
     no_mistakes::invocation::check_timeout()?;
-    results::finalize_domain_checks(results::FinalizeInput {
+    let mut results = results::finalize_domain_checks(results::FinalizeInput {
         root: &root,
         facts: &facts,
         runner_config_deadlines: runner_deadline_plan
@@ -184,17 +179,22 @@ pub(super) fn run_all_with_session_options(
         react_warning: None,
         discover_duration,
         facts_duration,
-        completed: complete_domain_checks((
-            react,
-            queues,
-            rules,
-            integration,
-            codebase,
-            filesystem_rules,
-        ))?,
+        completed: results::retain_domain_checks(
+            &session,
+            (
+                react,
+                queues,
+                rules,
+                integration,
+                codebase,
+                filesystem_rules,
+            ),
+        ),
         include_suppressed,
         unproven_member_query_sql: facts.unproven_member_query_sql(),
         sql_verdicts: facts.sql_verdicts(),
         include_sql_verdicts,
-    })
+    })?;
+    results.incomplete = session.check_failures();
+    Ok(results)
 }

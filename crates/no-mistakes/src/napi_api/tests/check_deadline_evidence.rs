@@ -172,13 +172,19 @@ fn public_check_cli_renderer_and_batched_reports_share_evidence_without_ordinary
 #[test]
 fn ordinary_integration_errors_are_preserved_when_deadline_evidence_is_requested() {
     for config in ["integration-error.yml", "integration-missing.yml"] {
-        let baseline = check_json_impl(json!({"root": root(), "config": config})).unwrap_err();
-        let evidence = check_json_impl(
-            json!({"root": root(), "config": config, "includeRunnerConfigDeadlines": true}),
+        let baseline: serde_json::Value = serde_json::from_str(
+            &check_json_impl(json!({"root": root(), "config": config})).unwrap(),
         )
-        .unwrap_err();
-        assert_eq!(baseline.reason, evidence.reason);
-        assert!(!baseline.reason.is_empty());
+        .unwrap();
+        let evidence: serde_json::Value = serde_json::from_str(
+            &check_json_impl(
+                json!({"root": root(), "config": config, "includeRunnerConfigDeadlines": true}),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(baseline["incomplete"], evidence["incomplete"]);
+        assert!(!baseline["incomplete"].as_array().unwrap().is_empty());
     }
 }
 

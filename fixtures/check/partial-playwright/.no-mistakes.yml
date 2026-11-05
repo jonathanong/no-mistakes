@@ -1,0 +1,14 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+tests:
+  playwright:
+    configs: playwright.config.ts
+rules:
+  - rule: no-empty-or-comments-only-files
+    scope: repository
+    options:
+      extensions: [.txt]
+  - rule: playwright-coverage
+    projects: [web]

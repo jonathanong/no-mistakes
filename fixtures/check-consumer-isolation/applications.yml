@@ -1,0 +1,13 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      traversal: transitive
+      roots: [{ file: entry.ts }]
+      targets: [{ global: setTimeout }]
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      traversal: transitive
+      roots: [{ file: healthy.ts }]
+      targets: [{ global: setTimeout }]

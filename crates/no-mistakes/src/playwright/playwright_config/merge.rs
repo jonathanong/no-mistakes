@@ -92,7 +92,20 @@ pub(super) fn parse_options(
     Ok(ParsedOptions {
         name: property_expression(object, "name").and_then(|value| optional_string(value, source)),
         test_dir: property_expression(object, "testDir")
-            .map(|value| required_string(value, source, "testDir"))
+            .map(|value| {
+                required_string(value, source, "testDir").map_err(|error| {
+                    let project = property_expression(object, "name")
+                        .and_then(|value| optional_string(value, source));
+                    anyhow::anyhow!(
+                        "{}: {}{}",
+                        path.display(),
+                        error,
+                        project
+                            .map(|name| format!(" (project {name})"))
+                            .unwrap_or_default()
+                    )
+                })
+            })
             .transpose()?,
         test_match: property_expression(object, "testMatch").map(|value| {
             crate::playwright::test_patterns::Patterns::parse(

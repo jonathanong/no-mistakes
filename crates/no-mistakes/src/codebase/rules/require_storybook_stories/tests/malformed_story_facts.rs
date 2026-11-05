@@ -74,24 +74,29 @@ fn prepared_story_errors_use_authoritative_causes_and_sources() {
 fn unreadable_story_reports_repo_relative_read_error_through_public_checks() {
     let root = fixture("unreadable-story");
     let cfg = crate::config::v2::load_v2_config(&root, None).unwrap();
-    let direct = check(&root, &cfg, None).unwrap();
-    assert_eq!(direct.len(), 1, "{direct:#?}");
-    assert_eq!(direct[0].file, "Card.stories.tsx");
-    assert_eq!(direct[0].target.as_deref(), Some("unanalyzable"));
-    assert!(direct[0]
-        .message
-        .contains("failed to read Card.stories.tsx:"));
-    assert!(!direct[0].message.contains(root.to_str().unwrap()));
-    assert_eq!(
-        direct,
-        crate::codebase::rules::run_check(&root, None, None).unwrap()
-    );
+    let direct = check(&root, &cfg, None).unwrap_err();
+    let source = direct
+        .downcast_ref::<crate::codebase::check_outcome::CheckInputFailure>()
+        .unwrap();
+    assert!(source.file.as_ref().unwrap().ends_with("Card.stories.tsx"));
+    assert!(crate::codebase::rules::run_check(&root, None, None).is_err());
     let json = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
         serde_json::json!({ "root": root }).to_string(),
     ))
     .unwrap();
     let report: serde_json::Value = serde_json::from_str(&json).unwrap();
-    assert_eq!(report["rules"], serde_json::to_value(direct).unwrap());
+    let diagnostics = report["rules"].as_array().unwrap();
+    assert_eq!(diagnostics.len(), 1, "{report}");
+    assert_eq!(diagnostics[0]["file"], "Card.stories.tsx");
+    assert!(diagnostics[0]["message"]
+        .as_str()
+        .unwrap()
+        .contains("failed to read Card.stories.tsx:"));
+    assert!(!diagnostics[0]["message"]
+        .as_str()
+        .unwrap()
+        .contains(root.to_str().unwrap()));
+    assert!(!report["incomplete"].as_array().unwrap().is_empty());
 }
 
 #[test]
@@ -113,10 +118,10 @@ fn malformed_recovered_story_facts_cannot_prove_coverage_or_namespace_errors() {
     let stories = std::collections::BTreeSet::from([story.clone()]);
     let resolver = empty_resolver(&root);
     let keys = coverage::all_react_component_keys(&root, &shared);
-    assert!(
-        !coverage::directly_covered_components(&root, &shared, &stories, &resolver, &keys)
-            .is_empty()
-    );
+    assert!(!coverage::directly_covered_components(
+        &root, &shared, &stories, &resolver, &keys, None
+    )
+    .is_empty());
     let facts = std::sync::Arc::get_mut(shared.ts.get_mut(&story).unwrap()).unwrap();
     facts.parse_error = Some("recovered parse failure".into());
     facts.storybook.as_mut().unwrap().used_runtime_imports[0].namespace = true;
@@ -130,10 +135,10 @@ fn malformed_recovered_story_facts_cannot_prove_coverage_or_namespace_errors() {
         .unwrap()
         .used_runtime_imports[0]
         .namespace = false;
-    assert!(
-        coverage::directly_covered_components(&root, &shared, &stories, &resolver, &keys)
-            .is_empty()
-    );
+    assert!(coverage::directly_covered_components(
+        &root, &shared, &stories, &resolver, &keys, None
+    )
+    .is_empty());
     assert!(
         !diagnostics::malformed_stories(&root, &shared, &stories, false)
             .1

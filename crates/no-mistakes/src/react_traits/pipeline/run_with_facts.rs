@@ -5,6 +5,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 mod facts_only;
+mod prerequisites;
 
 pub(crate) fn run_analyze_with_loaded_config_and_facts(
     root: &Path,
@@ -30,11 +31,12 @@ pub(crate) struct PreparedComponentFacts {
     pub(crate) inherited_fetch_locations: Vec<(String, usize)>,
 }
 
-pub(crate) fn run_analyze_inner_with_facts_and_suppression(
+pub(crate) fn run_with_session(
     root: &Path,
     file_config: &FileConfig,
     targets: &[String],
     shared: &crate::codebase::check_facts::CheckFactMap,
+    session: Option<&crate::codebase::analysis_session::AnalysisSession>,
 ) -> Result<Vec<PreparedComponentFacts>> {
     let root = crate::codebase::ts_source::normalize_discovery_path(root);
     let files = target_files(&root, file_config, targets, shared.files())?;
@@ -46,24 +48,29 @@ pub(crate) fn run_analyze_inner_with_facts_and_suppression(
             file_cache.insert(path.clone(), analysis.components.clone());
         }
         if let Some(error) = &facts.parse_error {
-            let file_disabled = facts.source.as_deref().is_some_and(|source| {
-                crate::codebase::ts_source::has_disable_file_comment(source, "assert-no-fetch")
-            });
-            if !file_disabled {
-                parse_errors.insert(path, error);
-            }
+            parse_errors.insert(path, error);
         }
     }
     let child_path_index = child_path_index(&root, &file_cache);
+    let source_index = (!parse_errors.is_empty()).then(|| prerequisites::source_index(shared));
     let mut all_results = Vec::new();
     for file in files {
         if let Some(error) = parse_errors.get(&file) {
-            anyhow::bail!("failed to parse {}: {error}", file.display());
+            prerequisites::accept(session, &[(file.clone(), error.as_str())])?;
+            continue;
         }
         let Some(components) = file_cache.get(&file).cloned() else {
             continue;
         };
         for mut facts in components.iter().cloned() {
+            if let Some(source_index) = &source_index {
+                if !prerequisites::accept(
+                    session,
+                    &prerequisites::child_failures(&facts, &root, source_index),
+                )? {
+                    continue;
+                }
+            }
             let agg = aggregate_children_cached(
                 &facts,
                 &file_cache,
@@ -161,33 +168,7 @@ pub(super) fn child_path_index(
     index
 }
 
-fn merge_component(agg: &mut AggregateResult, facts: &ComponentFacts) {
-    agg.facts.has_state |= facts.has_state;
-    agg.facts.has_props |= facts.has_props;
-    agg.facts.passes_props |= facts.passes_props;
-    agg.facts.uses_memo |= facts.uses_memo;
-    agg.facts.uses_context_provider |= facts.uses_context_provider;
-    agg.facts.uses_suspense |= facts.uses_suspense;
-    agg.facts.has_fetch |= !facts.fetches.is_empty();
-    agg.fetch_locations.extend(
-        facts
-            .fetches
-            .iter()
-            .map(|fetch| (fetch.file.clone(), fetch.line)),
-    );
-}
-
-fn merge_aggregate(agg: &mut AggregateResult, child: &AggregateResult) {
-    agg.facts.has_state |= child.facts.has_state;
-    agg.facts.has_fetch |= child.facts.has_fetch;
-    agg.facts.uses_suspense |= child.facts.uses_suspense;
-    agg.facts.uses_context_provider |= child.facts.uses_context_provider;
-    agg.facts.uses_memo |= child.facts.uses_memo;
-    agg.facts.has_props |= child.facts.has_props;
-    agg.facts.passes_props |= child.facts.passes_props;
-    agg.fetch_locations
-        .extend(child.fetch_locations.iter().cloned());
-}
+include!("run_with_facts/merge.rs");
 
 #[cfg(test)]
 mod tests;

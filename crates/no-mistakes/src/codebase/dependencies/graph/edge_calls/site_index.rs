@@ -56,3 +56,9 @@ impl DepGraph {
         }).collect()
     }
 }
+
+impl DepGraph {
+    pub(crate) fn failed_call_sources(&self, site: &ResolvedCallSite) -> impl Iterator<Item = &std::path::PathBuf> {
+        self.call_prerequisites.get(&site.file).and_then(|sites| sites.get(&site.offset)).into_iter().flatten()
+    }
+}

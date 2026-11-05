@@ -4,6 +4,7 @@ use rayon::prelude::*;
 use std::{collections::HashSet, path::PathBuf};
 
 pub(super) struct CheckContext<'a> {
+    pub session: Option<&'a crate::codebase::analysis_session::AnalysisSession>,
     pub root: &'a Path,
     pub config: &'a NoMistakesConfig,
     pub sources: &'a crate::codebase::ts_source::SourceStore,
@@ -21,6 +22,7 @@ where
     T: Sync,
 {
     let CheckContext {
+        session,
         root,
         config,
         sources,
@@ -67,6 +69,12 @@ where
                 && (route_globset.is_match(relative_path(root, path))
                     || path.ancestors().any(|dir| route_dirs.contains(dir)))
             {
+                if let Some(session) = session {
+                    session.register_check_demand(RULE_ID, [path.to_path_buf()]);
+                    if let Some(error) = facts_for(item).1 {
+                        session.record_check_source_failure(path, error);
+                    }
+                }
                 if let Some(error) = facts_for(item).1 {
                     let finding = match sources.read_path(path) {
                         Err(read_error) => super::super::source_access::read_failure(

@@ -4,6 +4,7 @@ use std::time::Duration;
 pub(crate) fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
     let warnings = warnings.into_iter().flatten().collect();
     CheckResults {
+        incomplete: Vec::new(),
         react: Vec::new(),
         queues: Vec::new(),
         rules: Vec::new(),

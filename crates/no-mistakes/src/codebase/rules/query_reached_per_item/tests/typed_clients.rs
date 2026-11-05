@@ -145,7 +145,8 @@ fn indexed_contextual_and_nullish_executor_paths_keep_exact_provenance() {
         [5, 8, 16, 21, 39, 42],
         "{report:#?}"
     );
-    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    let findings =
+        crate::codebase::rules::run_check(&root, Some(&root.join("valid-only.yml")), None).unwrap();
     assert_eq!(
         findings
             .iter()
@@ -188,7 +189,8 @@ fn executor_choices_and_async_callback_guards_keep_exact_provenance() {
         [17, 25, 31, 35],
         "{report:#?}"
     );
-    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    let findings =
+        crate::codebase::rules::run_check(&root, Some(&root.join("valid-only.yml")), None).unwrap();
     assert_eq!(
         findings
             .iter()

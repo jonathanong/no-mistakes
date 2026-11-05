@@ -58,59 +58,41 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unique-exports"
         },
         {
+          "file": "src/disabled-target.ts",
+          "line": 1,
+          "message": "directive for `unique-exports` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file unique-exports",
+          "target": "unique-exports"
+        },
+        {
           "file": "src/invalid.ts",
           "line": 1,
           "message": "directive for `unique-exports` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
           "sourceLine": "// no-mistakes-disable-file unique-exports",
           "target": "unique-exports"
+        },
+        {
+          "file": "src/skip-target.ts",
+          "line": 1,
+          "message": "directive for `unique-exports` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line unique-exports",
+          "target": "unique-exports"
         }
       ],
-      "codebase": [
+      "codebase": [],
+      "incomplete": [
         {
-          "exportKind": "type",
-          "exportName": "DefaultShapeAlias",
-          "file": "src/default-type-b.ts",
-          "line": 1,
-          "message": "type export `DefaultShapeAlias` is already exported from src/default-type-a.ts:1; rename or consolidate this exported API",
-          "rule": "unique-exports",
-          "sourceLine": "export type DefaultShapeAlias = {};"
+          "consumer": "unique-exports",
+          "file": "src/disabled-invalid.ts",
+          "message": "parsing src/disabled-invalid.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 65, end: 65 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
         },
         {
-          "exportKind": "value",
-          "exportName": "CycleName",
-          "file": "src/cycle-explicit-b.ts",
-          "line": 1,
-          "message": "value export `CycleName` is already exported from src/cycle-explicit-a.ts:1; rename or consolidate this exported API",
-          "rule": "unique-exports",
-          "sourceLine": "export { CycleName } from \"./cycle-explicit-a\";"
-        },
-        {
-          "exportKind": "value",
-          "exportName": "Hidden",
-          "file": "src/disabled-reexport.ts",
-          "line": 1,
-          "message": "value export `Hidden` is already exported from src/disabled-local.ts:1; rename or consolidate this exported API",
-          "rule": "unique-exports",
-          "sourceLine": "export { Hidden } from \"./disabled-target\";"
-        },
-        {
-          "exportKind": "value",
-          "exportName": "Namespace",
-          "file": "src/namespace-b.ts",
-          "line": 1,
-          "message": "value export `Namespace` is already exported from src/namespace-a.ts:1; rename or consolidate this exported API",
-          "rule": "unique-exports",
-          "sourceLine": "export const Namespace = {};"
-        },
-        {
-          "exportKind": "value",
-          "exportName": "SameLine",
-          "file": "src/same-line-b.ts",
-          "line": 1,
-          "message": "value export `SameLine` is already exported from src/same-line-a.ts:1; rename or consolidate this exported API",
-          "rule": "unique-exports",
-          "sourceLine": "export const SameLine = 2;"
+          "consumer": "unique-exports",
+          "file": "src/invalid.ts",
+          "message": "parsing src/invalid.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 56, end: 57 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
         }
       ],
       "integration": [],

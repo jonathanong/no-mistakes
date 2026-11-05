@@ -51,6 +51,7 @@ pub(super) fn check_files(
         .collect();
     check_items(
         CheckContext {
+            session: None,
             root,
             config,
             sources: &sources,

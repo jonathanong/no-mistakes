@@ -28,6 +28,7 @@ fn malformed_selection_uses_only_prepared_source_and_never_recovers_exports() {
             selection::SelectionOptions {
                 options: &opts,
                 defer_suppression: false,
+                demand: None,
             },
             &include,
             &exclude,

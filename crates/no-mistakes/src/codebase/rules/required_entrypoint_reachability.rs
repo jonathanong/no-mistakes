@@ -65,7 +65,7 @@ pub(crate) fn check_with_graph_and_inferred(
             graph,
             &file_universe,
             &anchor,
-        ));
+        )?);
     }
     super::sort_findings(&mut findings);
     Ok(findings)
@@ -79,7 +79,7 @@ fn check_rule_application(
     graph: &DepGraph,
     file_universe: &crate::fx::PathSet,
     anchor: &ConfigAnchor,
-) -> Vec<RuleFinding> {
+) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     if options.source_globs.is_empty() {
         findings.push(config_finding(
@@ -160,6 +160,7 @@ fn check_rule_application(
             .filter_map(|entry| entry.node.as_file().map(Path::to_path_buf))
             .collect::<HashSet<_>>();
         reachable.extend(entrypoint_paths);
+        paths::require_sources(graph, reachable.iter().chain(source_files.iter()))?;
         let target = entrypoint_labels.join(",");
         for source in source_files {
             let source = crate::codebase::ts_resolver::normalize_path(&source);
@@ -179,7 +180,7 @@ fn check_rule_application(
             });
         }
     }
-    findings
+    Ok(findings)
 }
 
 fn config_finding(

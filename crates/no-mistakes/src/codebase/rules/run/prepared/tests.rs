@@ -199,3 +199,71 @@ fn production_export_rule_requests_shared_symbol_selectors_and_full_universe() {
     assert!(canonical_graph_requires_full_file_universe(&config));
     assert!(super::super::any_codebase_rule_enabled(&config));
 }
+
+#[test]
+fn failed_graph_preparation_is_partial_or_strict_without_rebuilding_inputs() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check-consumer-isolation"),
+    );
+    let shared = crate::codebase::check_facts::CheckFactMap::default();
+    let tsconfig = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths_dir: root.clone(),
+        ..Default::default()
+    };
+    let catalog =
+        crate::codebase::ts_resolver::TsConfigCatalog::forced(&root, tsconfig.clone(), None);
+    for malformed in [false, true] {
+        let mut config = crate::config::v2::NoMistakesConfig::default();
+        config.rules.push(crate::config::v2::schema::RuleDef {
+            rule: if malformed {
+                FORBIDDEN_DEPENDENCIES
+            } else {
+                UNCONSTRUCTED_ERROR_CLASS
+            }
+            .into(),
+            scope: Some(crate::config::v2::schema::RuleScope::Repository),
+            options: serde_yaml::from_str(if malformed {
+                "relationships: invalid"
+            } else {
+                "{}"
+            })
+            .unwrap(),
+            ..Default::default()
+        });
+        for partial in [false, true] {
+            let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+            if partial {
+                session.enable_partial_checks();
+            }
+            let output = run_check_with_config_and_facts_and_playwright(PreparedRulesCheck {
+                session: session.clone(),
+                root: &root,
+                config_path: None,
+                tsconfig_path: None,
+                shared: &shared,
+                prepared_playwright: None,
+                config: &config,
+                prepared_graph: None,
+                prepared_tsconfig: &tsconfig,
+                prepared_tsconfig_catalog: &catalog,
+                prepared_vitest_projects: None,
+                prepared_playwright_projects: None,
+                inferred_roots: None,
+                sources: None,
+            });
+            assert_eq!(output.is_ok(), partial, "{malformed}: {output:?}");
+            if partial {
+                assert!(output.unwrap().is_empty());
+                let failures = session.check_failures();
+                assert_eq!(failures.len(), 1);
+                assert_eq!(failures[0].consumer, config.rules[0].rule);
+                if !malformed {
+                    assert!(failures[0].message.contains("missing graph facts"));
+                }
+            } else {
+                assert!(session.check_failures().is_empty());
+            }
+        }
+    }
+}

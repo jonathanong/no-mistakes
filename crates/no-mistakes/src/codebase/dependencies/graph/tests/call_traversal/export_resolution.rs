@@ -24,7 +24,7 @@ fn call_export_resolution_keeps_missing_facts_and_nonvisible_stars_unknown() {
             &source,
             "missing",
             &indexes,
-            &mut Vec::new(),
+            &mut ExportResolutionTrace::default(),
         ),
         ExportedCallableResolution::Unknown
     ));
@@ -51,7 +51,7 @@ fn call_export_resolution_keeps_missing_facts_and_nonvisible_stars_unknown() {
             &source,
             "missing",
             &CallableResolutionIndexes::default(),
-            &mut Vec::new(),
+            &mut ExportResolutionTrace::default(),
         ),
         ExportedCallableResolution::Unknown
     ));

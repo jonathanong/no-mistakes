@@ -119,6 +119,7 @@ fn collect_check_facts_inner(
         files,
         graph_files,
         graph_files_complete,
+        queue_paths: plan.queue.then(|| plan.queue_paths.clone()),
         ts: ts.map_values(Arc::new),
         graph_plan: collected_ts_plan,
         integration_runner_configs,

@@ -11,6 +11,7 @@ use std::path::Path;
 mod config;
 mod external;
 mod ownership;
+mod source_failures;
 mod traversal;
 use config::Options;
 pub(crate) use ownership::ownership_edges;
@@ -42,6 +43,7 @@ pub(crate) fn check(
                 continue;
             }
             let outcome = traversal::analyze(&node, &options, graph, facts, &sites, &contracts);
+            source_failures::require_sources(&outcome)?;
             let reason = if outcome.uncertain {
                 "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically"
             } else if !outcome.assertion {

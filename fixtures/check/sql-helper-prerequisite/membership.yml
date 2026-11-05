@@ -1,0 +1,12 @@
+effort: low
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      include: [helper.ts, missing.ts, missing.json]
+      importSpecifier: '@selected/db'
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      include: [caller.ts]
+      importSpecifier: '@other/db'

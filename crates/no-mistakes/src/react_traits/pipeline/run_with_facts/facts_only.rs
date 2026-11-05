@@ -27,6 +27,8 @@ pub(super) fn run(
         }
     }
     let child_path_index = super::child_path_index(&root, &file_cache);
+    let source_index =
+        (!parse_errors.is_empty()).then(|| super::prerequisites::source_index(shared));
     let mut all_results = Vec::new();
     for file in files {
         if let Some(error) = parse_errors.get(&file) {
@@ -36,6 +38,12 @@ pub(super) fn run(
             continue;
         };
         for mut facts in components.iter().cloned() {
+            if let Some(source_index) = &source_index {
+                super::prerequisites::accept(
+                    None,
+                    &super::prerequisites::child_failures(&facts, &root, source_index),
+                )?;
+            }
             let agg =
                 aggregate_children(&facts, &file_cache, &child_path_index, &mut HashSet::new());
             if agg != AggregatedFacts::default() {

@@ -19,6 +19,15 @@ export interface CheckTiming {
   parallel: boolean;
 }
 
+/** A requested check consumer that could not run because a prerequisite failed. */
+export interface CheckFailure {
+  /** Identifier of the requested rule, configured trait, or check domain. */
+  consumer: string;
+  file?: string;
+  property?: string;
+  message: string;
+}
+
 export interface CheckReport {
   /** Present only when timings are requested. */
   timings?: CheckTiming[];
@@ -26,6 +35,8 @@ export interface CheckReport {
   queues: QueueCheckFinding[];
   rules: RuleFinding[];
   integration: IntegrationFinding[];
+  /** Failed prerequisites for requested consumers; omitted when none were captured. */
+  incomplete?: CheckFailure[];
   /** Partner-backed low-effort rules that fell back to maximum analysis; omitted when empty. */
   analysisFallbacks?: AnalysisFallback[];
   /** Present only when requested; declaration evidence, not runtime closure. */

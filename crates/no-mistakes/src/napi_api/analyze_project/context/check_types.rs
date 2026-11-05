@@ -6,6 +6,7 @@ struct SharedCheckPreparationOptions<'a> {
 }
 
 struct SharedCheckContext {
+    session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     root: PathBuf,
     config_path: Option<PathBuf>,
     tsconfig_path: Option<PathBuf>,

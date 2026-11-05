@@ -748,13 +748,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "coverage-producer-assertion-owner",
+          "message": "coverage-producer-assertion-owner: function `src/missing.mts#absent` must select exactly one prepared callable"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
       "rules": [],
-      "warnings": [
-        "warning: rules check skipped: coverage-producer-assertion-owner: function `src/missing.mts#absent` must select exactly one prepared callable"
-      ]
+      "warnings": []
     }
   },
   "mixed": {
@@ -887,19 +891,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "coverage-producer-assertion-owner",
+          "file": "src/broken.mts",
+          "message": "parsing src/broken.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 123, end: 124 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [
-        {
-          "file": "src/broken.mts",
-          "line": 1,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/broken.mts#broken",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "// A configured producer with invalid syntax must abstain, never prove an owner.",
-          "target": "broken"
-        }
-      ],
+      "rules": [],
       "warnings": []
     }
   },
@@ -1063,13 +1065,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "coverage-producer-assertion-owner",
+          "message": "invalid options for rule `coverage-producer-assertion-owner` at options.typo: unknown field `typo`, expected one of `producers`, `assertions`, `ownership`, `maxDepth`, `maxNodes`"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
       "rules": [],
-      "warnings": [
-        "warning: rules check skipped: invalid options for rule `coverage-producer-assertion-owner` at options.typo: unknown field `typo`, expected one of `producers`, `assertions`, `ownership`, `maxDepth`, `maxNodes`"
-      ]
+      "warnings": []
     }
   }
 }

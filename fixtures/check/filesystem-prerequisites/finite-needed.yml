@@ -1,0 +1,6 @@
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+        - {name: calls, file: broken.ts, kind: ts-call-first-string-argument, target: register}

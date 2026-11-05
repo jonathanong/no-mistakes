@@ -15,6 +15,9 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
+#[path = "tests/prerequisites.rs"]
+mod prerequisites;
+
 #[path = "tests/plain_clause.rs"]
 mod plain_clause;
 

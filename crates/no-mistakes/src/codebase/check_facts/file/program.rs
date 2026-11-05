@@ -172,6 +172,7 @@ pub(crate) fn collect_file_facts_from_program(
         nextjs_caching_low: fused.nextjs_caching_low,
         storybook: fused.storybook,
         embedded_sql,
+        sql_source_prerequisites: Default::default(),
         query_annotation,
         query_annotation_heads,
         sql_identifier_syntax,

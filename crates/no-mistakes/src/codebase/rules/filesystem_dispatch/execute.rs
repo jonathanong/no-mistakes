@@ -3,13 +3,19 @@ use anyhow::Result;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 mod next_config;
+mod outcomes;
 mod parallel;
+mod source_demand;
 mod special;
+mod sql_demand;
 mod timing;
+pub use outcomes::{
+    run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression,
+    run_filesystem_rules_with_config_snapshot_catalog_sources_facts_suppression_and_session,
+};
 use parallel::run_enabled_rules;
 pub(super) use parallel::trace_rule;
 pub(super) type ResultAccumulator = Mutex<Vec<(&'static str, Result<Vec<RuleFinding>>)>>;
-
 pub(super) struct RuleRunInputs<'a> {
     root: &'a Path,
     config: &'a crate::config::v2::NoMistakesConfig,
@@ -26,10 +32,9 @@ pub(super) struct RuleRunInputs<'a> {
     markdown_facts: &'a super::super::markdown_facts::MarkdownFactMap,
     acc: &'a ResultAccumulator,
 }
-
-/// Request-scoped inputs prepared once and shared by filesystem rules.
 #[doc(hidden)]
 pub struct PreparedFilesystemRuleInputs<'a> {
+    pub session: Option<&'a crate::codebase::analysis_session::AnalysisSession>,
     pub next_config_resolver: Option<&'a nextjs_redirect_destinations::PreparedConfigResolver<'a>>,
     pub snapshot: &'a crate::codebase::ts_source::VisiblePathSnapshot,
     pub vitest_catalog: Option<&'a super::super::PreparedVitestProjectCatalog>,
@@ -39,7 +44,6 @@ pub struct PreparedFilesystemRuleInputs<'a> {
     pub tsconfig_gate_project_inputs: Option<&'a tsconfig_gate_coverage::ProjectSourceInputs>,
     pub config_path: Option<&'a Path>,
 }
-
 #[doc(hidden)]
 pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
     root: &Path,
@@ -47,9 +51,6 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
     files: &[PathBuf],
     prepared: PreparedFilesystemRuleInputs<'_>,
 ) -> Result<Vec<RuleFinding>> {
-    // This legacy prepared entrypoint still owns the one request-scoped fact
-    // pass for callers that did not supply one. Reuse its source store so the
-    // finite-set rule can borrow call facts without reading or parsing again.
     let facts =
         super::entrypoints::prepare_call_site_facts(root, config, files, &prepared.sources)?;
     run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
@@ -60,12 +61,6 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
         facts.as_ref(),
     )
 }
-
-/// Run filesystem rules using request-scoped facts prepared by the caller.
-///
-/// The optional lookup keeps standalone filesystem callers lightweight while
-/// allowing aggregate CLI and N-API checks to share their one TS fact pass
-/// with AST-backed filesystem rules.
 #[doc(hidden)]
 pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
     root: &Path,
@@ -74,8 +69,6 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
     prepared: PreparedFilesystemRuleInputs<'_>,
     facts: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> Result<Vec<RuleFinding>> {
-    // This public standalone adapter owns missing demand at its boundary.
-    // Lower rule layers only borrow it; a supplied sparse map is not repaired.
     let owned_facts = if facts.is_none()
         && (rule_enabled(config, FORBIDDEN_LINT_SUPPRESSIONS)
             || rule_enabled(config, PRODUCTION_DEPENDENCY_DECLARATIONS)
@@ -98,18 +91,6 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
     )
 }
 
-/// Aggregate check adapter that defers suppression to the shared result pass.
-#[doc(hidden)]
-pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
-    root: &Path,
-    config: &crate::config::v2::NoMistakesConfig,
-    files: &[PathBuf],
-    prepared: PreparedFilesystemRuleInputs<'_>,
-    facts: Option<&crate::codebase::check_facts::CheckFactMap>,
-) -> Result<Vec<RuleFinding>> {
-    next_config::run(root, config, files, prepared, facts, true)
-}
-
 fn run_prepared_filesystem_rules(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
@@ -117,8 +98,10 @@ fn run_prepared_filesystem_rules(
     prepared: PreparedFilesystemRuleInputs<'_>,
     facts: Option<&crate::codebase::check_facts::CheckFactMap>,
     defer_suppression: bool,
+    session: Option<&crate::codebase::analysis_session::AnalysisSession>,
 ) -> Result<Vec<RuleFinding>> {
     let PreparedFilesystemRuleInputs {
+        session: _,
         snapshot,
         next_config_resolver,
         vitest_catalog,
@@ -160,8 +143,28 @@ fn run_prepared_filesystem_rules(
     let mut results = acc.into_inner().expect("mutex poisoned");
     results.sort_unstable_by_key(|(id, _)| *id);
     let mut findings = Vec::new();
-    for (_, result) in results {
-        findings.extend(result?);
+    for (id, result) in results {
+        if let Some(session) = session {
+            session.capture_check_result(
+                id,
+                outcomes::register_demand(
+                    root,
+                    config,
+                    id,
+                    candidates.candidates(id),
+                    facts,
+                    &sources,
+                    session,
+                ),
+            )?;
+            findings.extend(
+                session
+                    .capture_check_result(id, result)?
+                    .unwrap_or_default(),
+            );
+        } else {
+            findings.extend(result?);
+        }
     }
     if let Some(facts) = facts {
         findings.extend(
@@ -183,8 +186,6 @@ fn run_prepared_filesystem_rules(
     }
     findings.sort();
     findings.dedup_by(|left, right| {
-        // Prepared PostgreSQL producers finish physical deduplication before
-        // projecting DTOs; retain distinct columns whose DTOs compare equal.
         left == right
             && !crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS
                 .contains(&left.rule.as_str())

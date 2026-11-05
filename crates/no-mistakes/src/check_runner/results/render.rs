@@ -2,6 +2,7 @@ use super::CheckResults;
 
 pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
     let CheckResults {
+        incomplete,
         react,
         queues,
         rules,
@@ -29,6 +30,9 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
         "warnings": warnings,
         "advisories": advisories,
     });
+    if !incomplete.is_empty() {
+        value["incomplete"] = serde_json::json!(incomplete);
+    }
     if !analysis_fallbacks.is_empty() {
         value["analysisFallbacks"] = serde_json::json!(analysis_fallbacks);
     }

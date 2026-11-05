@@ -460,6 +460,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "src/Card.tsx",
+          "message": "parsing src/Card.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 31, end: 32 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -467,7 +474,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/Card.tsx",
           "line": 1,
-          "message": "Selected React source could not be analyzed (parsing src/Card.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 31, end: 32 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "message": "Selected React source could not be analyzed (parsing src/Card.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 31, end: 32 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.",
           "rule": "require-storybook-stories",
           "sourceLine": "export function Card( { return <article>Card</article>; }",
           "target": "unanalyzable"

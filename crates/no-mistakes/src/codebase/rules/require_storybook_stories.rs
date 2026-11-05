@@ -20,6 +20,7 @@ mod findings;
 mod prepared;
 mod runner;
 mod selection;
+mod source_failures;
 mod suppression;
 mod types;
 

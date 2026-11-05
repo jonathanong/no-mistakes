@@ -72,6 +72,7 @@
             module_files,
             resolved_call_sites,
             opaque_external_members,
+            call_prerequisites,
             class_declarations,
             class_ancestry,
             call_sites_by_file,

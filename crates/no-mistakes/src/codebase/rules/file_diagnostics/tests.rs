@@ -53,8 +53,8 @@ fn evaluate(
             None,
             Arc::clone(sources),
         );
-        super::super::server_route_client_boundary::diagnostics_with_facts_for_aggregate(
-            root, config, &facts, sources, None, defer,
+        super::super::server_route_client_boundary::diagnostics_with_facts_for_aggregate_and_session(
+            root, config, &facts, sources, None, defer, None,
         )
         .unwrap()
     } else {

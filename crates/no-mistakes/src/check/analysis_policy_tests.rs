@@ -38,29 +38,6 @@ fn shared_unanalyzable_policies_route_actual_sql_failures_advisories_and_skips()
 }
 
 #[test]
-fn invalid_legacy_sql_alias_keeps_its_original_parser_error_at_max() {
-    let execute = |effort| {
-        check_runner::run_all_with_options(
-            root(),
-            Some("invalid-alias.yml".into()),
-            None,
-            false,
-            false,
-            check_runner::AnalysisOptions {
-                effort,
-                include_sql_verdicts: false,
-            },
-        )
-        .err()
-        .unwrap()
-    };
-    let default = format!("{:#}", execute(None));
-    assert_eq!(format!("{:#}", execute(Some(Effort::Max))), default);
-    assert!(default.contains("options.unanalyzableSql"));
-    assert!(default.contains(" REPORT "));
-}
-
-#[test]
 fn shared_defaults_preserve_malformed_options_errors_instead_of_panicking() {
     for name in ["malformed-options", "malformed-sequence"] {
         let execute = |config: String| {
@@ -208,3 +185,5 @@ fn canonical_policy_wins_valid_alias_conflicts_on_actual_sql() {
 
 #[path = "analysis_policy_tests/effort.rs"]
 mod effort;
+#[path = "analysis_policy_tests/partial.rs"]
+mod partial;

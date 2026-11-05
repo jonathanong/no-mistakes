@@ -22,6 +22,7 @@ pub(super) fn fact_plan(
         .unwrap_or_default();
     match prepared {
         Some(prepared) => Ok(Some(prepared.fact_plan())),
+        None if !no_mistakes::playwright::rules::configured(config) => Ok(None),
         None => no_mistakes::playwright::rules::fact_plan_for_consumers(
             root,
             config_path,

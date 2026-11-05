@@ -39,6 +39,14 @@ fn run_check_with_facts_rejects_missing_prepared_graph_test_facts() {
     assert!(error
         .to_string()
         .contains("prepared graph facts are missing 1 indexable file"));
+    assert!(error.to_string().contains("tests/bad.test.mts"));
+    assert!(error
+        .downcast_ref::<crate::codebase::check_outcome::CheckInputFailure>()
+        .unwrap()
+        .file
+        .as_ref()
+        .unwrap()
+        .ends_with("tests/bad.test.mts"));
 }
 
 #[test]

@@ -96,7 +96,7 @@ fn pass5a_public_wrappers_create_one_request_snapshot() {
         ),
         (
             include_str!("../../../integration_tests/standalone.rs"),
-            "pub(super) fn check(",
+            "fn check_with_cache(",
         ),
         (
             include_str!("../../../integration_tests.rs"),
@@ -111,6 +111,10 @@ fn pass5a_public_wrappers_create_one_request_snapshot() {
         ),
     ];
 
+    let integration = include_str!("../../../integration_tests/standalone.rs");
+    let owner = function_body(integration, "pub(super) fn check(");
+    assert_eq!(owner.matches("with_request_parse_cache").count(), 1);
+    assert_eq!(owner.matches("check_with_cache(").count(), 1);
     for (source, signature) in cases {
         let body = function_body(source, signature);
         assert_eq!(

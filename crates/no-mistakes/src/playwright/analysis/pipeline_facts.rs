@@ -79,12 +79,27 @@ pub(crate) fn extend_standalone_fact_plan(
         Some(snapshot.source_store_for(root).as_ref()),
     );
     let playwright = playwright?;
-    fact_plan.add_matcher_warnings(settings.project.clone(), playwright.matcher_warnings(root));
-    let test_files = crate::playwright::analysis::discover::discover_test_files_from_visible(
+    extend_fact_plan_with_config(
+        fact_plan,
         root,
         settings,
-        &playwright,
+        unique_selector_policy,
         snapshot,
+        &playwright,
+    )
+}
+
+pub(crate) fn extend_fact_plan_with_config(
+    fact_plan: &mut crate::codebase::check_facts::PlaywrightFactPlan,
+    root: &Path,
+    settings: &config::Settings,
+    unique_selector_policy: UniqueSelectorPolicy,
+    snapshot: &VisiblePathSnapshot,
+    playwright: &crate::playwright::playwright_config::PlaywrightConfig,
+) -> Result<()> {
+    fact_plan.add_matcher_warnings(settings.project.clone(), playwright.matcher_warnings(root));
+    let test_files = crate::playwright::analysis::discover::discover_test_files_from_visible(
+        root, settings, playwright, snapshot,
     );
     let test_files = test_files?;
     for test_file in &test_files {

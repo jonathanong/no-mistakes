@@ -7,18 +7,25 @@ use super::{
     values::{Cache, Engine},
     ApplicationKey, Recovered,
 };
-use crate::codebase::{check_facts::CheckFileFacts, ts_source::FileIdMap};
+use crate::codebase::{
+    check_facts::{
+        sql_source_prerequisites::{source_demanded, source_failed, SqlProjection, SqlSourceKey},
+        CheckFileFacts,
+    },
+    ts_source::FileIdMap,
+};
 use std::{
     collections::BTreeMap,
     path::{Path, PathBuf},
     sync::Arc,
 };
+mod finalize;
 
 pub(crate) fn project(
     files: &mut FileIdMap<CheckFileFacts>,
     resolve: impl Fn(&str, &Path) -> Option<PathBuf>,
 ) {
-    let mut updates = super::transports::project(files, &resolve);
+    let (mut updates, mut failed_sources) = super::transports::project(files, &resolve);
     let mut caches = BTreeMap::<ApplicationKey, Cache>::new();
     for (path, file) in &*files {
         if file.parse_error.is_some() || file.ts.parse_error.is_some() {
@@ -27,11 +34,23 @@ pub(crate) fn project(
         let models = &file.sql_identifier_syntax.recovery;
         for application in file.sql_identifier_syntax.application_keys() {
             let profile = &application.profile;
+            let cache = caches.entry(application.clone()).or_default();
+            let observed = cache.observed_sources.clone();
+            let tracked_resolve = |specifier: &str, from: &Path| {
+                let target = resolve(specifier, from);
+                if let Some(path) = target
+                    .as_deref()
+                    .filter(|path| failed_source_is_demanded(files, path, &application))
+                {
+                    observed.borrow_mut().push(path.to_path_buf());
+                }
+                target
+            };
             let catalog = PreparedCatalog {
                 application: Some(&application),
                 profile: Some(profile),
                 files,
-                resolve: &resolve,
+                resolve: &tracked_resolve,
             };
             let Some(calls) = file.sql_identifier_syntax.calls_for(&application) else {
                 continue;
@@ -39,10 +58,9 @@ pub(crate) fn project(
             let Some(sinks) = models.sinks.get(profile) else {
                 continue;
             };
-            let cache = caches.entry(application.clone()).or_default();
             for call in calls {
                 let partial = application.rule == "postgres-no-test-state-mutation"
-                    && finite_template_candidate(&call.input);
+                    && finalize::finite_template_candidate(&call.input);
                 if !(matches!(call.input, Input::Unknown) || partial) || !sinks.contains(&call.span)
                 {
                     continue;
@@ -93,17 +111,43 @@ pub(crate) fn project(
                         ..Default::default()
                     }
                 };
+                drop(engine);
+                let mut call_failures = cache.take_observed_sources();
                 if recovered.alternatives.is_empty() {
                     let Some(executors) = models.executors.get(profile) else {
+                        finalize::push_failures(
+                            &mut failed_sources,
+                            path,
+                            &application,
+                            call.span,
+                            call_failures,
+                        );
                         continue;
                     };
                     let mut engine = Engine::new(&catalog, cache, Limits::default());
-                    let Some(recovered_site) = engine.site(path, &models.calls[index], executors)
-                    else {
+                    let recovered_site = engine.site(path, &models.calls[index], executors);
+                    drop(engine);
+                    let Some(recovered_site) = recovered_site else {
+                        call_failures.extend(cache.take_observed_sources());
+                        finalize::push_failures(
+                            &mut failed_sources,
+                            path,
+                            &application,
+                            call.span,
+                            call_failures,
+                        );
                         continue;
                     };
                     recovered = recovered_site;
+                    call_failures.extend(cache.take_observed_sources());
                 }
+                finalize::push_failures(
+                    &mut failed_sources,
+                    path,
+                    &application,
+                    call.span,
+                    call_failures,
+                );
                 if !recovered.alternatives.is_empty() && (!partial || recovered.complete()) {
                     updates.push((
                         path.clone(),
@@ -115,52 +159,25 @@ pub(crate) fn project(
             }
         }
     }
-    for (path, application, span, recovered) in updates {
-        let Some(file) = files.get_mut(&path) else {
-            continue;
-        };
-        if !file
-            .sql_identifier_syntax
-            .application_calls
-            .contains_key(&application)
-        {
-            let Some(calls) = file
-                .sql_identifier_syntax
-                .calls_for(&application)
-                .map(<[_]>::to_vec)
-            else {
-                continue;
-            };
-            file.sql_identifier_syntax
-                .application_calls
-                .insert(application.clone(), calls);
-        }
-        let calls = file
-            .sql_identifier_syntax
-            .application_calls
-            .get_mut(&application)
-            .unwrap();
-        if let Ok(index) = calls.binary_search_by_key(&span, |call| call.span) {
-            calls[index].input = Input::Recovered(recovered);
-        }
-    }
+    finalize::apply(files, updates, failed_sources);
 }
 
-fn finite_template_candidate(input: &Input) -> bool {
-    let Input::Sql {
-        text,
-        holes,
-        parameterized: None,
-        ..
-    } = input
-    else {
+fn failed_source_is_demanded(
+    files: &FileIdMap<CheckFileFacts>,
+    path: &Path,
+    application: &ApplicationKey,
+) -> bool {
+    if !source_failed(files, path) {
         return false;
-    };
-    let first = holes
-        .iter()
-        .filter_map(|(marker, _)| text.find(marker))
-        .min();
-    // Preserve the existing complete-statement prefix path. In particular,
-    // an invalid recovered suffix must never erase a known prefix finding.
-    first.is_some_and(|first| !text[..first].contains(';'))
+    }
+    let key = SqlSourceKey::application(
+        SqlProjection::LowSyntax,
+        &application.profile,
+        &application.rule,
+        application.index,
+    );
+    source_demanded(files, path, &key)
 }
+
+#[cfg(test)]
+mod source_failure_tests;

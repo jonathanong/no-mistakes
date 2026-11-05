@@ -1,13 +1,41 @@
 ---
-source: crates/no-mistakes/tests/cli_pkgcfg_snapshot_version_pin_consistency.rs
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
   "empty_options": {
-    "exitCode": 2,
-    "stderr": "error: version-pin-consistency: sourceFile is required and must not be empty\n"
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "filesystem",
+          "message": "version-pin-consistency: sourceFile is required and must not be empty"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
   },
   "empty_source_file": {
-    "exitCode": 2,
-    "stderr": "error: version-pin-consistency: sourceFile is required and must not be empty\n"
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "filesystem",
+          "message": "version-pin-consistency: sourceFile is required and must not be empty"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
   }
 }

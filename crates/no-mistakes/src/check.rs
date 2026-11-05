@@ -97,6 +97,7 @@ pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
     let results = results?;
     record_missing_check_timings(&results);
     no_mistakes::invocation::commit_timeout()?;
+    output::print_incomplete(&results);
     for warning in &results.warnings {
         no_mistakes::diagnostics::print_stderr(format_args!("{warning}"));
     }
@@ -170,7 +171,8 @@ fn timing_metadata(label: &str) -> Option<(&'static str, no_mistakes::diagnostic
 }
 
 fn has_failures(results: &check_runner::CheckResults) -> bool {
-    !results.react.is_empty()
+    !results.incomplete.is_empty()
+        || !results.react.is_empty()
         || !results.queues.is_empty()
         || !results.rules.is_empty()
         || !results.integration.is_empty()

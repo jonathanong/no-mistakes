@@ -88,6 +88,7 @@ impl<'a, F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'a, F> {
         'a: 'b,
     {
         let files = self.files;
+        self.modules.sources.consult(path);
         let Some((origin, file)) = files.get_key_value(path) else {
             return Some(ResolvedExport::unknown());
         };

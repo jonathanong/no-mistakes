@@ -1,5 +1,10 @@
 use super::{demand, File, Module};
-use crate::codebase::check_facts::CheckFileFacts;
+use crate::codebase::check_facts::{
+    sql_source_prerequisites::{
+        source_demanded, source_error, FailedSqlSources, SqlProjection, SqlSourceKey,
+    },
+    CheckFileFacts,
+};
 use crate::codebase::postgres::EmbeddedSqlOptions;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::FileIdMap;
@@ -12,12 +17,19 @@ pub(super) struct Profile<'a> {
     pub files: FxHashMap<PathBuf, File<'a>>,
     pub roots: Vec<PathBuf>,
     pub untrusted_array_intrinsics: bool,
+    pub failed_sources: Arc<FailedSqlSources>,
 }
 
 pub(super) fn profiles<'a>(
     files: &'a FileIdMap<CheckFileFacts>,
     resolve: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> Vec<Profile<'a>> {
+    let failed_files = files
+        .into_iter()
+        .filter(|(_, file)| source_error(file).is_some())
+        .map(|(path, _)| path)
+        .collect::<Vec<_>>();
+    let empty_failures = Arc::<FailedSqlSources>::default();
     let mut profiles = files
         .into_iter()
         .flat_map(|(_, file)| {
@@ -54,6 +66,18 @@ pub(super) fn profiles<'a>(
     profiles
         .into_iter()
         .map(|options| {
+            let failed_sources = if failed_files.is_empty() {
+                Arc::clone(&empty_failures)
+            } else {
+                let key = SqlSourceKey::profile(SqlProjection::AnnotationMax, &options);
+                Arc::new(
+                    failed_files
+                        .iter()
+                        .filter(|path| source_demanded(files, path, &key))
+                        .map(|path| normalize_path(path))
+                        .collect(),
+                )
+            };
             let collected = files
                 .into_iter()
                 .filter_map(|(path, file)| {
@@ -95,6 +119,7 @@ pub(super) fn profiles<'a>(
                 files: collected,
                 roots,
                 untrusted_array_intrinsics,
+                failed_sources,
             }
         })
         .collect()

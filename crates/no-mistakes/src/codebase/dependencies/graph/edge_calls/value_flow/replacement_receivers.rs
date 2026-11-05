@@ -110,7 +110,7 @@ fn receiver_identity(
         &source,
         &binding.imported,
         indexes,
-        &mut Vec::new(),
+        &mut ExportResolutionTrace::default(),
     ) {
         ExportedCallableResolution::ExternalModuleExport(module, export) => {
             Some(ReceiverIdentity::External(module, export))

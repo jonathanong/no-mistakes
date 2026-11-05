@@ -38,8 +38,14 @@ fn mutable_receiver_origins_invalidate_without_becoming_value_bindings() {
         .chain(rhs_cases::CASES)
         .copied()
     {
-        let sites = graph
-            .call_sites_in_file(&root.join(format!("src/nested-receiver-containers/{case}.mts")));
+        let extension = if case == "mutable-let-wrapped-assertion" {
+            "ts"
+        } else {
+            "mts"
+        };
+        let sites = graph.call_sites_in_file(
+            &root.join(format!("src/nested-receiver-containers/{case}.{extension}")),
+        );
         let site = sites
             .iter()
             .find(|site| site.caller.as_deref() == Some("consume") && site.source_callee == callee)

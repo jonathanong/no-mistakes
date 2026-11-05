@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { normalizeCheckFailurePaths } = require("./check-policy-test-helpers");
 const { join } = require("node:path");
 const { readFileSync } = require("node:fs");
 const test = globalThis.test || require("node:test").test;
@@ -169,11 +170,16 @@ test(
     ];
     const prepared = await cjs.analyzeProject({ root, reports });
     assert.deepEqual(
-      prepared.reports.map(({ result }) => result),
-      [effects, check, calls],
+      prepared.reports.map(({ type, result }) =>
+        type === "check" ? normalizeCheckFailurePaths(result) : result,
+      ),
+      [effects, normalizeCheckFailurePaths(check), calls],
     );
     assert.deepEqual(await esm.effects(options), effects);
-    assert.deepEqual(await esm.check({ root }), check);
+    assert.deepEqual(
+      normalizeCheckFailurePaths(await esm.check({ root })),
+      normalizeCheckFailurePaths(check),
+    );
     assert.deepEqual(
       await esm.callSites({ root, file: "entry.mts", exportName: "options" }),
       calls,

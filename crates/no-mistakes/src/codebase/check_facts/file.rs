@@ -1,3 +1,4 @@
+use super::sql_source_prerequisites::with_failed_source;
 use super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use std::path::Path;
@@ -17,11 +18,9 @@ pub(crate) use variants::{
     collect_file_fact_variants_from_source_with_session, collect_file_fact_variants_with_session,
     CheckFactVariant,
 };
-
 pub(crate) fn is_mdx_file(path: &Path) -> bool {
     path.extension().and_then(|ext| ext.to_str()) == Some("mdx")
 }
-
 pub(crate) fn collect_file_facts_with_session_and_sources(
     session: &crate::codebase::analysis_session::AnalysisSession,
     root: &Path,
@@ -39,7 +38,7 @@ pub(crate) fn collect_file_facts_with_session_and_sources(
     }
     let source = match sources.read_path(path) {
         Ok(source) => source,
-        Err(err) => return Some(super::file_parse_error::read_facts(path, plan, err)),
+        Err(err) => return Some(super::file_parse_error::read_facts(root, path, plan, err)),
     };
     if plan.production_import_paths.contains(path) {
         return production_imports::collect(
@@ -54,7 +53,6 @@ pub(crate) fn collect_file_facts_with_session_and_sources(
     }
     collect_file_facts_from_source(session, root, path, plan, playwright, source, retain_parse)
 }
-
 fn collect_file_facts_from_source(
     session: &crate::codebase::analysis_session::AnalysisSession,
     root: &Path,
@@ -73,8 +71,6 @@ fn collect_file_facts_from_source(
             ts: Arc::new(ts_source(stored_source.clone())),
             source: stored_source,
             storybook,
-            // MDX is intentionally not sent through OXC, but every requested fact
-            // family still needs an explicit entry for prepared consumers.
             server_route_client_boundary: plan.server_route_client_boundary.then(Default::default),
             ..CheckFileFacts::default()
         });
@@ -129,6 +125,9 @@ fn collect_file_facts_from_source(
                 embedded_sql::prepared_embedded_sql(root, path, parsed_source, program, plan);
             return CheckFileFacts {
                 lint_suppressions: plan.collect_lint_suppressions(path, program, parsed_source),
+                sql_source_prerequisites: super::SqlSourcePrerequisites::failed_source(
+                    root, path, plan,
+                ),
                 sql_identifier_syntax: sql_identifier::invalid(
                     root,
                     path,
@@ -177,7 +176,7 @@ fn collect_file_facts_from_source(
             } else {
                 format!("unsupported file type: {}", path.display())
             };
-            Some(CheckFileFacts {
+            let facts = CheckFileFacts {
                 ts: Arc::new(TsFileFacts {
                     fatal_parse_error: legacy_symbols,
                     parse_error: Some(parse_error.clone()),
@@ -190,7 +189,8 @@ fn collect_file_facts_from_source(
                     .server_route_client_boundary
                     .then(Default::default),
                 ..CheckFileFacts::default()
-            })
+            };
+            Some(with_failed_source(root, path, plan, facts))
         }
     };
     if !retain_parse {

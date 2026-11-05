@@ -33,6 +33,7 @@
   "CallSitesOptions",
   "CallSitesResult",
   "CheckCommand",
+  "CheckFailure",
   "CheckKind",
   "CheckOptions",
   "CheckReport",

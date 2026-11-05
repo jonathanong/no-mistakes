@@ -117,19 +117,36 @@ pub fn run_check_with_prepared_facts_for_aggregate(
     shared: &crate::codebase::check_facts::CheckFactMap,
     prepared: &PreparedReactCheck,
 ) -> Result<PreparedReactFindings> {
+    run_check_with_prepared_facts_for_aggregate_and_session(
+        root,
+        targets,
+        shared,
+        prepared,
+        &crate::codebase::analysis_session::AnalysisSession::disabled(),
+    )
+}
+
+#[doc(hidden)]
+pub fn run_check_with_prepared_facts_for_aggregate_and_session(
+    root: &Path,
+    targets: &[String],
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    prepared: &PreparedReactCheck,
+    session: &crate::codebase::analysis_session::AnalysisSession,
+) -> Result<PreparedReactFindings> {
     if !prepared.enabled() {
         return Ok(PreparedReactFindings {
             findings: Vec::new(),
             suppression_targets: Vec::new(),
         });
     }
-    let facts_list =
-        crate::react_traits::pipeline::run_with_facts::run_analyze_inner_with_facts_and_suppression(
-            root,
-            &prepared.file_config,
-            targets,
-            shared,
-        );
+    let facts_list = crate::react_traits::pipeline::run_with_facts::run_with_session(
+        root,
+        &prepared.file_config,
+        targets,
+        shared,
+        Some(session),
+    );
     let facts_list = facts_list?;
     Ok(assert_no_fetch_violations_with_suppression(&facts_list))
 }

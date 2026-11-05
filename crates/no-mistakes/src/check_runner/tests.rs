@@ -99,17 +99,15 @@ fn run_all_contextualizes_playwright_fact_plan_preparation_failures() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check-runner/invalid-playwright-fact-plan");
 
-    let error = match run_all(root, None, None) {
-        Ok(_) => panic!("missing Playwright config unexpectedly produced a check result"),
-        Err(error) => error,
-    };
-
-    assert!(
-        error
-            .to_string()
-            .contains("failed to prepare Playwright shared facts"),
-        "{error:#}"
-    );
+    let report = run_all(root, None, None).unwrap();
+    assert!(!report.incomplete.is_empty());
+    assert!(report.incomplete.iter().any(|failure| {
+        failure.consumer == "playwright-coverage"
+            && failure
+                .file
+                .as_ref()
+                .is_some_and(|file| file.ends_with("playwright.config.ts"))
+    }));
 }
 
 #[test]
@@ -123,6 +121,7 @@ fn disabled_filesystem_check_returns_no_findings_without_dispatching_rules() {
         false,
         &[],
         no_mistakes::codebase::rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
+            session: None,
             snapshot: &snapshot,
             next_config_resolver: None,
             vitest_catalog: None,
@@ -231,7 +230,10 @@ fn run_all_shares_visible_candidates_across_check_phases() {
 
 #[test]
 fn run_all_constructs_one_canonical_root_snapshot() {
-    let source = include_str!("prepared.rs");
+    let source = concat!(
+        include_str!("prepared.rs"),
+        include_str!("prepared/session_entry.rs")
+    );
 
     assert_eq!(source.matches("session.visible_paths(root)").count(), 1);
     assert_eq!(source.matches("VisiblePathSnapshot::new").count(), 0);
@@ -338,10 +340,13 @@ fn run_all_surfaces_invalid_unique_exports_option_types() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check/invalid-unique-exports-options");
 
-    let error = run_all(root, None, None)
-        .err()
-        .expect("invalid configured unique-exports options must fail the check");
-    let message = format!("{error:#}");
+    let report = run_all(root, None, None).unwrap();
+    let message = report
+        .incomplete
+        .iter()
+        .map(|failure| failure.message.as_str())
+        .collect::<Vec<_>>()
+        .join("\n");
 
     assert!(message.contains("invalid options for rule `unique-exports`"));
     assert!(message.contains("options.uniqueAcrossTypesAndValues"));
@@ -355,14 +360,11 @@ fn run_all_propagates_integration_check_error() {
         .join("../../test-cases/integration-tests/missing-config/fixture");
     let config = root.join(".no-mistakes.yml");
 
-    let err = run_all(root, Some(config), None)
-        .err()
-        .expect("expected integration check error for missing vitest config");
-
-    assert!(
-        !err.to_string().is_empty(),
-        "error should have a message: {err}"
-    );
+    let report = run_all(root, Some(config), None).unwrap();
+    assert!(report
+        .incomplete
+        .iter()
+        .any(|failure| { failure.consumer == "integration" && !failure.message.is_empty() }));
 }
 
 #[test]
@@ -424,3 +426,5 @@ fn integration_configured_covers_vitest_and_playwright_suites() {
 }
 
 mod domain_errors;
+
+mod prerequisite_failures;

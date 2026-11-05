@@ -1,4 +1,4 @@
-use super::graph_rules::graph_rule_findings;
+use super::graph_rules::graph_rule_findings_with_session;
 use super::helpers::{storybook_findings, StorybookFindingsRequest};
 use super::independent::{IndependentRuleRequest, RuleChunk};
 use super::*;
@@ -38,14 +38,16 @@ pub(super) fn boundary(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
     crate::perf_trace::rule("analysis.rules.server-route-client-boundary", || {
-        let output = server_route_client_boundary::diagnostics_with_facts_for_aggregate(
-            req.root,
-            req.config,
-            req.shared,
-            req.sources,
-            req.inferred_roots,
-            req.defer_suppression,
-        )?;
+        let output =
+            server_route_client_boundary::diagnostics_with_facts_for_aggregate_and_session(
+                req.root,
+                req.config,
+                req.shared,
+                req.sources,
+                req.inferred_roots,
+                req.defer_suppression,
+                Some(req.session),
+            )?;
         let mut chunk = RuleChunk::from_findings(output.findings);
         chunk.advisories = output.advisories;
         Ok(chunk)
@@ -112,6 +114,24 @@ pub(super) fn playwright(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> 
     if !crate::playwright::rules::configured(req.config) {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
+    if req.prepared_playwright.is_none() && req.session.partial_checks_enabled() {
+        for consumer in [
+            crate::playwright::rules::PLAYWRIGHT_COVERAGE,
+            crate::playwright::rules::PLAYWRIGHT_UNIQUE_TEST_IDS,
+            crate::playwright::rules::PLAYWRIGHT_UNIQUE_HTML_IDS,
+            crate::playwright::rules::PLAYWRIGHT_PREFER_TEST_ID_LOCATORS,
+        ] {
+            if req.config.rule_configured(consumer) && req.session.check_consumer_ready(consumer) {
+                req.session.record_check_failure(
+                    crate::codebase::check_outcome::CheckFailure::new(
+                        consumer,
+                        "prepared Playwright prerequisites are unavailable",
+                    ),
+                );
+            }
+        }
+        return Ok(RuleChunk::from_findings(Vec::new()));
+    }
     let output = crate::perf_trace::rule("analysis.rules.playwright-combined", || {
         match req.prepared_playwright {
             Some(prepared) => crate::playwright::rules::check_with_prepared_facts_outcome(
@@ -136,42 +156,28 @@ pub(super) fn playwright(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> 
     })
 }
 
+#[cfg(test)]
+#[path = "independent_collect_tests.rs"]
+mod tests;
+
 pub(super) fn graph_rules(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
-    let diagnostics = graph_rule_findings(graph_rules::GraphRuleRequest {
-        root: req.root,
-        config: req.config,
-        config_path: req.config_path,
-        shared: req.shared,
-        prepared_graph: req.prepared_graph,
-        dependency_graph: req.dependency_graph,
-        inferred_roots: req.inferred_roots,
-        sources: Some(req.sources),
-        tsconfig_catalog: Some(req.prepared_tsconfig_catalog),
-        prepared_vitest_projects: req.prepared_vitest_projects,
-        prepared_playwright_projects: req.prepared_playwright_projects,
-    })?;
+    let diagnostics = graph_rule_findings_with_session(
+        graph_rules::GraphRuleRequest {
+            root: req.root,
+            config: req.config,
+            config_path: req.config_path,
+            shared: req.shared,
+            prepared_graph: req.prepared_graph,
+            dependency_graph: req.dependency_graph,
+            inferred_roots: req.inferred_roots,
+            sources: Some(req.sources),
+            tsconfig_catalog: Some(req.prepared_tsconfig_catalog),
+            prepared_vitest_projects: req.prepared_vitest_projects,
+            prepared_playwright_projects: req.prepared_playwright_projects,
+        },
+        Some(req.session),
+    )?;
     let mut chunk = RuleChunk::from_findings(diagnostics.findings);
     chunk.advisories = diagnostics.advisories;
-    if req
-        .config
-        .rule_configured(crate::codebase::rules::coverage_producer_assertion_owner::RULE_ID)
-    {
-        let diagnostics =
-            crate::perf_trace::rule("analysis.rules.coverage-producer-assertion-owner", || {
-                crate::codebase::rules::coverage_producer_assertion_owner::check(
-                    req.root,
-                    req.config,
-                    req.dependency_graph
-                        .expect("coverage ownership requires canonical graph"),
-                    req.shared,
-                    req.sources,
-                )
-            })?;
-        chunk
-            .suppression_sources
-            .extend(std::iter::repeat_n(None, diagnostics.findings.len()));
-        chunk.findings.extend(diagnostics.findings);
-        chunk.advisories.extend(diagnostics.advisories);
-    }
     Ok(chunk)
 }

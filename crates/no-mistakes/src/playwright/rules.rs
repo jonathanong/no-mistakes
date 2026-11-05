@@ -27,6 +27,7 @@ pub use fact_plan::{fact_plan_for_consumers, PlaywrightFactConsumers};
 pub use prepared::PreparedPlaywrightRules;
 pub use prepared_entrypoints::{
     fact_plan, prepare, prepare_from_snapshot, prepare_from_snapshot_with_catalog,
+    prepare_from_snapshot_with_catalog_partial,
 };
 pub use standalone::check;
 
@@ -65,13 +66,18 @@ pub(crate) fn check_with_prepared_facts_outcome(
         advisories: Vec::new(),
     };
     for prepared_selection in &prepared.selections {
+        let crate::codebase::check_outcome::Prerequisite::Ready(settings) =
+            &prepared_selection.settings
+        else {
+            continue;
+        };
         let next = check_selection_with_facts(
             root,
             config,
             facts,
             prepared.snapshot.as_ref(),
             &prepared_selection.selection,
-            &prepared_selection.settings,
+            settings,
         )?;
         output.findings.extend(next.findings);
         output.advisories.extend(next.advisories);
@@ -190,6 +196,5 @@ fn check_selection_with_facts(
         advisories: filter_rule_findings(root, config, report.advisories)?,
     })
 }
-
 #[cfg(test)]
 mod tests;

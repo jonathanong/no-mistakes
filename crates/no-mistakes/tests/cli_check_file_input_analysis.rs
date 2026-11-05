@@ -30,11 +30,15 @@ fn file_input_analysis_routes_every_rule_through_policy_at_max_and_low_fallback(
                             String::from_utf8_lossy(&output.stderr)
                         )
                     });
-                assert_eq!(
-                    output.status.code(),
-                    Some(i32::from(definite + uncertainty > 0)),
+                assert!(
+                    report["incomplete"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .any(|failure| { failure["consumer"] == "server-route-client-boundary" }),
                     "{report}"
                 );
+                assert_eq!(output.status.code(), Some(1), "{report}");
                 assert_eq!(
                     report["rules"].as_array().unwrap().len(),
                     definite + uncertainty,

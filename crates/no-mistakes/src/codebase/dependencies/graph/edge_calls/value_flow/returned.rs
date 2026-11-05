@@ -83,7 +83,7 @@ impl ValueFlowResolution<'_, '_> {
                                 &file,
                                 &export_path,
                                 self.indexes,
-                                &mut Vec::new(),
+                                &mut ExportResolutionTrace::default(),
                             ) {
                                 ExportedCallableResolution::Callable(file, _, Some(id)) => {
                                     Some((file, id))

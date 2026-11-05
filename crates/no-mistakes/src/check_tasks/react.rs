@@ -3,13 +3,14 @@ use anyhow::Result;
 use no_mistakes::codebase::check_facts::CheckFactMap;
 use no_mistakes::react_traits;
 
-pub(crate) fn run_react_check(
+pub(crate) fn run_react_check_with_session(
     root: &std::path::Path,
     enabled: bool,
     facts: &CheckFactMap,
     prepared: &react_traits::PreparedReactCheck,
     sources: &no_mistakes::codebase::ts_source::SourceStore,
     defer_suppression: bool,
+    session: Option<&no_mistakes::codebase::analysis_session::AnalysisSession>,
 ) -> Result<CheckTask<Vec<react_traits::Violation>>> {
     let (((findings, react_suppression_targets), warning), duration) =
         no_mistakes::diagnostics::measure_if_enabled(
@@ -17,12 +18,24 @@ pub(crate) fn run_react_check(
             no_mistakes::diagnostics::TimingKind::Parallel,
             || {
                 if enabled {
-                    match react_traits::run_check_with_prepared_facts_for_aggregate(
-                        root,
-                        &[],
-                        facts,
-                        prepared,
-                    ) {
+                    let result = match session {
+                        Some(session) => {
+                            react_traits::run_check_with_prepared_facts_for_aggregate_and_session(
+                                root,
+                                &[],
+                                facts,
+                                prepared,
+                                session,
+                            )
+                        }
+                        None => react_traits::run_check_with_prepared_facts_for_aggregate(
+                            root,
+                            &[],
+                            facts,
+                            prepared,
+                        ),
+                    };
+                    match result {
                         Ok(mut findings) => {
                             if !defer_suppression {
                                 // Ordinary checks suppress each component using
@@ -57,3 +70,6 @@ pub(crate) fn run_react_check(
         duration,
     })
 }
+
+#[cfg(test)]
+mod tests;

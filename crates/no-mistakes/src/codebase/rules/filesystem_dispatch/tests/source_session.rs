@@ -21,6 +21,7 @@ fn aggregate_reads_rust_sources_once_without_global_suppression_rereads() {
         &config,
         &files,
         PreparedFilesystemRuleInputs {
+            session: None,
             snapshot: &snapshot,
             next_config_resolver: None,
             vitest_catalog: None,
@@ -78,6 +79,7 @@ comparisons:
         &config,
         &files,
         PreparedFilesystemRuleInputs {
+            session: None,
             snapshot: &snapshot,
             next_config_resolver: None,
             vitest_catalog: None,
@@ -111,6 +113,7 @@ fn aggregate_finding_and_suppression_share_one_physical_read() {
         &config,
         &files,
         PreparedFilesystemRuleInputs {
+            session: None,
             snapshot: &snapshot,
             next_config_resolver: None,
             vitest_catalog: None,

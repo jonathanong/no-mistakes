@@ -9,23 +9,15 @@ pub(super) fn read_errors(
     variants: &[CheckFactVariant<'_>],
     error: impl std::fmt::Display,
 ) -> Vec<Option<CheckFileFacts>> {
-    let parse_error = format!("failed to read {}: {error}", path.display());
     variants
         .iter()
         .map(|variant| {
-            Some(CheckFileFacts {
-                ts: Arc::new(TsFileFacts {
-                    operational_error: Some(parse_error.clone()),
-                    parse_error: Some(parse_error.clone()),
-                    ..TsFileFacts::default()
-                }),
-                parse_error: Some(parse_error.clone()),
-                server_route_client_boundary: variant
-                    .plan
-                    .server_route_client_boundary
-                    .then(Default::default),
-                ..CheckFileFacts::default()
-            })
+            Some(super::super::super::file_parse_error::read_facts(
+                variant.root,
+                path,
+                variant.plan,
+                &error,
+            ))
         })
         .collect()
 }
@@ -47,6 +39,21 @@ pub(super) fn fill_parse_errors(
             format!("unsupported file type: {}", path.display())
         };
         results[index] = Some(CheckFileFacts {
+            sql_source_prerequisites:
+                crate::codebase::check_facts::SqlSourcePrerequisites::failed_source(
+                    variant.root,
+                    path,
+                    variant.plan,
+                ),
+            sql_identifier_syntax: crate::codebase::postgres::sql_identifier_syntax::FileFacts {
+                low_applications:
+                    crate::codebase::check_facts::sql_source_prerequisites::planned_low_applications(
+                        variant.root,
+                        path,
+                        variant.plan,
+                    ),
+                ..Default::default()
+            },
             ts: Arc::new(TsFileFacts {
                 fatal_parse_error: legacy,
                 parse_error: Some(parse_error.clone()),
@@ -99,6 +106,12 @@ pub(super) fn recovered_error_facts(
         )
     });
     CheckFileFacts {
+        sql_source_prerequisites:
+            crate::codebase::check_facts::SqlSourcePrerequisites::failed_source(
+                variant.root,
+                path,
+                plan,
+            ),
         lint_suppressions: plan.collect_lint_suppressions(path, program, parsed_source),
         ts: Arc::new(ts),
         source: stored_source,

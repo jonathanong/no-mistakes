@@ -1,0 +1,16 @@
+version: 2
+projects:
+  backend:
+    type: server
+    root: .
+    queues:
+      enqueues: [src/enqueue.ts]
+      workers: [src/worker.ts]
+queues:
+  factories:
+    queue:
+      - { callee: createQueue, name: 0 }
+    enqueue:
+      - { callee: createEnqueueFunction, queue: 0, job: 1 }
+    worker:
+      - { callee: createWorker, name: 0, processor: 1 }

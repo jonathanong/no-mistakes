@@ -8,7 +8,13 @@ pub(super) fn sources(
     graph: &DepGraph,
     roots: &[NodeId],
     root_files: &[PathBuf],
-) -> FxHashSet<NodeId> {
+) -> anyhow::Result<FxHashSet<NodeId>> {
+    super::super::graph_source_prerequisites::require_import_sources(
+        super::RULE_ID,
+        graph,
+        &root_files.iter().map(NodeId::file).collect::<Vec<_>>(),
+        None,
+    )?;
     let entries: Vec<NodeId> = root_files.iter().map(NodeId::file).collect();
     // Importing a module runs its top level, so each imported module's
     // module-scope calls start a call chain of their own.
@@ -34,5 +40,5 @@ pub(super) fn sources(
     all.extend(graph.expand_call_roots(&modules));
     all.sort();
     all.dedup();
-    graph.call_source_nodes(&all, CallTraversal::Transitive, None)
+    Ok(graph.call_source_nodes(&all, CallTraversal::Transitive, None))
 }

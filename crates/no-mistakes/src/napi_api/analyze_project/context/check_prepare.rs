@@ -1,6 +1,7 @@
 include!("check_prepare_graph.rs");
 impl SharedCheckContext {
     fn prepare(
+        session: &crate::codebase::analysis_session::AnalysisSession,
         root: &Path,
         options: SharedCheckPreparationOptions<'_>,
         visible_paths: std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot>,
@@ -20,6 +21,8 @@ impl SharedCheckContext {
             deadlines,
             effort,
         } = options;
+        let session = session.scoped_checks();
+        session.enable_partial_checks();
         let root = root.to_path_buf();
         let mut config = config.clone();
         config.effort_override = effort;
@@ -35,6 +38,7 @@ impl SharedCheckContext {
                 deadlines,
             },
         )?;
+        crate::check_runner::prepared::failures::record(&session, &prepared);
         let config = &prepared.config;
         let queues_enabled = queues_configured(config);
         let unique_exports_enabled = unique_exports_configured(config);
@@ -70,7 +74,9 @@ impl SharedCheckContext {
             embedded_sql: enabled.embedded_sql,
         });
         crate::codebase::rules::nextjs_no_caching::configure_effort_plan(config, &mut plan)?;
-        crate::codebase::rules::require_storybook_stories::configure_effort_plan(config, &mut plan)?;
+        crate::codebase::rules::require_storybook_stories::configure_effort_plan(
+            config, &mut plan,
+        )?;
         crate::codebase::postgres::assign_prepared_embedded_sql_options(config, &mut plan)?;
         plan.postgres_schema_catalog_paths =
             crate::codebase::postgres::configured_schema_catalog_paths(
@@ -101,34 +107,20 @@ impl SharedCheckContext {
                 prepared.visible_paths.source_store_for(&root),
             )));
         }
-        let prepared_graph = prepare_shared_graph(&root, config, &prepared, graph_plan)?;
-        if let Some(graph_playwright) = prepared_graph
-            .as_ref()
-            .map(|graph| {
-                graph.playwright_fact_plan(
-                    &root,
-                    &prepared.tsconfig,
-                    prepared.visible_paths.as_ref(),
-                )
-            })
-            .transpose()?
-            .flatten()
-        {
-            match playwright_fact_plan.as_mut() {
-                Some(plan) => plan.include(graph_playwright),
-                None => playwright_fact_plan = Some(graph_playwright),
-            }
-        }
-        if let (Some(graph_plan), Some(prepared_graph)) = (graph_plan, prepared_graph.as_ref()) {
-            let (fact_plan, fact_context) =
-                crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_prepared(
-                    &root,
-                    graph_plan,
-                    prepared_graph,
-                );
-            plan.graph.include(fact_plan);
-            plan.graph_context = fact_context;
-        }
+        let prepared_graph = crate::check_runner::graph_plan::prepare(
+            &root,
+            config,
+            crate::check_runner::graph_plan::PreparedInputs {
+                session: &session,
+                codebase_config: &prepared.codebase_config,
+                tsconfig: &prepared.tsconfig,
+                visible_paths: prepared.visible_paths.as_ref(),
+                workflow_documents: prepared.workflow_documents.as_ref(),
+            },
+            graph_plan,
+            &mut playwright_fact_plan,
+            &mut plan,
+        )?;
         plan.graph.per_item_calls |=
             config.rule_configured(crate::codebase::rules::QUERY_REACHED_PER_ITEM);
         crate::codebase::rules::forbidden_calls::configure_argument_facts(&root, config, &mut plan);
@@ -176,6 +168,7 @@ impl SharedCheckContext {
             Default::default()
         };
         Ok(Self {
+            session,
             disable_directives: prepare_disable_directives(&root, config, &fs_files, &prepared)?,
             root,
             config_path: config_path.map(Path::to_path_buf),

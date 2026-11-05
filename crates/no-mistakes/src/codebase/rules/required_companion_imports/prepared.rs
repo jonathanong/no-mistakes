@@ -1,5 +1,3 @@
-//! Request-owned companion selections, shared by fact demand and projection.
-
 use super::helpers::{
     build_globset, build_pattern_globset, companion_patterns, render_template, source_extensions,
     source_info,
@@ -63,7 +61,7 @@ pub fn configure_fact_plan(
 }
 
 impl PreparedCompanionImportPlan {
-    pub(super) fn matches(&self, root: &Path, config: &NoMistakesConfig) -> bool {
+    pub(crate) fn matches(&self, root: &Path, config: &NoMistakesConfig) -> bool {
         self.root == normalize_path(root) && self.config == companion_view(config)
     }
 }

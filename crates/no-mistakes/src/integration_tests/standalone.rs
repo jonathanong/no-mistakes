@@ -7,6 +7,13 @@ pub(super) fn check(
     root: &Path,
     config_path: Option<&Path>,
 ) -> Result<Vec<super::IntegrationFinding>> {
+    crate::ast::with_request_parse_cache(|| check_with_cache(root, config_path))
+}
+
+fn check_with_cache(
+    root: &Path,
+    config_path: Option<&Path>,
+) -> Result<Vec<super::IntegrationFinding>> {
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
     let visible_paths = snapshot.paths_for(root);
     let config = load_v2_config_from_visible(root, config_path, &visible_paths)?;

@@ -1,0 +1,13 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    include: [caller.ts]
+    options:
+      importSpecifier: '@example/db'
+      executorNames: [query]
+      sqlLiteralHelpers: ['./helper#head']
+  - rule: no-empty-or-comments-only-files
+    scope: repository
+    include: [empty.txt]
+    options:
+      extensions: [.txt]

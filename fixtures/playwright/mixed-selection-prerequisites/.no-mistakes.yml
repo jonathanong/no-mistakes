@@ -1,0 +1,19 @@
+projects:
+  mixed:
+    type: nextjs
+    root: mixed
+  healthy:
+    type: nextjs
+    root: healthy
+tests:
+  playwright:
+    configs: [playwright.config.ts]
+    selectors:
+      testIds: [data-testid]
+rules:
+  - rule: playwright-coverage
+    projects: [mixed]
+  - rule: playwright-coverage
+    projects: [healthy]
+    tests:
+      playwright: [good]

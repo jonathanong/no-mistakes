@@ -86,7 +86,7 @@ fn check_with_facts_reports_dropped_helper_parse_errors() {
 }
 
 #[test]
-fn file_disabled_parse_errors_do_not_abort_integration_checks() {
+fn file_disabled_parse_errors_remain_integration_prerequisite_failures() {
     let root = fixture("basic");
     let file = root.join("backend/unit.test.mts");
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
@@ -104,5 +104,17 @@ fn file_disabled_parse_errors_do_not_abort_integration_checks() {
         .into(),
     );
 
-    checks::fail_on_dropped_files(&root, &suites, &shared).unwrap();
+    let tsconfig = test_support::tsconfig_without_config(&root);
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    assert!(checks::check_suites(
+        &root,
+        &suites,
+        &tsconfig,
+        &std::collections::BTreeMap::new(),
+        &session,
+        &shared,
+    )
+    .is_err());
 }
+
+mod partial;

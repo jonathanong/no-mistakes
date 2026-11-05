@@ -144,7 +144,7 @@ fn analyze_project_inner<T>(
             &session,
             config.as_ref(),
             filter.as_ref(),
-        );
+        )?;
         producers.extend(lang_producers);
         workers.extend(lang_workers);
     }

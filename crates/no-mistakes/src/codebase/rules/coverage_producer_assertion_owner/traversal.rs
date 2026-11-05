@@ -4,6 +4,7 @@ use std::collections::VecDeque;
 pub(super) struct Outcome {
     pub assertion: bool,
     pub uncertain: bool,
+    pub(super) source_failures: std::collections::BTreeMap<std::path::PathBuf, String>,
     unmodeled: bool,
 }
 pub(super) fn analyze(
@@ -20,7 +21,11 @@ pub(super) fn analyze(
     let mut queue = VecDeque::from([(root.clone(), 0usize)]);
     while let Some((node, depth)) = queue.pop_front() {
         let file = node.as_file().expect("callable file");
-        if unavailable(file, facts) || generator(&node, facts) {
+        let source_unavailable = unavailable(file, facts);
+        if source_unavailable {
+            out.record_source_failure(file, facts);
+        }
+        if source_unavailable || generator(&node, facts) {
             out.uncertain = true;
             continue;
         }
@@ -32,6 +37,9 @@ pub(super) fn analyze(
             .copied()
             .filter(|site| eligible(site, facts))
         {
+            for failed in graph.failed_call_sources(site) {
+                out.record_source_failure(failed, facts);
+            }
             // Calling a generator creates an iterator; neither a configured
             // selector nor a contract makes that occurrence execute its body.
             if site.target_nodes().any(|target| generator(target, facts)) {
@@ -54,6 +62,12 @@ pub(super) fn analyze(
                 unavailable(contract.to.as_file().expect("callable file"), facts)
                     || generator(&contract.to, facts)
             });
+            for contract in &modeled {
+                let file = contract.to.as_file().expect("callable file");
+                if unavailable(file, facts) {
+                    out.record_source_failure(file, facts);
+                }
+            }
             targets.extend(modeled.iter().map(|contract| contract.to.clone()));
             targets.extend(site.target_nodes().cloned());
             // External calls are opaque boundaries unless explicitly modeled. Node `fs`

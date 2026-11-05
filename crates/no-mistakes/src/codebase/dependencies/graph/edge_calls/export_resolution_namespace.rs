@@ -5,7 +5,7 @@ fn resolve_exported_namespace_reexport_member(
     path: &std::path::Path,
     export: (&CallableFileIndex, &str, &str),
     indexes: &CallableResolutionIndexes,
-    visited: &mut Vec<(std::path::PathBuf, String)>,
+    visited: &mut ExportResolutionTrace,
 ) -> ExportedCallableResolution {
     let (file, namespace, member) = export;
     if member.contains('.') {
@@ -45,7 +45,7 @@ fn resolve_exported_namespace_member_alias(
     path: &std::path::Path,
     alias: (&CallableFileIndex, &str),
     indexes: &CallableResolutionIndexes,
-    visited: &mut Vec<(std::path::PathBuf, String)>,
+    visited: &mut ExportResolutionTrace,
 ) -> Option<ExportedCallableResolution> {
     let (file, local) = alias;
     let (namespace, export) = local.split_once('.')?;

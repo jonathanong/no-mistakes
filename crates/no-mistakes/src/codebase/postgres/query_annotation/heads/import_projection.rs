@@ -1,10 +1,14 @@
 //! Resolve only direct source imports against the request's prepared file map.
 use super::{AnnotationHeads, HeadProof, Span};
-use crate::codebase::check_facts::CheckFileFacts;
+use crate::codebase::check_facts::{
+    sql_source_prerequisites::{source_failed, FailedSqlSources},
+    CheckFileFacts,
+};
 use crate::codebase::ts_source::FileIdMap;
 use crate::fx::{FxHashMap, FxHashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+mod record_failures;
 
 pub(crate) fn project(
     files: &mut FileIdMap<CheckFileFacts>,
@@ -14,6 +18,7 @@ pub(crate) fn project(
     let mut completed: Vec<(PathBuf, Span, HeadProof)> = Vec::new();
     let mut effects: FxHashMap<PathBuf, FxHashSet<Span>> = FxHashMap::default();
     let mut callbacks = Vec::new();
+    let mut failed_sources = Vec::<(PathBuf, Span, FailedSqlSources)>::new();
     for (path, file) in files.iter() {
         let Some(heads) = file.query_annotation_heads.as_deref() else {
             continue;
@@ -22,6 +27,10 @@ pub(crate) fn project(
             let Some(target) = resolve(&pending.specifier, path) else {
                 continue;
             };
+            if source_failed(files, &target) {
+                failed_sources.push((path.clone(), pending.span, [target].into_iter().collect()));
+                continue;
+            }
             let Some(proof) = files
                 .get(&target)
                 .and_then(|target| target.query_annotation_heads.as_deref())
@@ -60,6 +69,10 @@ pub(crate) fn project(
             let Some(target) = resolve(&pending.specifier, path) else {
                 continue;
             };
+            if source_failed(files, &target) {
+                failed_sources.push((path.clone(), pending.span, [target].into_iter().collect()));
+                continue;
+            }
             let proven = files
                 .get(&target)
                 .and_then(|target| target.query_annotation_heads.as_deref())
@@ -69,7 +82,11 @@ pub(crate) fn project(
             }
         }
         for pending in &heads.pending_namespaces {
-            if let Some(proof) = super::namespace_heads::project(files, &resolve, path, pending) {
+            let (proof, failed) = super::namespace_heads::project(files, &resolve, path, pending);
+            if !failed.is_empty() {
+                failed_sources.push((path.clone(), pending.span, failed));
+            }
+            if let Some(proof) = proof {
                 completed.push((path.clone(), pending.span, proof));
             }
         }
@@ -77,6 +94,16 @@ pub(crate) fn project(
             let Some(target) = resolve(&pending.specifier, path) else {
                 continue;
             };
+            if source_failed(files, &target) {
+                for span in pending.affected_spans() {
+                    failed_sources.push((
+                        path.clone(),
+                        span,
+                        [target.clone()].into_iter().collect(),
+                    ));
+                }
+                continue;
+            }
             let Some(summary) = files
                 .get(&target)
                 .and_then(|target| target.query_annotation_heads.as_deref())
@@ -92,6 +119,10 @@ pub(crate) fn project(
             let Some(target) = resolve(&pending.specifier, path) else {
                 continue;
             };
+            if source_failed(files, &target) {
+                failed_sources.push((path.clone(), pending.span, [target].into_iter().collect()));
+                continue;
+            }
             let proven = files
                 .get(&target)
                 .and_then(|target| target.query_annotation_heads.as_deref())
@@ -105,7 +136,7 @@ pub(crate) fn project(
             }
         }
     }
-    super::async_returns::project(files, &resolve);
+    failed_sources.extend(super::async_returns::project(files, &resolve));
     for (path, span, proof) in completed {
         let Some(heads) = files
             .get_mut(&path)
@@ -150,6 +181,9 @@ pub(crate) fn project(
                 }
             }
         }
+    }
+    for (path, span, failed) in failed_sources {
+        record_failures::record(files, &path, span, failed);
     }
     super::import_gate::retain(files, &resolve);
 }

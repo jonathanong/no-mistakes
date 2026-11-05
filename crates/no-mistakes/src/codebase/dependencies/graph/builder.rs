@@ -11,6 +11,7 @@ pub struct DepGraph {
     resolved_call_sites: Vec<ResolvedCallSite>,
     root_mock_boundaries: FxHashMap<PathBuf, RootMockBoundaries>,
     opaque_external_members: FxHashMap<PathBuf, OpaqueExternalMembers>,
+    call_prerequisites: FxHashMap<PathBuf, FailedCallSources>,
     /// Class ancestry records in deterministic preparation order. Empty unless
     /// the graph was built with [`GraphBuildPlan::extends`].
     class_declarations: Vec<ClassDeclaration>,
@@ -99,7 +100,7 @@ impl DepGraph {
                 root,
                 tsconfig,
                 tsconfig_catalog,
-                plan,
+                plan: prepared.effective_plan(plan),
                 graph_files,
                 workspace: Some(prepared.workspace()),
                 config_options: prepared.options.as_ref(),
@@ -134,7 +135,7 @@ impl DepGraph {
                 root,
                 tsconfig,
                 tsconfig_catalog: None,
-                plan,
+                plan: prepared.effective_plan(plan),
                 graph_files,
                 workspace: Some(prepared.workspace()),
                 config_options: prepared.options.as_ref(),

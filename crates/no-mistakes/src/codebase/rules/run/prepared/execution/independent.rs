@@ -21,6 +21,7 @@ impl RuleChunk {
     }
 }
 
+#[derive(Clone, Copy)]
 pub(super) struct IndependentRuleRequest<'a> {
     pub session: &'a std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     pub root: &'a Path,
@@ -41,26 +42,75 @@ pub(super) struct IndependentRuleRequest<'a> {
 
 pub(super) fn collect(req: IndependentRuleRequest<'_>) -> Result<RuleChunk> {
     let observer = crate::diagnostics::current();
-    let run = |collect: fn(&IndependentRuleRequest<'_>) -> Result<RuleChunk>| {
+    let run = |consumer: &str,
+               collect: fn(&IndependentRuleRequest<'_>) -> Result<RuleChunk>|
+     -> Result<RuleChunk> {
         with_observer(observer.clone(), || {
-            with_timing_kind(TimingKind::Parallel, || collect(&req))
+            with_timing_kind(TimingKind::Parallel, || {
+                if consumer == TEST_NO_UNMOCKED_DYNAMIC_IMPORTS
+                    && req.dependency_graph.is_none()
+                    && !req.session.check_consumer_ready(consumer)
+                {
+                    return Ok(RuleChunk::from_findings(Vec::new()));
+                }
+                if !req.session.partial_checks_enabled()
+                    || consumer == "graph-rules"
+                    || consumer == "playwright"
+                {
+                    return Ok(req
+                        .session
+                        .capture_check_result(consumer, collect(&req))?
+                        .unwrap_or_else(|| RuleChunk::from_findings(Vec::new())));
+                }
+                let mut chunks = Vec::new();
+                for (index, application) in req
+                    .config
+                    .rule_applications(consumer)
+                    .into_iter()
+                    .enumerate()
+                {
+                    let mut application = application.clone();
+                    application
+                        .resolved_application_index
+                        .get_or_insert(index + 1);
+                    let config = crate::config::v2::NoMistakesConfig {
+                        rules: vec![application],
+                        ..req.config.clone()
+                    };
+                    let scoped = IndependentRuleRequest {
+                        config: &config,
+                        ..req
+                    };
+                    chunks.push(
+                        req.session
+                            .capture_check_result(consumer, collect(&scoped))?
+                            .unwrap_or_else(|| RuleChunk::from_findings(Vec::new())),
+                    );
+                }
+                merge_chunks(chunks)
+            })
         })
     };
     let (dynamic, (boundary, (api, (caching, (storybook, (playwright, graph)))))) = rayon::join(
-        || run(dynamic_imports),
+        || run(TEST_NO_UNMOCKED_DYNAMIC_IMPORTS, dynamic_imports),
         || {
             rayon::join(
-                || run(boundary),
+                || run(SERVER_ROUTE_CLIENT_BOUNDARY, boundary),
                 || {
                     rayon::join(
-                        || run(api_routes),
+                        || run(NEXTJS_NO_API_ROUTES, api_routes),
                         || {
                             rayon::join(
-                                || run(caching),
+                                || run(NEXTJS_NO_CACHING, caching),
                                 || {
                                     rayon::join(
-                                        || run(storybook),
-                                        || rayon::join(|| run(playwright), || run(graph_rules)),
+                                        || run(REQUIRE_STORYBOOK_STORIES, storybook),
+                                        || {
+                                            rayon::join(
+                                                || run("playwright", playwright),
+                                                || run("graph-rules", graph_rules),
+                                            )
+                                        },
                                     )
                                 },
                             )
@@ -81,7 +131,7 @@ pub(super) fn collect(req: IndependentRuleRequest<'_>) -> Result<RuleChunk> {
     ])
 }
 
-fn merge_chunks(chunks: [RuleChunk; 7]) -> Result<RuleChunk> {
+fn merge_chunks(chunks: impl IntoIterator<Item = RuleChunk>) -> Result<RuleChunk> {
     let mut findings = Vec::new();
     let mut suppression_sources = Vec::new();
     let mut advisories = Vec::new();

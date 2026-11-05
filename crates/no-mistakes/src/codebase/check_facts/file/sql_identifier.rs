@@ -116,9 +116,7 @@ pub(super) fn invalid(
 ) -> sql_identifier_syntax::FileFacts {
     let mut facts =
         sql_identifier_syntax::collect_invalid(program, source, &profiles(root, path, plan));
-    if policy_selected(root, path, plan) {
-        register(root, path, plan, &mut facts);
-    }
+    register(root, path, plan, &mut facts);
     facts
 }
 fn register(
@@ -127,19 +125,10 @@ fn register(
     plan: &CheckFactPlan,
     facts: &mut sql_identifier_syntax::FileFacts,
 ) {
-    facts.low_applications = plan
-        .sql_identifier_profiles
-        .iter()
-        .flat_map(|(profile, scans)| {
-            scans
-                .iter()
-                .filter(|scan| scan.includes(root, path))
-                .filter_map(|scan| {
-                    scan.application_index
-                        .map(|index| (profile.clone(), scan.rule.clone(), index))
-                })
-        })
-        .collect();
+    facts.low_applications =
+        crate::codebase::check_facts::sql_source_prerequisites::planned_low_applications(
+            root, path, plan,
+        );
 }
 pub(super) fn policy_selected(root: &Path, path: &Path, plan: &CheckFactPlan) -> bool {
     plan.sql_identifier_profiles.values().any(|scans| {

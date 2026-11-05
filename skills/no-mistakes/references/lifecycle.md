@@ -63,6 +63,11 @@ stderr pipes or stalled snapshot collection can omit this best-effort output.
 
 Run `no-mistakes check --format json`. For Next.js or Playwright changes, also
 run `no-mistakes playwright check --json` and the focused Playwright test plan.
+Inspect `incomplete` in check JSON: it names requested consumers whose checks
+could not finish after a prerequisite failure. These failures cannot be suppressed and are not
+advisories; exit status 1 can accompany findings from consumers that completed.
+An absent field means no prerequisite failures were captured, not that arbitrary
+dynamic JavaScript configuration was evaluated.
 For package additions, compare direct importers with each nearest
 `package.json` and verify that each importer declares the dependency directly.
 

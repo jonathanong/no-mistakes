@@ -1,6 +1,5 @@
 use super::check_json_snapshot::{assert_saved_fixture, rules_path};
 use std::path::PathBuf;
-use std::process::Command;
 
 fn fixture(rule: &str, name: &str) -> (PathBuf, PathBuf) {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -37,18 +36,9 @@ fn issue_3030_array_invalid_option_snapshot() {
         "configs",
         "issue-3030-invalid-kind.yml",
     );
-    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
-        .args(["check", "--root"])
-        .arg(root)
-        .arg("--config")
-        .arg(config)
-        .args(["--format", "json"])
-        .output()
-        .unwrap();
-    assert_eq!(output.status.code(), Some(2));
-    insta::assert_snapshot!(
+    assert_saved_fixture(
         "postgres_issue_3030_array_invalid_option",
-        format!("exitCode: 2\n{}", String::from_utf8_lossy(&output.stderr))
+        &[("invalid_kind", root, config)],
     );
 }
 

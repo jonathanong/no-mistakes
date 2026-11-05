@@ -11,7 +11,7 @@ pub(super) fn reachable_story_files(
     shared: &CheckFactMap,
     stories: &GlobMatcher,
     resolver: &dyn ImportResolution,
-    _all_component_keys: &HashSet<String>,
+    demand: Option<&super::source_failures::SourceFailures<'_>>,
 ) -> BTreeSet<PathBuf> {
     let mut queue: VecDeque<PathBuf> = story_files_matching(project_root, shared, stories)
         .into_iter()
@@ -20,6 +20,9 @@ pub(super) fn reachable_story_files(
     while let Some(file) = queue.pop_front() {
         if !seen.insert(file.clone()) {
             continue;
+        }
+        if let Some(demand) = demand {
+            demand.require_story(&file);
         }
         let Some(facts) = shared.ts.get(&file) else {
             continue;
@@ -87,6 +90,7 @@ pub(super) fn directly_covered_components(
     story_files: &BTreeSet<PathBuf>,
     resolver: &dyn ImportResolution,
     component_keys: &HashSet<String>,
+    demand: Option<&super::source_failures::SourceFailures<'_>>,
 ) -> BTreeSet<String> {
     let mut covered = BTreeSet::new();
     for file in story_files {
@@ -115,7 +119,7 @@ pub(super) fn directly_covered_components(
                 &import.imported,
                 component_keys,
                 resolver,
-                &mut HashSet::new(),
+                (&mut HashSet::new(), demand),
             ) {
                 covered.insert(key);
             }
@@ -144,55 +148,5 @@ pub(super) fn all_react_component_keys(
     out
 }
 
-fn resolve_component_key(
-    project_root: &Path,
-    shared: &CheckFactMap,
-    file: &Path,
-    export_name: &str,
-    component_keys: &HashSet<String>,
-    resolver: &dyn ImportResolution,
-    visiting: &mut HashSet<(PathBuf, String)>,
-) -> Option<String> {
-    if !file.starts_with(project_root) {
-        return None;
-    }
-    let project_file = relative_slash_path(project_root, file);
-    let direct = component_key(&project_file, export_name);
-    if component_keys.contains(&direct) {
-        return Some(direct);
-    }
-    if !visiting.insert((file.to_path_buf(), export_name.to_string())) {
-        return None;
-    }
-    let facts = shared.ts.get(file)?;
-    let symbols = facts.symbols.as_ref()?;
-    for export in &symbols.exports {
-        let ExportKind::ReExport { source, imported } = &export.kind else {
-            continue;
-        };
-        if export.is_type_only {
-            continue;
-        }
-        if export.name != export_name && export.name != "*" {
-            continue;
-        }
-        let resolved = resolver.resolve(source, file).map(|p| normalize_path(&p))?;
-        let target_name = if imported == "*" {
-            export_name
-        } else {
-            imported
-        };
-        if let Some(key) = resolve_component_key(
-            project_root,
-            shared,
-            &resolved,
-            target_name,
-            component_keys,
-            resolver,
-            visiting,
-        ) {
-            return Some(key);
-        }
-    }
-    None
-}
+mod resolve;
+use resolve::resolve_component_key;

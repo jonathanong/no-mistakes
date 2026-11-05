@@ -66,7 +66,7 @@ pub(crate) fn check_with_graph(
             graph_files,
             target_roots: &target_roots,
         })?;
-        let reachable = reachable::sources(graph, &roots, &root_files);
+        let reachable = reachable::sources(graph, &roots, &root_files)?;
         let filter = super::path_filter::RulePathFilter::new(&root, config, application)?;
         let fixture_dirs = options.fixture_dirs();
         let mut sites = requires::Sites::default();
@@ -80,12 +80,7 @@ pub(crate) fn check_with_graph(
             }
             let loads =
                 node_loaders::findings(&root, application, site, facts, &options.enumerators);
-            if !loads.is_empty() {
-                match options.unresolved_root {
-                    UnresolvedRoot::Report => diagnostics.findings.extend(loads),
-                    UnresolvedRoot::Advise => diagnostics.advisories.extend(loads),
-                }
-            }
+            unresolved_findings(&mut diagnostics, options.unresolved_root).extend(loads);
             sites.visit(site, &options.enumerators);
             let Some(scan) = scan_of(site, &options.enumerators) else {
                 continue;
@@ -149,18 +144,12 @@ pub(crate) fn check_with_graph(
                 }
                 Verdict::Unresolved(why) => {
                     let finding = findings::unresolved(&root, application, site, why);
-                    match options.unresolved_root {
-                        UnresolvedRoot::Report => diagnostics.findings.push(finding),
-                        UnresolvedRoot::Advise => diagnostics.advisories.push(finding),
-                    }
+                    unresolved_findings(&mut diagnostics, options.unresolved_root).push(finding);
                 }
             }
         }
         for finding in sites.unresolved_requires(&root, application, facts, &options.enumerators) {
-            match options.unresolved_root {
-                UnresolvedRoot::Report => diagnostics.findings.push(finding),
-                UnresolvedRoot::Advise => diagnostics.advisories.push(finding),
-            }
+            unresolved_findings(&mut diagnostics, options.unresolved_root).push(finding);
         }
     }
     for list in [&mut diagnostics.findings, &mut diagnostics.advisories] {
@@ -168,6 +157,16 @@ pub(crate) fn check_with_graph(
         list.dedup();
     }
     Ok(diagnostics)
+}
+
+fn unresolved_findings(
+    diagnostics: &mut AnalysisDiagnostics,
+    policy: UnresolvedRoot,
+) -> &mut Vec<super::RuleFinding> {
+    match policy {
+        UnresolvedRoot::Report => &mut diagnostics.findings,
+        UnresolvedRoot::Advise => &mut diagnostics.advisories,
+    }
 }
 
 #[cfg(test)]

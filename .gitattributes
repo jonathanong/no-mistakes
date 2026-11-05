@@ -1,7 +1,38 @@
 *.snap text eol=lf
+test-cases/rule-recall-audit/fixture/storybook/required-props-malformed/src/Card.tsx text eol=lf
 # Bytes from these fixtures are span-counted or quoted into check JSON.
 # Windows autocrlf would move the span and embed CR in the TOML error.
 test-cases/rules/forbidden-calls/malformed-roots/fixture/src/broken.mts text eol=lf
+fixtures/postgres-facts/embedded/helpers/uncooked-template.ts text eol=lf
+test-cases/rules/postgres-sql-statement-policy/fixture/embedded/unparsed.ts text eol=lf
+test-cases/rules/postgres-require-query-annotation/fixture/loop-carried-reassignment/src/malformed.mts text eol=lf
+test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-coverage/src/invalid.mts text eol=lf
+fixtures/check/coverage-owner-partial/broken.ts text eol=lf
+fixtures/check/partial-source/template.js text eol=lf
+fixtures/check/partial-unique/bad/broken.ts text eol=lf
+test-cases/codebase-analysis/no-nextjs-caching/fixture/web/app/invalid.ts text eol=lf
+test-cases/codebase-analysis/unique-exports-edge-cases/fixture/src/disabled-invalid.ts text eol=lf
+test-cases/codebase-analysis/unique-exports-edge-cases/fixture/src/invalid.ts text eol=lf
+test-cases/rules/forbidden-lint-suppressions/fixture/src/recovered.ts text eol=lf
+test-cases/rules/postgres-generated-column-predicates/fixture/ext-cjs/src/query.cjs text eol=lf
+test-cases/rules/require-storybook-stories/fixture/malformed-selected/components/Allowed.tsx text eol=lf
+test-cases/rules/require-storybook-stories/fixture/malformed-selected/components/Broken.jsx text eol=lf
+test-cases/rules/require-storybook-stories/fixture/malformed-selected/components/Broken.test.tsx text eol=lf
+test-cases/rules/require-storybook-stories/fixture/malformed-selected/components/Broken.tsx text eol=lf
+test-cases/rules/require-storybook-stories/fixture/malformed-selected/components/Excluded.tsx text eol=lf
+test-cases/rules/require-storybook-stories/fixture/malformed-selected/components/FileDisabled.tsx text eol=lf
+test-cases/rules/require-storybook-stories/fixture/malformed-selected/components/GenericExcluded.tsx text eol=lf
+test-cases/rules/require-storybook-stories/fixture/malformed-selected/components/LineDisabled.tsx text eol=lf
+test-cases/rules/require-storybook-stories/fixture/malformed-selected/components/_Private.tsx text eol=lf
+test-cases/rules/require-storybook-stories/fixture/malformed-selected/components/index.tsx text eol=lf
+test-cases/rules/require-storybook-stories/fixture/malformed-selected/components/plain.ts text eol=lf
+test-cases/rules/require-storybook-stories/fixture/malformed-selected/outside/NextLine.tsx text eol=lf
+test-cases/rules/require-storybook-stories/fixture/malformed-selected/outside/Unselected.tsx text eol=lf
+test-cases/rules/require-storybook-stories/fixture/malformed-stories/web/stories/Broken.stories.tsx text eol=lf
+test-cases/rules/require-storybook-stories/fixture/malformed-stories/web/stories/FileDisabled.stories.tsx text eol=lf
+test-cases/rules/require-storybook-stories/fixture/malformed-stories/web/stories/LineDisabled.stories.tsx text eol=lf
+test-cases/rules/required-companion-imports/prepared-shared/stories/fatal.stories.mts text eol=lf
+test-cases/rules/required-companion-imports/prepared-shared/stories/legacy.stories.js text eol=lf
 test-cases/rules/version-pin-consistency/fixture/unavailable-source/versions.toml text eol=lf
 fixtures/rules/disable-directive-audit/boundaries-crlf.rs -text -whitespace
 fixtures/rules/disable-directive-audit/rust-block-docs-crlf.rs -text -whitespace
@@ -21,3 +52,4 @@ test-cases/rules/markdown-link-display-text/unit-fixture/** text eol=lf
 test-cases/rules/github-actions-max-inline-script-lines/fixture/continuations/.github/workflows/continued.yml text eol=lf -whitespace
 test-cases/rules/github-actions-max-inline-script-lines/fixture/unreadable/.github/workflows/*.yml -text -whitespace
 test-cases/rule-recall-audit/fixture/timeout-literals/multiline-allow-crlf/.github/workflows/ci.test.mts -text -whitespace
+fixtures/check/sql-helper-prerequisite/helper.ts text eol=lf

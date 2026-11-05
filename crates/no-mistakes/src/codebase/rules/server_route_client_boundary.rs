@@ -43,13 +43,14 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
     super::check_indexed_standalone(root, config, check_files)
 }
 
-pub(crate) fn diagnostics_with_facts_for_aggregate(
+pub(crate) fn diagnostics_with_facts_for_aggregate_and_session(
     root: &Path,
     config: &NoMistakesConfig,
     shared: &crate::codebase::check_facts::CheckFactMap,
     sources: &crate::codebase::ts_source::SourceStore,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     defer_suppression: bool,
+    session: Option<&crate::codebase::analysis_session::AnalysisSession>,
 ) -> Result<super::analysis_policy::AnalysisDiagnostics> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut facts = Vec::new();
@@ -74,6 +75,7 @@ pub(crate) fn diagnostics_with_facts_for_aggregate(
     }
     check_items(
         CheckContext {
+            session,
             root: &root,
             config,
             sources,

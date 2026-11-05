@@ -1,6 +1,9 @@
 use super::*;
 use serde_json::json;
 
+#[path = "check_partial.rs"]
+mod check_partial;
+
 #[path = "check_job_permissions.rs"]
 mod check_job_permissions;
 
@@ -169,7 +172,7 @@ fn check_json_optionally_accounts_for_suppressed_ordinary_rule_findings() {
 }
 
 #[test]
-fn check_json_returns_warnings_for_skipped_configured_check() {
+fn check_json_returns_incompleteness_for_skipped_configured_check() {
     let options = json!({
         "root": fixture_root("test-no-unmocked-dynamic-imports-unknown-vitest-project"),
     })
@@ -177,11 +180,17 @@ fn check_json_returns_warnings_for_skipped_configured_check() {
     let output = check_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
 
-    assert!(value["warnings"].as_array().unwrap().iter().any(|warning| {
-        warning
-            .as_str()
-            .is_some_and(|warning| warning.contains("unknown vitest project web"))
-    }));
+    assert!(value["incomplete"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|failure| {
+            failure["consumer"] == "test-no-unmocked-dynamic-imports"
+                && failure["message"]
+                    .as_str()
+                    .unwrap()
+                    .contains("unknown vitest project web")
+        }));
     assert_eq!(value["rules"].as_array().map(Vec::len), Some(0));
 }
 

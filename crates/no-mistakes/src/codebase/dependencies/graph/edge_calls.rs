@@ -1,6 +1,5 @@
 use crate::codebase::dependencies::extract::InvocationKind;
 
-/// Projects statically resolved lexical calls into the canonical graph.
 ///
 /// This resolves same-file bindings, direct named and namespace imports, and
 /// explicit or unambiguous-star re-export chains. Dynamic calls and computed
@@ -143,6 +142,7 @@ include!("edge_calls/traversal_filter.rs");
 struct CallableResolutionIndexes {
     files: dashmap::DashMap<std::path::PathBuf, std::sync::Arc<CallableFileIndex>>,
     exports: dashmap::DashMap<(std::path::PathBuf, String), ExportedCallableResolution>,
+    export_prerequisites: dashmap::DashMap<(std::path::PathBuf, String), std::sync::Arc<std::collections::BTreeSet<std::path::PathBuf>>>,
     namespace_roots: dashmap::DashMap<(std::path::PathBuf, String), RootLookup>,
 }
 
