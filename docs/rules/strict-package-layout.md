@@ -16,9 +16,9 @@ rules:
           allowedSubdirs: [src, __tests__]
 ```
 
-Counterexample: a package missing required files or containing banned paths.
+Counterexample: a package containing disallowed files or subdirectories.
 
-Fix: add/move files to the configured package layout.
+Fix: move files into allowed paths or adjust the configured package layout.
 
 ## Why and when
 
