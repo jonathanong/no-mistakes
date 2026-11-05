@@ -79,6 +79,8 @@ rules:
       includeAllReactNamedExports: true
 ```
 
+Omitting `stories` retains configured Storybook patterns or the default story glob. An explicitly empty `stories: []` selects no story files. `requiredProps` applies to explicitly included files as well as components selected by export kind. Explicitly selected malformed sources still report incomplete coverage before component filters.
+
 `stories` selects candidate story files; an empty list matches no stories.
 `include` and `exclude` are rule-local component path globs and both default to
 empty lists. `includeAllReactNamedExports` and

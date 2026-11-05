@@ -12,22 +12,25 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": ".github/workflows",
-          "line": 1,
-          "message": "required artifact edge missing: .github/workflows/pipeline.yml#build -> .github/workflows/pipeline.yml#test: dist [prefix]",
-          "rule": "workflow-topology-policy"
-        },
-        {
-          "file": ".github/workflows",
-          "line": 1,
-          "message": "required artifact edge missing: .github/workflows/pipeline.yml#ghost -> .github/workflows/pipeline.yml#test: dist",
-          "rule": "workflow-topology-policy"
-        },
-        {
-          "file": ".github/workflows",
+          "file": ".github/workflows/pipeline.yml",
           "line": 1,
           "message": "step-order job missing: .github/workflows/pipeline.yml#ghost",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: Needs Basic"
+        },
+        {
+          "file": ".github/workflows/pipeline.yml",
+          "line": 8,
+          "message": "required artifact edge missing: .github/workflows/pipeline.yml#build -> .github/workflows/pipeline.yml#test: dist [prefix]",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "test:"
+        },
+        {
+          "file": ".github/workflows/pipeline.yml",
+          "line": 8,
+          "message": "required artifact edge missing: .github/workflows/pipeline.yml#ghost -> .github/workflows/pipeline.yml#test: dist",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "test:"
         }
       ],
       "warnings": []
@@ -43,16 +46,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": ".github/workflows",
-          "line": 1,
-          "message": "caller allowlist missing: .github/workflows/reusable.yml",
-          "rule": "workflow-topology-policy"
-        },
-        {
-          "file": ".github/workflows",
+          "file": ".github/workflows/ci.yml",
           "line": 1,
           "message": "caller allowlist stale: .github/workflows/ci.yml",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: CI"
+        },
+        {
+          "file": ".github/workflows/reusable.yml",
+          "line": 1,
+          "message": "caller allowlist missing: .github/workflows/reusable.yml",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: Reusable"
         }
       ],
       "warnings": []
@@ -68,7 +73,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": ".github/workflows",
+          "file": ".github/workflows/missing.yml",
           "line": 1,
           "message": "caller allowlist stale: .github/workflows/missing.yml",
           "rule": "workflow-topology-policy"
@@ -87,28 +92,32 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": ".github/workflows",
-          "line": 1,
-          "message": "caller allowlist mismatch: .github/workflows/reusable.yml: expected .github/workflows/ci.yml#missing, got .github/workflows/ci.yml#reusable",
-          "rule": "workflow-topology-policy"
-        },
-        {
-          "file": ".github/workflows",
-          "line": 1,
-          "message": "lock intent missing: .github/workflows/follow-up.yml",
-          "rule": "workflow-topology-policy"
-        },
-        {
-          "file": ".github/workflows",
-          "line": 1,
-          "message": "lock intent missing: .github/workflows/reusable.yml",
-          "rule": "workflow-topology-policy"
-        },
-        {
-          "file": ".github/workflows",
+          "file": ".github/workflows/ci.yml",
           "line": 1,
           "message": "unlocked reason stale: .github/workflows/ci.yml",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: CI"
+        },
+        {
+          "file": ".github/workflows/follow-up.yml",
+          "line": 1,
+          "message": "lock intent missing: .github/workflows/follow-up.yml",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: Follow-up"
+        },
+        {
+          "file": ".github/workflows/reusable.yml",
+          "line": 1,
+          "message": "caller allowlist mismatch: .github/workflows/reusable.yml: expected .github/workflows/ci.yml#missing, got .github/workflows/ci.yml#reusable",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: Reusable"
+        },
+        {
+          "file": ".github/workflows/reusable.yml",
+          "line": 1,
+          "message": "lock intent missing: .github/workflows/reusable.yml",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: Reusable"
         }
       ],
       "warnings": []
@@ -124,28 +133,32 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": ".github/workflows",
+          "file": ".github/workflows/ci.yml",
           "line": 1,
           "message": "concurrency cancellation mismatch: .github/workflows/ci.yml: expected conditional, got cancel-running",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: CI"
         },
         {
-          "file": ".github/workflows",
-          "line": 1,
-          "message": "concurrency intent missing: .github/workflows/lint.yml",
-          "rule": "workflow-topology-policy"
-        },
-        {
-          "file": ".github/workflows",
-          "line": 1,
-          "message": "concurrency pending mismatch: .github/workflows/release.yml#publish: expected fifo, got coalesce-latest",
-          "rule": "workflow-topology-policy"
-        },
-        {
-          "file": ".github/workflows",
+          "file": ".github/workflows/deploy.yml",
           "line": 1,
           "message": "concurrency scope mismatch: .github/workflows/deploy.yml: expected , got sha",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: Deploy"
+        },
+        {
+          "file": ".github/workflows/lint.yml",
+          "line": 1,
+          "message": "concurrency intent missing: .github/workflows/lint.yml",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: Lint"
+        },
+        {
+          "file": ".github/workflows/release.yml",
+          "line": 4,
+          "message": "concurrency pending mismatch: .github/workflows/release.yml#publish: expected fifo, got coalesce-latest",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "publish:"
         }
       ],
       "warnings": []
@@ -197,16 +210,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": ".github/workflows",
-          "line": 1,
-          "message": "exact fan-in mismatch: .github/workflows/pipeline.yml#deploy: expected .github/workflows/pipeline.yml#build, got .github/workflows/pipeline.yml#test",
-          "rule": "workflow-topology-policy"
-        },
-        {
-          "file": ".github/workflows",
+          "file": ".github/workflows/pipeline.yml",
           "line": 1,
           "message": "exact fan-in target missing: .github/workflows/pipeline.yml#ghost",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: Needs Basic"
+        },
+        {
+          "file": ".github/workflows/pipeline.yml",
+          "line": 14,
+          "message": "exact fan-in mismatch: .github/workflows/pipeline.yml#deploy: expected .github/workflows/pipeline.yml#build, got .github/workflows/pipeline.yml#test",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "deploy:"
         }
       ],
       "warnings": []
@@ -222,22 +237,25 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": ".github/workflows",
-          "line": 1,
-          "message": "forbidden direct edge present: .github/workflows/pipeline.yml#build -> .github/workflows/pipeline.yml#test",
-          "rule": "workflow-topology-policy"
-        },
-        {
-          "file": ".github/workflows",
-          "line": 1,
-          "message": "forbidden transitive edge present: .github/workflows/pipeline.yml#build -> .github/workflows/pipeline.yml#deploy",
-          "rule": "workflow-topology-policy"
-        },
-        {
-          "file": ".github/workflows",
+          "file": ".github/workflows/pipeline.yml",
           "line": 1,
           "message": "required transitive edge missing: .github/workflows/pipeline.yml#build -> .github/workflows/pipeline.yml#ghost",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: Needs Basic"
+        },
+        {
+          "file": ".github/workflows/pipeline.yml",
+          "line": 14,
+          "message": "forbidden transitive edge present: .github/workflows/pipeline.yml#build -> .github/workflows/pipeline.yml#deploy",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "deploy:"
+        },
+        {
+          "file": ".github/workflows/pipeline.yml",
+          "line": 8,
+          "message": "forbidden direct edge present: .github/workflows/pipeline.yml#build -> .github/workflows/pipeline.yml#test",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "test:"
         }
       ],
       "warnings": []
@@ -253,22 +271,25 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": ".github/workflows",
+          "file": ".github/workflows/a.yml",
           "line": 1,
           "message": "concurrency group collision: ${{ github.ref }}: .github/workflows/a.yml, .github/workflows/b.yml",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: A"
         },
         {
-          "file": ".github/workflows",
+          "file": ".github/workflows/ci.yml",
           "line": 1,
           "message": "concurrency group collision: ${{ github.workflow }}-${{ github.ref }}: .github/workflows/ci.yml, .github/workflows/ci.yml#build",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: CI"
         },
         {
-          "file": ".github/workflows",
+          "file": ".github/workflows/one.yml",
           "line": 1,
           "message": "concurrency group collision: shared: .github/workflows/one.yml, .github/workflows/two.yml",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: One"
         }
       ],
       "warnings": []
@@ -296,16 +317,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": ".github/workflows",
-          "line": 1,
-          "message": "job inventory mismatch: .github/workflows/pipeline.yml: expected build, got build, deploy, test",
-          "rule": "workflow-topology-policy"
-        },
-        {
-          "file": ".github/workflows",
+          "file": ".github/workflows/missing.yml",
           "line": 1,
           "message": "workflow inventory stale: .github/workflows/missing.yml",
           "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/pipeline.yml",
+          "line": 1,
+          "message": "job inventory mismatch: .github/workflows/pipeline.yml: expected build, got build, deploy, test",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: Needs Basic"
         }
       ],
       "warnings": []
@@ -321,16 +343,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": ".github/workflows",
-          "line": 1,
-          "message": "workflow inventory missing: .github/workflows/pipeline.yml",
-          "rule": "workflow-topology-policy"
-        },
-        {
-          "file": ".github/workflows",
+          "file": ".github/workflows/missing.yml",
           "line": 1,
           "message": "workflow inventory stale: .github/workflows/missing.yml",
           "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/pipeline.yml",
+          "line": 1,
+          "message": "workflow inventory missing: .github/workflows/pipeline.yml",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: Needs Basic"
         }
       ],
       "warnings": []
@@ -358,16 +381,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": ".github/workflows",
-          "line": 1,
-          "message": "lock intent missing: .github/workflows/pipeline.yml",
-          "rule": "workflow-topology-policy"
-        },
-        {
-          "file": ".github/workflows",
+          "file": ".github/workflows/missing.yml",
           "line": 1,
           "message": "unlocked reason stale: .github/workflows/missing.yml",
           "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/pipeline.yml",
+          "line": 1,
+          "message": "lock intent missing: .github/workflows/pipeline.yml",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: Needs Basic"
         }
       ],
       "warnings": []
@@ -407,10 +431,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": ".github/workflows",
+          "file": ".github/workflows/pipeline.yml",
           "line": 1,
           "message": "required direct edge missing: .github/workflows/pipeline.yml#build -> .github/workflows/pipeline.yml#missing",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: Needs Basic"
         }
       ],
       "warnings": []
@@ -426,16 +451,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": ".github/workflows",
-          "line": 1,
-          "message": "forbidden job present: .github/workflows/pipeline.yml#build",
-          "rule": "workflow-topology-policy"
-        },
-        {
-          "file": ".github/workflows",
+          "file": ".github/workflows/pipeline.yml",
           "line": 1,
           "message": "required job missing: .github/workflows/pipeline.yml#ghost",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: Needs Basic"
+        },
+        {
+          "file": ".github/workflows/pipeline.yml",
+          "line": 4,
+          "message": "forbidden job present: .github/workflows/pipeline.yml#build",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "build:"
         }
       ],
       "warnings": []
@@ -1463,10 +1490,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": ".github/workflows",
-          "line": 1,
+          "file": ".github/workflows/pipeline.yml",
+          "line": 4,
           "message": "required ordered step missing: .github/workflows/pipeline.yml#build: actions/checkout@v4",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "build:"
         }
       ],
       "warnings": []
@@ -1494,10 +1522,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": ".github/workflows",
-          "line": 1,
+          "file": ".github/workflows/pipeline.yml",
+          "line": 4,
           "message": "required step order invalid: .github/workflows/pipeline.yml#build: first",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "build:"
         }
       ],
       "warnings": []
@@ -1513,10 +1542,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": ".github/workflows",
-          "line": 1,
+          "file": ".github/workflows/pipeline.yml",
+          "line": 20,
           "message": "required ordered step missing: .github/workflows/pipeline.yml#empty: <step>",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "empty:"
         }
       ],
       "warnings": []
@@ -1532,10 +1562,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": ".github/workflows",
+          "file": ".github/workflows/pipeline.yml",
           "line": 1,
           "message": "unlocked reason empty: .github/workflows/pipeline.yml",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: Needs Basic"
         }
       ],
       "warnings": []

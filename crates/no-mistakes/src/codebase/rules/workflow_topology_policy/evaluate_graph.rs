@@ -1,13 +1,13 @@
 use super::evaluate::Index;
-use super::{finding, Options};
-use crate::codebase::rules::RuleFinding;
+use super::LocatedFinding;
+use super::{job_finding, workflow_finding as finding, Options};
 use crate::codebase::workflow_topology::model::WorkflowTopology;
 
 pub(super) fn lint(
     topology: &WorkflowTopology,
     index: &Index<'_>,
     opts: &Options,
-) -> Vec<RuleFinding> {
+) -> Vec<LocatedFinding> {
     let mut findings = Vec::new();
     findings.extend(edges(index, &opts.required_direct_edges, true, true));
     findings.extend(edges(index, &opts.forbidden_direct_edges, true, false));
@@ -24,14 +24,15 @@ fn edges(
     rules: &[[String; 2]],
     direct: bool,
     required: bool,
-) -> Vec<RuleFinding> {
+) -> Vec<LocatedFinding> {
     let kind = if direct { "direct" } else { "transitive" };
     rules
         .iter()
         .filter_map(|[from, to]| {
             if !index.jobs.contains_key(from.as_str()) || !index.jobs.contains_key(to.as_str()) {
-                return required
-                    .then(|| finding(format!("required {kind} edge missing: {from} -> {to}")));
+                return required.then(|| {
+                    job_finding(to, format!("required {kind} edge missing: {from} -> {to}"))
+                });
             }
             let downstream = if direct {
                 index.direct_downstream(from)
@@ -40,40 +41,46 @@ fn edges(
             };
             let present = downstream.contains(&to.as_str());
             (present != required).then(|| {
-                finding(format!(
-                    "{} {kind} edge {}: {from} -> {to}",
-                    if required { "required" } else { "forbidden" },
-                    if required { "missing" } else { "present" }
-                ))
+                job_finding(
+                    to,
+                    format!(
+                        "{} {kind} edge {}: {from} -> {to}",
+                        if required { "required" } else { "forbidden" },
+                        if required { "missing" } else { "present" }
+                    ),
+                )
             })
         })
         .collect()
 }
 
-fn fan_ins(index: &Index<'_>, opts: &Options) -> Vec<RuleFinding> {
+fn fan_ins(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
     opts.exact_fan_ins
         .iter()
         .map(|(job_id, expected)| {
             if !index.jobs.contains_key(job_id.as_str()) {
-                return finding(format!("exact fan-in target missing: {job_id}"));
+                return job_finding(job_id, format!("exact fan-in target missing: {job_id}"));
             }
             let actual = index.direct_upstream(job_id);
             let mut expected: Vec<&str> = expected.iter().map(String::as_str).collect();
             expected.sort_unstable();
             if actual == expected {
-                return finding(String::new());
+                return job_finding(job_id, String::new());
             }
-            finding(format!(
-                "exact fan-in mismatch: {job_id}: expected {}, got {}",
-                expected.join(", "),
-                actual.join(", ")
-            ))
+            job_finding(
+                job_id,
+                format!(
+                    "exact fan-in mismatch: {job_id}: expected {}, got {}",
+                    expected.join(", "),
+                    actual.join(", ")
+                ),
+            )
         })
-        .filter(|finding| !finding.message.is_empty())
+        .filter(|finding| !finding.finding.message.is_empty())
         .collect()
 }
 
-fn callers(index: &Index<'_>, opts: &Options) -> Vec<RuleFinding> {
+fn callers(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
     if opts.exact_caller_jobs.is_empty() {
         return Vec::new();
     }
@@ -86,12 +93,12 @@ fn callers(index: &Index<'_>, opts: &Options) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     for path in &callable {
         if !opts.exact_caller_jobs.contains_key(*path) {
-            findings.push(finding(format!("caller allowlist missing: {path}")));
+            findings.push(finding(path, format!("caller allowlist missing: {path}")));
         }
     }
     for path in opts.exact_caller_jobs.keys() {
         if !callable.contains(&path.as_str()) {
-            findings.push(finding(format!("caller allowlist stale: {path}")));
+            findings.push(finding(path, format!("caller allowlist stale: {path}")));
         }
     }
     for (path, expected) in &opts.exact_caller_jobs {
@@ -106,17 +113,20 @@ fn callers(index: &Index<'_>, opts: &Options) -> Vec<RuleFinding> {
         let mut expected: Vec<&str> = expected.iter().map(String::as_str).collect();
         expected.sort_unstable();
         if actual != expected {
-            findings.push(finding(format!(
-                "caller allowlist mismatch: {path}: expected {}, got {}",
-                expected.join(", "),
-                actual.join(", ")
-            )));
+            findings.push(finding(
+                path,
+                format!(
+                    "caller allowlist mismatch: {path}: expected {}, got {}",
+                    expected.join(", "),
+                    actual.join(", ")
+                ),
+            ));
         }
     }
     findings
 }
 
-fn unlocked(topology: &WorkflowTopology, opts: &Options) -> Vec<RuleFinding> {
+fn unlocked(topology: &WorkflowTopology, opts: &Options) -> Vec<LocatedFinding> {
     if opts.unlocked_workflow_reasons.is_empty() {
         return Vec::new();
     }
@@ -134,13 +144,22 @@ fn unlocked(topology: &WorkflowTopology, opts: &Options) -> Vec<RuleFinding> {
                     .is_some_and(|job| job.concurrency.is_none())
             });
         if has_unlocked_job && reason.is_none() {
-            findings.push(finding(format!("lock intent missing: {}", workflow.path)));
+            findings.push(finding(
+                &workflow.path,
+                format!("lock intent missing: {}", workflow.path),
+            ));
         }
         if !has_unlocked_job && reason.is_some() {
-            findings.push(finding(format!("unlocked reason stale: {}", workflow.path)));
+            findings.push(finding(
+                &workflow.path,
+                format!("unlocked reason stale: {}", workflow.path),
+            ));
         }
         if reason.is_some_and(|value| value.trim().is_empty()) {
-            findings.push(finding(format!("unlocked reason empty: {}", workflow.path)));
+            findings.push(finding(
+                &workflow.path,
+                format!("unlocked reason empty: {}", workflow.path),
+            ));
         }
     }
     for path in opts.unlocked_workflow_reasons.keys() {
@@ -149,7 +168,7 @@ fn unlocked(topology: &WorkflowTopology, opts: &Options) -> Vec<RuleFinding> {
             .iter()
             .any(|workflow| workflow.path == *path)
         {
-            findings.push(finding(format!("unlocked reason stale: {path}")));
+            findings.push(finding(path, format!("unlocked reason stale: {path}")));
         }
     }
     findings

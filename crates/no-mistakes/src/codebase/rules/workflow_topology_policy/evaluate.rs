@@ -1,6 +1,6 @@
 use super::concurrency_compile::CompiledIntent;
-use super::{finding, Options};
-use crate::codebase::rules::RuleFinding;
+use super::LocatedFinding;
+use super::{job_finding, workflow_finding as finding, Options};
 use crate::codebase::workflow_topology::model::WorkflowTopology;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -102,7 +102,7 @@ pub(super) fn lint(
     topology: &WorkflowTopology,
     opts: &Options,
     concurrency: &BTreeMap<String, CompiledIntent>,
-) -> Vec<RuleFinding> {
+) -> Vec<LocatedFinding> {
     let index = Index::new(topology);
     let mut findings = Vec::new();
     if !opts.job_inventory.is_empty() {
@@ -118,7 +118,7 @@ pub(super) fn lint(
     findings
 }
 
-fn inventory(topology: &WorkflowTopology, opts: &Options) -> Vec<RuleFinding> {
+fn inventory(topology: &WorkflowTopology, opts: &Options) -> Vec<LocatedFinding> {
     let mut findings = Vec::new();
     let mut actual = BTreeMap::new();
     for workflow in &topology.workflows {
@@ -131,40 +131,43 @@ fn inventory(topology: &WorkflowTopology, opts: &Options) -> Vec<RuleFinding> {
     }
     for (path, keys) in &actual {
         match opts.job_inventory.get(path) {
-            None => findings.push(finding(format!("workflow inventory missing: {path}"))),
+            None => findings.push(finding(path, format!("workflow inventory missing: {path}"))),
             Some(expected) => {
                 let mut expected = expected.clone();
                 expected.sort();
                 let mut got = keys.clone();
                 got.sort();
                 if expected != got {
-                    findings.push(finding(format!(
-                        "job inventory mismatch: {path}: expected {}, got {}",
-                        expected.join(", "),
-                        got.join(", ")
-                    )));
+                    findings.push(finding(
+                        path,
+                        format!(
+                            "job inventory mismatch: {path}: expected {}, got {}",
+                            expected.join(", "),
+                            got.join(", ")
+                        ),
+                    ));
                 }
             }
         }
     }
     for path in opts.job_inventory.keys() {
         if !actual.contains_key(path) {
-            findings.push(finding(format!("workflow inventory stale: {path}")));
+            findings.push(finding(path, format!("workflow inventory stale: {path}")));
         }
     }
     findings
 }
 
-fn job_presence(index: &Index<'_>, opts: &Options) -> Vec<RuleFinding> {
+fn job_presence(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
     let mut findings = Vec::new();
     for id in &opts.required_jobs {
         if !index.jobs.contains_key(id.as_str()) {
-            findings.push(finding(format!("required job missing: {id}")));
+            findings.push(job_finding(id, format!("required job missing: {id}")));
         }
     }
     for id in &opts.forbidden_jobs {
         if index.jobs.contains_key(id.as_str()) {
-            findings.push(finding(format!("forbidden job present: {id}")));
+            findings.push(job_finding(id, format!("forbidden job present: {id}")));
         }
     }
     findings

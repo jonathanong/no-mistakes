@@ -1,0 +1,1 @@
+{"rules": [{"rule": "github-actions-test-timeout-literals", "scope": "repository", "options": {"allow": [{"file": ".github/workflows/ci.test.mts", "text": "expect(\n  step[\"timeout-minutes\"]\n).toBe(10);", "reason": "synthetic assertion control"}]}}]}

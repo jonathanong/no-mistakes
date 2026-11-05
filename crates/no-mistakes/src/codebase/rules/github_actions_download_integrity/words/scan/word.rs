@@ -6,6 +6,9 @@ impl Scan<'_> {
         let Some(quote) = self.quoting else {
             return false;
         };
+        if quote == '"' && self.expansion(ch) {
+            return true;
+        }
         if ch == quote {
             self.quoting = None;
         } else {
@@ -28,15 +31,17 @@ impl Scan<'_> {
     }
 
     pub(super) fn expansion(&mut self, ch: char) -> bool {
-        if matches!(ch, '$' | '`')
-            && self.chars[..self.index]
-                .iter()
-                .rev()
-                .take_while(|character| **character == '\\')
-                .count()
-                % 2
-                == 0
-        {
+        let escaped = self.chars[..self.index]
+            .iter()
+            .rev()
+            .take_while(|character| **character == '\\')
+            .count()
+            % 2
+            != 0;
+        if escaped {
+            return false;
+        }
+        if self.quoting.is_none() && matches!(ch, '$' | '`') {
             self.word_expansion_may_split = true;
         }
         if ch == '`' {

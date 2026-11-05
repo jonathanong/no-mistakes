@@ -19,6 +19,9 @@ mod config_diagnostic_locations;
 #[path = "check_playwright_patterns.rs"]
 mod check_playwright_patterns;
 
+#[path = "check_recall_audit.rs"]
+mod check_recall_audit;
+
 #[path = "check_react_consumed_directives.rs"]
 mod check_react_consumed_directives;
 #[path = "check_redirect_suppression.rs"]

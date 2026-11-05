@@ -13,6 +13,9 @@ mod cli_check_production_exports_importer_gaps;
 #[path = "cli_check_rule_severity.rs"]
 mod cli_check_rule_severity;
 
+#[path = "cli_rule_recall_audit.rs"]
+mod cli_rule_recall_audit;
+
 #[path = "cli_shellcheck_policy.rs"]
 mod cli_shellcheck_policy;
 

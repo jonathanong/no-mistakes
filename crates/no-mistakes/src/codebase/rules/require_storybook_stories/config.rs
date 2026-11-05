@@ -71,8 +71,8 @@ pub(super) fn effective_story_patterns(
     opts: &Options,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<String> {
-    if !opts.stories.is_empty() {
-        return opts.stories.clone();
+    if let Some(stories) = &opts.stories {
+        return stories.clone();
     }
     let mut patterns = Vec::new();
     if let Some(configs) = config.tests.storybook.configs.as_ref() {

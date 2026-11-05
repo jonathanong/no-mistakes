@@ -414,6 +414,8 @@ CI, and keep the Vitest test for small supplied fixtures that exercise that
 check's evaluator. If a test truly needs a directory tree, create it under
 `mkdtemp(join(tmpdir(), ...))` or commit it under a `fixtures` directory.
 
+An absolute literal below the invocation root matches `runtimeAssets` using the same root-relative containment test as a relative literal; paths outside that root do not inherit the declaration. An unresolved relative consumer also invalidates owned-parameter proofs, retaining callee diagnostics for review.
+
 ## Suppression
 
 Use `no-mistakes-disable-next-line test-no-live-repository-scan` or

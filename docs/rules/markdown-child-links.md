@@ -88,6 +88,8 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it checks links in parsed Markdown against the file inventory, so `options.unanalyzable` has no effect on it.
 
+A missing link is reported at the child’s first content line, skipping leading HTML comments. Place a next-line suppression immediately before that content, or a line suppression on it. An empty or comment-only child falls back to line 1.
+
 ## Suppression
 
 Use `no-mistakes-disable-next-line markdown-child-links` or

@@ -187,6 +187,8 @@ jobs:
 
 ## Fix
 
+Job and relationship findings use the affected job key in its workflow; edge findings use the destination job. Workflow findings use the workflow document. If a configured job or workflow is absent, its workflow path remains the diagnostic location, with line 1 as the fallback. Line and next-line suppressions belong at that reported key.
+
 Add the missing topology edge or ordered step, or update the policy with the
 intended graph and a reason for an intentionally unlocked workflow. For a
 concurrency group collision, give each owner its own group. For an undeclared

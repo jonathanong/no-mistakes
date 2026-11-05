@@ -19,7 +19,7 @@ pub(super) struct RuleCheck<'a> {
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub(super) struct Options {
-    pub(super) stories: Vec<String>,
+    pub(super) stories: Option<Vec<String>>,
     pub(super) include: Vec<String>,
     pub(super) exclude: Vec<String>,
     #[serde(alias = "include_all_react_named_exports")]

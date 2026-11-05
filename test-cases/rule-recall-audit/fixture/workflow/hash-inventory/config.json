@@ -1,0 +1,1 @@
+{"rules": [{"rule": "workflow-topology-policy", "scope": "repository", "options": {"jobInventory": {".github/workflows/ci#public.yml": ["lint", "test", "missing"]}}}]}

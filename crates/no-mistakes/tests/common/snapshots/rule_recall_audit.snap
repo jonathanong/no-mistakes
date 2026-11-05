@@ -1,0 +1,890 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "child-links/bom-next-line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "child-links/comment-adjacent": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "child.md",
+          "line": 1,
+          "message": "child.md is not linked from a configured parent markdown file; add a markdown link to this file from a parent",
+          "rule": "markdown-child-links",
+          "sourceLine": "<!-- one --><!-- two --># Child",
+          "target": "child.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "child-links/comment-leading": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "child.md",
+          "line": 5,
+          "message": "child.md is not linked from a configured parent markdown file; add a markdown link to this file from a parent",
+          "rule": "markdown-child-links",
+          "sourceLine": "# Child",
+          "target": "child.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "child-links/comment-only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "child.md",
+          "line": 1,
+          "message": "child.md is not linked from a configured parent markdown file; add a markdown link to this file from a parent",
+          "rule": "markdown-child-links",
+          "sourceLine": "<!-- note -->",
+          "target": "child.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "child-links/empty-child": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "child.md",
+          "line": 1,
+          "message": "child.md is not linked from a configured parent markdown file; add a markdown link to this file from a parent",
+          "rule": "markdown-child-links",
+          "sourceLine": "",
+          "target": "child.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "child-links/file-disable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "child-links/html-off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "child-links/html-on": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "child-links/inline-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "child-links/missing": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "child.md",
+          "line": 1,
+          "message": "child.md is not linked from a configured parent markdown file; add a markdown link to this file from a parent",
+          "rule": "markdown-child-links",
+          "sourceLine": "# Child",
+          "target": "child.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "child-links/next-line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "download-integrity/escaped-substitution": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "download-integrity/literal-check": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "download-integrity/quoted-backtick": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml:6: job `build` step 1 downloads `https://example.invalid/a.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://example.invalid/a.tgz",
+          "target": "build"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "download-integrity/single-quoted-substitution": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "download-integrity/substitution-check": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml:6: job `build` step 1 downloads `https://example.invalid/a.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://example.invalid/a.tgz",
+          "target": "build"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "download-integrity/unquoted-substitution": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml:6: job `build` step 1 downloads `https://example.invalid/a.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://example.invalid/a.tgz",
+          "target": "build"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "download-integrity/unsafe": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml:6: job `build` step 1 downloads `https://example.invalid/a.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://example.invalid/a.tgz",
+          "target": "build"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "live-scan/absolute-control": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "entry.mts",
+          "import": "readdirSync",
+          "line": 2,
+          "message": "runtime asset: `readdirSync` enumerates `assets`, which `runtimeAssets` declares as shipped input (shipped). Listed for review, not a repository scan. If this tree is policy or source, remove the declaration so the read is reported.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(\"assets\");",
+          "target": "runtime asset"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "live-scan/missing-alias": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "helper.mts",
+          "import": "readdirSync",
+          "line": 2,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function scan(dir: string) { return readdirSync(dir); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "live-scan/missing-relative": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "helper.mts",
+          "import": "readdirSync",
+          "line": 2,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function scan(dir: string) { return readdirSync(dir); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "live-scan/owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "storybook/empty-stories": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/Card.tsx",
+          "line": 1,
+          "message": "React component `Card` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "sourceLine": "export function Card() { return <article>Card</article>; }",
+          "target": "src/Card.tsx#Card"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "storybook/nonmatching-stories": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/Card.tsx",
+          "line": 1,
+          "message": "React component `Card` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "sourceLine": "export function Card() { return <article>Card</article>; }",
+          "target": "src/Card.tsx#Card"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "storybook/omitted-stories": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "storybook/required-props-explicit": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "storybook/required-props-kind": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "storybook/required-props-malformed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/Card.tsx",
+          "line": 1,
+          "message": "Selected React source could not be analyzed (parsing src/Card.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 31, end: 32 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "rule": "require-storybook-stories",
+          "sourceLine": "export function Card( { return <article>Card</article>; }",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "storybook/required-props-matching": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/Card.tsx",
+          "line": 1,
+          "message": "React component `Card` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "sourceLine": "export function Card() { return <article data-testid=\"card\">Card</article>; }",
+          "target": "src/Card.tsx#Card"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "timeout-literals/multiline": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 1,
+          "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
+          "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "expect(",
+          "target": "expect(\n  step[\"timeout-minutes\"]\n).toBe(10);"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "timeout-literals/multiline-allow": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "timeout-literals/multiline-allow-crlf": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "timeout-literals/multiline-containment": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 1,
+          "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
+          "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "expect(",
+          "target": "expect(\n step.timeoutMinutes\n).toContain(\"10\");"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "timeout-literals/multiline-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "timeout-literals/multiline-yaml-text": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 2,
+          "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
+          "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "timeout-minutes: 10",
+          "target": "timeout-minutes: 10"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "timeout-literals/single-line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 1,
+          "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
+          "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "expect(step[\"timeout-minutes\"]).toBe(10);",
+          "target": "expect(step[\"timeout-minutes\"]).toBe(10);"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "timeout-literals/single-line-expect-literal": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 1,
+          "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
+          "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "expect(step.timeoutMinutes || \"expect(\").toBe(10);",
+          "target": "expect(step.timeoutMinutes || \"expect(\").toBe(10);"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "timeout-literals/symbolic": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "timeout-literals/symbolic-then-timeout": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 2,
+          "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
+          "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "expect(",
+          "target": "expect(\n step.timeoutMinutes\n).toBe(10)"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "timeout-literals/symbolic-then-unrelated": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "workflow/edge-control": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "workflow/file-suppression": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "workflow/hash-edge-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "workflow/hash-inventory": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci#public.yml",
+          "line": 1,
+          "message": "job inventory mismatch: .github/workflows/ci#public.yml: expected lint, missing, test, got lint, test",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: audit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "workflow/hash-inventory-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "workflow/hash-missing-edge": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci#public.yml",
+          "line": 8,
+          "message": "required direct edge missing: .github/workflows/ci#public.yml#lint -> .github/workflows/ci#public.yml#test",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "test:"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "workflow/hash-missing-job-yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci#public.yml",
+          "line": 1,
+          "message": "required job missing: .github/workflows/ci#public.yml#missing.yml",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: audit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "workflow/hash-missing-job-yml-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "workflow/hash-stale-concurrency": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci#public.yml",
+          "line": 1,
+          "message": "concurrency intent stale: .github/workflows/ci#public.yml",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: audit"
+        },
+        {
+          "file": ".github/workflows/ci#public.yml",
+          "line": 1,
+          "message": "concurrency intent stale: .github/workflows/ci#public.yml#missing.yml",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: audit"
+        },
+        {
+          "file": ".github/workflows/ci#public.yml",
+          "line": 4,
+          "message": "concurrency intent stale: .github/workflows/ci#public.yml#lint",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "lint:"
+        },
+        {
+          "file": ".github/workflows/missing#pipeline.yml",
+          "line": 1,
+          "message": "concurrency intent stale: .github/workflows/missing#pipeline.yml",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "workflow/inline-suppression": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "workflow/line-suppression": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "workflow/missing-edge": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": "required direct edge missing: .github/workflows/ci.yml#lint -> .github/workflows/ci.yml#test",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "test:"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

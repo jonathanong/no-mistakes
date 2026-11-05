@@ -1,6 +1,6 @@
 use super::evaluate::Index;
-use super::{finding, Options, StepSelector};
-use crate::codebase::rules::RuleFinding;
+use super::LocatedFinding;
+use super::{job_finding as finding, Options, StepSelector};
 use crate::codebase::workflow_topology::model::{
     WorkflowStep, WorkflowTopology, WorkflowTopologyEdge,
 };
@@ -9,7 +9,7 @@ pub(super) fn lint(
     topology: &WorkflowTopology,
     index: &Index<'_>,
     opts: &Options,
-) -> Vec<RuleFinding> {
+) -> Vec<LocatedFinding> {
     let mut findings = artifact_edges(topology, index, opts);
     findings.extend(step_orders(index, opts));
     findings
@@ -19,7 +19,7 @@ fn artifact_edges(
     topology: &WorkflowTopology,
     index: &Index<'_>,
     opts: &Options,
-) -> Vec<RuleFinding> {
+) -> Vec<LocatedFinding> {
     opts.required_artifact_edges
         .iter()
         .map(|rule| {
@@ -30,7 +30,7 @@ fn artifact_edges(
             if !index.jobs.contains_key(rule.from.as_str())
                 || !index.jobs.contains_key(rule.to.as_str())
             {
-                return finding(format!("required artifact edge missing: {label}"));
+                return finding(&rule.to, format!("required artifact edge missing: {label}"));
             }
             let present = topology.edges.iter().any(|edge| match edge {
                 WorkflowTopologyEdge::Artifact(artifact) => {
@@ -45,21 +45,24 @@ fn artifact_edges(
                 _ => false,
             });
             if present {
-                finding(String::new())
+                finding(&rule.to, String::new())
             } else {
-                finding(format!("required artifact edge missing: {label}"))
+                finding(&rule.to, format!("required artifact edge missing: {label}"))
             }
         })
-        .filter(|finding| !finding.message.is_empty())
+        .filter(|finding| !finding.finding.message.is_empty())
         .collect()
 }
 
-fn step_orders(index: &Index<'_>, opts: &Options) -> Vec<RuleFinding> {
+fn step_orders(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
     opts.step_orders
         .iter()
         .filter_map(|rule| {
             let Some(job) = index.jobs.get(rule.job_id.as_str()) else {
-                return Some(finding(format!("step-order job missing: {}", rule.job_id)));
+                return Some(finding(
+                    &rule.job_id,
+                    format!("step-order job missing: {}", rule.job_id),
+                ));
             };
             let mut prior = -1i32;
             for selector in &rule.steps {
@@ -74,10 +77,10 @@ fn step_orders(index: &Index<'_>, opts: &Options) -> Vec<RuleFinding> {
                         .or(selector.uses.as_deref())
                         .or(selector.name.as_deref())
                         .unwrap_or("<step>");
-                    return Some(finding(format!(
-                        "required ordered step missing: {}: {label}",
-                        rule.job_id
-                    )));
+                    return Some(finding(
+                        &rule.job_id,
+                        format!("required ordered step missing: {}: {label}", rule.job_id),
+                    ));
                 };
                 if (step.index as i32) <= prior {
                     let label = selector
@@ -86,10 +89,10 @@ fn step_orders(index: &Index<'_>, opts: &Options) -> Vec<RuleFinding> {
                         .or(selector.uses.as_deref())
                         .or(selector.name.as_deref())
                         .unwrap_or("<step>");
-                    return Some(finding(format!(
-                        "required step order invalid: {}: {label}",
-                        rule.job_id
-                    )));
+                    return Some(finding(
+                        &rule.job_id,
+                        format!("required step order invalid: {}: {label}", rule.job_id),
+                    ));
                 }
                 prior = step.index as i32;
             }

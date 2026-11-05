@@ -1,0 +1,1 @@
+{"rules": [{"rule": "workflow-topology-policy", "scope": "repository", "options": {"requiredDirectEdges": [[".github/workflows/ci#public.yml#lint", ".github/workflows/ci#public.yml#test"]]}}]}

@@ -1,14 +1,13 @@
 //! Match a live enumeration root against the configured runtime-asset roots.
 use super::config::RuntimeAsset;
 use crate::codebase::ts_source::module_facts::arguments::{PathAnchor, PathOrigin};
-use std::path::{Component, Path};
+use std::path::Path;
 
 fn parts(path: &Path) -> Vec<String> {
-    path.components()
-        .filter_map(|part| match part {
-            Component::Normal(name) => Some(name.to_string_lossy().into_owned()),
-            _ => None,
-        })
+    path.to_string_lossy()
+        .split(['/', '\\'])
+        .filter(|part| !part.is_empty() && *part != ".")
+        .map(str::to_owned)
         .collect()
 }
 
@@ -27,10 +26,15 @@ pub(super) fn declared<'o>(
     }
     let mut path = match origin.anchor {
         PathAnchor::Module => parts(file.parent()?.strip_prefix(root).ok()?),
-        PathAnchor::Cwd | PathAnchor::Relative => Vec::new(),
+        PathAnchor::Cwd | PathAnchor::Relative | PathAnchor::Absolute => Vec::new(),
         _ => return None,
     };
-    for segment in &origin.segments {
+    let segments = if origin.anchor == PathAnchor::Absolute {
+        origin.segments.strip_prefix(parts(root).as_slice())?
+    } else {
+        &origin.segments
+    };
+    for segment in segments {
         if segment == ".." {
             path.pop()?;
         } else {

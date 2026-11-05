@@ -1,7 +1,7 @@
 use super::{CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::ts_source::relative_slash_path;
 use regex::Regex;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::sync::LazyLock;
 
@@ -49,8 +49,39 @@ pub(super) fn check_source(
     }
     let mut findings = Vec::new();
     let mut used_allow = BTreeSet::new();
+    let line_starts: Vec<usize> = std::iter::once(0)
+        .chain(source.match_indices('\n').map(|(offset, _)| offset + 1))
+        .collect();
+    let mut violations = BTreeMap::new();
+    let mut collect_matches = |pattern: &Regex, offset: usize, text: &str| {
+        for matched in pattern.find_iter(text) {
+            let match_start = offset + matched.start();
+            let match_end = offset + matched.end();
+            let line_no = line_starts.partition_point(|start| *start <= match_start);
+            let start = line_starts[line_no - 1];
+            let end = source[match_end..]
+                .find('\n')
+                .map_or(source.len(), |i| match_end + i);
+            violations.entry(line_no).or_insert(&source[start..end]);
+        }
+    };
     for (index, line) in source.lines().enumerate() {
-        findings.extend(line_findings(rel, index + 1, line, opts, &mut used_allow));
+        collect_matches(&YAML_FRAGMENT, line_starts[index], line);
+        collect_matches(&TIMEOUT_EQUALITY, line_starts[index], line);
+        collect_matches(&TIMEOUT_CONTAIN, line_starts[index], line);
+    }
+    let assertions: Vec<usize> = source
+        .match_indices("expect(")
+        .map(|(offset, _)| offset)
+        .chain(std::iter::once(source.len()))
+        .collect();
+    for range in assertions.windows(2) {
+        let text = &source[range[0]..range[1]];
+        collect_matches(&TIMEOUT_EQUALITY, range[0], text);
+        collect_matches(&TIMEOUT_CONTAIN, range[0], text);
+    }
+    for (line_no, text) in violations {
+        findings.extend(line_findings(rel, line_no, text, opts, &mut used_allow));
     }
     findings.extend(stale_allow_findings(rel, opts, &used_allow));
     if !defer_suppression {
@@ -69,7 +100,7 @@ fn line_findings(
     if !is_violation(line) {
         return Vec::new();
     }
-    let trimmed = line.trim();
+    let trimmed = line.trim().replace("\r\n", "\n");
     let key = format!("{rel}#{trimmed}");
     if let Some(reason) = opts.allow.get(&key) {
         used_allow.insert(key.clone());
@@ -89,7 +120,7 @@ fn line_findings(
         format!(
             "{rel}: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry"
         ),
-        trimmed,
+        &trimmed,
     )]
 }
 

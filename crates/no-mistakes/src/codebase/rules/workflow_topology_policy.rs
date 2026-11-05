@@ -12,6 +12,7 @@ mod evaluate_collisions;
 mod evaluate_concurrency;
 mod evaluate_graph;
 mod evaluate_steps;
+mod locations;
 #[cfg(test)]
 mod prepare;
 mod secret_inventory;
@@ -72,6 +73,7 @@ pub(crate) fn check_prepared(
     config_path: Option<&Path>,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
+    let mut locations = locations::Locations::default();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
         let concurrency = concurrency_compile::compile(&opts.concurrency_policy)?;
@@ -80,7 +82,8 @@ pub(crate) fn check_prepared(
             .as_ref()
             .map(|options| options.compile())
             .transpose()?;
-        findings.extend(evaluate::lint(inputs.topology(), &opts, &concurrency));
+        let topology_findings = evaluate::lint(inputs.topology(), &opts, &concurrency);
+        findings.extend(locations.locate(root, sources, topology_findings));
         if let Some(inventory) = inventory {
             let authored = config
                 .rules
@@ -106,15 +109,43 @@ pub(crate) fn check_prepared(
     Ok(findings)
 }
 
-pub(super) fn finding(message: String) -> RuleFinding {
-    RuleFinding {
-        rule: RULE_ID.to_string(),
-        file: ".github/workflows".to_string(),
-        line: 1,
-        message,
-        import: None,
-        target: None,
+#[derive(Clone, Copy)]
+pub(super) enum FindingOwner<'a> {
+    Workflow(&'a str),
+    Job(&'a str),
+}
+
+pub(super) struct LocatedFinding {
+    finding: RuleFinding,
+    job: Option<String>,
+}
+
+pub(super) fn finding(owner: FindingOwner<'_>, message: String) -> LocatedFinding {
+    let (file, job) = match owner {
+        FindingOwner::Workflow(file) => (file, None),
+        FindingOwner::Job(id) => id
+            .rsplit_once('#')
+            .map_or((id, None), |(file, key)| (file, Some(key.to_owned()))),
+    };
+    LocatedFinding {
+        finding: RuleFinding {
+            rule: RULE_ID.to_string(),
+            file: file.to_string(),
+            line: 1,
+            message,
+            import: None,
+            target: None,
+        },
+        job,
     }
+}
+
+pub(super) fn workflow_finding(owner: &str, message: String) -> LocatedFinding {
+    finding(FindingOwner::Workflow(owner), message)
+}
+
+pub(super) fn job_finding(owner: &str, message: String) -> LocatedFinding {
+    finding(FindingOwner::Job(owner), message)
 }
 
 #[cfg(test)]
