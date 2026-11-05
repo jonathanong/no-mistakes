@@ -12,6 +12,8 @@ engine.
 
 Every complete [SQL alternative](../postgres-facts.md#finite-sql-alternatives)
 of a branching executor call is judged independently, up to 16 versions.
+Numeric literal ternaries in template holes (for example, `$${lower ? 4 : 3}`)
+recover the same SQL alternatives as string literals (`$${lower ? "4" : "3"}`).
 If only one path omits the required `ORDER BY`, that path is still reported;
 an ordered sibling cannot make it safe. All safe versions pass without an
 unanalyzable finding. Findings preserve physical branch-fragment locations for
@@ -174,14 +176,23 @@ Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`,
 
 ### Unanalyzable inputs
 
-Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
+Executor calls without statically recovered SQL follow `options.unanalyzable`:
 
-- Inputs this rule cannot prove: executor calls whose SQL cannot be recovered (a `FOR UPDATE` lock and its order cannot be checked), and `FOR UPDATE` SQL that fails to parse. They follow `options.unanalyzable`:
-  - `report` (default): fails as a finding, e.g. `executed SQL is not statically recoverable, so a FOR UPDATE lock and its row order cannot be checked for ABBA deadlocks`.
-  - `advise`: a non-failing advisory with the same reason.
-  - `ignore`: omitted.
+- `report` (default): a finding explains that a possible `FOR UPDATE` lock and
+  its row order cannot be checked for ABBA deadlocks.
+- `advise`: a non-failing advisory with the same reason.
+- `ignore`: omitted.
 
-  Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
+The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore`
+keep their names.
+
+Recovered SQL containing `FOR UPDATE` that fails to parse always produces an
+`unparseable` finding, including under `ignore` and `advise`. That SQL may hold
+a lock whose row order cannot be judged; hiding it would silently lose recall.
+Rewrite it as valid, statically recoverable SQL, or use a justified safe directive
+or suppression. Definite lock-order violations also remain findings under every
+policy. `ignore` only skips dynamic calls without recovered SQL; it does not silence
+recovered lock SQL parse failures.
 
 ## Suppression
 

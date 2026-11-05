@@ -86,6 +86,8 @@ mod cli_postgres_snapshot_no_offset;
 mod cli_postgres_snapshot_no_test_state_mutation;
 #[path = "cli_postgres_snapshot_no_unbounded_sql_identifier.rs"]
 mod cli_postgres_snapshot_no_unbounded_sql_identifier;
+#[path = "cli_postgres_snapshot_numeric_ternary.rs"]
+mod cli_postgres_snapshot_numeric_ternary;
 #[path = "cli_postgres_snapshot_object_naming.rs"]
 mod cli_postgres_snapshot_object_naming;
 #[path = "cli_postgres_snapshot_redundant_index.rs"]

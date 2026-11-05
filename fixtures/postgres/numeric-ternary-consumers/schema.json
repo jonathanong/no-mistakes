@@ -1,0 +1,55 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "accounts": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "tenant_id": {
+          "dataType": "uuid"
+        },
+        "created_at": {
+          "dataType": "timestamptz"
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "accounts_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "orders": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "details": {
+          "dataType": "jsonb"
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    }
+  }
+}

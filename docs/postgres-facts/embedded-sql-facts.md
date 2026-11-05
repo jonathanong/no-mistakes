@@ -69,4 +69,12 @@ plain value elsewhere in the file also fails closed. Rules with
 `unanalyzableSql: fail` report calls whose complete alternatives cannot be
 recovered instead of reading the fragment as a bind value.
 
+Numeric literal alternatives inside untagged template holes are stringified using
+JavaScript number formatting, including radix and exponent literals. For example,
+`$${lower ? 4 : 3}` recovers `$4` and `$3`, just like string literal alternatives.
+Numeric zero retains its falsy value while evaluating logical alternatives;
+coercion to SQL text happens at the template boundary. Parameterized SQL tags
+continue to bind interpolated values instead of splicing numeric text. Unknown
+alternatives and arithmetic that cannot be proved still retain uncertainty.
+
 [PostgreSQL fact sources](../postgres-facts.md)

@@ -12,7 +12,12 @@ fn read_calls(name: &str) -> Vec<EmbeddedSqlCall> {
     extract_embedded_sql_from_source(
         &fixture(name),
         &source,
-        &EmbeddedSqlOptions::configured("@example/db", &[]),
+        &EmbeddedSqlOptions::configured("@example/db", &[]).with_trusted_sql_tags(&[
+            super::TrustedSqlTag {
+                module: "@example/db".into(),
+                name: "sql".into(),
+            },
+        ]),
     )
     .calls
     .into_iter()
@@ -159,4 +164,45 @@ fn variant_cap_keeps_sixteen_and_abstains_past_it() {
         .all(|variant| variant.sql_text.contains("account_id")));
     assert!(calls[1].is_unanalyzable(), "{:?}", calls[1]);
     assert!(calls[1].variants.is_empty(), "{:?}", calls[1].variants);
+}
+
+#[test]
+fn numeric_ternaries_recover_with_javascript_coercion_and_truthiness() {
+    let calls = read_calls("numeric-ternary.ts");
+    assert_eq!(calls.len(), 10, "{calls:?}");
+    assert_eq!(sql_of(&calls[0]), sql_of(&calls[1]));
+    assert_eq!(
+        sql_of(&calls[0]),
+        [
+            "SELECT id FROM orders WHERE id = $3",
+            "SELECT id FROM orders WHERE id = $4",
+        ]
+    );
+    assert_eq!(
+        sql_of(&calls[2]),
+        [
+            "SELECT id FROM orders WHERE account_id = $1",
+            "SELECT id FROM orders WHERE account_id = $1 AND id = ANY($3::int[])",
+            "SELECT id FROM orders WHERE account_id = $1 AND id = ANY($4::int[])",
+        ]
+    );
+    assert_eq!(sql_of(&calls[3]), ["SELECT 1000", "SELECT 16"]);
+    assert_eq!(sql_of(&calls[4]), ["SELECT 1e+21", "SELECT 1e-7"]);
+    assert_eq!(sql_of(&calls[5]), ["SELECT 3", "SELECT 4"]);
+    assert_eq!(sql_of(&calls[6]), ["SELECT 0", "SELECT 3"]);
+    for call in &calls[7..9] {
+        assert!(call.is_unanalyzable(), "{call:?}");
+        assert!(call.variants.is_empty(), "{call:?}");
+    }
+    for call in &calls[..7] {
+        assert!(!call.is_unanalyzable(), "{call:?}");
+        for variant in &call.variants {
+            assert_eq!(variant.sql_text.len(), variant.sql_source_offsets.len());
+        }
+    }
+    assert!(!calls[9].is_unanalyzable(), "{:?}", calls[9]);
+    assert_eq!(
+        calls[9].sql_text.as_deref(),
+        Some("SELECT id FROM orders WHERE id = sql_placeholder_1")
+    );
 }

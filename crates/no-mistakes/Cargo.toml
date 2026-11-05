@@ -41,7 +41,7 @@ oxc_ast_visit = "0.155.0"
 oxc_diagnostics = "0.155.0"
 oxc_parser = "0.155.0"
 oxc_span = "0.155.0"
-oxc_syntax = "0.155.0"
+oxc_syntax = { version = "0.155.0", features = ["to_js_string"] }
 oxc_str = "0.155.0"
 proc-macro2 = { version = "1", features = ["span-locations"] }
 percent-encoding = "2.3"

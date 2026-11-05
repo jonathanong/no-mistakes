@@ -19,14 +19,14 @@ pub(super) fn recover(
     }
     let left = clause(visitor, &branch.left, depth - 1, constraints)?;
     match branch.operator {
-        // A recovered clause is a string, so it is never nullish. "" stays.
+        // Recovered string and number clauses are never nullish.
         LogicalOperator::Coalesce => Some(left),
         LogicalOperator::And => apply(visitor, &branch.right, depth, constraints, left, false),
         LogicalOperator::Or => apply(visitor, &branch.right, depth, constraints, left, true),
     }
 }
 
-/// `keep_truthy` is `||`. `&&` keeps only the falsy strings.
+/// `keep_truthy` is `||`. `&&` keeps only falsy values.
 fn apply(
     visitor: &ScopeVisitor<'_>,
     right: &Expression<'_>,
@@ -36,7 +36,7 @@ fn apply(
     keep_truthy: bool,
 ) -> Option<Vec<Recovered>> {
     let (kept, replaced): (Vec<_>, Vec<_>) = left.into_iter().partition(|value| {
-        let truthy = !value.sql.is_empty();
+        let truthy = value.truth();
         if keep_truthy {
             truthy
         } else {
