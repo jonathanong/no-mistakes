@@ -109,7 +109,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 2,
-          "message": "src/query.ts:2: statement can scan unbounded rows from roots table:accounts; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/query.ts:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "query(sql`SELECT a.id FROM accounts a CROSS JOIN accounts b ${flag ? sql`/* first */` : sql`/* second */`}`);",
           "target": "table:accounts"
@@ -174,11 +174,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "query.ts",
+          "line": 10,
+          "message": "query.ts:10: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from query.ts:8)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(statement);",
+          "target": "table:invoices"
+        },
+        {
+          "file": "query.ts",
+          "line": 10,
+          "message": "query.ts:10: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from query.ts:6)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(statement);",
+          "target": "table:orders"
+        },
+        {
+          "file": "query.ts",
           "line": 4,
-          "message": "query.ts:4: statement can scan unbounded rows from roots table:accounts, table:invoices, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "query.ts:4: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "const statement = sql`SELECT a.id FROM accounts a`;",
-          "target": "table:accounts, table:invoices, table:orders"
+          "target": "table:accounts"
         }
       ],
       "warnings": []

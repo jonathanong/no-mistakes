@@ -33,7 +33,7 @@ fn combined_catalog_reports_both_column_kinds() {
         &[statements],
         &mut crate::codebase::rules::VariantFindingDedup::default(),
         None,
-        &|_| &catalogs,
+        &|_, _| &catalogs,
     );
     let findings = findings.finish();
     assert_eq!(findings.len(), 2);

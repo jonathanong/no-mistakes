@@ -7,7 +7,7 @@ pub(super) struct Span {
     call_line: usize,
     opening_shift: i64,
     all_appended: bool,
-    relations: Vec<(usize, i64)>,
+    relations: Vec<(String, usize, i64, bool)>,
 }
 
 pub(super) fn span(file: &SqlStatementFileFacts, bound_index: usize) -> Option<Span> {
@@ -18,22 +18,26 @@ pub(super) fn span(file: &SqlStatementFileFacts, bound_index: usize) -> Option<S
         .bound_tables
         .iter()
         .filter(|(index, _, _)| *index == bound_index)
-        .map(|(_, _, site)| locations.position(site.clone()))
+        .map(|(_, table, site)| (table, locations.position(site.clone())))
         .collect();
     let all_appended = !positions.is_empty()
         && locations.first_append_position.is_some_and(|boundary| {
-            positions.iter().all(|position| {
+            positions.iter().all(|(_, position)| {
                 position
                     .is_some_and(|position| (position.sql_line, position.sql_column) >= boundary)
             })
         });
     let relations = positions
         .into_iter()
-        .flatten()
-        .filter_map(|position| {
+        .filter_map(|(table, position)| {
+            let position = position?;
             same_file(position.source_path.as_ref(), &file.path).then_some((
+                table.clone(),
                 position.source_line,
                 shift(position.source_line, position.sql_line),
+                locations
+                    .first_append_position
+                    .is_some_and(|boundary| (position.sql_line, position.sql_column) >= boundary),
             ))
         })
         .collect();
@@ -61,6 +65,20 @@ pub(super) fn only_appended(spans: &[Span]) -> Option<usize> {
         .flatten()
 }
 
+pub(super) fn fragment_line(spans: &[Span], target: &str) -> Option<usize> {
+    spans
+        .iter()
+        .flat_map(|span| &span.relations)
+        .filter(|(table, _, _, appended)| {
+            *appended
+                && target
+                    .rsplit_once(':')
+                    .is_some_and(|(_, name)| name == table)
+        })
+        .map(|(_, line, _, _)| *line)
+        .min()
+}
+
 /// The call line when every relation on the group's earliest line sits outside the opening template.
 pub(super) fn relocate(
     spans: &[Span],
@@ -75,7 +93,7 @@ pub(super) fn relocate(
     let on_opening = spans.iter().any(|span| {
         span.relations
             .iter()
-            .any(|(line, shift)| *line == earliest && *shift == span.opening_shift)
+            .any(|(_, line, shift, _)| *line == earliest && *shift == span.opening_shift)
     });
     if on_opening {
         return None;
@@ -85,7 +103,7 @@ pub(super) fn relocate(
         .any(|span| {
             span.relations
                 .iter()
-                .any(|(line, shift)| *line == earliest && *shift != span.opening_shift)
+                .any(|(_, line, shift, _)| *line == earliest && *shift != span.opening_shift)
         })
         .then(|| {
             spans

@@ -76,6 +76,26 @@ fn issue_3030_schema_proofs_snapshot() {
             "issue-3030-chronology",
         ),
         (
+            "generated_quoted_trigger",
+            "postgres-no-generated-column-writes",
+            "issue-3030-quoted-trigger",
+        ),
+        (
+            "generated_unquoted_trigger",
+            "postgres-no-generated-column-writes",
+            "issue-3030-unquoted-trigger",
+        ),
+        (
+            "generated_quoted_positional",
+            "postgres-no-generated-column-writes",
+            "issue-3030-quoted-positional",
+        ),
+        (
+            "generated_ordinary_positional",
+            "postgres-no-generated-column-writes",
+            "issue-3030-ordinary-positional",
+        ),
+        (
             "redundant_drop",
             "postgres-redundant-index",
             "issue-3030-same-line-drop",
@@ -99,6 +119,11 @@ fn issue_3030_schema_proofs_snapshot() {
             "bounded_roots",
             "postgres-bounded-statements",
             "issue-3030-roots",
+        ),
+        (
+            "bounded_embedded",
+            "postgres-bounded-statements",
+            "issue-3030-embedded",
         ),
     ];
     let cases = cases.map(|(label, rule, name)| {

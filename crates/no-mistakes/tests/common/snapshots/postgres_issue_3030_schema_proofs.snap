@@ -2,6 +2,67 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "bounded_embedded": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/direct.ts",
+          "line": 5,
+          "message": "src/direct.ts:5: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM accounts a",
+          "target": "table:accounts"
+        },
+        {
+          "file": "src/direct.ts",
+          "line": 6,
+          "message": "src/direct.ts:6: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "CROSS JOIN orders o`);",
+          "target": "table:orders"
+        },
+        {
+          "file": "src/first.ts",
+          "line": 6,
+          "message": "src/first.ts:6: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/shared.ts:4)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(statement);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "src/first.ts",
+          "line": 6,
+          "message": "src/first.ts:6: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/shared.ts:4)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(statement);",
+          "target": "table:orders"
+        },
+        {
+          "file": "src/second.ts",
+          "line": 6,
+          "message": "src/second.ts:6: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/shared.ts:4)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(statement);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "src/second.ts",
+          "line": 6,
+          "message": "src/second.ts:6: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/shared.ts:4)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(statement);",
+          "target": "table:orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "bounded_roots": {
     "exitCode": 1,
     "report": {
@@ -144,6 +205,84 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-generated-column-writes",
           "sourceLine": "CREATE TABLE items(note text, normalized text GENERATED ALWAYS AS(lower(note)) STORED); UPDATE items SET normalized='manual'; DROP TABLE items; CREATE TABLE items(note text, normalized text); UPDATE items SET normalized='manual';",
           "target": "normalized"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "generated_ordinary_positional": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "generated_quoted_positional": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.Normalized",
+          "line": 2,
+          "message": "case.sql:2: do not write generated column `items.Normalized`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO items VALUES ('x','manual');",
+          "target": "Normalized"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "generated_quoted_trigger": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.Updated_At",
+          "line": 2,
+          "message": "case.sql:2: do not write trigger-maintained column `items.Updated_At`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE items SET \"Updated_At\"=now();",
+          "target": "Updated_At"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "generated_unquoted_trigger": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.updated_at",
+          "line": 2,
+          "message": "case.sql:2: do not write trigger-maintained column `items.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE items SET updated_at=now();",
+          "target": "updated_at"
         }
       ],
       "warnings": []

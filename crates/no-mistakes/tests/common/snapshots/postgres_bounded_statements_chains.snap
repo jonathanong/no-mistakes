@@ -63,14 +63,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "sql/shape1-foreign.sql",
-          "line": 12,
-          "message": "sql/shape1-foreign.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
-          "target": "table:states"
-        },
-        {
-          "file": "sql/shape1-foreign.sql",
           "line": 4,
           "message": "sql/shape1-foreign.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
@@ -108,14 +100,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "sql/shape1.sql",
-          "line": 12,
-          "message": "sql/shape1.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
-          "target": "table:states"
-        },
-        {
-          "file": "sql/shape1.sql",
           "line": 4,
           "message": "sql/shape1.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
@@ -151,14 +135,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "sql/shape1-nolimit.sql",
-          "line": 12,
-          "message": "sql/shape1-nolimit.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
-          "target": "table:states"
-        },
         {
           "file": "sql/shape1-nolimit.sql",
           "line": 4,
@@ -232,14 +208,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "sql/shape1.sql",
-          "line": 12,
-          "message": "sql/shape1.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
-          "target": "table:states"
-        },
         {
           "file": "sql/shape1.sql",
           "line": 4,
@@ -353,14 +321,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "sql/shape1.sql",
-          "line": 12,
-          "message": "sql/shape1.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
-          "target": "table:states"
-        },
-        {
-          "file": "sql/shape1.sql",
           "line": 4,
           "message": "sql/shape1.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
@@ -396,14 +356,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "sql/shape1-nolimit.sql",
-          "line": 12,
-          "message": "sql/shape1-nolimit.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
-          "target": "table:states"
-        },
         {
           "file": "sql/shape1-nolimit.sql",
           "line": 4,
@@ -462,14 +414,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "sql/sibling.sql",
-          "line": 12,
-          "message": "sql/sibling.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
-          "target": "table:states"
-        },
         {
           "file": "sql/sibling.sql",
           "line": 4,

@@ -24,6 +24,8 @@ statement order, including statically recovered routine DDL. Dropping and
 recreating a table replaces its generated status and positional column order.
 Quoted column names retain their case: `normalized` and `"Normalized"` can be
 distinct columns of one table.
+Configured `triggerMaintainedColumns` names still match case-insensitively;
+findings retain the matched SQL column's spelling.
 
 ## Options and defaults
 

@@ -42,7 +42,7 @@ fn missing_relation_locations_prevent_the_all_appended_proof() {
         SqlFactSite::BoundRelation(0, 0),
     ));
     let incomplete = span(&file, 0).unwrap();
-    assert_eq!(incomplete.relations, [(5, 4)]);
+    assert_eq!(incomplete.relations, [("invoices".to_string(), 5, 4, true)]);
     assert_eq!(only_appended(&[incomplete]), None);
 }
 

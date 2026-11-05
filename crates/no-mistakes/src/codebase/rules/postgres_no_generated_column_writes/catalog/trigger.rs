@@ -15,7 +15,7 @@ pub(crate) fn trigger_catalog_from_tables(
                         .iter()
                         .any(|name| name.eq_ignore_ascii_case(column.name))
             })
-            .map(|column| column.name.to_ascii_lowercase())
+            .map(|column| column.name.to_string())
             .collect::<std::collections::BTreeSet<_>>();
         if !maintained.is_empty() {
             catalog.insert_table_with_key(
@@ -27,7 +27,7 @@ pub(crate) fn trigger_catalog_from_tables(
                         table
                             .columns
                             .iter()
-                            .map(|column| column.name.to_ascii_lowercase())
+                            .map(|column| column.name.to_string())
                             .collect()
                     }),
                 },

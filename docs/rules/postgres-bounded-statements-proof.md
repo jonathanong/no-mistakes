@@ -159,6 +159,8 @@ SQL stays cheap to analyze. A `COPY (SELECT …)` query is judged like a `SELECT
 reports each relation that makes a statement unbounded, once, at that relation's line.
 Each report keeps its own `table:` target and rule message when a query reads
 several unbounded relations.
+Imported or appended shared SQL keeps each root's report at its executing
+caller, with the fragment line named in the message.
 An uncapped SELECT also reports unbounded relations read by its IN-subquery pins,
 even when another predicate pins the outer table. UPDATE and DELETE retain target-only
 reporting.

@@ -39,14 +39,13 @@ fn aggregated_statement_roots_preserve_allow_usage_and_relation_suppressions() {
 }
 
 #[test]
-fn alternatives_share_one_statement_finding_with_every_unbounded_root() {
+fn alternatives_share_one_finding_per_unbounded_root() {
     let root = fixture_dir("variants/cascading-statements");
     let findings = findings_of(check_in(&root, "variants.yml"));
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(
-        findings[0].2,
-        "table:accounts, table:invoices, table:orders"
-    );
+    assert_eq!(findings.len(), 3, "{findings:?}");
+    assert_eq!(findings[0].2, "table:accounts");
+    assert_eq!(findings[1].2, "table:invoices");
+    assert_eq!(findings[2].2, "table:orders");
 }
 
 #[test]

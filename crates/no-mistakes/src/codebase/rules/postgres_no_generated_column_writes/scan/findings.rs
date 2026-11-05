@@ -79,16 +79,18 @@ pub(super) fn extend_writes<'a>(
                 .get_exact(table)
                 .or_else(|| generated.get(table))
                 .is_some_and(|meta| {
-                    let key = statement.writes[write_index]
-                        .column_keys
-                        .as_ref()
-                        .and_then(|keys| match &statement.writes[write_index].columns {
-                            SqlWriteColumns::Named(columns) => columns
-                                .iter()
-                                .position(|name| name == &column)
-                                .and_then(|index| keys.get(index)),
-                            _ => None,
-                        });
+                    let write = &statement.writes[write_index];
+                    let key = match &write.columns {
+                        SqlWriteColumns::Named(columns) => {
+                            write.column_keys.as_ref().and_then(|keys| {
+                                columns
+                                    .iter()
+                                    .position(|name| name == &column)
+                                    .and_then(|index| keys.get(index))
+                            })
+                        }
+                        SqlWriteColumns::Positional(_) | SqlWriteColumns::All => Some(&column),
+                    };
                     key.map_or_else(
                         || meta.generated.contains(&column.to_ascii_lowercase()),
                         |key| meta.generated.contains(key),
