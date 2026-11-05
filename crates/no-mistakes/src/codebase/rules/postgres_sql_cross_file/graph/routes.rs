@@ -56,7 +56,7 @@ fn export_route(
     if binding.specifier.is_none() {
         return Some(UniqueExport {
             producer: file.to_path_buf(),
-            exported: exported.clone(),
+            exported: binding.local.clone(),
         });
     }
     let next = routes.target(

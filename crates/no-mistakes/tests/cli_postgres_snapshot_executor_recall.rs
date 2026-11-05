@@ -13,6 +13,31 @@ fn postgres_executor_recall_check_json_snapshot() {
                 rules_path(registry, "configs", "registry.yml"),
             ),
             (
+                "registry_reexport_both_routes",
+                rules_path(registry, "fixture", "fail-reexport-alias"),
+                rules_path(registry, "configs", "registry.yml"),
+            ),
+            (
+                "registry_named_writer_namespace_sink",
+                rules_path(registry, "fixture", "alias-named-writer-namespace-sink"),
+                rules_path(registry, "configs", "registry.yml"),
+            ),
+            (
+                "registry_namespace_writer_named_sink",
+                rules_path(registry, "fixture", "alias-namespace-writer-named-sink"),
+                rules_path(registry, "configs", "registry.yml"),
+            ),
+            (
+                "registry_require_writer_named_sink",
+                rules_path(registry, "fixture", "alias-require-writer-named-sink"),
+                rules_path(registry, "configs", "registry.yml"),
+            ),
+            (
+                "registry_named_writer_require_sink",
+                rules_path(registry, "fixture", "alias-named-writer-require-sink"),
+                rules_path(registry, "configs", "registry.yml"),
+            ),
+            (
                 "lock_whitespace_and_comments",
                 rules_path(lock, "fixture", "fail-lock-trivia"),
                 rules_path(lock, "configs", "default.yml"),

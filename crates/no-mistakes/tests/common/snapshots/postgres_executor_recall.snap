@@ -47,6 +47,116 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "registry_named_writer_namespace_sink": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "registry",
+          "line": 3,
+          "message": "Cross-file write to exported registry `registry` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "query(`SELECT id FROM ${registry.tables.users}`);",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "registry_named_writer_require_sink": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "registry",
+          "line": 3,
+          "message": "Cross-file write to exported registry `registry` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "query(`SELECT id FROM ${registry.tables.users}`);",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "registry_namespace_writer_named_sink": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "tables",
+          "line": 3,
+          "message": "Cross-file write to exported registry `tables` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "query(`SELECT id FROM ${tables.users}`);",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "registry_reexport_both_routes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "registry",
+          "line": 5,
+          "message": "Cross-file write to exported registry `registry` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "return query(`SELECT id FROM ${registry.users}`);",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "registry_require_writer_named_sink": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "tables",
+          "line": 3,
+          "message": "Cross-file write to exported registry `tables` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "query(`SELECT id FROM ${tables.users}`);",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "registry_writer_alias_sink_direct": {
     "exitCode": 1,
     "report": {
