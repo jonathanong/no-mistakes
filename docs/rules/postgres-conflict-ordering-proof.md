@@ -40,7 +40,8 @@ one row because tied rows can all be returned. The rule accepts only these shape
 - a `SELECT` from one plain table (no join, CTE shadowing or table function) whose
   top-level `AND` conjuncts equate every column of one catalog unique key (valid, ready,
   immediate, non-partial) to a literal or bound parameter;
-- a literal `LIMIT 0`/`LIMIT 1` or `FETCH FIRST [1] ROW ONLY`.
+- a literal `LIMIT 0`/`LIMIT 1`, `FETCH FIRST [1] ROW ONLY`, or
+  `FETCH FIRST 0 ROWS WITH TIES` (which returns no rows).
 
 Anything else, including `OR` filters, partial unique indexes, a partly pinned composite key
 and `LIMIT $1`, stays multi-row and fail-closed. A positional `ORDER BY 1, 2` maps to the

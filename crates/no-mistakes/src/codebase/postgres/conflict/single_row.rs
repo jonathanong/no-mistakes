@@ -56,8 +56,15 @@ fn limits_to_one_row(query: &Query) -> bool {
     };
     limit.is_some_and(is_zero_or_one)
         || query.fetch.as_ref().is_some_and(|fetch| {
-            !fetch.percent && !fetch.with_ties && fetch.quantity.as_ref().is_none_or(is_zero_or_one)
+            !fetch.percent
+                && (fetch.quantity.as_ref().is_some_and(is_zero)
+                    || (!fetch.with_ties && fetch.quantity.as_ref().is_none_or(is_zero_or_one)))
         })
+}
+
+fn is_zero(expr: &Expr) -> bool {
+    matches!(expr, Expr::Value(value)
+        if matches!(&value.value, Value::Number(number, _) if number == "0"))
 }
 
 fn is_zero_or_one(expr: &Expr) -> bool {

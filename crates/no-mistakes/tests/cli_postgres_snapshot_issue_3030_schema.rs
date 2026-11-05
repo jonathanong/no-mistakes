@@ -116,6 +116,11 @@ fn issue_3030_schema_proofs_snapshot() {
             "issue-3030-only",
         ),
         (
+            "conflict_zero_ties",
+            "postgres-conflict-ordering",
+            "issue-3030-zero-ties",
+        ),
+        (
             "bounded_roots",
             "postgres-bounded-statements",
             "issue-3030-roots",
