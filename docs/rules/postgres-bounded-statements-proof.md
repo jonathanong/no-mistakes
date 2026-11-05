@@ -90,6 +90,16 @@ LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` 
   pinned only in `WHERE` reports the preserved relation. `JOIN … USING (col)` pins the same
   way as `ON a.col = b.col` when each side is one FROM item; after a longer chain, which
   item owns the column cannot be told, so it pins nothing.
+- For an uncapped `SELECT`, a complete primary or valid unique key equated directly to
+  columns of other FROM relations makes the keyed relation a lookup rather than an
+  independent unbounded root. For example, `FROM items i LEFT JOIN topics t ON t.id = i.topic_id`
+  keeps `items` as the source and does not separately report `topics`. The same applies to inner and chained joins. This only
+  changes which base relation is reported; the lookup does not become a bounded driver
+  for another relation. An incomplete key, a nullable unique key compared with `IS NOT
+  DISTINCT FROM`, and an expression on the other side of the equality do not establish
+  this lookup. The lookup-side key columns must be non-null. A join cycle retains
+  its roots, including self-joins, rather than erasing every report. Reads inside
+  derived tables and CTEs retain their own reports.
 - For `UPDATE` and `DELETE`, the target relation is bounded. A CTE or subquery that picks
   the target rows with a `LIMIT` bounds it when the target's key is matched against it
   (`FROM c WHERE t.id = c.id`, or `WHERE t.id IN (SELECT id … LIMIT n)`). `ctid` identifies
