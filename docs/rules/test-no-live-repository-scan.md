@@ -17,7 +17,8 @@ rules:
         - file: tests/policy.test.ts
 ```
 
-Without `roots` the rule starts from every Vitest project (`tests.vitest`);
+Without `roots` the rule discovers Vitest test files using Vitest's default
+test-file patterns, including when no `tests.vitest` project is configured;
 this example names one file. `severity: advisory` is the recommended adoption
 default: findings are listed without failing `check`. Remove it once the
 repository is clean.
@@ -189,8 +190,10 @@ workspace packages, `package.json` `exports`) maps each such specifier to a file
 so `import * as m from "@lib"` consumes the file `@lib` points at. A specifier
 that is neither a bare package nor resolvable to a file keeps the finding for
 every callee. A default import, a barrel re-export, and a type-only import of the
-callee also keep the finding. Class and object-literal methods are never
-accepted, and the rule does not reach them at all.
+callee also keep the finding. Class and object-literal methods can be
+reached from a file root; when a method's enumeration root depends on an
+unresolved parameter or expression, the rule reports an unresolved-root
+advisory at that call.
 
 Callers are the repository call sites in the canonical call graph; only calls
 through an imported binding record their argument roots. A function reached only

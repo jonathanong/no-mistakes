@@ -118,9 +118,11 @@ regardless of `extensions`, while `vitest.config.ts` is untouched. An invalid
 regex is a configuration error and fails the run with a message naming the bad
 `pattern`.
 
-Counterexample: keeping both old and new filenames during a migration, or a
-distinct basename that merely shares a prefix (e.g. `webpack.configuration.js`
-under a `matchCompoundExtensions` rule) — neither is flagged.
+Counterexample: a distinct basename that merely shares a prefix (e.g.
+`webpack.configuration.js` under a `matchCompoundExtensions` rule) is not
+flagged. During a migration, the configured legacy filename is still reported
+even when its replacement already exists; the rule does not check that the new
+name is absent.
 
 Fix: rename the file and update imports or framework references.
 

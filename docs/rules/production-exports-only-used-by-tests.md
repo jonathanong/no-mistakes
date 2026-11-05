@@ -263,11 +263,12 @@ reads:
 - App Router files under `app/` or `src/app/` (`page`, `layout`, `loading`,
   `error`, `global-error`, `not-found`, `template`, `default`, `manifest`,
   `robots`, `sitemap`, `icon`, `apple-icon`, `opengraph-image`,
-  `twitter-image`): `default`, plus metadata and segment config (`metadata`,
-  `generateMetadata`, `generateStaticParams`, `viewport`, `generateViewport`,
-  `dynamic`, `dynamicParams`, `revalidate`, `fetchCache`, `runtime`,
-  `preferredRegion`, `maxDuration`, `experimental_ppr`). Image conventions also
-  exempt `alt`, `size`, and `contentType`.
+  `twitter-image`): `default`, `generateStaticParams`, and segment config
+  (`dynamic`, `dynamicParams`, `revalidate`, `fetchCache`, `runtime`,
+  `preferredRegion`, `maxDuration`, `experimental_ppr`). Only `page` and
+  `layout` also exempt metadata exports (`metadata`, `generateMetadata`,
+  `viewport`, `generateViewport`). Image conventions also exempt `alt`, `size`,
+  and `contentType`.
 - `route` handlers exempt the HTTP methods `GET`, `POST`, `PUT`, `PATCH`,
   `DELETE`, `HEAD`, and `OPTIONS`, plus the same segment config. A `default`
   export from `route` is still reported.
