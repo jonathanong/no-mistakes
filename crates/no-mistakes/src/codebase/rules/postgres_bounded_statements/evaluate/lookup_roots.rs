@@ -53,15 +53,22 @@ pub(super) fn suppressed(
             );
             let mut dependencies = Vec::new();
             for alternative in prepared {
-                let key = alternative.into_iter().find(|key| {
+                let mut complete = false;
+                for key in alternative.into_iter().filter(|key| {
                     !key.is_empty()
                         && key
                             .iter()
                             .all(|column| column.iter().any(|source| !source.is_empty()))
-                })?;
-                for column in key {
-                    let source = column.into_iter().find(|source| !source.is_empty())?;
-                    dependencies.extend(source);
+                }) {
+                    complete = true;
+                    for column in key {
+                        for source in column.into_iter().filter(|source| !source.is_empty()) {
+                            dependencies.extend(source);
+                        }
+                    }
+                }
+                if !complete {
+                    return None;
                 }
             }
             dependencies.sort_unstable();
