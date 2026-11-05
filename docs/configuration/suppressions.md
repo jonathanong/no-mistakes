@@ -180,7 +180,7 @@ even when no finding matched the checked subset. Excluded files, changed-file
 restrictions, disabled applications, missing files, read/parse failures, and
 uncertain coverage cannot establish staleness. An empty match set is not proof
 of a checked scope. Graph-dependent checks also require usable supporting facts.
-The audit never widens a run or reparses files to establish coverage.
+The audit never widens a run or parses files again to establish coverage.
 
 For example, `allow: ["src/**"]` cannot be reported stale when the run checked
 only `src/one.ts` and left `src/two.ts` outside scope. It can be reported when
