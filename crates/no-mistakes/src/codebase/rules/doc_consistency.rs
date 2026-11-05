@@ -13,13 +13,18 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<super::RuleFi
     let skip = &config.filesystem.skip_directories;
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let opts: options::Options = rule.try_rule_options()?;
+        let mut opts: options::Options = rule.try_rule_options()?;
         let target_roots = super::target_roots(root, config, rule);
+        let filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
+        opts.retain_selected_substrings(root, config, &target_roots, &filter);
         let files: Vec<PathBuf> = target_roots
             .iter()
             .flat_map(|root| discover_files(root, skip))
             .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        let files: Vec<_> = files
+            .into_iter()
+            .filter(|path| filter.is_match(path))
+            .collect();
         findings.extend(scan::scan(root, &opts, &files)?);
     }
     super::sort_findings(&mut findings);
@@ -43,15 +48,20 @@ pub(crate) fn check_with_files_and_sources(
 ) -> Result<Vec<super::RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let opts: options::Options = rule.try_rule_options()?;
+        let mut opts: options::Options = rule.try_rule_options()?;
         let target_roots = super::target_roots(root, config, rule);
+        let filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
+        opts.retain_selected_substrings(root, config, &target_roots, &filter);
         let skip = super::skip_dir_set(config);
         let files: Vec<PathBuf> = all_files
             .iter()
             .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots))
             .cloned()
             .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        let files: Vec<_> = files
+            .into_iter()
+            .filter(|path| filter.is_match(path))
+            .collect();
         findings.extend(scan::scan_with_sources(root, &opts, &files, sources)?);
     }
     super::sort_findings(&mut findings);

@@ -1,0 +1,36 @@
+{
+  "rules": [
+    {
+      "rule": "strict-package-layout",
+      "scope": "repository",
+      "options": {
+        "packages": [
+          {
+            "root": "packages",
+            "sourceExtension": ".ts",
+            "allowedRootFiles": [
+              "index.ts"
+            ],
+            "allowedSubdirs": [
+              "src"
+            ],
+            "testFilePatterns": [
+              "*.check.ts"
+            ],
+            "testDirName": "tests"
+          },
+          {
+            "root": "tools",
+            "sourceExtension": ".ts",
+            "testFilePatterns": [],
+            "testDirName": "checks"
+          }
+        ],
+        "testFilePatterns": [
+          "*.global.ts"
+        ],
+        "testDirName": "global"
+      }
+    }
+  ]
+}

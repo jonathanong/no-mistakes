@@ -17,6 +17,7 @@ mermaid-validation = ["dep:merman-analysis"]
 test-instrumentation = []
 
 [dependencies]
+htmlize = { version = "1.1", features = ["unescape"] }
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
 dashmap = "6.2.1"

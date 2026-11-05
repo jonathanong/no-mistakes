@@ -44,7 +44,17 @@ fn required_findings(
     rel_set: &HashSet<String>,
     sources: &SourceStore,
 ) -> Vec<RuleFinding> {
-    opts.required_files
+    let required: HashSet<&str> = opts
+        .required_files
+        .iter()
+        .map(String::as_str)
+        .chain(
+            opts.required_substrings
+                .iter()
+                .map(|spec| spec.file.as_str()),
+        )
+        .collect();
+    required
         .par_iter()
         .flat_map(|req_file| required_file_findings(root, opts, rel_set, sources, req_file))
         .collect()
@@ -64,7 +74,11 @@ fn required_file_findings(
         return Vec::new();
     };
     let mut local = Vec::new();
-    if let Some(heading) = &opts.required_heading {
+    if let Some(heading) = opts
+        .required_heading
+        .as_ref()
+        .filter(|_| opts.required_files.iter().any(|file| file == req_file))
+    {
         if !crate::codebase::markdown_sections::has_required_heading(&content, heading) {
             local.push(RuleFinding {
                 rule: RULE_ID.to_string(),

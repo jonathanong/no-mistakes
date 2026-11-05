@@ -13,7 +13,7 @@ fn scan_source(source: &str, yaml: &str) -> Vec<RuleFinding> {
     scan::check_source(
         ".github/workflows/ci.test.mts",
         source,
-        &compile_options(serde_yaml::from_str(yaml).unwrap()),
+        &compile_options(serde_yaml::from_str(yaml).unwrap()).unwrap(),
         false,
     )
 }
@@ -64,7 +64,7 @@ fn deferred_suppression_still_emits_disabled_file() {
     let findings = scan::check_source(
         ".github/workflows/ci.test.mts",
         "// no-mistakes-disable-file github-actions-test-timeout-literals\nexpect(job.timeoutMinutes).toBe(10)\n",
-        &compile_options(Options::default()),
+        &compile_options(Options::default()).unwrap(),
         true,
     );
     assert_eq!(findings.len(), 1, "{findings:?}");
@@ -130,7 +130,7 @@ fn unreadable_test_is_skipped() {
     let root = fixture("pass");
     let path = root.join(".github/workflows/missing.test.mts");
     let sources = super::super::source_store_for_files(&[]);
-    let opts = compile_options(Options::default());
+    let opts = compile_options(Options::default()).unwrap();
     assert!(scan::check_file(&root, &path, &opts, &sources, false).is_empty());
 }
 

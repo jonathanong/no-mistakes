@@ -1,10 +1,10 @@
 use std::collections::BTreeSet;
 
-pub(super) fn extract_yaml_sequence(source: &str, key: &str) -> BTreeSet<String> {
-    let Ok(value) = serde_yaml::from_str::<serde_yaml::Value>(source) else {
-        return BTreeSet::new();
-    };
-    let Some(serde_yaml::Value::Sequence(items)) = value_at_key(&value, key) else {
+pub(super) fn extract_yaml_sequence_value(
+    value: &serde_yaml::Value,
+    key: &str,
+) -> BTreeSet<String> {
+    let Some(serde_yaml::Value::Sequence(items)) = value_at_key(value, key) else {
         return BTreeSet::new();
     };
     items
@@ -24,15 +24,15 @@ pub(super) fn extract_yaml_sequence(source: &str, key: &str) -> BTreeSet<String>
 /// structural, such as `["a.b"]`, `["[]"]`, or `["0"]`. Invalid selectors and
 /// non-string terminal values are deliberately ignored, so callers can use
 /// `minSize` to make required inventories fail closed.
-pub(super) fn extract_yaml_string_selector(source: &str, selector: &str) -> BTreeSet<String> {
-    let Ok(value) = serde_yaml::from_str::<serde_yaml::Value>(source) else {
-        return BTreeSet::new();
-    };
+pub(super) fn extract_yaml_string_selector_value(
+    value: &serde_yaml::Value,
+    selector: &str,
+) -> BTreeSet<String> {
     let Some(segments) = parse_selector(selector) else {
         return BTreeSet::new();
     };
     let mut selected = Vec::new();
-    select_values(&value, &segments, &mut selected);
+    select_values(value, &segments, &mut selected);
     selected
         .into_iter()
         .filter_map(|value| match value {

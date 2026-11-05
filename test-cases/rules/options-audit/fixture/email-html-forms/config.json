@@ -1,0 +1,16 @@
+{
+  "rules": [
+    {
+      "rule": "test-email-domain-policy",
+      "scope": "repository",
+      "options": {
+        "bannedDomains": [
+          "example.com"
+        ],
+        "allowedEmailPatterns": [
+          "^allow&#64;example[.]com$"
+        ]
+      }
+    }
+  ]
+}

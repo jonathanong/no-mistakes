@@ -1,0 +1,17 @@
+{
+  "rules": [
+    {
+      "rule": "doc-consistency",
+      "scope": "repository",
+      "options": {
+        "requiredHeading": "Heading",
+        "requiredSubstrings": [
+          {
+            "file": "guide.md",
+            "substring": "Install"
+          }
+        ]
+      }
+    }
+  ]
+}

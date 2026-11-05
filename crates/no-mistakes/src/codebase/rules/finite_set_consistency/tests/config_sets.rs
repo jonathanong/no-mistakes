@@ -1,7 +1,8 @@
 use super::extract::{
     extract_markdown_table_code_cells, extract_sql_enum, extract_ts_array_literal,
-    extract_ts_const_array_property, extract_yaml_sequence, ExtractedSet,
+    extract_ts_const_array_property, ExtractedSet,
 };
+use super::test_support::extract_yaml_sequence;
 use super::*;
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::{

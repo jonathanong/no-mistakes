@@ -1,0 +1,16 @@
+{
+  "rules": [
+    {
+      "rule": "doc-consistency",
+      "scope": "repository",
+      "options": {
+        "requiredSubstrings": [
+          {
+            "file": "missing.md",
+            "substring": "Install"
+          }
+        ]
+      }
+    }
+  ]
+}

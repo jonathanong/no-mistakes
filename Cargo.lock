@@ -1353,6 +1353,7 @@ dependencies = [
  "globset",
  "granit-parser",
  "hcl-rs",
+ "htmlize",
  "ignore",
  "insta",
  "is-terminal",

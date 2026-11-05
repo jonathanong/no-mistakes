@@ -24,6 +24,7 @@ pub(super) fn diagnostics_with_lookup(
         .map(|rule| {
             crate::diagnostics::with_observer(observer.clone(), || {
                 let opts: Options = rule.try_rule_options()?;
+                opts.validate()?;
                 let target_roots = target_roots(root, config, rule);
                 let skip = skip_dir_set(config);
                 let files: Vec<PathBuf> = all_files

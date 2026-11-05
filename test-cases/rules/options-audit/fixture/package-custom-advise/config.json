@@ -1,0 +1,13 @@
+{
+  "rules": [
+    {
+      "rule": "package-json-required-fields",
+      "scope": "repository",
+      "message": "AUDIT CUSTOM",
+      "options": {
+        "private": true,
+        "unanalyzable": "advise"
+      }
+    }
+  ]
+}

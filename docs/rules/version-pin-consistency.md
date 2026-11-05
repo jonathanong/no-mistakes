@@ -99,6 +99,10 @@ caused by an unreadable or malformed source outside the selected file set or
 an unreadable selected anchor.
 Definite mismatches and validation of a selected source remain findings.
 
+Missing or blank `sourceFile` / `sourceKey`, and missing `anchors`,
+are configuration errors even when the selected file set is empty. An explicit
+empty anchor list retains its no-op behavior.
+
 ## Valid example
 
 ```toml

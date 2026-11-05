@@ -24,3 +24,20 @@ pub(crate) struct Options {
     pub(crate) banned_substrings: Vec<String>,
     pub(crate) banned_patterns: Vec<BannedPattern>,
 }
+
+impl Options {
+    pub(super) fn retain_selected_substrings(
+        &mut self,
+        root: &std::path::Path,
+        config: &crate::config::v2::NoMistakesConfig,
+        target_roots: &[std::path::PathBuf],
+        filter: &super::super::path_filter::RulePathFilter,
+    ) {
+        let skip = super::super::skip_dir_set(config);
+        self.required_substrings.retain(|spec| {
+            let path = crate::codebase::ts_resolver::normalize_path(&root.join(&spec.file));
+            filter.is_match(&path)
+                && super::super::file_allowed_by_roots_and_skip(root, &skip, &path, target_roots)
+        });
+    }
+}

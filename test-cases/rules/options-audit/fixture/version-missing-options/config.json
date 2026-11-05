@@ -1,0 +1,8 @@
+{
+  "rules": [
+    {
+      "rule": "version-pin-consistency",
+      "scope": "repository"
+    }
+  ]
+}

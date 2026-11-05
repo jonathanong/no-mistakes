@@ -1,0 +1,1 @@
+{"rules": [{"rule": "strict-package-layout", "scope": "repository", "options": {"testDirName": "tests", "testFilePatterns": ["*.check.ts"], "packages": [{"root": "packages", "sourceExtension": ".ts", "allowedRootFiles": ["package.json", "README.md", "index.ts"], "allowedSubdirs": ["src", "__tests__"]}]}}]}

@@ -53,7 +53,10 @@ pub fn diagnostics_with_files_and_sources(
         if !defer_suppression {
             super::suppress_rule_findings_with_sources(root, &mut findings, sources);
         }
-        for finding in findings {
+        for mut finding in findings {
+            if let Some(message) = &rule.message {
+                finding.message = format!("{message} {}", finding.message);
+            }
             if finding.target.as_deref() == Some("unanalyzable") {
                 diagnostics.unanalyzable(policy, finding);
             } else {

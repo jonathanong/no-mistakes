@@ -21,7 +21,6 @@ fn version_pin_consistency_json_matches_snapshot() {
         case("pass", "pass", "lychee.yml"),
         case("mismatch", "fail", "lychee.yml"),
         case("skip_absent", "skip-absent", "lychee.yml"),
-        case("empty_options", "pass", "empty.yml"),
         case("missing_source_key", "missing-source-key", "lychee.yml"),
         case("non_string_pin", "non-string-pin", "lychee.yml"),
         case("missing_capture", "missing-capture", "lychee.yml"),
@@ -83,7 +82,6 @@ fn version_pin_consistency_json_matches_snapshot() {
             "non-string-pin",
             "include-anchor.yml",
         ),
-        case("empty_source_file", "fail", "empty-source.yml"),
         case("unicode_key", "unicode-key", "unicode-key.yml"),
         case(
             "source_only_missing_key",
@@ -263,4 +261,40 @@ fn version_pin_consistency_json_matches_snapshot() {
         ),
     ];
     assert_saved_fixture("version_pin_consistency", &cases);
+}
+
+#[test]
+fn version_pin_required_options_are_hard_errors() {
+    let mut errors = serde_json::Map::new();
+    for (label, scenario, name) in [
+        ("empty_options", "pass", "empty.yml"),
+        ("empty_source_file", "fail", "empty-source.yml"),
+    ] {
+        let root = rules_path(RULE, "fixture", scenario);
+        let config = rules_path(RULE, "configs", name);
+        let mut previous = None;
+        for jobs in ["1", "2"] {
+            let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+                .args(["--jobs", jobs, "check", "--root"])
+                .arg(&root)
+                .arg("--config")
+                .arg(&config)
+                .args(["--format", "json"])
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(2));
+            assert!(output.stdout.is_empty());
+            let stderr = String::from_utf8(output.stderr).unwrap();
+            assert!(stderr.contains("sourceFile is required"), "{stderr}");
+            let value = serde_json::json!({"exitCode": 2, "stderr": stderr});
+            if let Some(previous) = previous {
+                assert_eq!(previous, value);
+            }
+            previous = Some(value.clone());
+            errors.insert(label.to_string(), value);
+        }
+    }
+    insta::with_settings!({snapshot_path => "common/snapshots", prepend_module_to_snapshot => false, omit_expression => true}, {
+        insta::assert_snapshot!("version_pin_required_options_errors", serde_json::to_string_pretty(&errors).unwrap());
+    });
 }

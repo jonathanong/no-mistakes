@@ -1,0 +1,48 @@
+{
+  "projects": {
+    "web": {
+      "root": "web",
+      "include": [
+        "**/*.md"
+      ],
+      "exclude": [
+        "draft.md"
+      ]
+    }
+  },
+  "rules": [
+    {
+      "rule": "doc-consistency",
+      "projects": [
+        "web"
+      ],
+      "include": [
+        "web/*.md"
+      ],
+      "options": {
+        "requiredSubstrings": [
+          {
+            "file": "guide.md",
+            "substring": "Install"
+          },
+          {
+            "file": "web/guide.md",
+            "substring": "Install"
+          },
+          {
+            "file": "web/draft.md",
+            "substring": "Install"
+          },
+          {
+            "file": "web/missing.md",
+            "substring": "Install"
+          },
+          {
+            "file": "web/note.txt",
+            "substring": "Install"
+          }
+        ]
+      }
+    }
+  ]
+}

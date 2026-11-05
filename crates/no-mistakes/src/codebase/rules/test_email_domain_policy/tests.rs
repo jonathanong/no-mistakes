@@ -24,7 +24,7 @@ fn check_file(root: &Path, path: &Path, opts: &CompiledOptions) -> Vec<RuleFindi
 
 fn compiled() -> CompiledOptions {
     compile_options(&Options {
-        banned_domains: vec!["example.com".to_string()],
+        banned_domains: Some(vec!["example.com".to_string()]),
         allowed_email_patterns: vec![
             r"(?i)^tests(?:\+[a-z0-9._%${}-]+|%2b[a-z0-9._%${}-]+)(?:@|%40)example\.com$"
                 .to_string(),
@@ -87,7 +87,7 @@ fn covers_custom_extensions_no_replacement_invalid_regex_and_missing_files() {
     let file = root.join("fixtures/email.fixture");
 
     let opts = Options {
-        banned_domains: vec!["example.com.".to_string()],
+        banned_domains: Some(vec!["example.com.".to_string()]),
         allowed_email_patterns: Vec::new(),
         replacement: None,
         extensions: vec![".fixture".to_string()],
@@ -105,7 +105,7 @@ fn covers_custom_extensions_no_replacement_invalid_regex_and_missing_files() {
     );
 
     let invalid = Options {
-        banned_domains: vec!["example.com".to_string()],
+        banned_domains: Some(vec!["example.com".to_string()]),
         allowed_email_patterns: vec!["[".to_string()],
         replacement: None,
         extensions: Vec::new(),
@@ -132,7 +132,7 @@ fn prefilter_preserves_fixture_findings() {
     ];
     let default_opts = compiled();
     let custom_opts = compile_options(&Options {
-        banned_domains: vec!["example.com.".to_string()],
+        banned_domains: Some(vec!["example.com.".to_string()]),
         allowed_email_patterns: Vec::new(),
         replacement: None,
         extensions: vec![".fixture".to_string()],
@@ -166,7 +166,7 @@ fn prefilter_preserves_fixture_findings() {
 #[test]
 fn non_ascii_source_disables_the_domain_prefilter() {
     let opts = compile_options(&Options {
-        banned_domains: vec!["okta.com".to_string()],
+        banned_domains: Some(vec!["okta.com".to_string()]),
         allowed_email_patterns: Vec::new(),
         replacement: None,
         extensions: Vec::new(),
@@ -199,7 +199,7 @@ fn prefilter_skips_ascii_files_without_domain_needles() {
 #[test]
 fn empty_first_label_disables_the_domain_prefilter() {
     let opts = compile_options(&Options {
-        banned_domains: vec![".".to_string()],
+        banned_domains: Some(vec![".".to_string()]),
         allowed_email_patterns: Vec::new(),
         replacement: None,
         extensions: Vec::new(),

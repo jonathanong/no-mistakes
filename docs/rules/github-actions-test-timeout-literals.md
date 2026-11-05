@@ -16,6 +16,10 @@ in matching workflow tests.
 entry requires `file`, exact trimmed `text`, and a non-empty `reason`; no other
 rule-specific options exist.
 
+An allow entry with a missing or blank `file` is a configuration error, even
+when no workflow tests are selected. Stale entries with a file retain their
+existing diagnostic behavior.
+
 ## Valid example
 
 A relational assertion compares values without restating the owned timeout

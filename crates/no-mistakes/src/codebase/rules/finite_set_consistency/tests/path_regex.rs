@@ -203,11 +203,11 @@ comparisons:
 
 #[cfg(unix)]
 #[test]
-fn scan_skips_sets_with_empty_names() {
+fn scan_rejects_sets_with_empty_names() {
     let root = saved_fixture("path-regex-directory-symlink");
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
     let sources = snapshot.source_store_for(&root);
-    let findings = check_with_files_and_sources(
+    let error = check_with_files_and_sources(
         &root,
         &path_regex_config(
             r#"
@@ -230,8 +230,8 @@ comparisons:
         &[root.join("alpha.txt")],
         &sources,
     )
-    .unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
+    .unwrap_err();
+    assert!(error.to_string().contains("sets[0].name"), "{error:#}");
 }
 
 #[cfg(unix)]

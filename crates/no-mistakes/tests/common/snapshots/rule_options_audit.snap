@@ -1,0 +1,626 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "doc-missing-file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "missing.md",
+          "line": 1,
+          "message": "file not found or untracked",
+          "rule": "doc-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "doc-project-substrings": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/guide.md",
+          "line": 1,
+          "message": "web/guide.md: missing required substring \"Install\"",
+          "rule": "doc-consistency",
+          "sourceLine": "# Guide"
+        },
+        {
+          "file": "web/missing.md",
+          "line": 1,
+          "message": "file not found or untracked",
+          "rule": "doc-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "doc-required-file-filtered": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "guide.md",
+          "line": 1,
+          "message": "file not found or untracked",
+          "rule": "doc-consistency",
+          "sourceLine": "# Guide"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "doc-substring-alone": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "guide.md",
+          "line": 1,
+          "message": "guide.md: missing required substring \"Install the CLI\"",
+          "rule": "doc-consistency",
+          "sourceLine": "# Guide"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "doc-substring-filtered": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "doc-substring-present": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "doc-substring-with-required-file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "guide.md",
+          "line": 1,
+          "message": "guide.md: missing required substring \"Install the CLI\"",
+          "rule": "doc-consistency",
+          "sourceLine": "# Guide"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "email-empty-domains": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "email-fully-encoded": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "emails.txt",
+          "import": "person&#64;&#101;&#120;&#97;&#109;&#112;&#108;&#101;&#46;&#99;&#111;&#109;",
+          "line": 1,
+          "message": "emails.txt: test email fixtures must not use `example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "person&#64;&#101;&#120;&#97;&#109;&#112;&#108;&#101;&#46;&#99;&#111;&#109;",
+          "target": "example.com"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "email-html": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "test.txt",
+          "import": "person&#64;example.com",
+          "line": 1,
+          "message": "test.txt: test email fixtures must not use `example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "person&#64;example.com",
+          "target": "example.com"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "email-html-forms": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "emails.txt",
+          "import": "person&#64;&#101;&#120;&#97;&#109;&#112;&#108;&#101;&#46;&#99;&#111;&#109;",
+          "line": 4,
+          "message": "emails.txt: test email fixtures must not use `example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "person&#64;&#101;&#120;&#97;&#109;&#112;&#108;&#101;&#46;&#99;&#111;&#109;",
+          "target": "example.com"
+        },
+        {
+          "file": "emails.txt",
+          "import": "person&#64;example.com",
+          "line": 1,
+          "message": "emails.txt: test email fixtures must not use `example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "person&#64;example.com",
+          "target": "example.com"
+        },
+        {
+          "file": "emails.txt",
+          "import": "person&#64;example.com",
+          "line": 10,
+          "message": "emails.txt: test email fixtures must not use `example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "person&#64;example.com &copy;",
+          "target": "example.com"
+        },
+        {
+          "file": "emails.txt",
+          "import": "person&#64;example.com",
+          "line": 8,
+          "message": "emails.txt: test email fixtures must not use `example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "&copy; person&#64;example.com; person@example.com",
+          "target": "example.com"
+        },
+        {
+          "file": "emails.txt",
+          "import": "person&#64example&#46com",
+          "line": 11,
+          "message": "emails.txt: test email fixtures must not use `example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "person&#64example&#46com",
+          "target": "example.com"
+        },
+        {
+          "file": "emails.txt",
+          "import": "person&#x0040;&#x65;xample&#x2E;com",
+          "line": 5,
+          "message": "emails.txt: test email fixtures must not use `example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "person&#x0040;&#x65;xample&#x2E;com",
+          "target": "example.com"
+        },
+        {
+          "file": "emails.txt",
+          "import": "person&#x40;example.com",
+          "line": 2,
+          "message": "emails.txt: test email fixtures must not use `example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "person&#x40;example.com",
+          "target": "example.com"
+        },
+        {
+          "file": "emails.txt",
+          "import": "person&commat;example&period;com",
+          "line": 3,
+          "message": "emails.txt: test email fixtures must not use `example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "person&commat;example&period;com",
+          "target": "example.com"
+        },
+        {
+          "file": "emails.txt",
+          "import": "person@example.com",
+          "line": 8,
+          "message": "emails.txt: test email fixtures must not use `example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "&copy; person&#64;example.com; person@example.com",
+          "target": "example.com"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "email-literal": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "test.txt",
+          "import": "person@example.com",
+          "line": 1,
+          "message": "test.txt: test email fixtures must not use `example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "person@example.com",
+          "target": "example.com"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "email-percent": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "test.txt",
+          "import": "person%40example.com",
+          "line": 1,
+          "message": "test.txt: test email fixtures must not use `example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "person%40example.com",
+          "target": "example.com"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "finite-shared-yaml": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "finite-valid-low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "layout-entry-overrides": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/api/global/a.global.ts",
+          "line": 1,
+          "message": "packages/api/global/a.global.ts: subdirectory global/ is not allowed (allowedSubdirs: [src])",
+          "rule": "strict-package-layout",
+          "sourceLine": "export {};"
+        },
+        {
+          "file": "packages/api/tests/a.global.ts",
+          "line": 1,
+          "message": "packages/api/tests/a.global.ts: files in tests/ must match test file patterns",
+          "rule": "strict-package-layout",
+          "sourceLine": "export {};"
+        },
+        {
+          "file": "tools/api/checks/a.check.ts",
+          "line": 1,
+          "message": "tools/api/checks/a.check.ts: files in checks/ must match test file patterns",
+          "rule": "strict-package-layout",
+          "sourceLine": "export {};"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "layout-entry-test-options": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "layout-top-test-options": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "package-advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "package.json",
+          "line": 1,
+          "message": "package.json: cannot verify required package fields because the manifest could not be read or parsed: key must be a string at line 1 column 2. Repair the JSON or restore read access.",
+          "rule": "package-json-required-fields",
+          "sourceLine": "{broken",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "package-custom-advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "package.json",
+          "line": 1,
+          "message": "AUDIT CUSTOM package.json: cannot verify required package fields because the manifest could not be read or parsed: key must be a string at line 1 column 2. Repair the JSON or restore read access.",
+          "rule": "package-json-required-fields",
+          "sourceLine": "{broken",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "package-custom-findings": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "package.json",
+          "line": 1,
+          "message": "AUDIT CUSTOM package.json: must declare \"private\": true.",
+          "rule": "package-json-required-fields",
+          "sourceLine": "{\"private\":false}",
+          "target": "private"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "package-custom-parse": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "package.json",
+          "line": 1,
+          "message": "AUDIT CUSTOM package.json: cannot verify required package fields because the manifest could not be read or parsed: key must be a string at line 1 column 2. Repair the JSON or restore read access.",
+          "rule": "package-json-required-fields",
+          "sourceLine": "{broken",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "renamed-both-names": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "middleware.ts",
+          "line": 1,
+          "message": "rename to proxy.ts",
+          "rule": "banned-renamed-files",
+          "sourceLine": "export {};"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "renamed-entry-extensions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "middleware.ts",
+          "line": 1,
+          "message": "rename to proxy.ts",
+          "rule": "banned-renamed-files",
+          "sourceLine": "export {};"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "renamed-entry-overrides": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/legacy.js",
+          "line": 1,
+          "message": "remove legacy",
+          "rule": "banned-renamed-files",
+          "sourceLine": "export {};"
+        },
+        {
+          "file": "web/middleware.ts",
+          "line": 1,
+          "message": "rename to proxy.ts",
+          "rule": "banned-renamed-files",
+          "sourceLine": "export {};"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "renamed-entry-scope": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/middleware.ts",
+          "line": 1,
+          "message": "rename to proxy.ts",
+          "rule": "banned-renamed-files",
+          "sourceLine": "export {};"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "timeout-literals-stale-allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 1,
+          "message": "stale github-actions-test-timeout-literals allow entry `.github/workflows/ci.test.mts#absent`",
+          "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "const value = 1;",
+          "target": ".github/workflows/ci.test.mts#absent"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "version-blank-anchors": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "version-control": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

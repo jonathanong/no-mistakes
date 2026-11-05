@@ -1,0 +1,1 @@
+{"rules": [{"rule": "version-pin-consistency", "scope": "repository", "options": {"sourceFile": "pin.json", "sourceKey": "version"}}]}

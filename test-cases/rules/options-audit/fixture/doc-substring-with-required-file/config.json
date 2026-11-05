@@ -1,0 +1,1 @@
+{"rules": [{"rule": "doc-consistency", "scope": "repository", "options": {"requiredSubstrings": [{"file": "guide.md", "substring": "Install the CLI"}], "requiredFiles": ["guide.md"]}}]}
