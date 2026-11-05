@@ -149,3 +149,19 @@ fn postgres_lock_ordering_check_json_snapshot() {
     );
     assert_saved_fixture("postgres_lock_ordering", &cases);
 }
+
+#[test]
+fn postgres_numeric_ternary_lock_ordering_check_json_snapshot() {
+    let root = fix("numeric-ternary");
+    let cases: Vec<_> = ["ignore", "fail", "advise"]
+        .into_iter()
+        .map(|policy| {
+            (
+                policy,
+                root.clone(),
+                root.join(format!(".no-mistakes-{policy}.yml")),
+            )
+        })
+        .collect();
+    assert_saved_fixture("postgres_numeric_ternary_lock_ordering", &cases);
+}

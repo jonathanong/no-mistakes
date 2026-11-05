@@ -1,0 +1,141 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/lock.ts",
+          "line": 34,
+          "message": "src/lock.ts:34: postgres-lock-ordering application #0 has unresolved SQL for catalog-key-order, row-lock-order: invalid-sql",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "return query(`SELECT * FROM orders WHERE id = ANY($1 FOR UPDATE`);",
+          "target": "catalog-key-order, row-lock-order"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 38,
+          "message": "src/lock.ts:38: postgres-lock-ordering application #0 has unresolved SQL for catalog-key-order, row-lock-order: opaque-sql-tail",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "return query(statement);",
+          "target": "catalog-key-order, row-lock-order"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 16,
+          "message": "src/lock.ts:16: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "return query(`SELECT * FROM orders WHERE id = ANY($1)${hashesPredicate} ORDER BY created_at FOR UPDATE`);",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 30,
+          "message": "src/lock.ts:30: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "return query(`SELECT * FROM orders WHERE id = ANY($1)${hashesPredicate} ORDER BY created_at FOR UPDATE`);",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 34,
+          "message": "src/lock.ts:34: keep FOR UPDATE SQL parseable so lock ordering can be checked, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "return query(`SELECT * FROM orders WHERE id = ANY($1 FOR UPDATE`);",
+          "target": "unparseable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 16,
+          "message": "src/lock.ts:16: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "return query(`SELECT * FROM orders WHERE id = ANY($1)${hashesPredicate} ORDER BY created_at FOR UPDATE`);",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 30,
+          "message": "src/lock.ts:30: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "return query(`SELECT * FROM orders WHERE id = ANY($1)${hashesPredicate} ORDER BY created_at FOR UPDATE`);",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 34,
+          "message": "src/lock.ts:34: keep FOR UPDATE SQL parseable so lock ordering can be checked, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "return query(`SELECT * FROM orders WHERE id = ANY($1 FOR UPDATE`);",
+          "target": "unparseable"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 38,
+          "message": "src/lock.ts:38: executed SQL is not statically recoverable, so a FOR UPDATE lock and its row order cannot be checked for ABBA deadlocks; pass a SQL literal or trusted tagged template, add a `deadlock-safe` comment, or set unanalyzableSql: ignore",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "return query(statement);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 16,
+          "message": "src/lock.ts:16: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "return query(`SELECT * FROM orders WHERE id = ANY($1)${hashesPredicate} ORDER BY created_at FOR UPDATE`);",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 30,
+          "message": "src/lock.ts:30: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "return query(`SELECT * FROM orders WHERE id = ANY($1)${hashesPredicate} ORDER BY created_at FOR UPDATE`);",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 34,
+          "message": "src/lock.ts:34: keep FOR UPDATE SQL parseable so lock ordering can be checked, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "return query(`SELECT * FROM orders WHERE id = ANY($1 FOR UPDATE`);",
+          "target": "unparseable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

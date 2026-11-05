@@ -162,8 +162,12 @@ fn missing_object_member_stays_unknown() {
 }
 
 #[test]
-fn non_string_const_template_piece_stays_unknown() {
-    assert_unknown("const-splice-non-string-piece.ts");
+fn numeric_const_template_piece_is_recovered() {
+    let calls = read_calls("const-splice-non-string-piece.ts");
+    assert_eq!(calls.len(), 1);
+    assert!(!calls[0].is_unanalyzable(), "{:?}", calls[0]);
+    assert_eq!(calls[0].variants.len(), 1);
+    assert_eq!(calls[0].variants[0].sql_text, "SELECT 1");
 }
 
 #[test]

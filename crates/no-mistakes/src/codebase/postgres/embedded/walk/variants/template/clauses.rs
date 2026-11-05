@@ -25,6 +25,7 @@ use crate::codebase::postgres::embedded::{source_positions, EmbeddedSqlKind};
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use oxc_ast::ast::{ConditionalExpression, Expression, TemplateLiteral};
 use oxc_span::GetSpan;
+use oxc_syntax::number::ToJsString;
 
 mod logic;
 mod finite_member;
@@ -36,8 +37,9 @@ pub(in crate::codebase::postgres::embedded::walk::variants) fn recover(visitor: 
     for (index, quasi) in template.quasis.iter().enumerate() {
         versions = combine(versions, vec![piece::quasi(visitor, quasi)])?;
         if let Some(expr) = template.expressions.get(index) {
-            let values = clause(visitor, expr, depth - 1, constraints)?;
+            let mut values = clause(visitor, expr, depth - 1, constraints)?;
             if !plain(&values) { return None; }
+            for value in &mut values { value.value = ValueKind::Sql; }
             versions = combine(versions, values)?;
         }
     }
@@ -76,6 +78,11 @@ fn clause(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, depth: u8, constrai
     let line = byte_offset_to_line(visitor.source, expr.span().start as usize);
     match expr {
         Expression::StringLiteral(literal) => text(visitor, expr, crate::ast::js_literal(literal).into_owned(), line),
+        Expression::NumericLiteral(literal) => {
+            let mut values = text(visitor, expr, literal.value.to_js_string(), line)?;
+            for value in &mut values { value.value = ValueKind::Number(literal.value != 0.0); }
+            Some(values)
+        }
         Expression::TemplateLiteral(template) => recover(visitor, template, depth - 1, constraints),
         Expression::Identifier(id) => super::super::super::guarded::recover(visitor, expr, id)
             .or_else(|| constant(visitor, expr, constraints)),
@@ -152,7 +159,7 @@ fn agrees(value: &Recovered, constraints: &[(u64, u32)]) -> bool {
     !value.choices.iter().any(|(id, arm)| constraints.iter().any(|(other, choice)| id == other && arm != choice))
 }
 fn plain(values: &[Recovered]) -> bool {
-    values.iter().all(|value| value.value == ValueKind::Sql && !value.fragment && !tainted(&value.sql))
+    values.iter().all(|value| matches!(value.value, ValueKind::Sql | ValueKind::Number(_)) && !value.fragment && !tainted(&value.sql))
 }
 fn tainted(sql: &str) -> bool {
     sql.contains('\0') || crate::codebase::postgres::embedded::helpers::sentinel::contains(sql)

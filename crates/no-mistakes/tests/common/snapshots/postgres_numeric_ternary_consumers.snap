@@ -1,0 +1,1237 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "numeric-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "numeric.ts",
+          "line": 11,
+          "message": "numeric.ts:11: key \"accountId\" written into orders.details has no same-row foreign key column; write a mapped column with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "sourceLine": "await query(`UPDATE orders SET details = '{\"accountId\": ${condition ? 1 : 2}}'::jsonb`);",
+          "target": "column:orders.details"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "numeric.ts",
+          "import": "accounts.created_at",
+          "line": 7,
+          "message": "numeric.ts:7: do not write generated column `accounts.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "await query(`UPDATE accounts SET created_at = now() WHERE 1 = ${condition ? 1 : 2}`);",
+          "target": "created_at"
+        },
+        {
+          "file": "numeric.ts",
+          "import": "accounts.tenant_id",
+          "line": 10,
+          "message": "numeric.ts:10: SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE id = ANY($1::uuid[]) AND 1 = ${condition ? 1 : 2} FOR UPDATE`);",
+          "target": "accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "import": "accounts.tenant_id",
+          "line": 4,
+          "message": "numeric.ts:4: SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? 1 : 2} OFFSET 0`);",
+          "target": "accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "import": "accounts.tenant_id",
+          "line": 5,
+          "message": "numeric.ts:5: SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE lower(id::text) = 'x' AND 1 = ${condition ? 1 : 2}`);",
+          "target": "accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "import": "accounts.tenant_id",
+          "line": 6,
+          "message": "numeric.ts:6: SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE created_at > now() AND 1 = ${condition ? 1 : 2}`);",
+          "target": "accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "import": "accounts.tenant_id",
+          "line": 7,
+          "message": "numeric.ts:7: UPDATE on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`UPDATE accounts SET created_at = now() WHERE 1 = ${condition ? 1 : 2}`);",
+          "target": "accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 10,
+          "message": "numeric.ts:10: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE id = ANY($1::uuid[]) AND 1 = ${condition ? 1 : 2} FOR UPDATE`);",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 10,
+          "message": "numeric.ts:10: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE id = ANY($1::uuid[]) AND 1 = ${condition ? 1 : 2} FOR UPDATE`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 11,
+          "message": "numeric.ts:11: UPDATE can change every row of orders; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`UPDATE orders SET details = '{\"accountId\": ${condition ? 1 : 2}}'::jsonb`);",
+          "target": "table:orders"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 11,
+          "message": "numeric.ts:11: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`UPDATE orders SET details = '{\"accountId\": ${condition ? 1 : 2}}'::jsonb`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 12,
+          "message": "numeric.ts:12: executed SQL must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "await query(`TRUNCATE accounts; SELECT ${condition ? 1 : 2}`);",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 12,
+          "message": "numeric.ts:12: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(`TRUNCATE accounts; SELECT ${condition ? 1 : 2}`);",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 12,
+          "message": "numeric.ts:12: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`TRUNCATE accounts; SELECT ${condition ? 1 : 2}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 13,
+          "message": "numeric.ts:13: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`SELECT ${condition ? 1 : 2} FROM accounts FOR UPDATE !!!`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 13,
+          "message": "numeric.ts:13: SQL could not be analyzed for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "await query(`SELECT ${condition ? 1 : 2} FROM accounts FOR UPDATE !!!`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 13,
+          "message": "numeric.ts:13: SQL could not be analyzed for generated column predicates",
+          "rule": "postgres-generated-column-predicates",
+          "sourceLine": "await query(`SELECT ${condition ? 1 : 2} FROM accounts FOR UPDATE !!!`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 13,
+          "message": "numeric.ts:13: SQL could not be analyzed for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT ${condition ? 1 : 2} FROM accounts FOR UPDATE !!!`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 13,
+          "message": "numeric.ts:13: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "await query(`SELECT ${condition ? 1 : 2} FROM accounts FOR UPDATE !!!`);",
+          "target": "literal-limit"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 13,
+          "message": "numeric.ts:13: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "await query(`SELECT ${condition ? 1 : 2} FROM accounts FOR UPDATE !!!`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 13,
+          "message": "numeric.ts:13: executed SQL is not statically recoverable for statement policy",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "await query(`SELECT ${condition ? 1 : 2} FROM accounts FOR UPDATE !!!`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 13,
+          "message": "numeric.ts:13: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(`SELECT ${condition ? 1 : 2} FROM accounts FOR UPDATE !!!`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 13,
+          "message": "numeric.ts:13: keep FOR UPDATE SQL parseable so lock ordering can be checked, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "await query(`SELECT ${condition ? 1 : 2} FROM accounts FOR UPDATE !!!`);",
+          "target": "unparseable"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 13,
+          "message": "numeric.ts:13: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT ${condition ? 1 : 2} FROM accounts FOR UPDATE !!!`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 4,
+          "message": "numeric.ts:4: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? 1 : 2} OFFSET 0`);",
+          "target": "literal-limit"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 4,
+          "message": "numeric.ts:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? 1 : 2} OFFSET 0`);",
+          "target": "offset"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 4,
+          "message": "numeric.ts:4: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? 1 : 2} OFFSET 0`);",
+          "target": "accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 4,
+          "message": "numeric.ts:4: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? 1 : 2} OFFSET 0`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 5,
+          "message": "numeric.ts:5: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE lower(id::text) = 'x' AND 1 = ${condition ? 1 : 2}`);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 5,
+          "message": "numeric.ts:5: WHERE applies lower to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE lower(id::text) = 'x' AND 1 = ${condition ? 1 : 2}`);",
+          "target": "accounts.id"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 5,
+          "message": "numeric.ts:5: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE lower(id::text) = 'x' AND 1 = ${condition ? 1 : 2}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 6,
+          "message": "numeric.ts:6: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE created_at > now() AND 1 = ${condition ? 1 : 2}`);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 6,
+          "message": "numeric.ts:6: WHERE filters accounts.created_at, which is generated from a configured expression using id; consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE created_at > now() AND 1 = ${condition ? 1 : 2}`);",
+          "target": "created_at"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 6,
+          "message": "numeric.ts:6: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE created_at > now() AND 1 = ${condition ? 1 : 2}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 7,
+          "message": "numeric.ts:7: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`UPDATE accounts SET created_at = now() WHERE 1 = ${condition ? 1 : 2}`);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 7,
+          "message": "numeric.ts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`UPDATE accounts SET created_at = now() WHERE 1 = ${condition ? 1 : 2}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 8,
+          "message": "numeric.ts:8: INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS",
+          "rule": "postgres-idempotent-insert",
+          "sourceLine": "await query(`INSERT INTO accounts (id) VALUES ('00000000-0000-0000-0000-000000000001') RETURNING ${condition ? 1 : 2}`);",
+          "target": "insert"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 8,
+          "message": "numeric.ts:8: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`INSERT INTO accounts (id) VALUES ('00000000-0000-0000-0000-000000000001') RETURNING ${condition ? 1 : 2}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 9,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.id ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "await query(`INSERT INTO accounts (id) SELECT input.id FROM unnest($1::uuid[]) AS input(id) WHERE 1 = ${condition ? 1 : 2} ON CONFLICT (id) DO NOTHING`);",
+          "target": "missing-canonical-order"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 9,
+          "message": "numeric.ts:9: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`INSERT INTO accounts (id) SELECT input.id FROM unnest($1::uuid[]) AS input(id) WHERE 1 = ${condition ? 1 : 2} ON CONFLICT (id) DO NOTHING`);",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "numeric-ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "numeric.ts",
+          "line": 11,
+          "message": "numeric.ts:11: key \"accountId\" written into orders.details has no same-row foreign key column; write a mapped column with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "sourceLine": "await query(`UPDATE orders SET details = '{\"accountId\": ${condition ? 1 : 2}}'::jsonb`);",
+          "target": "column:orders.details"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "numeric.ts",
+          "import": "accounts.created_at",
+          "line": 7,
+          "message": "numeric.ts:7: do not write generated column `accounts.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "await query(`UPDATE accounts SET created_at = now() WHERE 1 = ${condition ? 1 : 2}`);",
+          "target": "created_at"
+        },
+        {
+          "file": "numeric.ts",
+          "import": "accounts.tenant_id",
+          "line": 10,
+          "message": "numeric.ts:10: SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE id = ANY($1::uuid[]) AND 1 = ${condition ? 1 : 2} FOR UPDATE`);",
+          "target": "accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "import": "accounts.tenant_id",
+          "line": 4,
+          "message": "numeric.ts:4: SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? 1 : 2} OFFSET 0`);",
+          "target": "accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "import": "accounts.tenant_id",
+          "line": 5,
+          "message": "numeric.ts:5: SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE lower(id::text) = 'x' AND 1 = ${condition ? 1 : 2}`);",
+          "target": "accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "import": "accounts.tenant_id",
+          "line": 6,
+          "message": "numeric.ts:6: SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE created_at > now() AND 1 = ${condition ? 1 : 2}`);",
+          "target": "accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "import": "accounts.tenant_id",
+          "line": 7,
+          "message": "numeric.ts:7: UPDATE on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`UPDATE accounts SET created_at = now() WHERE 1 = ${condition ? 1 : 2}`);",
+          "target": "accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 10,
+          "message": "numeric.ts:10: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE id = ANY($1::uuid[]) AND 1 = ${condition ? 1 : 2} FOR UPDATE`);",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 10,
+          "message": "numeric.ts:10: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE id = ANY($1::uuid[]) AND 1 = ${condition ? 1 : 2} FOR UPDATE`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 11,
+          "message": "numeric.ts:11: UPDATE can change every row of orders; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`UPDATE orders SET details = '{\"accountId\": ${condition ? 1 : 2}}'::jsonb`);",
+          "target": "table:orders"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 11,
+          "message": "numeric.ts:11: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`UPDATE orders SET details = '{\"accountId\": ${condition ? 1 : 2}}'::jsonb`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 12,
+          "message": "numeric.ts:12: executed SQL must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "await query(`TRUNCATE accounts; SELECT ${condition ? 1 : 2}`);",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 12,
+          "message": "numeric.ts:12: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(`TRUNCATE accounts; SELECT ${condition ? 1 : 2}`);",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 12,
+          "message": "numeric.ts:12: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`TRUNCATE accounts; SELECT ${condition ? 1 : 2}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 13,
+          "message": "numeric.ts:13: keep FOR UPDATE SQL parseable so lock ordering can be checked, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "await query(`SELECT ${condition ? 1 : 2} FROM accounts FOR UPDATE !!!`);",
+          "target": "unparseable"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 13,
+          "message": "numeric.ts:13: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT ${condition ? 1 : 2} FROM accounts FOR UPDATE !!!`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 4,
+          "message": "numeric.ts:4: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? 1 : 2} OFFSET 0`);",
+          "target": "literal-limit"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 4,
+          "message": "numeric.ts:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? 1 : 2} OFFSET 0`);",
+          "target": "offset"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 4,
+          "message": "numeric.ts:4: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? 1 : 2} OFFSET 0`);",
+          "target": "accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 4,
+          "message": "numeric.ts:4: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? 1 : 2} OFFSET 0`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 5,
+          "message": "numeric.ts:5: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE lower(id::text) = 'x' AND 1 = ${condition ? 1 : 2}`);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 5,
+          "message": "numeric.ts:5: WHERE applies lower to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE lower(id::text) = 'x' AND 1 = ${condition ? 1 : 2}`);",
+          "target": "accounts.id"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 5,
+          "message": "numeric.ts:5: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE lower(id::text) = 'x' AND 1 = ${condition ? 1 : 2}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 6,
+          "message": "numeric.ts:6: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE created_at > now() AND 1 = ${condition ? 1 : 2}`);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 6,
+          "message": "numeric.ts:6: WHERE filters accounts.created_at, which is generated from a configured expression using id; consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE created_at > now() AND 1 = ${condition ? 1 : 2}`);",
+          "target": "created_at"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 6,
+          "message": "numeric.ts:6: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE created_at > now() AND 1 = ${condition ? 1 : 2}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 7,
+          "message": "numeric.ts:7: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`UPDATE accounts SET created_at = now() WHERE 1 = ${condition ? 1 : 2}`);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 7,
+          "message": "numeric.ts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`UPDATE accounts SET created_at = now() WHERE 1 = ${condition ? 1 : 2}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 8,
+          "message": "numeric.ts:8: INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS",
+          "rule": "postgres-idempotent-insert",
+          "sourceLine": "await query(`INSERT INTO accounts (id) VALUES ('00000000-0000-0000-0000-000000000001') RETURNING ${condition ? 1 : 2}`);",
+          "target": "insert"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 8,
+          "message": "numeric.ts:8: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`INSERT INTO accounts (id) VALUES ('00000000-0000-0000-0000-000000000001') RETURNING ${condition ? 1 : 2}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 9,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.id ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "await query(`INSERT INTO accounts (id) SELECT input.id FROM unnest($1::uuid[]) AS input(id) WHERE 1 = ${condition ? 1 : 2} ON CONFLICT (id) DO NOTHING`);",
+          "target": "missing-canonical-order"
+        },
+        {
+          "file": "numeric.ts",
+          "line": 9,
+          "message": "numeric.ts:9: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`INSERT INTO accounts (id) SELECT input.id FROM unnest($1::uuid[]) AS input(id) WHERE 1 = ${condition ? 1 : 2} ON CONFLICT (id) DO NOTHING`);",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "string-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "string.ts",
+          "line": 11,
+          "message": "string.ts:11: key \"accountId\" written into orders.details has no same-row foreign key column; write a mapped column with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "sourceLine": "await query(`UPDATE orders SET details = '{\"accountId\": ${condition ? \"1\" : \"2\"}}'::jsonb`);",
+          "target": "column:orders.details"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "string.ts",
+          "import": "accounts.created_at",
+          "line": 7,
+          "message": "string.ts:7: do not write generated column `accounts.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "await query(`UPDATE accounts SET created_at = now() WHERE 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "created_at"
+        },
+        {
+          "file": "string.ts",
+          "import": "accounts.tenant_id",
+          "line": 10,
+          "message": "string.ts:10: SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE id = ANY($1::uuid[]) AND 1 = ${condition ? \"1\" : \"2\"} FOR UPDATE`);",
+          "target": "accounts"
+        },
+        {
+          "file": "string.ts",
+          "import": "accounts.tenant_id",
+          "line": 4,
+          "message": "string.ts:4: SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? \"1\" : \"2\"} OFFSET 0`);",
+          "target": "accounts"
+        },
+        {
+          "file": "string.ts",
+          "import": "accounts.tenant_id",
+          "line": 5,
+          "message": "string.ts:5: SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE lower(id::text) = 'x' AND 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "accounts"
+        },
+        {
+          "file": "string.ts",
+          "import": "accounts.tenant_id",
+          "line": 6,
+          "message": "string.ts:6: SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE created_at > now() AND 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "accounts"
+        },
+        {
+          "file": "string.ts",
+          "import": "accounts.tenant_id",
+          "line": 7,
+          "message": "string.ts:7: UPDATE on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`UPDATE accounts SET created_at = now() WHERE 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "accounts"
+        },
+        {
+          "file": "string.ts",
+          "line": 10,
+          "message": "string.ts:10: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE id = ANY($1::uuid[]) AND 1 = ${condition ? \"1\" : \"2\"} FOR UPDATE`);",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "string.ts",
+          "line": 10,
+          "message": "string.ts:10: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE id = ANY($1::uuid[]) AND 1 = ${condition ? \"1\" : \"2\"} FOR UPDATE`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 11,
+          "message": "string.ts:11: UPDATE can change every row of orders; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`UPDATE orders SET details = '{\"accountId\": ${condition ? \"1\" : \"2\"}}'::jsonb`);",
+          "target": "table:orders"
+        },
+        {
+          "file": "string.ts",
+          "line": 11,
+          "message": "string.ts:11: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`UPDATE orders SET details = '{\"accountId\": ${condition ? \"1\" : \"2\"}}'::jsonb`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 12,
+          "message": "string.ts:12: executed SQL must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "await query(`TRUNCATE accounts; SELECT ${condition ? \"1\" : \"2\"}`);",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "string.ts",
+          "line": 12,
+          "message": "string.ts:12: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(`TRUNCATE accounts; SELECT ${condition ? \"1\" : \"2\"}`);",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "string.ts",
+          "line": 12,
+          "message": "string.ts:12: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`TRUNCATE accounts; SELECT ${condition ? \"1\" : \"2\"}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 13,
+          "message": "string.ts:13: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`SELECT ${condition ? \"1\" : \"2\"} FROM accounts FOR UPDATE !!!`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "string.ts",
+          "line": 13,
+          "message": "string.ts:13: SQL could not be analyzed for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "await query(`SELECT ${condition ? \"1\" : \"2\"} FROM accounts FOR UPDATE !!!`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "string.ts",
+          "line": 13,
+          "message": "string.ts:13: SQL could not be analyzed for generated column predicates",
+          "rule": "postgres-generated-column-predicates",
+          "sourceLine": "await query(`SELECT ${condition ? \"1\" : \"2\"} FROM accounts FOR UPDATE !!!`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "string.ts",
+          "line": 13,
+          "message": "string.ts:13: SQL could not be analyzed for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT ${condition ? \"1\" : \"2\"} FROM accounts FOR UPDATE !!!`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "string.ts",
+          "line": 13,
+          "message": "string.ts:13: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "await query(`SELECT ${condition ? \"1\" : \"2\"} FROM accounts FOR UPDATE !!!`);",
+          "target": "literal-limit"
+        },
+        {
+          "file": "string.ts",
+          "line": 13,
+          "message": "string.ts:13: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "await query(`SELECT ${condition ? \"1\" : \"2\"} FROM accounts FOR UPDATE !!!`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "string.ts",
+          "line": 13,
+          "message": "string.ts:13: executed SQL is not statically recoverable for statement policy",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "await query(`SELECT ${condition ? \"1\" : \"2\"} FROM accounts FOR UPDATE !!!`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "string.ts",
+          "line": 13,
+          "message": "string.ts:13: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(`SELECT ${condition ? \"1\" : \"2\"} FROM accounts FOR UPDATE !!!`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "string.ts",
+          "line": 13,
+          "message": "string.ts:13: keep FOR UPDATE SQL parseable so lock ordering can be checked, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "await query(`SELECT ${condition ? \"1\" : \"2\"} FROM accounts FOR UPDATE !!!`);",
+          "target": "unparseable"
+        },
+        {
+          "file": "string.ts",
+          "line": 13,
+          "message": "string.ts:13: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT ${condition ? \"1\" : \"2\"} FROM accounts FOR UPDATE !!!`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 4,
+          "message": "string.ts:4: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? \"1\" : \"2\"} OFFSET 0`);",
+          "target": "literal-limit"
+        },
+        {
+          "file": "string.ts",
+          "line": 4,
+          "message": "string.ts:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? \"1\" : \"2\"} OFFSET 0`);",
+          "target": "offset"
+        },
+        {
+          "file": "string.ts",
+          "line": 4,
+          "message": "string.ts:4: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? \"1\" : \"2\"} OFFSET 0`);",
+          "target": "accounts"
+        },
+        {
+          "file": "string.ts",
+          "line": 4,
+          "message": "string.ts:4: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? \"1\" : \"2\"} OFFSET 0`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 5,
+          "message": "string.ts:5: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE lower(id::text) = 'x' AND 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "string.ts",
+          "line": 5,
+          "message": "string.ts:5: WHERE applies lower to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE lower(id::text) = 'x' AND 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "accounts.id"
+        },
+        {
+          "file": "string.ts",
+          "line": 5,
+          "message": "string.ts:5: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE lower(id::text) = 'x' AND 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 6,
+          "message": "string.ts:6: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE created_at > now() AND 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "string.ts",
+          "line": 6,
+          "message": "string.ts:6: WHERE filters accounts.created_at, which is generated from a configured expression using id; consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE created_at > now() AND 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "created_at"
+        },
+        {
+          "file": "string.ts",
+          "line": 6,
+          "message": "string.ts:6: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE created_at > now() AND 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 7,
+          "message": "string.ts:7: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`UPDATE accounts SET created_at = now() WHERE 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "string.ts",
+          "line": 7,
+          "message": "string.ts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`UPDATE accounts SET created_at = now() WHERE 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 8,
+          "message": "string.ts:8: INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS",
+          "rule": "postgres-idempotent-insert",
+          "sourceLine": "await query(`INSERT INTO accounts (id) VALUES ('00000000-0000-0000-0000-000000000001') RETURNING ${condition ? \"1\" : \"2\"}`);",
+          "target": "insert"
+        },
+        {
+          "file": "string.ts",
+          "line": 8,
+          "message": "string.ts:8: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`INSERT INTO accounts (id) VALUES ('00000000-0000-0000-0000-000000000001') RETURNING ${condition ? \"1\" : \"2\"}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 9,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.id ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "await query(`INSERT INTO accounts (id) SELECT input.id FROM unnest($1::uuid[]) AS input(id) WHERE 1 = ${condition ? \"1\" : \"2\"} ON CONFLICT (id) DO NOTHING`);",
+          "target": "missing-canonical-order"
+        },
+        {
+          "file": "string.ts",
+          "line": 9,
+          "message": "string.ts:9: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`INSERT INTO accounts (id) SELECT input.id FROM unnest($1::uuid[]) AS input(id) WHERE 1 = ${condition ? \"1\" : \"2\"} ON CONFLICT (id) DO NOTHING`);",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "string-ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "string.ts",
+          "line": 11,
+          "message": "string.ts:11: key \"accountId\" written into orders.details has no same-row foreign key column; write a mapped column with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "sourceLine": "await query(`UPDATE orders SET details = '{\"accountId\": ${condition ? \"1\" : \"2\"}}'::jsonb`);",
+          "target": "column:orders.details"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "string.ts",
+          "import": "accounts.created_at",
+          "line": 7,
+          "message": "string.ts:7: do not write generated column `accounts.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "await query(`UPDATE accounts SET created_at = now() WHERE 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "created_at"
+        },
+        {
+          "file": "string.ts",
+          "import": "accounts.tenant_id",
+          "line": 10,
+          "message": "string.ts:10: SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE id = ANY($1::uuid[]) AND 1 = ${condition ? \"1\" : \"2\"} FOR UPDATE`);",
+          "target": "accounts"
+        },
+        {
+          "file": "string.ts",
+          "import": "accounts.tenant_id",
+          "line": 4,
+          "message": "string.ts:4: SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? \"1\" : \"2\"} OFFSET 0`);",
+          "target": "accounts"
+        },
+        {
+          "file": "string.ts",
+          "import": "accounts.tenant_id",
+          "line": 5,
+          "message": "string.ts:5: SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE lower(id::text) = 'x' AND 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "accounts"
+        },
+        {
+          "file": "string.ts",
+          "import": "accounts.tenant_id",
+          "line": 6,
+          "message": "string.ts:6: SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE created_at > now() AND 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "accounts"
+        },
+        {
+          "file": "string.ts",
+          "import": "accounts.tenant_id",
+          "line": 7,
+          "message": "string.ts:7: UPDATE on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await query(`UPDATE accounts SET created_at = now() WHERE 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "accounts"
+        },
+        {
+          "file": "string.ts",
+          "line": 10,
+          "message": "string.ts:10: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE id = ANY($1::uuid[]) AND 1 = ${condition ? \"1\" : \"2\"} FOR UPDATE`);",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "string.ts",
+          "line": 10,
+          "message": "string.ts:10: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE id = ANY($1::uuid[]) AND 1 = ${condition ? \"1\" : \"2\"} FOR UPDATE`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 11,
+          "message": "string.ts:11: UPDATE can change every row of orders; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`UPDATE orders SET details = '{\"accountId\": ${condition ? \"1\" : \"2\"}}'::jsonb`);",
+          "target": "table:orders"
+        },
+        {
+          "file": "string.ts",
+          "line": 11,
+          "message": "string.ts:11: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`UPDATE orders SET details = '{\"accountId\": ${condition ? \"1\" : \"2\"}}'::jsonb`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 12,
+          "message": "string.ts:12: executed SQL must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "await query(`TRUNCATE accounts; SELECT ${condition ? \"1\" : \"2\"}`);",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "string.ts",
+          "line": 12,
+          "message": "string.ts:12: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(`TRUNCATE accounts; SELECT ${condition ? \"1\" : \"2\"}`);",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "string.ts",
+          "line": 12,
+          "message": "string.ts:12: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`TRUNCATE accounts; SELECT ${condition ? \"1\" : \"2\"}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 13,
+          "message": "string.ts:13: keep FOR UPDATE SQL parseable so lock ordering can be checked, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "await query(`SELECT ${condition ? \"1\" : \"2\"} FROM accounts FOR UPDATE !!!`);",
+          "target": "unparseable"
+        },
+        {
+          "file": "string.ts",
+          "line": 13,
+          "message": "string.ts:13: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT ${condition ? \"1\" : \"2\"} FROM accounts FOR UPDATE !!!`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 4,
+          "message": "string.ts:4: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? \"1\" : \"2\"} OFFSET 0`);",
+          "target": "literal-limit"
+        },
+        {
+          "file": "string.ts",
+          "line": 4,
+          "message": "string.ts:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? \"1\" : \"2\"} OFFSET 0`);",
+          "target": "offset"
+        },
+        {
+          "file": "string.ts",
+          "line": 4,
+          "message": "string.ts:4: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? \"1\" : \"2\"} OFFSET 0`);",
+          "target": "accounts"
+        },
+        {
+          "file": "string.ts",
+          "line": 4,
+          "message": "string.ts:4: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT * FROM accounts LIMIT ${condition ? \"1\" : \"2\"} OFFSET 0`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 5,
+          "message": "string.ts:5: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE lower(id::text) = 'x' AND 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "string.ts",
+          "line": 5,
+          "message": "string.ts:5: WHERE applies lower to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE lower(id::text) = 'x' AND 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "accounts.id"
+        },
+        {
+          "file": "string.ts",
+          "line": 5,
+          "message": "string.ts:5: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE lower(id::text) = 'x' AND 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 6,
+          "message": "string.ts:6: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE created_at > now() AND 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "string.ts",
+          "line": 6,
+          "message": "string.ts:6: WHERE filters accounts.created_at, which is generated from a configured expression using id; consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE created_at > now() AND 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "created_at"
+        },
+        {
+          "file": "string.ts",
+          "line": 6,
+          "message": "string.ts:6: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`SELECT id FROM accounts WHERE created_at > now() AND 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 7,
+          "message": "string.ts:7: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`UPDATE accounts SET created_at = now() WHERE 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "string.ts",
+          "line": 7,
+          "message": "string.ts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`UPDATE accounts SET created_at = now() WHERE 1 = ${condition ? \"1\" : \"2\"}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 8,
+          "message": "string.ts:8: INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS",
+          "rule": "postgres-idempotent-insert",
+          "sourceLine": "await query(`INSERT INTO accounts (id) VALUES ('00000000-0000-0000-0000-000000000001') RETURNING ${condition ? \"1\" : \"2\"}`);",
+          "target": "insert"
+        },
+        {
+          "file": "string.ts",
+          "line": 8,
+          "message": "string.ts:8: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`INSERT INTO accounts (id) VALUES ('00000000-0000-0000-0000-000000000001') RETURNING ${condition ? \"1\" : \"2\"}`);",
+          "target": "annotation"
+        },
+        {
+          "file": "string.ts",
+          "line": 9,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.id ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "await query(`INSERT INTO accounts (id) SELECT input.id FROM unnest($1::uuid[]) AS input(id) WHERE 1 = ${condition ? \"1\" : \"2\"} ON CONFLICT (id) DO NOTHING`);",
+          "target": "missing-canonical-order"
+        },
+        {
+          "file": "string.ts",
+          "line": 9,
+          "message": "string.ts:9: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(`INSERT INTO accounts (id) SELECT input.id FROM unnest($1::uuid[]) AS input(id) WHERE 1 = ${condition ? \"1\" : \"2\"} ON CONFLICT (id) DO NOTHING`);",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

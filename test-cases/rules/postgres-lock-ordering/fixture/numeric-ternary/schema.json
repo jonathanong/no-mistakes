@@ -1,0 +1,26 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "indexes": {
+        "orders_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "id",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        }
+      }
+    }
+  }
+}

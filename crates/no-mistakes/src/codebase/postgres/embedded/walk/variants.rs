@@ -29,6 +29,7 @@ pub(super) enum ValueKind {
     Sql,
     Null,
     Boolean(bool),
+    Number(bool),
     Absent,
     UnknownFalsy,
 }
@@ -71,7 +72,7 @@ impl Recovered {
     pub(super) fn truth(&self) -> bool {
         match self.value {
             ValueKind::Sql => self.fragment || !self.sql.is_empty(),
-            ValueKind::Boolean(value) => value,
+            ValueKind::Boolean(value) | ValueKind::Number(value) => value,
             ValueKind::Null | ValueKind::Absent | ValueKind::UnknownFalsy => false,
         }
     }

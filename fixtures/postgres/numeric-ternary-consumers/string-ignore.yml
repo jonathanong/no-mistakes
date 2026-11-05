@@ -1,0 +1,148 @@
+version: 2
+effort: max
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    include: ["string.ts", "schema.sql", "schema.json"]
+    options:
+      importSpecifier: "@example/db"
+      executorNames: ["query"]
+      unanalyzableSql: "ignore"
+      schemaCatalogPath: "schema.json"
+      sqlInclude: ["schema.sql"]
+  - rule: postgres-explicit-columns
+    scope: repository
+    include: ["string.ts", "schema.sql", "schema.json"]
+    options:
+      importSpecifier: "@example/db"
+      executorNames: ["query"]
+      unanalyzableSql: "ignore"
+      schemaCatalogPath: "schema.json"
+      sqlInclude: ["schema.sql"]
+      maxColumns: 0
+  - rule: postgres-required-predicates
+    scope: repository
+    include: ["string.ts", "schema.sql", "schema.json"]
+    options:
+      importSpecifier: "@example/db"
+      executorNames: ["query"]
+      unanalyzableSql: "ignore"
+      schemaCatalogPath: "schema.json"
+      sqlInclude: ["schema.sql"]
+      relations: [{table: "accounts", requireColumns: ["tenant_id"]}]
+      partitionKeys: "off"
+  - rule: postgres-generated-column-predicates
+    scope: repository
+    include: ["string.ts", "schema.sql", "schema.json"]
+    options:
+      importSpecifier: "@example/db"
+      executorNames: ["query"]
+      unanalyzableSql: "ignore"
+      sqlInclude: ["schema.sql"]
+      extraGeneratedColumns: [{table: "accounts", column: "created_at", sourceColumn: "id"}]
+      requireArgumentIsPrimaryKey: false
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    include: ["string.ts", "schema.sql", "schema.json"]
+    options:
+      importSpecifier: "@example/db"
+      executorNames: ["query"]
+      unanalyzableSql: "ignore"
+      schemaCatalogPath: "schema.json"
+      sqlInclude: ["schema.sql"]
+  - rule: postgres-idempotent-insert
+    scope: repository
+    include: ["string.ts", "schema.sql", "schema.json"]
+    options:
+      importSpecifier: "@example/db"
+      executorNames: ["query"]
+      unanalyzableSql: "ignore"
+      sqlInclude: ["schema.sql"]
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    include: ["string.ts", "schema.sql", "schema.json"]
+    options:
+      importSpecifier: "@example/db"
+      executorNames: ["query"]
+      unanalyzableSql: "ignore"
+      sqlInclude: ["schema.sql"]
+      bannedStatements: ["TRUNCATE"]
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    include: ["string.ts", "schema.sql", "schema.json"]
+    options:
+      importSpecifier: "@example/db"
+      executorNames: ["query"]
+      unanalyzableSql: "ignore"
+      testGlobs: ["string.ts"]
+  - rule: postgres-no-offset
+    scope: repository
+    include: ["string.ts", "schema.sql", "schema.json"]
+    options:
+      importSpecifier: "@example/db"
+      executorNames: ["query"]
+      unanalyzableSql: "ignore"
+      sqlInclude: ["schema.sql"]
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    include: ["string.ts", "schema.sql", "schema.json"]
+    options:
+      importSpecifier: "@example/db"
+      executorNames: ["query"]
+      unanalyzableSql: "ignore"
+      sqlInclude: ["schema.sql"]
+      extraGeneratedColumns: [{table: "accounts", column: "created_at"}]
+  - rule: postgres-conflict-ordering
+    scope: repository
+    include: ["string.ts", "schema.sql", "schema.json"]
+    options:
+      importSpecifier: "@example/db"
+      executorNames: ["query"]
+      unanalyzableSql: "ignore"
+      schemaCatalogPath: "schema.json"
+      sqlInclude: ["schema.sql"]
+  - rule: postgres-lock-ordering
+    scope: repository
+    include: ["string.ts", "schema.sql", "schema.json"]
+    options:
+      importSpecifier: "@example/db"
+      executorNames: ["query"]
+      unanalyzableSql: "ignore"
+      schemaCatalogPath: "schema.json"
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: ["string.ts", "schema.sql", "schema.json"]
+    options:
+      importSpecifier: "@example/db"
+      executorNames: ["query"]
+      unanalyzableSql: "ignore"
+      sqlInclude: ["schema.sql"]
+      bannedShapes: ["literal-limit"]
+  - rule: postgres-require-query-annotation
+    scope: repository
+    include: ["string.ts", "schema.sql", "schema.json"]
+    options:
+      importSpecifier: "@example/db"
+      executorNames: ["query"]
+      unanalyzableSql: "ignore"
+  - rule: postgres-json-relation-ids
+    scope: repository
+    include: ["string.ts", "schema.sql", "schema.json"]
+    options:
+      importSpecifier: "@example/db"
+      executorNames: ["query"]
+      schemaCatalogPath: "schema.json"
+      sqlInclude: ["schema.sql"]
+      idKeyPattern: "Id$"
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    include: ["string.ts", "schema.sql", "schema.json"]
+    options:
+      importSpecifier: "@example/db"
+      executorNames: ["query"]
+  - rule: postgres-no-mutable-sql-registry
+    scope: repository
+    include: ["string.ts", "schema.sql", "schema.json"]
+    options:
+      importSpecifier: "@example/db"
+      executorNames: ["query"]
