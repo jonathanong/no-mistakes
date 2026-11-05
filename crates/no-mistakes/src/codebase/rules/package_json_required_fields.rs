@@ -66,6 +66,10 @@ pub fn diagnostics_with_files_and_sources(
             super::suppress_rule_findings_with_sources(root, &mut findings, sources);
         }
         for mut finding in findings {
+            if finding.rule == super::allow_audit::RULE_ID {
+                diagnostics.findings.push(finding);
+                continue;
+            }
             if let Some(message) = &rule.message {
                 finding.message = format!("{message} {}", finding.message);
             }

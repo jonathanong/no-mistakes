@@ -140,3 +140,20 @@ fn allow_audit_is_silent_when_manifest_parse_fails() {
         "{findings:?}"
     );
 }
+
+#[test]
+fn an_allow_entry_named_unanalyzable_is_still_a_hygiene_result() {
+    let root = fixture("allow-audit");
+    let mut config = allow_audit_config();
+    config.rules[0].options = serde_yaml::from_str(
+        "requireScopedName: true\nunscopedNameExceptions: [unanalyzable]\nunanalyzable: ignore",
+    )
+    .unwrap();
+    let files = [root.join("clean/package.json")];
+    let sources = super::super::source_store_for_files(&files);
+    let output =
+        diagnostics_with_files_and_sources(&root, &config, &files, &sources, false).unwrap();
+    assert_eq!(output.findings.len(), 1, "{:?}", output.findings);
+    assert_eq!(output.findings[0].rule, "unused-allow-entry");
+    assert_eq!(output.findings[0].target.as_deref(), Some("unanalyzable"));
+}

@@ -33,3 +33,14 @@ fn lexical_roots_share_inventory_and_checked_identities() {
     assert!(scope.exact("Cargo.toml"));
     assert!(scope.glob("*.toml"));
 }
+
+#[test]
+fn an_empty_exception_list_needs_no_sources_or_scope_work() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let sources = super::super::source_store_for_files(&[root.join("Cargo.toml")]);
+    let config = NoMistakesConfig::default();
+    let rule = RuleDef::default();
+    let audit = ExceptionAudit::new(root, &config, &rule, &sources, "allow", &[]);
+    assert!(audit.finish(&sources, |_| true).is_empty());
+    assert_eq!(sources.physical_read_count(), 0);
+}

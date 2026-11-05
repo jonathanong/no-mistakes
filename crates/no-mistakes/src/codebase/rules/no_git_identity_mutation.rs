@@ -25,8 +25,6 @@ pub(crate) struct Options {
 mod audit;
 mod scan;
 pub(crate) use audit::check_with_files_and_sources;
-#[cfg(test)]
-use scan::check_file_with_sources;
 use scan::check_source;
 
 pub fn check(

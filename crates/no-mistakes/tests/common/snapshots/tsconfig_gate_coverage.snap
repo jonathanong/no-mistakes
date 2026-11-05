@@ -71,14 +71,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "docs/readme.json"
         },
         {
-          "file": ".no-mistakes.yml",
-          "line": 1,
-          "message": "stale allowProjects entry `gone/tsconfig.json` does not name a tracked tsconfig; remove it",
-          "rule": "tsconfig-gate-coverage",
-          "sourceLine": "version: 2",
-          "target": "gone/tsconfig.json"
-        },
-        {
           "file": "allowed/tsconfig.json",
           "line": 1,
           "message": "allowed/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project allowed/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",

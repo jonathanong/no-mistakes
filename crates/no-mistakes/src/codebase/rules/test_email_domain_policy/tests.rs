@@ -1,3 +1,4 @@
+use super::scan::scan_email_lines;
 use super::*;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::{
@@ -285,4 +286,22 @@ fn allow_audit_is_silent_when_relevant_input_is_unreadable() {
             .all(|finding| finding.rule != "unused-allow-entry"),
         "{findings:?}"
     );
+}
+
+fn scan_with_sources(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
+    if opts.banned_domains.as_ref().is_none_or(Vec::is_empty) {
+        return Ok(Vec::new());
+    }
+    let compiled = compile_options(opts)?;
+    let mut findings: Vec<RuleFinding> = files
+        .par_iter()
+        .flat_map(|path| check_file_with_sources(root, path, &compiled, sources))
+        .collect();
+    super::super::sort_findings(&mut findings);
+    Ok(findings)
 }

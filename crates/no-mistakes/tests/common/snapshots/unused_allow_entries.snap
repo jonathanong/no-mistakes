@@ -24,6 +24,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "forbidden_dependencies": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "forbidden-dependencies",
+          "line": 10,
+          "message": "stale forbidden-dependencies exceptions[0].allowedFiles entry `clean.ts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allowedFiles: [target.ts, clean.ts]",
+          "target": "clean.ts"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "no-git-identity-mutation": {
     "exitCode": 0,
     "report": {
@@ -151,17 +173,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "package-json-required-fields": {
     "exitCode": 0,
     "report": {
-      "advisories": [
-        {
-          "file": ".no-mistakes.yml",
-          "import": "package-json-required-fields",
-          "line": 7,
-          "message": "stale package-json-required-fields unscopedNameExceptions entry `@scope/safe` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
-          "rule": "unused-allow-entry",
-          "sourceLine": "unscopedNameExceptions: [used, used, '@scope/safe']",
-          "target": "@scope/safe"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -178,10 +190,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".no-mistakes.yml",
           "import": "query-reached-per-item",
           "line": 13,
-          "message": "stale query-reached-per-item allow entry `src/entry.mts#retired` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "message": "stale query-reached-per-item allow entry `src/entry.mts:900#read` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
-          "sourceLine": "- {file: src/entry.mts, callee: retired}",
-          "target": "src/entry.mts#retired"
+          "sourceLine": "- {file: src/entry.mts, callee: read, line: 900}",
+          "target": "src/entry.mts:900#read"
         }
       ],
       "codebase": [],

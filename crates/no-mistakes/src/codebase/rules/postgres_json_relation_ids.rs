@@ -7,7 +7,7 @@ use anyhow::Result;
 use rayon::prelude::*;
 use regex::Regex;
 use serde::Deserialize;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 mod compile;
@@ -40,7 +40,6 @@ struct CompiledOptions {
     id_key_pattern: Option<Regex>,
     key_column_map: BTreeMap<String, String>,
     fingerprint_name_pattern: Option<Regex>,
-    allow: BTreeSet<String>,
     include: GlobMatcher,
     exclude: GlobMatcher,
     schema: PostgresSchemaOptions,
@@ -48,11 +47,6 @@ struct CompiledOptions {
 }
 
 impl CompiledOptions {
-    fn allows(&self, table: &str, column: &str) -> bool {
-        self.allow.contains(&format!("table:{table}"))
-            || self.allow.contains(&format!("column:{table}.{column}"))
-    }
-
     fn includes(&self, rel: &str, sql: bool) -> bool {
         if !self.exclude.is_empty() && self.exclude.is_match(rel) {
             return false;
@@ -79,7 +73,7 @@ pub(crate) fn check_with_files_sources_and_facts(
         .into_par_iter()
         .map(|rule| {
             let opts: Options = rule.try_rule_options()?;
-            let mut compiled = compile::compile_options(&opts)?;
+            let compiled = compile::compile_options(&opts)?;
             if compiled.id_key_pattern.is_none() && compiled.fingerprint_name_pattern.is_none() {
                 return Ok(super::PostgresFindings::default());
             }
@@ -102,21 +96,15 @@ pub(crate) fn check_with_files_sources_and_facts(
                 "allow",
                 opts.allow.len(),
             );
-            compiled.allow.clear();
-            let mut findings = scan::scan(root, &compiled, &files, sources, facts)?;
-            findings.0.retain(|located| {
-                !audit.usage.suppress(opts.allow.iter().map(|entry| {
-                    located.finding.target.as_ref().is_some_and(|target| {
-                        entry.object == *target
-                            || target.strip_prefix("column:").is_some_and(|column| {
-                                entry
-                                    .object
-                                    .strip_prefix("table:")
-                                    .is_some_and(|table| column.starts_with(&format!("{table}.")))
-                            })
-                    })
-                }))
-            });
+            let allows =
+                |table: &str, column: &str| {
+                    let table_selector = format!("table:{table}");
+                    let column_selector = format!("column:{table}.{column}");
+                    audit.usage.suppress(opts.allow.iter().map(|entry| {
+                        entry.object == table_selector || entry.object == column_selector
+                    }))
+                };
+            let mut findings = scan::scan(root, &compiled, &files, sources, facts, &allows)?;
             findings.extend(audit.finish(
                 |_| compiled.id_key_pattern.is_none() && scope.exact(&compiled.schema_catalog_path),
                 |index| opts.allow[index].object.clone(),

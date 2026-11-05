@@ -185,10 +185,7 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
         findings.push(super::effort::missing(component));
     }
     findings.retain(|finding| rule_filter.is_match(&root.join(&finding.file)));
-    let mut diagnostics = AnalysisDiagnostics {
-        findings,
-        ..Default::default()
-    };
+    let mut diagnostics = super::diagnostics::with_findings(findings);
     super::diagnostics::append_unanalyzable(
         &mut diagnostics,
         unanalyzable,

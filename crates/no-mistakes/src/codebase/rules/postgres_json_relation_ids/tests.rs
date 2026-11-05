@@ -48,3 +48,15 @@ fn stale_fingerprint_allowance_requires_catalog_in_scope() {
     let findings = check_with_files(&root, &config, &[]).unwrap();
     assert!(findings.is_empty(), "{findings:?}");
 }
+
+#[test]
+fn table_allowances_keep_exact_schema_qualified_identity() {
+    let findings = run("idKeyPattern: 'Id$'\nsqlInclude: ['db/schema-qualified.sql']\nallow: [{object: 'table:public', reason: reviewed}]", &["db/schema-qualified.sql"]);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].rule, RULE_ID);
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some("column:public.orders.details")
+    );
+    assert!(run("idKeyPattern: 'Id$'\nsqlInclude: ['db/schema-qualified.sql']\nallow: [{object: 'table:public.orders', reason: reviewed}]", &["db/schema-qualified.sql"]).is_empty());
+}

@@ -10,7 +10,7 @@ rules:
       allow:
         - {file: src/entry.mts, callee: read, line: 3}
         - {file: src/entry.mts, callee: read}
-        - {file: src/entry.mts, callee: retired}
+        - {file: src/entry.mts, callee: read, line: 900}
         - {file: src/excluded.mts, callee: retired}
         - {file: src/missing.mts, callee: retired}
   - rule: query-reached-per-item

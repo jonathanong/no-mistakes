@@ -55,7 +55,6 @@ pub(super) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         id_key_pattern,
         key_column_map: opts.key_column_map.clone(),
         fingerprint_name_pattern,
-        allow,
         include: GlobMatcher::new(&opts.include, &format!("{RULE_ID} include"))?,
         exclude: GlobMatcher::new(&opts.exclude, &format!("{RULE_ID} exclude"))?,
         schema: PostgresSchemaOptions {

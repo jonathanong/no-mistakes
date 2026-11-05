@@ -1,20 +1,5 @@
 use super::*;
 
-#[cfg(test)]
-pub(super) fn check_file_with_sources(
-    path: &Path,
-    root: &Path,
-    exclude_set: &GlobSet,
-    cond_set: &GlobSet,
-    patterns: &[Regex; 3],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Vec<RuleFinding> {
-    let Some(content) = super::super::read_source(sources, path) else {
-        return Vec::new();
-    };
-    check_source(path, root, exclude_set, cond_set, patterns, &content)
-}
-
 pub(super) fn check_source(
     path: &Path,
     root: &Path,

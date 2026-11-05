@@ -17,7 +17,9 @@ fn check_file(
     patterns: &[regex::Regex; 3],
 ) -> Vec<RuleFinding> {
     let sources = crate::codebase::rules::source_store_for_files(&[path.to_path_buf()]);
-    check_file_with_sources(path, root, exclude_set, cond_set, patterns, &sources)
+    super::super::read_source(&sources, path).map_or_else(Vec::new, |source| {
+        super::scan::check_source(path, root, exclude_set, cond_set, patterns, &source)
+    })
 }
 
 fn config_with_options(yaml: &str) -> NoMistakesConfig {
@@ -213,4 +215,15 @@ fn allow_audit_requires_the_full_application_universe() {
             .all(|finding| finding.rule != "unused-allow-entry"),
         "{findings:?}"
     );
+}
+
+#[test]
+fn allow_audit_is_silent_when_a_workflow_cannot_be_read() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/no-git-identity-mutation/fixture/allow-audit");
+    let files = [root.join("missing.yml")];
+    let sources = super::super::source_store_for_files(&files);
+    let config = config_with_options("conditionallyAllowedWorkflows: ['missing.yml']");
+    let findings = check_with_files_and_sources(&root, &config, &files, &sources).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
 }

@@ -20,7 +20,7 @@ impl Selectors<'_> {
         let Some(sources) = sources else {
             return Vec::new();
         };
-        if graph.parse_errors().next().is_some() {
+        if graph.parse_errors().next().is_some() || !graph.resource_diagnostics().is_empty() {
             return Vec::new();
         }
         let target_files = graph

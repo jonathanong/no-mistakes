@@ -6,7 +6,7 @@ use std::path::Path;
 pub(crate) struct ExceptionAudit {
     pub(crate) audit: AllowAudit,
     selectors: Vec<String>,
-    universe: Option<Vec<std::path::PathBuf>>,
+    universe: Option<std::sync::Arc<Vec<std::path::PathBuf>>>,
     checked: dashmap::DashSet<std::path::PathBuf>,
 }
 
@@ -25,13 +25,7 @@ impl ExceptionAudit {
             universe: if selectors.is_empty() {
                 None
             } else {
-                super::super::selected_rule_files(
-                    &crate::codebase::ts_resolver::normalize_path(root),
-                    config,
-                    rule,
-                    &sources.inventory().paths(),
-                )
-                .ok()
+                Some(sources.inventory().paths())
             },
             checked: dashmap::DashSet::new(),
         }

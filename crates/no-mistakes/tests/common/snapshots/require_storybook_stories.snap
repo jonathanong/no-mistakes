@@ -41,25 +41,12 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": "components/Gone.tsx",
-          "line": 1,
-          "message": "Storybook component opt-out `components/Gone.tsx#Gone` does not match a selected component.",
-          "rule": "require-storybook-stories",
-          "target": "components/Gone.tsx#Gone"
-        },
-        {
           "file": "components/Missing.tsx",
           "line": 1,
           "message": "Storybook component opt-out `components/Missing.tsx#Missing` must include a reason.",
           "rule": "require-storybook-stories",
           "sourceLine": "export function Missing() {",
           "target": "components/Missing.tsx#Missing"
-        },
-        {
-          "file": "components/nope/**",
-          "line": 1,
-          "message": "Storybook file opt-out `components/nope/**` does not match any project file.",
-          "rule": "require-storybook-stories"
         }
       ],
       "warnings": []
@@ -1431,13 +1418,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "require-storybook-stories",
           "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
-        },
-        {
-          "file": "web/components/Absent.tsx",
-          "line": 1,
-          "message": "Storybook component opt-out `components/Absent.tsx#Absent` does not match a selected component.",
-          "rule": "require-storybook-stories",
-          "target": "components/Absent.tsx#Absent"
         },
         {
           "file": "web/stories/Broken.stories.tsx",

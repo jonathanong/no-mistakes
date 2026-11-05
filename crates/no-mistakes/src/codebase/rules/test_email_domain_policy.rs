@@ -19,8 +19,6 @@ mod scan;
 use super::allow_audit::ExceptionAudit;
 use domain::{banned_domain_needles, email_domain, message, normalize_domain};
 use scan::check_file_with_sources;
-#[cfg(test)]
-use scan::scan_email_lines;
 
 pub const RULE_ID: &str = "test-email-domain-policy";
 
@@ -109,25 +107,6 @@ pub(crate) fn check_with_files_and_sources(
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
-}
-
-#[cfg(test)]
-fn scan_with_sources(
-    root: &Path,
-    opts: &Options,
-    files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<Vec<RuleFinding>> {
-    if opts.banned_domains.as_ref().is_none_or(Vec::is_empty) {
-        return Ok(Vec::new());
-    }
-    let compiled = compile_options(opts)?;
-    let mut findings: Vec<RuleFinding> = files
-        .par_iter()
-        .flat_map(|path| check_file_with_sources(root, path, &compiled, sources))
-        .collect();
     super::sort_findings(&mut findings);
     Ok(findings)
 }

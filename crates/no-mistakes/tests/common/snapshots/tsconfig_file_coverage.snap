@@ -223,22 +223,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "empty_allow_path": {
-    "exitCode": 1,
+    "exitCode": 0,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [
-        {
-          "file": "",
-          "line": 1,
-          "message": "stale tsconfig-file-coverage allow entry ``",
-          "rule": "tsconfig-file-coverage",
-          "target": ""
-        }
-      ],
+      "rules": [],
       "warnings": []
     }
   },
@@ -424,22 +416,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "stale_allow": {
-    "exitCode": 1,
+    "exitCode": 0,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [
-        {
-          "file": "missing.ts",
-          "line": 1,
-          "message": "stale tsconfig-file-coverage allow entry `missing.ts`",
-          "rule": "tsconfig-file-coverage",
-          "target": "missing.ts"
-        }
-      ],
+      "rules": [],
       "warnings": []
     }
   },

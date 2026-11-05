@@ -13,13 +13,14 @@ pub(super) fn scan(
     files: &[PathBuf],
     sources: &SourceStore,
     facts: &CheckFactMap,
+    allows: &impl Fn(&str, &str) -> bool,
 ) -> Result<PostgresFindings> {
     let catalog = (!opts.schema_catalog_path.trim().is_empty())
         .then(|| facts.postgres_schema_catalog(&opts.schema_catalog_path))
         .transpose()?;
     let mut findings = PostgresFindings::default();
     if let Some(catalog) = catalog {
-        findings.extend(super::fingerprint::scan(opts, catalog));
+        findings.extend(super::fingerprint::scan(opts, catalog, allows));
     }
     if opts.id_key_pattern.is_none() {
         return Ok(findings);
@@ -38,7 +39,7 @@ pub(super) fn scan(
         let source = sources.read_path(path)?;
         for statement in statements {
             for (index, write) in statement.json_writes.iter().enumerate() {
-                if let Some(finding) = json_finding(&rel, opts, catalog, write) {
+                if let Some(finding) = json_finding(&rel, opts, catalog, write, allows) {
                     dedup
                         .entry(&write.key)
                         .or_insert_with(|| VariantFindingDedup::for_root(root, sources))
@@ -62,6 +63,7 @@ fn json_finding(
     opts: &CompiledOptions,
     catalog: Option<&SchemaCatalog>,
     write: &SqlJsonWriteFact,
+    allows: &impl Fn(&str, &str) -> bool,
 ) -> Option<RuleFinding> {
     if !opts.id_key_pattern.as_ref()?.is_match(&write.key) {
         return None;
@@ -75,9 +77,6 @@ fn json_finding(
                 .and_then(|index| positional_column(table, index))
         })
     });
-    if opts.allows(table_name, column.unwrap_or_default()) {
-        return None;
-    }
     let mapped = opts.key_column_map.get(&write.key);
     if mapped.is_some_and(|mapped| {
         table.is_some_and(|table| {
@@ -88,6 +87,9 @@ fn json_finding(
                 && writes_column(write, table, mapped)
         })
     }) {
+        return None;
+    }
+    if allows(table_name, column.unwrap_or_default()) {
         return None;
     }
     let mapped = mapped.map_or("a mapped column", String::as_str);

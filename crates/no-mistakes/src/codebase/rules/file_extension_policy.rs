@@ -59,23 +59,13 @@ pub(crate) fn check_with_files_and_sources(
                 opts.allowlist.len(),
             );
             let scope = super::allow_audit::CheckedScope::new(root, Some(sources), &files);
-            let mut raw_opts = Options {
-                scopes: opts.scopes,
-                allowlist: Vec::new(),
-            };
-            let mut findings = scan(root, &raw_opts, &files, &config_file);
-            raw_opts.allowlist = opts.allowlist;
-            findings.retain(|finding| {
-                !audit.usage.suppress(raw_opts.allowlist.iter().map(|entry| {
-                    entry == &finding.file && finding.message.contains(": file uses ")
-                }))
-            });
+            let mut findings = scan(root, &opts, &files, &config_file, &audit);
             findings.extend(audit.finish(
                 |index| {
-                    scope.exact(&raw_opts.allowlist[index])
-                        && audited(&raw_opts.allowlist[index], &raw_opts.scopes)
+                    scope.exact(&opts.allowlist[index])
+                        && audited(&opts.allowlist[index], &opts.scopes)
                 },
-                |index| raw_opts.allowlist[index].clone(),
+                |index| opts.allowlist[index].clone(),
             ));
             Ok(findings)
         })
@@ -85,13 +75,24 @@ pub(crate) fn check_with_files_and_sources(
     Ok(findings)
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf], config_file: &str) -> Vec<RuleFinding> {
-    let allowlist: HashSet<&str> = opts.allowlist.iter().map(String::as_str).collect();
+fn scan(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    config_file: &str,
+    audit: &super::allow_audit::AllowAudit,
+) -> Vec<RuleFinding> {
+    let allowlist = HashSet::new();
     let mut findings = escaping_scope_findings(opts, config_file);
     // `par_iter` is a rayon iterator. Collect it before extending the Vec.
     let file_findings: Vec<RuleFinding> = files
         .par_iter()
         .flat_map(|path| check_file(path, root, &allowlist, &opts.scopes))
+        .filter(|finding| {
+            !audit
+                .usage
+                .suppress(opts.allowlist.iter().map(|entry| entry == &finding.file))
+        })
         .collect();
     findings.extend(file_findings);
     findings.sort_by(|a, b| a.file.cmp(&b.file));

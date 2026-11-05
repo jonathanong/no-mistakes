@@ -16,9 +16,10 @@ pub(super) fn finish(
     audit: &AllowAudit,
 ) -> Vec<RuleFinding> {
     if facts.graph_file_universe().iter().any(|file| {
-        facts
-            .get_ts_facts(file)
-            .is_some_and(|facts| facts.parse_error.is_some() || facts.operational_error.is_some())
+        crate::codebase::dependencies::extract::is_indexable(file)
+            && facts.get_ts_facts(file).is_none_or(|facts| {
+                facts.parse_error.is_some() || facts.operational_error.is_some()
+            })
     }) {
         return Vec::new();
     }

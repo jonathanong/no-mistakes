@@ -815,7 +815,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "self_hosted": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "<repo>/test-cases/rules/no-git-identity-mutation/configs/conditional-github-workflows.yml",
+          "import": "no-git-identity-mutation",
+          "line": 6,
+          "message": "stale no-git-identity-mutation conditionallyAllowedWorkflows entry `.github/workflows/*.yml` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "conditionallyAllowedWorkflows: [\".github/workflows/*.yml\"]",
+          "target": ".github/workflows/*.yml"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],

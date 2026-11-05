@@ -13,6 +13,11 @@ fn unused_allow_entries_check_json_snapshot() {
             repository.join("fixtures/rules/unused-allow-other"),
             PathBuf::new(),
         ),
+        (
+            "forbidden_dependencies",
+            repository.join("fixtures/rules/unused-allow-forbidden"),
+            PathBuf::new(),
+        ),
     ];
     for rule in [
         "csharp-no-async-void-delegate",

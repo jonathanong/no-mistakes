@@ -4,7 +4,11 @@ use sqlparser::ast::{visit_expressions, Expr};
 use std::collections::BTreeSet;
 use std::ops::ControlFlow;
 
-pub(super) fn scan(opts: &CompiledOptions, catalog: &SchemaCatalog) -> Vec<RuleFinding> {
+pub(super) fn scan(
+    opts: &CompiledOptions,
+    catalog: &SchemaCatalog,
+    allows: &impl Fn(&str, &str) -> bool,
+) -> Vec<RuleFinding> {
     let Some(pattern) = &opts.fingerprint_name_pattern else {
         return Vec::new();
     };
@@ -16,11 +20,13 @@ pub(super) fn scan(opts: &CompiledOptions, catalog: &SchemaCatalog) -> Vec<RuleF
                 column.data_type.to_ascii_lowercase().as_str(),
                 "bytea" | "text" | "pg_catalog.bytea" | "pg_catalog.text"
             ) || !pattern.is_match(&column.name)
-                || opts.allows(&table.name, &column.name)
             {
                 continue;
             }
             for key in unique_keys(catalog, table, &column.name) {
+                if allows(&table.name, &column.name) {
+                    continue;
+                }
                 let line = catalog.column_line(&table.name, &column.name);
                 findings.push(RuleFinding {
                     rule: RULE_ID.to_string(),

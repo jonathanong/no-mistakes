@@ -19,7 +19,7 @@ fn stale_allow_entries_are_advisory_and_match_batched_check() {
     assert_eq!(advice[0]["file"], ".no-mistakes.yml");
     assert_eq!(advice[0]["line"], 13);
     assert_eq!(advice[0]["import"], "query-reached-per-item");
-    assert_eq!(advice[0]["target"], "src/entry.mts#retired");
+    assert_eq!(advice[0]["target"], "src/entry.mts:900#read");
     let batch: Value = serde_json::from_str(
         &crate::napi_api::analyze_project::analyze_project_json_impl(
             crate::napi_api::options::test_json_arg(

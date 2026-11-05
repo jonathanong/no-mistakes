@@ -567,13 +567,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": ".github/workflows/deleted.yml: duplicate github-actions-step-timeouts allow entry `.github/workflows/deleted.yml#build#checkout`",
           "rule": "github-actions-step-timeouts",
           "target": ".github/workflows/deleted.yml#build#checkout"
-        },
-        {
-          "file": ".github/workflows/deleted.yml",
-          "line": 1,
-          "message": ".github/workflows/deleted.yml: stale github-actions-step-timeouts allow entry `.github/workflows/deleted.yml#build#checkout`",
-          "rule": "github-actions-step-timeouts",
-          "target": ".github/workflows/deleted.yml#build#checkout"
         }
       ],
       "warnings": []

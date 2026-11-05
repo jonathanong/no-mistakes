@@ -5,7 +5,14 @@ use crate::codebase::check_facts::{
 use crate::codebase::rules::allow_audit::AllowAudit;
 use crate::codebase::ts_source::facts::TsFactPlan;
 
-fn assert_audit_silent(failed: bool) {
+enum Scenario {
+    Narrowed,
+    Failed,
+    Missing,
+}
+
+fn assert_audit_silent(scenario: Scenario) {
+    let failed = matches!(scenario, Scenario::Failed);
     let root =
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/unused-allow-entries");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
@@ -32,8 +39,12 @@ fn assert_audit_silent(failed: bool) {
         None,
         sources.clone(),
     );
-    if !failed {
-        facts.files = vec![files[1].clone()];
+    match scenario {
+        Scenario::Narrowed => facts.files = vec![files[1].clone()],
+        Scenario::Missing => {
+            assert!(facts.ts.remove(&files[1]).is_some());
+        }
+        Scenario::Failed => {}
     }
     let filter =
         super::super::path_filter::RulePathFilter::new(&root, &config, application).unwrap();
@@ -50,10 +61,15 @@ fn assert_audit_silent(failed: bool) {
 
 #[test]
 fn supporting_graph_files_outside_selected_scope_are_not_audited() {
-    assert_audit_silent(false);
+    assert_audit_silent(Scenario::Narrowed);
 }
 
 #[test]
 fn a_failed_supporting_fact_cannot_prove_an_allowance_stale() {
-    assert_audit_silent(true);
+    assert_audit_silent(Scenario::Failed);
+}
+
+#[test]
+fn missing_supporting_facts_cannot_prove_an_allowance_stale() {
+    assert_audit_silent(Scenario::Missing);
 }

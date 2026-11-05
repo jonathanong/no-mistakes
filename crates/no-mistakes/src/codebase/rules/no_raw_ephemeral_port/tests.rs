@@ -121,77 +121,77 @@ fn bind_regex_skips_comment_lines_but_keeps_command_strings() {
 #[test]
 fn listen_numeric_zero_and_object_port_are_flagged() {
     assert_eq!(
-        ast::scan_lines(Path::new("server.ts"), "server.listen(0);\n"),
+        ast_lines(Path::new("server.ts"), "server.listen(0);\n"),
         vec![1]
     );
     assert_eq!(
-        ast::scan_lines(Path::new("server.ts"), "server.listen(0, '127.0.0.1');\n"),
+        ast_lines(Path::new("server.ts"), "server.listen(0, '127.0.0.1');\n"),
         vec![1]
     );
     assert_eq!(
-        ast::scan_lines(Path::new("server.ts"), "server.listen({ port: 0 });\n"),
+        ast_lines(Path::new("server.ts"), "server.listen({ port: 0 });\n"),
         vec![1]
     );
     assert_eq!(
-        ast::scan_lines(
+        ast_lines(
             Path::new("server.ts"),
             "server.listen({ host: '127.0.0.1', port: 0 }, () => {});\n"
         ),
         vec![1]
     );
     assert_eq!(
-        ast::scan_lines(Path::new("server.ts"), "server.listen({ 'port': 0 });\n"),
+        ast_lines(Path::new("server.ts"), "server.listen({ 'port': 0 });\n"),
         vec![1]
     );
     assert_eq!(
-        ast::scan_lines(Path::new("server.ts"), r#"server["listen"](0);"#),
+        ast_lines(Path::new("server.ts"), r#"server["listen"](0);"#),
         vec![1]
     );
     assert_eq!(
-        ast::scan_lines(Path::new("server.ts"), "server.listen(+0);\n"),
+        ast_lines(Path::new("server.ts"), "server.listen(+0);\n"),
         vec![1]
     );
     assert_eq!(
-        ast::scan_lines(Path::new("server.ts"), "server.listen(-0);\n"),
+        ast_lines(Path::new("server.ts"), "server.listen(-0);\n"),
         vec![1]
     );
     assert_eq!(
-        ast::scan_lines(Path::new("server.ts"), "server.listen({ port: -0 });\n"),
+        ast_lines(Path::new("server.ts"), "server.listen({ port: -0 });\n"),
         vec![1]
     );
     assert_eq!(
-        ast::scan_lines(Path::new("server.ts"), "server.listen({ port: +0 });\n"),
+        ast_lines(Path::new("server.ts"), "server.listen({ port: +0 });\n"),
         vec![1]
     );
 }
 
 #[test]
 fn listen_non_literal_ports_are_ignored() {
-    assert!(ast::scan_lines(Path::new("server.ts"), "server.listen(8080);\n").is_empty());
-    assert!(ast::scan_lines(Path::new("server.ts"), "server.listen({ port: 8080 });\n").is_empty());
-    assert!(ast::scan_lines(Path::new("server.ts"), "server.listen(port);\n").is_empty());
-    assert!(ast::scan_lines(Path::new("server.ts"), "server.listen({ port });\n").is_empty());
-    assert!(ast::scan_lines(Path::new("server.ts"), "server.listen({ port: '0' });\n").is_empty());
-    assert!(ast::scan_lines(Path::new("server.ts"), "listen(0);\n").is_empty());
-    assert!(ast::scan_lines(Path::new("server.ts"), "server.listen({ ...opts });\n").is_empty());
-    assert!(ast::scan_lines(Path::new("server.py"), "server.listen(0);\n").is_empty());
+    assert!(ast_lines(Path::new("server.ts"), "server.listen(8080);\n").is_empty());
+    assert!(ast_lines(Path::new("server.ts"), "server.listen({ port: 8080 });\n").is_empty());
+    assert!(ast_lines(Path::new("server.ts"), "server.listen(port);\n").is_empty());
+    assert!(ast_lines(Path::new("server.ts"), "server.listen({ port });\n").is_empty());
+    assert!(ast_lines(Path::new("server.ts"), "server.listen({ port: '0' });\n").is_empty());
+    assert!(ast_lines(Path::new("server.ts"), "listen(0);\n").is_empty());
+    assert!(ast_lines(Path::new("server.ts"), "server.listen({ ...opts });\n").is_empty());
+    assert!(ast_lines(Path::new("server.py"), "server.listen(0);\n").is_empty());
 }
 
 #[test]
 fn jsx_and_cjs_listen_zero_are_flagged() {
     assert_eq!(
-        ast::scan_lines(
+        ast_lines(
             Path::new("app.tsx"),
             "export const A = () => { s.listen(0); return <div/> }\n"
         ),
         vec![1]
     );
     assert_eq!(
-        ast::scan_lines(Path::new("server.cjs"), "server.listen(0);\n"),
+        ast_lines(Path::new("server.cjs"), "server.listen(0);\n"),
         vec![1]
     );
     assert_eq!(
-        ast::scan_lines(Path::new("app.jsx"), "server.listen(0);\n"),
+        ast_lines(Path::new("app.jsx"), "server.listen(0);\n"),
         vec![1]
     );
 }
@@ -199,37 +199,37 @@ fn jsx_and_cjs_listen_zero_are_flagged() {
 #[test]
 fn listen_ts_wrappers_are_unwrapped() {
     assert_eq!(
-        ast::scan_lines(Path::new("server.ts"), "server.listen(0 as number);\n"),
+        ast_lines(Path::new("server.ts"), "server.listen(0 as number);\n"),
         vec![1]
     );
     assert_eq!(
-        ast::scan_lines(
+        ast_lines(
             Path::new("server.ts"),
             "server.listen(0 satisfies number);\n"
         ),
         vec![1]
     );
     assert_eq!(
-        ast::scan_lines(Path::new("server.ts"), "server.listen((0));\n"),
+        ast_lines(Path::new("server.ts"), "server.listen((0));\n"),
         vec![1]
     );
     assert_eq!(
-        ast::scan_lines(Path::new("server.ts"), "server.listen(0!);\n"),
+        ast_lines(Path::new("server.ts"), "server.listen(0!);\n"),
         vec![1]
     );
     assert_eq!(
-        ast::scan_lines(Path::new("server.ts"), "server.listen(<number>0);\n"),
+        ast_lines(Path::new("server.ts"), "server.listen(<number>0);\n"),
         vec![1]
     );
     assert_eq!(
-        ast::scan_lines(
+        ast_lines(
             Path::new("server.ts"),
             "server.listen({ port: 0 as number });\n"
         ),
         vec![1]
     );
     assert_eq!(
-        ast::scan_lines(
+        ast_lines(
             Path::new("server.ts"),
             "server.listen({ ...opts, port: 0! });\n"
         ),
@@ -387,4 +387,8 @@ fn allow_audit_is_silent_for_parse_failures() {
             .all(|finding| finding.rule != "unused-allow-entry"),
         "{findings:?}"
     );
+}
+
+fn ast_lines(path: &Path, source: &str) -> Vec<usize> {
+    ast::scan_lines_checked(path, source).0
 }
