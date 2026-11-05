@@ -98,5 +98,10 @@ fn postgres_bounded_statements_join_roots_check_json_snapshot() {
         ["table:posts", "table:posts", "table:posts"],
         "nested reads and the self-join driver must remain roots: {report}"
     );
+    assert_eq!(
+        targets_at("sql/unproven-drivers.sql"),
+        ["table:posts", "table:posts", "table:posts"],
+        "lateral, external, and recursive joins must retain their posts driver: {report}"
+    );
     assert!(targets_at("sql/limited-control.sql").is_empty(), "{report}");
 }
