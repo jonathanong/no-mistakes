@@ -17,8 +17,13 @@ rules:
         - file: tests/policy.test.ts
 ```
 
-Without `roots` the rule starts from every Vitest project (`tests.vitest`);
-this example names one file. `severity: advisory` is the recommended adoption
+Without `roots`, the default `[{ vitest: true }]` selector uses projects from
+Vitest config files discovered at the repository root (`vitest.config.*`,
+`vitest.workspace.*`, and `vitest.projects.*`). A root workspace or projects
+file takes precedence over sibling `vitest.config.*` files. Explicit
+`tests.vitest.configs` remains authoritative when configured, and no
+`tests.vitest` entry is required for default config discovery; this example
+names one file. `severity: advisory` is the recommended adoption
 default: findings are listed without failing `check`. Remove it once the
 repository is clean.
 
@@ -32,7 +37,8 @@ fixture, or a directory the test created, is fine.
 
 ## What it catches
 
-Starting from the configured roots (every Vitest project by default), the rule
+Starting from the configured roots (every discovered or configured Vitest
+project by default), the rule
 follows the canonical call graph: the root files' own calls, their module scope,
 every function they reach, and the module scope of every module they import.
 At each reached call it reports a directory enumeration whose root is not
@@ -189,8 +195,10 @@ workspace packages, `package.json` `exports`) maps each such specifier to a file
 so `import * as m from "@lib"` consumes the file `@lib` points at. A specifier
 that is neither a bare package nor resolvable to a file keeps the finding for
 every callee. A default import, a barrel re-export, and a type-only import of the
-callee also keep the finding. Class and object-literal methods are never
-accepted, and the rule does not reach them at all.
+callee also keep the finding. Class and object-literal methods can be
+reached from a file root; when a method's enumeration root depends on an
+unresolved parameter or expression, the rule reports an unresolved-root
+advisory at that call.
 
 Callers are the repository call sites in the canonical call graph; only calls
 through an imported binding record their argument roots. A function reached only
@@ -363,7 +371,7 @@ rules:
 
 - `roots` uses the [`forbidden-calls` root selectors](forbidden-calls.md#options-and-roots)
   (`vitest`, `glob`, `file`, `module`, `function`). Default: `[{ vitest: true }]`,
-  which needs `tests.vitest` configuration.
+  which uses discovered Vitest configs; `tests.vitest` configuration is optional.
 - `excludeRoots` removes matching files from the root set, as in `forbidden-calls`.
 - `fixtureDirs` lists path segments that mark bounded fixture input. It replaces
   the defaults. Entries are single segments without separators.

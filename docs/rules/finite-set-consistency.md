@@ -226,8 +226,9 @@ targets only, so those views stay unchanged.
 Set `minSize` on any set when an empty extract must fail closed. `equal-set`
 treats two empty sets as equal, so a renamed pattern or missing directory
 would otherwise pass. When an extract has fewer members than `minSize`, the
-rule reports that set and skips comparisons that use it. `minSize` defaults
-to `0` and is kind-agnostic. Use `minSize: 1` for live inventories such as
+rule reports that set and skips comparisons that use it. Suppressing the
+`minSize` finding allows those comparisons to run against the extracted values.
+`minSize` defaults to `0` and is kind-agnostic. Use `minSize: 1` for live inventories such as
 skill-directory captures.
 
 `stripPrefix` and `excludePrefix` post-process a raw extraction and are
@@ -254,8 +255,10 @@ expression-free template literal. `target` is an exact syntactic callee name,
 such as `ai_agents.upsertJobScheduler`; identifier and one-level static member
 calls are supported. Calls on local or parameter receivers are included, while
 function and method declarations are not calls and are excluded. Calls through
-aliases, computed or optional properties, multi-hop member expressions,
-interpolated templates, and other dynamic expressions are not inferred.
+aliases, optional properties, interpolated templates, and other dynamic
+expressions are not inferred. Static computed properties and multi-hop member
+calls such as `api["register"](...)` or `api.jobs.register(...)` can be extracted
+when they match the configured target.
 
 This extractor is fail-closed: a configured target with no matching calls, or
 a matching call whose first argument is not a static string, produces a

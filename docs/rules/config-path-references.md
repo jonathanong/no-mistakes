@@ -2,8 +2,12 @@
 
 Validates path strings stored inside structured YAML or JSON config files.
 `keys` reads dotted string or string-array fields. `presets` extract the
-required path fields for well-known configs (not optional `!` / `node_modules`
-/ `.git` ignore globs). For Knip, a trailing `!` production marker is removed
+required path fields for well-known configs; interpretation of ignore patterns
+depends on the preset field. For example, Oxlint `overrides[].files` entries
+without unescaped `*`, `?`, or `{` are checked as path references, including a
+leading `!` string; entries with those unescaped glob characters are skipped.
+Backslash-escaped characters such as `\*` are treated as literal path
+characters and checked. For Knip, a trailing `!` production marker is removed
 from workspace `entry` and `project` paths before required-path validation;
 leading-negation selectors remain ignored.
 
@@ -25,7 +29,7 @@ not scanned.
 ## Options
 
 `files` and `keys` select explicit config fields. `baseDir` defaults to
-`config-file`, `allowGlobs` defaults to `true`, and `presets` selects the
+`config-file`, `allowGlobs` defaults to `false`, and `presets` selects the
 documented config extractors. Empty selectors collect no explicit references.
 
 ```yaml

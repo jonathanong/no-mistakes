@@ -36,9 +36,13 @@ rules:
 Links are resolved from shared Markdown facts (`link_destinations`). External
 URLs are ignored. The parent file itself is not required to link to itself.
 `requireWholeFile: true` ignores destinations that include a `#` fragment so a
-section link does not count as covering the child file. pulldown-cmark does not
-see HTML list items such as `- <a id="guide"></a>[Guide](guide.md)`; set
-`countCanonicalHtmlListItems: true` to count those as parent links.
+section link does not count as covering the child file. A Markdown link in the
+canonical list form `- <a id="guide"></a>[Guide](guide.md)` is found by shared
+Markdown parsing, so this example passes even when
+`countCanonicalHtmlListItems` is omitted. When enabled, the option additionally
+recognizes only entries in the exact anchor-plus-Markdown-link form
+`- <a id="..."></a>[Text](relative.md)`. It does not parse general HTML list
+items or `<a href>` links.
 
 ## Valid example
 
