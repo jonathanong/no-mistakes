@@ -217,7 +217,7 @@ fn unique_export_follows_named_reexports_stars_and_namespace_members() {
     )
     .unwrap();
     assert_eq!(unique.producer, producer);
-    assert_eq!(unique.exported, "registry");
+    assert_eq!(unique.exported, "tables");
 
     facts.ts.insert(
         importer.clone(),

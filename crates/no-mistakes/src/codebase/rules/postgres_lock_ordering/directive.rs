@@ -2,16 +2,69 @@ pub(crate) const DEFAULT_SAFE_DIRECTIVE: &str = "deadlock-safe";
 const DIRECTIVE_LOOKBACK: usize = 200;
 
 pub(super) fn contains_for_update(sql: &str) -> bool {
-    let lowered = sql.to_ascii_lowercase();
-    lowered.contains("for update") || lowered.contains("for no key update")
+    lock_clause_offset(&sql.to_ascii_lowercase()).is_some()
 }
 
 /// Offset of the first exclusive-lock clause in already-lowercased text.
 pub(super) fn lock_clause_offset(lowered: &str) -> Option<usize> {
-    ["for update", "for no key update"]
-        .iter()
-        .filter_map(|clause| lowered.find(clause))
-        .min()
+    let bytes = lowered.as_bytes();
+    let mut index = 0;
+    while index + 3 <= bytes.len() {
+        if keyword_at(bytes, index, b"for") {
+            let (next, spaced) = skip_sql_trivia(bytes, index + 3);
+            if spaced && keyword_at(bytes, next, b"update") {
+                return Some(index);
+            }
+            if spaced && keyword_at(bytes, next, b"no") {
+                let (key, spaced) = skip_sql_trivia(bytes, next + 2);
+                if spaced && keyword_at(bytes, key, b"key") {
+                    let (update, spaced) = skip_sql_trivia(bytes, key + 3);
+                    if spaced && keyword_at(bytes, update, b"update") {
+                        return Some(index);
+                    }
+                }
+            }
+        }
+        index += 1;
+    }
+    None
+}
+
+fn keyword_at(bytes: &[u8], start: usize, word: &[u8]) -> bool {
+    let end = start + word.len();
+    bytes.get(start..end) == Some(word)
+        && (start == 0 || !identifier_byte(bytes[start - 1]))
+        && (end == bytes.len() || !identifier_byte(bytes[end]))
+}
+
+fn identifier_byte(byte: u8) -> bool {
+    byte.is_ascii_alphanumeric() || byte == b'_'
+}
+
+fn skip_sql_trivia(bytes: &[u8], mut index: usize) -> (usize, bool) {
+    let start = index;
+    loop {
+        while bytes.get(index).is_some_and(u8::is_ascii_whitespace) {
+            index += 1;
+        }
+        if bytes.get(index..index + 2) == Some(b"/*") {
+            index += 2;
+            while index + 1 < bytes.len() && bytes.get(index..index + 2) != Some(b"*/") {
+                index += 1;
+            }
+            if bytes.get(index..index + 2) != Some(b"*/") {
+                return (bytes.len(), true);
+            }
+            index += 2;
+        } else if bytes.get(index..index + 2) == Some(b"--") {
+            index += 2;
+            while index < bytes.len() && bytes[index] != b'\n' {
+                index += 1;
+            }
+        } else {
+            return (index, index > start);
+        }
+    }
 }
 
 pub(crate) fn has_safe_directive(source: &str, line: u32, sql: &str, directive: &str) -> bool {
@@ -81,6 +134,25 @@ pub(super) fn comment_contains_directive(text: &str, directive: &str) -> bool {
     let bytes = text.as_bytes();
     let mut index = 0;
     while index < bytes.len() {
+        if matches!(bytes[index], b'\'' | b'"' | b'`') {
+            let quote = bytes[index];
+            index += 1;
+            while index < bytes.len() {
+                if bytes[index] == b'\\' {
+                    index = (index + 2).min(bytes.len());
+                } else if bytes[index] == quote {
+                    index += 1;
+                    if bytes.get(index) == Some(&quote) && quote != b'`' {
+                        index += 1;
+                    } else {
+                        break;
+                    }
+                } else {
+                    index += 1;
+                }
+            }
+            continue;
+        }
         if bytes[index] == b'/' && bytes.get(index + 1) == Some(&b'*') {
             let start = index + 2;
             let rest = &text[start..];

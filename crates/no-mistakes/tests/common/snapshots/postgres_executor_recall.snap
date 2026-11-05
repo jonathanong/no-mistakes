@@ -1,0 +1,138 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "lock_whitespace_and_comments": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 4,
+          "message": "src/lock.ts:4: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "query(`SELECT * FROM t WHERE id = ANY($1) FOR",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 6,
+          "message": "src/lock.ts:6: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "query(`SELECT * FROM t WHERE id = ANY($1) FOR  UPDATE`);",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 7,
+          "message": "src/lock.ts:7: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "query(`SELECT * FROM t WHERE id = ANY($1) FOR /* legal gap */ UPDATE`);",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 8,
+          "message": "src/lock.ts:8: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "query(`SELECT * FROM t WHERE id = ANY($1) FOR -- legal gap",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "registry_writer_alias_sink_direct": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "tables",
+          "line": 5,
+          "message": "Cross-file write to exported registry `tables` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "return query(`SELECT id FROM ${tables.users}`);",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "source_comment_marker_exempts": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "source_string_marker_still_fails": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 3,
+          "message": "src/lock.ts:3: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "query(`SELECT * FROM t WHERE id = ANY($1) FOR UPDATE`);",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "sql_comment_marker_exempts": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sql_string_marker_still_fails": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 2,
+          "message": "src/lock.ts:2: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "query(`SELECT * FROM t WHERE id = ANY($1) AND note = '/* deadlock-safe: SQL data */' FOR UPDATE`);",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

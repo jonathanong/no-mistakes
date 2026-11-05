@@ -44,6 +44,8 @@ Writes through a named re-export (`export { tables as registry } from
 "./tables"`), an `export *` barrel, or a namespace import (`import * as t` then
 `t.tables.users = ...`) are the same violation as a direct named import. `delete
 tables.users` and `Object.defineProperty(tables, ...)` are member mutations too.
+The writer may import the renamed barrel binding while the SQL sink imports the
+original export directly; both resolve to the same declared registry.
 
 Static top-level `const` bindings initialized by `require("./tables")`,
 including destructured `const` bindings, are checked when the actual literal
