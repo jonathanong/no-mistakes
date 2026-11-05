@@ -54,6 +54,7 @@ fn postgres_bounded_statements_join_roots_check_json_snapshot() {
         targets_at("sql/pk-left-inner-chain.sql"),
         [
             "table:public.genericitems",
+            "table:public.genericitems",
             "table:public.posts",
             "table:public.posts",
         ],
@@ -76,6 +77,19 @@ fn postgres_bounded_statements_join_roots_check_json_snapshot() {
             "table:public.users",
             "table:public.users",
             "table:public.users",
+            "table:public.users",
+        ],
+        "{report}"
+    );
+    assert_eq!(
+        targets_at("sql/join-direction-controls.sql"),
+        [
+            "table:public.genericitems",
+            "table:public.genericitems",
+            "table:public.genericitems",
+            "table:public.posts",
+            "table:public.posts",
+            "table:public.topics",
             "table:public.users",
         ],
         "{report}"

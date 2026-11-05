@@ -31,7 +31,11 @@
     },
     "topics": {
       "relationKind": "table",
-      "columns": { "id": { "dataType": "uuid", "nullable": false }, "name": { "dataType": "text", "nullable": false } },
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false },
+        "name": { "dataType": "text", "nullable": false },
+        "owner_id": { "dataType": "uuid", "nullable": true }
+      },
       "primaryKey": { "columns": ["id"] },
       "indexes": {
         "topics_pkey": {
