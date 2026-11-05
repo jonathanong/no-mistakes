@@ -148,8 +148,12 @@ For schema parse failures, the implicit default advises for any statement that
 cannot be analyzed inside a recognized `DO`, PL/pgSQL function, or procedure body.
 This includes malformed body statements: an advisory means analysis is incomplete,
 not that PostgreSQL accepts the SQL. Successfully parsed body statements still
-contribute facts and rule findings. At the top level, only these complete forms
-advise. Malformed and unrecognized statements retain findings.
+contribute facts and rule findings. At the top level, examples of complete forms
+that advise include the following; this list is not exhaustive. The recognizer
+also accepts complete
+forms such as `ALTER PUBLICATION name ADD TABLE table [, table ...]`,
+`ALTER PUBLICATION name DROP TABLE table [, table ...]`, and supported
+`REVOKE` statements. Malformed or unrecognized statements retain findings.
 
 - `REFRESH MATERIALIZED VIEW [CONCURRENTLY] view [WITH [NO] DATA]`
 - `CREATE PUBLICATION name FOR ALL TABLES`
