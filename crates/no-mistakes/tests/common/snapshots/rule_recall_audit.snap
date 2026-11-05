@@ -497,6 +497,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "timeout-literals/multiline-allow": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "timeout-literals/multiline-allow-crlf": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "timeout-literals/multiline-containment": {
     "exitCode": 1,
     "report": {
@@ -563,6 +587,39 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "timeout-literals/symbolic-then-timeout": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 2,
+          "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
+          "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "expect(",
+          "target": "expect(\n step.timeoutMinutes\n).toBe(10)"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "timeout-literals/symbolic-then-unrelated": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "workflow/edge-control": {
     "exitCode": 0,
     "report": {
@@ -584,6 +641,142 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "workflow/hash-edge-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "workflow/hash-inventory": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci#public.yml",
+          "line": 1,
+          "message": "job inventory mismatch: .github/workflows/ci#public.yml: expected lint, missing, test, got lint, test",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: audit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "workflow/hash-inventory-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "workflow/hash-missing-edge": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci#public.yml",
+          "line": 8,
+          "message": "required direct edge missing: .github/workflows/ci#public.yml#lint -> .github/workflows/ci#public.yml#test",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "test:"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "workflow/hash-missing-job-yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci#public.yml",
+          "line": 1,
+          "message": "required job missing: .github/workflows/ci#public.yml#missing.yml",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: audit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "workflow/hash-missing-job-yml-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "workflow/hash-stale-concurrency": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci#public.yml",
+          "line": 1,
+          "message": "concurrency intent stale: .github/workflows/ci#public.yml",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: audit"
+        },
+        {
+          "file": ".github/workflows/ci#public.yml",
+          "line": 1,
+          "message": "concurrency intent stale: .github/workflows/ci#public.yml#missing.yml",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "name: audit"
+        },
+        {
+          "file": ".github/workflows/ci#public.yml",
+          "line": 4,
+          "message": "concurrency intent stale: .github/workflows/ci#public.yml#lint",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "lint:"
+        },
+        {
+          "file": ".github/workflows/missing#pipeline.yml",
+          "line": 1,
+          "message": "concurrency intent stale: .github/workflows/missing#pipeline.yml",
+          "rule": "workflow-topology-policy"
+        }
+      ],
       "warnings": []
     }
   },

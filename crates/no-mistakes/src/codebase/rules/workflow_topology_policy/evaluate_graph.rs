@@ -1,13 +1,13 @@
 use super::evaluate::Index;
-use super::{finding, Options};
-use crate::codebase::rules::RuleFinding;
+use super::LocatedFinding;
+use super::{job_finding, workflow_finding as finding, Options};
 use crate::codebase::workflow_topology::model::WorkflowTopology;
 
 pub(super) fn lint(
     topology: &WorkflowTopology,
     index: &Index<'_>,
     opts: &Options,
-) -> Vec<RuleFinding> {
+) -> Vec<LocatedFinding> {
     let mut findings = Vec::new();
     findings.extend(edges(index, &opts.required_direct_edges, true, true));
     findings.extend(edges(index, &opts.forbidden_direct_edges, true, false));
@@ -24,14 +24,15 @@ fn edges(
     rules: &[[String; 2]],
     direct: bool,
     required: bool,
-) -> Vec<RuleFinding> {
+) -> Vec<LocatedFinding> {
     let kind = if direct { "direct" } else { "transitive" };
     rules
         .iter()
         .filter_map(|[from, to]| {
             if !index.jobs.contains_key(from.as_str()) || !index.jobs.contains_key(to.as_str()) {
-                return required
-                    .then(|| finding(to, format!("required {kind} edge missing: {from} -> {to}")));
+                return required.then(|| {
+                    job_finding(to, format!("required {kind} edge missing: {from} -> {to}"))
+                });
             }
             let downstream = if direct {
                 index.direct_downstream(from)
@@ -40,7 +41,7 @@ fn edges(
             };
             let present = downstream.contains(&to.as_str());
             (present != required).then(|| {
-                finding(
+                job_finding(
                     to,
                     format!(
                         "{} {kind} edge {}: {from} -> {to}",
@@ -53,20 +54,20 @@ fn edges(
         .collect()
 }
 
-fn fan_ins(index: &Index<'_>, opts: &Options) -> Vec<RuleFinding> {
+fn fan_ins(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
     opts.exact_fan_ins
         .iter()
         .map(|(job_id, expected)| {
             if !index.jobs.contains_key(job_id.as_str()) {
-                return finding(job_id, format!("exact fan-in target missing: {job_id}"));
+                return job_finding(job_id, format!("exact fan-in target missing: {job_id}"));
             }
             let actual = index.direct_upstream(job_id);
             let mut expected: Vec<&str> = expected.iter().map(String::as_str).collect();
             expected.sort_unstable();
             if actual == expected {
-                return finding(job_id, String::new());
+                return job_finding(job_id, String::new());
             }
-            finding(
+            job_finding(
                 job_id,
                 format!(
                     "exact fan-in mismatch: {job_id}: expected {}, got {}",
@@ -75,11 +76,11 @@ fn fan_ins(index: &Index<'_>, opts: &Options) -> Vec<RuleFinding> {
                 ),
             )
         })
-        .filter(|finding| !finding.message.is_empty())
+        .filter(|finding| !finding.finding.message.is_empty())
         .collect()
 }
 
-fn callers(index: &Index<'_>, opts: &Options) -> Vec<RuleFinding> {
+fn callers(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
     if opts.exact_caller_jobs.is_empty() {
         return Vec::new();
     }
@@ -125,7 +126,7 @@ fn callers(index: &Index<'_>, opts: &Options) -> Vec<RuleFinding> {
     findings
 }
 
-fn unlocked(topology: &WorkflowTopology, opts: &Options) -> Vec<RuleFinding> {
+fn unlocked(topology: &WorkflowTopology, opts: &Options) -> Vec<LocatedFinding> {
     if opts.unlocked_workflow_reasons.is_empty() {
         return Vec::new();
     }

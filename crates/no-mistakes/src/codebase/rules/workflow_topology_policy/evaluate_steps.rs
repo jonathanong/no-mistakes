@@ -1,6 +1,6 @@
 use super::evaluate::Index;
-use super::{finding, Options, StepSelector};
-use crate::codebase::rules::RuleFinding;
+use super::LocatedFinding;
+use super::{job_finding as finding, Options, StepSelector};
 use crate::codebase::workflow_topology::model::{
     WorkflowStep, WorkflowTopology, WorkflowTopologyEdge,
 };
@@ -9,7 +9,7 @@ pub(super) fn lint(
     topology: &WorkflowTopology,
     index: &Index<'_>,
     opts: &Options,
-) -> Vec<RuleFinding> {
+) -> Vec<LocatedFinding> {
     let mut findings = artifact_edges(topology, index, opts);
     findings.extend(step_orders(index, opts));
     findings
@@ -19,7 +19,7 @@ fn artifact_edges(
     topology: &WorkflowTopology,
     index: &Index<'_>,
     opts: &Options,
-) -> Vec<RuleFinding> {
+) -> Vec<LocatedFinding> {
     opts.required_artifact_edges
         .iter()
         .map(|rule| {
@@ -50,11 +50,11 @@ fn artifact_edges(
                 finding(&rule.to, format!("required artifact edge missing: {label}"))
             }
         })
-        .filter(|finding| !finding.message.is_empty())
+        .filter(|finding| !finding.finding.message.is_empty())
         .collect()
 }
 
-fn step_orders(index: &Index<'_>, opts: &Options) -> Vec<RuleFinding> {
+fn step_orders(index: &Index<'_>, opts: &Options) -> Vec<LocatedFinding> {
     opts.step_orders
         .iter()
         .filter_map(|rule| {

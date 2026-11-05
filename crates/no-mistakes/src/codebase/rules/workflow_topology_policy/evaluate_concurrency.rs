@@ -1,7 +1,6 @@
 use super::concurrency_compile::CompiledIntent;
 use super::concurrency_scope::actual_scope;
-use super::finding;
-use crate::codebase::rules::RuleFinding;
+use super::{finding, FindingOwner, LocatedFinding};
 use crate::codebase::workflow_topology::model::{
     ConcurrencyValue, WorkflowConcurrency, WorkflowTopology,
 };
@@ -12,51 +11,69 @@ use std::sync::OnceLock;
 pub(super) fn lint(
     topology: &WorkflowTopology,
     policy: &BTreeMap<String, CompiledIntent>,
-) -> Vec<RuleFinding> {
+) -> Vec<LocatedFinding> {
     if policy.is_empty() {
         return Vec::new();
     }
     let owners = owners(topology);
     let mut findings = Vec::new();
-    for id in owners.keys() {
-        if !policy.contains_key(*id) {
-            findings.push(finding(id, format!("concurrency intent missing: {id}")));
+    for (id, (concurrency, owner)) in &owners {
+        if concurrency.is_some() && !policy.contains_key(*id) {
+            findings.push(finding(*owner, format!("concurrency intent missing: {id}")));
         }
     }
     for id in policy.keys() {
-        if !owners.contains_key(id.as_str()) {
-            findings.push(finding(id, format!("concurrency intent stale: {id}")));
+        if owners
+            .get(id.as_str())
+            .is_none_or(|(concurrency, _)| concurrency.is_none())
+        {
+            let owner = owners
+                .get(id.as_str())
+                .map(|(_, owner)| *owner)
+                .unwrap_or_else(|| match id.rsplit_once('#') {
+                    Some((file, _)) if owners.contains_key(file) => FindingOwner::Job(id),
+                    _ => FindingOwner::Workflow(id),
+                });
+            findings.push(finding(owner, format!("concurrency intent stale: {id}")));
         }
     }
     for (id, intent) in policy {
-        let Some(concurrency) = owners.get(id.as_str()) else {
+        let Some((Some(concurrency), owner)) = owners.get(id.as_str()) else {
             continue;
         };
-        findings.extend(compare(id, concurrency, intent));
+        findings.extend(compare(id, *owner, concurrency, intent));
     }
     findings
 }
 
-fn owners(topology: &WorkflowTopology) -> BTreeMap<&str, &WorkflowConcurrency> {
+fn owners(
+    topology: &WorkflowTopology,
+) -> BTreeMap<&str, (Option<&WorkflowConcurrency>, FindingOwner<'_>)> {
     let mut owners = BTreeMap::new();
     for workflow in &topology.workflows {
-        if let Some(concurrency) = &workflow.concurrency {
-            owners.insert(workflow.path.as_str(), concurrency);
-        }
+        owners.insert(
+            workflow.path.as_str(),
+            (
+                workflow.concurrency.as_ref(),
+                FindingOwner::Workflow(&workflow.path),
+            ),
+        );
     }
     for job in &topology.jobs {
-        if let Some(concurrency) = &job.concurrency {
-            owners.insert(job.id.as_str(), concurrency);
-        }
+        owners.insert(
+            job.id.as_str(),
+            (job.concurrency.as_ref(), FindingOwner::Job(&job.id)),
+        );
     }
     owners
 }
 
 fn compare(
     id: &str,
+    owner: FindingOwner<'_>,
     concurrency: &WorkflowConcurrency,
     intent: &CompiledIntent,
-) -> Vec<RuleFinding> {
+) -> Vec<LocatedFinding> {
     let mut findings = Vec::new();
     let pending = if concurrency.effective.queue == "max" {
         "fifo"
@@ -65,7 +82,7 @@ fn compare(
     };
     if pending != intent.pending {
         findings.push(finding(
-            id,
+            owner,
             format!(
                 "concurrency pending mismatch: {id}: expected {}, got {pending}",
                 intent.pending
@@ -76,7 +93,7 @@ fn compare(
         ConcurrencyValue::Text(value) => {
             if !complete_expression(value) {
                 findings.push(finding(
-                    id,
+                    owner,
                     format!("conditional cancel-in-progress expression invalid: {id}: {value}"),
                 ));
             }
@@ -87,7 +104,7 @@ fn compare(
     };
     if cancellation != intent.cancellation {
         findings.push(finding(
-            id,
+            owner,
             format!(
                 "concurrency cancellation mismatch: {id}: expected {}, got {cancellation}",
                 intent.cancellation
@@ -97,7 +114,7 @@ fn compare(
     let actual = actual_scope(&concurrency.effective.group);
     if actual != intent.scope {
         findings.push(finding(
-            id,
+            owner,
             format!(
                 "concurrency scope mismatch: {id}: expected {}, got {}",
                 intent.scope.join(", "),

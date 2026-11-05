@@ -52,6 +52,20 @@ fn check_json_snapshot_rule_recall_audit() {
         ("child-links/inline-suppressed", ".no-mistakes.yml"),
         ("child-links/comment-adjacent", ".no-mistakes.yml"),
         ("child-links/bom-next-line", ".no-mistakes.yml"),
+        ("timeout-literals/multiline-allow", ".no-mistakes.yml"),
+        ("timeout-literals/multiline-allow-crlf", ".no-mistakes.yml"),
+        ("workflow/hash-missing-edge", "config.json"),
+        ("workflow/hash-edge-suppressed", "config.json"),
+        ("workflow/hash-inventory", "config.json"),
+        ("workflow/hash-inventory-suppressed", "config.json"),
+        ("workflow/hash-missing-job-yml", "config.json"),
+        ("workflow/hash-missing-job-yml-suppressed", "config.json"),
+        ("workflow/hash-stale-concurrency", "config.json"),
+        (
+            "timeout-literals/symbolic-then-unrelated",
+            ".no-mistakes.yml",
+        ),
+        ("timeout-literals/symbolic-then-timeout", ".no-mistakes.yml"),
     ]
     .into_iter()
     .map(|(name, config)| {

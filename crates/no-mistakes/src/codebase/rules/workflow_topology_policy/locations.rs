@@ -14,30 +14,29 @@ impl Locations {
         &mut self,
         root: &Path,
         sources: &SourceStore,
-        findings: &mut [RuleFinding],
-    ) {
-        for finding in findings {
-            let (file, job) = finding
-                .file
-                .split_once('#')
-                .map_or((finding.file.as_str(), None), |(file, job)| {
-                    (file, Some(job))
+        findings: Vec<super::LocatedFinding>,
+    ) -> Vec<RuleFinding> {
+        findings
+            .into_iter()
+            .map(|located| {
+                let mut finding = located.finding;
+                let file = &finding.file;
+                let document = self.by_file.entry(file.to_owned()).or_insert_with(|| {
+                    let path = root.join(file);
+                    sources
+                        .read_path(&path)
+                        .ok()
+                        .and_then(|source| ConfigLocations::parse(&source, &path))
                 });
-            let document = self.by_file.entry(file.to_owned()).or_insert_with(|| {
-                let path = root.join(file);
-                sources
-                    .read_path(&path)
-                    .ok()
-                    .and_then(|source| ConfigLocations::parse(&source, &path))
-            });
-            let path = job.map_or_else(ConfigPath::default, |job| {
-                ConfigPath::default().key("jobs").key(job)
-            });
-            finding.line = document
-                .as_ref()
-                .and_then(|locations| locations.line(&path))
-                .unwrap_or(1);
-            finding.file = file.to_owned();
-        }
+                let path = located.job.map_or_else(ConfigPath::default, |job| {
+                    ConfigPath::default().key("jobs").key(job)
+                });
+                finding.line = document
+                    .as_ref()
+                    .and_then(|locations| locations.line(&path))
+                    .unwrap_or(1);
+                finding
+            })
+            .collect()
     }
 }

@@ -10,7 +10,9 @@ pub(super) fn finding(path: &str, line: usize, message: String) -> RuleFinding {
         file: path.to_owned(),
         line,
         message,
-        ..super::super::finding(path, String::new())
+        rule: super::super::RULE_ID.to_string(),
+        import: None,
+        target: None,
     }
 }
 

@@ -6,7 +6,10 @@ use crate::codebase::workflow_topology::render_mermaid::render_workflow_topology
 use crate::config::v2::schema::CiConfig;
 
 fn collisions(topology: &WorkflowTopology) -> Vec<String> {
-    let mut findings = super::super::evaluate_collisions::lint(topology);
+    let mut findings = super::super::evaluate_collisions::lint(topology)
+        .into_iter()
+        .map(|located| located.finding)
+        .collect::<Vec<_>>();
     sort_findings(&mut findings);
     findings
         .into_iter()
@@ -17,7 +20,10 @@ fn collisions(topology: &WorkflowTopology) -> Vec<String> {
 fn gated(topology: &WorkflowTopology, yaml: &str) -> Vec<String> {
     let opts: super::super::Options = super::config(yaml).rules[0].try_rule_options().unwrap();
     let policy = super::super::concurrency_compile::compile(&opts.concurrency_policy).unwrap();
-    let mut findings = super::super::evaluate::lint(topology, &opts, &policy);
+    let mut findings = super::super::evaluate::lint(topology, &opts, &policy)
+        .into_iter()
+        .map(|located| located.finding)
+        .collect::<Vec<_>>();
     sort_findings(&mut findings);
     findings
         .into_iter()

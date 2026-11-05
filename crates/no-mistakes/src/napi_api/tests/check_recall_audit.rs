@@ -7,6 +7,9 @@ fn public_check_and_project_preserve_rule_recall_and_suppression() {
     for (case, config, findings, advisories) in [
         ("workflow/missing-edge", "config.json", 1, 0),
         ("workflow/line-suppression", "config.json", 0, 0),
+        ("workflow/hash-missing-edge", "config.json", 1, 0),
+        ("workflow/hash-missing-job-yml", "config.json", 1, 0),
+        ("workflow/hash-inventory-suppressed", "config.json", 0, 0),
         ("live-scan/missing-relative", ".no-mistakes.yml", 0, 1),
         ("live-scan/absolute-control", ".no-mistakes.yml", 0, 1),
         ("storybook/empty-stories", ".no-mistakes.yml", 1, 0),

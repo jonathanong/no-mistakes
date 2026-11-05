@@ -6,7 +6,10 @@ use crate::codebase::workflow_topology::model::{ConcurrencyValue, WorkflowTopolo
 fn messages(topology: &WorkflowTopology, yaml: &str) -> Vec<String> {
     let opts: super::super::Options = super::config(yaml).rules[0].try_rule_options().unwrap();
     let policy = super::super::concurrency_compile::compile(&opts.concurrency_policy).unwrap();
-    let mut findings = super::super::evaluate_concurrency::lint(topology, &policy);
+    let mut findings = super::super::evaluate_concurrency::lint(topology, &policy)
+        .into_iter()
+        .map(|located| located.finding)
+        .collect::<Vec<_>>();
     sort_findings(&mut findings);
     findings
         .into_iter()
@@ -191,10 +194,10 @@ concurrencyPolicy:
         found,
         vec![
             "concurrency cancellation mismatch: .github/workflows/ci.yml: expected conditional, got cancel-running".to_string(),
-            "concurrency intent missing: .github/workflows/lint.yml".to_string(),
-            "concurrency intent stale: .github/workflows/gone.yml".to_string(),
-            "concurrency pending mismatch: .github/workflows/release.yml#publish: expected fifo, got coalesce-latest".to_string(),
             "concurrency scope mismatch: .github/workflows/deploy.yml: expected , got sha".to_string(),
+            "concurrency intent stale: .github/workflows/gone.yml".to_string(),
+            "concurrency intent missing: .github/workflows/lint.yml".to_string(),
+            "concurrency pending mismatch: .github/workflows/release.yml#publish: expected fifo, got coalesce-latest".to_string(),
         ]
     );
 }

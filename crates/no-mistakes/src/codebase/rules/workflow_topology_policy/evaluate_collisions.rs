@@ -1,12 +1,11 @@
-use super::finding;
-use crate::codebase::rules::RuleFinding;
+use super::{finding, FindingOwner, LocatedFinding};
 use crate::codebase::workflow_topology::model::WorkflowTopology;
 use regex::Regex;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
-pub(super) fn lint(topology: &WorkflowTopology) -> Vec<RuleFinding> {
-    let mut groups: BTreeMap<(String, String), BTreeSet<String>> = BTreeMap::new();
+pub(super) fn lint(topology: &WorkflowTopology) -> Vec<LocatedFinding> {
+    let mut groups: BTreeMap<(String, String), BTreeMap<String, bool>> = BTreeMap::new();
     for owner in owners(topology) {
         let partition = if workflow_scoped(&owner.group) {
             owner.workflow_path
@@ -16,19 +15,25 @@ pub(super) fn lint(topology: &WorkflowTopology) -> Vec<RuleFinding> {
         groups
             .entry((partition, owner.group.to_lowercase()))
             .or_default()
-            .insert(owner.id);
+            .insert(owner.id, owner.job);
     }
     let mut findings = Vec::new();
     for ((_, lowered), ids) in groups {
         if ids.len() < 2 {
             continue;
         }
-        let owner = ids.first().cloned().unwrap_or_default();
+        let (id, job) = ids.first_key_value().unwrap();
+        let id = id.clone();
+        let owner = if *job {
+            FindingOwner::Job(&id)
+        } else {
+            FindingOwner::Workflow(&id)
+        };
         findings.push(finding(
-            &owner,
+            owner,
             format!(
                 "concurrency group collision: {lowered}: {}",
-                ids.into_iter().collect::<Vec<_>>().join(", ")
+                ids.into_keys().collect::<Vec<_>>().join(", ")
             ),
         ));
     }
@@ -39,6 +44,7 @@ struct Owner {
     id: String,
     workflow_path: String,
     group: String,
+    job: bool,
 }
 
 fn owners(topology: &WorkflowTopology) -> Vec<Owner> {
@@ -47,6 +53,7 @@ fn owners(topology: &WorkflowTopology) -> Vec<Owner> {
         if let Some(concurrency) = &workflow.concurrency {
             owners.push(Owner {
                 id: workflow.path.clone(),
+                job: false,
                 workflow_path: workflow.path.clone(),
                 group: concurrency.effective.group.clone(),
             });
@@ -56,6 +63,7 @@ fn owners(topology: &WorkflowTopology) -> Vec<Owner> {
         if let Some(concurrency) = &job.concurrency {
             owners.push(Owner {
                 id: job.id.clone(),
+                job: true,
                 workflow_path: job.workflow_id.clone(),
                 group: concurrency.effective.group.clone(),
             });

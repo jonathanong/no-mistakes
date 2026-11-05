@@ -53,15 +53,28 @@ pub(super) fn check_source(
         .chain(source.match_indices('\n').map(|(offset, _)| offset + 1))
         .collect();
     let mut violations = BTreeMap::new();
-    for pattern in [&*YAML_FRAGMENT, &*TIMEOUT_EQUALITY, &*TIMEOUT_CONTAIN] {
-        for matched in pattern.find_iter(source) {
-            let line_no = line_starts.partition_point(|offset| *offset <= matched.start());
+    let mut collect_matches = |pattern: &Regex, offset: usize, text: &str| {
+        for matched in pattern.find_iter(text) {
+            let match_start = offset + matched.start();
+            let match_end = offset + matched.end();
+            let line_no = line_starts.partition_point(|start| *start <= match_start);
             let start = line_starts[line_no - 1];
-            let end = source[matched.end()..]
+            let end = source[match_end..]
                 .find('\n')
-                .map_or(source.len(), |i| matched.end() + i);
+                .map_or(source.len(), |i| match_end + i);
             violations.entry(line_no).or_insert(&source[start..end]);
         }
+    };
+    collect_matches(&YAML_FRAGMENT, 0, source);
+    let assertions: Vec<usize> = source
+        .match_indices("expect(")
+        .map(|(offset, _)| offset)
+        .chain(std::iter::once(source.len()))
+        .collect();
+    for range in assertions.windows(2) {
+        let text = &source[range[0]..range[1]];
+        collect_matches(&TIMEOUT_EQUALITY, range[0], text);
+        collect_matches(&TIMEOUT_CONTAIN, range[0], text);
     }
     for (line_no, text) in violations {
         findings.extend(line_findings(rel, line_no, text, opts, &mut used_allow));
@@ -83,7 +96,7 @@ fn line_findings(
     if !is_violation(line) {
         return Vec::new();
     }
-    let trimmed = line.trim();
+    let trimmed = line.trim().replace("\r\n", "\n");
     let key = format!("{rel}#{trimmed}");
     if let Some(reason) = opts.allow.get(&key) {
         used_allow.insert(key.clone());
@@ -103,7 +116,7 @@ fn line_findings(
         format!(
             "{rel}: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry"
         ),
-        trimmed,
+        &trimmed,
     )]
 }
 

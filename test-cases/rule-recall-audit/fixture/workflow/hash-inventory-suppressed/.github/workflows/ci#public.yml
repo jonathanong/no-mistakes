@@ -1,0 +1,12 @@
+# no-mistakes-disable-file workflow-topology-policy
+name: audit
+on: push
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo lint
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo test

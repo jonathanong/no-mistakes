@@ -20,3 +20,4 @@ test-cases/rules/rust-max-lines-per-file/fixture/line-counts/blank_and_comment.r
 test-cases/rules/markdown-link-display-text/unit-fixture/** text eol=lf
 test-cases/rules/github-actions-max-inline-script-lines/fixture/continuations/.github/workflows/continued.yml text eol=lf -whitespace
 test-cases/rules/github-actions-max-inline-script-lines/fixture/unreadable/.github/workflows/*.yml -text -whitespace
+test-cases/rule-recall-audit/fixture/timeout-literals/multiline-allow-crlf/.github/workflows/ci.test.mts -text -whitespace
