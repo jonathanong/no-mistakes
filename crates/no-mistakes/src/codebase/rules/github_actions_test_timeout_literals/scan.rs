@@ -67,6 +67,8 @@ pub(super) fn check_source(
     };
     for (index, line) in source.lines().enumerate() {
         collect_matches(&YAML_FRAGMENT, line_starts[index], line);
+        collect_matches(&TIMEOUT_EQUALITY, line_starts[index], line);
+        collect_matches(&TIMEOUT_CONTAIN, line_starts[index], line);
     }
     let assertions: Vec<usize> = source
         .match_indices("expect(")

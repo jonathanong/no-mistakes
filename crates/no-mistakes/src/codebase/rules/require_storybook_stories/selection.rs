@@ -111,7 +111,9 @@ fn should_skip_file(facts: &CheckFileFacts, opts: &Options, defer_suppression: b
     // Aggregate checks must retain file-disabled components until the shared
     // suppression projection records their findings in the optional audit.
     (!defer_suppression && has_disable_file_comment(source, RULE_ID))
-        || (!opts.required_props.is_empty() && !source_has_required_prop(source, opts))
+        || (facts.parse_error.is_none()
+            && !opts.required_props.is_empty()
+            && !source_has_required_prop(source, opts))
 }
 
 fn is_index_or_private_file(path: &Path) -> bool {

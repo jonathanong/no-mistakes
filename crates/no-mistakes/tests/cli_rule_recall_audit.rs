@@ -67,6 +67,11 @@ fn check_json_snapshot_rule_recall_audit() {
         ),
         ("timeout-literals/symbolic-then-timeout", ".no-mistakes.yml"),
         ("timeout-literals/multiline-yaml-text", ".no-mistakes.yml"),
+        (
+            "timeout-literals/single-line-expect-literal",
+            ".no-mistakes.yml",
+        ),
+        ("storybook/required-props-malformed", ".no-mistakes.yml"),
     ]
     .into_iter()
     .map(|(name, config)| {

@@ -455,6 +455,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "storybook/required-props-malformed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/Card.tsx",
+          "line": 1,
+          "message": "Selected React source could not be analyzed (parsing src/Card.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 31, end: 32 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "rule": "require-storybook-stories",
+          "sourceLine": "export function Card( { return <article>Card</article>; }",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "storybook/required-props-matching": {
     "exitCode": 1,
     "report": {
@@ -591,6 +612,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "github-actions-test-timeout-literals",
           "sourceLine": "expect(step[\"timeout-minutes\"]).toBe(10);",
           "target": "expect(step[\"timeout-minutes\"]).toBe(10);"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "timeout-literals/single-line-expect-literal": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 1,
+          "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
+          "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "expect(step.timeoutMinutes || \"expect(\").toBe(10);",
+          "target": "expect(step.timeoutMinutes || \"expect(\").toBe(10);"
         }
       ],
       "warnings": []
