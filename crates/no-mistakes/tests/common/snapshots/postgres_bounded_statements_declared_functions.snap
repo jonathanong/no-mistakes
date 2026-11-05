@@ -26,7 +26,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-conflict.sql",
           "line": 12,
-          "message": "sql/declared-cte-conflict.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-conflict.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"
@@ -63,7 +63,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-explicit-set.sql",
           "line": 12,
-          "message": "sql/declared-cte-explicit-set.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-explicit-set.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"
@@ -100,7 +100,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-foreign.sql",
           "line": 12,
-          "message": "sql/declared-cte-foreign.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-foreign.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"
@@ -137,7 +137,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-malformed.sql",
           "line": 12,
-          "message": "sql/declared-cte-malformed.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-malformed.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"
@@ -174,7 +174,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-mixed.sql",
           "line": 12,
-          "message": "sql/declared-cte-mixed.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-mixed.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"
@@ -235,7 +235,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-set.sql",
           "line": 12,
-          "message": "sql/declared-cte-set.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-set.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"
@@ -272,7 +272,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-table.sql",
           "line": 12,
-          "message": "sql/declared-cte-table.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-table.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"
@@ -309,7 +309,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-unknown.sql",
           "line": 12,
-          "message": "sql/declared-cte-unknown.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-unknown.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"
@@ -346,7 +346,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-unknown-overload.sql",
           "line": 12,
-          "message": "sql/declared-cte-unknown-overload.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-unknown-overload.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"
@@ -383,7 +383,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-wrong-name.sql",
           "line": 12,
-          "message": "sql/declared-cte-wrong-name.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-wrong-name.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"
@@ -420,7 +420,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-wrong-schema.sql",
           "line": 12,
-          "message": "sql/declared-cte-wrong-schema.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-wrong-schema.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"

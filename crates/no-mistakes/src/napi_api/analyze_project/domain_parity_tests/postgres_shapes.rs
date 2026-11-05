@@ -152,6 +152,7 @@ fn prepared_postgres_catalog_bounds_match_standalone() {
         ("column-policy", "../../configs/column-bounds-composite-prefix.yml", 1),
         ("column-policy", "../../configs/recursive-depth.yml", 10),
         ("join-roots", "valid.yml", 29),
+        ("fixedpoint", "valid.yml", 32),
         ("../variants/correlated-append", ".no-mistakes.yml", 1),
         ("../variants/correlated-append", "undeclared.yml", 3),
         ("../variants/correlated-append", "advise.yml", 0),

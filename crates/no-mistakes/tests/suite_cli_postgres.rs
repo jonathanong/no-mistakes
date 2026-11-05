@@ -235,3 +235,6 @@ mod cli_postgres_snapshot_function_locations;
 mod cli_postgres_snapshot_join_roots;
 #[path = "cli_postgres_snapshot_native_advice.rs"]
 mod cli_postgres_snapshot_native_advice;
+
+#[path = "cli_postgres_snapshot_fixedpoint.rs"]
+mod cli_postgres_snapshot_fixedpoint;

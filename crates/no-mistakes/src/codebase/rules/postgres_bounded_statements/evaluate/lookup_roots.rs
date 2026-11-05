@@ -1,6 +1,8 @@
 //! Project keyed lookup joins from the prepared statement pins and catalog keys.
 use super::{keys, qualified, reads_outer, Evaluation};
-use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundQuery, SqlPinSource};
+use crate::codebase::postgres::statements::{
+    SqlBoundItem, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
+};
 use crate::codebase::postgres::SchemaCatalog;
 use std::collections::BTreeMap;
 
@@ -10,14 +12,6 @@ pub(super) fn suppressed(
     owners: &BTreeMap<String, usize>,
     catalog: &SchemaCatalog,
 ) -> Vec<bool> {
-    if query.items.iter().enumerate().any(|(index, item)| {
-        matches!(item.kind, SqlBoundItemKind::Query(_))
-            && nested[index]
-                .as_ref()
-                .is_some_and(|inner| !inner.bounded && inner.offenders.is_empty())
-    }) {
-        return vec![false; query.items.len()];
-    }
     let drivers: Vec<bool> = query
         .items
         .iter()
@@ -33,20 +27,23 @@ pub(super) fn suppressed(
                 }
         })
         .collect();
-    let dependencies: Vec<Option<Vec<usize>>> = query
+    let dependencies: Vec<Vec<Vec<Vec<usize>>>> = query
         .items
         .iter()
         .enumerate()
         .map(|(item_index, item)| {
             let SqlBoundItemKind::Table(name) = &item.kind else {
-                return None;
+                return Vec::new();
             };
-            let table = catalog.bounded_relation(name)?;
+            let Some(table) = catalog.bounded_relation(name) else {
+                return Vec::new();
+            };
             let mut lookup = item.clone();
             lookup.pins.retain(|pin| {
                 pin.column != "ctid"
                     && pin.expression.is_none()
                     && pin.peer_column.is_some()
+                    && pin.alternative.is_none()
                     && table.columns.iter().any(|column| {
                         !column.nullable
                             && super::super::arrays::key_visible(
@@ -56,12 +53,12 @@ pub(super) fn suppressed(
                             ) == Some(pin.column.as_str())
                     })
                     && matches!(&pin.source, SqlPinSource::Items(source)
-                    if source.len() == 1
-                        && source[0] != item_index
-                        && drivers.get(source[0]) == Some(&true))
+                        if source.len() == 1
+                            && source[0] != item_index
+                            && drivers.get(source[0]) == Some(&true))
             });
             if lookup.pins.is_empty() {
-                return None;
+                return Vec::new();
             }
             let arrays = vec![true; lookup.pins.len()];
             let subqueries = (0..lookup.pins.len()).map(|_| None).collect::<Vec<_>>();
@@ -74,41 +71,38 @@ pub(super) fn suppressed(
                 catalog,
                 &Default::default(),
             );
-            let mut dependencies = Vec::new();
-            for alternative in prepared {
-                let mut complete = false;
-                for key in alternative.into_iter().filter(|key| {
-                    !key.is_empty()
-                        && key
-                            .iter()
-                            .all(|column| column.iter().any(|source| !source.is_empty()))
-                }) {
-                    complete = true;
-                    for column in key {
-                        for source in column.into_iter().filter(|source| !source.is_empty()) {
-                            dependencies.extend(source);
-                        }
-                    }
-                }
-                if !complete {
-                    return None;
-                }
-            }
-            dependencies.sort_unstable();
-            dependencies.dedup();
-            (!dependencies.is_empty()).then_some(dependencies)
+            complete_choices(&lookup, prepared)
         })
         .collect();
-    (0..dependencies.len())
-        .map(|index| {
-            dependencies[index].is_some()
-                && !reaches(
-                    index,
-                    index,
-                    &dependencies,
-                    &mut vec![false; dependencies.len()],
-                )
-        })
+    let mut rooted: Vec<bool> = drivers
+        .iter()
+        .enumerate()
+        .map(|(index, driver)| *driver && dependencies[index].is_empty())
+        .collect();
+    loop {
+        let next: Vec<usize> = dependencies
+            .iter()
+            .enumerate()
+            .filter_map(|(index, sources)| {
+                (!rooted[index]
+                    && sources.iter().any(|key| {
+                        key.iter()
+                            .all(|column| column.iter().any(|source| rooted[*source]))
+                    }))
+                .then_some(index)
+            })
+            .collect();
+        if next.is_empty() {
+            break;
+        }
+        for index in next {
+            rooted[index] = true;
+        }
+    }
+    dependencies
+        .iter()
+        .enumerate()
+        .map(|(index, sources)| !sources.is_empty() && rooted[index])
         .collect()
 }
 
@@ -128,34 +122,45 @@ fn clean_driver(
     }
     match &item.kind {
         SqlBoundItemKind::Table(name) => catalog.bounded_relation(name).is_some(),
-        SqlBoundItemKind::Query(inner) => inner
-            .items
-            .iter()
-            .all(|source| clean_driver(source, catalog)),
+        SqlBoundItemKind::Query(_) => true,
         SqlBoundItemKind::Other => true,
         SqlBoundItemKind::Opaque => false,
     }
 }
 
-fn reaches(
-    current: usize,
-    target: usize,
-    dependencies: &[Option<Vec<usize>>],
-    seen: &mut [bool],
-) -> bool {
-    let Some(sources) = &dependencies[current] else {
-        return false;
-    };
-    for &source in sources {
-        if source == target {
-            return true;
+fn complete_choices(item: &SqlBoundItem, prepared: keys::Keys) -> Vec<Vec<Vec<usize>>> {
+    let mut choices = None;
+    for (branch, alternative) in prepared.into_iter().enumerate() {
+        if item.rejected_alternatives.contains(&branch) {
+            continue;
         }
-        if !seen[source] {
-            seen[source] = true;
-            if reaches(source, target, dependencies, seen) {
-                return true;
+        let mut complete = Vec::new();
+        for key in alternative {
+            if key.is_empty() || key.iter().any(|column| column.is_empty()) {
+                continue;
+            }
+            let mut columns = Vec::new();
+            let mut valid = true;
+            for column in key {
+                let mut peers = Vec::new();
+                for source in column.into_iter().filter(|source| !source.is_empty()) {
+                    peers.extend(source);
+                }
+                peers.sort_unstable();
+                peers.dedup();
+                valid &= !peers.is_empty();
+                columns.push(peers);
+            }
+            if valid {
+                complete.push(columns);
             }
         }
+        if complete.is_empty() {
+            return Vec::new();
+        }
+        if choices.is_none() {
+            choices = Some(complete);
+        }
     }
-    false
+    choices.unwrap_or_default()
 }

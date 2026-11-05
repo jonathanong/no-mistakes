@@ -94,19 +94,26 @@ LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` 
   columns of other FROM relations makes the keyed relation a lookup rather than an
   independent unbounded root. For example, `FROM items i LEFT JOIN topics t ON t.id = i.topic_id`
   keeps `items` as the source and does not separately report `topics`. The same applies to inner and chained joins. This only
-  changes which base relation is reported; the lookup does not become a bounded driver
-  for another relation. An incomplete key, a nullable unique key compared with `IS NOT
+  changes which base relation is reported; a lookup can lead to another keyed lookup
+  when one complete key depends on an independently reportable root, even if another
+  key participates in a cycle. Each key column needs one rooted equality; when
+  two peers equate the same column, either one can supply it. A key equality
+  present only in an `OR` branch cannot
+  establish a lookup root. An incomplete key, a nullable unique key compared with `IS NOT
   DISTINCT FROM`, and an expression on the other side of the equality do not establish
-  this lookup. The lookup-side key columns must be non-null. A join cycle retains
-  its roots, including self-joins, rather than erasing every report. Reads inside
-  derived tables and CTEs retain their own reports. If a query also reads a
-  derived or recursive source with no independent bound or reportable root, its
-  table joins retain their ordinary findings; that opaque source cannot explain
-  which base relation drives the work. A correlated `LATERAL` source, an unknown
+  this lookup. The lookup-side key columns must be non-null. A cycle without an
+  independent driver retains its roots, including self-joins, rather than erasing
+  every report. Reads inside derived tables and CTEs retain their own reports.
+  A derived or recursive source with no independent bound or reportable root
+  cannot explain a keyed relation. It does not prevent an independent relation
+  from proving another key lookup in the same query. A correlated `LATERAL` source, an unknown
   catalog relation, or a relation with uncertain temporary shadowing cannot act
-  as a lookup driver either. A derived source containing an opaque row producer
-  cannot lend its projected column as lookup evidence merely because another
-  table inside that source has a reportable read.
+  as a lookup driver either. A derived source can drive a key lookup when its own
+  analysis has a bounded result or a reportable base-table root, including a
+  recursive CTE whose step reads a base table. A source made only of opaque rows
+  cannot drive one. The joined column may be projected or computed by the derived
+  relation; the outer equality still names a column of that relation. Extra
+  independent conjuncts do not erase a complete key equality.
 - For `UPDATE` and `DELETE`, the target relation is bounded. A CTE or subquery that picks
   the target rows with a `LIMIT` bounds it when the target's key is matched against it
   (`FROM c WHERE t.id = c.id`, or `WHERE t.id IN (SELECT id … LIMIT n)`). `ctid` identifies

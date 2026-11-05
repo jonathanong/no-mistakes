@@ -64,7 +64,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/shape1-foreign.sql",
           "line": 12,
-          "message": "sql/shape1-foreign.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/shape1-foreign.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"
@@ -101,7 +101,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/shape1.sql",
           "line": 12,
-          "message": "sql/shape1.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/shape1.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"
@@ -138,7 +138,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/shape1-nolimit.sql",
           "line": 12,
-          "message": "sql/shape1-nolimit.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/shape1-nolimit.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"
@@ -211,7 +211,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/shape1.sql",
           "line": 12,
-          "message": "sql/shape1.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/shape1.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"
@@ -322,7 +322,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/shape1.sql",
           "line": 12,
-          "message": "sql/shape1.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/shape1.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"
@@ -359,7 +359,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/shape1-nolimit.sql",
           "line": 12,
-          "message": "sql/shape1-nolimit.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/shape1-nolimit.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"
@@ -417,7 +417,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/sibling.sql",
           "line": 12,
-          "message": "sql/sibling.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/sibling.sql:12: UPDATE can change every row of states; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
           "target": "table:states"
