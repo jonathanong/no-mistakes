@@ -1,7 +1,7 @@
 use super::super::catalog_check::{
     locks_interpolated_relation, locks_single_row, orders_by_catalog_key,
 };
-use super::super::directive::{contains_for_update, has_safe_directive};
+use super::super::directive::{contains_for_update, has_safe_variant_directive};
 use super::{CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
@@ -29,19 +29,24 @@ pub(super) fn record(
         &["row-lock-order"][..]
     };
     for (call_index, original) in embedded.calls.iter().enumerate() {
-        let exempt = has_safe_directive(
-            source,
-            original.line,
-            original.sql_text.as_deref().unwrap_or_default(),
-            &opts.safe_directive,
-        );
+        let safe = |sql: &str| {
+            has_safe_variant_directive(
+                source,
+                embedded.call_spans[call_index].0,
+                &embedded.source_comment_spans,
+                sql,
+                &opts.safe_directive,
+            )
+        };
+        let exempt = safe(original.sql_text.as_deref().unwrap_or_default());
         let versions = original
             .statement_calls()
             .enumerate()
             .map(|(index, version)| {
                 let sql = version.sql_text.as_deref().unwrap_or_default();
+                let safe = safe(sql);
                 let metadata = if version.kind == EmbeddedSqlKind::Dynamic
-                    || has_safe_directive(source, version.line, sql, &opts.safe_directive)
+                    || safe
                     || !contains_for_update(sql)
                 {
                     Err("metadata-not-required")
@@ -50,7 +55,7 @@ pub(super) fn record(
                 };
                 checks
                     .iter()
-                    .map(|check| judge(check, source, &version, opts, catalog, &metadata))
+                    .map(|check| judge(check, safe, &version, catalog, &metadata))
                     .collect::<Vec<_>>()
             })
             .collect::<Vec<_>>();
@@ -107,7 +112,6 @@ pub(super) fn record(
         }
     }
 }
-
 #[cfg(test)]
 mod tests;
 
@@ -115,9 +119,9 @@ fn metadata<'a>(
     call: &'a EmbeddedSqlCall,
     prepared: Option<&'a SqlStatementFileFacts>,
 ) -> Result<Cow<'a, [LockingSelectMetadata]>, &'static str> {
-    let Some(sql) = call.sql_text.as_deref() else {
+    if call.sql_text.is_none() {
         return Err("unresolved-sql-fragment");
-    };
+    }
     if let Some(statement) = prepared {
         if statement.parse_failed {
             return Err("invalid-sql");
@@ -126,20 +130,18 @@ fn metadata<'a>(
             return Ok(Cow::Borrowed(&locations.locking));
         }
     }
-    let _ = sql;
     Err("missing-prepared-sql-facts")
 }
 
 fn judge(
     check: &str,
-    source: &str,
+    safe: bool,
     call: &EmbeddedSqlCall,
-    opts: &CompiledOptions,
     catalog: Option<&SchemaCatalog>,
     metadata: &Result<Cow<'_, [LockingSelectMetadata]>, &'static str>,
 ) -> SqlBranchJudgment {
     let sql = call.sql_text.as_deref().unwrap_or_default();
-    if has_safe_directive(source, call.line, sql, &opts.safe_directive) {
+    if safe {
         return SqlBranchJudgment::clear();
     }
     if call.kind == EmbeddedSqlKind::Dynamic {

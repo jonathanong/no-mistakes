@@ -2,6 +2,72 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "backslash_adjacent_comment_marker_exempts": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dollar_adjacent_comment_marker_exempts": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dollar_sql_string_marker_still_fails": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 2,
+          "message": "src/lock.ts:2: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "query(`SELECT $$ /* deadlock-safe: stored text */ $$ AS note FROM items WHERE id=ANY($1) FOR UPDATE`);",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "escape_string_marker_still_fails": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 2,
+          "message": "src/lock.ts:2: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "query(\"SELECT E'ends\\\\'/* deadlock-safe: stored text */' FROM items WHERE id=ANY($1) FOR UPDATE\");",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "lock_whitespace_and_comments": {
     "exitCode": 1,
     "report": {
@@ -41,6 +107,72 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "src/lock.ts:8: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
           "rule": "postgres-lock-ordering",
           "sourceLine": "query(`SELECT * FROM t WHERE id = ANY($1) FOR -- legal gap",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "long_source_comment_marker_exempts": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "long_source_string_marker_still_fails": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 3,
+          "message": "src/lock.ts:3: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "query(`SELECT * FROM items WHERE id=ANY($1) FOR UPDATE`);",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nested_sql_comment_marker_exempts": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ordinary_backslash_sql_string_marker_still_fails": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 2,
+          "message": "src/lock.ts:2: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "query(\"SELECT 'ends\\\\', '/* deadlock-safe: data */' FROM items WHERE id=ANY($1) FOR UPDATE\");",
           "target": "lock-ordering"
         }
       ],
@@ -239,6 +371,48 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "src/lock.ts:2: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
           "rule": "postgres-lock-ordering",
           "sourceLine": "query(`SELECT * FROM t WHERE id = ANY($1) AND note = '/* deadlock-safe: SQL data */' FOR UPDATE`);",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "tagged_dollar_sql_string_marker_still_fails": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 2,
+          "message": "src/lock.ts:2: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "query(`SELECT $note$ /* deadlock-safe: stored text */ $note$ AS note FROM items WHERE id=ANY($1) FOR UPDATE`);",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unicode_dollar_sql_string_marker_still_fails": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 2,
+          "message": "src/lock.ts:2: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "query(\"SELECT $\\u03c3$ /* deadlock-safe: data */ $\\u03c3$ FROM items WHERE id=ANY($1) FOR UPDATE\");",
           "target": "lock-ordering"
         }
       ],

@@ -1,5 +1,7 @@
 pub(crate) const DEFAULT_SAFE_DIRECTIVE: &str = "deadlock-safe";
 const DIRECTIVE_LOOKBACK: usize = 200;
+mod comments;
+pub(crate) use comments::comment_contains_directive;
 
 pub(super) fn contains_for_update(sql: &str) -> bool {
     lock_clause_offset(&sql.to_ascii_lowercase()).is_some()
@@ -78,7 +80,7 @@ pub(crate) fn has_safe_directive(source: &str, line: u32, sql: &str, directive: 
         || comment_contains_directive(sql, directive)
 }
 
-pub(super) fn has_safe_variant_directive(
+pub(crate) fn has_safe_variant_directive(
     source: &str,
     call_start: u32,
     comment_spans: &[(u32, u32)],
@@ -128,54 +130,4 @@ pub(super) fn floor_char_boundary(source: &str, index: usize) -> usize {
         .rev()
         .find(|idx| source.is_char_boundary(*idx))
         .unwrap_or(0)
-}
-
-pub(super) fn comment_contains_directive(text: &str, directive: &str) -> bool {
-    let bytes = text.as_bytes();
-    let mut index = 0;
-    while index < bytes.len() {
-        if matches!(bytes[index], b'\'' | b'"' | b'`') {
-            let quote = bytes[index];
-            index += 1;
-            while index < bytes.len() {
-                if bytes[index] == b'\\' {
-                    index = (index + 2).min(bytes.len());
-                } else if bytes[index] == quote {
-                    index += 1;
-                    if bytes.get(index) == Some(&quote) && quote != b'`' {
-                        index += 1;
-                    } else {
-                        break;
-                    }
-                } else {
-                    index += 1;
-                }
-            }
-            continue;
-        }
-        if bytes[index] == b'/' && bytes.get(index + 1) == Some(&b'*') {
-            let start = index + 2;
-            let rest = &text[start..];
-            if let Some(end) = rest.find("*/") {
-                if rest[..end].contains(directive) {
-                    return true;
-                }
-                index = start + end + 2;
-                continue;
-            }
-            return rest.contains(directive);
-        }
-        if bytes[index] == b'-' && bytes.get(index + 1) == Some(&b'-') {
-            let start = index + 2;
-            let rest = &text[start..];
-            let end = rest.find('\n').unwrap_or(rest.len());
-            if rest[..end].contains(directive) {
-                return true;
-            }
-            index = start + end;
-            continue;
-        }
-        index += 1;
-    }
-    false
 }

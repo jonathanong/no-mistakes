@@ -8,8 +8,17 @@ pub(super) fn findings(
     opts: &CompiledOptions,
     catalog: Option<&SchemaCatalog>,
     prepared: Option<&crate::codebase::postgres::SqlStatementFileFacts>,
+    source_comments: Option<(u32, &[(u32, u32)])>,
 ) -> Vec<RuleFinding> {
-    super::findings_for_prepared_call(file, source, original, opts, catalog, prepared)
+    super::findings_for_prepared_call(
+        file,
+        source,
+        original,
+        opts,
+        catalog,
+        prepared,
+        source_comments,
+    )
 }
 
 pub(super) fn prepared_findings(
@@ -85,7 +94,18 @@ pub(super) fn findings_for_file(
             if original.sql_text.is_some() && prepared.is_none() {
                 return Err(anyhow::anyhow!("prepared SQL facts are missing"));
             }
-            output.extend(findings(file, source, original, opts, catalog, prepared));
+            output.extend(findings(
+                file,
+                source,
+                original,
+                opts,
+                catalog,
+                prepared,
+                Some((
+                    embedded.call_spans[call_index].0,
+                    &embedded.source_comment_spans,
+                )),
+            ));
             continue;
         }
         for (variant_index, call) in original.statement_calls().enumerate() {

@@ -5,10 +5,6 @@ use crate::codebase::postgres::{
     SqlStatementFileFacts, SqlVerdictStatus,
 };
 
-fn compiled() -> super::super::super::CompiledOptions {
-    super::super::super::compile_options(&super::super::super::Options::default()).unwrap()
-}
-
 fn lock(table: &str) -> LockingSelectMetadata {
     LockingSelectMetadata {
         has_multi_row_predicate: true,
@@ -57,14 +53,7 @@ fn a_parsed_statement_without_variant_locations_has_no_prepared_facts() {
 fn textless_sql_without_a_lock_clause_abstains() {
     let metadata: Result<Cow<'_, [LockingSelectMetadata]>, &'static str> = Err("unused");
     abstains(
-        super::judge(
-            "row-lock-order",
-            "",
-            &call(None),
-            &compiled(),
-            None,
-            &metadata,
-        ),
+        super::judge("row-lock-order", false, &call(None), None, &metadata),
         "unresolved-sql-fragment",
     );
 }
@@ -76,9 +65,8 @@ fn catalog_key_order_abstains_without_a_catalog() {
     abstains(
         super::judge(
             "catalog-key-order",
-            "",
+            false,
             &call(Some("SELECT id FROM items FOR UPDATE")),
-            &compiled(),
             None,
             &metadata,
         ),
@@ -108,9 +96,8 @@ fn an_interpolated_relation_that_is_in_the_catalog_is_still_unknown() {
     abstains(
         super::judge(
             "catalog-key-order",
-            "",
+            false,
             &call(Some("SELECT id FROM sql_placeholder_1 FOR UPDATE")),
-            &compiled(),
             Some(&catalog),
             &metadata,
         ),

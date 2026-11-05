@@ -53,6 +53,56 @@ fn postgres_executor_recall_check_json_snapshot() {
                 rules_path(lock, "configs", "default.yml"),
             ),
             (
+                "long_source_string_marker_still_fails",
+                rules_path(lock, "fixture", "fail-long-source-string"),
+                rules_path(lock, "configs", "default.yml"),
+            ),
+            (
+                "dollar_sql_string_marker_still_fails",
+                rules_path(lock, "fixture", "fail-dollar-sql-string"),
+                rules_path(lock, "configs", "default.yml"),
+            ),
+            (
+                "tagged_dollar_sql_string_marker_still_fails",
+                rules_path(lock, "fixture", "fail-tagged-dollar-sql-string"),
+                rules_path(lock, "configs", "default.yml"),
+            ),
+            (
+                "unicode_dollar_sql_string_marker_still_fails",
+                rules_path(lock, "fixture", "fail-unicode-dollar-sql-string"),
+                rules_path(lock, "configs", "default.yml"),
+            ),
+            (
+                "ordinary_backslash_sql_string_marker_still_fails",
+                rules_path(lock, "fixture", "fail-ordinary-backslash-sql-string"),
+                rules_path(lock, "configs", "default.yml"),
+            ),
+            (
+                "escape_string_marker_still_fails",
+                rules_path(lock, "fixture", "fail-escape-string-marker"),
+                rules_path(lock, "configs", "default.yml"),
+            ),
+            (
+                "backslash_adjacent_comment_marker_exempts",
+                rules_path(lock, "fixture", "pass-backslash-adjacent-comment"),
+                rules_path(lock, "configs", "default.yml"),
+            ),
+            (
+                "long_source_comment_marker_exempts",
+                rules_path(lock, "fixture", "pass-long-source-comment"),
+                rules_path(lock, "configs", "default.yml"),
+            ),
+            (
+                "dollar_adjacent_comment_marker_exempts",
+                rules_path(lock, "fixture", "pass-dollar-adjacent-comment"),
+                rules_path(lock, "configs", "default.yml"),
+            ),
+            (
+                "nested_sql_comment_marker_exempts",
+                rules_path(lock, "fixture", "pass-nested-sql-comment"),
+                rules_path(lock, "configs", "default.yml"),
+            ),
+            (
                 "source_comment_marker_exempts",
                 rules_path(lock, "fixture", "pass-source-comment-marker"),
                 rules_path(lock, "configs", "default.yml"),

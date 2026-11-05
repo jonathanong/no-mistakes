@@ -1,5 +1,5 @@
 use super::catalog_check::{locks_interpolated_relation, locks_single_row, orders_by_catalog_key};
-use super::directive::{contains_for_update, has_safe_directive};
+use super::directive::{contains_for_update, has_safe_directive, has_safe_variant_directive};
 use super::{CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
@@ -72,14 +72,18 @@ pub(super) fn findings_for_prepared_call(
     opts: &CompiledOptions,
     catalog: Option<&SchemaCatalog>,
     prepared: Option<&SqlStatementFileFacts>,
+    source_comments: Option<(u32, &[(u32, u32)])>,
 ) -> Vec<RuleFinding> {
+    let sql = call.sql_text.as_deref().unwrap_or_default();
+    let safe = if let Some((start, spans)) = source_comments {
+        has_safe_variant_directive(source, start, spans, sql, &opts.safe_directive)
+    } else {
+        has_safe_directive(source, call.line, sql, &opts.safe_directive)
+    };
     let Some(sql) = call.sql_text.as_deref() else {
         // Opaque executor text could take a FOR UPDATE lock. A recovered prefix
         // without a lock clause is treated as non-locking to keep reads quiet.
-        if opts.fail_unanalyzable
-            && call.kind == EmbeddedSqlKind::Dynamic
-            && !has_safe_directive(source, call.line, "", &opts.safe_directive)
-        {
+        if opts.fail_unanalyzable && call.kind == EmbeddedSqlKind::Dynamic && !safe {
             return vec![finding(
                 file,
                 call.line,
@@ -92,7 +96,7 @@ pub(super) fn findings_for_prepared_call(
     if !contains_for_update(sql) {
         return Vec::new();
     }
-    if has_safe_directive(source, call.line, sql, &opts.safe_directive) {
+    if safe {
         return Vec::new();
     }
     let metadata: std::result::Result<Cow<'_, [LockingSelectMetadata]>, ()> = match prepared {

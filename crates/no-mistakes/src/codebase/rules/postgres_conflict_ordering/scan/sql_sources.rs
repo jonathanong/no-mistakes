@@ -1,7 +1,7 @@
 //! Opt-in standalone SQL sources share the owning request's prepared source store.
 use super::{analysis, CompiledOptions};
 use crate::codebase::postgres::{postgres_sql_paths, SchemaCatalog};
-use crate::codebase::rules::postgres_lock_ordering::directive::has_safe_directive;
+use crate::codebase::rules::postgres_lock_ordering::directive::comment_contains_directive;
 use crate::codebase::rules::PostgresFindings;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use anyhow::Result;
@@ -24,7 +24,7 @@ pub(super) fn scan(
                 .advise_unanalyzable
                 .then(|| crate::codebase::rules::native_sql_advice::NativeSqlAdvice::new(&source));
             for (line, statement) in analysis::sql_statements(&source) {
-                if has_safe_directive(statement, 1, statement, &opts.safe_directive) {
+                if comment_contains_directive(statement, &opts.safe_directive) {
                     continue;
                 }
                 let checked = analysis::findings_for_sql(

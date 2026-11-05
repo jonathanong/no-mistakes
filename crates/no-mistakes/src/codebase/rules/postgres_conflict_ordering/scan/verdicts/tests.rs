@@ -1,17 +1,8 @@
-use super::super::super::{compile_options, Options};
 use super::judge;
 use crate::codebase::postgres::{
     EmbeddedSqlCall, EmbeddedSqlKind, SchemaCatalog, SqlBranchJudgment, SqlConflictInsertFact,
     SqlConflictTarget, SqlInsertSourceShape, SqlStatementFileFacts, SqlVerdictStatus,
 };
-
-fn options() -> super::super::super::CompiledOptions {
-    compile_options(&Options {
-        schema_catalog_path: "schema.json".to_string(),
-        ..Default::default()
-    })
-    .expect("default conflict options")
-}
 
 fn insert_call() -> EmbeddedSqlCall {
     EmbeddedSqlCall {
@@ -25,15 +16,7 @@ fn reason(
     call: &EmbeddedSqlCall,
     prepared: Option<&SqlStatementFileFacts>,
 ) -> Option<&'static str> {
-    judge(
-        "query.ts",
-        "",
-        call,
-        prepared,
-        &options(),
-        &SchemaCatalog::default(),
-    )
-    .reason
+    judge("query.ts", false, call, prepared, &SchemaCatalog::default()).reason
 }
 
 #[test]
@@ -83,10 +66,9 @@ fn overlapping_parse_failure_abstains_after_reliable_conflicts() {
     }
     let judgment = judge(
         "query.ts",
-        "",
+        false,
         &insert_call(),
         Some(&facts),
-        &options(),
         &SchemaCatalog::default(),
     );
     assert_eq!(judgment.status, SqlVerdictStatus::Abstain);
@@ -108,10 +90,9 @@ fn missing_prepared_conflict_locations_abstain() {
     let facts = crate::codebase::postgres::extract_sql_statement_facts(&sql);
     let judgment = judge(
         "query.ts",
-        "",
+        false,
         &call,
         Some(&facts),
-        &options(),
         &SchemaCatalog::default(),
     );
     assert_eq!(judgment.status, SqlVerdictStatus::Abstain);
@@ -132,7 +113,7 @@ fn judged(sql: &str, kind: EmbeddedSqlKind, catalog: &SchemaCatalog) -> SqlBranc
         kind,
         ..Default::default()
     };
-    judge("query.ts", "", &call, Some(&facts), &options(), catalog)
+    judge("query.ts", false, &call, Some(&facts), catalog)
 }
 
 const TARGETLESS: &str = "INSERT INTO items (id) SELECT id FROM pending ON CONFLICT DO NOTHING";
@@ -173,7 +154,7 @@ fn dynamic(sql: &str, positions: Vec<(u32, u32)>) -> SqlBranchJudgment {
         recovered_placeholder_positions: positions,
         ..Default::default()
     };
-    judge("query.ts", "", &call, None, &options(), &catalog())
+    judge("query.ts", false, &call, None, &catalog())
 }
 
 #[test]
@@ -205,15 +186,7 @@ fn opaque_prefix_without_a_proven_targetless_clause_abstains() {
         ..Default::default()
     };
     assert_eq!(
-        judge(
-            "query.ts",
-            "",
-            &missing,
-            None,
-            &options(),
-            &SchemaCatalog::default(),
-        )
-        .reason,
+        judge("query.ts", false, &missing, None, &SchemaCatalog::default(),).reason,
         Some("opaque-sql-tail")
     );
     let marker_only = dynamic("sql_placeholder_1", vec![(1, 1)]);
