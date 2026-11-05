@@ -1,14 +1,23 @@
 //! Project keyed lookup joins from the prepared statement pins and catalog keys.
-use super::keys;
+use super::{keys, Evaluation};
 use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundQuery, SqlPinSource};
 use crate::codebase::postgres::SchemaCatalog;
 use std::collections::BTreeMap;
 
 pub(super) fn suppressed(
     query: &SqlBoundQuery,
+    nested: &[Option<Evaluation>],
     owners: &BTreeMap<String, usize>,
     catalog: &SchemaCatalog,
 ) -> Vec<bool> {
+    if query.items.iter().enumerate().any(|(index, item)| {
+        matches!(item.kind, SqlBoundItemKind::Query(_))
+            && nested[index]
+                .as_ref()
+                .is_some_and(|inner| !inner.bounded && inner.offenders.is_empty())
+    }) {
+        return vec![false; query.items.len()];
+    }
     let dependencies: Vec<Option<Vec<usize>>> = query
         .items
         .iter()
@@ -32,10 +41,15 @@ pub(super) fn suppressed(
                             ) == Some(pin.column.as_str())
                     })
                     && matches!(&pin.source, SqlPinSource::Items(source)
-                        if source.len() == 1
-                            && source[0] != item_index
-                            && matches!(query.items.get(source[0]).map(|item| &item.kind),
-                                Some(SqlBoundItemKind::Table(_) | SqlBoundItemKind::Query(_))))
+                    if source.len() == 1
+                        && source[0] != item_index
+                        && match query.items.get(source[0]).map(|item| &item.kind) {
+                            Some(SqlBoundItemKind::Table(_)) => true,
+                            Some(SqlBoundItemKind::Query(_)) => nested[source[0]]
+                                .as_ref()
+                                .is_some_and(|inner| inner.bounded || !inner.offenders.is_empty()),
+                            _ => false,
+                        })
             });
             if lookup.pins.is_empty() {
                 return None;

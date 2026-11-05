@@ -99,7 +99,10 @@ LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` 
   DISTINCT FROM`, and an expression on the other side of the equality do not establish
   this lookup. The lookup-side key columns must be non-null. A join cycle retains
   its roots, including self-joins, rather than erasing every report. Reads inside
-  derived tables and CTEs retain their own reports.
+  derived tables and CTEs retain their own reports. If a query also reads a
+  derived or recursive source with no independent bound or reportable root, its
+  table joins retain their ordinary findings; that opaque source cannot explain
+  which base relation drives the work.
 - For `UPDATE` and `DELETE`, the target relation is bounded. A CTE or subquery that picks
   the target rows with a `LIMIT` bounds it when the target's key is matched against it
   (`FROM c WHERE t.id = c.id`, or `WHERE t.id IN (SELECT id … LIMIT n)`). `ctid` identifies

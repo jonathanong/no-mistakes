@@ -178,7 +178,7 @@ fn evaluate(
         })
         .collect();
     propagation::bound(&keys, &mut bounded);
-    let lookup_roots = lookup_roots::suppressed(query, &owners, catalog);
+    let lookup_roots = lookup_roots::suppressed(query, &nested, &owners, catalog);
     let mut offenders = reads::collect(
         query,
         &nested,
