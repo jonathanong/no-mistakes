@@ -112,13 +112,19 @@ For schema parse failures, the implicit default advises for any statement that
 cannot be analyzed inside a recognized `DO`, PL/pgSQL function, or procedure body.
 This includes malformed body statements: an advisory means analysis is incomplete,
 not that PostgreSQL accepts the SQL. Successfully parsed body statements still
-contribute facts and rule findings. At the top level, only these complete forms
-advise. Malformed and unrecognized statements retain findings.
+contribute facts and rule findings. At the top level, examples of complete
+recognized forms that advise include:
 
 - `REFRESH MATERIALIZED VIEW [CONCURRENTLY] view [WITH [NO] DATA]`
 - `CREATE PUBLICATION name FOR ALL TABLES`
 - `CREATE PUBLICATION name FOR TABLE table [, table ...]`
 - `ALTER DEFAULT PRIVILEGES [FOR {ROLE | USER} role [, role ...]] [IN SCHEMA schema [, schema ...]] GRANT {ALL [PRIVILEGES] | privilege [, privilege ...]} ON {TABLES | SEQUENCES | FUNCTIONS | ROUTINES | TYPES | SCHEMAS} TO grantee [, grantee ...] [WITH GRANT OPTION]`
+- `ALTER PUBLICATION name ADD TABLE table [, table ...]`
+- `ALTER PUBLICATION name DROP TABLE table [, table ...]`
+- Supported `REVOKE` statements.
+
+This list is not exhaustive. Malformed or unrecognized statements retain
+findings.
 
 Privileges are `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `REFERENCES`,
 `TRIGGER`, `USAGE`, `CREATE`, `EXECUTE`, and `MAINTAIN`. `view` and each `table`
