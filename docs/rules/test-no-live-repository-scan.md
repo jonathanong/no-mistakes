@@ -19,7 +19,8 @@ rules:
 
 Without `roots`, the default `[{ vitest: true }]` selector uses projects from
 Vitest config files discovered at the repository root (`vitest.config.*`,
-`vitest.workspace.*`, and `vitest.projects.*`). Explicit
+`vitest.workspace.*`, and `vitest.projects.*`). A root workspace or projects
+file takes precedence over sibling `vitest.config.*` files. Explicit
 `tests.vitest.configs` remains authoritative when configured, and no
 `tests.vitest` entry is required for default config discovery; this example
 names one file. `severity: advisory` is the recommended adoption
