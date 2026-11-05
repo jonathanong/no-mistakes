@@ -1,0 +1,18 @@
+{
+  "rules": [
+    {
+      "rule": "version-pin-consistency",
+      "scope": "repository",
+      "options": {
+        "sourceFile": "  ",
+        "sourceKey": "version",
+        "anchors": [
+          {
+            "file": "anchor.txt",
+            "pattern": "VERSION=([0-9.]+)"
+          }
+        ]
+      }
+    }
+  ]
+}

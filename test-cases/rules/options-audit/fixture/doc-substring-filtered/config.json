@@ -1,0 +1,19 @@
+{
+  "rules": [
+    {
+      "rule": "doc-consistency",
+      "scope": "repository",
+      "exclude": [
+        "guide.md"
+      ],
+      "options": {
+        "requiredSubstrings": [
+          {
+            "file": "guide.md",
+            "substring": "Install"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "rules": [
+    {
+      "rule": "banned-renamed-files",
+      "scope": "repository",
+      "options": {
+        "scope": "backend",
+        "extensions": [
+          ".js"
+        ],
+        "bannedBasenames": [
+          {
+            "name": "middleware",
+            "message": "rename to proxy.ts",
+            "extensions": [
+              ".ts"
+            ],
+            "scope": "web"
+          },
+          {
+            "name": "legacy",
+            "message": "remove legacy"
+          }
+        ]
+      }
+    }
+  ]
+}

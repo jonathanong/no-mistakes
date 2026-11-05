@@ -44,6 +44,7 @@ fn spec(
         source_extension: source_extension.to_string(),
         allowed_root_files: allowed_root_files.iter().map(|s| s.to_string()).collect(),
         allowed_subdirs: allowed_subdirs.iter().map(|s| s.to_string()).collect(),
+        ..Default::default()
     }
 }
 
@@ -262,6 +263,7 @@ fn scan_uses_default_test_patterns_when_empty() {
             source_extension: ".mts".to_string(),
             allowed_root_files: vec![],
             allowed_subdirs: vec![],
+            ..Default::default()
         }],
     };
     let findings = scan(&root, &opts, &[file]);
@@ -317,6 +319,7 @@ fn scan_with_absolute_package_root() {
             source_extension: ".mts".to_string(),
             allowed_root_files: vec!["package.json".to_string()],
             allowed_subdirs: vec![],
+            ..Default::default()
         }],
         ..Options::default()
     };

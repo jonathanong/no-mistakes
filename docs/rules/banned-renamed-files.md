@@ -16,6 +16,12 @@ compound-extension and regular-expression matching.
 `scope`, `matchCompoundExtensions`, and `pattern`; omitted optional fields use
 their documented simple-basename behavior.
 
+Entry-level `scope` and `extensions` override the corresponding rule-wide
+options. Omitted entry fields inherit the rule-wide values. An explicit empty
+extension list matches no simple basenames; `pattern` retains precedence over
+extension filtering. Entry scopes match a directory boundary, so `web` does not
+select `web-other`.
+
 ## Valid example
 
 A `jest.config.ts` renamed to the configured replacement and absent from the

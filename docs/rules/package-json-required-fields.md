@@ -49,6 +49,9 @@ rules:
       mainWhenFileExists: index.mts
 ```
 
+A configured rule `message` prefixes both definite findings and parse/read
+diagnostics, including advisories. The original repair detail remains visible.
+
 ## Unanalyzable manifests
 
 When any field check is enabled, a selected manifest that cannot be read as

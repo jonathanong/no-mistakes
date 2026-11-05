@@ -1,0 +1,1 @@
+{"rules": [{"rule": "package-json-required-fields", "scope": "repository", "options": {"private": true, "unanalyzable": "advise"}}]}

@@ -9,6 +9,7 @@ mod locate;
 mod low;
 mod markdown;
 mod object;
+mod options;
 mod scan;
 mod ts_array;
 mod ts_union;
@@ -127,6 +128,7 @@ pub fn try_required_call_site_fact_files(
         .into_iter()
         .map(|rule| {
             let opts: Options = rule.try_rule_options()?;
+            opts.validate()?;
             if config.effective_rule_analysis(rule)?.effort == crate::config::v2::Effort::Low {
                 return Ok(Vec::new());
             }

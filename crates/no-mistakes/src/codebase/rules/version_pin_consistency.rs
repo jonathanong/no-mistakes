@@ -17,7 +17,7 @@ pub const RULE_ID: &str = "version-pin-consistency";
 pub(crate) struct Options {
     pub(crate) source_file: String,
     pub(crate) source_key: String,
-    pub(crate) anchors: Vec<Anchor>,
+    pub(crate) anchors: Option<Vec<Anchor>>,
 }
 
 #[derive(Deserialize, Default)]
@@ -52,6 +52,15 @@ pub fn diagnostics_with_files_and_sources(
     let mut diagnostics = super::analysis_policy::AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
+        anyhow::ensure!(
+            !opts.source_file.trim().is_empty(),
+            "{RULE_ID}: sourceFile is required and must not be empty"
+        );
+        anyhow::ensure!(
+            !opts.source_key.trim().is_empty(),
+            "{RULE_ID}: sourceKey is required and must not be empty"
+        );
+        anyhow::ensure!(opts.anchors.is_some(), "{RULE_ID}: anchors is required");
         let target_roots = super::target_roots(root, config, rule);
         let skip = super::skip_dir_set(config);
         let files: Vec<PathBuf> = all_files

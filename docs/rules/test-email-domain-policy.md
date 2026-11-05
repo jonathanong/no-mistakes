@@ -41,6 +41,12 @@ HTML-encoded forms, unless an allowed pattern matches.
 optional; `extensions` defaults to the supported text/test extensions when not
 specified. Project and common include/exclude filters also apply.
 
+`bannedDomains` must be supplied even when options are otherwise omitted; an
+explicit empty list disables domain bans. HTML named and decimal/hex numeric
+entities are decoded in addresses, including domain labels and dots. Findings
+retain the original source spelling and line. `allowedEmailPatterns` matches
+that original spelling, including HTML or URL encoding.
+
 ## Valid example
 
 ```text

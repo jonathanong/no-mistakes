@@ -1,0 +1,5 @@
+rules:
+  - rule: github-actions-test-timeout-literals
+    scope: repository
+    options:
+      allow: [{text: absent, reason: audit}]

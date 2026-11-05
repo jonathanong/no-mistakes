@@ -1,0 +1,29 @@
+{
+  "rules": [
+    {
+      "rule": "finite-set-consistency",
+      "scope": "repository",
+      "options": {
+        "sets": [
+          {
+            "name": "a",
+            "kind": "yaml-sequence",
+            "file": "values.yml",
+            "key": "values"
+          },
+          {
+            "name": "b",
+            "kind": "yaml-string-selector",
+            "file": "values.yml",
+            "key": "values.[]"
+          }
+        ],
+        "comparisons": [
+          {
+            "left": "a"
+          }
+        ]
+      }
+    }
+  ]
+}

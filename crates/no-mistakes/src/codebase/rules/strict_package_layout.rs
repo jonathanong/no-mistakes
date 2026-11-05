@@ -21,6 +21,8 @@ pub(crate) struct PackageLayoutSpec {
     /// Parent directory that contains individual package subdirectories.
     pub(crate) root: PathBuf,
     pub(crate) source_extension: String,
+    pub(crate) test_file_patterns: Option<Vec<String>>,
+    pub(crate) test_dir_name: Option<String>,
     pub(crate) allowed_root_files: Vec<String>,
     pub(crate) allowed_subdirs: Vec<String>,
 }
@@ -83,7 +85,6 @@ pub(crate) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFi
     } else {
         &opts.test_dir_name
     };
-    let test_globs = build_test_globset(&patterns);
 
     let repo = crate::codebase::ts_resolver::normalize_path(root);
     let normalized_files: Vec<PathBuf> = files
@@ -92,6 +93,13 @@ pub(crate) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFi
         .collect();
     let mut findings = Vec::new();
     for spec in &opts.packages {
+        let patterns: Vec<&str> = spec
+            .test_file_patterns
+            .as_ref()
+            .map(|patterns| patterns.iter().map(String::as_str).collect())
+            .unwrap_or_else(|| patterns.clone());
+        let test_globs = build_test_globset(&patterns);
+        let test_dir = spec.test_dir_name.as_deref().unwrap_or(test_dir);
         let Some(spec_root) = contained_spec_root(&repo, &spec.root) else {
             continue;
         };

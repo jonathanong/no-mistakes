@@ -14,7 +14,7 @@ pub(super) fn scan(
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Vec<RuleFinding> {
-    if opts.source_file.is_empty() || opts.anchors.is_empty() {
+    if opts.source_file.is_empty() || opts.anchors.as_ref().is_none_or(Vec::is_empty) {
         return Vec::new();
     }
     let tracked = tracked_rels(root, files);
@@ -23,6 +23,7 @@ pub(super) fn scan(
     let remaining: Vec<&Anchor> = opts
         .anchors
         .iter()
+        .flatten()
         .filter(|anchor| !anchor.file.is_empty() && tracked.contains(configured_rel(&anchor.file)))
         .collect();
     if !source_tracked && remaining.is_empty() {

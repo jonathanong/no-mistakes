@@ -14,6 +14,7 @@ thread_local! {
 }
 
 mod domain;
+mod encoding;
 use domain::{banned_domain_needles, email_domain, message, normalize_domain};
 
 pub const RULE_ID: &str = "test-email-domain-policy";
@@ -26,11 +27,14 @@ const DEFAULT_EXTENSIONS: &[&str] = &[
 const EMAIL_PATTERN: &str = r"(?i)[a-z0-9._%+\$\{\}-]+@[a-z0-9.-]+\.[a-z]{2,}|[a-z0-9._%+\$\{\}-]+%40[a-z0-9.-]*(?:\.|%2e)[a-z0-9.%+-]+";
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct Options {
-    pub(crate) banned_domains: Vec<String>,
+    pub(crate) banned_domains: Option<Vec<String>>,
+    #[serde(default)]
     pub(crate) allowed_email_patterns: Vec<String>,
+    #[serde(default)]
     pub(crate) replacement: Option<String>,
+    #[serde(default)]
     pub(crate) extensions: Vec<String>,
 }
 
@@ -63,6 +67,10 @@ pub(crate) fn check_with_files_and_sources(
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
             let opts: Options = rule.try_rule_options()?;
+            anyhow::ensure!(
+                opts.banned_domains.is_some(),
+                "{RULE_ID}: bannedDomains is required"
+            );
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
             let files: Vec<PathBuf> = all_files
@@ -85,7 +93,7 @@ fn scan_with_sources(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    if opts.banned_domains.is_empty() {
+    if opts.banned_domains.as_ref().is_none_or(Vec::is_empty) {
         return Ok(Vec::new());
     }
     let compiled = compile_options(opts)?;
@@ -109,6 +117,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let banned_domains: HashSet<String> = opts
         .banned_domains
         .iter()
+        .flatten()
         .map(|domain| normalize_domain(domain))
         .collect();
     let domain_needles = banned_domain_needles(&banned_domains);
@@ -144,6 +153,7 @@ fn check_file_with_sources(
         return Vec::new();
     };
     if !opts.domain_needles.is_empty()
+        && !content.contains('&')
         && super::byte_prefilter::is_ascii(content.as_bytes())
         && !super::byte_prefilter::contains_any_ascii_ignore_case(
             content.as_bytes(),
@@ -159,11 +169,13 @@ fn check_file_with_sources(
 fn scan_email_lines(rel: &str, content: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     for (index, line) in content.lines().enumerate() {
-        for matched in opts.email.find_iter(line).map(|m| m.as_str()) {
+        let decoded = encoding::decode(line);
+        for found in opts.email.find_iter(&decoded.text) {
+            let matched = decoded.original(line, found.range());
             if opts.allowed.iter().any(|allowed| allowed.is_match(matched)) {
                 continue;
             }
-            let domain = email_domain(matched);
+            let domain = email_domain(found.as_str());
             if !opts.banned_domains.contains(&domain) {
                 continue;
             }

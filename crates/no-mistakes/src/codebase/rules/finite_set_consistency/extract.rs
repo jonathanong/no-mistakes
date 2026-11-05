@@ -5,6 +5,7 @@ pub(super) use super::markdown::extract_markdown_table_code_cells;
 use super::object::{const_object_body, top_level_object_keys, top_level_property_values};
 pub(super) use super::ts_array::{extract_ts_array_literal, extract_ts_const_array_property};
 use super::ts_union;
+#[cfg(test)]
 pub(super) use super::yaml::{extract_yaml_sequence, extract_yaml_string_selector};
 use super::SetSpec;
 use super::TS_CALL_FIRST_STRING_ARGUMENT;
@@ -87,8 +88,14 @@ pub(super) fn extract_set_with_sources(
                 "ts-const-array-property" => {
                     extract_ts_const_array_property(&source, &spec.target, &spec.property)
                 }
-                "yaml-sequence" => extract_yaml_sequence(&source, &spec.key),
-                "yaml-string-selector" => extract_yaml_string_selector(&source, &spec.key),
+                "yaml-sequence" | "yaml-string-selector" => {
+                    let value = sources.parse_yaml_path(path).map_err(|error| anyhow::anyhow!("finite set '{}': could not parse {} as YAML: {error}; repair the configured YAML source", spec.name, relative_slash_path(root, path)))?;
+                    if spec.kind == "yaml-sequence" {
+                        super::yaml::extract_yaml_sequence_value(&value, &spec.key)
+                    } else {
+                        super::yaml::extract_yaml_string_selector_value(&value, &spec.key)
+                    }
+                },
                 "markdown-table-code-cells" => extract_markdown_table_code_cells(&source),
                 "sql-enum" => extract_sql_enum(&source, &spec.target),
                 _ => BTreeSet::new(),

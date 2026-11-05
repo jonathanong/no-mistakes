@@ -41,6 +41,11 @@ Each `packages` entry supplies `root`, `sourceExtension`, `allowedRootFiles`,
 inputs rather than inferred defaults. Unlisted files or directories are
 findings when the corresponding allowlist is present.
 
+Per-package `testFilePatterns` and `testDirName` override the rule-wide options.
+Omitted fields inherit the rule-wide values; when those are omitted, the
+existing defaults remain `*.test.*` / `*.spec.*` and `__tests__`. An explicit
+empty per-package pattern list matches no test files.
+
 ## Valid example
 
 ```text

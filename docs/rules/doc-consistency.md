@@ -78,6 +78,10 @@ rules:
           message: "Move this pin to versions.md."
 ```
 
+Each `requiredSubstrings` entry checks its file independently of `requiredFiles`.
+A missing selected file is reported; `requiredHeading` applies only to
+`requiredFiles`. Common file filters retain their existing missing-file semantics.
+
 ## Valid example
 
 A matching document contains every required heading and text, none of the

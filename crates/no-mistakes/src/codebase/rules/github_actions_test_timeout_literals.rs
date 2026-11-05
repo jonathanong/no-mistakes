@@ -53,7 +53,7 @@ pub(crate) fn check_with_files_and_sources(
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let opts = compile_options(rule.try_rule_options()?);
+        let opts = compile_options(rule.try_rule_options()?)?;
         let target_roots = super::target_roots(root, config, rule);
         let skip = super::skip_dir_set(config);
         let files: Vec<PathBuf> = all_files
@@ -72,7 +72,13 @@ pub(crate) fn check_with_files_and_sources(
     Ok(findings)
 }
 
-fn compile_options(opts: Options) -> CompiledOptions {
+fn compile_options(opts: Options) -> Result<CompiledOptions> {
+    for (index, entry) in opts.allow.iter().enumerate() {
+        anyhow::ensure!(
+            !entry.file.trim().is_empty(),
+            "{RULE_ID}: allow[{index}].file is required and must not be empty"
+        );
+    }
     let include = if opts.include.is_empty() {
         DEFAULT_INCLUDE
             .iter()
@@ -81,7 +87,7 @@ fn compile_options(opts: Options) -> CompiledOptions {
     } else {
         opts.include
     };
-    CompiledOptions {
+    Ok(CompiledOptions {
         include,
         allow: opts
             .allow
@@ -93,7 +99,7 @@ fn compile_options(opts: Options) -> CompiledOptions {
                 )
             })
             .collect(),
-    }
+    })
 }
 
 fn scan_files(

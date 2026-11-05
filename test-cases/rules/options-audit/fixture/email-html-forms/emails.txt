@@ -1,0 +1,10 @@
+person&#64;example.com
+person&#x40;example.com
+person&commat;example&period;com
+person&#64;&#101;&#120;&#97;&#109;&#112;&#108;&#101;&#46;&#99;&#111;&#109;
+person&#x0040;&#x65;xample&#x2E;com
+person&#64;other.test
+allow&#64;example.com
+&copy; person&#64;example.com; person@example.com
+person&unknown;example.com
+person&#64;example.com &copy;

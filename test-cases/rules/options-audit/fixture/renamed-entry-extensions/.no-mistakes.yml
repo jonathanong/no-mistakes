@@ -1,0 +1,1 @@
+{"rules": [{"rule": "banned-renamed-files", "scope": "repository", "options": {"bannedBasenames": [{"name": "middleware", "message": "rename to proxy.ts", "extensions": [".ts"]}]}}]}

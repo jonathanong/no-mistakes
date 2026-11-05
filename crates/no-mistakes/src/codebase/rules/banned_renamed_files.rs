@@ -15,6 +15,8 @@ pub const RULE_ID: &str = "banned-renamed-files";
 #[serde(default, rename_all = "camelCase")]
 pub(crate) struct BannedBasename {
     pub(crate) name: String,
+    pub(crate) extensions: Option<Vec<String>>,
+    pub(crate) scope: Option<String>,
     pub(crate) message: String,
     /// Match `<name>` followed by one or more extension segments (e.g.
     /// `webpack.config.prod.js`), with the final extension still in `extensions`.
@@ -62,23 +64,30 @@ pub(crate) fn check_file(
 ) -> Vec<RuleFinding> {
     let rel = relative_slash_path(root, path);
 
-    if let Some(scope) = &opts.scope {
-        let scope = normalize_scope(scope);
-        if !scope.is_empty() {
-            let in_scope = rel == scope || rel.starts_with(&format!("{scope}/"));
-            if !in_scope {
-                return Vec::new();
-            }
-        }
-    }
-
     let Some(file_name) = path.file_name().and_then(|n| n.to_str()) else {
         return Vec::new();
     };
 
     compiled
         .iter()
-        .filter(|banned| matches(file_name, banned, &opts.extensions))
+        .filter(|banned| {
+            banned
+                .def
+                .scope
+                .as_deref()
+                .or(opts.scope.as_deref())
+                .is_none_or(|scope| {
+                    let scope = normalize_scope(scope);
+                    scope.is_empty() || rel == scope || rel.starts_with(&format!("{scope}/"))
+                })
+        })
+        .filter(|banned| {
+            matches(
+                file_name,
+                banned,
+                banned.def.extensions.as_deref().unwrap_or(&opts.extensions),
+            )
+        })
         .map(|banned| RuleFinding {
             rule: RULE_ID.to_string(),
             file: rel.clone(),
