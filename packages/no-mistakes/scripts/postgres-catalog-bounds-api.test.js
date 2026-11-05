@@ -39,7 +39,10 @@ test(
         "qualified-bare-tables.yml": ["table:a", "table:b"],
       };
       for (const target of relationTargets[config] || []) {
-        assert.ok(standalone.rules.some((finding) => finding.target === target), `${config}: ${target}`);
+        assert.ok(
+          standalone.rules.some((finding) => finding.target === target),
+          `${config}: ${target}`,
+        );
       }
       assert.deepEqual(await esm.check(options), standalone, config);
       const project = await cjs.analyzeProject({
