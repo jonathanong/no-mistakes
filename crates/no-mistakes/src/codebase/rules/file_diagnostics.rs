@@ -50,7 +50,7 @@ pub(crate) fn route_application(
     let mut diagnostics = AnalysisDiagnostics::default();
     for mut finding in findings {
         if finding.rule == super::allow_audit::RULE_ID {
-            diagnostics.advisories.push(finding);
+            diagnostics.findings.push(finding);
             continue;
         }
         if let Some(message) = &rule.message {

@@ -3,7 +3,7 @@ use super::*;
 // Output cases moved to cli_gha_snapshot_step_timeouts.
 
 #[test]
-fn removed_workflow_file_keeps_allow_audits_active() {
+fn removed_workflow_file_reports_duplicates_without_false_stale_entries() {
     let options = r#"
 allow:
   - step: ".github/workflows/deleted.yml#build#checkout"
@@ -12,7 +12,9 @@ allow:
     reason: "Duplicate former exception."
 "#;
     // `check` discovers ci.yml. An empty file list is not a CLI invocation.
-    assert_eq!(run_files("deleted-workflow", options, &[]).len(), 2);
+    let findings = run_files("deleted-workflow", options, &[]);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("duplicate"));
 }
 
 #[test]

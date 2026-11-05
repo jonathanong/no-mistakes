@@ -9,19 +9,14 @@ pub(crate) struct CheckedScope {
 
 impl CheckedScope {
     pub(crate) fn new(root: &Path, sources: Option<&SourceStore>, checked: &[PathBuf]) -> Self {
+        let root = crate::codebase::ts_resolver::normalize_path(root);
+        let relative = |path: &PathBuf| {
+            relative_slash_path(&root, &crate::codebase::ts_resolver::normalize_path(path))
+        };
         Self {
-            checked: checked
-                .iter()
-                .map(|path| relative_slash_path(root, path))
-                .collect(),
-            inventory: sources.map(|sources| {
-                sources
-                    .inventory()
-                    .paths()
-                    .iter()
-                    .map(|path| relative_slash_path(root, path))
-                    .collect()
-            }),
+            checked: checked.iter().map(relative).collect(),
+            inventory: sources
+                .map(|sources| sources.inventory().paths().iter().map(relative).collect()),
         }
     }
 

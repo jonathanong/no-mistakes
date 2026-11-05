@@ -25,7 +25,7 @@ fn fixture_root(subpath: &str) -> std::path::PathBuf {
 }
 
 #[test]
-fn pass_fixture_has_no_findings() {
+fn pass_fixture_has_only_unused_allow_advice() {
     let root = fixture_root("pass");
     let config_path = root.join(".no-mistakes.yml");
     let findings = check(
@@ -34,8 +34,10 @@ fn pass_fixture_has_no_findings() {
     )
     .unwrap();
     assert!(
-        findings.is_empty(),
-        "expected no findings, got: {findings:?}"
+        findings
+            .iter()
+            .all(|finding| finding.rule == "unused-allow-entry"),
+        "expected only advice, got: {findings:?}"
     );
 }
 
@@ -59,7 +61,8 @@ fn allowed_lockfile_passes() {
         "allowed: [pnpm-lock.yaml]\nbannedBasenames: [package-lock.json, yarn.lock]",
     );
     let findings = check(&root, &config).unwrap();
-    assert!(findings.is_empty());
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].rule, "unused-allow-entry");
 }
 
 #[test]

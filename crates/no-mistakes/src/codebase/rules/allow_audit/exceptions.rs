@@ -25,8 +25,13 @@ impl ExceptionAudit {
             universe: if selectors.is_empty() {
                 None
             } else {
-                super::super::selected_rule_files(root, config, rule, &sources.inventory().paths())
-                    .ok()
+                super::super::selected_rule_files(
+                    &crate::codebase::ts_resolver::normalize_path(root),
+                    config,
+                    rule,
+                    &sources.inventory().paths(),
+                )
+                .ok()
             },
             checked: dashmap::DashSet::new(),
         }
@@ -34,7 +39,8 @@ impl ExceptionAudit {
 
     pub(crate) fn checked(&self, path: &Path) {
         if !self.selectors.is_empty() {
-            self.checked.insert(path.to_path_buf());
+            self.checked
+                .insert(crate::codebase::ts_resolver::normalize_path(path));
         }
     }
 

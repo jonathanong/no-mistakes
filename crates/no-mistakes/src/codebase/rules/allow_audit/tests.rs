@@ -23,3 +23,13 @@ fn coverage_requires_every_matching_inventory_file() {
     assert!(full.glob("**/*"));
     assert!(!CheckedScope::new(root, None, &files).glob("**/*"));
 }
+
+#[test]
+fn lexical_roots_share_inventory_and_checked_identities() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/..");
+    let files = [root.join("Cargo.toml")];
+    let sources = super::super::source_store_for_files(&files);
+    let scope = CheckedScope::new(&root, Some(&sources), &files);
+    assert!(scope.exact("Cargo.toml"));
+    assert!(scope.glob("*.toml"));
+}

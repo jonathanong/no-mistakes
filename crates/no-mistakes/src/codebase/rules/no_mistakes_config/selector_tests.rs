@@ -15,7 +15,9 @@ fn run(config: &str) -> Vec<RuleFinding> {
 #[test]
 fn forbidden_selectors_preserve_existing_literal_bracket_files_and_directories() {
     let findings = run("literal-roots.yml");
-    assert!(findings.is_empty(), "{findings:?}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].rule, "unused-allow-entry");
+    assert_eq!(findings[0].target.as_deref(), Some("shared/testing/**"));
 }
 
 #[test]

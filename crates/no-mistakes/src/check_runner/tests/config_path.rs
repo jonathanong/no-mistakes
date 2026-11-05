@@ -38,7 +38,7 @@ fn auto_discovered_config_path_reaches_findings_and_suppressions() {
     assert_eq!(results.rules[0].file, ".no-mistakes.yaml");
     assert_eq!(
         results.rules[0].target.as_deref(),
-        Some("missing/tsconfig.json")
+        Some("app/tsconfig.json")
     );
     let direct = no_mistakes::codebase::rules::filesystem_dispatch::run_filesystem_rules(
         &fixture_root("auto-config-path"),
