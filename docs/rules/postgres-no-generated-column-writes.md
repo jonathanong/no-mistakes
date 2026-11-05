@@ -251,7 +251,9 @@ SQL files that themselves define schema (`CREATE` / `ALTER` / `DROP TABLE`) are
 matched statement by statement against the catalog as of that write, so an
 `INSERT` that precedes a later `DROP TABLE` or ordinary recreation is still
 checked against the generated definition. Other files (TypeScript, DML-only SQL)
-use the final catalog. `CREATE TABLE ... AS`, `LIKE`, `INHERITS`, and partition
-tables keep an unknown positional column order, so positional `INSERT` values are
+use the final catalog. DDL inside a `DO $$` body follows physical statement
+order even when the body and an outer write share a line. `CREATE TABLE ... AS`,
+`LIKE`, `INHERITS`, and partition tables keep an unknown positional column
+order, so positional `INSERT` values are
 not attributed to later `ALTER ... ADD COLUMN` generated columns. Quoted and
 unquoted column names that differ in case are distinct during `ALTER` replay.

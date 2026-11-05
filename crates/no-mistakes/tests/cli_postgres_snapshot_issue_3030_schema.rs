@@ -76,6 +76,16 @@ fn issue_3030_schema_proofs_snapshot() {
             "issue-3030-chronology",
         ),
         (
+            "generated_do_after_write",
+            "postgres-no-generated-column-writes",
+            "issue-3030-do-after-write",
+        ),
+        (
+            "generated_do_before_write",
+            "postgres-no-generated-column-writes",
+            "issue-3030-do-before-write",
+        ),
+        (
             "generated_quoted_trigger",
             "postgres-no-generated-column-writes",
             "issue-3030-quoted-trigger",

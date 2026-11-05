@@ -222,6 +222,40 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "generated_do_after_write": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.normalized",
+          "line": 1,
+          "message": "case.sql:1: do not write generated column `items.normalized`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "CREATE TABLE items(note text, normalized text GENERATED ALWAYS AS(lower(note)) STORED); UPDATE items SET normalized='manual'; DO $$ BEGIN DROP TABLE items; END $$;",
+          "target": "normalized"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "generated_do_before_write": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "generated_ordinary_positional": {
     "exitCode": 0,
     "report": {
