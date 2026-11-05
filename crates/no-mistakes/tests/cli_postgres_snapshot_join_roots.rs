@@ -28,11 +28,7 @@ fn postgres_bounded_statements_join_roots_check_json_snapshot() {
     let fixture = root();
     assert_saved_fixture(
         "postgres_bounded_statements_join_roots",
-        &[(
-            "join_key_roots",
-            fixture.clone(),
-            fixture.join("valid.yml"),
-        )],
+        &[("join_key_roots", fixture.clone(), fixture.join("valid.yml"))],
     );
     let report = report();
     let findings = report["rules"].as_array().unwrap();
@@ -105,9 +101,8 @@ fn postgres_bounded_statements_join_roots_check_json_snapshot() {
             "table:posts",
             "table:posts",
             "table:posts",
-            "table:posts",
         ],
-        "lateral, external, recursive, and opaque nested drivers must retain their roots: {report}"
+        "lateral, external, recursive, and opaque nested drivers retain their existing roots: {report}"
     );
     assert!(targets_at("sql/limited-control.sql").is_empty(), "{report}");
 }

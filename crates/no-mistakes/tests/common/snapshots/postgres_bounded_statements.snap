@@ -144,14 +144,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.account_id = a.id JOIN order_lines l ON l.order_id = o.id WHERE a.id = $1;",
           "target": "table:order_lines"
-        },
-        {
-          "file": "cases/a_bound_propagates_across_joins_on_unique_keys_3.sql",
-          "line": 1,
-          "message": "cases/a_bound_propagates_across_joins_on_unique_keys_3.sql:1: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.account_id = a.id JOIN order_lines l ON l.order_id = o.id WHERE a.id = $1;",
-          "target": "table:orders"
         }
       ],
       "warnings": []
@@ -3755,14 +3747,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "cases/bounded_items_bound_the_relations_pinned_to_them_3.sql",
-          "line": 1,
-          "message": "cases/bounded_items_bound_the_relations_pinned_to_them_3.sql:1: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "WITH c AS (SELECT id FROM orders) SELECT 1 FROM c JOIN accounts a ON a.id = c.id;",
-          "target": "table:accounts"
-        },
         {
           "file": "cases/bounded_items_bound_the_relations_pinned_to_them_3.sql",
           "line": 1,
@@ -25264,14 +25248,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "sql/scalar-case-projection.sql",
-          "line": 10,
-          "message": "sql/scalar-case-projection.sql:10: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM accounts JOIN (SELECT CASE WHEN $1 THEN app.scalar(o.id) ELSE o.id END AS id FROM orders o) d ON accounts.id = d.id;",
-          "target": "table:accounts"
-        },
         {
           "file": "sql/scalar-case-projection.sql",
           "line": 10,

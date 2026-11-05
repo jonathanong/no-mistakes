@@ -231,7 +231,7 @@ mod cli_postgres_snapshot_executor_recall;
 #[path = "cli_postgres_snapshot_function_locations.rs"]
 mod cli_postgres_snapshot_function_locations;
 
-#[path = "cli_postgres_snapshot_native_advice.rs"]
-mod cli_postgres_snapshot_native_advice;
 #[path = "cli_postgres_snapshot_join_roots.rs"]
 mod cli_postgres_snapshot_join_roots;
+#[path = "cli_postgres_snapshot_native_advice.rs"]
+mod cli_postgres_snapshot_native_advice;

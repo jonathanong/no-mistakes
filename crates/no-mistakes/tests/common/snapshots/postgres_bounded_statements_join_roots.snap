@@ -1,0 +1,250 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "join_key_roots": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/cte-derived-self.sql",
+          "line": 11,
+          "message": "sql/cte-derived-self.sql:11: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM (SELECT p.id, p.user_id FROM posts p) d",
+          "target": "table:posts"
+        },
+        {
+          "file": "sql/cte-derived-self.sql",
+          "line": 15,
+          "message": "sql/cte-derived-self.sql:15: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts p",
+          "target": "table:posts"
+        },
+        {
+          "file": "sql/cte-derived-self.sql",
+          "line": 3,
+          "message": "sql/cte-derived-self.sql:3: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts p",
+          "target": "table:posts"
+        },
+        {
+          "file": "sql/join-direction-controls.sql",
+          "line": 10,
+          "message": "sql/join-direction-controls.sql:10: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts p",
+          "target": "table:posts"
+        },
+        {
+          "file": "sql/join-direction-controls.sql",
+          "line": 11,
+          "message": "sql/join-direction-controls.sql:11: SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN users u ON u.id = p.user_id OR u.email = 'someone@example.test';",
+          "target": "table:users"
+        },
+        {
+          "file": "sql/join-direction-controls.sql",
+          "line": 14,
+          "message": "sql/join-direction-controls.sql:14: SELECT can return every row of genericitems; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM genericitems i",
+          "target": "table:genericitems"
+        },
+        {
+          "file": "sql/join-direction-controls.sql",
+          "line": 15,
+          "message": "sql/join-direction-controls.sql:15: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN posts p ON p.id = i.id;",
+          "target": "table:posts"
+        },
+        {
+          "file": "sql/join-direction-controls.sql",
+          "line": 3,
+          "message": "sql/join-direction-controls.sql:3: SELECT can return every row of genericitems; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "RIGHT JOIN genericitems i ON t.id = i.topic_id;",
+          "target": "table:genericitems"
+        },
+        {
+          "file": "sql/join-direction-controls.sql",
+          "line": 6,
+          "message": "sql/join-direction-controls.sql:6: SELECT can return every row of genericitems; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM genericitems i",
+          "target": "table:genericitems"
+        },
+        {
+          "file": "sql/join-direction-controls.sql",
+          "line": 7,
+          "message": "sql/join-direction-controls.sql:7: SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FULL JOIN topics t ON t.id = i.topic_id;",
+          "target": "table:topics"
+        },
+        {
+          "file": "sql/pk-left-inner-chain.sql",
+          "line": 10,
+          "message": "sql/pk-left-inner-chain.sql:10: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts p",
+          "target": "table:posts"
+        },
+        {
+          "file": "sql/pk-left-inner-chain.sql",
+          "line": 18,
+          "message": "sql/pk-left-inner-chain.sql:18: SELECT can return every row of genericitems; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM genericitems i",
+          "target": "table:genericitems"
+        },
+        {
+          "file": "sql/pk-left-inner-chain.sql",
+          "line": 2,
+          "message": "sql/pk-left-inner-chain.sql:2: SELECT can return every row of genericitems; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM genericitems i",
+          "target": "table:genericitems"
+        },
+        {
+          "file": "sql/pk-left-inner-chain.sql",
+          "line": 6,
+          "message": "sql/pk-left-inner-chain.sql:6: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts p",
+          "target": "table:posts"
+        },
+        {
+          "file": "sql/unique-composite.sql",
+          "line": 2,
+          "message": "sql/unique-composite.sql:2: SELECT can return every row of genericitems; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM genericitems i",
+          "target": "table:genericitems"
+        },
+        {
+          "file": "sql/unique-composite.sql",
+          "line": 6,
+          "message": "sql/unique-composite.sql:6: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts p",
+          "target": "table:posts"
+        },
+        {
+          "file": "sql/unproven-drivers.sql",
+          "line": 15,
+          "message": "sql/unproven-drivers.sql:15: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts p",
+          "target": "table:posts"
+        },
+        {
+          "file": "sql/unproven-drivers.sql",
+          "line": 2,
+          "message": "sql/unproven-drivers.sql:2: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts p",
+          "target": "table:posts"
+        },
+        {
+          "file": "sql/unproven-drivers.sql",
+          "line": 24,
+          "message": "sql/unproven-drivers.sql:24: SELECT can return every row of genericitems; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "CROSS JOIN genericitems i",
+          "target": "table:genericitems"
+        },
+        {
+          "file": "sql/unproven-drivers.sql",
+          "line": 6,
+          "message": "sql/unproven-drivers.sql:6: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts p",
+          "target": "table:posts"
+        },
+        {
+          "file": "sql/unproven-keys.sql",
+          "line": 10,
+          "message": "sql/unproven-keys.sql:10: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts p",
+          "target": "table:posts"
+        },
+        {
+          "file": "sql/unproven-keys.sql",
+          "line": 11,
+          "message": "sql/unproven-keys.sql:11: SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN users u ON u.id = coalesce(p.user_id, '00000000-0000-0000-0000-000000000000'::uuid);",
+          "target": "table:users"
+        },
+        {
+          "file": "sql/unproven-keys.sql",
+          "line": 14,
+          "message": "sql/unproven-keys.sql:14: SELECT can return every row of genericitems; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM genericitems i",
+          "target": "table:genericitems"
+        },
+        {
+          "file": "sql/unproven-keys.sql",
+          "line": 15,
+          "message": "sql/unproven-keys.sql:15: SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN users u ON u.email = i.email;",
+          "target": "table:users"
+        },
+        {
+          "file": "sql/unproven-keys.sql",
+          "line": 18,
+          "message": "sql/unproven-keys.sql:18: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts p",
+          "target": "table:posts"
+        },
+        {
+          "file": "sql/unproven-keys.sql",
+          "line": 2,
+          "message": "sql/unproven-keys.sql:2: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts p",
+          "target": "table:posts"
+        },
+        {
+          "file": "sql/unproven-keys.sql",
+          "line": 3,
+          "message": "sql/unproven-keys.sql:3: SELECT can return every row of genericitems; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN genericitems i ON i.tenant_id = p.tenant_id;",
+          "target": "table:genericitems"
+        },
+        {
+          "file": "sql/unproven-keys.sql",
+          "line": 6,
+          "message": "sql/unproven-keys.sql:6: SELECT can return every row of genericitems; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM genericitems i",
+          "target": "table:genericitems"
+        },
+        {
+          "file": "sql/unproven-keys.sql",
+          "line": 7,
+          "message": "sql/unproven-keys.sql:7: SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN users u ON u.email IS NOT DISTINCT FROM i.email;",
+          "target": "table:users"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

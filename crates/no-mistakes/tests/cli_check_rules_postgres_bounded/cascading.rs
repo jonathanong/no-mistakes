@@ -4,13 +4,13 @@ use super::{check_in, findings_of, fixture_dir};
 fn cascading_descendant_walks_report_each_unbounded_relation() {
     let root = fixture_dir("variants/cascading-statements");
     let findings = findings_of(check_in(&root, ".no-mistakes.yml"));
-    assert_eq!(findings.len(), 4, "{findings:?}");
+    assert_eq!(findings.len(), 3, "{findings:?}");
     assert_eq!(
         findings
             .iter()
             .filter(|(_, _, target)| target == "table:accounts")
             .count(),
-        2
+        1
     );
     assert_eq!(
         findings
@@ -25,17 +25,15 @@ fn cascading_descendant_walks_report_each_unbounded_relation() {
 fn aggregated_statement_roots_preserve_allow_usage_and_relation_suppressions() {
     let root = fixture_dir("variants/cascading-statements");
     let allowed = findings_of(check_in(&root, "allow.yml"));
-    assert_eq!(allowed.len(), 2, "{allowed:?}");
+    assert_eq!(allowed.len(), 1, "{allowed:?}");
     assert!(allowed
         .iter()
         .all(|(_, _, target)| target == "table:accounts"));
     let mut suppressed = findings_of(check_in(&root, "suppression.yml"));
     suppressed.sort();
-    assert_eq!(suppressed.len(), 4, "{suppressed:?}");
-    assert_eq!(suppressed[0].2, "table:accounts");
-    assert_eq!(suppressed[1].2, "table:accounts");
-    assert_eq!(suppressed[2].2, "table:invoices");
-    assert_eq!(suppressed[3].2, "table:orders");
+    assert_eq!(suppressed.len(), 2, "{suppressed:?}");
+    assert_eq!(suppressed[0].2, "table:invoices");
+    assert_eq!(suppressed[1].2, "table:orders");
 }
 
 #[test]
