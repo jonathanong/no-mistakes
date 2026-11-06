@@ -183,6 +183,12 @@ or disabled rule names separately. Set repository
 diagnostics. This works without `--include-suppressed`; see
 [suppression hygiene](../configuration/suppressions.md).
 
+Configured exceptions produce `unused-allow-entry` advice by default. Set
+repository `reportUnusedAllowEntries: report` to fail or `ignore` to omit it.
+The diagnostic retains its configuration entry location and selector. Narrowed,
+changed-file, and partial runs stay silent whenever the full selector scope
+was not checked. See [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
+
 Swift and C# source rules scan executable code only. Comments and string
 literals, including raw and multiline forms, do not create findings; code in a
 string interpolation remains executable and is checked at its source line.

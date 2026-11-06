@@ -31,3 +31,84 @@ fn stale_allow_entries_are_advisory_and_match_batched_check() {
     .unwrap();
     assert_eq!(batch["reports"][0]["result"], report);
 }
+
+#[test]
+fn unused_allow_policy_matches_batched_check() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/unused-allow-entries");
+    let mut canonical = None;
+    for policy in ["advise", "report", "ignore"] {
+        let config = root.join(format!("{policy}.yml"));
+        let report: Value = serde_json::from_str(
+            &check_json_impl(crate::napi_api::options::test_json_arg(
+                json!({"root": root, "config": config}).to_string(),
+            ))
+            .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(
+            report["rules"].as_array().unwrap().len(),
+            usize::from(policy == "report"),
+            "{report}"
+        );
+        assert_eq!(
+            report["advisories"].as_array().unwrap().len(),
+            usize::from(policy == "advise"),
+            "{report}"
+        );
+        if policy != "ignore" {
+            let channel = if policy == "report" {
+                "rules"
+            } else {
+                "advisories"
+            };
+            let mut finding = report[channel][0].clone();
+            finding.as_object_mut().unwrap().remove("file");
+            if let Some(expected) = &canonical {
+                assert_eq!(&finding, expected);
+            } else {
+                canonical = Some(finding);
+            }
+        }
+        let batch: Value = serde_json::from_str(
+            &crate::napi_api::analyze_project::analyze_project_json_impl(
+                crate::napi_api::options::test_json_arg(
+                    json!({"root": root, "config": config, "reports": [{"type": "check"}]})
+                        .to_string(),
+                ),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(batch["reports"][0]["result"], report);
+    }
+}
+
+#[test]
+fn unused_allow_policy_rejects_invalid_values() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/unused-allow-entries");
+    let error = check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({"root": root, "config": root.join("invalid.yml")}).to_string(),
+    ))
+    .unwrap_err()
+    .to_string();
+    assert!(error.contains("unsupported"), "{error}");
+}
+
+#[test]
+fn report_policy_respects_narrowed_scope_and_overrides_advisory_severity() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/unused-allow-entries");
+    for (config, count) in [("report-narrowed", 0), ("report-advisory", 1)] {
+        let report: Value = serde_json::from_str(
+            &check_json_impl(crate::napi_api::options::test_json_arg(
+                json!({"root": root, "config": root.join(format!("{config}.yml"))}).to_string(),
+            ))
+            .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(report["rules"].as_array().unwrap().len(), count, "{report}");
+        assert_eq!(report["advisories"], json!([]), "{report}");
+    }
+}

@@ -214,3 +214,19 @@ test("per-item query configuration exports optional capped cursor exemption", ()
     ),
   );
 });
+
+test("declared config exports its unused allow-entry policy", () => {
+  const declarations = readFileSync(join(packageRoot, "resolve-config-types.d.ts"), "utf8");
+  assert.match(
+    declarations,
+    /export type UnusedAllowEntryPolicy = "advise" \| "report" \| "ignore";/,
+  );
+  assert.match(
+    declarations,
+    /export interface DeclaredConfig extends DeclaredConfigObject \{[\s\S]*?reportUnusedAllowEntries\?: UnusedAllowEntryPolicy;/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export \* from "\.\/resolve-config-types";/,
+  );
+});

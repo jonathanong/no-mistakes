@@ -48,6 +48,7 @@ effects:
 effort: max
 unanalyzable: report
 reportUnusedDisableDirectives: advise
+reportUnusedAllowEntries: advise
 rules:
   - rule: unique-exports
     projects: [web]
@@ -92,6 +93,11 @@ step comparisons when the partner caps steps below the job deadline.
 comments naming unknown or disabled check rules produce non-failing advice.
 Use `report` to fail or `ignore` to omit it. See
 [suppression hygiene](suppressions.md) for locations, examples, and API parity.
+
+`reportUnusedAllowEntries` independently controls proven stale configured
+exceptions: `advise` (default) returns `unused-allow-entry` advice, `report`
+fails the check, and `ignore` omits those diagnostics. Incomplete selector
+coverage never establishes staleness. See [allow-entry hygiene](suppressions.md#allow-entry-hygiene).
 
 The top-level `frontendRoot`, `assertNoFetch`, and `reactTraits` fields are
 legacy compatibility settings for the standalone `react` command. Prefer

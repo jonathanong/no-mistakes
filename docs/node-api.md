@@ -99,6 +99,13 @@ no-mistakes disable comments using the selected configuration's
 IDs have distinct messages. `includeSuppressed` controls only the optional
 ledger of hidden findings. See [suppression hygiene](configuration/suppressions.md).
 
+Both APIs also honor repository `reportUnusedAllowEntries` for proven stale
+configured exceptions: `advise` (default) returns `unused-allow-entry` in
+`CheckReport.advisories`, `report` returns the same diagnostic in
+`CheckReport.rules`, and `ignore` omits it. The setting never expands analysis
+scope; incomplete selector coverage stays silent. The exported
+`UnusedAllowEntryPolicy` union names this policy in `DeclaredConfig`.
+
 `check(options)` and check reports in `analyzeProject()` accept the same
 `effort: "low" | "max"` option as CLI `--effort`. See
 [check options](node-api/check-verdicts.md) for precedence and fallback

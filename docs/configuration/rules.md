@@ -61,8 +61,8 @@ A demoted `unique-exports` finding is converted to a rule finding, so it loses
 its `exportName` and `exportKind` fields. Findings of the `react`, `queues`
 and `integration` sections are not demoted because those sections are enabled by
 project config, not by `rules:` entries, so there is no rule entry to carry a
-`severity`. Warnings and `reportUnusedDisableDirectives` diagnostics also keep
-their own failure policies.
+`severity`. Warnings, `reportUnusedDisableDirectives` diagnostics, and
+`reportUnusedAllowEntries` diagnostics also keep their own failure policies.
 
 The repository setting `reportUnusedDisableDirectives: advise | report | ignore`
 audits disable comments independently of rule applications. Its default is

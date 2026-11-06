@@ -166,4 +166,7 @@ Findings attach to the selected origin at line 1. For example, place
 in that origin file. A directive in the forbidden target does not suppress a
 finding attached to a production origin.
 
-Unused `exceptions[].allowedFiles` entries produce non-failing `unused-allow-entry` advisories only when all matching source roots and target files were checked with no graph parse failures. Overlapping exceptions are all credited when they suppress a forbidden dependency. Remove stale entries; narrowed scopes stay silent.
+Unused `exceptions[].allowedFiles` entries produce non-failing `unused-allow-entry` advisories by default only when all matching source roots and target files were checked with no graph parse failures. Overlapping exceptions are all credited when they suppress a forbidden dependency. Remove stale entries; narrowed scopes stay silent.
+
+Repository `reportUnusedAllowEntries: report` makes these diagnostics fail;
+`ignore` omits them. See [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

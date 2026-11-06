@@ -149,8 +149,11 @@ rules:
 [`package-json-workspace-coverage`](package-json-workspace-coverage.md)
 checks directory membership rather than field shape.
 
-Unused `unscopedNameExceptions` entries produce `unused-allow-entry` advisories
+Unused `unscopedNameExceptions` entries produce `unused-allow-entry` advisories by default
 when the complete relevant file scope was successfully checked. Remove stale
 entries. Every overlapping exception that suppresses a raw finding is used;
 matching text that would not violate the rule does not use an exception.
 Partial scopes and failed reads or parses do not prove an entry stale.
+
+Repository `reportUnusedAllowEntries: report` makes these diagnostics fail;
+`ignore` omits them. See [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

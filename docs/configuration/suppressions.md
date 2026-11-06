@@ -158,7 +158,7 @@ counts as used when its selector matches a finding before allow filtering.
 All overlapping entries matching that finding count as used; one entry does
 not become stale merely because an earlier entry also matches it.
 
-New stale diagnostics use `rule: "unused-allow-entry"` in `advisories`, with the
+Stale diagnostics use `rule: "unused-allow-entry"`, with the
 configuration file and entry line in `file` and `line`, the checked rule ID in
 `import`, and the selector in `target`. Entry lines refer to the authored
 sequence item under that rule option, even when an earlier rule has already
@@ -167,12 +167,25 @@ Remove an obsolete entry, or correct its selector if the exception is still
 needed. Reporting unused exceptions prevents obsolete intent from silently
 hiding future violations.
 
-These diagnostics are always non-failing advisories, matching the default
-unused-disable-directive precedent. `reportUnusedDisableDirectives` continues
-to configure comments only; it does not change allow-entry severity. Disable
-comments cannot suppress the new hygiene diagnostics. CLI `check`, async
-`check()`, and `analyzeProject()` check reports share this behavior and retain
-the existing report shape.
+Set the repository policy independently of disable-comment hygiene:
+
+```yaml
+reportUnusedAllowEntries: advise
+```
+
+| Value | Behavior |
+| --- | --- |
+| `advise` (default) | Return `unused-allow-entry` diagnostics as non-failing `advisories`. |
+| `report` | Return them in `rules`; CLI `check` exits nonzero. |
+| `ignore` | Omit `unused-allow-entry` diagnostics. |
+
+Changing the policy retains the same diagnostic message, file, line, rule,
+import, and target. `reportUnusedDisableDirectives` configures comments only.
+Disable comments and a rule application's advisory severity cannot demote or
+suppress these hygiene diagnostics. CLI `check`, async `check()`, and
+`analyzeProject()` check reports use the same policy and report shape.
+Established rule-specific stale findings described below keep their existing
+contracts; this setting controls only `unused-allow-entry` diagnostics.
 
 An entry is stale only when the run checked its entire relevant selector
 scope and none of those checks produced a matching finding. For a file glob,
@@ -214,3 +227,48 @@ Policy vocabularies such as allowed SQL types, accepted YAML keys, and permitted
 manifest fields define valid input rather than individual finding exceptions.
 They are not audited as suppressions. File and root exclusions continue to
 control analysis scope rather than becoming allow entries.
+
+### Coverage boundaries and deferred exception accounting
+
+The lists above describe implemented hygiene coverage, not every option whose
+name contains `allow`, `ignore`, or `exempt`. The following exception selectors
+do not currently produce `unused-allow-entry` diagnostics:
+
+| Rule | Option | Accounting still required |
+| --- | --- | --- |
+| `no-empty-or-comments-only-files` | `intentionallyEmpty` | Inspect the selected file before skipping it, count an exception only for empty or comment-only content, and withhold stale reports for missing, excluded, unreadable, or unsupported-extension files. |
+| `postgres-required-comments` | `exemptColumnNamePatterns` | Track every overlapping pattern against otherwise reportable missing comments in the complete applicable catalog. |
+| `postgres-column-naming` | `ignoreTablePatterns` | Evaluate otherwise applicable column policies before applying table exclusions, with complete catalog coverage. |
+| `postgres-finite-text-columns` | `ignoreTablePatterns` | Evaluate otherwise applicable finite-text findings before applying table exclusions, with complete catalog coverage. |
+| `postgres-object-naming` | `plural.ignorePatterns` | Track overlapping patterns against otherwise reportable pluralization findings in the complete applicable catalog. |
+| `postgres-sql-shape-policy` | `shapeOptions.keysetOnlySweep.ignoreTables` | Track table selectors against otherwise reportable full-table sweeps, requiring complete configured SQL and embedded-executor coverage; uncertain SQL cannot prove an entry stale. |
+
+These extensions are deferred rather than inferred from selector existence.
+They need rule-specific pre-filter finding accounting and saved regression
+fixtures for overlapping entries, partial runs, and analysis failures. The
+hygiene setting does not add that missing analysis or widen a run.
+
+Several other exception lists already have their own stale diagnostics:
+`postgres-no-add-column.allowedMigrations`,
+`postgres-fk-index.allowedColumns` and `allowedTables`,
+`postgres-redundant-index.allowedIndexes`,
+`postgres-required-predicates.partitionKeyExemptions`, and
+`postgres-column-naming.foreignKeys.requireForeignKey.exempt`. These retain
+their rule IDs, messages, locations, severity, and existing matching semantics;
+they do not also emit `unused-allow-entry`. Workflow topology's
+`unlockedWorkflowReasons` likewise has its own stale-reason check.
+
+Policy vocabularies are deliberately outside this audit. This includes
+`strict-package-layout.allowedRootFiles` and `allowedSubdirs`,
+`production-dependency-declarations.allowedFields`,
+`github-actions-composite-step-schema.allowedKeys`, PostgreSQL accepted column
+or array element types, `postgres-explicit-columns.allowWholeRowFunctions`,
+`postgres-object-naming.doubleUnderscore.allowPattern`,
+`postgres-sql-shape-policy.shapeOptions.literalLimit.allowedValues`, and
+`workflow-topology-policy.secretInventory.builtInExemptions`. They define
+valid layouts, fields, types, function forms, values, or platform-provided
+secret names, rather than individual finding exceptions. Secret inventory's
+`reportUnused` audits declared repository and environment secrets under its
+own contract; it does not audit built-in exemptions. Boolean policy switches,
+root/file exclusions, and include filters also remain outside allow-entry
+accounting.

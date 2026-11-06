@@ -1,0 +1,22 @@
+reportUnusedAllowEntries: ignore
+effects:
+  database:
+    functions: [read]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    exclude: [src/excluded.mts]
+    options:
+      effects: [database]
+      allow:
+        - {file: src/entry.mts, callee: read, line: 3}
+        - {file: src/entry.mts, callee: read}
+        - {file: src/entry.mts, callee: read, line: 900}
+        - {file: src/excluded.mts, callee: retired}
+        - {file: src/missing.mts, callee: retired}
+  - rule: query-reached-per-item
+    enabled: false
+    scope: repository
+    options:
+      effects: [database]
+      allow: [{file: src/entry.mts, callee: retired}]
