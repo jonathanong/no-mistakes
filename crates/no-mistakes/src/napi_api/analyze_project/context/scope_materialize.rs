@@ -19,15 +19,17 @@ impl PreparedScopePlan {
         // Config facts were prepared before the batch. Seed them before the
         // canonical graph so invalidation retains Playwright occurrences.
         self.traversal.seed_cached_program_facts(&self.configs);
-        let traversal_graph = self.traversal.graph_files();
         let graph_fact_files = graph_facts.graph_file_universe();
-        let incomplete_check_only = self
-            .options
-            .reports
-            .iter()
-            .all(|request| request.report_type == "check")
-            && graph_fact_files.iter().any(|file| graph_facts.ts.get(file).is_some_and(|facts| facts.ts.value_flow.incomplete_reason.is_some()));
-        let check_shares_traversal_graph_universe = !incomplete_check_only
+        let incomplete_value_flow = graph_fact_files.iter().any(|file| {
+            graph_facts.ts.get(file).is_some_and(|facts| {
+                facts.ts.value_flow.incomplete_reason.is_some()
+            })
+        });
+        if incomplete_value_flow {
+            self.traversal.use_graph_build_plan(graph_build_plan(&self.options)?);
+        }
+        let traversal_graph = self.traversal.graph_files();
+        let check_shares_traversal_graph_universe = !incomplete_value_flow
             && graph_fact_files.len() == traversal_graph.visible_len()
             && graph_fact_files
                 .iter()

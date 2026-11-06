@@ -59,7 +59,7 @@ The command is `no-mistakes check --root <clone> --config <config> --format json
 `099f69b44a21f5b88ef83db459f4504fe0ed3a20`; its frozen executable SHA-256 is
 `b1cde38589ec21cbf112046d5162af4cdc96fb5cfb525ff3dffedc93112463d1`.
 
-The candidate production source is `a27051bc7c0d91597bbdb33a9da50c47f905ef30`;
+The measured candidate source is `a27051bc7c0d91597bbdb33a9da50c47f905ef30`;
 its frozen executable SHA-256 is
 `a306b24ac9af6c8dc23e6a0871110f30ccc424bda938038630c37d473488264b`.
 The two jobs-4 samples per binary run in baseline/candidate/candidate/baseline
@@ -108,3 +108,9 @@ are Linux x64 only; macOS/Windows performance and a successful full Supabase
 analysis remain unverified. The temporary counter build uses LTO off and 16
 codegen units; its timings are diagnostic only and excluded from this release
 comparison.
+
+Mixed Node API requests isolate an incomplete check from import-only dependency
+and dependent reports. Their graph plan excludes check-only demand after
+exhaustion, while retaining the shared inventory, resolver, and collected facts.
+The check retains independent findings and incomplete entries in either report
+order. Reports that require the missing value flow still fail explicitly.

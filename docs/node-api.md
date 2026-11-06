@@ -84,7 +84,9 @@ source that fails to read or parse still names that consumer and input.
 Per-file foreign receiver work-budget exhaustion uses the same `incomplete`
 contract, with the affected file and an actionable message. `check()` and
 `analyzeProject()` discard partial value-flow facts and preserve independent
-source-check findings. Narrow `root` or simplify shared receiver mutations;
+source-check findings. Mixing a check with import-only dependency or dependent
+reports preserves each standalone result, including partial check findings.
+Narrow `root` or simplify shared receiver mutations;
 application `include`/`exclude` filters do not narrow the full graph evidence.
 Reverse-query diagnostics classify exhausted value flow as `operational-error`.
 Vitest config failures identify the config file and property (for example,

@@ -48,6 +48,40 @@ fn foreign_receiver_budget_failure_preserves_file_and_programmatic_parity() {
     .unwrap();
     let analyzed: serde_json::Value = serde_json::from_str(&analyzed).unwrap();
     assert_eq!(report, analyzed["reports"][0]["result"]);
+    let analyze = |reports: Vec<serde_json::Value>| {
+        let raw = crate::napi_api::analyze_project::analyze_project_json_impl(
+            crate::napi_api::options::test_json_arg(
+                json!({
+                    "root": root,
+                    "config": root.join("independent-config.yml"),
+                    "reports": reports
+                })
+                .to_string(),
+            ),
+        )
+        .unwrap();
+        serde_json::from_str::<serde_json::Value>(&raw).unwrap()
+    };
+    for report_type in ["dependencies", "dependents"] {
+        let imports = json!({
+            "type": report_type,
+            "files": ["src/providers.mts"],
+            "relationships": ["import"]
+        });
+        let standalone = analyze(vec![imports.clone()]);
+        for reports in [
+            vec![json!({"type": "check"}), imports.clone()],
+            vec![imports, json!({"type": "check"})],
+        ] {
+            let mixed = analyze(reports.clone());
+            let check_index = usize::from(reports[0]["type"] != "check");
+            assert_eq!(report, mixed["reports"][check_index]["result"]);
+            assert_eq!(
+                standalone["reports"][0]["result"],
+                mixed["reports"][1 - check_index]["result"]
+            );
+        }
+    }
     let failures = report["incomplete"].as_array().unwrap();
     assert!(
         failures.iter().any(|failure| {

@@ -1,4 +1,9 @@
 impl SharedTraversalContext {
+    pub(crate) fn use_graph_build_plan(&mut self, plan: graph::GraphBuildPlan) {
+        self.build_plan = plan;
+        self.invalidate_analysis_caches();
+    }
+
     pub(crate) fn ensure_facts(&mut self) {
         if crate::playwright::integration_routes::configured(&self.config)
             && self.facts.as_ref().is_none_or(|facts| facts.integration_route_links.is_empty())
