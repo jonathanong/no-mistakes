@@ -31,8 +31,9 @@ impl MemberArguments {
 
     pub(super) fn expand(
         &self,
-        references: &mut Vec<(nested::ReceiverWrite, Option<CallableId>, (u32, u32))>,
-    ) -> Vec<(nested::ReceiverWrite, Option<CallableId>, (u32, u32))> {
+        references: &mut nested::ForeignMemberReferences,
+        budget: &mut WorkBudget,
+    ) -> Option<nested::ForeignMemberReferences> {
         let (mut arguments, mut possible, mut visited) = (Vec::new(), Vec::new(), fx_set());
         let mut pending: Vec<_> = references
             .iter()
@@ -42,6 +43,7 @@ impl MemberArguments {
         while let Some(((receiver, reads, root_read), owner, interval, mut active, uncertain)) =
             pending.pop()
         {
+            budget.charge(1 + receiver.1.len() + active.len())?;
             let selected = self.origins.values_at(&receiver.0, root_read);
             let uncertain = uncertain || selected.uncertain;
             if (selected.values.is_none() && selected.possible.iter().all(Option::is_none))
@@ -68,9 +70,10 @@ impl MemberArguments {
                 (selected.possible[2], true),
             ] {
                 for value in values.into_iter().flatten() {
-                    let mut projected = Vec::new();
+                    let mut projected = budget.output();
                     nested::write_receiver_references(value, &receiver.1, &reads, &mut projected);
-                    for reference in projected {
+                    for reference in projected.finish()? {
+                        budget.charge(1 + active.len() + reference.0 .1.len())?;
                         let item = (reference, owner, interval);
                         let uncertain = uncertain || added;
                         pending.push((item.0.clone(), owner, interval, active.clone(), uncertain));
@@ -84,6 +87,6 @@ impl MemberArguments {
             }
         }
         references.extend(arguments);
-        possible
+        Some(possible)
     }
 }

@@ -408,6 +408,12 @@ through asynchronous Node `check()` and `analyzeProject()` check reports, return
 ordinary check findings/advisories. Node callers can name the exported
 `ProductionExportsOnlyUsedByTestsOptions` interface.
 
+Class ancestry exemptions also use prepared value-flow facts to resolve constructor
+aliases. If foreign receiver analysis exceeds its per-file work budget, this rule
+reports the affected files as `incomplete` and emits no definitive findings. Use a
+narrower analysis root or simplify shared receiver mutations. Import-only and
+extends-only graph queries remain available when their own inputs are complete.
+
 ## Related rules
 
 Use [`unique-exports`](unique-exports.md) for export-name uniqueness and

@@ -1,5 +1,10 @@
 use super::*;
 use std::collections::BTreeMap;
+#[path = "foreign_work_budget.rs"]
+mod budget;
+#[path = "foreign_projection_budget.rs"]
+mod projection_budget;
+pub(super) use budget::WorkBudget;
 #[path = "mutable_origin_data.rs"]
 mod data;
 #[path = "mutable_foreign_writes.rs"]
@@ -132,7 +137,7 @@ impl ReceiverBindingOrigins {
         &self,
         key: &(usize, String),
         coordinates: (&[Option<String>], &[nested::ReceiverRead], nested::RootRead),
-        output: &mut impl Extend<nested::ReceiverWrite<R>>,
+        output: &mut impl nested::ReceiverOutput<R>,
         foreign_before: usize,
         version: RootVersion,
         defer_module: bool,
@@ -163,6 +168,9 @@ impl ReceiverBindingOrigins {
         }
         // Arena links share alternatives without recursive traversal or drop.
         while let Some((id, foreign)) = pending.pop() {
+            if !output.active() {
+                break;
+            }
             #[cfg(feature = "test-instrumentation")]
             self.visits.set(self.visits.get() + 1);
             match &self.arena[id] {

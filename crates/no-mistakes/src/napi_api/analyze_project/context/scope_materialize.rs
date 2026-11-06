@@ -19,10 +19,32 @@ impl PreparedScopePlan {
         // Config facts were prepared before the batch. Seed them before the
         // canonical graph so invalidation retains Playwright occurrences.
         self.traversal.seed_cached_program_facts(&self.configs);
-        let traversal_graph = self.traversal.graph_files();
         let graph_fact_files = graph_facts.graph_file_universe();
-        let check_shares_traversal_graph_universe = graph_fact_files.len()
-            == traversal_graph.visible_len()
+        let incomplete_value_flow = graph_fact_files.iter().any(|file| {
+            graph_facts.ts.get(file).is_some_and(|facts| {
+                facts.ts.value_flow.incomplete_reason.is_some()
+            })
+        });
+        let partial_check_plan = incomplete_value_flow
+            .then(|| {
+                self.check.as_ref().and_then(|check| {
+                    crate::codebase::rules::forbidden_dependencies::eligible_partial_graph_plan(
+                        &check.prepared.config,
+                    )
+                })
+            })
+            .flatten();
+        if incomplete_value_flow {
+            let mut plan = graph_build_plan(&self.options)?;
+            if let Some(partial) = partial_check_plan {
+                plan.include(partial);
+            }
+            self.traversal.use_graph_build_plan(plan);
+        }
+        let traversal_graph = self.traversal.graph_files();
+        let check_shares_traversal_graph_universe = (!incomplete_value_flow
+            || partial_check_plan.is_some())
+            && graph_fact_files.len() == traversal_graph.visible_len()
             && graph_fact_files
                 .iter()
                 .all(|path| traversal_graph.contains_visible(path));
@@ -99,6 +121,26 @@ impl ScopeFactPlan {
             plan: self.plan.clone(),
             playwright: self.playwright.clone(),
             sources: std::sync::Arc::clone(&self.sources),
+        }
+    }
+}
+
+fn union_import_args(
+    existing: &mut crate::codebase::dependencies::TraverseArgs,
+    args: crate::codebase::dependencies::TraverseArgs,
+) {
+    existing.files.extend(args.files);
+    existing.file_symbols.extend(args.file_symbols);
+    existing.depth = match (existing.depth, args.depth) {
+        (Some(left), Some(right)) => Some(left.max(right)),
+        _ => None,
+    };
+    existing
+        .file_entrypoints_are_structured
+        .extend(args.file_entrypoints_are_structured);
+    for relationship in args.relationships {
+        if !existing.relationships.contains(&relationship) {
+            existing.relationships.push(relationship);
         }
     }
 }

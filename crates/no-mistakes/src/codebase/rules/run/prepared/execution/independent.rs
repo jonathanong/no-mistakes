@@ -48,8 +48,12 @@ pub(super) fn collect(req: IndependentRuleRequest<'_>) -> Result<RuleChunk> {
         with_observer(observer.clone(), || {
             with_timing_kind(TimingKind::Parallel, || {
                 if consumer == TEST_NO_UNMOCKED_DYNAMIC_IMPORTS
-                    && req.dependency_graph.is_none()
                     && !req.session.check_consumer_ready(consumer)
+                    && (req.dependency_graph.is_none()
+                        || matches!(
+                            req.session.check_prerequisite("codebase.canonical-graph"),
+                            Some(crate::codebase::check_outcome::Prerequisite::Failed(_))
+                        ))
                 {
                     return Ok(RuleChunk::from_findings(Vec::new()));
                 }

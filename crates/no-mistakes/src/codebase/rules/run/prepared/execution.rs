@@ -49,7 +49,7 @@ pub(super) fn run(
     let mut graph_plan = match try_canonical_graph_plan(config) {
         Ok(plan) => Prerequisite::Ready(plan),
         Err(error) if session.partial_checks_enabled() => {
-            outcomes::graph_failed(config, &session, &format!("{error:#}"));
+            outcomes::graph_failed(config, &session, &error);
             Prerequisite::Failed(session.check_failures())
         }
         Err(error) => return Err(error),
@@ -65,7 +65,7 @@ pub(super) fn run(
             let message =
                 "shared check facts are missing graph facts required by configured codebase rules";
             if session.partial_checks_enabled() {
-                outcomes::graph_failed(config, &session, message);
+                outcomes::graph_failed(config, &session, &anyhow::anyhow!(message));
                 graph_plan = Prerequisite::Failed(session.check_failures());
             } else {
                 anyhow::bail!("{message}");
@@ -76,6 +76,14 @@ pub(super) fn run(
         session.check_prerequisite("codebase.canonical-graph")
     {
         graph_plan = Prerequisite::Failed(failures);
+    }
+    if matches!(graph_plan, Prerequisite::Failed(_))
+        && session.partial_checks_enabled()
+        && session.check_consumer_ready(FORBIDDEN_DEPENDENCIES)
+    {
+        if let Some(plan) = forbidden_dependencies::eligible_partial_graph_plan(config) {
+            graph_plan = Prerequisite::Ready(Some(plan));
+        }
     }
     let owned_graph;
     let dependency_graph = if matches!(graph_plan, Prerequisite::Failed(_)) {
@@ -117,7 +125,7 @@ pub(super) fn run(
         match owned_graph {
             Ok(ref graph) => Some(graph),
             Err(error) if session.partial_checks_enabled() => {
-                outcomes::graph_failed(config, &session, &format!("{error:#}"));
+                outcomes::graph_failed(config, &session, &error);
                 None
             }
             Err(error) => return Err(error),

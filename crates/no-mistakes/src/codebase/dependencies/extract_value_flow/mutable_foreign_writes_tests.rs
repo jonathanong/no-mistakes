@@ -135,3 +135,13 @@ fn foreign_callable_captures_keep_writer_ownership_and_share_provider_work() {
         "the physical mutation owner is the nested closure"
     );
 }
+
+impl ForeignReceiverWrites {
+    pub(in super::super::super) fn finishing_with(work: WorkBudget) -> Self {
+        Self {
+            work,
+            finishing: true,
+            ..Default::default()
+        }
+    }
+}

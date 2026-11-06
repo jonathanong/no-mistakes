@@ -92,6 +92,7 @@ impl ImportCollector {
     }
 
     pub(in super::super) fn finish_forward_receiver_writes(&mut self) {
+        self.begin_receiver_finalization();
         // Final aliases own argument recipients before either writer channel replays.
         self.finish_possible_arguments();
         let Some(mut work) = self.forward_receiver_writes.take() else {
@@ -104,6 +105,9 @@ impl ImportCollector {
         let mut alias_index = None;
         let mut parameter_arguments = None;
         for mut writer in writers {
+            if self.charge_foreign_work(writer.sources.len() + 1).is_none() {
+                break;
+            }
             writer
                 .sources
                 .retain(|((((scope, name), _), _, _), _, _, _)| {
@@ -133,13 +137,22 @@ impl ImportCollector {
                     parameter_arguments.get_or_insert_with(|| self.parameter_call_origins());
                 let mut definite_sources = Vec::new();
                 for source in writer.sources {
-                    let (definite, possible) = parameter_arguments::expand(arguments, source);
+                    let Some((definite, possible)) = parameter_arguments::expand(
+                        arguments,
+                        source,
+                        &mut self.foreign_receiver_writes.as_mut().unwrap().work,
+                    ) else {
+                        return;
+                    };
                     definite_sources.extend(definite);
                     possible_sources.extend(possible);
                 }
                 writer.sources = definite_sources;
             }
             self.replay_forward_write(&mut writer, possible_sources, &mut alias_index);
+            if self.foreign_work_exhausted() {
+                break;
+            }
         }
     }
 }

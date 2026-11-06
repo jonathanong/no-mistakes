@@ -130,7 +130,7 @@ impl ImportCollector {
         &self,
         key: &(usize, String),
         coordinates: (&[Option<String>], &[nested::ReceiverRead], nested::RootRead),
-        output: &mut impl Extend<nested::ReceiverWrite<R>>,
+        output: &mut impl nested::ReceiverOutput<R>,
         foreign_before: usize,
         version: mutable_origins::RootVersion,
         writer: Option<CallableId>,

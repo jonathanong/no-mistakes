@@ -7,7 +7,7 @@ impl PreparedScope {
             .options
             .reports
             .iter()
-        .filter(|request| super::is_playwright_report(&request.report_type))
+            .filter(|request| super::is_playwright_report(&request.report_type))
         {
             let raw = playwright_options(request, &self.options)?;
             let options: PlaywrightOptions = serde_json::from_str(&raw)?;
@@ -33,6 +33,9 @@ impl PreparedScope {
     }
 
     fn prewarm_graph_for_report(&self, request: &AnalyzeReportRequest) -> Result<()> {
+        if request.report_type == "check" && !self.check_uses_traversal_graph {
+            return Ok(());
+        }
         match super::graph_direction(&request.report_type) {
             Some(direction) => {
                 let args = super::traverse_args(request, &self.options)?;
@@ -185,24 +188,4 @@ fn classify_import_seed_requests(options: &AnalyzeProjectOptions) -> Result<Impo
         }
     }
     Ok(plan)
-}
-
-fn union_import_args(
-    existing: &mut crate::codebase::dependencies::TraverseArgs,
-    args: crate::codebase::dependencies::TraverseArgs,
-) {
-    existing.files.extend(args.files);
-    existing.file_symbols.extend(args.file_symbols);
-    existing.depth = match (existing.depth, args.depth) {
-        (Some(left), Some(right)) => Some(left.max(right)),
-        _ => None,
-    };
-    existing
-        .file_entrypoints_are_structured
-        .extend(args.file_entrypoints_are_structured);
-    for relationship in args.relationships {
-        if !existing.relationships.contains(&relationship) {
-            existing.relationships.push(relationship);
-        }
-    }
 }

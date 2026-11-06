@@ -37,6 +37,9 @@ impl ImportCollector {
                 &mut affected,
             );
             self.receiver_escapes.projecting_possible = previous;
+            if self.foreign_work_exhausted() {
+                return;
+            }
             if !possible {
                 let aliases = aliases.get_or_insert_with(|| self.prepare_mutation_alias_index());
                 self.invalidate_mutation_bindings_indexed(

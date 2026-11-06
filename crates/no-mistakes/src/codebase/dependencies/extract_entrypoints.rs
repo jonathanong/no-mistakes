@@ -79,8 +79,7 @@ fn extract_import_facts_with_rhs_probe(
     collector.materialize_deferred_simple_aliases();
     collector.finish_forward_receiver_writes();
     collector.finish_foreign_receiver_writes();
-    collector.finish_default_mutations();
-    finish_callable_assignment_facts(&mut collector);
+    collector.finish_bounded_value_flow();
 
     let reassigned_callable_ids = collector
         .reassigned_callable_binding_ids

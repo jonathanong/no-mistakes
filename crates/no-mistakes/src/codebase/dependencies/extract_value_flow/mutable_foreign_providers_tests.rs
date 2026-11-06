@@ -32,10 +32,18 @@ fn foreign_two_latest_distinct_owners_answer_every_suffix_query() {
 #[test]
 fn foreign_provider_index_without_a_retained_root_is_empty() {
     let origins = ReceiverBindingOrigins::default();
-    let index = origins.foreign_provider_index(&(0, "missing".into()), &[], Vec::new());
+    let index = origins
+        .foreign_provider_index(
+            &(0, "missing".into()),
+            &[],
+            Vec::new(),
+            &mut WorkBudget::default(),
+        )
+        .unwrap();
     assert!(index.references(Some(CallableId(0)), 0).is_empty());
     assert!(origins
-        .module_provider_index(&(0, "missing".into()), &[])
+        .module_provider_index(&(0, "missing".into()), &[], &mut WorkBudget::default())
+        .unwrap()
         .is_empty());
 }
 
@@ -47,11 +55,14 @@ fn callable_member_providers_are_available_without_a_root_rebinding() {
         vec![Some((9, Some(CallableId(1))))],
         (9, Some(CallableId(1))),
     );
-    let index = origins.foreign_provider_index(
-        &(0, "missing".into()),
-        &[],
-        vec![(reference, Some(CallableId(1)), (0, u32::MAX))],
-    );
+    let index = origins
+        .foreign_provider_index(
+            &(0, "missing".into()),
+            &[],
+            vec![(reference, Some(CallableId(1)), (0, u32::MAX))],
+            &mut WorkBudget::default(),
+        )
+        .unwrap();
     let selected = index.references(None, usize::MAX);
     assert_eq!(selected.len(), 1);
     assert_eq!(selected[0].1, vec![None]);

@@ -34,6 +34,9 @@ pub(super) struct ForeignProviderIndex {
         Vec<(nested::ReceiverWrite, std::sync::Arc<ModuleProviderTarget>)>,
 }
 impl ForeignProviderIndex {
+    pub(super) fn reference_count(&self) -> usize {
+        self.references.len()
+    }
     pub(super) fn references(
         &self,
         writer: Option<CallableId>,
@@ -59,8 +62,9 @@ impl ReceiverBindingOrigins {
         &self,
         key: &(usize, String),
         path: &[Option<String>],
-        member_references: Vec<(nested::ReceiverWrite, Option<CallableId>, (u32, u32))>,
-    ) -> ForeignProviderIndex {
+        member_references: nested::ForeignMemberReferences,
+        budget: &mut WorkBudget,
+    ) -> Option<ForeignProviderIndex> {
         let root = self.roots.get(&key.0).and_then(|names| names.get(&key.1));
         let reads = vec![None; path.len()];
         let mut indexed = fx_map();
@@ -84,7 +88,8 @@ impl ReceiverBindingOrigins {
             for id in states.possible.before(usize::MAX) {
                 #[cfg(feature = "test-instrumentation")]
                 foreign::count(2, 1);
-                let mut references = Vec::new();
+                budget.charge(1)?;
+                let mut references = budget.output();
                 match &self.arena[id] {
                     Origin::Value(value) => {
                         nested::write_receiver_references(value, path, &reads, &mut references)
@@ -94,14 +99,15 @@ impl ReceiverBindingOrigins {
                     }
                     Origin::Either(..) => unreachable!("possible origins contain leaves only"),
                 }
-                for reference in references {
+                for reference in references.finish()? {
                     insert(reference, id, *owner);
                 }
             }
         }
-        let mut module_references = self.module_provider_index(key, path);
+        let mut module_references = self.module_provider_index(key, path, budget)?;
         // Callable stores are summaries; module stores retain execution intervals.
         for (reference, owner, interval) in member_references {
+            budget.charge(1)?;
             if let Some(owner) = owner {
                 insert(reference, usize::MAX, owner);
             } else {
@@ -118,10 +124,10 @@ impl ReceiverBindingOrigins {
         references.sort_by(|(left, _), (right, _)| left.cmp(right));
         #[cfg(feature = "test-instrumentation")]
         foreign::count(3, references.len());
-        ForeignProviderIndex {
+        Some(ForeignProviderIndex {
             references,
             module_references,
-        }
+        })
     }
 }
 

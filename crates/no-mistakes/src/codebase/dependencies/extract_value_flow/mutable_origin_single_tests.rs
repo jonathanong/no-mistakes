@@ -1,6 +1,29 @@
 use super::*;
 
 #[test]
+fn compact_projection_cancels_before_resolving_the_saved_field() {
+    struct Cancelled;
+    impl Extend<nested::ReceiverWrite> for Cancelled {
+        fn extend<I: IntoIterator<Item = nested::ReceiverWrite>>(&mut self, _: I) {
+            panic!("cancelled projection must not construct or append references");
+        }
+    }
+    impl nested::ReceiverOutput<nested::RootRead> for Cancelled {
+        fn visit(&mut self) -> bool {
+            false
+        }
+    }
+    let mut origins = ReceiverBindingOrigins::default();
+    let value = origins.single_named_field("field", "source", Some(0), (1, None));
+    origins.append_single::<nested::RootRead>(
+        &value,
+        &[Some("field".into())],
+        &[None],
+        &mut Cancelled,
+    );
+}
+
+#[test]
 fn compact_leaf_does_not_grow_the_origin_arena() {
     // This is the exact old arena shape, retained only as a layout oracle.
     enum LegacyOrigin {

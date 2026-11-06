@@ -2,6 +2,8 @@
 /// prepared catalog and never reparses a factory or helper body.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ValueFlowFacts {
+    /// Failed analysis must not supply definitive value-flow or graph answers.
+    pub incomplete_reason: Option<String>,
     #[cfg(feature = "test-instrumentation")]
     pub module_provider_work: [usize; 3],
     /// Prepared nullish expressions can add known plain-name fallback effects.

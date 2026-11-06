@@ -9,7 +9,7 @@ pub(super) use eligibility::MutationInfo;
 #[path = "mutation_projection_differential_tests.rs"]
 mod differential_tests;
 #[path = "mutation_pending.rs"]
-mod pending_work;
+pub(super) mod pending_work;
 #[path = "mutation_pending_queue.rs"]
 mod queue;
 pub(super) use queue::{PendingMutation, Queue as PendingQueue};

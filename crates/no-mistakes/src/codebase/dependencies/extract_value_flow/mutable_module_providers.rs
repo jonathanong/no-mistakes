@@ -6,12 +6,13 @@ impl ReceiverBindingOrigins {
         &self,
         key: &(usize, String),
         path: &[Option<String>],
-    ) -> Vec<(nested::ReceiverWrite, Arc<ModuleProviderTarget>)> {
+        budget: &mut WorkBudget,
+    ) -> Option<Vec<(nested::ReceiverWrite, Arc<ModuleProviderTarget>)>> {
         let Some(root) = self.roots.get(&key.0).and_then(|names| names.get(&key.1)) else {
-            return Vec::new();
+            return Some(Vec::new());
         };
         let Some(states) = root.owners.get(&None) else {
-            return Vec::new();
+            return Some(Vec::new());
         };
         let uncertain = root.patterns.is_some() || states.snapshots.unordered();
         #[cfg(feature = "test-instrumentation")]
@@ -23,13 +24,14 @@ impl ReceiverBindingOrigins {
         let mut targets = fx_map();
         let reads = vec![None; path.len()];
         let mut append = |id, start, end| {
+            budget.charge(1)?;
             #[cfg(feature = "test-instrumentation")]
             self.module_work.set([
                 self.module_work.get()[0],
                 self.module_work.get()[1] + 1,
                 self.module_work.get()[2],
             ]);
-            let mut references = Vec::new();
+            let mut references = budget.output();
             match &self.arena[id] {
                 Origin::Value(value) => {
                     nested::write_receiver_references(value, path, &reads, &mut references)
@@ -37,9 +39,9 @@ impl ReceiverBindingOrigins {
                 Origin::SingleNamedField(value) => {
                     self.append_single(value, path, &reads, &mut references)
                 }
-                Origin::Either(..) => return,
+                Origin::Either(..) => return Some(()),
             }
-            for (receiver, mut reads, mut read) in references {
+            for (receiver, mut reads, mut read) in references.finish()? {
                 if !self.contains(receiver.0 .0, &receiver.0 .1) {
                     reads.fill(None);
                     read = (0, None);
@@ -49,22 +51,27 @@ impl ReceiverBindingOrigins {
                 target.uncertain = uncertain;
                 target.intervals.push((start, end));
             }
+            Some(())
         };
         if uncertain {
             for id in states.possible.before(usize::MAX) {
-                append(id, 0, u32::MAX);
+                append(id, 0, u32::MAX)?;
             }
         } else {
             let mut end = u32::MAX;
             states
                 .snapshots
-                .reversed(|start, selected| match &self.arena[selected] {
+                .try_reversed(|start, selected| match &self.arena[selected] {
                     Origin::Either(_, leaf) => append(*leaf, start, end),
                     _ => {
-                        append(selected, start, end);
+                        append(selected, start, end)?;
                         end = start;
+                        Some(())
                     }
-                });
+                })?;
+        }
+        if budget.exhausted() {
+            return None;
         }
         let mut indexed: Vec<_> = targets
             .into_iter()
@@ -80,6 +87,6 @@ impl ReceiverBindingOrigins {
             self.module_work.get()[1],
             self.module_work.get()[2] + indexed.len(),
         ]);
-        indexed
+        Some(indexed)
     }
 }

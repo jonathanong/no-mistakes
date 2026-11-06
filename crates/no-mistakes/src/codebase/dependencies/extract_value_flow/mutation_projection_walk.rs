@@ -14,6 +14,7 @@ impl ImportCollector {
         while let Some((((key, path), reads, root_read), exiting, remember, propagated)) =
             pending.pop()
         {
+            if self.charge_foreign_work(1 + path.len() + reads.len()).is_none() { return; }
             if exiting {
                 self.finish_projected_receiver(&mut traversal, &key, root_read, propagated);
                 continue;
@@ -64,6 +65,7 @@ impl ImportCollector {
             {
                 self.value_flow.reference_successor_bookkeeping += 1;
             }
+            if self.charge_foreign_link_work(&key, path.len() + reads.len()).is_none() { return; }
             let mut assigned_origin = if self.projected_rhs_admitted::<RHS>() {
                 let canonical = self.assignment_rhs_parent_identities(&key, &path, &reads, version);
                 self.prior_member_mutations
@@ -104,7 +106,6 @@ impl ImportCollector {
                 {
                     self.value_flow.reference_link_visits += 1;
                 }
-                // Reserve the slot occupied by the old early exit marker.
                 pending.reserve(2);
                 pending.push((
                     ((target.clone(), path.to_vec()), reads.clone(), root_read),
@@ -113,8 +114,7 @@ impl ImportCollector {
                     propagated,
                 ));
             }
-            let mut references =
-                reference_output::ReferenceOutput::<nested::ReceiverWrite<R>>::default();
+            let mut references = self.bounded_receiver_output::<R>();
             if let Some(selection) = &assigned_origin {
                 selection.append_references(&path, &reads, &mut references);
             }
@@ -182,16 +182,14 @@ impl ImportCollector {
                     );
                 }
             }
-            #[cfg(feature = "test-instrumentation")]
-            references.record_counts(&mut self.value_flow);
-            pending_work::append(
+            if !self.append_bounded_mutation(
                 &mut pending,
                 exit_position,
                 key,
                 root_read,
                 assigned_exit,
                 references,
-            );
+            ) { return; }
         }
         #[cfg(feature = "test-instrumentation")]
         self.record_projection_counts::<R>(traversal, binding_visits, pending.capacity());

@@ -1,6 +1,6 @@
 use super::*;
 
-pub(super) fn append<R: nested::RootCoordinate>(
+pub(in super::super) fn append<R: nested::RootCoordinate>(
     pending: &mut super::queue::Queue<PendingMutation<R>>,
     exit_position: usize,
     key: (usize, String),

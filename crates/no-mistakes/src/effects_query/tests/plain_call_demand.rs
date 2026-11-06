@@ -57,10 +57,11 @@ fn plain_names_need_calls_for_any_prepared_replacement_or_incomplete_file() {
         TsFactPlan::default(),
     );
     assert!(needs_effect_call_graph(&selection, &files, &missing));
-    for failure in ["operational", "parse", "fatal"] {
+    for failure in ["operational", "parse", "fatal", "value-flow"] {
         let mut facts = clean();
         let file = facts.get_mut(&writer).unwrap();
         match failure {
+            "value-flow" => file.value_flow.incomplete_reason = Some("work budget".into()),
             "operational" => file.operational_error = Some("failed read".into()),
             "parse" => file.parse_error = Some("partial syntax".into()),
             _ => file.fatal_parse_error = true,

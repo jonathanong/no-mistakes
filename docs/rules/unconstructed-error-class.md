@@ -519,3 +519,10 @@ Reflection and some alias forms can still hide a dead class.
 `unconstructed-error-class` covers exported names that can never be produced.
 [`forbidden-calls`](forbidden-calls.md) uses the same call graph to ban
 invocations rather than require them.
+
+Large branching receiver-provider histories can exceed the per-file value-flow
+work budget. The check then reports the file as `incomplete`, with a reason and
+repair hint, and emits no definitive findings from the incomplete graph. Use a
+narrower analysis root that omits generated assets or simplify shared receiver
+mutations. Rule include/exclude filters do not remove full-graph evidence.
+See [check prerequisites](../cli/check.md).
