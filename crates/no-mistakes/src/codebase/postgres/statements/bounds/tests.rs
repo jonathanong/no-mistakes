@@ -334,7 +334,7 @@ fn an_interpolation_recovered_from_a_template_is_a_bind() {
     );
     assert_eq!(
         shape("SELECT 1 FROM a JOIN b ON b.a_id = a.id WHERE a.id = sql_placeholder_1 AND b.k IN (sql_placeholder_2, 3)"),
-        ["select: a[id=#1 id=value] b[a_id=#0 k=value]"]
+        ["select: a[id=#1 id=value] b[a_id=#0 k=value a_id=value]"]
     );
     // A bind never names a column of the item it is compared with.
     assert_eq!(
