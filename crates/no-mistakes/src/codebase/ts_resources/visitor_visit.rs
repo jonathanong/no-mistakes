@@ -4,8 +4,8 @@ use oxc_ast::ast::{
     ArrowFunctionExpression, AssignmentExpression, BlockStatement, CatchClause, Class,
     ExportDefaultDeclaration, ForInStatement, ForOfStatement, ForStatement, ForStatementInit,
     ForStatementLeft, Function, ImportDeclaration, MethodDefinition, ObjectProperty,
-    PropertyDefinition, SwitchStatement, VariableDeclaration, VariableDeclarationKind,
-    VariableDeclarator,
+    PropertyDefinition, SwitchStatement, TSModuleBlock, VariableDeclaration,
+    VariableDeclarationKind, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 
@@ -77,6 +77,16 @@ impl<'a> Visit<'a> for ResourceVisitor<'a> {
         self.push_lexical_scope();
         self.predeclare_statement_bindings(&block.body);
         walk::walk_block_statement(self, block);
+        self.pop_lexical_scope();
+    }
+
+    fn visit_ts_module_block(&mut self, block: &TSModuleBlock<'a>) {
+        self.push_lexical_scope();
+        self.function_binding_scopes.push(self.bindings.len() - 1);
+        self.predeclare_statement_bindings(&block.body);
+        self.predeclare_var_bindings_in_statements(&block.body);
+        walk::walk_ts_module_block(self, block);
+        self.function_binding_scopes.pop();
         self.pop_lexical_scope();
     }
 

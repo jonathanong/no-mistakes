@@ -65,4 +65,5 @@ impl<'a> Visit<'a> for VarNames {
     fn visit_function(&mut self, _: &Function<'a>, _: ScopeFlags) {}
     fn visit_arrow_function_expression(&mut self, _: &ArrowFunctionExpression<'a>) {}
     fn visit_class(&mut self, _: &Class<'a>) {}
+    fn visit_ts_module_block(&mut self, _: &oxc_ast::ast::TSModuleBlock<'a>) {}
 }

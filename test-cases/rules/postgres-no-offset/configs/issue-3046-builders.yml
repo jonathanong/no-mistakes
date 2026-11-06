@@ -1,0 +1,9 @@
+effort: max
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      importSpecifier: pg
+      trustedSqlTags:
+        - { module: pg, name: sql }
+      unanalyzableSql: fail

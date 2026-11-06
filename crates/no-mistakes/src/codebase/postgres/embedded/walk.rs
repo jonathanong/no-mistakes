@@ -37,10 +37,10 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_block_statement(&mut self, block: &ast::BlockStatement<'a>) {
-        self.push_scope();
-        resolve::record_statements(&block.body, self);
-        walk::walk_block_statement(self, block);
-        self.pop_scope();
+        self.walk_block_scope(block);
+    }
+    fn visit_ts_module_block(&mut self, block: &ast::TSModuleBlock<'a>) {
+        self.walk_namespace_scope(block);
     }
 
     fn visit_catch_clause(&mut self, clause: &oxc_ast::ast::CatchClause<'a>) {
