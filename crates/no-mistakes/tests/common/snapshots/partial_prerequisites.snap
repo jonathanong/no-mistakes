@@ -158,6 +158,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "partial-vitest": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "test-no-unmocked-dynamic-imports",
+          "file": "vitest.config.ts",
+          "message": "vitest.config.ts:1: test.include: expected string literal or string array for include",
+          "property": "test.include"
+        },
+        {
+          "consumer": "vitest-ci-path-coverage",
+          "file": "vitest.config.ts",
+          "message": "vitest.config.ts:1: test.include: expected string literal or string array for include",
+          "property": "test.include"
+        },
+        {
+          "consumer": "vitest-project-mapping",
+          "file": "vitest.config.ts",
+          "message": "vitest.config.ts:1: test.include: expected string literal or string array for include",
+          "property": "test.include"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "empty.ts",
+          "line": 1,
+          "message": "file is empty",
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": ""
+        }
+      ],
+      "warnings": []
+    }
+  },
   "sql-helper-prerequisite": {
     "exitCode": 1,
     "report": {
