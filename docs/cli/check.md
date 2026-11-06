@@ -171,7 +171,8 @@ Value-flow extraction bounds foreign receiver finalization to 100,000 work units
 per file, including retained paths, provider scans, argument expansion, and replay.
 If a file exceeds that budget, dependent graph checks are `incomplete`; each
 exhausted file is named with the reason and a repair hint. Partial value-flow
-facts cannot prove findings. Independent source checks still run. Analyze a
+facts cannot prove findings. Independent source checks and `forbidden-dependencies`
+checks configured only for import relationships still run using complete prepared facts. Analyze a
 narrower `--root` that omits generated assets, or simplify shared receiver mutations.
 Rule `include`/`exclude` filters select diagnostics and do not remove evidence
 from this full graph analysis. See [the work-budget investigation](../performance/foreign-receiver-work-budget.md).

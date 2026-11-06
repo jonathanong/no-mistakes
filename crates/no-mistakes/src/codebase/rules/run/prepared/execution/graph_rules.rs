@@ -14,6 +14,24 @@ pub(super) fn graph_rule_findings_with_session(
     request: GraphRuleRequest<'_>,
     session: Option<&crate::codebase::analysis_session::AnalysisSession>,
 ) -> Result<crate::codebase::rules::analysis_policy::AnalysisDiagnostics> {
+    let config = session
+        .filter(|session| {
+            matches!(
+                session.check_prerequisite("codebase.canonical-graph"),
+                Some(crate::codebase::check_outcome::Prerequisite::Failed(_))
+            )
+        })
+        .map(|session| {
+            let mut config = request.config.clone();
+            for application in &mut config.rules {
+                application.enabled &= session.check_consumer_ready(&application.rule);
+            }
+            config
+        });
+    let request = GraphRuleRequest {
+        config: config.as_ref().unwrap_or(request.config),
+        ..request
+    };
     let mut findings = Vec::new();
     let mut advisories = Vec::new();
     if session.is_some_and(|session| session.partial_checks_enabled()) {

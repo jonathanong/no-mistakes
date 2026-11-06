@@ -96,7 +96,13 @@ fn register_value_flow_failures(
     session: &AnalysisSession,
 ) {
     let mut failures = Vec::new();
-    for file in shared.files() {
+    let complete_imports = forbidden_dependencies::eligible_partial_graph_plan(config).is_some();
+    let files: std::collections::BTreeSet<_> = shared
+        .files()
+        .iter()
+        .chain(shared.graph_file_universe())
+        .collect();
+    for file in files {
         let Some(reason) = shared
             .ts
             .get(file)
@@ -107,6 +113,7 @@ fn register_value_flow_failures(
         for consumer in GRAPH_CONSUMERS
             .iter()
             .filter(|consumer| config.rule_configured(consumer))
+            .filter(|consumer| **consumer != FORBIDDEN_DEPENDENCIES || !complete_imports)
         {
             failures.push(CheckFailure {
                 consumer: (*consumer).into(),

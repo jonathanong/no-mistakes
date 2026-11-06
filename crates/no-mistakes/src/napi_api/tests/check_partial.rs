@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "check_partial_graph_consumers.rs"]
+mod graph_consumers;
+
 #[test]
 fn async_check_report_retains_findings_with_incomplete_consumers() {
     for fixture in ["partial-source", "partial-playwright"] {

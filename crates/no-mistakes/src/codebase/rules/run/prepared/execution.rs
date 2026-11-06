@@ -77,6 +77,14 @@ pub(super) fn run(
     {
         graph_plan = Prerequisite::Failed(failures);
     }
+    if matches!(graph_plan, Prerequisite::Failed(_))
+        && session.partial_checks_enabled()
+        && session.check_consumer_ready(FORBIDDEN_DEPENDENCIES)
+    {
+        if let Some(plan) = forbidden_dependencies::eligible_partial_graph_plan(config) {
+            graph_plan = Prerequisite::Ready(Some(plan));
+        }
+    }
     let owned_graph;
     let dependency_graph = if matches!(graph_plan, Prerequisite::Failed(_)) {
         None

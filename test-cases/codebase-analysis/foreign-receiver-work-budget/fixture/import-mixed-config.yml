@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: unconstructed-error-class
+    scope: repository
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: ["src/shared-4096.mts"]
+      forbiddenFiles: ["src/providers.mts"]
+      relationships: [import]

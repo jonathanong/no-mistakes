@@ -86,6 +86,8 @@ contract, with the affected file and an actionable message. `check()` and
 `analyzeProject()` discard partial value-flow facts and preserve independent
 source-check findings. Mixing a check with import-only dependency or dependent
 reports preserves each standalone result, including partial check findings.
+Import-only `forbidden-dependencies` checks retain their findings; repeated
+partial checks share the complete canonical import projection.
 Narrow `root` or simplify shared receiver mutations;
 application `include`/`exclude` filters do not narrow the full graph evidence.
 Reverse-query diagnostics classify exhausted value flow as `operational-error`.

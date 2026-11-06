@@ -327,6 +327,21 @@ fn foreign_receiver_budget_check_json_snapshot() {
                 fixture.clone(),
                 fixture.join("production-mixed-config.yml"),
             ),
+            (
+                "import_only",
+                fixture.clone(),
+                fixture.join("import-only-config.yml"),
+            ),
+            (
+                "import_mixed",
+                fixture.clone(),
+                fixture.join("import-mixed-config.yml"),
+            ),
+            (
+                "graph_only",
+                fixture.clone(),
+                fixture.join("graph-only-config.yml"),
+            ),
         ],
     );
 }

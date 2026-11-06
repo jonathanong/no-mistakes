@@ -1,0 +1,6 @@
+version: 2
+filesystem:
+  skipDirectories: [src]
+rules:
+  - rule: unconstructed-error-class
+    scope: repository

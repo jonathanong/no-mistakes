@@ -30,6 +30,9 @@ Exhaustion discards partial value-flow facts and retains an explicit reason.
 Call/value-flow graph construction rejects those facts before projection.
 `check` reports affected files in `incomplete`, exits 1, and retains independent
 source-check findings. The async Node APIs expose the same check failure contract.
+Import-only dependency checks keep their complete findings, and graph-only
+sources receive individual incomplete entries. Repeated partial Node checks
+reuse the complete canonical import projection.
 A narrower analysis root can omit vendored assets; application include/exclude
 filters select diagnostics and cannot remove full-graph evidence.
 

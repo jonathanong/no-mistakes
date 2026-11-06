@@ -5,6 +5,13 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::{bail, Result};
 use std::path::Path;
 
+pub(crate) fn eligible_partial_graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
+    super::try_graph_plan(config)
+        .ok()
+        .flatten()
+        .filter(|plan| plan.is_lazy_import_plan())
+}
+
 pub(super) fn validate_shared_graph_plan(
     root: &Path,
     config_path: Option<&Path>,

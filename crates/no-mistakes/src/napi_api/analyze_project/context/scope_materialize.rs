@@ -25,11 +25,25 @@ impl PreparedScopePlan {
                 facts.ts.value_flow.incomplete_reason.is_some()
             })
         });
+        let partial_check_plan = incomplete_value_flow
+            .then(|| {
+                self.check.as_ref().and_then(|check| {
+                    crate::codebase::rules::forbidden_dependencies::eligible_partial_graph_plan(
+                        &check.prepared.config,
+                    )
+                })
+            })
+            .flatten();
         if incomplete_value_flow {
-            self.traversal.use_graph_build_plan(graph_build_plan(&self.options)?);
+            let mut plan = graph_build_plan(&self.options)?;
+            if let Some(partial) = partial_check_plan {
+                plan.include(partial);
+            }
+            self.traversal.use_graph_build_plan(plan);
         }
         let traversal_graph = self.traversal.graph_files();
-        let check_shares_traversal_graph_universe = !incomplete_value_flow
+        let check_shares_traversal_graph_universe = (!incomplete_value_flow
+            || partial_check_plan.is_some())
             && graph_fact_files.len() == traversal_graph.visible_len()
             && graph_fact_files
                 .iter()

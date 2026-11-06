@@ -2,6 +2,106 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "graph_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/argument-diamond-16.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/argument-diamond-20.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/shared-2048.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/shared-4096.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "import_mixed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/argument-diamond-16.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/argument-diamond-20.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/shared-2048.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/shared-4096.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/shared-4096.mts",
+          "import": "import",
+          "line": 1,
+          "message": "src/shared-4096.mts reaches forbidden file 'src/providers.mts' via import. Reproduce: no-mistakes dependencies 'src/shared-4096.mts' --filter 'src/providers.mts' --relationship import --format json",
+          "rule": "forbidden-dependencies",
+          "sourceLine": "import { provider0, provider1, provider2, provider3, provider4, provider5, provider6, provider7, provider8, provider9, provider10, provider11, provider12, provider13, provider14, provider15, provider16, provider17, provider18, provider19, provider20, provider21, provider22, provider23, provider24, provider25, provider26, provider27, provider28, provider29, provider30, provider31, provider32, provider33, provider34, provider35, provider36, provider37, provider38, provider39, provider40, provider41, provider42, provider43, provider44, provider45, provider46, provider47, provider48, provider49, provider50, provider51, provider52, provider53, provider54, provider55, provider56, provider57, provider58, provider59, provider60, provider61, provider62, provider63 } from './providers.mjs';",
+          "target": "src/providers.mts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "import_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/shared-4096.mts",
+          "import": "import",
+          "line": 1,
+          "message": "src/shared-4096.mts reaches forbidden file 'src/providers.mts' via import. Reproduce: no-mistakes dependencies 'src/shared-4096.mts' --filter 'src/providers.mts' --relationship import --format json",
+          "rule": "forbidden-dependencies",
+          "sourceLine": "import { provider0, provider1, provider2, provider3, provider4, provider5, provider6, provider7, provider8, provider9, provider10, provider11, provider12, provider13, provider14, provider15, provider16, provider17, provider18, provider19, provider20, provider21, provider22, provider23, provider24, provider25, provider26, provider27, provider28, provider29, provider30, provider31, provider32, provider33, provider34, provider35, provider36, provider37, provider38, provider39, provider40, provider41, provider42, provider43, provider44, provider45, provider46, provider47, provider48, provider49, provider50, provider51, provider52, provider53, provider54, provider55, provider56, provider57, provider58, provider59, provider60, provider61, provider62, provider63 } from './providers.mjs';",
+          "target": "src/providers.mts"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "incomplete": {
     "exitCode": 1,
     "report": {
