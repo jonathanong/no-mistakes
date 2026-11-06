@@ -60,3 +60,42 @@ fn missing_catalog_file_is_an_error() {
     let error = super::check_with_files(&root, &config, &[root.join("schema.json")]).unwrap_err();
     assert!(error.to_string().contains("missing.json"), "{error}");
 }
+
+#[test]
+fn ignored_plural_patterns_only_count_when_suppressing_findings() {
+    for (scenario, stale) in [
+        ("used", false),
+        ("stale", true),
+        ("overlap", false),
+        ("partial", false),
+        ("disabled", false),
+    ] {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/postgres-object-naming/fixture")
+            .join(format!("ignore-patterns-{scenario}"));
+        let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+        let findings =
+            super::check_with_files(&root, &config, &[root.join("schema.json")]).unwrap();
+        assert_eq!(
+            findings
+                .iter()
+                .any(|finding| finding.rule == "unused-allow-entry"),
+            stale,
+            "{scenario}: {findings:#?}"
+        );
+        assert!(
+            !findings
+                .iter()
+                .any(|finding| finding.rule == super::RULE_ID),
+            "{scenario}: {findings:#?}"
+        );
+    }
+}
+
+#[test]
+fn failed_catalog_cannot_emit_stale_plural_patterns() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-object-naming/fixture/ignore-patterns-invalid");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    assert!(super::check_with_files(&root, &config, &[root.join("schema.json")]).is_err());
+}

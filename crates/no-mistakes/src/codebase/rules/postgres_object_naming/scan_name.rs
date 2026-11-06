@@ -50,7 +50,7 @@ pub(super) fn consider(
                 object.clone(),
                 &format!(
                     "{} name does not match pattern {}{note}",
-                    kind_word(kind),
+                    super::policy::kind_word(kind),
                     pattern.raw
                 ),
             );
@@ -62,8 +62,9 @@ pub(super) fn consider(
     }
     if let Some(plural_kind) = flags.plural {
         if let Some(plural) = &compiled.plural {
-            if plural.covers(plural_kind) && !plural.ignored(name) {
-                for text in plural.findings(plural_kind, name) {
+            let texts = plural.findings(plural_kind, name);
+            if plural.covers(plural_kind) && !texts.is_empty() && !plural.ignored(name) {
+                for text in texts {
                     push(findings, path, object.clone(), &text);
                 }
             }
@@ -192,13 +193,4 @@ fn covered_by_table(
                 .iter()
                 .any(|part| part.text.eq_ignore_ascii_case(&token.text))
         })
-}
-
-fn kind_word(kind: &str) -> &str {
-    match kind {
-        "materializedView" => "materialized view",
-        "triggerFunction" => "trigger function",
-        "uniqueIndex" => "index",
-        other => other,
-    }
 }

@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      sqlInclude: ["*.sql"]
+      bannedShapes: [not-in-subquery]
+      shapeOptions:
+        keysetOnlySweep:
+          ignoreTables:
+            - "items"

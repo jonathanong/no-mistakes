@@ -6,6 +6,7 @@ use anyhow::Result;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+mod audit;
 mod functions;
 mod iteration;
 mod scan;
@@ -64,9 +65,30 @@ pub(crate) fn check_with_files_sources_and_facts(
     super::run_included_postgres_rule(
         super::PreparedRuleContext::new(root, config, all_files, sources, facts),
         RULE_ID,
-        |rule| compile_options(&rule.try_rule_options()?),
+        |rule| {
+            let options: Options = rule.try_rule_options()?;
+            let mut compiled = compile_options(&options)?;
+            if compiled.shapes.keyset_only_sweep
+                && !options
+                    .shape_options
+                    .keyset_only_sweep
+                    .ignore_tables
+                    .is_empty()
+            {
+                compiled.iteration.audit = Some(audit::SweepAudit::new(
+                    root, config, rule, all_files, sources, &options, &compiled,
+                )?);
+            }
+            Ok(compiled)
+        },
         |compiled, rel| compiled.includes(rel),
-        scan::scan,
+        |root, compiled, files, sources, facts| {
+            let mut findings = scan::scan(root, compiled, files, sources, facts)?;
+            if let Some(audit) = &compiled.iteration.audit {
+                findings.extend(audit.finish());
+            }
+            Ok(findings)
+        },
     )
 }
 

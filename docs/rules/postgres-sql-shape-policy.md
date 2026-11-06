@@ -238,3 +238,11 @@ relation filters; [`postgres-idempotent-insert`](postgres-idempotent-insert.md)
 covers replay-safe INSERT.
 
 See [additional shape coverage](postgres-sql-shape-policy-coverage.md).
+
+`shapeOptions.keysetOnlySweep.ignoreTables` entries count as used only when they
+suppress a `keyset-only-sweep` finding. Every matching spelling counts, including
+overlapping qualified and unqualified names. An entry that only matches selective
+queries is stale: remove it when `unused-allow-entry` identifies its configuration
+location. Auditing requires the shape to be enabled and the whole applicable file
+scope to be analyzed. Partial file requests, low analysis effort, SQL parse failures,
+and unrecoverable executed or builder SQL cannot prove an entry stale.

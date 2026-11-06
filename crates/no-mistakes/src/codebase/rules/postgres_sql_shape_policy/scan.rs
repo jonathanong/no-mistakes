@@ -27,6 +27,7 @@ pub(super) fn scan(
         let file = prepared
             .embedded_sql(path, &opts.embedded)
             .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
+        super::audit::observe_embedded(opts, file);
         if facts.wants_sql_verdicts() {
             verdicts::record(root, opts, file, facts)?;
         }
@@ -57,6 +58,7 @@ pub(super) fn scan(
         let source = crate::codebase::rules::read_source(sources, path);
         for fragment in prepared.postgres_fragments(path, &opts.embedded)? {
             let statements = &fragment.statements;
+            super::audit::observe_statements(opts, statements);
             let line_at =
                 |line: usize| fragment.line.saturating_add(line as u32).saturating_sub(1) as usize;
             for (index, finding) in super::functions::located_findings(
@@ -118,6 +120,7 @@ pub(super) fn scan(
     );
     for (path, profile) in projections {
         for file in prepared.postgres_statements(path, profile)? {
+            super::audit::observe_statements(opts, file);
             let rel = relative_slash_path(root, &file.path);
             let source = crate::codebase::rules::read_source(sources, path);
             for (index, finding) in super::functions::located_findings(
