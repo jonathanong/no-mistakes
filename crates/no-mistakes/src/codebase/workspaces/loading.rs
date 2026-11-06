@@ -57,6 +57,7 @@ fn load_from_files_with_sources(
     files: &[PathBuf],
     sources: WorkspaceSources<'_>,
 ) -> Result<IndexedWorkspaceMap> {
+    workspace_load_metrics!(root);
     let metadata = load_workspace_metadata_from_files(root, files, sources)?;
     let workspace_dirs = expand_workspace_globs_from_files(root, &metadata.globs, files)
         .into_iter()

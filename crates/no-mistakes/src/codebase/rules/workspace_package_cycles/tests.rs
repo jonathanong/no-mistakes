@@ -214,3 +214,42 @@ fn local_paths_count_only_when_they_are_the_package_directory() {
         &package_b
     ));
 }
+
+#[test]
+fn stale_allowances_require_checked_files_and_raw_findings() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/unused-allow-other"),
+    );
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    let files =
+        crate::codebase::ts_source::discover_files(&root, &config.filesystem.skip_directories);
+    let findings = super::check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].rule, "unused-allow-entry");
+    let findings = super::check_with_files(&root, &config, &[]).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn cycle_and_allow_audits_construct_one_workspace() {
+    let saved =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/rules/unused-allow-other");
+    for allow in [false, true] {
+        let fixture = crate::test_support::materialize_saved_fixture(&saved);
+        let root = fixture.path();
+        let mut config = crate::config::v2::load_v2_config(root, None).unwrap();
+        config.rules.retain(|rule| rule.rule == RULE_ID);
+        if !allow {
+            config.rules[0].options["allowlist"] = serde_yaml::Value::Sequence(Vec::new());
+        }
+        let files = crate::codebase::ts_source::discover_files(root, &[]);
+        let sources = super::super::source_store_for_files(&files);
+        let (findings, loads) = workspaces::load_metrics_tests::count(root, || {
+            super::check_with_files_and_sources(root, &config, &files, &sources).unwrap()
+        });
+        assert_eq!(loads, 1);
+        assert_eq!(findings.len(), usize::from(allow));
+    }
+}

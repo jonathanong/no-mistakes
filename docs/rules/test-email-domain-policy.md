@@ -86,3 +86,9 @@ avoid file-wide suppression so the domain remains banned elsewhere.
 [`test-no-dependency-pins`](test-no-dependency-pins.md) prevents brittle test
 assertions; [`test-no-unmocked-dynamic-imports`](test-no-unmocked-dynamic-imports.md)
 protects test isolation.
+
+Unused `allowedEmailPatterns` entries produce `unused-allow-entry` advisories
+when the complete relevant file scope was successfully checked. Remove stale
+entries. Every overlapping exception that suppresses a raw finding is used;
+matching text that would not violate the rule does not use an exception.
+Partial scopes and failed reads or parses do not prove an entry stale.

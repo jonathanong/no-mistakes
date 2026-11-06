@@ -25,7 +25,7 @@ fn fixture_root(subpath: &str) -> std::path::PathBuf {
 }
 
 #[test]
-fn pass_fixture_has_no_findings() {
+fn pass_fixture_has_only_unused_allow_advice() {
     let root = fixture_root("pass");
     let config_path = root.join(".no-mistakes.yml");
     let findings = check(
@@ -34,8 +34,10 @@ fn pass_fixture_has_no_findings() {
     )
     .unwrap();
     assert!(
-        findings.is_empty(),
-        "expected no findings, got: {findings:?}"
+        findings
+            .iter()
+            .all(|finding| finding.rule == "unused-allow-entry"),
+        "expected only advice, got: {findings:?}"
     );
 }
 
@@ -59,7 +61,8 @@ fn allowed_lockfile_passes() {
         "allowed: [pnpm-lock.yaml]\nbannedBasenames: [package-lock.json, yarn.lock]",
     );
     let findings = check(&root, &config).unwrap();
-    assert!(findings.is_empty());
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].rule, "unused-allow-entry");
 }
 
 #[test]
@@ -120,6 +123,19 @@ fn invalid_allowed_glob_fails_closed() {
 }
 
 #[test]
+fn raw_allow_audit_has_no_reserved_filename() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/unused-allow-other");
+    let config =
+        config_with_rule("allowed: [absent.lock]\nbannedBasenames: [__no_mistakes_no_lockfile__]");
+    let findings =
+        super::check_with_files(&root, &config, &[root.join("__no_mistakes_no_lockfile__")])
+            .unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].rule, super::RULE_ID);
+}
+
+#[test]
 fn custom_banned_basenames_ignore_default_npm_lockfile() {
     let root = fixture_root("custom-banned-basenames");
     let findings = check(
@@ -127,5 +143,22 @@ fn custom_banned_basenames_ignore_default_npm_lockfile() {
         &config_with_rule("allowed: [pnpm-lock.yaml]\nbannedBasenames: [yarn.lock]"),
     )
     .unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn stale_allowances_require_checked_files_and_raw_findings() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/unused-allow-other"),
+    );
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    let files =
+        crate::codebase::ts_source::discover_files(&root, &config.filesystem.skip_directories);
+    let findings = super::check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].rule, "unused-allow-entry");
+    let findings = super::check_with_files(&root, &config, &[]).unwrap();
     assert!(findings.is_empty(), "{findings:?}");
 }

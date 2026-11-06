@@ -35,9 +35,7 @@ pub(super) fn run<'a>(
                         )
                     },
                 )?);
-                remaining
-                    .rules
-                    .retain(|rule| rule.rule != rules::$module::RULE_ID);
+                super::handled::mark(&mut remaining, |id| id == rules::$module::RULE_ID);
             }
         };
     }

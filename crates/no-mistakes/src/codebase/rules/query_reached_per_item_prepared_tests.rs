@@ -77,8 +77,14 @@ fn assert_prepared_per_item_projection(fixture: &str) {
     )
     .unwrap();
     let before = sources.physical_read_count();
-    let findings =
-        super::query_reached_per_item::check_with_graph(&root, &config, &graph, &facts).unwrap();
+    let findings = super::query_reached_per_item::check_with_graph(
+        &root,
+        &config,
+        &graph,
+        &facts,
+        Some(&sources),
+    )
+    .unwrap();
     assert!(!findings.is_empty());
     assert_eq!(
         sources.physical_read_count(),

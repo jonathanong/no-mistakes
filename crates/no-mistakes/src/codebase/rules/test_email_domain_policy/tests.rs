@@ -1,3 +1,4 @@
+use super::scan::scan_email_lines;
 use super::*;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::{
@@ -224,4 +225,83 @@ fn check_with_files_scans_the_source_store_wrapper() {
     });
     let findings = check_with_files(&root, &config, &[file]).unwrap();
     assert!(!findings.is_empty(), "{findings:#?}");
+}
+
+fn allow_audit_config() -> NoMistakesConfig {
+    NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str("bannedDomains: [example.com]\nallowedEmailPatterns: ['used@example.com', 'used@.*', 'safe@example.org']").unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    }
+}
+
+#[test]
+fn allow_audit_tracks_raw_findings_and_all_overlapping_entries() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/test-email-domain-policy/unit-fixture/allow-audit");
+    let files = vec![root.join("dirty.txt"), root.join("clean.txt")];
+    let sources = super::super::source_store_for_files(&files);
+    let findings =
+        check_with_files_and_sources(&root, &allow_audit_config(), &files, &sources).unwrap();
+    let stale: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding.rule == "unused-allow-entry")
+        .collect();
+    assert_eq!(stale.len(), 1, "{findings:?}");
+    assert_eq!(stale[0].target.as_deref(), Some("safe@example.org"));
+    assert_eq!(findings.len(), 1, "{findings:?}");
+}
+
+#[test]
+fn allow_audit_requires_the_full_application_universe() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/test-email-domain-policy/unit-fixture/allow-audit");
+    let inventory = vec![root.join("dirty.txt"), root.join("clean.txt")];
+    let sources = super::super::source_store_for_files(&inventory);
+    let findings =
+        check_with_files_and_sources(&root, &allow_audit_config(), &inventory[1..], &sources)
+            .unwrap();
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.rule != "unused-allow-entry"),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn allow_audit_is_silent_when_relevant_input_is_unreadable() {
+    let root = fixture("allow-audit");
+    let files = vec![root.join("missing.txt")];
+    let sources = super::super::source_store_for_files(&files);
+    let findings =
+        check_with_files_and_sources(&root, &allow_audit_config(), &files, &sources).unwrap();
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.rule != "unused-allow-entry"),
+        "{findings:?}"
+    );
+}
+
+fn scan_with_sources(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
+    if opts.banned_domains.as_ref().is_none_or(Vec::is_empty) {
+        return Ok(Vec::new());
+    }
+    let compiled = compile_options(opts)?;
+    let mut findings: Vec<RuleFinding> = files
+        .par_iter()
+        .flat_map(|path| check_file_with_sources(root, path, &compiled, sources))
+        .collect();
+    super::super::sort_findings(&mut findings);
+    Ok(findings)
 }

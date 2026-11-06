@@ -20,9 +20,9 @@ pub(super) fn run(
         // Consume both channels in the rule pass; finalization must not scan configs again.
         diagnostics = nextjs::run(root, config, files, &prepared, defer_suppression)?;
         remaining = config.clone();
-        remaining
-            .rules
-            .retain(|rule| rule.rule != rules::NEXTJS_REDIRECT_DESTINATIONS);
+        super::handled::mark(&mut remaining, |id| {
+            id == rules::NEXTJS_REDIRECT_DESTINATIONS
+        });
         &remaining
     } else {
         config
@@ -43,9 +43,7 @@ pub(super) fn run(
             },
         )?);
         shell_remaining = config.clone();
-        shell_remaining
-            .rules
-            .retain(|rule| rule.rule != rules::SHELLCHECK_RUNNER);
+        super::handled::mark(&mut shell_remaining, |id| id == rules::SHELLCHECK_RUNNER);
         &shell_remaining
     } else {
         config
@@ -65,9 +63,9 @@ pub(super) fn run(
             },
         )?);
         without_version_pins = config.clone();
-        without_version_pins
-            .rules
-            .retain(|rule| rule.rule != rules::VERSION_PIN_CONSISTENCY);
+        super::handled::mark(&mut without_version_pins, |id| {
+            id == rules::VERSION_PIN_CONSISTENCY
+        });
         &without_version_pins
     } else {
         config
@@ -87,9 +85,9 @@ pub(super) fn run(
             },
         )?);
         without_script_expressions = config.clone();
-        without_script_expressions
-            .rules
-            .retain(|rule| rule.rule != rules::github_actions_script_expressions::RULE_ID);
+        super::handled::mark(&mut without_script_expressions, |id| {
+            id == rules::github_actions_script_expressions::RULE_ID
+        });
         &without_script_expressions
     } else {
         config
@@ -113,9 +111,9 @@ pub(super) fn run(
             },
         )?);
         without_manifest_fields = config.clone();
-        without_manifest_fields
-            .rules
-            .retain(|rule| rule.rule != rules::PACKAGE_JSON_REQUIRED_FIELDS);
+        super::handled::mark(&mut without_manifest_fields, |id| {
+            id == rules::PACKAGE_JSON_REQUIRED_FIELDS
+        });
         &without_manifest_fields
     } else {
         config
@@ -139,9 +137,10 @@ pub(super) fn run(
             },
         )?);
         remaining_required_files = config.clone();
-        remaining_required_files
-            .rules
-            .retain(|rule| !rules::file_diagnostics::handles(&rule.rule));
+        super::handled::mark(
+            &mut remaining_required_files,
+            rules::file_diagnostics::handles,
+        );
         &remaining_required_files
     } else {
         config

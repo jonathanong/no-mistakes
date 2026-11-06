@@ -12,9 +12,9 @@ pub(in crate::check_runner::results) fn demote(
     codebase: &mut Vec<PreparedUniqueExportFinding>,
     advisories: &mut Vec<RuleFinding>,
 ) {
-    let (advisory, failing) = std::mem::take(rules)
-        .into_iter()
-        .partition(|finding| config.rule_is_advisory(&finding.rule));
+    let (advisory, failing) = std::mem::take(rules).into_iter().partition(|finding| {
+        finding.rule == "unused-allow-entry" || config.rule_is_advisory(&finding.rule)
+    });
     *rules = failing;
     advisories.extend(advisory);
     let (advisory, failing): (Vec<_>, Vec<_>) = std::mem::take(codebase)

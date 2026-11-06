@@ -1,4 +1,4 @@
-use super::path_filter::GlobMatcher;
+use super::masked_source::FileAllow;
 use super::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -42,7 +42,7 @@ pub(crate) struct Options {
 
 pub(super) struct CompiledOptions {
     include: Vec<String>,
-    allow: GlobMatcher,
+    allow: FileAllow,
     bind: regex::Regex,
     message: String,
 }
@@ -70,7 +70,8 @@ pub fn diagnostics_with_files_and_sources(
 ) -> Result<super::analysis_policy::AnalysisDiagnostics> {
     let mut diagnostics = super::analysis_policy::AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
-        let opts = compile_options(rule.try_rule_options()?)?;
+        let mut opts = compile_options(rule.try_rule_options()?)?;
+        opts.allow.setup(root, config, rule, sources);
         let target_roots = super::target_roots(root, config, rule);
         let skip = super::skip_dir_set(config);
         let files: Vec<PathBuf> = all_files
@@ -83,7 +84,8 @@ pub fn diagnostics_with_files_and_sources(
             continue;
         }
         let files = super::matching_files(root, &opts.include, &files, &target_roots)?;
-        let findings = scan_files(root, &opts, &files, sources, defer_suppression);
+        let mut findings = scan_files(root, &opts, &files, sources, defer_suppression);
+        findings.extend(opts.allow.finish(root, sources));
         diagnostics.append(super::file_diagnostics::application(
             root,
             sources,
@@ -108,7 +110,7 @@ fn compile_options(opts: Options) -> Result<CompiledOptions> {
     };
     Ok(CompiledOptions {
         include,
-        allow: GlobMatcher::new(&opts.allow, &format!("{RULE_ID} allow"))?,
+        allow: FileAllow::new(&opts.allow, &format!("{RULE_ID} allow"))?,
         bind: regex::Regex::new(python::BIND_PATTERN).expect("bind pattern"),
         message: match opts.message.filter(|hint| !hint.is_empty()) {
             Some(hint) => format!("{DEFAULT_MESSAGE} {hint}"),

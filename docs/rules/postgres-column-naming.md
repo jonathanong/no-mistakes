@@ -233,3 +233,8 @@ requireForeignKey exempt entry`.
 `postgres-fk-index` requires an index on a foreign key. `postgres-require-fk-on-delete`
 requires an `ON DELETE` action. This rule does not rename columns or choose
 an `ON DELETE` action.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

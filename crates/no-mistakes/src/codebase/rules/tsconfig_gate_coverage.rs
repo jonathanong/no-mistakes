@@ -107,6 +107,13 @@ pub(crate) fn check_with_prepared(
                 &non_enforcing,
                 &config_file,
             );
+            findings.retain(|finding| {
+                !finding.message.starts_with("stale allowProjects entry")
+                    || finding
+                        .target
+                        .as_ref()
+                        .is_some_and(|path| candidates.contains(path))
+            });
             diagnostics::annotate(root, config, rule, prepared.sources, &mut findings);
             Ok(findings)
         })

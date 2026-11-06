@@ -1,0 +1,5 @@
+rules:
+  - rule: swift-no-raw-print
+    scope: repository
+    options:
+      allow: ['dirty.swift', '*dirty.swift', 'clean.swift']

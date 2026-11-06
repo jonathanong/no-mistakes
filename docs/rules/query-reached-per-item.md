@@ -260,3 +260,10 @@ requires operation names on executed SQL.
 
 CLI: `no-mistakes check --root . --format json`. Node API: the asynchronous
 `check({root, config})` and `analyzeProject()` check query expose the same rule.
+
+Unused `allow` entries are non-failing `unused-allow-entry` advisories at the
+configuration entry's file and line. An entry must name a file actually checked
+by this application, and supporting graph facts must be usable. Entries for
+excluded, missing, or unchecked files stay silent. Overlapping selectors that
+match a finding all count as used. Remove obsolete entries or correct their
+selectors; see [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

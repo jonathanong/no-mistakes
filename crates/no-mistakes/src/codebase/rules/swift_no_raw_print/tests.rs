@@ -141,3 +141,64 @@ fn masks_comments_and_strings_but_scans_interpolation_at_original_lines() {
         "{findings:#?}"
     );
 }
+
+#[test]
+fn allow_audit_tracks_overlaps_and_stale_entries() {
+    let root = fixture("allow-audit");
+    let findings = run_deferred(
+        &root,
+        "allow: ['dirty.swift', '*dirty.swift', 'clean.swift']",
+        false,
+    );
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].rule, "unused-allow-entry");
+    assert_eq!(findings[0].target.as_deref(), Some("clean.swift"));
+}
+
+#[test]
+fn allow_audit_is_silent_when_glob_scope_is_partial() {
+    let root = fixture("allow-audit");
+    let files = vec![root.join("clean.swift")];
+    let inventory = vec![root.join("clean.swift"), root.join("dirty.swift")];
+    let sources = super::super::source_store_for_files(&inventory);
+    let findings = check_with_files_sources_and_deferred_suppression(
+        &root,
+        &config("allow: ['*.swift']"),
+        &files,
+        &sources,
+        false,
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn allow_audit_counts_findings_before_inline_suppression() {
+    let findings = run_deferred(
+        &fixture("allow-audit"),
+        "allow: ['suppressed.swift']",
+        false,
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.rule != "unused-allow-entry"),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn allow_audit_is_silent_for_failed_reads() {
+    let root = fixture("allow-audit");
+    let files = vec![root.join("missing.swift")];
+    let sources = super::super::source_store_for_files(&files);
+    let findings = check_with_files_sources_and_deferred_suppression(
+        &root,
+        &config("allow: ['missing.swift']"),
+        &files,
+        &sources,
+        false,
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}

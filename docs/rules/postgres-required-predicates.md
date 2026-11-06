@@ -318,3 +318,8 @@ SQL recovered from an imported helper is reported in the helper's module at the 
 [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) bans correlated
 `EXISTS` set operations; [`postgres-idempotent-insert`](postgres-idempotent-insert.md)
 covers replay-safe INSERT.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

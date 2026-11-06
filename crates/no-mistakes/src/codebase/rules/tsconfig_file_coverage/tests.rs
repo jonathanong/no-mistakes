@@ -25,6 +25,18 @@ fn config(yaml: &str) -> NoMistakesConfig {
     }
 }
 
+#[test]
+fn unchecked_allow_entries_still_require_a_reason() {
+    let findings = check_with_files(
+        &fixture("fail"),
+        &config("allow: [{path: absent.ts, reason: ''}]"),
+        &[],
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("empty reason"));
+}
+
 // Saved-fixture output cases moved to cli_pkgcfg_snapshot_tsconfig_file_coverage.
 // Kept tests use paths discovery will not return, option-string helpers, or an
 // include glob that config load rejects before check JSON is rendered.

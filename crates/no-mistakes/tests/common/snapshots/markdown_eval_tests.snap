@@ -48,22 +48,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "stale_allow": {
-    "exitCode": 1,
+    "exitCode": 0,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [
-        {
-          "file": "missing.test.mts",
-          "line": 1,
-          "message": "stale markdown-eval-tests allowlist entry `missing.test.mts`: it is not a matching markdown-eval test in this run",
-          "rule": "markdown-eval-tests",
-          "target": "missing.test.mts"
-        }
-      ],
+      "rules": [],
       "warnings": []
     }
   }

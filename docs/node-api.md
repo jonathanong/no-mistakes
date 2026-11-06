@@ -566,3 +566,11 @@ scalars, or null. Omitting `view`, or passing `view: "resolved"`, retains the
 existing `ResolvedConfig` return shape. Readers that parse YAML or match its raw
 text should use the declared view before splitting configuration; CI path filters
 that name the root config must also cover `.no-mistakes/**`.
+
+Allow-entry hygiene uses the existing asynchronous `check()` → `checkJson`
+binding and `analyzeProject()` check-report path. New `unused-allow-entry`
+results are `RuleFinding` objects in `CheckReport.advisories`: `file`/`line`
+locate the config entry, `import` names the checked rule, and `target` carries
+the selector. No runtime export or report field is added. Partial or uncertain
+selector coverage stays silent; established rule-specific stale outputs retain
+their existing shape and severity. See [allow-entry hygiene](configuration/suppressions.md#allow-entry-hygiene).

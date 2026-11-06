@@ -97,3 +97,8 @@ guard's own test fixture, not as a substitute for `allow`.
 [`markdown-mermaid-validation`](markdown-mermaid-validation.md) validates a
 safe, declarative fence language; [`shellcheck-runner`](shellcheck-runner.md)
 checks real shell files.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

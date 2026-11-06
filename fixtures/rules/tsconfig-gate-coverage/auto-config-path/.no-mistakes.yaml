@@ -9,4 +9,4 @@ rules:
     scope: repository
     options:
       allowProjects:
-        missing/tsconfig.json: stale regression entry
+        app/tsconfig.json: ""

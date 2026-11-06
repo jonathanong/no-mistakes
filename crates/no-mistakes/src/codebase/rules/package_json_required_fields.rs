@@ -6,6 +6,7 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 mod scan;
+use super::allow_audit::ExceptionAudit;
 
 pub const RULE_ID: &str = "package-json-required-fields";
 
@@ -49,11 +50,26 @@ pub fn diagnostics_with_files_and_sources(
             super::selected_files::rule_scope_files_with_roots(root, config, rule, all_files);
         let manifests = super::path_filter::filter_rule_files(root, config, rule, &in_scope)?;
         let policy = config.effective_rule_analysis(rule)?.unanalyzable;
-        let mut findings = scan::scan(root, &opts, &manifests, &in_scope, sources);
+        let audit = ExceptionAudit::new(
+            root,
+            config,
+            rule,
+            sources,
+            "unscopedNameExceptions",
+            &opts.unscoped_name_exceptions,
+        );
+        let mut findings = scan::scan(root, &opts, &manifests, &in_scope, sources, Some(&audit));
+        findings.extend(audit.finish(sources, |path| {
+            path.file_name().is_some_and(|name| name == "package.json")
+        }));
         if !defer_suppression {
             super::suppress_rule_findings_with_sources(root, &mut findings, sources);
         }
         for mut finding in findings {
+            if finding.rule == super::allow_audit::RULE_ID {
+                diagnostics.findings.push(finding);
+                continue;
+            }
             if let Some(message) = &rule.message {
                 finding.message = format!("{message} {}", finding.message);
             }

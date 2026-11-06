@@ -7,6 +7,13 @@ use crate::config::v2::Unanalyzable;
 use anyhow::Result;
 use std::path::Path;
 
+pub(super) fn with_findings(findings: Vec<RuleFinding>) -> AnalysisDiagnostics {
+    AnalysisDiagnostics {
+        findings,
+        ..Default::default()
+    }
+}
+
 pub(super) fn check_with_resolver(
     root: &Path,
     config: &NoMistakesConfig,

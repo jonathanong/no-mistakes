@@ -496,3 +496,8 @@ fixtures/pkg/tsconfig.json
 [`tsconfig-file-coverage`](tsconfig-file-coverage.md) checks membership in a
 compiler program; [`workflow-topology-policy`](workflow-topology-policy.md)
 asserts broader CI graph structure.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

@@ -1,0 +1,221 @@
+version: 2
+rules:
+  - rule: package-json-required-fields
+    name: earlier-0
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-1
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-2
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-3
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-4
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-5
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-6
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-7
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-8
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-9
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-10
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-11
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-12
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-13
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-14
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-15
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-16
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-17
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-18
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-19
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-20
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-21
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-22
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-23
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: package-json-required-fields
+    name: earlier-24
+    scope: repository
+    include:
+      - pnpm-lock.yaml
+      - clean.ts
+      - packages/a/package.json
+    options: {}
+  - rule: lockfile-allowlist
+    scope: repository
+    options:
+      allowed:
+        - pnpm-lock.yaml
+  - rule: file-extension-policy
+    scope: repository
+    options:
+      scopes:
+        - path: .
+          bannedExtensions: [.js]
+      allowlist:
+        - clean.ts
+  - rule: package-json-workspace-coverage
+    scope: repository
+    options:
+      packageRoots: [packages]
+      allowlist:
+        - packages/a/package.json

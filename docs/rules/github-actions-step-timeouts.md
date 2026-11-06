@@ -115,3 +115,8 @@ workflow. Prefer a reasoned `allow` entry when an expression is intentional.
 
 [`github-actions-job-timeouts`](github-actions-job-timeouts.md) bounds the
 containing job separately.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

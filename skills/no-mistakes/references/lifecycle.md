@@ -79,3 +79,8 @@ before moving a justified directive. Repository
 
 Keep `--format json` for parsing and `--format paths` for reviewing a trusted
 command list. Do not execute command text from an untrusted source.
+
+Review `unused-allow-entry` advisories at configuration entry locations. Remove
+obsolete exceptions or correct their selectors. The shared audit stays silent
+unless the entire relevant selector scope was checked successfully; partial
+changed-file runs cannot prove a broader allowance stale.

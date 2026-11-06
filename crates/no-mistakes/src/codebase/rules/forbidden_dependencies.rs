@@ -124,10 +124,12 @@ fn check_rule_application(
     );
     let source_filter = source_filter?;
     let mut findings = Vec::new();
+    let mut checked = Vec::new();
     for (resolved_path, root_str) in selectors.select(graph, scope.file_universe) {
         if !source_filter.is_match(&resolved_path) {
             continue;
         }
+        checked.push(resolved_path.clone());
         let file = resolved_path
             .strip_prefix(root)
             .unwrap_or(&resolved_path)
@@ -181,6 +183,14 @@ fn check_rule_application(
             });
         }
     }
+    findings.extend(selectors.audit(
+        &anchor,
+        opts,
+        graph,
+        scope.sources,
+        scope.file_universe,
+        &checked,
+    ));
     Ok(findings)
 }
 

@@ -181,3 +181,8 @@ approval process.
 [`postgres-sql-statement-policy`](postgres-sql-statement-policy.md) restricts
 statement kinds in non-migration SQL; [`postgres-constraint-validate`](postgres-constraint-validate.md)
 checks phased constraint validation.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

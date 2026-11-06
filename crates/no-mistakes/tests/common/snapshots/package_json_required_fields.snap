@@ -125,7 +125,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "pass": {
     "exitCode": 0,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "<repo>/test-cases/rules/package-json-required-fields/configs/shape.yml",
+          "import": "package-json-required-fields",
+          "line": 10,
+          "message": "stale package-json-required-fields unscopedNameExceptions entry `web` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "unscopedNameExceptions: [web]",
+          "target": "web"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -137,7 +147,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "shape": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "<repo>/test-cases/rules/package-json-required-fields/configs/shape.yml",
+          "import": "package-json-required-fields",
+          "line": 10,
+          "message": "stale package-json-required-fields unscopedNameExceptions entry `web` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "unscopedNameExceptions: [web]",
+          "target": "web"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],

@@ -1,0 +1,5 @@
+rules:
+  - rule: csharp-no-async-void-delegate
+    scope: repository
+    options:
+      allow: ['dirty.cs', '*dirty.cs', 'clean.cs']

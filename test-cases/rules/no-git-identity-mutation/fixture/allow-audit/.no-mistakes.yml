@@ -1,0 +1,5 @@
+rules:
+  - rule: no-git-identity-mutation
+    scope: repository
+    options:
+      conditionallyAllowedWorkflows: ['dirty.yml', '*dirty.yml', 'clean.yml']

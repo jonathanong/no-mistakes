@@ -48,7 +48,35 @@ pub(crate) fn check_with_files_and_sources(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files, all_files, sources)
+            let audit = super::allow_audit::AllowAudit::new(
+                root,
+                config,
+                rule,
+                Some(sources),
+                "allowlist",
+                opts.allowlist.len(),
+            );
+            let scope = super::allow_audit::CheckedScope::new(root, Some(sources), &files);
+            let mut findings = scan(root, &opts, &files, all_files, sources)?;
+            findings.retain(|finding| {
+                !audit.usage.suppress(opts.allowlist.iter().map(|entry| {
+                    finding.target.is_some() && normalize_relative_path(entry) == finding.file
+                }))
+            });
+            findings.extend(audit.finish(
+                |index| {
+                    let entry = normalize_relative_path(&opts.allowlist[index]);
+                    scope.exact(&entry)
+                        && entry.ends_with("/package.json")
+                        && sources.parse_json_path(&root.join(&entry)).is_ok()
+                        && patterns::path_under_package_roots(
+                            entry.trim_end_matches("/package.json"),
+                            &opts.package_roots,
+                        )
+                },
+                |index| opts.allowlist[index].clone(),
+            ));
+            Ok(findings)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -73,11 +101,7 @@ fn scan(
         workspace_dirs,
     } = coverage_scope::resolve_workspace(root, files, all_files, sources)?;
     let covered_workspace_dirs = covered_workspace_dirs(root, files, &workspace_globs)?;
-    let allowlist: HashSet<String> = opts
-        .allowlist
-        .iter()
-        .map(|path| normalize_relative_path(path))
-        .collect();
+    let allowlist = HashSet::new();
 
     for path in files {
         findings.extend(coverage_scope::package_findings(

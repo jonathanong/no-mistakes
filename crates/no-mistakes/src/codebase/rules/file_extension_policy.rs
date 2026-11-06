@@ -33,6 +33,16 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -40,7 +50,24 @@ pub(crate) fn check_with_files(
             let opts: Options = rule.try_rule_options()?;
             let files = super::selected_rule_files(root, config, rule, all_files)?;
             let config_file = super::configured_root::config_file_for_rule(root, config, rule);
-            Ok(scan(root, &opts, &files, &config_file))
+            let audit = super::allow_audit::AllowAudit::new(
+                root,
+                config,
+                rule,
+                Some(sources),
+                "allowlist",
+                opts.allowlist.len(),
+            );
+            let scope = super::allow_audit::CheckedScope::new(root, Some(sources), &files);
+            let mut findings = scan(root, &opts, &files, &config_file, &audit);
+            findings.extend(audit.finish(
+                |index| {
+                    scope.exact(&opts.allowlist[index])
+                        && audited(&opts.allowlist[index], &opts.scopes)
+                },
+                |index| opts.allowlist[index].clone(),
+            ));
+            Ok(findings)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -48,13 +75,24 @@ pub(crate) fn check_with_files(
     Ok(findings)
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf], config_file: &str) -> Vec<RuleFinding> {
-    let allowlist: HashSet<&str> = opts.allowlist.iter().map(String::as_str).collect();
+fn scan(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    config_file: &str,
+    audit: &super::allow_audit::AllowAudit,
+) -> Vec<RuleFinding> {
+    let allowlist = HashSet::new();
     let mut findings = escaping_scope_findings(opts, config_file);
     // `par_iter` is a rayon iterator. Collect it before extending the Vec.
     let file_findings: Vec<RuleFinding> = files
         .par_iter()
         .flat_map(|path| check_file(path, root, &allowlist, &opts.scopes))
+        .filter(|finding| {
+            !audit
+                .usage
+                .suppress(opts.allowlist.iter().map(|entry| entry == &finding.file))
+        })
         .collect();
     findings.extend(file_findings);
     findings.sort_by(|a, b| a.file.cmp(&b.file));
@@ -134,6 +172,15 @@ fn normalized_scope_path(path: &str) -> Option<String> {
     } else {
         Some(normalized)
     }
+}
+
+fn audited(file: &str, scopes: &[ScopeSpec]) -> bool {
+    !is_typescript_declaration_file(file)
+        && scopes.iter().any(|scope| {
+            normalized_scope_path(&scope.path).is_some_and(|path| {
+                path == "." || file == path || file.starts_with(&format!("{path}/"))
+            })
+        })
 }
 
 fn file_extension(rel: &str) -> &str {

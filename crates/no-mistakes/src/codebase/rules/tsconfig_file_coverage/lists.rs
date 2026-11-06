@@ -35,6 +35,7 @@ pub(super) fn list_findings(
             &entry.path,
             &entry.reason,
             &candidate_paths,
+            false,
         ));
     }
     let tracked_files = files
@@ -58,6 +59,7 @@ fn reasoned_path_findings(
     path: &str,
     reason: &str,
     known: &BTreeSet<&str>,
+    audit_stale: bool,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     if reason.trim().is_empty() {
@@ -66,7 +68,7 @@ fn reasoned_path_findings(
             format!("tsconfig-file-coverage {kind} entry `{path}` has an empty reason"),
         ));
     }
-    if path.is_empty() || !known.contains(path) {
+    if audit_stale && (path.is_empty() || !known.contains(path)) {
         findings.push(finding(
             path,
             format!("stale tsconfig-file-coverage {kind} entry `{path}`"),
@@ -87,6 +89,7 @@ fn auxiliary_findings(
         &entry.path,
         &entry.reason,
         &tsconfigs.iter().map(String::as_str).collect(),
+        true,
     );
     if !basename_matches(&entry.path, &entry.required_basename) {
         findings.push(finding(

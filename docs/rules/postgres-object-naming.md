@@ -276,3 +276,8 @@ source findings; this rule reports snapshot objects, so use `allow`.
 [`postgres-lock-ordering`](postgres-lock-ordering.md) read the same schema
 catalog. Column type suffixes, foreign-key names, and identifier length are
 separate checks.
+
+Stale allow reporting retains this rule's established diagnostic messages and
+severity for checked inputs. Entries outside the checked scope stay silent;
+uncertain or partial selector coverage cannot prove staleness. See
+[allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

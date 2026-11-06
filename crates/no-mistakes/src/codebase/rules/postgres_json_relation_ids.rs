@@ -7,7 +7,7 @@ use anyhow::Result;
 use rayon::prelude::*;
 use regex::Regex;
 use serde::Deserialize;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 mod compile;
@@ -40,7 +40,6 @@ struct CompiledOptions {
     id_key_pattern: Option<Regex>,
     key_column_map: BTreeMap<String, String>,
     fingerprint_name_pattern: Option<Regex>,
-    allow: BTreeSet<String>,
     include: GlobMatcher,
     exclude: GlobMatcher,
     schema: PostgresSchemaOptions,
@@ -48,11 +47,6 @@ struct CompiledOptions {
 }
 
 impl CompiledOptions {
-    fn allows(&self, table: &str, column: &str) -> bool {
-        self.allow.contains(&format!("table:{table}"))
-            || self.allow.contains(&format!("column:{table}.{column}"))
-    }
-
     fn includes(&self, rel: &str, sql: bool) -> bool {
         if !self.exclude.is_empty() && self.exclude.is_match(rel) {
             return false;
@@ -84,6 +78,7 @@ pub(crate) fn check_with_files_sources_and_facts(
                 return Ok(super::PostgresFindings::default());
             }
             let files = super::selected_rule_files(root, config, rule, all_files)?;
+            let scope = super::allow_audit::CheckedScope::new(root, Some(sources), &files);
             let sql_paths =
                 crate::codebase::postgres::postgres_sql_paths(root, &files, &compiled.schema)?;
             let sql = crate::codebase::check_facts::PathMembership::new(&sql_paths);
@@ -93,7 +88,28 @@ pub(crate) fn check_with_files_sources_and_facts(
                     compiled.includes(&relative_slash_path(root, path), sql.contains(path))
                 })
                 .collect::<Vec<_>>();
-            scan::scan(root, &compiled, &files, sources, facts)
+            let audit = super::allow_audit::AllowAudit::new(
+                root,
+                config,
+                rule,
+                Some(sources),
+                "allow",
+                opts.allow.len(),
+            );
+            let allows =
+                |table: &str, column: &str| {
+                    let table_selector = format!("table:{table}");
+                    let column_selector = format!("column:{table}.{column}");
+                    audit.usage.suppress(opts.allow.iter().map(|entry| {
+                        entry.object == table_selector || entry.object == column_selector
+                    }))
+                };
+            let mut findings = scan::scan(root, &compiled, &files, sources, facts, &allows)?;
+            findings.extend(audit.finish(
+                |_| compiled.id_key_pattern.is_none() && scope.exact(&compiled.schema_catalog_path),
+                |index| opts.allow[index].object.clone(),
+            ));
+            Ok(findings)
         })
         .collect();
     let findings: super::PostgresFindings = all?.into_iter().flatten().collect();

@@ -336,7 +336,7 @@ fn unsupported_port_file_does_not_request_source() {
 }
 
 #[test]
-fn explicit_file_rule_exemptions_do_not_read_unavailable_inputs() {
+fn explicit_file_rule_exemptions_preserve_output_and_allow_audits_borrow_sources() {
     let root = saved();
     for &(rule, _) in CASES
         .iter()
@@ -375,7 +375,15 @@ fn explicit_file_rule_exemptions_do_not_read_unavailable_inputs() {
             output.findings.is_empty() && output.advisories.is_empty(),
             "{rule}"
         );
-        assert_eq!(sources.physical_read_count(), 0, "{rule}");
+        assert_eq!(
+            sources.physical_read_count(),
+            if rule == "no-raw-ephemeral-port" {
+                files.len()
+            } else {
+                0
+            },
+            "{rule}"
+        );
     }
 }
 

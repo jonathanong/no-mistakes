@@ -9,18 +9,20 @@ pub(super) fn scan(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
-    let mut observed = BTreeSet::new();
+    let mut checked = BTreeSet::new();
+    let allowed = opts.allow.iter().collect::<Vec<_>>();
+    let usage = super::super::allow_audit::AllowUsage::new(allowed.len());
     let mut findings = Vec::new();
     for path in files {
         let rel = relative_slash_path(root, path);
         let Some(source) = super::super::read_source(sources, path) else {
             continue;
         };
+        checked.insert(rel.clone());
         if !is_eval_test(&source, opts) {
             continue;
         }
-        if opts.allow.contains(&rel) {
-            observed.insert(rel);
+        if usage.suppress(allowed.iter().map(|allowed| *allowed == &rel)) {
             continue;
         }
         findings.push(RuleFinding {
@@ -34,8 +36,9 @@ pub(super) fn scan(
             target: Some(rel),
         });
     }
-    for allowed in &opts.allow {
-        if observed.contains(allowed) {
+    for index in usage.unused() {
+        let allowed = allowed[index];
+        if !checked.contains(allowed) {
             continue;
         }
         findings.push(RuleFinding {

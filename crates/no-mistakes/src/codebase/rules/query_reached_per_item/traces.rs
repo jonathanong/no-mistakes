@@ -34,6 +34,13 @@ pub(super) struct Reach {
     pub(super) path: Vec<String>,
     pub(super) transaction: bool,
 }
+pub(super) fn prefer_nontransaction(left: Reach, right: Reach) -> Reach {
+    if left.transaction && !right.transaction {
+        right
+    } else {
+        left
+    }
+}
 pub(super) fn shortest(values: impl Iterator<Item = Reach>) -> Option<Reach> {
     values.min_by(|left, right| {
         (left.path.len(), &left.path, left.transaction).cmp(&(

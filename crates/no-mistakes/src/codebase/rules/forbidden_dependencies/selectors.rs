@@ -50,9 +50,12 @@ impl PathSelector {
     }
 }
 
+mod audit;
+
 struct Exception {
     roots: Vec<PathSelector>,
     allowed: Option<GlobSet>,
+    usage: crate::codebase::rules::allow_audit::AllowUsage,
 }
 
 pub(super) struct Selectors<'a> {
@@ -122,7 +125,13 @@ impl<'a> Selectors<'a> {
                     .unwrap_or_default();
                 nested_error("allowedFiles", item, e)
             })?;
-            exceptions.push(Exception { roots, allowed });
+            exceptions.push(Exception {
+                roots,
+                allowed,
+                usage: crate::codebase::rules::allow_audit::AllowUsage::new(
+                    exception.allowed_files.len(),
+                ),
+            });
         }
         Ok(Self {
             root,
@@ -163,15 +172,28 @@ impl<'a> Selectors<'a> {
             .unwrap_or(target)
             .to_string_lossy()
             .replace('\\', "/");
-        self.exceptions.iter().any(|exception| {
-            exception
+        let mut suppressed = false;
+        for exception in &self.exceptions {
+            let source_matches = exception
                 .roots
                 .iter()
-                .any(|selector| selector.matches(self.root, source))
-                && exception
-                    .allowed
-                    .as_ref()
-                    .is_some_and(|allowed| allowed.is_match(&relative))
-        })
+                .any(|selector| selector.matches(self.root, source));
+            let matches = exception
+                .allowed
+                .as_ref()
+                .map(|allowed| allowed.matches(&relative))
+                .unwrap_or_default();
+            suppressed |= exception.usage.suppress(
+                (0..exception.usage_count())
+                    .map(|index| source_matches && matches.contains(&index)),
+            );
+        }
+        suppressed
+    }
+}
+
+impl Exception {
+    fn usage_count(&self) -> usize {
+        self.allowed.as_ref().map_or(0, GlobSet::len)
     }
 }

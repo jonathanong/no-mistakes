@@ -9,6 +9,7 @@ pub(super) fn scan(
     manifests: &[PathBuf],
     all_files: &[PathBuf],
     sources: &SourceStore,
+    audit: Option<&super::ExceptionAudit>,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     if opts.private.is_none()
@@ -35,7 +36,10 @@ pub(super) fn scan(
                 continue;
             }
         };
-        findings.extend(check_package(rel, path, all_files, opts, &json));
+        if let Some(audit) = audit {
+            audit.checked(path);
+        }
+        findings.extend(check_package(rel, path, all_files, opts, &json, audit));
     }
     findings
 }
@@ -46,13 +50,25 @@ fn check_package(
     files: &[PathBuf],
     opts: &Options,
     json: &Value,
+    audit: Option<&super::ExceptionAudit>,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     let name = json.get("name").and_then(Value::as_str).unwrap_or("");
-    if opts.require_scoped_name
-        && !opts.unscoped_name_exceptions.iter().any(|n| n == name)
-        && !name.starts_with('@')
-    {
+    let raw_name = opts.require_scoped_name && !name.starts_with('@');
+    let matches = opts
+        .unscoped_name_exceptions
+        .iter()
+        .map(|exception| exception == name);
+    let suppressed = if raw_name {
+        if let Some(audit) = audit {
+            audit.audit.usage.suppress(matches)
+        } else {
+            matches.into_iter().any(|matched| matched)
+        }
+    } else {
+        false
+    };
+    if raw_name && !suppressed {
         findings.push(finding(
             &rel,
             format!("{rel}: package name \"{name}\" must be scoped (start with @)."),

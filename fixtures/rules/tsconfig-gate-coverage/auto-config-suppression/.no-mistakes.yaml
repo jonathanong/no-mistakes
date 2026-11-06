@@ -10,4 +10,4 @@ rules:
     scope: repository
     options:
       allowProjects:
-        missing/tsconfig.json: intentionally suppressed regression entry
+        app/tsconfig.json: ""

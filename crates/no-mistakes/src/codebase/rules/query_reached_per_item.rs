@@ -8,11 +8,12 @@ use anyhow::Result;
 use std::collections::BTreeMap;
 use std::path::Path;
 
+mod allow;
 mod config;
 mod traces;
 pub(crate) use config::graph_plan;
 use config::{exempt, Options, Sinks};
-use traces::{source_node, Reach};
+use traces::{prefer_nontransaction, source_node, Reach};
 
 pub const RULE_ID: &str = "query-reached-per-item";
 
@@ -21,6 +22,7 @@ pub(crate) fn check_with_graph(
     config: &NoMistakesConfig,
     graph: &DepGraph,
     facts: &CheckFactMap,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<Vec<RuleFinding>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let root = root.as_path();
@@ -50,6 +52,14 @@ pub(crate) fn check_with_graph(
         let options: Options = application.try_rule_options()?;
         config::validate(&options, config)?;
         let filter = super::path_filter::RulePathFilter::new(root, config, application)?;
+        let audit = super::allow_audit::AllowAudit::new(
+            root,
+            config,
+            application,
+            sources,
+            "allow",
+            options.allow.len(),
+        );
         for kind in &options.effects {
             let effect = &config.effects[kind];
             let configured_sinks = Sinks::new(effect, graph);
@@ -134,14 +144,14 @@ pub(crate) fn check_with_graph(
                     continue;
                 };
                 let file = relative_slash_path(root, &site.file);
-                if options.allow.iter().any(|allow| {
+                if audit.usage.suppress(options.allow.iter().map(|allow| {
                     allow.file == file
                         && allow
                             .callee
                             .as_ref()
                             .is_none_or(|callee| callee == &site.source_callee)
                         && allow.line.is_none_or(|line| line == position.line)
-                }) {
+                })) {
                     continue;
                 }
                 let mut path = reach.path.clone();
@@ -171,17 +181,17 @@ pub(crate) fn check_with_graph(
                 ));
             }
         }
+        findings.extend(
+            allow::finish(root, facts, sources, &filter, &options, &audit)
+                .into_iter()
+                .map(|finding| (0, finding)),
+        );
     }
     Ok(traces::finalize_findings(findings))
 }
 
-fn prefer_nontransaction(left: Reach, right: Reach) -> Reach {
-    if left.transaction && !right.transaction {
-        right
-    } else {
-        left
-    }
-}
-
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod allow_tests;

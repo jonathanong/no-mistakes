@@ -42,3 +42,15 @@ fn option_defaults_are_empty() {
     assert!(opts.include.is_empty());
     assert!(opts.allow.is_empty());
 }
+
+#[test]
+fn unselected_and_unreadable_allow_entries_are_not_stale() {
+    let root = fixture("fail");
+    let mut config = config();
+    config.rules[0].options = serde_yaml::from_str(
+        "include: ['**/*.test.mts']\nallow: [missing.test.mts, excluded.test.mts]",
+    )
+    .unwrap();
+    let findings = check_with_files(&root, &config, &[root.join("missing.test.mts")]).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}

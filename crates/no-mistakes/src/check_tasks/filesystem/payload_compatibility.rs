@@ -39,9 +39,9 @@ pub(super) fn run(
     // Keep both channels from this evaluation; the remaining dispatch must not
     // evaluate the same contracts again to discover advisories at finalization.
     let mut remaining = config.clone();
-    remaining
-        .rules
-        .retain(|rule| rule.rule != rules::declared_payload_compatibility::RULE_ID);
+    super::handled::mark(&mut remaining, |id| {
+        id == rules::declared_payload_compatibility::RULE_ID
+    });
     let rest = super::download_integrity::run(
         root,
         &remaining,

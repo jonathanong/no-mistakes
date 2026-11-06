@@ -39,7 +39,21 @@ pub(super) fn scan(
             ));
         }
     }
-    findings.extend(stale_allowlist(opts, &used_columns, &used_tables));
+    let checked = facts
+        .iter()
+        .filter(|file| file.unanalyzable_statements.is_empty())
+        .map(|file| file.path.clone())
+        .collect::<Vec<_>>();
+    let scope = super::super::allow_audit::CheckedScope::new(root, Some(sources), &checked);
+    if !opts.schema.sql_include.is_empty()
+        && opts
+            .schema
+            .sql_include
+            .iter()
+            .all(|pattern| scope.glob(pattern))
+    {
+        findings.extend(stale_allowlist(opts, &used_columns, &used_tables));
+    }
     Ok(findings)
 }
 

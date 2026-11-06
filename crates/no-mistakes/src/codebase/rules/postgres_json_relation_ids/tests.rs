@@ -31,3 +31,32 @@ pub(super) fn run(yaml: &str, files: &[&str]) -> Vec<RuleFinding> {
     let files = files.iter().map(|file| root.join(file)).collect::<Vec<_>>();
     check_with_files(&root, &config(yaml), &files).unwrap()
 }
+
+#[test]
+fn stale_fingerprint_allowance_requires_catalog_in_scope() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/unused-allow-other"),
+    );
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    let files =
+        crate::codebase::ts_source::discover_files(&root, &config.filesystem.skip_directories);
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].rule, "unused-allow-entry");
+    let findings = check_with_files(&root, &config, &[]).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn table_allowances_keep_exact_schema_qualified_identity() {
+    let findings = run("idKeyPattern: 'Id$'\nsqlInclude: ['db/schema-qualified.sql']\nallow: [{object: 'table:public', reason: reviewed}]", &["db/schema-qualified.sql"]);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].rule, RULE_ID);
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some("column:public.orders.details")
+    );
+    assert!(run("idKeyPattern: 'Id$'\nsqlInclude: ['db/schema-qualified.sql']\nallow: [{object: 'table:public.orders', reason: reviewed}]", &["db/schema-qualified.sql"]).is_empty());
+}

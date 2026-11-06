@@ -150,3 +150,67 @@ a finding attributed to a delegated helper.
 
 This audit covers no-mistakes check rules. ESLint uses its own
 `reportUnusedDisableDirectives` setting.
+
+## Allow-entry hygiene
+
+Configured exception lists share invocation-local usage accounting. An entry
+counts as used when its selector matches a finding before allow filtering.
+All overlapping entries matching that finding count as used; one entry does
+not become stale merely because an earlier entry also matches it.
+
+New stale diagnostics use `rule: "unused-allow-entry"` in `advisories`, with the
+configuration file and entry line in `file` and `line`, the checked rule ID in
+`import`, and the selector in `target`. Entry lines refer to the authored
+sequence item under that rule option, even when an earlier rule has already
+been checked or contains the same string. Their message names the rule and option.
+Remove an obsolete entry, or correct its selector if the exception is still
+needed. Reporting unused exceptions prevents obsolete intent from silently
+hiding future violations.
+
+These diagnostics are always non-failing advisories, matching the default
+unused-disable-directive precedent. `reportUnusedDisableDirectives` continues
+to configure comments only; it does not change allow-entry severity. Disable
+comments cannot suppress the new hygiene diagnostics. CLI `check`, async
+`check()`, and `analyzeProject()` check reports share this behavior and retain
+the existing report shape.
+
+An entry is stale only when the run checked its entire relevant selector
+scope and none of those checks produced a matching finding. For a file glob,
+every matching file in the request's visible inventory must have been checked
+successfully by that rule application. A partially checked glob stays silent,
+even when no finding matched the checked subset. Excluded files, changed-file
+restrictions, disabled applications, missing files, read/parse failures, and
+uncertain coverage cannot establish staleness. An empty match set is not proof
+of a checked scope. Graph-dependent checks also require usable supporting facts.
+The audit never widens a run or parses files again to establish coverage.
+Regex and package-name entries have no file selector, so the audit requires
+complete coverage of their visible file domain; otherwise it stays silent.
+
+For example, `allow: ["src/**"]` cannot be reported stale when the run checked
+only `src/one.ts` and left `src/two.ts` outside scope. It can be reported when
+all matching relevant files were checked and none needed the exception.
+
+New advisory reporting covers `query-reached-per-item`, `no-raw-ephemeral-port`,
+`swift-no-raw-print`, `swift-viewmodel-main-actor`,
+`csharp-no-async-void-delegate`, `file-extension-policy`, `lockfile-allowlist`,
+`package-json-workspace-coverage`, `workspace-package-cycles`,
+`postgres-json-relation-ids`, nested `forbidden-dependencies` allowed files,
+`no-test-git-sha` allowed contexts, `test-email-domain-policy` allowed email
+patterns, `package-json-required-fields` unscoped-name exceptions, and
+`no-git-identity-mutation` conditional workflow allowances. Schema-backed
+JSON-relation allowances require complete applicable catalog coverage;
+combined catalog/write checks remain silent when coverage is uncertain.
+
+Existing PostgreSQL catalog allow lists use the shared usage accounting while
+keeping their established stale messages, locations, and severity. Existing
+workflow-timeout, Markdown-eval, Storybook, tsconfig, and SQL allow-list
+reporters retain their established diagnostic contracts, including their
+existence-based checks where applicable. They no longer call an entry stale
+solely because its files were outside the checked scope. Existing in-scope
+stale findings can therefore still fail `check`; the new advisory diagnostic
+does not demote them or duplicate their reports.
+
+Policy vocabularies such as allowed SQL types, accepted YAML keys, and permitted
+manifest fields define valid input rather than individual finding exceptions.
+They are not audited as suppressions. File and root exclusions continue to
+control analysis scope rather than becoming allow entries.

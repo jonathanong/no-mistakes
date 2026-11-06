@@ -85,3 +85,9 @@ Use `allow` for a stable generated or framework-owned path. Use a line or file
 [`swift-no-raw-print`](swift-no-raw-print.md) covers Swift runtime hygiene;
 Swift test planning and package boundaries are documented in the configuration
 guide.
+
+An `allow` glob that matches only successfully checked files and suppresses no
+raw finding produces an `unused-allow-entry` advisory. Remove the stale entry.
+Overlapping entries are all considered used when they match a raw finding,
+even when an inline suppression also applies. Partial or uncertain scopes do
+not produce stale-entry advisories.

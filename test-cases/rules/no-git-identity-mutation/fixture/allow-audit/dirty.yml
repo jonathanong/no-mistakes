@@ -1,0 +1,5 @@
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: git config user.name bot

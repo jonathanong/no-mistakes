@@ -229,3 +229,8 @@ check reports protected lint rule IDs disabled by real TS/JS comments in
 configured files. It shares the invocation's AST facts and returns ordinary
 rule findings with the directive line and offending ID. Blanket lint disables
 and TypeScript suppression directives require explicit options.
+
+Configured allow entries that match no finding in their fully checked selector
+scope produce non-failing `unused-allow-entry` advisories at the config entry.
+Partial or uncertain scope stays silent. Existing rule-specific stale findings
+retain their severity; see [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

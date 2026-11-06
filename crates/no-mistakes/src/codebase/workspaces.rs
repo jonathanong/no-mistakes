@@ -6,6 +6,13 @@ use std::path::{Path, PathBuf};
 
 use crate::codebase::ts_resolver::VisiblePathLookup;
 use crate::codebase::{glob_normalize, ts_resolver::normalize_path};
+#[cfg(not(test))]
+macro_rules! workspace_load_metrics {
+    ($root:expr) => {};
+}
+#[cfg(test)]
+#[macro_use]
+pub(crate) mod load_metrics_tests;
 include!("workspaces/models.rs");
 include!("workspaces/indexed.rs");
 include!("workspaces/projection_key.rs");

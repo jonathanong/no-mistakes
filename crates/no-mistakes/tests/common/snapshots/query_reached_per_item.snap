@@ -7,6 +7,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [
         {
+          "file": "allow.yml",
+          "import": "query-reached-per-item",
+          "line": 11,
+          "message": "stale query-reached-per-item allow entry `src/helpers.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allow: [{file: src/entry.mts, callee: lookup, line: 5}, {file: src/entry.mts, callee: read}, {file: src/helpers.mts}]",
+          "target": "src/helpers.mts"
+        },
+        {
           "file": "src/entry.mts",
           "line": 41,
           "message": "directive for `query-reached-per-item` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
