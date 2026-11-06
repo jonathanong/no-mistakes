@@ -45,6 +45,7 @@ struct ImportCollector {
     function_calls: Vec<FunctionCall>,
     collect_call_eligibility: bool,
     unreachable_call_ranges: Vec<UnreachableCallRange>,
+    import_inactive_call_ranges: Vec<(u32, u32)>,
     value_flow: ValueFlowFacts,
     callable_assignment_state: Option<Box<CallableAssignmentState>>,
     /// Cutoff for the current callable's body when its suffix is unreachable.

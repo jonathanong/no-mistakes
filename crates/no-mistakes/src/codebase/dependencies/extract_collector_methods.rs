@@ -92,7 +92,7 @@ fn record_callable_argument_transitions(
             callee_binding_scope: collector.callee_binding_scope(&callee),
             callee,
             line: 0,
-            offset: 0,
+            offset: expression.span().start,
             is_callback: true,
             invocation: InvocationKind::Callback,
             target_identity: CallTargetIdentity::RepositoryFunction,

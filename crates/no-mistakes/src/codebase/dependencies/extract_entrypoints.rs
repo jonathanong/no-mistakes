@@ -171,6 +171,9 @@ fn extract_import_facts_with_rhs_probe(
         per_item_calls: collector.per_item_calls,
         function_calls: collector.function_calls,
         unreachable_call_ranges: normalize_unreachable_call_ranges(collector.unreachable_call_ranges),
+        import_inactive_call_ranges: normalize_unreachable_call_ranges(collector.import_inactive_call_ranges.into_iter()
+            .map(|(start, end)| (None, start, end)).collect()).into_iter()
+            .map(|(_, start, end)| (start, end)).collect(),
         unknown_calls: collector.unknown_calls,
         symbol_references: collector.symbol_references,
         exported_functions,
