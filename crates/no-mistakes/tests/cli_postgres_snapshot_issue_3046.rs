@@ -8,6 +8,7 @@ fn postgres_namespace_issue_3046_check_json_snapshot() {
         ("import-type", "issue-3046.yml"),
         ("type-shadow", "issue-3046.yml"),
         ("recall", "issue-3046-executors.yml"),
+        ("builder-mutations", "issue-3046-builders.yml"),
         ("nested", "issue-3046.yml"),
         ("declare", "issue-3046.yml"),
         ("scope-isolation", "issue-3046-executors.yml"),

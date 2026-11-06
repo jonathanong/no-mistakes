@@ -13,13 +13,11 @@ impl<'a> ScopeVisitor<'a> {
 
     pub(super) fn walk_namespace_scope(&mut self, block: &ast::TSModuleBlock<'a>) {
         self.push_scope();
-        self.enter_function();
-        self.enter_plain_function(None, block.span.start);
+        self.var_scopes.push(self.scopes.len().saturating_sub(1));
         resolve::hoist_vars(&block.body, self);
         resolve::record_statements(&block.body, self);
         walk::walk_ts_module_block(self, block);
-        self.leave_plain_function();
-        self.leave_function();
+        self.var_scopes.pop();
         self.pop_scope();
     }
 

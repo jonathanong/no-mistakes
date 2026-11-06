@@ -172,20 +172,6 @@ impl ScopeVisitor<'_> {
         self.control_depth = self.control_depth.saturating_sub(1);
     }
 
-    pub(super) fn enter_function(&mut self) {
-        self.member_query_proof.next_function_id += 1;
-        self.member_query_proof
-            .function_ids
-            .push(self.member_query_proof.next_function_id);
-        self.function_scopes
-            .push(self.scopes.len().saturating_sub(1));
-    }
-
-    pub(super) fn leave_function(&mut self) {
-        self.member_query_proof.function_ids.pop();
-        self.function_scopes.pop();
-    }
-
     pub(super) fn with_loop(&mut self, walk: impl FnOnce(&mut Self)) {
         self.loop_depth += 1;
         walk(self);

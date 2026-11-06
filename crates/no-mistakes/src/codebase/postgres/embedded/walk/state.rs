@@ -83,6 +83,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) control_depth: usize,
     pub(crate) loop_depth: usize,
     pub(crate) function_scopes: Vec<usize>,
+    pub(crate) var_scopes: Vec<usize>,
     pub(crate) functions: resolve::LocalFunctions,
     pub(crate) sql_statement_types: HashSet<String>,
     pub(crate) unproven_member_query_spans: Vec<(u32, u32)>,

@@ -2,6 +2,35 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "builder-mutations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "index.ts",
+          "line": 10,
+          "message": "index.ts:10: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "offset.append(sql` OFFSET 11`);",
+          "target": "offset"
+        },
+        {
+          "file": "index.ts",
+          "line": 18,
+          "message": "index.ts:18: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "sourceLine": "query(deferred);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "declare": {
     "exitCode": 0,
     "report": {

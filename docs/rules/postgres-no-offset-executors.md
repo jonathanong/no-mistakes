@@ -63,3 +63,5 @@ TypeScript namespace bodies, including nested and `declare namespace` bodies,
 use their own binding scopes. Imported types are safe in namespace declarations;
 configured executor calls inside namespaces receive the same SQL checks as calls
 in other scopes. Namespace locals do not shadow bindings outside their body.
+Namespace bodies execute immediately: straight-line appends to outer SQL builders
+remain recoverable, while nested function bodies retain deferred-execution checks.

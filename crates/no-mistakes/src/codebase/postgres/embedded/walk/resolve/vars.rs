@@ -159,7 +159,7 @@ pub(super) fn invalidate_vars(pattern: &BindingPattern<'_>, visitor: &mut ScopeV
 }
 
 fn var_scope(visitor: &ScopeVisitor<'_>, name: &str) -> usize {
-    let owner = visitor.function_scopes.last().copied().unwrap_or(0);
+    let owner = visitor.var_scopes.last().copied().unwrap_or(0);
     // A simple catch parameter may legally share a hoisted var name. Its
     // initializer assigns the catch binding, leaving the outer var alone.
     (owner..visitor.scopes.len())

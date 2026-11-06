@@ -80,6 +80,7 @@ pub(crate) fn collect_calls<'a>(
         control_depth: 0,
         loop_depth: 0,
         function_scopes: Vec::new(),
+        var_scopes: Vec::new(),
         functions: if head_calls_only {
             resolve::LocalFunctions::collect_heads(program, &options.trusted_sql_tags)
         } else {
