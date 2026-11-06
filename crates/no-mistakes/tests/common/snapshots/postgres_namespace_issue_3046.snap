@@ -1,0 +1,168 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "declare": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "import-type": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "nested": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "index.ts",
+          "line": 12,
+          "message": "index.ts:12: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "query('SELECT id FROM posts OFFSET 4');",
+          "target": "offset#2"
+        },
+        {
+          "file": "index.ts",
+          "line": 6,
+          "message": "index.ts:6: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "const sql = 'SELECT id FROM posts OFFSET 3';",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "recall": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "index.ts",
+          "line": 3,
+          "message": "index.ts:3: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "const sql = 'SELECT id FROM posts OFFSET 1';",
+          "target": "offset"
+        },
+        {
+          "file": "index.ts",
+          "line": 6,
+          "message": "index.ts:6: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "pool.query('SELECT id FROM posts OFFSET 2');",
+          "target": "offset#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repro": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "scope-isolation": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "index.ts",
+          "line": 12,
+          "message": "index.ts:12: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "pool.query('SELECT id FROM posts OFFSET 6');",
+          "target": "offset#2"
+        },
+        {
+          "file": "index.ts",
+          "line": 19,
+          "message": "index.ts:19: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "pool.query('SELECT id FROM posts OFFSET 7');",
+          "target": "offset#3"
+        },
+        {
+          "file": "index.ts",
+          "line": 20,
+          "message": "index.ts:20: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "query('SELECT id FROM posts OFFSET 8');",
+          "target": "offset#4"
+        },
+        {
+          "file": "index.ts",
+          "line": 9,
+          "message": "index.ts:9: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "var sql = 'SELECT id FROM posts OFFSET 5';",
+          "target": "offset"
+        }
+      ],
+      "unprovenMemberQuerySql": 1,
+      "warnings": []
+    }
+  },
+  "type-shadow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "index.ts",
+          "import": "pg",
+          "line": 7,
+          "message": "index.ts:7: undeclared executor type `T` from `pg`; add `T` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-no-offset",
+          "sourceLine": "outer.query('SELECT id FROM posts OFFSET 9');",
+          "target": "undeclared-executor-type"
+        }
+      ],
+      "unprovenMemberQuerySql": 1,
+      "warnings": []
+    }
+  }
+}

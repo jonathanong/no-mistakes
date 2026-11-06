@@ -6,6 +6,7 @@ fn postgres_namespace_issue_3046_check_json_snapshot() {
     let cases: Vec<_> = [
         ("repro", "issue-3046.yml"),
         ("import-type", "issue-3046.yml"),
+        ("type-shadow", "issue-3046.yml"),
         ("recall", "issue-3046-executors.yml"),
         ("nested", "issue-3046.yml"),
         ("declare", "issue-3046.yml"),

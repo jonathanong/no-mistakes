@@ -1082,3 +1082,7 @@ PostgreSQL annotation low effort shares the bounded awaited fresh native builder
 return-origin proof across CLI, Rust checks and asynchronous Node checks. Exact
 prepared imported append-effect obligations must all resolve; unsupported return,
 await, alias or effect paths keep the existing unanalyzable policy.
+
+TypeScript namespace bodies (nested, dotted, reopened, and `declare namespace`)
+keep PostgreSQL executor and resource bindings local to each body. Namespace
+`var` declarations hoist within that body without shadowing outer imports.

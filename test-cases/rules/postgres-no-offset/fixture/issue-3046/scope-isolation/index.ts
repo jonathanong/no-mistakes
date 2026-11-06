@@ -2,8 +2,8 @@ import { query, Pool, createPool } from 'pg';
 namespace First {
   type Pool = {};
   const local: Pool = {};
-  var query = (sql: string) => {};
   query('SELECT id FROM posts OFFSET 90');
+  if (true) { var query = (sql: string) => {}; }
 }
 namespace Second {
   var sql = 'SELECT id FROM posts OFFSET 5';
