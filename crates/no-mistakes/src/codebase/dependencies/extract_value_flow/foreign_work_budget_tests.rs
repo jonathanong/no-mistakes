@@ -76,9 +76,14 @@ fn ordinary_files_keep_identical_complete_facts() {
         }
     }
     let controls = root().join("../../../foreign-receiver-declaration-order/fixture/src");
-    for file in std::fs::read_dir(controls).unwrap() {
-        let file = file.unwrap().path();
+    let mut compared = 0;
+    for file in ignore::WalkBuilder::new(controls)
+        .max_depth(Some(1))
+        .build()
+    {
+        let file = file.unwrap().into_path();
         if file.extension().is_some_and(|extension| extension == "mts") {
+            compared += 1;
             assert_eq!(
                 collect(&file, None, true).0,
                 collect(&file, Some(usize::MAX), true).0,
@@ -87,6 +92,7 @@ fn ordinary_files_keep_identical_complete_facts() {
             );
         }
     }
+    assert!(compared > 0);
 }
 #[test]
 fn exhausted_outputs_and_zero_remaining_never_extend_partial_facts() {

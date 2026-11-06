@@ -35,16 +35,17 @@ fn foreign_receiver_budget_failure_preserves_file_and_programmatic_parity() {
             .unwrap(),
     )
     .unwrap();
-    let analyzed =
-        crate::napi_api::analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+    let analyzed = crate::napi_api::analyze_project::analyze_project_json_impl(
+        crate::napi_api::options::test_json_arg(
             json!({
                 "root": root,
                 "config": root.join("independent-config.yml"),
                 "reports": [{"type": "check"}]
             })
             .to_string(),
-        ))
-        .unwrap();
+        ),
+    )
+    .unwrap();
     let analyzed: serde_json::Value = serde_json::from_str(&analyzed).unwrap();
     assert_eq!(report, analyzed["reports"][0]["result"]);
     let failures = report["incomplete"].as_array().unwrap();
