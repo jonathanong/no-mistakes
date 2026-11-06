@@ -1,0 +1,19 @@
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: actions/a
+      - uses: ./actions/a/../b
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: actions/a/../b
+      - uses: ./actions/a/../b
+      - uses: ./actions/b
+      - uses: ./actions/a
+      - uses: actions/checkout@v4
+        with:
+          repository: other/repo
+          sparse-checkout: unrelated
+      - uses: ./actions/a
+      - uses: ./actions/b

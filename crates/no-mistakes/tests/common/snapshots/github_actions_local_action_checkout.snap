@@ -1,0 +1,375 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "boundaries": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/shapes.yml",
+          "import": "./actions/a",
+          "line": 16,
+          "message": ".github/workflows/shapes.yml:16: job `build` uses local action `./actions/a` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/a",
+          "target": "build#6"
+        },
+        {
+          "file": ".github/workflows/shapes.yml",
+          "import": "./actions/a",
+          "line": 20,
+          "message": ".github/workflows/shapes.yml:20: job `build` uses local action `./actions/a` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/a",
+          "target": "build#8"
+        },
+        {
+          "file": ".github/workflows/shapes.yml",
+          "import": "./actions/a",
+          "line": 24,
+          "message": ".github/workflows/shapes.yml:24: job `build` uses local action `./actions/a` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/a",
+          "target": "build#10"
+        },
+        {
+          "file": ".github/workflows/shapes.yml",
+          "import": "./actions/a",
+          "line": 28,
+          "message": ".github/workflows/shapes.yml:28: job `build` uses local action `./actions/a` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/a",
+          "target": "build#12"
+        },
+        {
+          "file": ".github/workflows/shapes.yml",
+          "import": "./actions/a",
+          "line": 32,
+          "message": ".github/workflows/shapes.yml:32: job `build` uses local action `./actions/a` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/a",
+          "target": "build#14"
+        },
+        {
+          "file": ".github/workflows/shapes.yml",
+          "import": "./actions/a",
+          "line": 36,
+          "message": ".github/workflows/shapes.yml:36: job `build` uses local action `./actions/a` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/a",
+          "target": "build#16"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "diagnostics": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/malformed.yml",
+          "line": 1,
+          "message": ".github/workflows/malformed.yml:1: cannot determine local action checkout order (invalid YAML (did not find expected node content at line 2 column 1, while parsing a flow node)). Use a static workflow jobs mapping so local action availability can be checked.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "jobs: [",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/shape.yml",
+          "line": 1,
+          "message": ".github/workflows/shape.yml:1: cannot determine local action checkout order (jobs is not a mapping). Use a static workflow jobs mapping so local action availability can be checked.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "jobs: []",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/suppression.yml",
+          "import": "./actions/c",
+          "line": 9,
+          "message": ".github/workflows/suppression.yml:9: job `build` uses local action `./actions/c` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/c",
+          "target": "build#3"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclusions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/exclusions.yml",
+          "import": "./actions/setup",
+          "line": 10,
+          "message": ".github/workflows/exclusions.yml:10: job `excluded` uses local action `./actions/setup` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/setup",
+          "target": "excluded#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "locations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/forms.yml",
+          "import": "./actions/a",
+          "line": 5,
+          "message": ".github/workflows/forms.yml:5: job `quoted` uses local action `./actions/a` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "'uses': >-",
+          "target": "quoted#1"
+        },
+        {
+          "file": ".github/workflows/forms.yml",
+          "import": "./actions/b",
+          "line": 7,
+          "message": ".github/workflows/forms.yml:7: job `quoted` uses local action `./actions/b` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- {name: flow, 'uses': ./actions/b}",
+          "target": "quoted#2"
+        },
+        {
+          "file": ".github/workflows/forms.yml",
+          "import": "./actions/c",
+          "line": 9,
+          "message": ".github/workflows/forms.yml:9: job `flow` uses local action `./actions/c` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "{uses: ./actions/c},",
+          "target": "flow#1"
+        },
+        {
+          "file": ".github/workflows/paths.yml",
+          "import": "./actions/a",
+          "line": 18,
+          "message": ".github/workflows/paths.yml:18: job `build` uses local action `./actions/a` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/a",
+          "target": "build#8"
+        },
+        {
+          "file": ".github/workflows/paths.yml",
+          "import": "./actions/a/../b",
+          "line": 7,
+          "message": ".github/workflows/paths.yml:7: job `build` uses local action `./actions/a/../b` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/a/../b",
+          "target": "build#2"
+        },
+        {
+          "file": ".github/workflows/paths.yml",
+          "import": "./actions/b",
+          "line": 19,
+          "message": ".github/workflows/paths.yml:19: job `build` uses local action `./actions/b` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/b",
+          "target": "build#9"
+        },
+        {
+          "file": ".github/workflows/root-flow.yml",
+          "import": "./actions/a",
+          "line": 2,
+          "message": ".github/workflows/root-flow.yml:2: job `build` uses local action `./actions/a` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "{uses: ./actions/a},",
+          "target": "build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "named-job": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/named.yml",
+          "import": "./actions/setup",
+          "line": 4,
+          "message": ".github/workflows/named.yml:4: job `unanalyzable` uses local action `./actions/setup` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/setup",
+          "target": "unanalyzable#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/edges.yml",
+          "import": "./.github/actions/setup",
+          "line": 15,
+          "message": ".github/workflows/edges.yml:15: job `sparse-boundary` uses local action `./.github/actions/setup` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./.github/actions/setup",
+          "target": "sparse-boundary#2"
+        },
+        {
+          "file": ".github/workflows/edges.yml",
+          "import": "./.github/actions/setup",
+          "line": 24,
+          "message": ".github/workflows/edges.yml:24: job `sparse-boundary` uses local action `./.github/actions/setup` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./.github/actions/setup",
+          "target": "sparse-boundary#6"
+        },
+        {
+          "file": ".github/workflows/edges.yml",
+          "import": "./.github/actions/setup",
+          "line": 41,
+          "message": ".github/workflows/edges.yml:41: job `sparse-boundary` uses local action `./.github/actions/setup` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./.github/actions/setup",
+          "target": "sparse-boundary#14"
+        },
+        {
+          "file": ".github/workflows/edges.yml",
+          "import": "./.github/actions/setup",
+          "line": 9,
+          "message": ".github/workflows/edges.yml:9: job `empty-path` uses local action `./.github/actions/setup` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./.github/actions/setup",
+          "target": "empty-path#2"
+        },
+        {
+          "file": ".github/workflows/order.yml",
+          "import": "./actions/a",
+          "line": 22,
+          "message": ".github/workflows/order.yml:22: job `ordered` uses local action `./actions/a` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/a",
+          "target": "ordered#9"
+        },
+        {
+          "file": ".github/workflows/order.yml",
+          "import": "./actions/a",
+          "line": 40,
+          "message": ".github/workflows/order.yml:40: job `separate` uses local action `./actions/a` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/a",
+          "target": "separate#1"
+        },
+        {
+          "file": ".github/workflows/order.yml",
+          "import": "./actions/a",
+          "line": 43,
+          "message": ".github/workflows/order.yml:43: job `separate` uses local action `./actions/a` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/a",
+          "target": "separate#3"
+        },
+        {
+          "file": ".github/workflows/order.yml",
+          "import": "./actions/a",
+          "line": 47,
+          "message": ".github/workflows/order.yml:47: job `separate` uses local action `./actions/a` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/a",
+          "target": "separate#5"
+        },
+        {
+          "file": ".github/workflows/order.yml",
+          "import": "./actions/a",
+          "line": 51,
+          "message": ".github/workflows/order.yml:51: job `separate` uses local action `./actions/a` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/a",
+          "target": "separate#7"
+        },
+        {
+          "file": ".github/workflows/order.yml",
+          "import": "./actions/a",
+          "line": 6,
+          "message": ".github/workflows/order.yml:6: job `ordered` uses local action `./actions/a` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/a",
+          "target": "ordered#1"
+        },
+        {
+          "file": ".github/workflows/order.yml",
+          "import": "./actions/b",
+          "line": 28,
+          "message": ".github/workflows/order.yml:28: job `ordered` uses local action `./actions/b` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/b",
+          "target": "ordered#12"
+        },
+        {
+          "file": ".github/workflows/order.yml",
+          "import": "./actions/b",
+          "line": 33,
+          "message": ".github/workflows/order.yml:33: job `ordered` uses local action `./actions/b` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/b",
+          "target": "ordered#15"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -1,0 +1,4 @@
+jobs:
+  unanalyzable:
+    steps:
+      - uses: ./actions/setup

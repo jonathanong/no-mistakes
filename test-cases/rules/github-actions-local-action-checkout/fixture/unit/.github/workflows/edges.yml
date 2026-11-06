@@ -1,0 +1,45 @@
+name: edges
+on: push
+jobs:
+  empty-path:
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: ''
+      - uses: ./.github/actions/setup
+  sparse-boundary:
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/actions/setup-other
+      - uses: ./.github/actions/setup
+      - uses: AcTiOnS/ChEcKoUt@v4
+        with:
+          path: ./
+          sparse-checkout: .github
+      - uses: ./.github/actions/setup
+      - uses: actions/checkout@v4
+        with:
+          repository: elsewhere/repo
+      - uses: ./.github/actions/setup
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/actions
+      - uses: ./.github/actions/setup
+      - uses: actions/checkout@v4
+        if: true
+        with:
+          repository: elsewhere/repo
+      - uses: ./.github/actions/setup
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: unrelated
+      - uses: ./.github/actions/setup
+      - uses: actions/checkout@v4
+        with:
+          repository: '${{ inputs.repository }}'
+      - uses: ./.github/actions/setup
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/actions/setup
+      - uses: ./.github/actions/setup

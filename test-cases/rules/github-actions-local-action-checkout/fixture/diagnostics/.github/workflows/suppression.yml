@@ -1,0 +1,9 @@
+name: suppression
+on: push
+jobs:
+  build:
+    steps:
+      # no-mistakes-disable-next-line github-actions-local-action-checkout
+      - uses: ./actions/a
+      - uses: ./actions/b # no-mistakes-disable-line github-actions-local-action-checkout
+      - uses: ./actions/c

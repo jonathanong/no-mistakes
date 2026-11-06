@@ -1,0 +1,7 @@
+# no-mistakes-disable-file github-actions-local-action-checkout
+name: suppressed-file
+on: push
+jobs:
+  test:
+    steps:
+      - uses: ./.github/actions/a

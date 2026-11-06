@@ -1,0 +1,36 @@
+jobs:
+  12:
+    steps:
+      - uses: ./actions/a
+  reusable:
+    uses: ./.github/workflows/other.yml
+  build:
+    steps:
+      - run: echo ok
+      - uses: 12
+      - uses: actions/checkout
+      - uses: actions/checkout@
+      - uses: actions/checkout@v4
+        with:
+          path: 12
+      - uses: ./actions/a
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: 12
+      - uses: ./actions/a
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: ''
+      - uses: ./actions/a
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: '# comment'
+      - uses: ./actions/a
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: '${{ inputs.paths }}'
+      - uses: ./actions/a
+      - uses: actions/checkout@v4
+        with:
+          repository: 12
+      - uses: ./actions/a

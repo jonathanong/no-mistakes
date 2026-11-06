@@ -188,3 +188,10 @@ It compares explicitly paired JSON Schema declarations, including required
 properties, primitive enums, and nested objects/arrays. Unsupported keywords and
 missing declarations are unproven findings. A passing declaration check does
 not prove runtime endpoints adopt the schemas.
+
+For `github-actions-local-action-checkout`, move a covering unconditional root
+checkout of the current repository before each unprepared local `uses: ./path`.
+Readiness is per action path and per job; an unconditional foreign root checkout
+invalidates every path. Conditional, nonroot, and noncovering self checkouts
+preserve the previous state. Use `check()` or an `analyzeProject()` check report for repeated
+in-process queries. See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-local-action-checkout.md).

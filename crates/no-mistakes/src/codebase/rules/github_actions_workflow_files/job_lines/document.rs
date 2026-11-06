@@ -1,25 +1,26 @@
 use granit_parser::{Event, Parser, ScalarStyle, Tag};
 use std::collections::BTreeMap;
 
-pub(super) enum Kind {
+pub(crate) enum Kind {
     Mapping(Vec<usize>),
+    Sequence(Vec<usize>),
     String(String),
     Alias(usize),
     Other,
 }
 
-pub(super) struct Node {
-    pub(super) kind: Kind,
-    pub(super) line: usize,
+pub(crate) struct Node {
+    pub(crate) kind: Kind,
+    pub(crate) line: usize,
 }
 
-pub(super) struct Document {
-    pub(super) nodes: Vec<Node>,
+pub(crate) struct Document {
+    pub(crate) nodes: Vec<Node>,
     anchors: BTreeMap<usize, usize>,
 }
 
 impl Document {
-    pub(super) fn parse(source: &str) -> Option<Self> {
+    pub(crate) fn parse(source: &str) -> Option<Self> {
         let mut document = Self {
             nodes: Vec::new(),
             anchors: BTreeMap::new(),
@@ -32,7 +33,7 @@ impl Document {
             });
             let (kind, anchor, container) = match event {
                 Event::MappingStart(_, anchor, _) => (Kind::Mapping(Vec::new()), anchor, true),
-                Event::SequenceStart(_, anchor, _) => (Kind::Other, anchor, true),
+                Event::SequenceStart(_, anchor, _) => (Kind::Sequence(Vec::new()), anchor, true),
                 Event::Scalar(text, style, anchor, tag) => {
                     let key = (is_key || anchor != 0)
                         .then(|| scalar_key(&text, style, tag.as_deref()))
@@ -54,7 +55,9 @@ impl Document {
                 document.anchors.insert(anchor, id);
             }
             if let Some(&parent) = stack.last() {
-                if let Kind::Mapping(children) = &mut document.nodes[parent].kind {
+                if let Kind::Mapping(children) | Kind::Sequence(children) =
+                    &mut document.nodes[parent].kind
+                {
                     children.push(id);
                 }
             }
@@ -74,14 +77,39 @@ impl Document {
         }
     }
 
-    pub(super) fn mapping(&self, id: usize) -> Option<&[usize]> {
+    pub(crate) fn mapping(&self, id: usize) -> Option<&[usize]> {
         match &self.nodes.get(id).map(|_| self.resolved(id))?.kind {
             Kind::Mapping(children) => Some(children),
             _ => None,
         }
     }
 
-    pub(super) fn key(&self, id: usize) -> Option<&str> {
+    pub(crate) fn sequence(&self, id: usize) -> Option<&[usize]> {
+        match &self.nodes.get(id).map(|_| self.resolved(id))?.kind {
+            Kind::Sequence(children) => Some(children),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn field(&self, id: usize, name: &str) -> Option<usize> {
+        self.mapping(id)?
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .find(|pair| self.key(pair[0]) == Some(name))
+            .map(|pair| pair[1])
+    }
+
+    pub(crate) fn field_line(&self, id: usize, name: &str) -> Option<usize> {
+        self.mapping(id)?
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .find(|pair| self.key(pair[0]) == Some(name))
+            .map(|pair| self.nodes[pair[0]].line)
+    }
+
+    pub(crate) fn key(&self, id: usize) -> Option<&str> {
         match &self.resolved(id).kind {
             Kind::String(key) => Some(key),
             _ => None,
