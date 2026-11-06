@@ -325,7 +325,7 @@ fn forbidden_calls_barrel_prerequisites_json_matches_snapshot() {
     let fixture = root("barrel-prerequisites");
     assert_saved_fixture(
         "forbidden_calls_barrel_prerequisites",
-        &["broken", "healthy"].map(|kind| {
+        &["broken", "healthy", "disconnected"].map(|kind| {
             let root = fixture.join(kind);
             (kind, root.clone(), root.join(".no-mistakes.yml"))
         }),
@@ -335,7 +335,7 @@ fn forbidden_calls_barrel_prerequisites_json_matches_snapshot() {
 #[test]
 fn forbidden_calls_max_depth_retains_failed_barrel_prerequisites() {
     let fixture = root("barrel-prerequisites");
-    for kind in ["broken", "healthy"] {
+    for kind in ["broken", "healthy", "disconnected"] {
         let root = fixture.join(kind);
         let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
             .args(["check", "--root"])
