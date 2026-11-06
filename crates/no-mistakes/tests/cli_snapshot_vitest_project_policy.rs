@@ -61,6 +61,17 @@ fn vitest_project_policy_json_matches_snapshot() {
         "helper-type-only",
         "update-mutation",
         "delete-mutation",
+        "namespace-undeclared",
+        "namespace-missing",
+        "namespace-malformed",
+        "namespace-known",
+        "namespace-empty",
+        "namespace-partial",
+        "namespace-star-unknown",
+        "namespace-star-known",
+        "namespace-named-star",
+        "namespace-mutable",
+        "namespace-destructured",
     ] {
         let root = rules_path("vitest-project-policy", "fixture", "options-errors");
         cases.push((name, root.clone(), root.join(format!("{name}.yml"))));

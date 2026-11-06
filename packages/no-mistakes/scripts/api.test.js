@@ -129,13 +129,16 @@ test("forbidden lint suppression options expose exact directive choices", () => 
   );
 });
 
-test("forbidden lint suppression configuration compiles from the package root", () => {
+test("lint suppression and Vitest property configuration compile from the package root", () => {
   const { createRequire } = require("node:module");
   const dependencyRequire = createRequire(require.resolve("@storybook/react"));
   const ts = dependencyRequire("typescript");
   const repositoryRoot = join(packageRoot, "..", "..");
   const program = ts.createProgram(
-    [join(repositoryRoot, "fixtures/node-api/forbidden-lint-suppressions/public.mts")],
+    [
+      join(repositoryRoot, "fixtures/node-api/forbidden-lint-suppressions/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/vitest-project-policy/public.mts"),
+    ],
     {
       noEmit: true,
       strict: true,

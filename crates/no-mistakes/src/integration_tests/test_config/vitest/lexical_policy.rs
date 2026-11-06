@@ -48,7 +48,7 @@ impl Value {
 pub(crate) struct Reader<'a> {
     sources: &'a SourceStore,
     allowed: BTreeSet<PathBuf>,
-    modules: BTreeMap<PathBuf, BTreeMap<String, Value>>,
+    modules: BTreeMap<PathBuf, Module>,
     visiting: BTreeSet<PathBuf>,
     programs: crate::ast::ParsedProgramCache,
 }
@@ -64,18 +64,22 @@ impl<'a> Reader<'a> {
         }
     }
     pub(crate) fn read(&mut self, path: &Path) -> Value {
-        self.module(path).get("default").cloned().unwrap_or(Value {
-            kind: Kind::Unknown,
-            file: path.to_path_buf(),
-            line: 1,
-        })
+        self.module(path)
+            .exports
+            .get("default")
+            .cloned()
+            .unwrap_or(Value {
+                kind: Kind::Unknown,
+                file: path.to_path_buf(),
+                line: 1,
+            })
     }
-    fn module(&mut self, path: &Path) -> BTreeMap<String, Value> {
+    fn module(&mut self, path: &Path) -> Module {
         if let Some(module) = self.modules.get(path) {
             return module.clone();
         }
         if !self.allowed.contains(path) || !self.visiting.insert(path.to_path_buf()) {
-            return BTreeMap::new();
+            return Module::default();
         }
         let result = self
             .sources
@@ -94,9 +98,9 @@ impl<'a> Reader<'a> {
         self.modules.insert(path.to_path_buf(), result.clone());
         result
     }
-    fn import(&mut self, from: &Path, specifier: &str) -> BTreeMap<String, Value> {
+    fn import(&mut self, from: &Path, specifier: &str) -> Module {
         if !specifier.starts_with('.') {
-            return BTreeMap::new();
+            return Module::default();
         }
         let base = crate::codebase::ts_resolver::normalize_path(
             &from.parent().unwrap_or(from).join(specifier),
@@ -114,5 +118,28 @@ impl<'a> Reader<'a> {
             )
             .find(|candidate| self.allowed.contains(candidate));
         candidate.map(|path| self.module(&path)).unwrap_or_default()
+    }
+}
+
+#[derive(Clone)]
+struct Module {
+    exports: BTreeMap<String, Value>,
+    opaque: bool,
+}
+impl Default for Module {
+    fn default() -> Self {
+        Self {
+            exports: BTreeMap::new(),
+            opaque: true,
+        }
+    }
+}
+impl Module {
+    fn namespace(&self, path: &Path, line: usize) -> Value {
+        Value {
+            kind: Kind::Object(self.exports.clone(), self.opaque),
+            file: path.to_path_buf(),
+            line,
+        }
     }
 }

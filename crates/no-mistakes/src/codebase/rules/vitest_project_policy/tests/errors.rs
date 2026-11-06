@@ -81,3 +81,5 @@ fn unsupported_inputs_do_not_supply_config_values() {
         assert!(!result.incomplete.is_empty(), "{case}");
     }
 }
+
+mod namespaces;
