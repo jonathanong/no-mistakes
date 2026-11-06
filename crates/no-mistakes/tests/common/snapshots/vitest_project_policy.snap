@@ -2,6 +2,26 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "ambiguous-star-exports": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "known.ts",
+          "message": "Vitest project #1 is incomplete: isolate is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "isolate"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "arbitrary-call": {
     "exitCode": 1,
     "report": {
@@ -31,6 +51,32 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "vitest-project-policy",
           "message": "vitest-project-policy required values must be scalar JSON literals"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "computed-property": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "computed-property.ts",
+          "message": "Vitest project #1 is incomplete: isolate is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "isolate"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "computed-property.ts",
+          "message": "Vitest project #1 is incomplete: pool is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "pool"
         }
       ],
       "integration": [],
@@ -230,6 +276,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "known-namespace-member": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "line-suppression": {
     "exitCode": 0,
     "report": {
@@ -247,6 +305,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "local-cycle": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "local-cycle.ts",
+          "message": "Vitest project #1 is incomplete: isolate is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "isolate"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -291,6 +369,32 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "vitest.config.ts",
           "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
           "property": "test.projects"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "method-property": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "method-property.ts",
+          "message": "Vitest project #1 is incomplete: isolate is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "isolate"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "method-property.ts",
+          "message": "Vitest project #1 is incomplete: pool is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "pool"
         }
       ],
       "integration": [],
@@ -364,6 +468,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "vitest.config.ts",
           "message": "Vitest project #1 is incomplete: test is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
           "property": "test"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "missing-member": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "missing-member.ts",
+          "message": "Vitest project #1 is incomplete: isolate is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "isolate"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "missing-namespace-member": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "missing-namespace-member.ts",
+          "message": "Vitest project #1 is incomplete: isolate is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "isolate"
         }
       ],
       "integration": [],
@@ -693,6 +837,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "neither-pair": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "next-line-suppression": {
     "exitCode": 0,
     "report": {
@@ -714,6 +870,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "vitest-project-policy",
           "message": "vitest-project-policy requires options.config naming an explicit config file"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no-projects": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "nonfinite-number": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "nonfinite-number.ts",
+          "message": "Vitest project #1 is incomplete: isolate is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "isolate"
         }
       ],
       "integration": [],
@@ -772,6 +960,96 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "vitest-project-policy",
           "message": "vitest-project-policy required values must be scalar JSON literals"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "only-type-reexports": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "opaque-array-spread": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "opaque-array-spread.ts",
+          "message": "Vitest project #1 is incomplete: extends is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "extends"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "opaque-array-spread.ts",
+          "message": "Vitest project #1 is incomplete: test is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "opaque-inherits": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "opaque-inherits.ts",
+          "message": "Vitest project #1 is incomplete: fileParallelism is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "fileParallelism"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "opaque-inherits.ts",
+          "message": "Vitest project #1 is incomplete: maxWorkers is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "maxWorkers"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "opaque-star-exports": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "known.ts",
+          "message": "Vitest project #1 is incomplete: isolate is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "isolate"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "opaque-star-exports.ts",
+          "message": "Vitest project #1 is incomplete: pool is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "pool"
         }
       ],
       "integration": [],
@@ -883,6 +1161,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "repeated-helper": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "required-forbidden": {
     "exitCode": 1,
     "report": {
@@ -961,6 +1251,72 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "root-nonliteral": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "root-nonliteral.ts",
+          "message": "Vitest project <root> is incomplete: maxWorkers is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "maxWorkers"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "root-only-inheritance": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "root-only-inheritance-explicit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "root-only-inheritance-explicit.ts",
+          "line": 10,
+          "message": "Vitest project child: test.globalSetup is forbidden; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "globalSetup: './child-setup.ts',"
+        },
+        {
+          "file": "root-only-inheritance-explicit.ts",
+          "line": 11,
+          "message": "Vitest project child: test.projects is forbidden; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "projects: [],"
+        },
+        {
+          "file": "root-only-inheritance-explicit.ts",
+          "line": 9,
+          "message": "Vitest project child: test.name is forbidden; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "name: 'child',"
+        }
+      ],
       "warnings": []
     }
   },
@@ -1099,6 +1455,66 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "unary-nonfinite": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "unary-nonfinite.ts",
+          "message": "Vitest project #1 is incomplete: isolate is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "isolate"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unary-operator": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "unary-operator.ts",
+          "message": "Vitest project #1 is incomplete: isolate is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "isolate"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unary-string": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "unary-string.ts",
+          "message": "Vitest project #1 is incomplete: isolate is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "isolate"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "undeclared-helper": {
     "exitCode": 1,
     "report": {
@@ -1116,6 +1532,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "vitest.config.ts",
           "message": "Vitest project #1 is incomplete: test is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
           "property": "test"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unknown-expression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "unknown-expression.ts",
+          "message": "Vitest project #1 is incomplete: isolate is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "isolate"
         }
       ],
       "integration": [],
@@ -1151,6 +1587,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "unknown-inherits": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "unknown-inherits.ts",
+          "message": "Vitest project #1 is incomplete: test is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "unknown-option": {
     "exitCode": 1,
     "report": {
@@ -1160,6 +1616,52 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "vitest-project-policy",
           "message": "invalid options for rule `vitest-project-policy` at options.surprise: unknown field `surprise`, expected one of `config`, `helpers`, `required`, `forbidden`, `parity`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unresolved-local-export": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "unresolved-export.ts",
+          "message": "Vitest project #1 is incomplete: isolate is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "isolate"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "unresolved-local-export.ts",
+          "message": "Vitest project #1 is incomplete: pool is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "pool"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unsupported-export-declarations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "unsupported-export-declarations.ts",
+          "message": "Vitest project #1 is incomplete: pool is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "pool"
         }
       ],
       "integration": [],
@@ -1194,6 +1696,66 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "wrapper-multiple-arguments": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "wrapper-multiple-arguments.ts",
+          "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.projects"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "wrapper-no-arguments": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "wrapper-no-arguments.ts",
+          "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.projects"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "wrapper-spread-argument": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "wrapper-spread-argument.ts",
+          "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.projects"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],

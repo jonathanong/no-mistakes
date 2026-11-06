@@ -51,6 +51,7 @@ worker settings or changing inheritance can change how tests run.
 ## Valid example
 
 ```ts
+// vitest.config.ts
 import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
@@ -67,12 +68,13 @@ export default defineConfig({
 The second project omits one member of the configured pair:
 
 ```ts
+// vitest.config.ts
 import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     projects: [
-      { test: { name: 'unit', fileParallelism: false, maxWorkers: 1 } },
-      { test: { name: 'integration', fileParallelism: false } },
+      { test: { name: 'unit', isolate: true, fileParallelism: false, maxWorkers: 1 } },
+      { test: { name: 'integration', isolate: true, fileParallelism: false } },
     ],
   },
 });
@@ -91,8 +93,9 @@ helper and import them statically to keep the source policy reviewable.
 The rule reuses the Vitest config parser's lexical utilities and the request's
 source store and parsed-program cache. Static object/array literals, local
 constant bindings, supported config wrappers, explicit helper imports, and
-object spreads preserve source locations. `extends: true` inherits root test
-settings. Root values are otherwise used for comparison only when requested.
+object spreads preserve source locations. Only explicit `extends: true` applies
+root inheritance here, excluding [`name`, `projects`, and root `globalSetup`](https://main.vitest.dev/guide/projects#configuration); version-specific inheritance defaults are not inferred.
+Root values are otherwise used for comparison only when requested.
 
 Non-literal property values, unresolved project entries, unknown spreads,
 unsupported calls, missing files, and imports outside `helpers` appear in

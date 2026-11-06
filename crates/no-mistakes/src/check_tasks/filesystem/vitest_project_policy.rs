@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use no_mistakes::codebase::rules::{self, analysis_policy::AnalysisDiagnostics};
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
@@ -23,35 +23,16 @@ pub(super) fn run(
             defer_suppression,
         );
     }
-    let evaluate = || {
-        no_mistakes::perf_trace::rule("analysis.rules.vitest-project-policy", || {
-            rules::vitest_project_policy::diagnostics_with_files_and_sources(
-                root,
-                config,
-                files,
-                &prepared.sources,
-                defer_suppression,
-            )
-        })
+    let diagnostics = prepared
+        .session
+        .and_then(|session| session.prepared_vitest_project_policy())
+        .context(
+            "vitest-project-policy requires prepared policy diagnostics from the request session",
+        )?;
+    let mut output = AnalysisDiagnostics {
+        findings: diagnostics.findings.clone(),
+        ..Default::default()
     };
-    let diagnostics = match prepared.session {
-        Some(session) => match session.prepared_vitest_project_policy() {
-            Some(diagnostics) => Some(diagnostics),
-            None => session
-                .capture_check_result(rules::vitest_project_policy::RULE_ID, evaluate())?
-                .map(std::sync::Arc::new),
-        },
-        None => Some(std::sync::Arc::new(evaluate()?)),
-    };
-    let mut output = AnalysisDiagnostics::default();
-    if let Some(diagnostics) = diagnostics {
-        output.findings = diagnostics.findings.clone();
-        if let Some(session) = prepared.session {
-            for failure in &diagnostics.incomplete {
-                session.record_check_failure(failure.clone());
-            }
-        }
-    }
     let mut remaining = config.clone();
     super::handled::mark(&mut remaining, |id| {
         id == rules::vitest_project_policy::RULE_ID
@@ -72,3 +53,6 @@ pub(super) fn run(
     output.findings.dedup();
     Ok(output)
 }
+
+#[cfg(test)]
+mod tests;

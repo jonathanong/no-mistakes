@@ -76,5 +76,43 @@ fn vitest_project_policy_json_matches_snapshot() {
         let root = rules_path("vitest-project-policy", "fixture", "options-errors");
         cases.push((name, root.clone(), root.join(format!("{name}.yml"))));
     }
+    for name in [
+        "repeated-helper",
+        "local-cycle",
+        "unary-string",
+        "unary-operator",
+        "nonfinite-number",
+        "unary-nonfinite",
+        "wrapper-no-arguments",
+        "wrapper-spread-argument",
+        "wrapper-multiple-arguments",
+        "missing-member",
+        "missing-namespace-member",
+        "known-namespace-member",
+        "unknown-expression",
+        "computed-property",
+        "method-property",
+        "opaque-array-spread",
+        "only-type-reexports",
+        "unsupported-export-declarations",
+        "unresolved-local-export",
+        "ambiguous-star-exports",
+        "opaque-star-exports",
+    ] {
+        let root = rules_path("vitest-project-policy", "fixture", "lexical-boundaries");
+        cases.push((name, root.clone(), root.join(format!("{name}.yml"))));
+    }
+    for name in [
+        "no-projects",
+        "neither-pair",
+        "root-nonliteral",
+        "unknown-inherits",
+        "opaque-inherits",
+        "root-only-inheritance",
+        "root-only-inheritance-explicit",
+    ] {
+        let root = rules_path("vitest-project-policy", "fixture", "policy-boundaries");
+        cases.push((name, root.clone(), root.join(format!("{name}.yml"))));
+    }
     assert_saved_fixture("vitest_project_policy", &cases);
 }

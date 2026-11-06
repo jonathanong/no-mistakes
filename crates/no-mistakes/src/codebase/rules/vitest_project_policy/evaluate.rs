@@ -90,7 +90,12 @@ fn inherit(root: &Value, project: &Value) -> Value {
             let mut merged = if *unknown {
                 BTreeMap::new()
             } else {
-                base.clone()
+                base.iter()
+                    .filter(|(name, _)| {
+                        !matches!(name.as_str(), "name" | "projects" | "globalSetup")
+                    })
+                    .map(|(name, value)| (name.clone(), value.clone()))
+                    .collect()
             };
             merged.extend(fields.clone());
             Value {

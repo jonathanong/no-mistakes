@@ -83,3 +83,7 @@ fn unsupported_inputs_do_not_supply_config_values() {
 }
 
 mod namespaces;
+
+mod boundaries;
+
+mod inheritance;

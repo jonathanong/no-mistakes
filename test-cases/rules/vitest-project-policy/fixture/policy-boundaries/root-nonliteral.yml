@@ -1,0 +1,8 @@
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: root-nonliteral.ts
+      parity:
+        - properties: [fileParallelism, maxWorkers]
+          compareRoot: true
