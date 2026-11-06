@@ -60,7 +60,10 @@ fn definite_temp_read_survives_ambiguous_namesake_in_same_view() {
     );
     assert_eq!(
         shape(sql),
-        ["select: opaque", "select: opaque public.accounts[id=#0 id=value]"]
+        [
+            "select: opaque",
+            "select: opaque public.accounts[id=#0 id=value]"
+        ]
     );
 }
 
