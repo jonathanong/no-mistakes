@@ -44,7 +44,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
     config: &NoMistakesConfig,
     _files: &[PathBuf],
-    _sources: &crate::codebase::ts_source::SourceStore,
+    sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     super::run_catalog_rule(
@@ -53,10 +53,30 @@ pub(crate) fn check_with_files_sources_and_facts(
         facts,
         RULE_ID,
         |rule| {
-            let compiled = compile_options(&rule.try_rule_options()?)?;
-            Ok((compiled.schema_catalog_path.clone(), compiled))
+            let options: Options = rule.try_rule_options()?;
+            let compiled = compile_options(&options)?;
+            let selectors = options.exempt_column_name_patterns;
+            let audit = super::allow_audit::AllowAudit::new(
+                root,
+                config,
+                rule,
+                Some(sources),
+                "exemptColumnNamePatterns",
+                selectors.len(),
+            );
+            Ok((
+                compiled.schema_catalog_path.clone(),
+                (compiled, audit, selectors),
+            ))
         },
-        |compiled, catalog, _| scan::scan(compiled, catalog),
+        |(compiled, audit, selectors), catalog, _| {
+            let mut findings = scan::scan(compiled, catalog, &audit.usage);
+            findings.extend(audit.finish(
+                |_| catalog.coverage() == crate::codebase::postgres::CatalogCoverage::Complete,
+                |index| selectors[index].clone(),
+            ));
+            findings
+        },
     )
 }
 
@@ -128,3 +148,6 @@ fn compile_patterns(option: &str, patterns: &[String]) -> Result<Vec<Regex>> {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod pattern_tests;

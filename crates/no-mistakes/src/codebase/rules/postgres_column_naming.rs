@@ -139,7 +139,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
     config: &NoMistakesConfig,
     _all_files: &[PathBuf],
-    _sources: &crate::codebase::ts_source::SourceStore,
+    sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     super::run_catalog_rule(
@@ -150,9 +150,25 @@ pub(crate) fn check_with_files_sources_and_facts(
         |rule| {
             let options: Options = rule.try_rule_options()?;
             let compiled = compile::compile(&options, rule.message.clone())?;
-            Ok((options.schema_catalog_path, compiled))
+            let selectors = options.ignore_table_patterns;
+            let audit = super::allow_audit::AllowAudit::new(
+                root,
+                config,
+                rule,
+                Some(sources),
+                "ignoreTablePatterns",
+                selectors.len(),
+            );
+            Ok((options.schema_catalog_path, (compiled, audit, selectors)))
         },
-        |compiled, catalog, path| scan::scan(catalog, &compiled, path),
+        |(compiled, audit, selectors), catalog, path| {
+            let mut findings = scan::scan(catalog, &compiled, path, &audit.usage);
+            findings.extend(audit.finish(
+                |_| catalog.coverage() == crate::codebase::postgres::CatalogCoverage::Complete,
+                |index| selectors[index].clone(),
+            ));
+            findings
+        },
     )
 }
 
