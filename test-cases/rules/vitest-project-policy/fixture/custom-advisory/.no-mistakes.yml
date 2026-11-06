@@ -1,0 +1,9 @@
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    severity: advisory
+    message: Declare both worker settings so project execution stays consistent.
+    options:
+      config: vitest.config.ts
+      parity:
+        - properties: [fileParallelism, maxWorkers]

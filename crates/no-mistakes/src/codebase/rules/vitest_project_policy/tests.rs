@@ -25,6 +25,7 @@ fn run(case: &str) -> Diagnostics {
 fn literal_projects_and_declared_helper_inheritance_pass() {
     for case in [
         "pass",
+        "literal-forms",
         "helper",
         "signed-literal",
         "wrapper-alias",
@@ -65,6 +66,7 @@ fn dynamic_inputs_are_incomplete() {
         "nonliteral",
         "spread",
         "dynamic-project",
+        "project-hole",
         "undeclared-helper",
         "mutated-object",
         "unknown-inheritance",

@@ -1,0 +1,9 @@
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: vitest.config.ts
+      helpers: [helper.ts]
+      required: { isolate: true, nullable: null, environment: node }
+      parity:
+        - properties: [fileParallelism, maxWorkers]

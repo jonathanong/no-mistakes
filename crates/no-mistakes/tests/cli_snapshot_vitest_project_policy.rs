@@ -4,6 +4,9 @@ use super::check_json_snapshot::{assert_saved_fixture, rules_path};
 fn vitest_project_policy_json_matches_snapshot() {
     let mut cases = [
         "pass",
+        "literal-forms",
+        "custom-advisory",
+        "excluded-root",
         "missing",
         "mismatch",
         "nonliteral",
@@ -14,6 +17,7 @@ fn vitest_project_policy_json_matches_snapshot() {
         "next-line-suppression",
         "spread",
         "dynamic-project",
+        "project-hole",
         "root-mismatch",
         "undeclared-helper",
         "spread-before",

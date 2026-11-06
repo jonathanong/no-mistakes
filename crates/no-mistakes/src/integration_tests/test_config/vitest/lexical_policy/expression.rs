@@ -134,6 +134,11 @@ impl Evaluator<'_, '_> {
                                 _ => elements.push(self.eval(&spread.argument).unknown()),
                             }
                         }
+                        ArrayExpressionElement::Elision(elision) => elements.push(Value {
+                            kind: Kind::Unknown,
+                            file: self.path.to_path_buf(),
+                            line: self.line(elision.span.start),
+                        }),
                         _ => {
                             if let Some(expression) = element.as_expression() {
                                 elements.push(self.eval(expression));

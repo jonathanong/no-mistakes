@@ -40,6 +40,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "custom-advisory": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "vitest.config.ts",
+          "line": 2,
+          "message": "Declare both worker settings so project execution stays consistent.",
+          "rule": "vitest-project-policy",
+          "sourceLine": "{ test: { name: 'missing-workers', fileParallelism: false } },"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "delete-mutation": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "delete-mutation.ts",
+          "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.projects"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "dotted-property": {
     "exitCode": 1,
     "report": {
@@ -95,6 +135,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "vitest-project-policy property names must be nonempty direct test property names"
         }
       ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "excluded-root": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
@@ -179,6 +231,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "line-suppression": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "literal-forms": {
     "exitCode": 0,
     "report": {
       "advisories": [],
@@ -527,6 +591,32 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "project-hole": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: extends is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "extends"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: test is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "projects-nonarray": {
     "exitCode": 1,
     "report": {
@@ -829,6 +919,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "vitest-project-policy",
           "message": "invalid options for rule `vitest-project-policy` at options.surprise: unknown field `surprise`, expected one of `config`, `helpers`, `required`, `forbidden`, `parity`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "update-mutation": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "update-mutation.ts",
+          "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.projects"
         }
       ],
       "integration": [],
