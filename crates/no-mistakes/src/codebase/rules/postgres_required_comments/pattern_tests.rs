@@ -59,3 +59,20 @@ fn failed_catalogs_retain_the_catalog_error() {
         assert!(result.is_err());
     }
 }
+
+#[test]
+fn disabled_column_checks_do_not_establish_exemption_staleness() {
+    for result in run("no-columns") {
+        assert!(result.unwrap().is_empty());
+    }
+}
+
+#[test]
+fn positive_column_selectors_define_the_complete_exception_domain() {
+    let results = run("column-selection");
+    let findings = results.into_iter().next().unwrap().unwrap();
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert!(findings
+        .iter()
+        .all(|finding| finding.rule == "unused-allow-entry"));
+}

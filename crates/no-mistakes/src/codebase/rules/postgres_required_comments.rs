@@ -70,9 +70,14 @@ pub(crate) fn check_with_files_sources_and_facts(
             ))
         },
         |(compiled, audit, selectors), catalog, _| {
+            let columns_checked = compiled.objects.contains(&ObjectKind::Column);
             let mut findings = scan::scan(compiled, catalog, &audit.usage);
             findings.extend(audit.finish(
-                |_| catalog.coverage() == crate::codebase::postgres::CatalogCoverage::Complete,
+                |_| {
+                    columns_checked
+                        && catalog.coverage()
+                            == crate::codebase::postgres::CatalogCoverage::Complete
+                },
                 |index| selectors[index].clone(),
             ));
             findings
