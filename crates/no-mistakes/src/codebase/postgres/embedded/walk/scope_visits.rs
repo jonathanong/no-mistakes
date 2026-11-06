@@ -4,6 +4,25 @@ use oxc_ast_visit::walk;
 use oxc_syntax::scope::ScopeFlags;
 
 impl<'a> ScopeVisitor<'a> {
+    pub(super) fn walk_block_scope(&mut self, block: &ast::BlockStatement<'a>) {
+        self.push_scope();
+        resolve::record_statements(&block.body, self);
+        walk::walk_block_statement(self, block);
+        self.pop_scope();
+    }
+
+    pub(super) fn walk_namespace_scope(&mut self, block: &ast::TSModuleBlock<'a>) {
+        self.push_scope();
+        self.enter_function();
+        self.enter_plain_function(None, block.span.start);
+        resolve::hoist_vars(&block.body, self);
+        resolve::record_statements(&block.body, self);
+        walk::walk_ts_module_block(self, block);
+        self.leave_plain_function();
+        self.leave_function();
+        self.pop_scope();
+    }
+
     pub(super) fn walk_catch_clause_scope(&mut self, clause: &oxc_ast::ast::CatchClause<'a>) {
         self.push_scope();
         if let Some(param) = &clause.param {
