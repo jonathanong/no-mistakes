@@ -1,3 +1,4 @@
+use crate::codebase::check_outcome::CheckInputFailure;
 use crate::integration_tests::{
     config as integration_config, project_config, types::ConfigProject, types::Framework,
 };
@@ -9,7 +10,7 @@ use std::path::Path;
 /// synthesizes ownership.
 #[doc(hidden)]
 pub struct PreparedVitestProjectCatalog {
-    config_projects: Result<Vec<ConfigProject>, String>,
+    config_projects: Result<Vec<ConfigProject>, CheckInputFailure>,
     explicit_projects: Vec<ConfigProject>,
 }
 
@@ -29,7 +30,7 @@ pub fn prepare_vitest_project_catalog(
             &root_visible_paths,
             tsconfig_catalog,
         )
-        .map_err(|error| format!("{error:#}"))
+        .map_err(CheckInputFailure::from_error)
     } else {
         Ok(Vec::new())
     };
@@ -41,7 +42,7 @@ pub fn prepare_vitest_project_catalog(
 
 impl PreparedVitestProjectCatalog {
     pub(crate) fn config_projects(&self) -> anyhow::Result<Vec<ConfigProject>> {
-        self.config_projects.clone().map_err(anyhow::Error::msg)
+        self.config_projects.clone().map_err(anyhow::Error::from)
     }
 
     pub(crate) fn merged_projects(&self) -> anyhow::Result<Vec<ConfigProject>> {

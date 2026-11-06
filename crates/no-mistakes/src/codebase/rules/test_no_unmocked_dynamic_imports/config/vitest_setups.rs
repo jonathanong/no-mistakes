@@ -25,7 +25,7 @@ pub(super) fn from_facts(
                 path.display()
             )
         })?
-        .map_err(anyhow::Error::msg)?;
+        .map_err(anyhow::Error::from)?;
     if projects.is_empty() && !file_facts.has_config_export() {
         // Named-only helpers supply no runner execution or global setup mocks.
         return Ok(Vec::new());

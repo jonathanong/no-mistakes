@@ -29,7 +29,7 @@ impl CheckFailure {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CheckInputFailure {
     pub file: Option<PathBuf>,
     pub property: Option<String>,
@@ -37,6 +37,15 @@ pub struct CheckInputFailure {
 }
 
 impl CheckInputFailure {
+    pub(crate) fn from_error(error: anyhow::Error) -> Self {
+        let input = error.downcast_ref::<Self>();
+        Self {
+            file: input.and_then(|input| input.file.clone()),
+            property: input.and_then(|input| input.property.clone()),
+            message: format!("{error:#}"),
+        }
+    }
+
     pub fn source(file: impl Into<PathBuf>, message: impl Into<String>) -> Self {
         Self {
             file: Some(file.into()),

@@ -33,13 +33,13 @@ impl PreparedIntegrationRunnerConfigs {
                         config_dir,
                         resolver: &resolver,
                     })
-                    .map_err(|error| error.to_string())
+                    .map_err(CheckInputFailure::from_error)
                 } else {
-                    Err(format!(
+                    Err(CheckInputFailure::source(path.clone(), format!(
                         "unsupported {} JSON config filename: {}; use vitest.workspace.json or vitest.projects.json",
                         spec.framework.as_str(),
                         path.display()
-                    ))
+                    )))
                 },
             })
             .collect();
