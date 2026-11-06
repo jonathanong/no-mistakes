@@ -20,6 +20,21 @@ impl ReceiverOutput<RootRead> for Observed {
         self.visits <= self.limit
     }
 }
+
+#[test]
+fn named_projection_cancels_before_constructing_receiver_coordinates() {
+    let mut output = Observed::default();
+    write_named_receiver_references::<RootRead>(
+        "source.member",
+        Some(0),
+        (1, None),
+        &[],
+        &[],
+        &mut output,
+    );
+    assert_eq!(output.visits, 1);
+    assert!(output.writes.is_empty());
+}
 #[test]
 fn wildcard_projection_stops_visiting_scalar_and_named_siblings_on_exhaustion() {
     for leaf in [

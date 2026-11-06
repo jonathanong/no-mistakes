@@ -44,7 +44,7 @@ enabled. Deferred forward and scalar-only wildcard controls exercise work that
 can occur before replay or without emitting references. Ordinary full facts are compared with the unrestricted path, and
 ordinary CLI findings are compared with the frozen baseline executable.
 
-## Release reproduction
+## Initial release reproduction
 
 Both measured executables use Rust 1.99.1 (`58cf8f9c3`), default features,
 optimization level 3, full LTO, one codegen unit, and no debug information.
@@ -85,7 +85,7 @@ budget, and include the repair hint. They exit 1 rather than claiming successful
 complete analysis. All three baseline runs abort with status 134 under the
 virtual-memory guard. No baseline/default sample was run.
 
-## Controls and limits
+## Initial controls and limits
 
 A second checkout of the same Supabase revision removes only `tsWorker.js`.
 Two samples per binary run in baseline/candidate/candidate/baseline order:
@@ -118,3 +118,33 @@ and dependent reports. Their graph plan excludes check-only demand after
 exhaustion, while retaining the shared inventory, resolver, and collected facts.
 The check retains independent findings and incomplete entries in either report
 order. Reports that require the missing value flow still fail explicitly.
+
+## Final release confirmation
+
+The final production revision is
+`3361bf035e21f59c1d0c3167b3bd4ad25ae2ede9`, with frozen executable SHA-256
+`6ee958790721fd2ebc787da2d800cb78d2d196f2c2ff936e6b9b4399bd1c2eff`.
+It uses the same release profile and guard as the initial comparison; the build
+finishes in 13m 28s. Later changes contain only tests and measurement evidence.
+
+The final budget includes deferred forward work and expression-node visits, so
+both `tsWorker.js` and `editor.main.js` are explicitly incomplete. The four
+candidate reports below are byte-identical. Baseline/candidate/candidate/baseline
+ordering is retained for jobs 4.
+
+| Revision / jobs / sample | Peak RSS | Wall | User CPU | System CPU | Outcome |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Baseline / 4 / first | 18.15 GiB | 60.39 s | 53.55 s | 7.73 s | Allocation abort |
+| Final / 4 / first | 1.84 GiB | 17.88 s | 20.23 s | 1.64 s | Two incomplete files |
+| Final / 4 / second | 1.87 GiB | 17.62 s | 20.34 s | 1.35 s | Two incomplete files |
+| Baseline / 4 / reverse | 18.15 GiB | 56.93 s | 50.79 s | 7.16 s | Allocation abort |
+| Final / 1 | 1.77 GiB | 21.59 s | 20.41 s | 1.17 s | Two incomplete files |
+| Final / default | 2.12 GiB | 12.51 s | 20.84 s | 2.62 s | Two incomplete files |
+
+The initial remaining-repository parity result above belongs to the initial
+candidate. The final budget also catches `editor.main.js`, so removing only
+`tsWorker.js` does not establish complete analysis. Ordinary full-fact controls
+and existing rule snapshots remain unchanged. Final control results and the
+validation summary are reported in [PR #3056](https://github.com/jonathanong/no-mistakes/pull/3056).
+These are memory observations for aborted/incomplete analysis, not a claim of
+complete-workload throughput.

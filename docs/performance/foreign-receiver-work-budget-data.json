@@ -221,5 +221,128 @@
       "findingCount": 89,
       "advisoryCount": 30
     }
-  ]
+  ],
+  "finalCandidate": {
+    "productionRevision": "3361bf035e21f59c1d0c3167b3bd4ad25ae2ede9",
+    "binarySha256": "6ee958790721fd2ebc787da2d800cb78d2d196f2c2ff936e6b9b4399bd1c2eff",
+    "buildWall": "13m 28s",
+    "samples": [
+      {
+        "label": "final-before-4a",
+        "exitStatus": 134,
+        "rssKiB": 19030328,
+        "wall": "1:00.39",
+        "userSeconds": 53.55,
+        "systemSeconds": 7.73,
+        "rssGiB": 18.149,
+        "reportSha256": null
+      },
+      {
+        "label": "final-after-4a",
+        "exitStatus": 1,
+        "rssKiB": 1932964,
+        "wall": "0:17.88",
+        "userSeconds": 20.23,
+        "systemSeconds": 1.64,
+        "rssGiB": 1.843,
+        "reportSha256": "0aa7d195049ac6e604c786bf48a479d38ed00f78aac822ade0dab8d4cc8e3b55",
+        "incomplete": [
+          {
+            "consumer": "unconstructed-error-class",
+            "file": "/tmp/nm-3052-supabase/apps/studio/public/monaco-editor/vs/editor/editor.main.js",
+            "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+          },
+          {
+            "consumer": "unconstructed-error-class",
+            "file": "/tmp/nm-3052-supabase/apps/studio/public/monaco-editor/vs/language/typescript/tsWorker.js",
+            "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+          }
+        ],
+        "findingCount": 0,
+        "advisoryCount": 0
+      },
+      {
+        "label": "final-after-4b",
+        "exitStatus": 1,
+        "rssKiB": 1956668,
+        "wall": "0:17.62",
+        "userSeconds": 20.34,
+        "systemSeconds": 1.35,
+        "rssGiB": 1.866,
+        "reportSha256": "0aa7d195049ac6e604c786bf48a479d38ed00f78aac822ade0dab8d4cc8e3b55",
+        "incomplete": [
+          {
+            "consumer": "unconstructed-error-class",
+            "file": "/tmp/nm-3052-supabase/apps/studio/public/monaco-editor/vs/editor/editor.main.js",
+            "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+          },
+          {
+            "consumer": "unconstructed-error-class",
+            "file": "/tmp/nm-3052-supabase/apps/studio/public/monaco-editor/vs/language/typescript/tsWorker.js",
+            "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+          }
+        ],
+        "findingCount": 0,
+        "advisoryCount": 0
+      },
+      {
+        "label": "final-before-4b",
+        "exitStatus": 134,
+        "rssKiB": 19031836,
+        "wall": "0:56.93",
+        "userSeconds": 50.79,
+        "systemSeconds": 7.16,
+        "rssGiB": 18.15,
+        "reportSha256": null
+      },
+      {
+        "label": "final-after-1",
+        "exitStatus": 1,
+        "rssKiB": 1855680,
+        "wall": "0:21.59",
+        "userSeconds": 20.41,
+        "systemSeconds": 1.17,
+        "rssGiB": 1.77,
+        "reportSha256": "0aa7d195049ac6e604c786bf48a479d38ed00f78aac822ade0dab8d4cc8e3b55",
+        "incomplete": [
+          {
+            "consumer": "unconstructed-error-class",
+            "file": "/tmp/nm-3052-supabase/apps/studio/public/monaco-editor/vs/editor/editor.main.js",
+            "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+          },
+          {
+            "consumer": "unconstructed-error-class",
+            "file": "/tmp/nm-3052-supabase/apps/studio/public/monaco-editor/vs/language/typescript/tsWorker.js",
+            "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+          }
+        ],
+        "findingCount": 0,
+        "advisoryCount": 0
+      },
+      {
+        "label": "final-after-default",
+        "exitStatus": 1,
+        "rssKiB": 2222140,
+        "wall": "0:12.51",
+        "userSeconds": 20.84,
+        "systemSeconds": 2.62,
+        "rssGiB": 2.119,
+        "reportSha256": "0aa7d195049ac6e604c786bf48a479d38ed00f78aac822ade0dab8d4cc8e3b55",
+        "incomplete": [
+          {
+            "consumer": "unconstructed-error-class",
+            "file": "/tmp/nm-3052-supabase/apps/studio/public/monaco-editor/vs/editor/editor.main.js",
+            "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+          },
+          {
+            "consumer": "unconstructed-error-class",
+            "file": "/tmp/nm-3052-supabase/apps/studio/public/monaco-editor/vs/language/typescript/tsWorker.js",
+            "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+          }
+        ],
+        "findingCount": 0,
+        "advisoryCount": 0
+      }
+    ]
+  }
 }

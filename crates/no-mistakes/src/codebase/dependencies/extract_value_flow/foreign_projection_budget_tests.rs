@@ -42,6 +42,22 @@ fn bounded_output_stops_consuming_input_after_the_first_rejected_reference() {
     assert!(bounded.exceeded);
     assert_eq!(generated.get(), 2);
 }
+
+#[test]
+fn expression_visits_exhaust_the_budget_before_any_reference_is_emitted() {
+    use nested::ReceiverOutput;
+    let mut bounded = output(Some(1));
+    assert!(bounded.visit());
+    assert!(bounded.active());
+    assert_eq!(bounded.used, 1);
+    assert_eq!(bounded.remaining, Some(0));
+    assert!(!bounded.visit());
+    assert!(!bounded.active());
+    assert!(bounded.exceeded);
+    let (first, overflow) = bounded.output.into_parts();
+    assert!(first.is_none());
+    assert!(overflow.is_empty());
+}
 #[cfg(feature = "test-instrumentation")]
 #[test]
 fn exhausted_projection_is_discarded_before_pending_queue_append() {
