@@ -20,6 +20,8 @@ impl<'a> Visit<'a> for VarBindingCollector {
         walk::walk_variable_declaration(self, declaration);
     }
 
+    fn visit_ts_module_block(&mut self, _: &oxc_ast::ast::TSModuleBlock<'a>) {}
+
     fn visit_function(&mut self, _: &Function<'a>, _: oxc_syntax::scope::ScopeFlags) {}
 
     fn visit_arrow_function_expression(&mut self, _: &oxc_ast::ast::ArrowFunctionExpression<'a>) {}

@@ -105,3 +105,29 @@ fn respects_hoisted_and_loop_lexical_shadows_without_leaking_them() {
         Some("Service/load")
     );
 }
+
+#[test]
+fn namespace_bindings_shadow_locally_without_escaping_or_crossing_nested_modules() {
+    let facts = facts(include_str!(
+        "../../../../../../fixtures/test-plan/resource-impact/extractor-namespace-scopes.ts"
+    ));
+    let paths = facts
+        .calls
+        .iter()
+        .map(|call| call.path.value.as_str())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        paths,
+        vec![
+            "before-namespace.json",
+            "after-lexical.json",
+            "after-var.json",
+            "outer-before-nested.json",
+            "outer-after-nested.json",
+            "reopened-namespace.json",
+            "after-namespaces.json",
+        ]
+    );
+    assert!(facts.calls.iter().all(|call| call.function_scope.is_none()));
+    assert!(facts.diagnostics.is_empty());
+}
