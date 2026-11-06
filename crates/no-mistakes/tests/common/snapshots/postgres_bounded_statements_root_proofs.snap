@@ -132,6 +132,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "table:items"
         },
         {
+          "file": "sql/distinct-unsafe.sql",
+          "line": 1,
+          "message": "sql/distinct-unsafe.sql:1: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id) i.url_id FROM items i WHERE i.url_id = $1 GROUP BY ROLLUP(i.url_id) ORDER BY i.url_id;",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/distinct-unsafe.sql",
+          "line": 3,
+          "message": "sql/distinct-unsafe.sql:3: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (url_id) i.id AS url_id FROM items i WHERE i.url_id = $1 ORDER BY url_id;",
+          "target": "table:items"
+        },
+        {
           "file": "sql/participants.sql",
           "line": 2,
           "message": "sql/participants.sql:2: SELECT can return every row of participants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
@@ -302,6 +318,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "sql/distinct-singleton.sql:3: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT DISTINCT ON (i.url_id, i.id) i.id FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/distinct-unsafe.sql",
+          "line": 1,
+          "message": "sql/distinct-unsafe.sql:1: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id) i.url_id FROM items i WHERE i.url_id = $1 GROUP BY ROLLUP(i.url_id) ORDER BY i.url_id;",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/distinct-unsafe.sql",
+          "line": 3,
+          "message": "sql/distinct-unsafe.sql:3: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (url_id) i.id AS url_id FROM items i WHERE i.url_id = $1 ORDER BY url_id;",
           "target": "table:items"
         },
         {

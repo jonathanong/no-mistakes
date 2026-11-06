@@ -113,6 +113,19 @@ fn postgres_bounded_statements_root_proofs_check_json_snapshot() {
         })
         .collect();
     assert_eq!(recursive, [(4, "table:items")]);
+    let unsafe_distinct: Vec<_> = complete["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|finding| finding["file"] == "sql/distinct-unsafe.sql")
+        .map(|finding| {
+            (
+                finding["line"].as_u64().unwrap(),
+                finding["target"].as_str().unwrap(),
+            )
+        })
+        .collect();
+    assert_eq!(unsafe_distinct, [(1, "table:items"), (3, "table:items")]);
     assert_eq!(complete["warnings"], serde_json::json!([]), "{complete}");
     assert_eq!(
         incomplete["warnings"],

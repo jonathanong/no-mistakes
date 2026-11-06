@@ -2,7 +2,7 @@ use super::super::{pins::Resolver, Scope};
 use crate::codebase::postgres::idents::unwrap_expr;
 use crate::codebase::postgres::statements::value::{is_placeholder_ident_at, PlaceholderPositions};
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind};
-use sqlparser::ast::{BinaryOperator, Distinct, Expr, Select};
+use sqlparser::ast::{BinaryOperator, Distinct, Expr, GroupByExpr, Select};
 
 pub(super) fn fixed(
     select: &Select,
@@ -16,7 +16,9 @@ pub(super) fn fixed(
     let Some(selection) = select.selection.as_ref() else {
         return false;
     };
-    if super::super::aggregate::projection_may_erase_input(select, scope)
+    if !matches!(&select.group_by, GroupByExpr::Expressions(expressions, modifiers)
+        if expressions.is_empty() && modifiers.is_empty())
+        || super::super::aggregate::projection_may_erase_input(select, scope)
         || has_opaque_row_inputs(items)
     {
         return false;
@@ -24,9 +26,10 @@ pub(super) fn fixed(
     let resolver = Resolver::new(items, scope.names(), positions);
     !expressions.is_empty()
         && expressions.iter().all(|expr| {
-            resolver
-                .column(expr)
-                .is_some_and(|column| fixed_by_where(selection, &column, &resolver, positions))
+            matches!(unwrap_expr(expr), Expr::CompoundIdentifier(_))
+                && resolver
+                    .column(expr)
+                    .is_some_and(|column| fixed_by_where(selection, &column, &resolver, positions))
         })
 }
 

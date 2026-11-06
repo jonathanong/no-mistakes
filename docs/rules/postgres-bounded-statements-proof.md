@@ -28,15 +28,18 @@ set operation). A statement is bounded when any of these holds:
   one implicit group when there is no GROUP BY and the select list does not expand rows. A function with the same name in another schema is an ordinary function,
   called once per row, and a set-returning function in the select list
   (`generate_series(1, count(*))`) expands the row again.
-- `DISTINCT ON` names only columns fixed by direct, top-level `WHERE` equalities
-  to literals or bind parameters. The fixed distinct tuple produces at
+- `DISTINCT ON` names only qualified columns in an ungrouped `SELECT`, fixed
+  by direct, top-level `WHERE` equalities to literals or bind parameters. The
+  fixed distinct tuple produces at
   most one row even when its input has many rows. For example,
   `SELECT DISTINCT ON (i.url_id) i.id FROM items i WHERE i.url_id = $1
   ORDER BY i.url_id, i.id DESC` is bounded and can supply a bounded CTE row to
   later key joins. Every distinct expression must be fixed. An `IN` list,
   `ANY` array, `OR` arm, or a fixed column other than the distinct expression
-  does not establish this row cap. A recursive CTE self-reference remains
-  unbounded even when each iteration selects one distinct row.
+  does not establish this row cap. Grouping sets can add a NULL subtotal value,
+  and an unqualified distinct name can refer to a select-list alias instead of
+  the base column. A recursive CTE self-reference remains unbounded even when
+  each iteration selects one distinct row.
 - Every base relation in its FROM list is **pinned** to a unique key, or comes from a bounded
   source. A relation is pinned when top-level `AND` conjuncts of `WHERE` and of the `ON`
   that restricts it equate **every** column of one unique key with a value:
