@@ -44,6 +44,8 @@ pub fn diagnostics_with_files_and_sources(
     sources: &SourceStore,
     defer_suppression: bool,
 ) -> Result<Diagnostics> {
+    let normalized_root = crate::codebase::ts_source::normalize_discovery_path(root);
+    let root = normalized_root.as_path();
     let mut output = Diagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
         let options: Options = rule.try_rule_options()?;
