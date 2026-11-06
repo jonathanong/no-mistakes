@@ -6,7 +6,7 @@ use crate::codebase::postgres::AllowList;
 use crate::codebase::postgres::SqlStatementFileFacts;
 use crate::codebase::rules::{LocatedRuleFinding, PostgresFindings};
 use crate::codebase::ts_source::{matching_disable_directive, SourceStore};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 type StatementKey = (PathBuf, Option<usize>, (usize, usize));
@@ -101,58 +101,47 @@ fn merge(
             group.push(located);
         }
     }
-    let appended_call = append::only_appended(spans);
-    if group.len() < 2 && (group.is_empty() || appended_call.is_none()) {
-        output.0.extend(group);
-        return;
-    }
-    let relocate_line = if group.len() == 1 {
-        appended_call
-    } else {
-        append::relocate(spans, &group, executor)
-    };
     group.sort();
-    let roots: BTreeSet<_> = group
-        .iter()
-        .filter_map(|located| located.finding.target.clone())
-        .collect();
-    let targets = roots.into_iter().collect::<Vec<_>>().join(", ");
-    let local = group
-        .iter()
-        .position(|located| located.finding.file == executor);
-    let relocate = relocate_line.filter(|_| local.is_some());
-    let mut fragments = BTreeMap::<&str, usize>::new();
-    for located in &group {
-        let finding = &located.finding;
-        if finding.file != executor || relocate.is_some_and(|line| finding.line != line) {
-            fragments
-                .entry(&finding.file)
-                .and_modify(|line| *line = (*line).min(finding.line))
-                .or_insert(finding.line);
+    group.sort_by_key(|located| located.finding.file != executor);
+    let appended_call = append::only_appended(spans);
+    let mut roots = BTreeMap::<String, LocatedRuleFinding>::new();
+    for mut located in group {
+        let Some(target) = located.finding.target.clone() else {
+            output.0.push(located);
+            continue;
+        };
+        let original = &located.finding;
+        let imported = original.file != executor;
+        let relocation = if imported {
+            call_line
+        } else {
+            appended_call
+                .or_else(|| append::relocate(spans, std::slice::from_ref(&located), executor))
+        };
+        if imported || relocation.is_some() {
+            let file = original.file.clone();
+            let line = original.line;
+            let suffix = original
+                .message
+                .strip_prefix(&format!("{file}:{line}: "))
+                .unwrap_or(&original.message)
+                .to_string();
+            let fragment_line = if imported {
+                Some(line)
+            } else {
+                append::fragment_line(spans, &target)
+            };
+            let note = fragment_line
+                .map(|line| format!(" (includes SQL appended from {file}:{line})"))
+                .unwrap_or_default();
+            located.finding.file = executor.to_string();
+            located.finding.line = relocation.unwrap_or(line).max(1);
+            located.finding.message = format!(
+                "{}:{}: {suffix}{note}",
+                located.finding.file, located.finding.line
+            );
         }
+        roots.entry(target).or_insert(located);
     }
-    let fragments = fragments
-        .into_iter()
-        .map(|(file, line)| format!("{file}:{line}"))
-        .collect::<Vec<_>>()
-        .join(", ");
-    let mut located: LocatedRuleFinding = group.remove(local.unwrap_or(0));
-    let finding = &mut located.finding;
-    if local.is_none() {
-        finding.file = executor.to_string();
-        finding.line = call_line.unwrap_or(finding.line).max(1);
-    } else if let Some(line) = relocate {
-        finding.line = line.max(1);
-    }
-    finding.target = Some(targets.clone());
-    let note = if fragments.is_empty() {
-        String::new()
-    } else {
-        format!(" (includes SQL appended from {fragments})")
-    };
-    finding.message = format!(
-        "{}:{}: statement can scan unbounded rows from roots {targets}{note}; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
-        finding.file, finding.line
-    );
-    output.0.push(located);
+    output.0.extend(roots.into_values());
 }

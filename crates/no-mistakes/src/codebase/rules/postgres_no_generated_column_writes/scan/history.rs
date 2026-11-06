@@ -45,10 +45,10 @@ impl Catalogs {
 }
 
 /// Number of this file's schema statements that run before a write on `line`.
-pub(super) fn events_before(file: &SqlSchemaFileFacts, line: usize) -> usize {
+pub(super) fn events_before(file: &SqlSchemaFileFacts, line: usize, column: usize) -> usize {
     file.table_events
         .iter()
-        .filter(|event| event.precedes_write(line))
+        .filter(|event| event.precedes_write(line, column))
         .count()
 }
 
@@ -60,14 +60,17 @@ pub(super) fn snapshots(
     opts: &CompiledOptions,
 ) -> BTreeMap<usize, Catalogs> {
     let mut out = BTreeMap::new();
-    for line in statements
-        .iter()
-        .flat_map(|statement| statement.writes.iter().map(|write| write.line))
-    {
-        out.entry(events_before(file, line)).or_insert_with(|| {
-            let tables = super::super::catalog::tables_before(schema, &file.path, line);
-            Catalogs::build(&tables, opts)
-        });
+    for (line, column) in statements.iter().flat_map(|statement| {
+        statement
+            .writes
+            .iter()
+            .map(|write| (write.line, write.column))
+    }) {
+        out.entry(events_before(file, line, column))
+            .or_insert_with(|| {
+                let tables = super::super::catalog::tables_before(schema, &file.path, line, column);
+                Catalogs::build(&tables, opts)
+            });
     }
     out
 }

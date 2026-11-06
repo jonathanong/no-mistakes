@@ -31,6 +31,7 @@ pub(super) fn record(
                     && table.inherits.is_none()
                     && table.partition_of.is_none(),
                 line: positions.line(&source_order),
+                position_column: positions.column(&source_order),
                 source_order,
                 table: object_name_key(&table.name),
                 relation_key: object_name_identity(&table.name),
@@ -63,6 +64,7 @@ pub(super) fn record(
                         table_if_exists: alter.if_exists,
                         if_not_exists: *if_not_exists,
                         line: positions.line(&source_order),
+                        position_column: positions.column(&source_order),
                         source_order: source_order.clone(),
                         table: object_name_key(&alter.name),
                         relation_key: object_name_identity(&alter.name),
@@ -84,6 +86,7 @@ pub(super) fn record(
                 }
                 out.push(SqlTableSchemaEvent::Drop {
                     line: positions.line(&source_order),
+                    position_column: positions.column(&source_order),
                     source_order,
                     table: object_name_key(name),
                     relation_key: object_name_identity(name),

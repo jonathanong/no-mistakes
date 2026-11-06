@@ -16,7 +16,8 @@ rules:
 ```
 
 `sqlInclude` defaults to `**/*.sql`. Pairing is by `table.name` across every
-included SQL file. Unquoted constraint names use PostgreSQL's lower-case
+included SQL file. `alpha.items.body_check` and `beta.items.body_check` are
+separate constraints. Unquoted constraint names use PostgreSQL's lower-case
 folding. An unnamed single-column `ADD CHECK ... NOT VALID` pairs using its
 generated `table_column_check` name. `NOT VALID` adds inside `DO $$` blocks (including
 idempotent `IF NOT EXISTS` wrappers) pair with a later `VALIDATE CONSTRAINT`,

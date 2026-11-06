@@ -1,0 +1,1 @@
+{"formatVersion":2,"coverage":"complete","tables":{"items":{"indexes":{"items_id":{"accessMethod":"btree","unique":true,"primary":false,"constraintBacked":false,"valid":true,"ready":true,"keys":[{"expression":"id","descending":false,"nullsFirst":false}],"includedColumns":[],"predicate":null}}}}}

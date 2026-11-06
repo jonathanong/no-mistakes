@@ -21,6 +21,7 @@ included SQL file. Table and index names keep schema qualifiers, so
 `public.events` and `audit.events` are distinct, and `DROP INDEX audit.idx`
 does not remove `public.idx`. A later `DROP INDEX` or `DROP TABLE` removes
 earlier indexes of the matching name (or every index on the dropped table).
+This also applies when CREATE and DROP statements share a physical line.
 File order uses the first numeric run in the filename (`2.sql` before
 `10.sql`, `V2__` before `V10__`); names without digits stay lexicographic.
 Unique shorter indexes are never redundant: the longer index enforces

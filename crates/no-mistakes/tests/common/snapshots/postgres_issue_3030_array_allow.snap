@@ -1,0 +1,38 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "definite_finding": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.tag_names: column is an array (text[]); store the values as child rows or an enum, or add an allow entry with a reason",
+          "rule": "postgres-array-columns",
+          "sourceLine": "{",
+          "target": "column:orders.tag_names"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "valid_column": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

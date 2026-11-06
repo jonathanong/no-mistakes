@@ -1,0 +1,91 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advisory": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "advisory.sql",
+          "line": 2,
+          "message": "advisory.sql:2: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "advisory.sql",
+          "line": 3,
+          "message": "advisory.sql:3: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "CROSS JOIN feeds f;",
+          "target": "table:feeds"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "embedded": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "lookup_roots": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/non-key.sql",
+          "line": 3,
+          "message": "sql/non-key.sql:3: SELECT can return every row of authorizations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN authorizations z ON z.status = a.status",
+          "target": "table:authorizations"
+        },
+        {
+          "file": "sql/unbounded-chain.sql",
+          "line": 2,
+          "message": "sql/unbounded-chain.sql:2: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/unbounded-chain.sql",
+          "line": 3,
+          "message": "sql/unbounded-chain.sql:3: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN feeds f ON f.id = i.feed_id AND f.deleted_at IS NULL",
+          "target": "table:feeds"
+        },
+        {
+          "file": "sql/unbounded-chain.sql",
+          "line": 4,
+          "message": "sql/unbounded-chain.sql:4: SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN topics t ON t.id = f.topic_id AND t.deleted_at IS NULL;",
+          "target": "table:topics"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -1,0 +1,370 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "bounded_embedded": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/direct.ts",
+          "line": 5,
+          "message": "src/direct.ts:5: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM accounts a",
+          "target": "table:accounts"
+        },
+        {
+          "file": "src/direct.ts",
+          "line": 6,
+          "message": "src/direct.ts:6: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "CROSS JOIN orders o`);",
+          "target": "table:orders"
+        },
+        {
+          "file": "src/first.ts",
+          "line": 6,
+          "message": "src/first.ts:6: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/shared.ts:4)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(statement);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "src/first.ts",
+          "line": 6,
+          "message": "src/first.ts:6: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/shared.ts:4)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(statement);",
+          "target": "table:orders"
+        },
+        {
+          "file": "src/second.ts",
+          "line": 6,
+          "message": "src/second.ts:6: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/shared.ts:4)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(statement);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "src/second.ts",
+          "line": 6,
+          "message": "src/second.ts:6: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/shared.ts:4)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(statement);",
+          "target": "table:orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "bounded_roots": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query.sql",
+          "line": 2,
+          "message": "query.sql:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM accounts a",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 3,
+          "message": "query.sql:3: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "CROSS JOIN orders o;",
+          "target": "table:orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "conflict_only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "conflict_ties": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "multi-row ON CONFLICT DO NOTHING needs an explicit conflict target; targetless DO NOTHING can arbitrate different unique or exclusion constraints",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items(id) SELECT id FROM source ORDER BY kind FETCH FIRST 1 ROW WITH TIES ON CONFLICT DO NOTHING;",
+          "target": "targetless-arbiter"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "conflict_zero_ties": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "constraint_cross_schema": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "ALTER TABLE ADD CONSTRAINT body_check NOT VALID must have a matching VALIDATE CONSTRAINT",
+          "rule": "postgres-constraint-validate",
+          "sourceLine": "ALTER TABLE alpha.items ADD CONSTRAINT body_check CHECK (body <> '') NOT VALID;",
+          "target": "alpha.items.body_check"
+        },
+        {
+          "file": "case.sql",
+          "line": 2,
+          "message": "VALIDATE CONSTRAINT body_check has no matching named NOT VALID add",
+          "rule": "postgres-constraint-validate",
+          "sourceLine": "ALTER TABLE beta.items VALIDATE CONSTRAINT body_check;",
+          "target": "beta.items.body_check"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "constraint_matched_schema": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "generated_case": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.normalized",
+          "line": 3,
+          "message": "case.sql:3: do not write generated column `items.normalized`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE items SET normalized='manual';",
+          "target": "normalized"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "generated_chronology": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.normalized",
+          "line": 1,
+          "message": "case.sql:1: do not write generated column `items.normalized`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "CREATE TABLE items(note text, normalized text GENERATED ALWAYS AS(lower(note)) STORED); UPDATE items SET normalized='manual'; DROP TABLE items; CREATE TABLE items(note text, normalized text); UPDATE items SET normalized='manual';",
+          "target": "normalized"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "generated_do_after_write": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.normalized",
+          "line": 1,
+          "message": "case.sql:1: do not write generated column `items.normalized`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "CREATE TABLE items(note text, normalized text GENERATED ALWAYS AS(lower(note)) STORED); UPDATE items SET normalized='manual'; DO $$ BEGIN DROP TABLE items; END $$;",
+          "target": "normalized"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "generated_do_before_write": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "generated_ordinary_positional": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "generated_quoted_positional": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.Normalized",
+          "line": 2,
+          "message": "case.sql:2: do not write generated column `items.Normalized`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO items VALUES ('x','manual');",
+          "target": "Normalized"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "generated_quoted_trigger": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.Updated_At",
+          "line": 2,
+          "message": "case.sql:2: do not write trigger-maintained column `items.Updated_At`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE items SET \"Updated_At\"=now();",
+          "target": "Updated_At"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "generated_unquoted_trigger": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "import": "items.updated_at",
+          "line": 2,
+          "message": "case.sql:2: do not write trigger-maintained column `items.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE items SET updated_at=now();",
+          "target": "updated_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "redundant_drop": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "redundant_live": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sql",
+          "line": 1,
+          "message": "items.short_idx: redundant index — its columns are a strict prefix of long_idx with the same predicate; drop it",
+          "rule": "postgres-redundant-index",
+          "sourceLine": "CREATE INDEX short_idx ON items (a); CREATE INDEX long_idx ON items (a,b);",
+          "target": "items.short_idx"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

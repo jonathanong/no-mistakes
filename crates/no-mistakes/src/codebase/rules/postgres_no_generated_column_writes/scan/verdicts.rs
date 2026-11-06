@@ -9,7 +9,7 @@ pub(super) fn record<'a>(
     context: SqlPolicyVerdictContext<'_>,
     file: &str,
     profile: &EmbeddedSqlOptions,
-    lookup: &dyn Fn(usize) -> &'a Catalogs,
+    lookup: &dyn Fn(usize, usize) -> &'a Catalogs,
     include_trigger: bool,
     advisory: bool,
 ) {
@@ -31,11 +31,11 @@ pub(super) fn record<'a>(
 fn judge<'a>(
     check: &str,
     statement: &SqlStatementFileFacts,
-    lookup: &dyn Fn(usize) -> &'a Catalogs,
+    lookup: &dyn Fn(usize, usize) -> &'a Catalogs,
 ) -> SqlBranchJudgment {
     let mut unknown = false;
     for write in &statement.writes {
-        let snapshot = lookup(write.line);
+        let snapshot = lookup(write.line, write.column);
         let catalog = if check == "generated-write" {
             &snapshot.catalog
         } else {
@@ -46,9 +46,13 @@ fn judge<'a>(
             continue;
         };
         let violation = match &write.columns {
-            SqlWriteColumns::Named(columns) => columns
-                .iter()
-                .any(|column| meta.generated.contains(&column.to_ascii_lowercase())),
+            SqlWriteColumns::Named(columns) => columns.iter().enumerate().any(|(index, column)| {
+                let key = write.column_keys.as_ref().and_then(|keys| keys.get(index));
+                key.map_or_else(
+                    || meta.generated.contains(&column.to_ascii_lowercase()),
+                    |key| meta.generated.contains(key),
+                )
+            }),
             SqlWriteColumns::Positional(width) => {
                 if width.is_none() || meta.column_order.is_none() {
                     unknown = true;

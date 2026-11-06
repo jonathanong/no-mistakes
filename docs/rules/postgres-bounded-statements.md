@@ -362,7 +362,7 @@ Declared `columnBounds` follow that push. A predicate on the derived column reac
 
 `DELETE ... WHERE id = ANY(ARRAY(SELECT id FROM expired))` is bounded when `expired` itself is capped. An unbounded `UPDATE ... FROM candidate INNER JOIN ...` finding names the `UPDATE`. A positional `LIMIT $n` inside `WITH page AS MATERIALIZED (... LIMIT $n)` caps that page. A data-modifying CTE joined to the page on the target's whole primary key, including `column = ANY(ARRAY[page.column])` for each key column, stays bounded, and the outer `SELECT` of its `RETURNING` rows keeps that proof. The same statement without the `LIMIT` still reports the target.
 
-A multi-line template reports the source line that contains the SQL. That includes `head + tail`, where each const is its own template. A single-root finding keeps that relation's source line, including inside a fluent append, when the opening template contains a relation. When the opening template has no relation and every relation comes from explicit builder appends, the finding is reported at each executor call, including for a single root. Prepared SQL append boundaries distinguish opening relations from appended roots regardless of escaped newlines, empty openings, or helper declaration order. A grouped finding keeps the opening template's line when its earliest root is there. When the earliest root is an appended fragment instead, the finding is reported once, on the executing call, and the message names that fragment.
+A multi-line template reports the source line that contains each relation. That includes `head + tail`, where each const is its own template. A relation in the opening template keeps its source line, including inside a fluent append. When every relation comes from explicit builder appends, each root is reported at the executor call. Prepared SQL append boundaries distinguish opening relations from appended roots regardless of escaped newlines, empty openings, or helper declaration order. Imported fragment roots are reported at each executing caller, with the fragment location in the message.
 
 ## Analysis
 
@@ -374,31 +374,29 @@ Successfully parsed sibling statements remain analyzable.
 ### Cascading relation findings
 
 A descendant walk can expose several unbounded relations, including repeated
-reads of the same table. The rule emits one finding per analyzed statement,
-listing its unbounded roots in sorted order. For multiple roots, `target` is a
-comma-separated list of catalog object refs, such as
-`table:accounts, table:orders`. A single root keeps its ordinary object ref.
-Independent statements remain separate, even on the same source line. SQL
-alternatives from one executor statement share the union of their unbounded
-roots. The finding sits at the executed statement, not at a shared fragment
-that the statement appends from another file: callers that append the same
-fragment each get their own finding, and a directive at one caller suppresses
-only that caller. A same-file const is treated the same way when the grouped
-finding's earliest root is in that fragment rather than in the statement's
-opening template. The finding is then one report on the executing call, and the
-message names the fragment. A grouped finding that starts in the opening
-template keeps that line. When a root comes from an appended fragment, the
-message names the earliest contributing line in each fragment file once. A
-statement made only of appended fragments is reported at each executor call,
-even for a single root when several callers append the same full `FROM`
-fragment. A bounded relation in the opening template preserves the usual
-single-root relation location. Suppressed roots do not determine the remaining group's location.
+reads of the same table. The rule emits one finding per distinct unbounded
+root in each analyzed statement. Each `target` is one catalog object ref, such
+as `table:accounts`. Independent statements remain separate, even on the same
+source line. SQL alternatives from one executor statement share the union of
+their roots, with one report per root.
 
-`allow` entries are applied per root and still report stale entries. A
-relation-line suppression suppresses that relation before the remaining roots
-are grouped; a statement-start suppression covers the whole statement. A
-`no-mistakes-disable-line` or `-next-line` on the executing call's line
-suppresses a grouped finding reported there.
+With `severity: advisory`, the same granularity applies: each unbounded relation
+produces one non-failing advisory. For example, `FROM items i CROSS JOIN feeds f`
+produces separate `SELECT can return every row of items` and `SELECT can return
+every row of feeds` messages. Advisory counts can therefore increase compared
+with a single grouped `statement can scan unbounded rows` report for the same
+statement; the number of analyzed statements has not increased.
+
+Direct SQL and local executor SQL place each finding at that relation's line.
+For SQL imported or appended from another file, each root is attributed to the
+executing caller and its message names the contributing fragment line. Callers
+that append the same fragment each get their own findings. A same-file appended
+root uses the executor call when its source is outside the opening template.
+
+`allow` entries apply per root and still report stale entries. A relation-line
+suppression removes that root; a statement-start suppression covers the whole
+statement. A `no-mistakes-disable-line` or `-next-line` at one executing call
+suppresses only that caller's attributed findings.
 
 ### Depth-capped recursive CTEs
 

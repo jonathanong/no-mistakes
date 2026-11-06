@@ -1,0 +1,341 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "participants": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "conversation_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 3
+        },
+        "removed_at": {
+          "dataType": "timestamptz",
+          "nullable": true,
+          "ordinalPosition": 4
+        }
+      },
+      "primaryKey": {
+        "columns": ["id"]
+      },
+      "indexes": {
+        "participants_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX participants_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "conversations": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "kind": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "deleted_at": {
+          "dataType": "timestamptz",
+          "nullable": true,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": ["id"]
+      },
+      "indexes": {
+        "conversations_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX conversations_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "users": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "deleted_at": {
+          "dataType": "timestamptz",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": ["id"]
+      },
+      "indexes": {
+        "users_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX users_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "items": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "item_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": ["id"]
+      },
+      "indexes": {
+        "items_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX items_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "sources": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "item_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "feed_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 3
+        },
+        "post_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 4
+        }
+      },
+      "primaryKey": {
+        "columns": ["id"]
+      },
+      "indexes": {
+        "sources_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX sources_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "feeds": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "topic_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "deleted_at": {
+          "dataType": "timestamptz",
+          "nullable": true,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": ["id"]
+      },
+      "indexes": {
+        "feeds_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX feeds_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "topics": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "deleted_at": {
+          "dataType": "timestamptz",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": ["id"]
+      },
+      "indexes": {
+        "topics_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX topics_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "posts": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": ["id"]
+      },
+      "indexes": {
+        "posts_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX posts_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

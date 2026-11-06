@@ -2,12 +2,15 @@ use super::transactions::{self, Marker};
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
+mod coordinates;
+use coordinates::{body_position, start_column, start_line};
+
 /// Lexical statement ordinals retain ordering even when lenient ASTs lose spans.
 pub(crate) struct Positions(
     BTreeMap<(String, String), VecDeque<Vec<usize>>>,
     BTreeSet<Vec<usize>>,
     Vec<Marker>,
-    BTreeMap<Vec<usize>, usize>,
+    BTreeMap<Vec<usize>, (usize, usize)>,
 );
 
 impl Positions {
@@ -32,11 +35,12 @@ impl Positions {
             }
             positions.record(&code, &[ordinal]);
             let outer_line = start_line(&code);
-            positions.3.insert(vec![ordinal], outer_line);
+            positions
+                .3
+                .insert(vec![ordinal], (outer_line, start_column(&code)));
             if code.first().is_some_and(|token| word(token, "DO")) {
                 for token in &code {
                     if let Token::DollarQuotedString(body) = &token.token {
-                        let body_line = token.span.start.line as usize;
                         let inner =
                             super::super::super::parse::unicode::tokenize_raw_unicode(&body.value);
                         let mut scope = super::super::dynamic::execution::Scope::default();
@@ -54,7 +58,7 @@ impl Positions {
                             positions.record(&code, &[ordinal, inner_ordinal]);
                             positions.3.insert(
                                 vec![ordinal, inner_ordinal],
-                                body_line + start_line(&code) - 1,
+                                body_position(token, body, &code),
                             );
                         }
                     }
@@ -72,7 +76,11 @@ impl Positions {
     }
 
     pub(super) fn line(&self, order: &[usize]) -> usize {
-        self.3.get(order).copied().unwrap_or(0)
+        self.3.get(order).map_or(0, |position| position.0)
+    }
+
+    pub(super) fn column(&self, order: &[usize]) -> usize {
+        self.3.get(order).map_or(0, |position| position.1)
     }
 
     pub(super) fn executed(&self, order: &[usize]) -> bool {
@@ -172,9 +180,4 @@ fn object_name(tokens: &[&TokenWithSpan], mut cursor: usize) -> (String, usize) 
         cursor += 1;
     }
     (parts.join("."), cursor)
-}
-
-fn start_line(code: &[&TokenWithSpan]) -> usize {
-    code.first()
-        .map_or(1, |token| token.span.start.line as usize)
 }

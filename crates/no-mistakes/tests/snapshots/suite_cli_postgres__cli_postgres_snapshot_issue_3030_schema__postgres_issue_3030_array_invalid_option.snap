@@ -1,0 +1,6 @@
+---
+source: crates/no-mistakes/tests/cli_postgres_snapshot_issue_3030_schema.rs
+expression: "format!(\"exitCode: 2\\n{}\", String::from_utf8_lossy(&output.stderr))"
+---
+exitCode: 2
+error: postgres-array-columns option allow: invalid object ref table:records (expected column:<table>.<column>)

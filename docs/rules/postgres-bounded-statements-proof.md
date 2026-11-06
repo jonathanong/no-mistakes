@@ -28,6 +28,18 @@ set operation). A statement is bounded when any of these holds:
   one implicit group when there is no GROUP BY and the select list does not expand rows. A function with the same name in another schema is an ordinary function,
   called once per row, and a set-returning function in the select list
   (`generate_series(1, count(*))`) expands the row again.
+- `DISTINCT ON` names only qualified columns in an ungrouped `SELECT`, fixed
+  by direct, top-level `WHERE` equalities to literals or bind parameters. The
+  fixed distinct tuple produces at
+  most one row even when its input has many rows. For example,
+  `SELECT DISTINCT ON (i.url_id) i.id FROM items i WHERE i.url_id = $1
+  ORDER BY i.url_id, i.id DESC` is bounded and can supply a bounded CTE row to
+  later key joins. Every distinct expression must be fixed. An `IN` list,
+  `ANY` array, `OR` arm, or a fixed column other than the distinct expression
+  does not establish this row cap. Grouping sets can add a NULL subtotal value,
+  and an unqualified distinct name can refer to a select-list alias instead of
+  the base column. A recursive CTE self-reference remains unbounded even when
+  each iteration selects one distinct row.
 - Every base relation in its FROM list is **pinned** to a unique key, or comes from a bounded
   source. A relation is pinned when top-level `AND` conjuncts of `WHERE` and of the `ON`
   that restricts it equate **every** column of one unique key with a value:
@@ -78,18 +90,52 @@ set operation). A statement is bounded when any of these holds:
   is not treated as an expanding call, while an unknown function still is.
   The relations inside it are still judged. Independent lateral queries retain their global bound. A derived query cannot resolve its own reads against
   the columns it later exposes. For example, `id IN (SELECT id FROM LATERAL (SELECT id) d
-LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` query sees
+  LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` query sees
   only preceding FROM sources; a later source with the same column name cannot hide that
   outer read.
 - A column compared with a column of another bounded relation is pinned too, so a bound
-  propagates across joins on unique keys to a fixed point: with `o.id = $1`, the account
-  `a.id = o.account_id` is bounded, and its profile `p.account_id = a.id` after it. A join on
-  a column that is not a whole key ends the chain (an account has many orders). `ON` pins
+  propagates across joins on unique keys to a fixed point: with `i.id = $1`,
+  `f.id = i.feed_id` is bounded, followed by `t.id = f.topic_id`. Additional `AND`
+  conjuncts in `ON`, such as `f.deleted_at IS NULL`, `t.deleted_at IS NULL`, or
+  `z.status = $2`, only narrow the key lookup. A join on a column that is not a
+  whole key does not bound that relation. The source relation must already be
+  bounded; a key equality does not make the source bounded. Both relations are
+  reported when neither has its own bound. A bounded source may contain multiple
+  rows, including when `columnBounds` establishes its bound on a non-key column.
+  A direct fixed equality crosses an unambiguous join equality even when its
+  source relation has an incomplete composite key: `p.conversation_id = $1`
+  together with `c.id = p.conversation_id` can bound `c` by its primary key
+  while `p` remains reported. This transfer follows a chain of direct
+  equalities to a fixed point; it does not treat a fanout relation as bounded.
+  The proof can continue through a middle relation bounded on a non-key column.
+  If that middle relation is an unbounded fanout from the root, it and the
+  downstream keyed target remain reported. `ON` pins
   only the side an outer join can null-extend, never the preserved side, and a `WHERE` on the
   null-extended side is not assumed to turn the join inner: a `LEFT JOIN` with its key
   pinned only in `WHERE` reports the preserved relation. `JOIN … USING (col)` pins the same
   way as `ON a.col = b.col` when each side is one FROM item; after a longer chain, which
   item owns the column cannot be told, so it pins nothing.
+- For an uncapped `SELECT`, a complete primary or valid unique key equated directly
+  to columns of another FROM relation bounds the keyed relation only when that
+  source relation is already bounded. For example, `FROM items i LEFT JOIN topics t
+  ON t.id = i.topic_id` reports both tables when `items` is unbounded. A direct
+  pin on `items.id` bounds `items`, then bounds `topics` through its key. In the
+  reverse direction, `users u JOIN posts p ON p.user_id = u.id` still reports
+  `posts` when `users` is bounded by its primary key: `posts.user_id` is not a
+  unique key and can match arbitrarily many rows. The same
+  direction applies to inner and chained joins. Each target key column needs one
+  bounded source equality; when two peers equate the same column, either bounded
+  peer can supply it. A key equality present only in an `OR` branch, an incomplete
+  key, or a nullable unique key compared with `IS NOT DISTINCT FROM` cannot prove
+  the bound. A cycle without an independent bounded source remains unbounded,
+  including self-joins. Reads inside derived tables and CTEs retain their own
+  reports. A keyed table joined to an unbounded derived recordset also remains
+  reported, even when the recordset has its own reportable base-table read. A
+  derived source can supply a key value when its own result is bounded,
+  including a bounded `DISTINCT ON` CTE chain. A correlated `LATERAL` source, an
+  unknown catalog relation, or a relation with uncertain temporary shadowing
+  cannot supply a bound. Extra independent conjuncts do not erase a complete key
+  equality.
 - For `UPDATE` and `DELETE`, the target relation is bounded. A CTE or subquery that picks
   the target rows with a `LIMIT` bounds it when the target's key is matched against it
   (`FROM c WHERE t.id = c.id`, or `WHERE t.id IN (SELECT id … LIMIT n)`). `ctid` identifies
@@ -157,6 +203,10 @@ distinct uncapped base-relation reads plus an opaque source. This retains findin
 while preventing the summary from bounding another relation, so pathological generated
 SQL stays cheap to analyze. A `COPY (SELECT …)` query is judged like a `SELECT`. The rule
 reports each relation that makes a statement unbounded, once, at that relation's line.
+Each report keeps its own `table:` target and rule message when a query reads
+several unbounded relations.
+Imported or appended shared SQL keeps each root's report at its executing
+caller, with the fragment line named in the message.
 An uncapped SELECT also reports unbounded relations read by its IN-subquery pins,
 even when another predicate pins the outer table. UPDATE and DELETE retain target-only
 reporting.

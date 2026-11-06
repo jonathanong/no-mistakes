@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-bounded-statements
+    severity: advisory
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [advisory.sql]

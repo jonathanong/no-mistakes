@@ -177,7 +177,7 @@ fn evaluate(
         })
         .collect();
     propagation::bound(&keys, &mut bounded);
-    let mut offenders = reads::collect(
+    let offenders = reads::collect(
         query,
         &nested,
         &pin_subqueries,
@@ -186,7 +186,6 @@ fn evaluate(
         views,
         precise_columns,
     );
-    driven::suppress(query, catalog, &mut offenders);
     Evaluation {
         bounded: query.capped || bounded.iter().all(|state| *state),
         items: bounded,

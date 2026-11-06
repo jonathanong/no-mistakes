@@ -12,13 +12,13 @@ pub(super) fn extend_unanalyzable<'a>(
     file: &str,
     embedded: &EmbeddedSqlFileFacts,
     _statements: &[SqlStatementFileFacts],
-    lookup: &dyn Fn(usize) -> &'a Catalogs,
+    lookup: &dyn Fn(usize, usize) -> &'a Catalogs,
 ) {
     for call in &embedded.calls {
         let line = call.line.max(1) as usize;
         if call.is_unanalyzable()
             && recovered_sql_may_write_columns(call.sql_text.as_deref())
-            && !lookup(line).combined.is_empty()
+            && !lookup(line, 0).combined.is_empty()
         {
             findings.push(unanalyzable_finding(file, line));
         }
@@ -31,20 +31,27 @@ pub(super) fn extend_writes<'a>(
     statements: &[SqlStatementFileFacts],
     dedup: &mut crate::codebase::rules::VariantFindingDedup,
     source: Option<&str>,
-    lookup: &dyn Fn(usize) -> &'a Catalogs,
+    lookup: &dyn Fn(usize, usize) -> &'a Catalogs,
 ) {
     for statement in statements {
         let mut hits = Vec::new();
         for (write_index, write) in statement.writes.iter().enumerate() {
-            let catalog = &lookup(write.line).combined;
+            let catalog = &lookup(write.line, write.column).combined;
             let Some(meta) = catalog.get(&write.table) else {
                 continue;
             };
             let columns: Vec<String> = match &write.columns {
                 SqlWriteColumns::Named(columns) => columns
                     .iter()
-                    .filter(|column| meta.generated.contains(&column.to_ascii_lowercase()))
-                    .cloned()
+                    .enumerate()
+                    .filter(|(index, column)| {
+                        let key = write.column_keys.as_ref().and_then(|keys| keys.get(*index));
+                        key.map_or_else(
+                            || meta.generated.contains(&column.to_ascii_lowercase()),
+                            |key| meta.generated.contains(key),
+                        )
+                    })
+                    .map(|(_, column)| column.clone())
                     .collect(),
                 SqlWriteColumns::Positional(width) => {
                     positional_insert_hits(&write.table, meta, *width)
@@ -55,18 +62,40 @@ pub(super) fn extend_writes<'a>(
                 SqlWriteColumns::All => meta.generated.iter().cloned().collect(),
             };
             for column in columns {
-                hits.push((write.line, meta.name.as_str(), column, write_index));
+                hits.push((
+                    write.line,
+                    write.column,
+                    meta.name.as_str(),
+                    column,
+                    write_index,
+                ));
             }
         }
         hits.sort();
         hits.dedup();
-        for (line, table, column, write_index) in hits {
-            let generated = &lookup(line).catalog;
+        for (line, position, table, column, write_index) in hits {
+            let generated = &lookup(line, position).catalog;
             let render = if generated
                 .get_exact(table)
                 .or_else(|| generated.get(table))
-                .is_some_and(|meta| meta.generated.contains(&column.to_ascii_lowercase()))
-            {
+                .is_some_and(|meta| {
+                    let write = &statement.writes[write_index];
+                    let key = match &write.columns {
+                        SqlWriteColumns::Named(columns) => {
+                            write.column_keys.as_ref().and_then(|keys| {
+                                columns
+                                    .iter()
+                                    .position(|name| name == &column)
+                                    .and_then(|index| keys.get(index))
+                            })
+                        }
+                        SqlWriteColumns::Positional(_) | SqlWriteColumns::All => Some(&column),
+                    };
+                    key.map_or_else(
+                        || meta.generated.contains(&column.to_ascii_lowercase()),
+                        |key| meta.generated.contains(key),
+                    )
+                }) {
                 finding
             } else {
                 trigger_finding

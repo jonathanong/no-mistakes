@@ -16,14 +16,18 @@ fn statements_appending_a_shared_fragment_are_reported_at_each_caller() {
         lines_of(".no-mistakes.yml"),
         [
             ("src/first.ts".to_string(), 5),
+            ("src/first.ts".to_string(), 6),
+            ("src/full-from.ts".to_string(), 9),
             ("src/full-from.ts".to_string(), 9),
             ("src/full-from.ts".to_string(), 15),
+            ("src/full-from.ts".to_string(), 15),
+            ("src/full-from.ts".to_string(), 21),
             ("src/full-from.ts".to_string(), 21),
             ("src/full-from.ts".to_string(), 38),
             ("src/full-from.ts".to_string(), 42),
-            ("src/full-from.ts".to_string(), 51),
+            ("src/full-from.ts".to_string(), 55),
             ("src/full-from.ts".to_string(), 59),
-            ("src/full-from.ts".to_string(), 63),
+            ("src/full-from.ts".to_string(), 64),
             ("src/full-from.ts".to_string(), 68),
             ("src/full-from.ts".to_string(), 72),
             ("src/full-from.ts".to_string(), 80),
@@ -32,7 +36,9 @@ fn statements_appending_a_shared_fragment_are_reported_at_each_caller() {
             ("src/imported-full-from.ts".to_string(), 5),
             ("src/imported-full-from.ts".to_string(), 9),
             ("src/second.ts".to_string(), 5),
-            ("src/third.ts".to_string(), 7)
+            ("src/second.ts".to_string(), 7),
+            ("src/third.ts".to_string(), 7),
+            ("src/third.ts".to_string(), 7),
         ]
     );
 }
@@ -85,17 +91,32 @@ fn same_file_full_from_fragments_keep_both_callers_and_ignore_a_suppressed_openi
             (
                 "src/full-from.ts".to_string(),
                 9,
-                "table:accounts, table:orders".to_string()
+                "table:accounts".to_string()
+            ),
+            (
+                "src/full-from.ts".to_string(),
+                9,
+                "table:orders".to_string()
             ),
             (
                 "src/full-from.ts".to_string(),
                 15,
-                "table:accounts, table:orders".to_string()
+                "table:accounts".to_string()
+            ),
+            (
+                "src/full-from.ts".to_string(),
+                15,
+                "table:orders".to_string()
             ),
             (
                 "src/full-from.ts".to_string(),
                 21,
-                "table:invoices, table:orders".to_string()
+                "table:invoices".to_string()
+            ),
+            (
+                "src/full-from.ts".to_string(),
+                21,
+                "table:orders".to_string()
             ),
             (
                 "src/full-from.ts".to_string(),
@@ -109,7 +130,7 @@ fn same_file_full_from_fragments_keep_both_callers_and_ignore_a_suppressed_openi
             ),
             (
                 "src/full-from.ts".to_string(),
-                51,
+                55,
                 "table:invoices".to_string()
             ),
             (
@@ -119,7 +140,7 @@ fn same_file_full_from_fragments_keep_both_callers_and_ignore_a_suppressed_openi
             ),
             (
                 "src/full-from.ts".to_string(),
-                63,
+                64,
                 "table:invoices".to_string()
             ),
             (
@@ -171,7 +192,7 @@ fn full_from_single_root_callers_do_not_merge_or_override_opening_relations() {
     assert!(!findings
         .iter()
         .any(|finding| finding["file"] == "src/full-from.ts" && finding["line"] == 47));
-    for line in [51, 59, 63, 93] {
+    for line in [59, 64, 93] {
         let finding = findings
             .iter()
             .find(|finding| finding["file"] == "src/full-from.ts" && finding["line"] == line)

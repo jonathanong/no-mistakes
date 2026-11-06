@@ -15,8 +15,11 @@ pub(crate) fn push_assignment_writes(
         return;
     };
     for assignment in assignments {
-        for name in assignment_column_names(&assignment.target) {
-            push_if_generated(meta, &name, writes);
+        for (name, key) in assignment_column_names(&assignment.target)
+            .into_iter()
+            .zip(assignment_column_keys(&assignment.target))
+        {
+            push_if_generated(meta, &name, &key, writes);
         }
     }
 }
@@ -33,16 +36,17 @@ pub(crate) fn collect_named_or_positional(
         return;
     }
     for column in columns {
-        push_if_generated(meta, &relation_name(column), writes);
+        push_if_generated(meta, &relation_name(column), &column_key(column), writes);
     }
 }
 
 pub(crate) fn push_if_generated(
     meta: &GeneratedTable,
     column: &str,
+    key: &str,
     writes: &mut Vec<GeneratedColumnWrite>,
 ) {
-    if meta.generated.contains(&column.to_ascii_lowercase()) {
+    if meta.generated.contains(key) {
         writes.push(GeneratedColumnWrite {
             table: meta.name.clone(),
             column: column.to_string(),
@@ -62,6 +66,19 @@ pub(crate) fn assignment_column_names(target: &AssignmentTarget) -> Vec<String> 
         AssignmentTarget::ColumnName(name) => vec![relation_name(name)],
         AssignmentTarget::Tuple(names) => names.iter().map(relation_name).collect(),
     }
+}
+
+pub(crate) fn assignment_column_keys(target: &AssignmentTarget) -> Vec<String> {
+    match target {
+        AssignmentTarget::ColumnName(name) => vec![column_key(name)],
+        AssignmentTarget::Tuple(names) => names.iter().map(column_key).collect(),
+    }
+}
+
+fn column_key(name: &ObjectName) -> String {
+    super::super::super::idents::object_name_ident(name)
+        .map(super::super::super::idents::ident_key)
+        .unwrap_or_default()
 }
 
 pub(crate) fn table_object_name(table: &TableObject) -> Option<String> {

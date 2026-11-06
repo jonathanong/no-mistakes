@@ -1,0 +1,1 @@
+CREATE TABLE items(note text, normalized text GENERATED ALWAYS AS(lower(note)) STORED); UPDATE items SET normalized='manual'; DROP TABLE items; CREATE TABLE items(note text, normalized text); UPDATE items SET normalized='manual';

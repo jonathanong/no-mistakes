@@ -255,23 +255,47 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/issue-2961-append.mts",
           "line": 109,
-          "message": "src/issue-2961-append.mts:109: statement can scan unbounded rows from roots table:disputes, table:items, view:view_feeds (includes SQL appended from src/issue-2961-append.mts:104); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/issue-2961-append.mts:109: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return read(",
-          "target": "table:disputes, table:items, view:view_feeds"
+          "target": "table:items"
+        },
+        {
+          "file": "src/issue-2961-append.mts",
+          "line": 109,
+          "message": "src/issue-2961-append.mts:109: Select can read unbounded rows from view view_feeds; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(",
+          "target": "view:view_feeds"
+        },
+        {
+          "file": "src/issue-2961-append.mts",
+          "line": 110,
+          "message": "src/issue-2961-append.mts:110: SELECT can return every row of disputes; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "sql`SELECT d.id FROM disputes d `",
+          "target": "table:disputes"
         },
         {
           "file": "src/issue-2961-append.mts",
           "line": 93,
-          "message": "src/issue-2961-append.mts:93: statement can scan unbounded rows from roots table:disputes, table:groups, table:items (includes SQL appended from src/issue-2961-append.mts:58); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/issue-2961-append.mts:93: SELECT can return every row of disputes; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return read(",
-          "target": "table:disputes, table:groups, table:items"
+          "target": "table:disputes"
+        },
+        {
+          "file": "src/issue-2961-append.mts",
+          "line": 93,
+          "message": "src/issue-2961-append.mts:93: SELECT can return every row of groups; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(",
+          "target": "table:groups"
         },
         {
           "file": "src/issue-2961-page.mts",
           "line": 79,
-          "message": "src/issue-2961-page.mts:79: statement can scan unbounded rows from roots table:messages; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/issue-2961-page.mts:79: SELECT can return every row of messages; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT m.owner_id, m.id FROM messages m",
           "target": "table:messages"

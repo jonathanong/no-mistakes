@@ -87,9 +87,12 @@ pub(super) fn collect_alter_table(
                     });
                 }
                 if *not_valid {
-                    if let Some(name) = constraint_name(constraint)
-                        .or_else(|| names::default_check_name(&constraint_table, constraint))
-                    {
+                    if let Some(name) = constraint_name(constraint).or_else(|| {
+                        names::default_check_name(
+                            &names::table_unqualified_key(&alter.name),
+                            constraint,
+                        )
+                    }) {
                         facts.not_valid_constraints.push(SqlNamedConstraint {
                             table_name: constraint_table.clone(),
                             name: name.clone(),

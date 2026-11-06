@@ -21,16 +21,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/queries.mts",
-          "line": 9,
-          "message": "src/queries.mts:9: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "line": 27,
+          "message": "src/queries.mts:27: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/relation.mts:6)",
           "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM accounts",
+          "sourceLine": "await query(relation(limit))",
           "target": "table:accounts"
         },
         {
-          "file": "src/relation.mts",
-          "line": 6,
-          "message": "src/relation.mts:6: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "file": "src/queries.mts",
+          "line": 9,
+          "message": "src/queries.mts:9: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM accounts",
           "target": "table:accounts"

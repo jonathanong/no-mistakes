@@ -27,7 +27,8 @@ change precedence, such as `a AND (b OR c)`, and the order of conjuncts stay sig
 ### Single-row sources and constant keys
 
 A source that provably yields at most one row has no second writer order to disagree
-with, so it needs no `ORDER BY`. The rule accepts only these shapes:
+with, so it needs no `ORDER BY`. `FETCH FIRST 1 ROW WITH TIES` does not prove
+one row because tied rows can all be returned. The rule accepts only these shapes:
 
 - a `SELECT` without `FROM` whose select list holds literals, bound parameters, casts,
   scalar subqueries and a short list of scalar functions (`lower`, `upper`, `coalesce`,
@@ -39,7 +40,8 @@ with, so it needs no `ORDER BY`. The rule accepts only these shapes:
 - a `SELECT` from one plain table (no join, CTE shadowing or table function) whose
   top-level `AND` conjuncts equate every column of one catalog unique key (valid, ready,
   immediate, non-partial) to a literal or bound parameter;
-- a literal `LIMIT 0`/`LIMIT 1` or `FETCH FIRST [1] ROW ONLY`.
+- a literal `LIMIT 0`/`LIMIT 1`, `FETCH FIRST [1] ROW ONLY`, or
+  `FETCH FIRST 0 ROWS WITH TIES` (which returns no rows).
 
 Anything else, including `OR` filters, partial unique indexes, a partly pinned composite key
 and `LIMIT $1`, stays multi-row and fail-closed. A positional `ORDER BY 1, 2` maps to the

@@ -1,0 +1,283 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "items": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "feed_id": {
+          "dataType": "uuid",
+          "nullable": true
+        },
+        "created_by_id": {
+          "dataType": "uuid",
+          "nullable": true
+        },
+        "parent_id": {
+          "dataType": "uuid",
+          "nullable": true
+        },
+        "tenant_id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "handle": {
+          "dataType": "text",
+          "nullable": false
+        },
+        "email": {
+          "dataType": "text",
+          "nullable": true
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "pk": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "feeds": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "topic_id": {
+          "dataType": "uuid",
+          "nullable": true
+        },
+        "alt_id": {
+          "dataType": "uuid",
+          "nullable": false
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "pk": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "feed_alt": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "alt_id",
+              "expression": "alt_id"
+            }
+          ]
+        }
+      }
+    },
+    "topics": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "created_by_id": {
+          "dataType": "uuid",
+          "nullable": true
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "pk": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "users": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "tenant_id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "handle": {
+          "dataType": "text",
+          "nullable": false
+        },
+        "email": {
+          "dataType": "text",
+          "nullable": true
+        },
+        "deleted_at": {
+          "dataType": "timestamptz",
+          "nullable": true
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "pk": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "0": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "tenant_id",
+              "expression": "tenant_id"
+            },
+            {
+              "column": "handle",
+              "expression": "handle"
+            }
+          ]
+        },
+        "1": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "email",
+              "expression": "email"
+            }
+          ]
+        }
+      }
+    },
+    "blocks": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": false
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "pk": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

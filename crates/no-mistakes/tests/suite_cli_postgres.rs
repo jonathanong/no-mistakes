@@ -34,6 +34,8 @@ mod cli_postgres_snapshot_array_columns;
 mod cli_postgres_snapshot_bounded_chains;
 #[path = "cli_postgres_snapshot_bounded_false_positives.rs"]
 mod cli_postgres_snapshot_bounded_false_positives;
+#[path = "cli_postgres_snapshot_bounded_on.rs"]
+mod cli_postgres_snapshot_bounded_on;
 #[path = "cli_postgres_snapshot_bounded_statements.rs"]
 mod cli_postgres_snapshot_bounded_statements;
 #[path = "cli_postgres_snapshot_bounded_statements_more.rs"]
@@ -68,6 +70,10 @@ mod cli_postgres_snapshot_generated_column_writes;
 mod cli_postgres_snapshot_idempotent_insert;
 #[path = "cli_postgres_snapshot_identifier_length.rs"]
 mod cli_postgres_snapshot_identifier_length;
+#[path = "cli_postgres_snapshot_issue_3030_schema.rs"]
+mod cli_postgres_snapshot_issue_3030_schema;
+#[path = "cli_postgres_snapshot_issue_3037.rs"]
+mod cli_postgres_snapshot_issue_3037;
 #[path = "cli_postgres_snapshot_json_relation_ids.rs"]
 mod cli_postgres_snapshot_json_relation_ids;
 #[path = "cli_postgres_snapshot_key_column_types.rs"]
@@ -229,5 +235,12 @@ mod cli_postgres_snapshot_executor_recall;
 #[path = "cli_postgres_snapshot_function_locations.rs"]
 mod cli_postgres_snapshot_function_locations;
 
+#[path = "cli_postgres_snapshot_join_roots.rs"]
+mod cli_postgres_snapshot_join_roots;
 #[path = "cli_postgres_snapshot_native_advice.rs"]
 mod cli_postgres_snapshot_native_advice;
+#[path = "cli_postgres_snapshot_root_proofs.rs"]
+mod cli_postgres_snapshot_root_proofs;
+
+#[path = "cli_postgres_snapshot_fixedpoint.rs"]
+mod cli_postgres_snapshot_fixedpoint;

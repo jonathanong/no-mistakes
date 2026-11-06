@@ -14,31 +14,55 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/first.ts",
           "line": 5,
-          "message": "src/first.ts:5: statement can scan unbounded rows from roots table:accounts, table:orders (includes SQL appended from src/fragment.ts:4); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/first.ts:5: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "const statement = sql`SELECT a.id FROM accounts a`.append(sharedFragmentSql());",
-          "target": "table:accounts, table:orders"
+          "target": "table:accounts"
+        },
+        {
+          "file": "src/first.ts",
+          "line": 6,
+          "message": "src/first.ts:6: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/fragment.ts:4)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(statement);",
+          "target": "table:orders"
         },
         {
           "file": "src/full-from.ts",
           "line": 15,
-          "message": "src/full-from.ts:15: statement can scan unbounded rows from roots table:accounts, table:orders (includes SQL appended from src/full-from.ts:4); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/full-from.ts:15: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:4)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(",
-          "target": "table:accounts, table:orders"
+          "target": "table:accounts"
+        },
+        {
+          "file": "src/full-from.ts",
+          "line": 15,
+          "message": "src/full-from.ts:15: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:5)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "table:orders"
         },
         {
           "file": "src/full-from.ts",
           "line": 21,
-          "message": "src/full-from.ts:21: statement can scan unbounded rows from roots table:invoices, table:orders (includes SQL appended from src/full-from.ts:29); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/full-from.ts:21: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:30)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(",
-          "target": "table:invoices, table:orders"
+          "target": "table:invoices"
+        },
+        {
+          "file": "src/full-from.ts",
+          "line": 21,
+          "message": "src/full-from.ts:21: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:29)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "table:orders"
         },
         {
           "file": "src/full-from.ts",
           "line": 38,
-          "message": "src/full-from.ts:38: statement can scan unbounded rows from roots table:invoices (includes SQL appended from src/full-from.ts:34); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/full-from.ts:38: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:34)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(sql`SELECT id`.append(singleRootFromSql()));",
           "target": "table:invoices"
@@ -46,17 +70,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/full-from.ts",
           "line": 42,
-          "message": "src/full-from.ts:42: statement can scan unbounded rows from roots table:invoices (includes SQL appended from src/full-from.ts:34); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/full-from.ts:42: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:34)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(sql`SELECT id`.append(singleRootFromSql()));",
           "target": "table:invoices"
         },
         {
           "file": "src/full-from.ts",
-          "line": 51,
-          "message": "src/full-from.ts:51: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "line": 55,
+          "message": "src/full-from.ts:55: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:51)",
           "rule": "postgres-bounded-statements",
-          "sourceLine": "return sql` CROSS JOIN invoices i`;",
+          "sourceLine": "return query(sql`SELECT i.id FROM accounts a`.append(singleJoinSql()).append(sql` WHERE a.id = ${id}`));",
           "target": "table:invoices"
         },
         {
@@ -69,16 +93,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/full-from.ts",
-          "line": 63,
-          "message": "src/full-from.ts:63: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "line": 64,
+          "message": "src/full-from.ts:64: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
-          "sourceLine": "const statement = sql`SELECT id\\nFROM invoices`;",
+          "sourceLine": "return query(statement.append(sql` ORDER BY id`));",
           "target": "table:invoices"
         },
         {
           "file": "src/full-from.ts",
           "line": 68,
-          "message": "src/full-from.ts:68: statement can scan unbounded rows from roots table:invoices (includes SQL appended from src/full-from.ts:76); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/full-from.ts:68: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:76)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(sql`SELECT id`.append(laterFromSql()));",
           "target": "table:invoices"
@@ -86,7 +110,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/full-from.ts",
           "line": 72,
-          "message": "src/full-from.ts:72: statement can scan unbounded rows from roots table:invoices (includes SQL appended from src/full-from.ts:76); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/full-from.ts:72: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:76)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(sql`SELECT id`.append(laterFromSql()));",
           "target": "table:invoices"
@@ -94,7 +118,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/full-from.ts",
           "line": 80,
-          "message": "src/full-from.ts:80: statement can scan unbounded rows from roots table:invoices (includes SQL appended from src/full-from.ts:88); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/full-from.ts:80: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:88)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(sql``.append(laterStatementSql()));",
           "target": "table:invoices"
@@ -102,7 +126,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/full-from.ts",
           "line": 84,
-          "message": "src/full-from.ts:84: statement can scan unbounded rows from roots table:invoices (includes SQL appended from src/full-from.ts:88); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/full-from.ts:84: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:88)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(sql``.append(laterStatementSql()));",
           "target": "table:invoices"
@@ -110,10 +134,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/full-from.ts",
           "line": 9,
-          "message": "src/full-from.ts:9: statement can scan unbounded rows from roots table:accounts, table:orders (includes SQL appended from src/full-from.ts:4); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/full-from.ts:9: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:4)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(",
-          "target": "table:accounts, table:orders"
+          "target": "table:accounts"
+        },
+        {
+          "file": "src/full-from.ts",
+          "line": 9,
+          "message": "src/full-from.ts:9: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:5)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "table:orders"
         },
         {
           "file": "src/full-from.ts",
@@ -126,7 +158,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/imported-full-from.ts",
           "line": 5,
-          "message": "src/imported-full-from.ts:5: statement can scan unbounded rows from roots table:invoices (includes SQL appended from src/single-root-fragment.ts:4); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/imported-full-from.ts:5: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/single-root-fragment.ts:4)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(sql`SELECT id`.append(singleRootFragmentSql()));",
           "target": "table:invoices"
@@ -134,7 +166,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/imported-full-from.ts",
           "line": 9,
-          "message": "src/imported-full-from.ts:9: statement can scan unbounded rows from roots table:invoices (includes SQL appended from src/single-root-fragment.ts:4); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/imported-full-from.ts:9: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/single-root-fragment.ts:4)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(sql`SELECT id`.append(singleRootFragmentSql()));",
           "target": "table:invoices"
@@ -142,18 +174,34 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/second.ts",
           "line": 5,
-          "message": "src/second.ts:5: statement can scan unbounded rows from roots table:accounts, table:orders (includes SQL appended from src/fragment.ts:4); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/second.ts:5: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "const statement = sql`SELECT a.id FROM accounts a`;",
-          "target": "table:accounts, table:orders"
+          "target": "table:accounts"
+        },
+        {
+          "file": "src/second.ts",
+          "line": 7,
+          "message": "src/second.ts:7: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/fragment.ts:4)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(statement);",
+          "target": "table:orders"
         },
         {
           "file": "src/third.ts",
           "line": 7,
-          "message": "src/third.ts:7: statement can scan unbounded rows from roots table:invoices, table:orders (includes SQL appended from src/pair.ts:4); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "message": "src/third.ts:7: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/pair.ts:4)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(statement);",
-          "target": "table:invoices, table:orders"
+          "target": "table:invoices"
+        },
+        {
+          "file": "src/third.ts",
+          "line": 7,
+          "message": "src/third.ts:7: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/pair.ts:4)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(statement);",
+          "target": "table:orders"
         }
       ],
       "warnings": []
