@@ -75,3 +75,17 @@ fn split_rule_options_keep_the_fragment_file_and_local_index() {
         ".no-mistakes/rules/policies.yml"
     );
 }
+
+#[test]
+fn dotted_option_paths_locate_the_authored_nested_entry() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/config-diagnostic-locations/fixture/nested-allow");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let sources = crate::codebase::rules::source_store_for_files(&[]);
+    let anchor = ConfigAnchor::resolve(&root, &config, Some(&sources), &config.rules[0]);
+    assert_eq!(anchor.option_item_line("plural.ignorePatterns", 0), 8);
+    assert_eq!(
+        anchor.option_item_line("shapeOptions.keysetOnlySweep.ignoreTables", 0),
+        12
+    );
+}

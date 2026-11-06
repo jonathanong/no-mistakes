@@ -1,0 +1,179 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "column-selection.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "column-selection.yml",
+          "import": "postgres-required-comments",
+          "line": 9,
+          "message": "stale postgres-required-comments exemptColumnNamePatterns entry `^bad$` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "exemptColumnNamePatterns: ['^bad$', '^good$']",
+          "target": "^bad$"
+        },
+        {
+          "file": "column-selection.yml",
+          "import": "postgres-required-comments",
+          "line": 9,
+          "message": "stale postgres-required-comments exemptColumnNamePatterns entry `^good$` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "exemptColumnNamePatterns: ['^bad$', '^good$']",
+          "target": "^good$"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "excluded.yml": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "failed.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-column-naming",
+          "message": "schemaCatalogPath invalid.json is not valid JSONC"
+        },
+        {
+          "consumer": "postgres-finite-text-columns",
+          "message": "schemaCatalogPath invalid.json is not valid JSONC"
+        },
+        {
+          "consumer": "postgres-required-comments",
+          "message": "schemaCatalogPath invalid.json is not valid JSONC"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no-columns.yml": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "partial.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-column-naming",
+          "message": "schemaCatalogPath partial.json has ordering-only coverage; this rule requires a complete schema catalog"
+        },
+        {
+          "consumer": "postgres-finite-text-columns",
+          "message": "schemaCatalogPath partial.json has ordering-only coverage; this rule requires a complete schema catalog"
+        },
+        {
+          "consumer": "postgres-required-comments",
+          "message": "schemaCatalogPath partial.json has ordering-only coverage; this rule requires a complete schema catalog"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "report.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "report.yml",
+          "import": "postgres-column-naming",
+          "line": 15,
+          "message": "stale postgres-column-naming ignoreTablePatterns entry `^clean$` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "ignoreTablePatterns: ['^legacy$', 'legacy', '^clean$', '^missing$']",
+          "target": "^clean$"
+        },
+        {
+          "file": "report.yml",
+          "import": "postgres-column-naming",
+          "line": 15,
+          "message": "stale postgres-column-naming ignoreTablePatterns entry `^missing$` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "ignoreTablePatterns: ['^legacy$', 'legacy', '^clean$', '^missing$']",
+          "target": "^missing$"
+        },
+        {
+          "file": "report.yml",
+          "import": "postgres-finite-text-columns",
+          "line": 21,
+          "message": "stale postgres-finite-text-columns ignoreTablePatterns entry `^clean$` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "ignoreTablePatterns: ['^legacy$', 'legacy', '^clean$', '^missing$']",
+          "target": "^clean$"
+        },
+        {
+          "file": "report.yml",
+          "import": "postgres-finite-text-columns",
+          "line": 21,
+          "message": "stale postgres-finite-text-columns ignoreTablePatterns entry `^missing$` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "ignoreTablePatterns: ['^legacy$', 'legacy', '^clean$', '^missing$']",
+          "target": "^missing$"
+        },
+        {
+          "file": "report.yml",
+          "import": "postgres-required-comments",
+          "line": 8,
+          "message": "stale postgres-required-comments exemptColumnNamePatterns entry `^good$` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "exemptColumnNamePatterns: ['^bad$', 'bad', '^good$', '^missing$']",
+          "target": "^good$"
+        },
+        {
+          "file": "report.yml",
+          "import": "postgres-required-comments",
+          "line": 8,
+          "message": "stale postgres-required-comments exemptColumnNamePatterns entry `^missing$` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "exemptColumnNamePatterns: ['^bad$', 'bad', '^good$', '^missing$']",
+          "target": "^missing$"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

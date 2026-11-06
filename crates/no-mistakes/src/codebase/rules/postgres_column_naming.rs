@@ -138,37 +138,24 @@ super::prepared_rule_entrypoints!(super::check_prepared_schema_rule);
 pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
     config: &NoMistakesConfig,
-    _all_files: &[PathBuf],
+    all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
-    super::run_catalog_rule(
-        root,
-        config,
-        facts,
+    super::catalog_rule::run_audited_catalog_rule(
+        super::PreparedRuleContext::new(root, config, all_files, sources, facts),
         RULE_ID,
+        "ignoreTablePatterns",
         |rule| {
             let options: Options = rule.try_rule_options()?;
             let compiled = compile::compile(&options, rule.message.clone())?;
-            let selectors = options.ignore_table_patterns;
-            let audit = super::allow_audit::AllowAudit::new(
-                root,
-                config,
-                rule,
-                Some(sources),
-                "ignoreTablePatterns",
-                selectors.len(),
-            );
-            Ok((options.schema_catalog_path, (compiled, audit, selectors)))
+            Ok((
+                options.schema_catalog_path,
+                compiled,
+                options.ignore_table_patterns,
+            ))
         },
-        |(compiled, audit, selectors), catalog, path| {
-            let mut findings = scan::scan(catalog, &compiled, path, &audit.usage);
-            findings.extend(audit.finish(
-                |_| catalog.coverage() == crate::codebase::postgres::CatalogCoverage::Complete,
-                |index| selectors[index].clone(),
-            ));
-            findings
-        },
+        scan::scan,
     )
 }
 

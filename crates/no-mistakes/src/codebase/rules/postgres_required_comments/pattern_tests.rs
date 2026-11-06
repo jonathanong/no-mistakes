@@ -44,12 +44,10 @@ fn excluded_catalogs_do_not_establish_staleness() {
 
 #[test]
 fn partial_catalogs_do_not_establish_staleness() {
-    for result in run("partial") {
-        if let Ok(findings) = result {
-            assert!(findings
-                .iter()
-                .all(|finding| finding.rule != "unused-allow-entry"));
-        }
+    for findings in run("partial").into_iter().flatten() {
+        assert!(findings
+            .iter()
+            .all(|finding| finding.rule != "unused-allow-entry"));
     }
 }
 

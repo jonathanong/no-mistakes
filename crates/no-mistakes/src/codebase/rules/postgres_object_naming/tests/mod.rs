@@ -74,8 +74,15 @@ fn ignored_plural_patterns_only_count_when_suppressing_findings() {
             .join("../../test-cases/rules/postgres-object-naming/fixture")
             .join(format!("ignore-patterns-{scenario}"));
         let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-        let findings =
-            super::check_with_files(&root, &config, &[root.join("schema.json")]).unwrap();
+        let result = super::check_with_files(&root, &config, &[root.join("schema.json")]);
+        if scenario == "partial" {
+            assert!(result
+                .unwrap_err()
+                .to_string()
+                .contains("ordering-only coverage"));
+            continue;
+        }
+        let findings = result.unwrap();
         assert_eq!(
             findings
                 .iter()

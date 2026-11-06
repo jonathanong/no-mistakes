@@ -71,3 +71,85 @@ fn unused_allow_policy_check_json_snapshot() {
     .collect();
     assert_saved_fixture("unused_allow_policy", &cases);
 }
+
+#[test]
+fn unused_allow_empty_files_check_json_snapshot() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/no-empty-or-comments-only-files/fixture/allow-audit");
+    let cases: Vec<_> = [
+        ".no-mistakes.yml",
+        "partial.yml",
+        "failed.yml",
+        "overlap.yml",
+    ]
+    .into_iter()
+    .map(|name| (name, root.clone(), root.join(name)))
+    .collect();
+    assert_saved_fixture("unused_allow_empty_files", &cases);
+}
+
+#[test]
+fn unused_allow_postgres_patterns_check_json_snapshot() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/postgres-pattern-exceptions");
+    let cases: Vec<_> = [
+        "report.yml",
+        "excluded.yml",
+        "partial.yml",
+        "failed.yml",
+        "no-columns.yml",
+        "column-selection.yml",
+    ]
+    .into_iter()
+    .map(|name| (name, root.clone(), root.join(name)))
+    .collect();
+    assert_saved_fixture("unused_allow_postgres_patterns", &cases);
+}
+
+#[test]
+fn unused_allow_postgres_names_and_sweeps_check_json_snapshot() {
+    let repository = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let mut cases = Vec::new();
+    for (rule, scenarios) in [
+        (
+            "postgres-object-naming",
+            &["used", "stale", "overlap", "partial", "disabled", "invalid"][..],
+        ),
+        (
+            "postgres-sql-shape-policy",
+            &[
+                "used",
+                "stale",
+                "overlap",
+                "parse-failure",
+                "disabled",
+                "unrecoverable",
+                "embedded-used",
+                "embedded-stale",
+                "embedded-parse-failure",
+                "typescript-parse-failure",
+                "fragment-unrecoverable",
+                "filtered",
+                "empty",
+                "low-effort",
+            ][..],
+        ),
+    ] {
+        for scenario in scenarios {
+            let prefix = if rule == "postgres-object-naming" {
+                "ignore-patterns"
+            } else {
+                "ignore-tables"
+            };
+            let root = repository.join(format!(
+                "test-cases/rules/{rule}/fixture/{prefix}-{scenario}"
+            ));
+            cases.push((format!("{rule}/{scenario}"), root, PathBuf::new()));
+        }
+    }
+    let cases: Vec<_> = cases
+        .iter()
+        .map(|(label, root, config)| (label.as_str(), root.clone(), config.clone()))
+        .collect();
+    assert_saved_fixture("unused_allow_postgres_names_and_sweeps", &cases);
+}

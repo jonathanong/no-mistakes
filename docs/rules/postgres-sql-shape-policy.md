@@ -244,5 +244,6 @@ suppress a `keyset-only-sweep` finding. Every matching spelling counts, includin
 overlapping qualified and unqualified names. An entry that only matches selective
 queries is stale: remove it when `unused-allow-entry` identifies its configuration
 location. Auditing requires the shape to be enabled and the whole applicable file
-scope to be analyzed. Partial file requests, low analysis effort, SQL parse failures,
-and unrecoverable executed or builder SQL cannot prove an entry stale.
+scope to be analyzed. Partial file requests, unresolved low-effort analysis, SQL parse failures,
+and unrecoverable executed or builder SQL cannot prove an entry stale. A requested
+low effort that falls back to the full `max` analysis can establish complete scope.

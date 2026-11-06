@@ -7,7 +7,6 @@ rules:
       executorNames: [query]
       unanalyzableSql: ignore
       sqlInclude: []
-      sqlIncludeLocked: true
       bannedShapes: [keyset-only-sweep]
       shapeOptions:
         keysetOnlySweep:

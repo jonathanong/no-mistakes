@@ -114,3 +114,53 @@ fn report_policy_respects_narrowed_scope_and_overrides_advisory_severity() {
         assert_eq!(report["advisories"], json!([]), "{report}");
     }
 }
+
+#[test]
+fn deferred_selector_accounting_matches_batched_check() {
+    let repository = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    for (fixture, config_name, count) in [
+        (
+            "test-cases/rules/no-empty-or-comments-only-files/fixture/allow-audit",
+            ".no-mistakes.yml",
+            1,
+        ),
+        (
+            "fixtures/check/postgres-pattern-exceptions",
+            "report.yml",
+            6,
+        ),
+        (
+            "test-cases/rules/postgres-object-naming/fixture/ignore-patterns-stale",
+            ".no-mistakes.yml",
+            1,
+        ),
+        (
+            "test-cases/rules/postgres-sql-shape-policy/fixture/ignore-tables-stale",
+            ".no-mistakes.yml",
+            1,
+        ),
+    ] {
+        let root = repository.join(fixture).canonicalize().unwrap();
+        let config = root.join(config_name);
+        let options = crate::napi_api::options::test_json_arg(
+            json!({"root": root, "config": config}).to_string(),
+        );
+        let report: Value = serde_json::from_str(&check_json_impl(options).unwrap()).unwrap();
+        let findings = report["rules"].as_array().unwrap();
+        assert_eq!(findings.len(), count, "{report}");
+        assert!(findings
+            .iter()
+            .all(|finding| finding["rule"] == "unused-allow-entry"));
+        let batch: Value = serde_json::from_str(
+            &crate::napi_api::analyze_project::analyze_project_json_impl(
+                crate::napi_api::options::test_json_arg(
+                    json!({"root": root, "config": config, "reports": [{"type": "check"}]})
+                        .to_string(),
+                ),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(batch["reports"][0]["result"], report);
+    }
+}
