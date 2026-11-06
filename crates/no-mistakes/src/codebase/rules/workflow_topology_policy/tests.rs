@@ -5,6 +5,7 @@ use crate::config::v2::{
 };
 use std::path::PathBuf;
 
+mod activity_types;
 mod concurrency_behavior;
 mod concurrency_collisions;
 mod concurrency_config;

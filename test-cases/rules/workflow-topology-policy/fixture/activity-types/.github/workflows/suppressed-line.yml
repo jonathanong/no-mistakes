@@ -1,0 +1,4 @@
+on:
+  pull_request:
+    types: ready_for_review # no-mistakes-disable-line workflow-topology-policy
+jobs: {}

@@ -5,7 +5,8 @@ Declarative GitHub Actions topology assertions over the graph produced by
 required and forbidden jobs and `needs` edges, artifact edges, exact
 fan-in, reusable-workflow callers, step order, unlocked-workflow
 reasons, secret-name declarations, the intended behavior of each
-`concurrency:` block, and shared concurrency groups.
+`concurrency:` block, shared concurrency groups, and forbidden trigger activity
+types.
 
 ```yaml
 rules:
@@ -71,13 +72,15 @@ jobs:
 ## Why and when
 
 Use this rule when CI's job, artifact, reusable-workflow, and step ordering are
-part of the delivery contract and should be checked as a graph.
+part of the delivery contract and should be checked as a graph. Ban explicit
+trigger activity types when they would create unwanted workflow runs.
 
 ## What it catches/requires
 
 Configured inventory and assertions must match workflow topology: required or
 forbidden edges, exact fan-in, artifacts, callers, step order, declared secret
-names, documented unlocked workflows, concurrency intent, and shared groups.
+names, documented unlocked workflows, concurrency intent, shared groups, and
+forbidden explicit trigger activity types.
 
 ## Options and defaults
 
@@ -100,6 +103,11 @@ no requirement. `secretInventory` is separately opt-in:
   `repository`, not under an environment. Omit it or set it to `null` to
   disable this check; `{}` enables strict empty declarations. See
   [secret inventory configuration](../configuration/workflow-topology-policy.md).
+- `forbiddenActivityTypes`: entries with `types: string[]` and optional
+  `events: string[]` banning exact explicit trigger activity types. Omitted
+  `events` applies to all events; `events: []` applies to none. See
+  [activity type configuration](../configuration/workflow-topology-policy-activity-types.md)
+  for examples, ignored inputs, and suppression at the `on.<event>.types` key.
 - `concurrencyPolicy`: owner id to the intended pending, cancellation, and
   scope behavior of that lock. See [concurrency configuration](../configuration/workflow-topology-policy-concurrency.md#concurrencypolicy).
 - `forbidConcurrencyGroupCollisions`: when `true`, report workflows and jobs
@@ -110,6 +118,26 @@ job or edge is checked and stale required targets are findings.
 `unlockedWorkflowReasons` still documents workflows that have no lock.
 `concurrencyPolicy` checks workflows and jobs that have one. The two options
 are independent.
+
+### `forbiddenActivityTypes`
+
+For example, ban `edited` only on pull request triggers:
+
+```yaml
+forbiddenActivityTypes:
+  - types: [edited]
+    events: [pull_request, pull_request_target]
+```
+
+`on: {pull_request: {types: [opened, edited]}}` is a counterexample;
+`on: {pull_request: {types: [opened]}}` is valid. Matching is exact and
+case-sensitive, for string scalars and string sequence members. Scalar/list
+`on`, missing `types`, and non-string values are ignored; defaults are not
+expanded. Remove the forbidden type while keeping the allowed types. Findings
+point to `on.<event>.types`; the standard rule-level `message` and suppression
+directives apply at that key. See the
+[configuration guide](../configuration/workflow-topology-policy-activity-types.md)
+for YAML examples and event-filter defaults.
 
 ### `concurrencyPolicy`
 
@@ -189,6 +217,11 @@ jobs:
 
 Job and relationship findings use the affected job key in its workflow; edge findings use the destination job. Workflow findings use the workflow document. If a configured job or workflow is absent, its workflow path remains the diagnostic location, with line 1 as the fallback. Line and next-line suppressions belong at that reported key.
 
+For a forbidden activity type, remove that type from `on.<event>.types` and
+retain the intended allowed types. Findings point to the `types` key; place
+line and next-line suppressions there. See the
+[configuration examples](../configuration/workflow-topology-policy-activity-types.md).
+
 Add the missing topology edge or ordered step, or update the policy with the
 intended graph and a reason for an intentionally unlocked workflow. For a
 concurrency group collision, give each owner its own group. For an undeclared
@@ -216,7 +249,7 @@ a path in a script. See the
 
 Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
 
-- This rule has no unanalyzable inputs: it judges parsed workflow topology: needs, concurrency groups, and secrets. Nothing is routed through `options.unanalyzable`.
+- This rule has no unanalyzable inputs: it judges parsed workflow topology: needs, concurrency groups, secrets, and explicit trigger activity types. Nothing is routed through `options.unanalyzable`.
 
 ## Suppression
 

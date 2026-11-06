@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    message: Remove draft transitions; these workflows do not read draft state.
+    options:
+      forbiddenActivityTypes:
+        - types: [ready_for_review, converted_to_draft]

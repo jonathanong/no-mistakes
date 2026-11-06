@@ -1,0 +1,13 @@
+on:
+  pull_request:
+    types: [opened, ready_for_review, ready_for_review, 42]
+  pull_request_target:
+    types: converted_to_draft
+  issues:
+    types:
+      - opened
+      - ready_for_review
+  push:
+  release:
+    types: {ready_for_review: true}
+jobs: {}

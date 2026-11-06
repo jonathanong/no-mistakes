@@ -4,6 +4,11 @@
 
 Run configured repository checks from `.no-mistakes.yml`.
 
+Configure `workflow-topology-policy.options.forbiddenActivityTypes` to ban
+explicit trigger activity types, optionally limited to named events. Findings
+point to `on.<event>.types`; see the
+[configuration reference](../configuration/workflow-topology-policy-activity-types.md).
+
 Enabled TS/JS checks share one source inventory and one parse per file for their
 combined fact demand. Resolution results, including unresolved imports, are
 memoized within the request. Analysis data is discarded when the request ends.

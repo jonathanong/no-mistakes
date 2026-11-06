@@ -1,0 +1,4 @@
+on:
+  pull_request:
+    types: [opened, synchronize, READY_FOR_REVIEW, ready_for_review_extra]
+jobs: {}

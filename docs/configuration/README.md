@@ -142,6 +142,7 @@ position use line 1 rather than an inferred line.
 - [CI workflow analysis](ci.md)
 - [Workflow secret inventory](workflow-topology-policy.md)
 - [Workflow topology concurrency](workflow-topology-policy-concurrency.md)
+- [Workflow activity type policy](workflow-topology-policy-activity-types.md)
 - [Changed-file checks](checks.md)
 - [Infrastructure (Terraform/OpenTofu)](infra.md)
 

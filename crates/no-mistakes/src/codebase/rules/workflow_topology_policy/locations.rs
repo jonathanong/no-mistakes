@@ -1,6 +1,6 @@
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
-use crate::config::source_locations::{ConfigLocations, ConfigPath};
+use crate::config::source_locations::ConfigLocations;
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -28,12 +28,9 @@ impl Locations {
                         .ok()
                         .and_then(|source| ConfigLocations::parse(&source, &path))
                 });
-                let path = located.job.map_or_else(ConfigPath::default, |job| {
-                    ConfigPath::default().key("jobs").key(job)
-                });
                 finding.line = document
                     .as_ref()
-                    .and_then(|locations| locations.line(&path))
+                    .and_then(|locations| locations.line(&located.path))
                     .unwrap_or(1);
                 finding
             })

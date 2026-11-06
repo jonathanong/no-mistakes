@@ -109,6 +109,7 @@ pub(super) fn lint(
         findings.extend(inventory(topology, opts));
     }
     findings.extend(job_presence(&index, opts));
+    findings.extend(super::evaluate_activity_types::lint(topology, opts));
     findings.extend(super::evaluate_graph::lint(topology, &index, opts));
     findings.extend(super::evaluate_steps::lint(topology, &index, opts));
     findings.extend(super::evaluate_concurrency::lint(topology, concurrency));

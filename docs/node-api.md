@@ -3,6 +3,14 @@
 The `no-mistakes` npm package exposes async functions backed by the same Rust
 analysis as the CLI. Use it for repeated structured queries without subprocess overhead.
 
+Configured `workflow-topology-policy.options.forbiddenActivityTypes` runs through
+async `check({ root, config })` and `analyzeProject()` check reports with the same
+exact matching, event filtering, `types` key locations, custom messages, and
+suppressions as CLI `check`. Configure it in the YAML selected by `config`;
+there is no additional runtime export or invocation option. The existing
+`check` → `checkJson` binding carries this rule. See
+[activity type configuration](configuration/workflow-topology-policy-activity-types.md).
+
 `check({ root, config })` and `{ type: "check", config }` reports in
 `analyzeProject()` honor the same `forbidden-dependencies` glob roots, root
 exclusions and per-root file exceptions as the CLI. Configure them in the YAML
