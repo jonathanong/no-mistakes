@@ -192,5 +192,6 @@ fn collect_call_edges_for_core(
         }
         mark_escaped_namespaces(&mut pass.classes, &escapes);
     }
+    project_import_execution(edge_inputs, facts, &mut pass);
     pass
 }

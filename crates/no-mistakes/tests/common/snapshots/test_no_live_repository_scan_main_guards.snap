@@ -1,0 +1,132 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "direct_call": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/guarded.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(\".\");",
+          "target": "live repository scan"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "forbidden_explicit_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/command.mts",
+          "import": "setTimeout",
+          "line": 3,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "sourceLine": "setTimeout(work, 100);",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "forbidden_explicit_glob": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/command.mts",
+          "import": "setTimeout",
+          "line": 3,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "sourceLine": "setTimeout(work, 100);",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "guarded_import": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reachable_controls": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/controls.mts",
+          "import": "readdirSync",
+          "line": 12,
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(\"./disjunction-on-import\");",
+          "target": "live repository scan"
+        },
+        {
+          "file": "src/controls.mts",
+          "import": "readdirSync",
+          "line": 5,
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(\"./else-on-import\");",
+          "target": "live repository scan"
+        },
+        {
+          "file": "src/controls.mts",
+          "import": "readdirSync",
+          "line": 7,
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(\"./after-guard\");",
+          "target": "live repository scan"
+        },
+        {
+          "file": "src/controls.mts",
+          "import": "readdirSync",
+          "line": 9,
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(\"./negated-on-import\");",
+          "target": "live repository scan"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -23,6 +23,7 @@ pub struct ImportFacts {
     pub function_calls: Vec<FunctionCall>,
     /// Sorted, disjoint dead ranges per exact callable; syntactic graph output stays unchanged.
     pub unreachable_call_ranges: Vec<UnreachableCallRange>,
+    pub import_inactive_call_ranges: Vec<(u32, u32)>,
     pub unknown_calls: Vec<UnknownCall>,
     pub symbol_references: Vec<FunctionCall>,
     pub exported_functions: Vec<String>,

@@ -1,5 +1,4 @@
 use crate::codebase::dependencies::extract::InvocationKind;
-
 ///
 /// This resolves same-file bindings, direct named and namespace imports, and
 /// explicit or unambiguous-star re-export chains. Dynamic calls and computed
@@ -198,3 +197,4 @@ include!("edge_calls/bench.rs");
 mod value_flow_metrics;
 
 include!("edge_calls/value_flow_metrics_exports.rs");
+include!("edge_calls/import_execution.rs");

@@ -126,6 +126,7 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
         per_item_calls: import_facts.per_item_calls,
         function_calls: import_facts.function_calls,
         unreachable_call_ranges: import_facts.unreachable_call_ranges,
+        import_inactive_call_ranges: import_facts.import_inactive_call_ranges,
         unknown_calls: import_facts.unknown_calls,
         call_sites,
         resource_calls: resources.calls,

@@ -264,3 +264,22 @@ fn invalid_options_are_configuration_errors() {
         "{text}"
     );
 }
+
+#[test]
+fn import_meta_main_reachability_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(RULE, "main-guards", "");
+    let cases: Vec<_> = [
+        ("guarded_import", ".no-mistakes.yml"),
+        ("reachable_controls", "controls.yml"),
+        ("direct_call", "direct.yml"),
+        ("forbidden_explicit_file", "forbidden-file.yml"),
+        ("forbidden_explicit_glob", "forbidden-glob.yml"),
+    ]
+    .into_iter()
+    .map(|(label, config)| (label, root.clone(), root.join(config)))
+    .collect();
+    crate::check_json_snapshot::assert_saved_fixture(
+        "test_no_live_repository_scan_main_guards",
+        &cases,
+    );
+}

@@ -36,6 +36,7 @@
         } else {
             Vec::new()
         };
+        callable_nodes.extend(entry_point_nodes(&resolved_call_sites, &call_interner));
         callable_nodes.sort();
         callable_nodes.dedup();
         let mut callable_nodes_by_file: FxHashMap<PathBuf, Vec<NodeId>> = fx_map();
