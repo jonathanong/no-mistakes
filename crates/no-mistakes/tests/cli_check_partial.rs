@@ -73,6 +73,39 @@ fn unsupported_config_retains_filesystem_findings_and_names_property() {
 }
 
 #[test]
+fn unsupported_vitest_include_names_its_config_property_and_line() {
+    for jobs in ["1", "2"] {
+        let (exit, report) = check("partial-vitest", ".no-mistakes.yml", jobs);
+        assert_ne!(exit, 0);
+        assert!(report["rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|finding| { finding["rule"] == "no-empty-or-comments-only-files" }));
+        let failures = report["incomplete"].as_array().unwrap();
+        for consumer in [
+            "vitest-project-mapping",
+            "vitest-ci-path-coverage",
+            "test-no-unmocked-dynamic-imports",
+        ] {
+            let failure = failures
+                .iter()
+                .find(|failure| failure["consumer"] == consumer)
+                .unwrap_or_else(|| panic!("{report}"));
+            assert!(failure["file"]
+                .as_str()
+                .unwrap()
+                .ends_with("vitest.config.ts"));
+            assert_eq!(failure["property"], "test.include");
+            assert!(failure["message"]
+                .as_str()
+                .unwrap()
+                .contains("vitest.config.ts:1: test.include"));
+        }
+    }
+}
+
+#[test]
 fn failures_outside_consumer_scope_do_not_mark_successful_checks_incomplete() {
     for name in ["partial-source", "partial-playwright"] {
         let (_, report) = check(name, "valid.yml", "1");
@@ -141,6 +174,7 @@ fn check_json_snapshot_partial_prerequisites() {
     let mut cases = [
         "partial-source",
         "partial-playwright",
+        "partial-vitest",
         "partial-unique",
         "coverage-owner-partial",
         "sql-helper-prerequisite",

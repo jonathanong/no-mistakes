@@ -40,7 +40,31 @@ pub(super) fn apply_property(
         return Ok(());
     }
     let nested_test_scope = nested_test || options.nested_test_scope;
-    merge_property(options, name, &property.value, nested_test_scope, ctx)?;
+    let property_name = name.as_deref().unwrap_or_default();
+    merge_property(
+        options,
+        name.clone(),
+        &property.value,
+        nested_test_scope,
+        ctx,
+    )
+    .map_err(|error| {
+        let property_name = if ctx.is_test_object {
+            format!("test.{property_name}")
+        } else {
+            property_name.to_string()
+        };
+        let line = ctx.source[..property.span.start as usize]
+            .bytes()
+            .filter(|byte| *byte == b'\n')
+            .count()
+            + 1;
+        crate::codebase::check_outcome::CheckInputFailure {
+            file: Some(ctx.path.to_path_buf()),
+            property: Some(property_name.clone()),
+            message: format!("{}:{line}: {property_name}: {error:#}", ctx.path.display()),
+        }
+    })?;
     Ok(())
 }
 
