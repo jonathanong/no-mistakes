@@ -16,6 +16,14 @@ comments or whitespace.
 extensions. `intentionallyEmpty` defaults to an empty list of exceptions. Use
 the common rule `include` and `exclude` fields to narrow the file scope.
 
+With `reportUnusedAllowEntries: report` (or `advise`), an
+`intentionallyEmpty` entry is stale only when its selected file was read
+successfully, has a supported extension, and contains real content. Every
+matching duplicate entry is used for an empty or comment-only file. Missing,
+excluded, unreadable, and unsupported files cannot prove an entry stale.
+Remove stale entries so future empty files remain visible. See
+[suppression hygiene](../configuration/suppressions.md).
+
 ## Valid example
 
 A file containing one meaningful declaration or Markdown paragraph passes.

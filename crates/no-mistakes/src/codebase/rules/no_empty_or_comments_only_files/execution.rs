@@ -26,15 +26,35 @@ pub fn diagnostics_with_files_and_sources(
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Result<super::super::analysis_policy::AnalysisDiagnostics> {
-    super::super::file_diagnostics::read_applications::<Options>(
-        super::super::file_diagnostics::FileRuleInputs {
-            root,
-            config,
-            files: all_files,
-            sources,
-            defer_suppression,
-        },
-        RULE_ID,
-        |options, files, _, _| scan(root, options, files, sources),
-    )
+    let outputs: Result<Vec<_>> = config
+        .rule_applications(RULE_ID)
+        .into_par_iter()
+        .map(|rule| {
+            let options: Options = rule.try_rule_options()?;
+            let files = super::super::selected_rule_files(root, config, rule, all_files)?;
+            let audit = super::super::allow_audit::AllowAudit::new(
+                root,
+                config,
+                rule,
+                Some(sources),
+                "intentionallyEmpty",
+                options.intentionally_empty.len(),
+            );
+            let findings = scan(root, &options, &files, sources, &audit)?;
+            super::super::file_diagnostics::application(
+                root,
+                sources,
+                config,
+                rule,
+                findings,
+                defer_suppression,
+                super::super::file_diagnostics::InputUncertainty::Read,
+            )
+        })
+        .collect();
+    let mut diagnostics = super::super::analysis_policy::AnalysisDiagnostics::default();
+    for output in outputs? {
+        diagnostics.append(output);
+    }
+    Ok(super::super::file_diagnostics::sorted(diagnostics))
 }

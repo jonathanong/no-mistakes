@@ -1,0 +1,13 @@
+reportUnusedAllowEntries: report
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      executorNames: []
+      sqlInclude: ["*.sql"]
+      bannedShapes: [keyset-only-sweep]
+      shapeOptions:
+        keysetOnlySweep:
+          ignoreTables:
+            - "items"
+            - "public.items"

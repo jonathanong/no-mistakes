@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: only-type-reexports.ts
+      helpers: [only-types.ts]
+      required: { isolate: true }
+      forbidden: [pool]

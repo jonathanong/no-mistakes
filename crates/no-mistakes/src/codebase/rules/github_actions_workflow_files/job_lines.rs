@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-mod document;
+pub(crate) mod document;
 use document::Document;
 
 pub(crate) struct Locations {

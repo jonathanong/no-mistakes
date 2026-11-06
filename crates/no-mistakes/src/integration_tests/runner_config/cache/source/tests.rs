@@ -68,3 +68,32 @@ fn read_request_source_reports_cached_store_failures() {
     .unwrap_err();
     assert!(error.to_string().contains("reading"));
 }
+
+#[test]
+fn explicit_source_scopes_restore_the_parent_store_after_unwinding() {
+    let path = cache_source_fixture("read-request-source-cached-store").join("cfg.ts");
+    let store = || {
+        Arc::new(crate::codebase::ts_source::SourceStore::new(Arc::new(
+            crate::codebase::ts_source::FileInventory::from_paths(std::slice::from_ref(&path)),
+        )))
+    };
+    let parent = store();
+    let nested = store();
+    with_request_sources(Arc::clone(&parent), || {
+        assert!(Arc::ptr_eq(&cached_sources().unwrap(), &parent));
+        let original = read_request_source(&path).unwrap();
+        let failure = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            with_request_sources(Arc::clone(&nested), || {
+                assert!(Arc::ptr_eq(&cached_sources().unwrap(), &nested));
+                assert_eq!(read_request_source(&path).unwrap(), original);
+                panic!("unwind scoped source routing");
+            });
+        }));
+        assert!(failure.is_err());
+        assert!(Arc::ptr_eq(&cached_sources().unwrap(), &parent));
+        assert_eq!(read_request_source(&path).unwrap(), original);
+    });
+    assert!(cached_sources().is_none());
+    assert_eq!(parent.physical_read_count(), 1);
+    assert_eq!(nested.physical_read_count(), 1);
+}

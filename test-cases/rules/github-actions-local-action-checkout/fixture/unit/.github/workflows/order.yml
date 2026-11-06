@@ -1,0 +1,58 @@
+name: order
+on: push
+jobs:
+  ordered:
+    steps:
+      - uses: ./actions/a
+      - uses: actions/checkout@v4
+      - uses: ./actions/a
+      - uses: actions/checkout@v4
+        with:
+          repository: other/repo
+          path: other
+      - uses: ./actions/a
+      - uses: actions/checkout@v4
+        if: true
+        with:
+          repository: other/repo
+      - uses: ./actions/a
+      - uses: actions/checkout@v4
+        with:
+          repository: other/repo
+      - uses: ./actions/a
+      - uses: actions/checkout@v4
+        with:
+          repository: '${{ github.repository }}'
+          sparse-checkout: actions/a
+      - uses: ./actions/a
+      - uses: ./actions/b
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: unrelated
+      - uses: ./actions/a
+      - uses: ./actions/b
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: actions
+      - uses: ./actions/b
+  separate:
+    steps:
+      - uses: ./actions/a
+      - uses: actions/checkout@v4
+        if: true
+      - uses: ./actions/a
+      - uses: actions/checkout@v4
+        with:
+          path: nested
+      - uses: ./actions/a
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: actions/*
+      - uses: ./actions/a
+      - uses: actions/checkout@v4
+        with:
+          path: ./
+          sparse-checkout: ./actions/
+      - uses: ./actions/a
+      - uses: owner/remote@v1
+      - uses: docker://alpine

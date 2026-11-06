@@ -322,7 +322,7 @@ remain failures. See
 | Selected TS/JS modules | `analyzeTypeScriptModules({ root, files })` |
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
 | Global `--progress` | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots |
-| `check`                                    | `check(options)` (including configured `forbidden-lint-suppressions`)                                                                                                                                                                                                                                                           |
+| `check`                                    | `check(options)` (including configured `forbidden-lint-suppressions` and `vitest-project-policy`)                                                                                                                                                                                                                                                           |
 | `config resolve [--view declared]`           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
 | `lock status` | `lockStatus()` (read-only shared-lock probe; does not wait) |
 | `data-pw`                                  | `dataPw(options)`                                                                                                                                                                                                                                                          |
@@ -360,7 +360,7 @@ remain failures. See
 | `analyzeProject` | `analyzeProject(options)`; import `AnalyzeProjectReportType` for report `type` instead of indexing `AnalyzeProjectReportRequest['type']` |
 | `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)` |
 | `callSites` | `callSites(options)` |
-| `check` | `check(options)`; configured `forbidden-lint-suppressions` uses `checkJson`; reports may include `CheckReport.incomplete` (`CheckFailure[]`) |
+| `check` | `check(options)`; configured `forbidden-lint-suppressions` and `vitest-project-policy` use `checkJson`; reports may include `CheckReport.incomplete` (`CheckFailure[]`) |
 | `ciEnv` | `ciEnv(options)` |
 | `ciImpact` | `ciImpact(options)` |
 | `ciTopology` | `ciTopology(options)` |
@@ -618,3 +618,18 @@ locate the config entry, `import` names the checked rule, and `target` carries
 the selector. No runtime export or report field is added. Partial or uncertain
 selector coverage stays silent; established rule-specific stale outputs retain
 their existing shape and severity. See [allow-entry hygiene](configuration/suppressions.md#allow-entry-hygiene).
+
+[`github-actions-local-action-checkout`](rules/github-actions-local-action-checkout.md)
+uses the existing asynchronous `check()` and `analyzeProject()` check report
+paths with the same configuration and ordered per-job checkout analysis as CLI
+`check`. Findings use the existing `RuleFinding` shape: `rule` identifies the
+rule, `file`/`line` locate the local action's `uses:` line, and `target` identifies
+the `job#step` (one-based step position). No new runtime
+export, option type, or report field is needed.
+
+The configured [`vitest-project-policy`](rules/vitest-project-policy.md) rule
+runs through `check()` and `analyzeProject()` check queries using the existing
+async `checkJson` binding and JS facade. Exported `VitestProjectPolicyOptions`,
+`VitestPropertyParity`, and `VitestPropertyLiteral` describe its explicit config
+and helper source inputs, required/forbidden properties, and parity pairs.
+Unresolved values are returned as `CheckReport.incomplete` (`CheckFailure[]`).

@@ -229,3 +229,9 @@ mod cli_rule_options_audit;
 
 #[path = "cli_gha_snapshot_activity_types.rs"]
 mod cli_gha_snapshot_activity_types;
+
+#[path = "cli_gha_snapshot_local_action_checkout.rs"]
+mod cli_gha_snapshot_local_action_checkout;
+
+#[path = "cli_snapshot_vitest_project_policy.rs"]
+mod cli_snapshot_vitest_project_policy;

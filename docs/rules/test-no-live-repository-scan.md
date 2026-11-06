@@ -70,6 +70,22 @@ The enumeration is the trigger, not the later `readFileSync`: a scan that is
 never read is still a scan, and every file it yields is covered by the finding
 on the enumeration. A `readFileSync` of a fixed literal path is not reported.
 
+## Reachability
+
+When a test imports a module, its module initialization excludes the body of
+`if (import.meta.main)`: that body runs only when the module is the process
+entry point. The same applies to `import.meta.main === true` and `&&`
+conditions requiring either form, such as
+`if (import.meta.main && shouldReport())`.
+
+The `else` branch, statements after the guarded block, and the body of
+`if (!import.meta.main)` remain reachable on import. A condition using `||`
+does not establish an entry-only body. Calls in the condition remain analyzed.
+An exported scanning function still produces a finding when a test calls it
+directly, even if the module also calls it inside an entry-point guard.
+The canonical graph retains entry-point calls for policies that explicitly
+select an entire file, such as `forbidden-calls` with `traversal: file`.
+
 ## Allowed input
 
 An enumeration passes when its root is provably bounded:

@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: unsupported-export-declarations.ts
+      helpers: [unsupported-exports.ts]
+      required: { isolate: true }
+      forbidden: [pool]

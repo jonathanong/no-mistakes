@@ -1,0 +1,20 @@
+jobs:
+  excluded:
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            actions
+            !actions/setup
+      - uses: ./actions/setup
+  retained:
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            actions
+            !actions/setup
+      - uses: ./actions/setup

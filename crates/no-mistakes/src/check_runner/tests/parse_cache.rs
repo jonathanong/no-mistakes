@@ -232,3 +232,81 @@ fn lint_suppressions_and_call_graph_share_one_ast_parse() {
     assert_eq!(work.get("parse.files"), Some(&1), "{work:#?}");
     assert_eq!(work.get("parse.files_after_extract"), Some(&1), "{work:#?}");
 }
+
+#[cfg(feature = "test-instrumentation")]
+#[test]
+fn vitest_runner_and_project_policy_share_prepared_parses() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/vitest-project-policy/fixture/shared-prepared");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
+    let session =
+        no_mistakes::codebase::analysis_session::AnalysisSession::new(Some(Arc::clone(&observer)));
+    no_mistakes::ast::begin_parse_count(&root);
+    let result = {
+        let _guard = no_mistakes::diagnostics::InvocationGuard::install(Arc::clone(&observer));
+        no_mistakes::ast::with_owned_request_parse_cache(|| {
+            super::super::run_all::run_all_with_session_options(
+                &session,
+                root.clone(),
+                None,
+                None,
+                false,
+                false,
+                crate::check_runner::AnalysisOptions::default(),
+            )
+            .unwrap()
+        })
+    };
+    assert!(result
+        .rules
+        .iter()
+        .any(|finding| finding.rule == "vitest-project-policy"));
+    assert!(result
+        .rules
+        .iter()
+        .any(|finding| finding.rule == "forbidden-calls"));
+    let work = observer.snapshot().work;
+    assert_eq!(
+        work.get("parse.files_after_extract"),
+        work.get("parse.files"),
+        "{work:#?}"
+    );
+    let counts = no_mistakes::ast::finish_parse_count(&root);
+    let reads = session.work_snapshot().source_reads;
+    for file in ["vitest.config.ts", "helper.ts", "unit.test.ts"] {
+        assert_eq!(counts.get(&root.join(file)), Some(&1), "{counts:#?}");
+        assert_eq!(reads.get(&root.join(file)), Some(&1), "{reads:#?}");
+    }
+}
+
+#[test]
+fn repeated_session_checks_do_not_reuse_another_roots_policy() {
+    let session = no_mistakes::codebase::analysis_session::AnalysisSession::new(None);
+    for (case, violations) in [("missing", 1), ("pass", 0)] {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/vitest-project-policy/fixture")
+            .join(case)
+            .canonicalize()
+            .unwrap();
+        let results = no_mistakes::ast::with_request_parse_cache(|| {
+            super::super::run_all::run_all_with_session_options(
+                &session,
+                root,
+                None,
+                None,
+                false,
+                false,
+                crate::check_runner::AnalysisOptions::default(),
+            )
+            .unwrap()
+        });
+        assert_eq!(
+            results.rules.len(),
+            violations,
+            "{case}: {:?}",
+            results.rules
+        );
+    }
+}

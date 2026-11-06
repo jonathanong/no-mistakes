@@ -1,0 +1,315 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "postgres-object-naming/disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "postgres-object-naming/invalid": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-object-naming",
+          "message": "schemaCatalogPath schema.json is not valid JSONC"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "postgres-object-naming/overlap": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "postgres-object-naming/partial": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-object-naming",
+          "message": "schemaCatalogPath schema.json has ordering-only coverage; this rule requires a complete schema catalog"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "postgres-object-naming/stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "postgres-object-naming",
+          "line": 10,
+          "message": "stale postgres-object-naming plural.ignorePatterns entry `^invoice_` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- \"^invoice_\"",
+          "target": "^invoice_"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres-object-naming/used": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "postgres-sql-shape-policy/disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "postgres-sql-shape-policy/embedded-parse-failure": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "postgres-sql-shape-policy/embedded-stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "postgres-sql-shape-policy",
+          "line": 13,
+          "message": "stale postgres-sql-shape-policy shapeOptions.keysetOnlySweep.ignoreTables entry `items` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "ignoreTables: [items]",
+          "target": "items"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres-sql-shape-policy/embedded-used": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "postgres-sql-shape-policy/empty": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "postgres-sql-shape-policy/filtered": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "postgres-sql-shape-policy/fragment-unrecoverable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "postgres-sql-shape-policy/low-effort": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "postgres-sql-shape-policy",
+          "line": 14,
+          "message": "stale postgres-sql-shape-policy shapeOptions.keysetOnlySweep.ignoreTables entry `items` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "ignoreTables: [items]",
+          "target": "items"
+        }
+      ],
+      "warnings": [
+        "postgres-sql-shape-policy: requested effort low; effective effort max because this rule has no low implementation"
+      ]
+    }
+  },
+  "postgres-sql-shape-policy/overlap": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "postgres-sql-shape-policy/parse-failure": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries.sql",
+          "line": 1,
+          "message": "queries.sql:1: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT FROM;",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres-sql-shape-policy/stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "postgres-sql-shape-policy",
+          "line": 12,
+          "message": "stale postgres-sql-shape-policy shapeOptions.keysetOnlySweep.ignoreTables entry `items` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- \"items\"",
+          "target": "items"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres-sql-shape-policy/typescript-parse-failure": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-sql-shape-policy",
+          "file": "queries.ts",
+          "message": "parsing queries.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 34, end: 35 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "postgres-sql-shape-policy/unrecoverable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "postgres-sql-shape-policy/used": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

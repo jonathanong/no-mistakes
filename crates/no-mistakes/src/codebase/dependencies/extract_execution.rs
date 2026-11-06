@@ -79,11 +79,11 @@ fn literal_truthiness(expression: &Expression<'_>) -> Option<bool> {
         _ => None,
     }
 }
-
 fn visit_if_with_execution<'a>(
     collector: &mut ImportCollector,
     statement: &oxc_ast::ast::IfStatement<'a>,
 ) {
+    record_import_inactive_branch(collector, statement);
     collector.visit_expression(&statement.test);
     let truthy = literal_truthiness(&statement.test);
     record_dead_branch(collector, truthy, &statement.consequent, statement.alternate.as_ref());

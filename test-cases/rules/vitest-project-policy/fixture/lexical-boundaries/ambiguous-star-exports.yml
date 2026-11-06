@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: ambiguous-star-exports.ts
+      helpers: [ambiguous-stars.ts, known.ts, other.ts]
+      required: { isolate: true }
+      forbidden: [pool]

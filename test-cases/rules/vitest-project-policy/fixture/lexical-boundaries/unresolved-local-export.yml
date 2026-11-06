@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: unresolved-local-export.ts
+      helpers: [unresolved-export.ts]
+      required: { isolate: true }
+      forbidden: [pool]

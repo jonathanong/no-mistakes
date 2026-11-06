@@ -1,0 +1,12 @@
+'jobs':
+  'quoted':
+    'steps':
+      - name: block
+        'uses': >-
+          ./actions/a
+      - {name: flow, 'uses': ./actions/b}
+  flow: {steps: [
+    {uses: ./actions/c},
+    {uses: actions/checkout@v4},
+    {uses: ./actions/c}
+  ]}

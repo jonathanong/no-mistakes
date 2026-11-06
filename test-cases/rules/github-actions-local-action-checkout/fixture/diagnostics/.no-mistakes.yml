@@ -1,0 +1,4 @@
+rules:
+  - rule: github-actions-local-action-checkout
+    scope: repository
+    include: ['.github/workflows/*.yml']

@@ -1,0 +1,15 @@
+version: 2
+reportUnusedAllowEntries: report
+rules:
+  - rule: no-empty-or-comments-only-files
+    scope: repository
+    include: [used.ts]
+    options:
+      intentionallyEmpty:
+        - used.ts
+        - used.ts
+        - clean.ts
+        - missing.ts
+        - excluded.ts
+        - unsupported.txt
+        - failed.ts

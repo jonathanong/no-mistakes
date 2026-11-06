@@ -1,0 +1,5 @@
+{jobs: {build: {steps: [
+  {uses: ./actions/a},
+  {uses: actions/checkout@v4},
+  {uses: ./actions/a}
+]}}}

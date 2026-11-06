@@ -1,0 +1,7 @@
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: no-projects.ts
+      parity:
+        - properties: [fileParallelism, maxWorkers]

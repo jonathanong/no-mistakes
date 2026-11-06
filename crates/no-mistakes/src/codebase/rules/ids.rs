@@ -16,6 +16,7 @@ pub use super::github_actions_action_timeout_pair::RULE_ID as GITHUB_ACTIONS_ACT
 pub use super::github_actions_composite_step_schema::RULE_ID as GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA;
 pub use super::github_actions_job_permissions::RULE_ID as GITHUB_ACTIONS_JOB_PERMISSIONS;
 pub use super::github_actions_job_timeouts::RULE_ID as GITHUB_ACTIONS_JOB_TIMEOUTS;
+pub use super::github_actions_local_action_checkout::RULE_ID as GITHUB_ACTIONS_LOCAL_ACTION_CHECKOUT;
 pub use super::github_actions_step_timeouts::RULE_ID as GITHUB_ACTIONS_STEP_TIMEOUTS;
 pub use super::github_actions_test_timeout_literals::RULE_ID as GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS;
 pub use super::integration_test_no_mocks::RULE_ID as INTEGRATION_TEST_NO_MOCKS;
@@ -110,3 +111,5 @@ pub use super::workflow_topology_policy::RULE_ID as WORKFLOW_TOPOLOGY_POLICY;
 pub use super::workspace_package_cycles::RULE_ID as WORKSPACE_PACKAGE_CYCLES;
 
 pub use super::github_actions_max_inline_script_lines::RULE_ID as GITHUB_ACTIONS_MAX_INLINE_SCRIPT_LINES;
+
+pub use super::vitest_project_policy::RULE_ID as VITEST_PROJECT_POLICY;

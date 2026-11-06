@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: vitest.config.ts
+      parity:
+        - properties: [fileParallelism, maxWorkers]
+      helpers: [helper.ts, second.ts]

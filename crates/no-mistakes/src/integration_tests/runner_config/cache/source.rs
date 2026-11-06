@@ -1,15 +1,41 @@
 use super::REQUEST_CACHES;
 use anyhow::Result;
+use std::cell::RefCell;
 use std::path::Path;
 use std::sync::Arc;
 
+thread_local! {
+    static SOURCE_SCOPES: RefCell<Vec<Arc<crate::codebase::ts_source::SourceStore>>> = const { RefCell::new(Vec::new()) };
+}
+struct SourceScope;
+impl Drop for SourceScope {
+    fn drop(&mut self) {
+        SOURCE_SCOPES.with(|sources| {
+            sources.borrow_mut().pop();
+        });
+    }
+}
+
+pub(crate) fn with_request_sources<T>(
+    sources: Arc<crate::codebase::ts_source::SourceStore>,
+    collect: impl FnOnce() -> T,
+) -> T {
+    SOURCE_SCOPES.with(|scopes| scopes.borrow_mut().push(sources));
+    let _scope = SourceScope;
+    collect()
+}
+
 fn cached_sources() -> Option<Arc<crate::codebase::ts_source::SourceStore>> {
-    REQUEST_CACHES.with(|caches| {
-        caches
-            .borrow()
-            .last()
-            .and_then(|request| request.sources.clone())
-    })
+    SOURCE_SCOPES
+        .with(|sources| sources.borrow().last().cloned())
+        .or_else(|| {
+            REQUEST_CACHES.with(|caches| {
+                caches
+                    .borrow()
+                    .last()
+                    .and_then(|request| request.sources.clone())
+            })
+        })
 }
 
 fn read_from_source_store(

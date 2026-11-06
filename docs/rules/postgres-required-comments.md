@@ -214,3 +214,18 @@ Stale allow reporting retains this rule's established diagnostic messages and
 severity for checked inputs. Entries outside the checked scope stay silent;
 uncertain or partial selector coverage cannot prove staleness. See
 [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
+
+When `reportUnusedAllowEntries` is enabled, `exemptColumnNamePatterns` entries are audited as
+exceptions. A pattern is used only when it suppresses a finding after the rule's
+positive selectors and column eligibility checks. Matching a compliant object
+alone leaves the entry stale. Every overlapping pattern that suppresses the same
+finding counts as used. Remove stale patterns to keep exceptions tied to current
+policy violations. Stale entries use the shared `unused-allow-entry` diagnostic
+and point to the configuration entry; only a successfully checked complete
+catalog can establish that an entry is stale. An excluded, unreadable, malformed,
+or partial catalog cannot establish staleness.
+
+Column exemption auditing requires `objects` to include `column`. When column
+checks are disabled, their exemptions are not audited. `columnNamePatterns`
+defines the positive column domain: an exemption matching only columns outside
+that domain suppresses no finding and is stale after a complete catalog check.

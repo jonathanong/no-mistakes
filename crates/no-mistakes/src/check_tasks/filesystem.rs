@@ -11,6 +11,7 @@ const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA,
     rules::GITHUB_ACTIONS_JOB_TIMEOUTS,
     rules::GITHUB_ACTIONS_JOB_PERMISSIONS,
+    rules::GITHUB_ACTIONS_LOCAL_ACTION_CHECKOUT,
     rules::GITHUB_ACTIONS_STEP_TIMEOUTS,
     rules::GITHUB_ACTIONS_MAX_INLINE_SCRIPT_LINES,
     rules::GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS,
@@ -104,6 +105,7 @@ const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::TSCONFIG_GATE_COVERAGE,
     rules::VITEST_CI_PATH_COVERAGE,
     rules::VITEST_PROJECT_MAPPING,
+    rules::VITEST_PROJECT_POLICY,
     rules::VITEST_TEST_CORRESPONDENCE,
     rules::WORKFLOW_TOPOLOGY_POLICY,
     rules::WORKSPACE_PACKAGE_CYCLES,
@@ -122,7 +124,7 @@ pub(crate) fn run_filesystem_rules_check_with_facts(
         "analysis.filesystem_rules",
         no_mistakes::diagnostics::TimingKind::Parallel,
         || {
-            run_enabled_filesystem_rules(
+            vitest_project_policy::run(
                 root,
                 config,
                 enabled,
@@ -161,7 +163,8 @@ mod manifests;
 mod partial;
 mod payload_compatibility;
 mod redirects;
-fn run_enabled_filesystem_rules(
+mod vitest_project_policy;
+fn run_remaining_filesystem_rules(
     root: &Path,
     config: &NoMistakesConfig,
     enabled: bool,

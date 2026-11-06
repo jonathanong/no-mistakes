@@ -129,13 +129,16 @@ test("forbidden lint suppression options expose exact directive choices", () => 
   );
 });
 
-test("forbidden lint suppression configuration compiles from the package root", () => {
+test("lint suppression and Vitest property configuration compile from the package root", () => {
   const { createRequire } = require("node:module");
   const dependencyRequire = createRequire(require.resolve("@storybook/react"));
   const ts = dependencyRequire("typescript");
   const repositoryRoot = join(packageRoot, "..", "..");
   const program = ts.createProgram(
-    [join(repositoryRoot, "fixtures/node-api/forbidden-lint-suppressions/public.mts")],
+    [
+      join(repositoryRoot, "fixtures/node-api/forbidden-lint-suppressions/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/vitest-project-policy/public.mts"),
+    ],
     {
       noEmit: true,
       strict: true,
@@ -228,5 +231,24 @@ test("declared config exports its unused allow-entry policy", () => {
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export \* from "\.\/resolve-config-types";/,
+  );
+});
+
+test("Vitest project property policy exports named configuration types", () => {
+  const types = readFileSync(join(packageRoot, "vitest-project-policy-types.d.ts"), "utf8");
+  assert.match(types, /export type VitestPropertyLiteral = string \| number \| boolean \| null;/);
+  assert.match(types, /export interface VitestPropertyParity/);
+  assert.match(types, /properties: \[string, string\];/);
+  assert.match(types, /compareRoot\?: boolean;/);
+  assert.match(types, /export interface VitestProjectPolicyOptions/);
+  assert.match(types, /config: string;/);
+  assert.match(types, /helpers\?: string\[\];/);
+  assert.match(types, /required\?: Record<string, VitestPropertyLiteral>;/);
+  assert.match(types, /forbidden\?: string\[\];/);
+  assert.match(types, /parity\?: VitestPropertyParity\[\];/);
+  assert.ok(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(
+      'export type * from "./vitest-project-policy-types";',
+    ),
   );
 });

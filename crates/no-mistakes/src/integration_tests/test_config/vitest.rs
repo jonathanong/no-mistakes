@@ -7,6 +7,7 @@ use oxc_ast::ast::Program;
 use std::path::{Path, PathBuf};
 
 mod json_projects;
+pub(crate) mod lexical_policy;
 mod merge;
 mod project_arrays;
 pub(crate) mod setup_resolution;

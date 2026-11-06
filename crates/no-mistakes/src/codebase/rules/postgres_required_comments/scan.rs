@@ -2,7 +2,11 @@ use super::{Compiled, ObjectKind, RULE_ID};
 use crate::codebase::postgres::{catalog_finding, CatalogObjectRef, SchemaCatalog};
 use crate::codebase::rules::RuleFinding;
 
-pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFinding> {
+pub(super) fn scan(
+    compiled: Compiled,
+    catalog: &SchemaCatalog,
+    usage: &super::super::allow_audit::AllowUsage,
+) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     let tables = compiled.objects.contains(&ObjectKind::Table);
     let columns = compiled.objects.contains(&ObjectKind::Column);
@@ -20,7 +24,15 @@ pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFindi
             }
             if columns {
                 for column in &table.columns {
-                    if column_selected(&compiled, &column.name) {
+                    if column_selected(&compiled, &column.name)
+                        && comment_text(column.comment.as_deref(), compiled.min_length).is_some()
+                        && !usage.suppress(
+                            compiled
+                                .exempt_column_name_patterns
+                                .iter()
+                                .map(|pattern| pattern.is_match(&column.name)),
+                        )
+                    {
                         push(
                             &mut findings,
                             &compiled,
@@ -73,10 +85,6 @@ fn column_selected(compiled: &Compiled, name: &str) -> bool {
             .iter()
             .any(|pattern| pattern.is_match(name));
     included
-        && !compiled
-            .exempt_column_name_patterns
-            .iter()
-            .any(|pattern| pattern.is_match(name))
 }
 
 fn push(
