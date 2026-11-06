@@ -53,12 +53,23 @@ fn postgres_bounded_statements_join_roots_check_json_snapshot() {
             "table:genericitems",
             "table:posts",
             "table:posts",
+            "table:topics",
+            "table:topics",
+            "table:topics",
+            "table:users",
+            "table:users",
+            "table:users",
         ],
         "{report}"
     );
     assert_eq!(
         targets_at("sql/unique-composite.sql"),
-        ["table:genericitems", "table:posts"],
+        [
+            "table:genericitems",
+            "table:genericitems",
+            "table:posts",
+            "table:users",
+        ],
         "{report}"
     );
     assert_eq!(
@@ -85,19 +96,27 @@ fn postgres_bounded_statements_join_roots_check_json_snapshot() {
             "table:posts",
             "table:posts",
             "table:topics",
+            "table:topics",
             "table:users",
         ],
         "{report}"
     );
     assert_eq!(
         targets_at("sql/cte-derived-self.sql"),
-        ["table:posts", "table:posts", "table:posts"],
+        [
+            "table:posts",
+            "table:posts",
+            "table:posts",
+            "table:users",
+            "table:users",
+        ],
         "nested reads and the self-join driver must remain roots: {report}"
     );
     assert_eq!(
         targets_at("sql/unproven-drivers.sql"),
         [
             "table:genericitems",
+            "table:posts",
             "table:posts",
             "table:posts",
             "table:posts",

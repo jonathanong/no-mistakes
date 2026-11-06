@@ -78,7 +78,7 @@ set operation). A statement is bounded when any of these holds:
   is not treated as an expanding call, while an unknown function still is.
   The relations inside it are still judged. Independent lateral queries retain their global bound. A derived query cannot resolve its own reads against
   the columns it later exposes. For example, `id IN (SELECT id FROM LATERAL (SELECT id) d
-LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` query sees
+  LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` query sees
   only preceding FROM sources; a later source with the same column name cannot hide that
   outer read.
 - A column compared with a column of another bounded relation is pinned too, so a bound
@@ -86,37 +86,39 @@ LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` 
   `f.id = i.feed_id` is bounded, followed by `t.id = f.topic_id`. Additional `AND`
   conjuncts in `ON`, such as `f.deleted_at IS NULL`, `t.deleted_at IS NULL`, or
   `z.status = $2`, only narrow the key lookup. A join on a column that is not a
-  whole key does not bound that relation. An unbounded driving relation remains
-  reported. `ON` pins
+  whole key does not bound that relation. The source relation must already be
+  bounded; a key equality does not make the source bounded. Both relations are
+  reported when neither has its own bound. A bounded source may contain multiple
+  rows, including when `columnBounds` establishes its bound on a non-key column.
+  The proof can continue through a middle relation bounded on a non-key column.
+  If that middle relation is an unbounded fanout from the root, it and the
+  downstream keyed target remain reported. `ON` pins
   only the side an outer join can null-extend, never the preserved side, and a `WHERE` on the
   null-extended side is not assumed to turn the join inner: a `LEFT JOIN` with its key
   pinned only in `WHERE` reports the preserved relation. `JOIN … USING (col)` pins the same
   way as `ON a.col = b.col` when each side is one FROM item; after a longer chain, which
   item owns the column cannot be told, so it pins nothing.
-- For an uncapped `SELECT`, a complete primary or valid unique key equated directly to
-  columns of other FROM relations makes the keyed relation a lookup rather than an
-  independent unbounded root. For example, `FROM items i LEFT JOIN topics t ON t.id = i.topic_id`
-  keeps `items` as the source and does not separately report `topics`. The same applies to inner and chained joins. This only
-  changes which base relation is reported; a lookup can lead to another keyed lookup
-  when one complete key depends on an independently reportable root, even if another
-  key participates in a cycle. Each key column needs one rooted equality; when
-  two peers equate the same column, either one can supply it. A key equality
-  present only in an `OR` branch cannot
-  establish a lookup root. An incomplete key, a nullable unique key compared with `IS NOT
-  DISTINCT FROM`, and an expression on the other side of the equality do not establish
-  this lookup. The lookup-side key columns must be non-null. A cycle without an
-  independent driver retains its roots, including self-joins, rather than erasing
-  every report. Reads inside derived tables and CTEs retain their own reports.
-  A derived or recursive source with no independent bound or reportable root
-  cannot explain a keyed relation. It does not prevent an independent relation
-  from proving another key lookup in the same query. A correlated `LATERAL` source, an unknown
-  catalog relation, or a relation with uncertain temporary shadowing cannot act
-  as a lookup driver either. A derived source can drive a key lookup when its own
-  analysis has a bounded result or a reportable base-table root, including a
-  recursive CTE whose step reads a base table. A source made only of opaque rows
-  cannot drive one. The joined column may be projected or computed by the derived
-  relation; the outer equality still names a column of that relation. Extra
-  independent conjuncts do not erase a complete key equality.
+- For an uncapped `SELECT`, a complete primary or valid unique key equated directly
+  to columns of another FROM relation bounds the keyed relation only when that
+  source relation is already bounded. For example, `FROM items i LEFT JOIN topics t
+  ON t.id = i.topic_id` reports both tables when `items` is unbounded. A direct
+  pin on `items.id` bounds `items`, then bounds `topics` through its key. In the
+  reverse direction, `users u JOIN posts p ON p.user_id = u.id` still reports
+  `posts` when `users` is bounded by its primary key: `posts.user_id` is not a
+  unique key and can match arbitrarily many rows. The same
+  direction applies to inner and chained joins. Each target key column needs one
+  bounded source equality; when two peers equate the same column, either bounded
+  peer can supply it. A key equality present only in an `OR` branch, an incomplete
+  key, or a nullable unique key compared with `IS NOT DISTINCT FROM` cannot prove
+  the bound. A cycle without an independent bounded source remains unbounded,
+  including self-joins. Reads inside derived tables and CTEs retain their own
+  reports. A keyed table joined to an unbounded derived recordset also remains
+  reported, even when the recordset has its own reportable base-table read. A
+  derived source can supply a key value when its own result is bounded,
+  including a bounded `DISTINCT ON` CTE chain. A correlated `LATERAL` source, an
+  unknown catalog relation, or a relation with uncertain temporary shadowing
+  cannot supply a bound. Extra independent conjuncts do not erase a complete key
+  equality.
 - For `UPDATE` and `DELETE`, the target relation is bounded. A CTE or subquery that picks
   the target rows with a `LIMIT` bounds it when the target's key is matched against it
   (`FROM c WHERE t.id = c.id`, or `WHERE t.id IN (SELECT id … LIMIT n)`). `ctid` identifies

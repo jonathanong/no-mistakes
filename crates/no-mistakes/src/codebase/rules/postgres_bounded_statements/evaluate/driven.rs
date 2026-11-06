@@ -26,33 +26,6 @@ pub(super) fn roots(
     (!roots.is_empty()).then_some(roots)
 }
 
-pub(super) fn suppress(
-    query: &SqlBoundQuery,
-    catalog: &SchemaCatalog,
-    offenders: &mut Vec<Offender>,
-) {
-    let names = query
-        .items
-        .iter()
-        .filter(|item| explained(item, query, catalog))
-        .filter_map(|item| match &item.kind {
-            SqlBoundItemKind::Table(name) => Some(name.clone()),
-            _ => None,
-        })
-        .collect::<Vec<_>>();
-    if names.is_empty() {
-        return;
-    }
-    let kept = offenders
-        .iter()
-        .filter(|offender| !names.iter().any(|name| name == &offender.table))
-        .cloned()
-        .collect::<Vec<_>>();
-    if !kept.is_empty() {
-        *offenders = kept;
-    }
-}
-
 fn explained(item: &SqlBoundItem, query: &SqlBoundQuery, catalog: &SchemaCatalog) -> bool {
     if item.pin_alternatives > 1 {
         return false;

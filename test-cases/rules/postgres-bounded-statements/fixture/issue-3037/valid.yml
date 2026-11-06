@@ -1,0 +1,20 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      executorNames: []
+      schemaCatalogPath: schema.json
+      columnBounds:
+        participants.conversation_id:
+          reason: Conversation participants are bound by a conversation id
+      sqlInclude:
+        - sql/participants.sql
+        - sql/unbounded_key_join.sql
+        - sql/bounded_nonkey_key_chain.sql
+        - sql/unbounded_key_target.sql
+      include:
+        - sql/participants.sql
+        - sql/unbounded_key_join.sql
+        - sql/bounded_nonkey_key_chain.sql
+        - sql/unbounded_key_target.sql

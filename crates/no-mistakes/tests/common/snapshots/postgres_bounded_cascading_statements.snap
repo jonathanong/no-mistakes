@@ -3,14 +3,31 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
   "allow": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": "queries.sql",
+          "line": 4,
+          "message": "queries.sql:4: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT child.id FROM accounts child",
+          "target": "table:accounts"
+        },
+        {
+          "file": "queries.sql",
+          "line": 9,
+          "message": "queries.sql:9: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id FROM accounts a JOIN orders o ON o.account_id = a.id;",
+          "target": "table:accounts"
+        }
+      ],
       "warnings": []
     }
   },
@@ -25,11 +42,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "queries.sql",
+          "line": 4,
+          "message": "queries.sql:4: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT child.id FROM accounts child",
+          "target": "table:accounts"
+        },
+        {
+          "file": "queries.sql",
           "line": 5,
           "message": "queries.sql:5: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "JOIN orders edge ON edge.account_id = child.id",
           "target": "table:orders"
+        },
+        {
+          "file": "queries.sql",
+          "line": 9,
+          "message": "queries.sql:9: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id FROM accounts a JOIN orders o ON o.account_id = a.id;",
+          "target": "table:accounts"
         },
         {
           "file": "queries.sql",
@@ -94,6 +127,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
+        {
+          "file": "suppression.sql",
+          "line": 1,
+          "message": "suppression.sql:1: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id FROM accounts a",
+          "target": "table:accounts"
+        },
+        {
+          "file": "suppression.sql",
+          "line": 4,
+          "message": "suppression.sql:4: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id FROM accounts a JOIN orders o ON o.account_id = a.id; SELECT id FROM invoices;",
+          "target": "table:accounts"
+        },
         {
           "file": "suppression.sql",
           "line": 4,

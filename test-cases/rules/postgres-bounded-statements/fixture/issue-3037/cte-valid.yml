@@ -1,0 +1,14 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      executorNames: []
+      schemaCatalogPath: schema.json
+      columnBounds:
+        items.item_id:
+          reason: The selected item is bound by a requested item id
+        sources.item_id:
+          reason: Sources are joined to the selected item id
+      sqlInclude: [sql/items.sql]
+      include: [sql/items.sql]

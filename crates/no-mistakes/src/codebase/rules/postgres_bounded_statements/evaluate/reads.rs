@@ -10,7 +10,7 @@ pub(super) fn collect(
     query: &SqlBoundQuery,
     nested: &[Option<Evaluation>],
     pin_subqueries: &[Vec<Option<Evaluation>>],
-    (bounded, lookup_roots): (&[bool], &[bool]),
+    bounded: &[bool],
     catalog: &SchemaCatalog,
     views: &ViewBounds,
     precise_columns: bool,
@@ -30,7 +30,7 @@ pub(super) fn collect(
                     .cloned(),
             );
         }
-        if !query.capped && !bounded[index] && !lookup_roots[index] && nested[index].is_none() {
+        if !query.capped && !bounded[index] && nested[index].is_none() {
             if let SqlBoundItemKind::Table(name) = &item.kind {
                 found.extend(relation_offender(
                     name,

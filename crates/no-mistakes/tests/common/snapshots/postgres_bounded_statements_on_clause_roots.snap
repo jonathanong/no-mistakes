@@ -67,6 +67,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM items i",
           "target": "table:items"
+        },
+        {
+          "file": "sql/unbounded-chain.sql",
+          "line": 3,
+          "message": "sql/unbounded-chain.sql:3: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN feeds f ON f.id = i.feed_id AND f.deleted_at IS NULL",
+          "target": "table:feeds"
+        },
+        {
+          "file": "sql/unbounded-chain.sql",
+          "line": 4,
+          "message": "sql/unbounded-chain.sql:4: SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN topics t ON t.id = f.topic_id AND t.deleted_at IS NULL;",
+          "target": "table:topics"
         }
       ],
       "warnings": []

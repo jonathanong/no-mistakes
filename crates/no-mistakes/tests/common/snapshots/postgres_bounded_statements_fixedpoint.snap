@@ -21,6 +21,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "sql/conjuncts.sql",
+          "line": 12,
+          "message": "sql/conjuncts.sql:12: SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN users u ON u.id = i.created_by_id AND u.deleted_at IS NULL",
+          "target": "table:users"
+        },
+        {
+          "file": "sql/conjuncts.sql",
           "line": 2,
           "message": "sql/conjuncts.sql:2: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
@@ -37,11 +45,51 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "sql/conjuncts.sql",
+          "line": 21,
+          "message": "sql/conjuncts.sql:21: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN feeds f ON f.id = i.feed_id",
+          "target": "table:feeds"
+        },
+        {
+          "file": "sql/conjuncts.sql",
+          "line": 22,
+          "message": "sql/conjuncts.sql:22: SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN topics t ON t.id = f.topic_id",
+          "target": "table:topics"
+        },
+        {
+          "file": "sql/conjuncts.sql",
+          "line": 23,
+          "message": "sql/conjuncts.sql:23: SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN users u ON u.id = t.created_by_id AND u.deleted_at IS NULL",
+          "target": "table:users"
+        },
+        {
+          "file": "sql/conjuncts.sql",
+          "line": 3,
+          "message": "sql/conjuncts.sql:3: SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN users u ON u.id = i.created_by_id AND u.deleted_at IS NULL;",
+          "target": "table:users"
+        },
+        {
+          "file": "sql/conjuncts.sql",
           "line": 6,
           "message": "sql/conjuncts.sql:6: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM items i",
           "target": "table:items"
+        },
+        {
+          "file": "sql/conjuncts.sql",
+          "line": 7,
+          "message": "sql/conjuncts.sql:7: SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN users u ON u.id = i.created_by_id AND u.deleted_at IS NULL",
+          "target": "table:users"
         },
         {
           "file": "sql/derived.sql",
@@ -53,11 +101,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "sql/derived.sql",
+          "line": 11,
+          "message": "sql/derived.sql:11: SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN users u ON u.id = s.created_by_id;",
+          "target": "table:users"
+        },
+        {
+          "file": "sql/derived.sql",
           "line": 14,
           "message": "sql/derived.sql:14: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT i.id, i.parent_id, i.created_by_id FROM items i",
           "target": "table:items"
+        },
+        {
+          "file": "sql/derived.sql",
+          "line": 18,
+          "message": "sql/derived.sql:18: SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT s.id FROM subtree s JOIN users u ON u.id = s.created_by_id;",
+          "target": "table:users"
         },
         {
           "file": "sql/derived.sql",
@@ -69,11 +133,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "sql/derived.sql",
+          "line": 25,
+          "message": "sql/derived.sql:25: SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT s.id FROM subtree s JOIN users u ON u.id = s.created_by_id;",
+          "target": "table:users"
+        },
+        {
+          "file": "sql/derived.sql",
           "line": 27,
           "message": "sql/derived.sql:27: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "WITH subtree AS (SELECT * FROM items)",
           "target": "table:items"
+        },
+        {
+          "file": "sql/derived.sql",
+          "line": 28,
+          "message": "sql/derived.sql:28: SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT s.id FROM subtree s JOIN users u ON u.id = s.created_by_id;",
+          "target": "table:users"
         },
         {
           "file": "sql/derived.sql",
@@ -90,6 +170,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "WITH projected AS (SELECT i.id AS id, coalesce(i.created_by_id, i.id) AS user_id FROM items i)",
           "target": "table:items"
+        },
+        {
+          "file": "sql/derived.sql",
+          "line": 31,
+          "message": "sql/derived.sql:31: SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT p.id FROM projected p JOIN users u ON u.id = p.user_id;",
+          "target": "table:users"
+        },
+        {
+          "file": "sql/derived.sql",
+          "line": 7,
+          "message": "sql/derived.sql:7: SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN users u ON u.id = s.created_by_id;",
+          "target": "table:users"
         },
         {
           "file": "sql/must-report.sql",
@@ -138,6 +234,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT i.id FROM items i JOIN users u ON u.id = i.created_by_id",
           "target": "table:items"
+        },
+        {
+          "file": "sql/must-report.sql",
+          "line": 19,
+          "message": "sql/must-report.sql:19: SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT i.id FROM items i JOIN users u ON u.id = i.created_by_id",
+          "target": "table:users"
         },
         {
           "file": "sql/must-report.sql",
@@ -196,12 +300,36 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "table:items"
         },
         {
+          "file": "sql/recursive-conjuncts.sql",
+          "line": 7,
+          "message": "sql/recursive-conjuncts.sql:7: SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN users u ON u.id = s.created_by_id AND u.deleted_at IS NULL",
+          "target": "table:users"
+        },
+        {
           "file": "sql/recursive-transitive.sql",
           "line": 4,
           "message": "sql/recursive-transitive.sql:4: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT c.id, c.parent_id, c.feed_id FROM items c JOIN subtree s ON c.parent_id = s.id",
           "target": "table:items"
+        },
+        {
+          "file": "sql/recursive-transitive.sql",
+          "line": 7,
+          "message": "sql/recursive-transitive.sql:7: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN feeds f ON f.id = s.feed_id",
+          "target": "table:feeds"
+        },
+        {
+          "file": "sql/recursive-transitive.sql",
+          "line": 8,
+          "message": "sql/recursive-transitive.sql:8: SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN topics t ON t.id = f.topic_id;",
+          "target": "table:topics"
         },
         {
           "file": "sql/transitive.sql",
@@ -213,11 +341,43 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "sql/transitive.sql",
+          "line": 13,
+          "message": "sql/transitive.sql:13: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN feeds f ON f.id = i.feed_id",
+          "target": "table:feeds"
+        },
+        {
+          "file": "sql/transitive.sql",
+          "line": 14,
+          "message": "sql/transitive.sql:14: SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN topics t ON t.id = f.topic_id AND f.alt_id = t.id;",
+          "target": "table:topics"
+        },
+        {
+          "file": "sql/transitive.sql",
           "line": 17,
           "message": "sql/transitive.sql:17: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM items i",
           "target": "table:items"
+        },
+        {
+          "file": "sql/transitive.sql",
+          "line": 18,
+          "message": "sql/transitive.sql:18: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN feeds f ON f.id = i.feed_id",
+          "target": "table:feeds"
+        },
+        {
+          "file": "sql/transitive.sql",
+          "line": 19,
+          "message": "sql/transitive.sql:19: SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN topics t ON t.id = f.topic_id AND f.id = t.created_by_id;",
+          "target": "table:topics"
         },
         {
           "file": "sql/transitive.sql",
@@ -234,6 +394,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM items i",
           "target": "table:items"
+        },
+        {
+          "file": "sql/transitive.sql",
+          "line": 24,
+          "message": "sql/transitive.sql:24: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN feeds f ON f.id = i.feed_id;",
+          "target": "table:feeds"
+        },
+        {
+          "file": "sql/transitive.sql",
+          "line": 3,
+          "message": "sql/transitive.sql:3: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN feeds f ON f.id = i.feed_id",
+          "target": "table:feeds"
+        },
+        {
+          "file": "sql/transitive.sql",
+          "line": 4,
+          "message": "sql/transitive.sql:4: SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN topics t ON t.id = f.topic_id;",
+          "target": "table:topics"
+        },
+        {
+          "file": "sql/transitive.sql",
+          "line": 7,
+          "message": "sql/transitive.sql:7: SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM topics t",
+          "target": "table:topics"
+        },
+        {
+          "file": "sql/transitive.sql",
+          "line": 8,
+          "message": "sql/transitive.sql:8: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN feeds f ON t.id = f.topic_id",
+          "target": "table:feeds"
         },
         {
           "file": "sql/transitive.sql",

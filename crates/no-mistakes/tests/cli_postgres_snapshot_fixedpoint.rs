@@ -61,9 +61,15 @@ fn postgres_bounded_statements_fixedpoint_check_json_snapshot() {
         "sql/conjuncts.sql",
         &[
             (2, "table:items"),
+            (3, "table:users"),
             (6, "table:items"),
+            (7, "table:users"),
             (11, "table:items"),
+            (12, "table:users"),
             (20, "table:items"),
+            (21, "table:feeds"),
+            (22, "table:topics"),
+            (23, "table:users"),
         ],
     );
     assert_findings_at(
@@ -71,11 +77,17 @@ fn postgres_bounded_statements_fixedpoint_check_json_snapshot() {
         "sql/derived.sql",
         &[
             (3, "table:items"),
+            (7, "table:users"),
             (10, "table:items"),
+            (11, "table:users"),
             (14, "table:items"),
+            (18, "table:users"),
             (23, "table:items"),
+            (25, "table:users"),
             (27, "table:items"),
+            (28, "table:users"),
             (30, "table:items"),
+            (31, "table:users"),
         ],
     );
     assert_findings_at(
@@ -83,38 +95,48 @@ fn postgres_bounded_statements_fixedpoint_check_json_snapshot() {
         "sql/must-report.sql",
         &[
             (1, "table:items"),
+            (1, "table:users"),
             (3, "table:items"),
+            (3, "table:users"),
             (5, "table:items"),
+            (5, "table:users"),
             (7, "table:items"),
+            (7, "table:users"),
             (12, "table:items"),
             (16, "table:items"),
-            (19, "table:items"),
-            (1, "table:users"),
-            (3, "table:users"),
-            (5, "table:users"),
-            (7, "table:users"),
             (16, "table:users"),
+            (19, "table:items"),
+            (19, "table:users"),
         ],
     );
     assert_findings_at(
         &report,
         "sql/recursive-conjuncts.sql",
-        &[(4, "table:items")],
+        &[(4, "table:items"), (7, "table:users")],
     );
     assert_findings_at(
         &report,
         "sql/recursive-transitive.sql",
-        &[(4, "table:items")],
+        &[(4, "table:items"), (7, "table:feeds"), (8, "table:topics")],
     );
     assert_findings_at(
         &report,
         "sql/transitive.sql",
         &[
             (2, "table:items"),
+            (3, "table:feeds"),
+            (4, "table:topics"),
+            (7, "table:topics"),
+            (8, "table:feeds"),
             (9, "table:items"),
             (12, "table:items"),
+            (13, "table:feeds"),
+            (14, "table:topics"),
             (17, "table:items"),
+            (18, "table:feeds"),
+            (19, "table:topics"),
             (22, "table:items"),
+            (24, "table:feeds"),
         ],
     );
     assert_findings_at(

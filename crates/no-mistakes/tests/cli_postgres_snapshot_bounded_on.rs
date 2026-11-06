@@ -69,8 +69,12 @@ fn postgres_bounded_statements_on_clause_roots_check_json_snapshot() {
     );
     assert_eq!(
         findings_at(&report, "sql/unbounded-chain.sql"),
-        [(2, "table:items".to_string())],
-        "an unbounded chain keeps only its driving table as a root: {report}"
+        [
+            (2, "table:items".to_string()),
+            (3, "table:feeds".to_string()),
+            (4, "table:topics".to_string()),
+        ],
+        "an unbounded key-join chain reports every unbounded relation: {report}"
     );
     let advisory = self::report("advisory.yml", 0);
     assert!(advisory["rules"].as_array().unwrap().is_empty());

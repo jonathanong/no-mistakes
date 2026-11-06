@@ -8,7 +8,6 @@ mod correlated;
 mod driven;
 mod keys;
 mod lateral;
-mod lookup_roots;
 mod outer_reads;
 mod ownership;
 mod possible_temporary;
@@ -178,17 +177,15 @@ fn evaluate(
         })
         .collect();
     propagation::bound(&keys, &mut bounded);
-    let lookup_roots = lookup_roots::suppressed(query, &nested, &owners, catalog);
-    let mut offenders = reads::collect(
+    let offenders = reads::collect(
         query,
         &nested,
         &pin_subqueries,
-        (&bounded, &lookup_roots),
+        &bounded,
         catalog,
         views,
         precise_columns,
     );
-    driven::suppress(query, catalog, &mut offenders);
     Evaluation {
         bounded: query.capped || bounded.iter().all(|state| *state),
         items: bounded,
