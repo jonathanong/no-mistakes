@@ -12,6 +12,7 @@ fn github_actions_local_action_checkout_json_matches_snapshot() {
         "diagnostics",
         "boundaries",
         "named-job",
+        "exclusions",
     ];
     let cases: Vec<_> = cases
         .iter()

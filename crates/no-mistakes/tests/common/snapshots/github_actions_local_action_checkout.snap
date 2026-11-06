@@ -107,6 +107,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "exclusions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/exclusions.yml",
+          "import": "./actions/setup",
+          "line": 10,
+          "message": ".github/workflows/exclusions.yml:10: job `excluded` uses local action `./actions/setup` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them.",
+          "rule": "github-actions-local-action-checkout",
+          "sourceLine": "- uses: ./actions/setup",
+          "target": "excluded#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "locations": {
     "exitCode": 1,
     "report": {

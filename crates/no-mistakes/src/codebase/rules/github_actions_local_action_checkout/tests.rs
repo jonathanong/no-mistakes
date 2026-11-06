@@ -212,3 +212,24 @@ fn nonworkflow_sources_are_ignored_and_invalid_policy_is_rejected() {
         super::diagnostics_with_files_and_sources(&root, &config, &files, &sources, false).is_err()
     );
 }
+
+#[test]
+fn sparse_exclusions_do_not_prove_checkout_or_erase_prior_readiness() {
+    let source = include_str!("../../../../../../test-cases/rules/github-actions-local-action-checkout/fixture/exclusions/.github/workflows/exclusions.yml");
+    let value = serde_yaml::from_str(source).unwrap();
+    let output = check_source(
+        ".github/workflows/exclusions.yml",
+        source,
+        &value,
+        Unanalyzable::Report,
+    );
+    assert_eq!(
+        output
+            .findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [10]
+    );
+    assert!(output.advisories.is_empty());
+}

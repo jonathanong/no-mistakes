@@ -15,6 +15,7 @@ test(
       ["unit", 12],
       ["locations", 7],
       ["named-job", 1],
+      ["exclusions", 1],
       ["pass", 0],
       ["suppressed", 0],
     ]) {

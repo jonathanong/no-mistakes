@@ -99,6 +99,9 @@ fn sparse_covers(step: &Value, action: &str) -> bool {
     let Some(sparse) = sparse.as_str() else {
         return false;
     };
+    if sparse.lines().any(|line| line.trim().starts_with('!')) {
+        return false;
+    }
     let action = crate::codebase::workflow_topology::posix_path::normalize(action);
     sparse.lines().any(|line| {
         let path = line.trim().trim_end_matches('/');

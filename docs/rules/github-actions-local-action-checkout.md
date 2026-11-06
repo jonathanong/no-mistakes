@@ -19,7 +19,9 @@ A checkout uses `actions/checkout@...`. Its `with.path` must be absent, `.`, or
 A missing `sparse-checkout` covers every local action. Otherwise, a literal
 directory prefix must cover the action path: `.github/actions` covers
 `.github/actions/setup`, but `.github/other` does not. Expressions and patterns
-do not establish directory coverage.
+do not establish directory coverage. A sparse list containing any negated entry
+(`!path`) cannot establish coverage, even if another entry is a literal ancestor;
+use a positive directory list so coverage is statically provable.
 
 An unconditional root checkout of a foreign repository invalidates readiness
 for every local action path, including paths outside its sparse checkout.
