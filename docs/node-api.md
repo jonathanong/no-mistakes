@@ -593,3 +593,11 @@ locate the config entry, `import` names the checked rule, and `target` carries
 the selector. No runtime export or report field is added. Partial or uncertain
 selector coverage stays silent; established rule-specific stale outputs retain
 their existing shape and severity. See [allow-entry hygiene](configuration/suppressions.md#allow-entry-hygiene).
+
+[`github-actions-local-action-checkout`](rules/github-actions-local-action-checkout.md)
+uses the existing asynchronous `check()` and `analyzeProject()` check report
+paths with the same configuration and ordered per-job checkout analysis as CLI
+`check`. Findings use the existing `RuleFinding` shape: `rule` identifies the
+rule, `file`/`line` locate the local action's `uses:` line, and `target` identifies
+the `job#step` (one-based step position). No new runtime
+export, option type, or report field is needed.

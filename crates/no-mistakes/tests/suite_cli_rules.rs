@@ -226,3 +226,6 @@ mod cli_config_fragments;
 
 #[path = "cli_rule_options_audit.rs"]
 mod cli_rule_options_audit;
+
+#[path = "cli_gha_snapshot_local_action_checkout.rs"]
+mod cli_gha_snapshot_local_action_checkout;

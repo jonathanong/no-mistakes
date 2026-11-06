@@ -247,3 +247,9 @@ Configured allow entries that match no finding in their fully checked selector
 scope produce non-failing `unused-allow-entry` advisories at the config entry.
 Partial or uncertain scope stays silent. Existing rule-specific stale findings
 retain their severity; see [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
+
+`github-actions-local-action-checkout` checks each job's ordered steps for local
+`uses: ./path` before a covering unconditional root checkout of the current
+repository. An unconditional foreign root checkout invalidates all paths' readiness.
+Findings point to the local `uses:` line; see [the rule](../rules/github-actions-local-action-checkout.md)
+for sparse checkout coverage and suppression.

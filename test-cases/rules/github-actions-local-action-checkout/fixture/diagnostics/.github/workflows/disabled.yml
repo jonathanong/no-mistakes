@@ -1,0 +1,5 @@
+# no-mistakes-disable-file github-actions-local-action-checkout
+jobs:
+  build:
+    steps:
+      - uses: ./actions/a

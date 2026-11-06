@@ -1,0 +1,8 @@
+name: suppressed
+on: push
+jobs:
+  test:
+    steps:
+      - uses: ./.github/actions/a # no-mistakes-disable-line github-actions-local-action-checkout
+      # no-mistakes-disable-next-line github-actions-local-action-checkout
+      - uses: ./.github/actions/b
