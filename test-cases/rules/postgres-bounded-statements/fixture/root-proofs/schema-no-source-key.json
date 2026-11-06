@@ -1,0 +1,213 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "participants": {
+      "relationKind": "table",
+      "columns": {
+        "conversation_id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": false
+        }
+      },
+      "primaryKey": {
+        "columns": ["conversation_id", "user_id"]
+      },
+      "indexes": {
+        "participants_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "conversation_id",
+              "expression": "conversation_id"
+            },
+            {
+              "column": "user_id",
+              "expression": "user_id"
+            }
+          ]
+        }
+      }
+    },
+    "conversations": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "kind": {
+          "dataType": "text",
+          "nullable": false
+        },
+        "deleted_at": {
+          "dataType": "timestamp",
+          "nullable": true
+        }
+      },
+      "primaryKey": {
+        "columns": ["id"]
+      },
+      "indexes": {
+        "conversations_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "items": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "url_id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "deleted_at": {
+          "dataType": "timestamp",
+          "nullable": true
+        }
+      },
+      "primaryKey": {
+        "columns": ["id"]
+      },
+      "indexes": {
+        "items_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "sources": {
+      "relationKind": "table",
+      "columns": {
+        "item_id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "feed_id": {
+          "dataType": "uuid",
+          "nullable": false
+        }
+      },
+      "primaryKey": null,
+      "indexes": {}
+    },
+    "feeds": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "topic_id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "deleted_at": {
+          "dataType": "timestamp",
+          "nullable": true
+        }
+      },
+      "primaryKey": {
+        "columns": ["id"]
+      },
+      "indexes": {
+        "feeds_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "topics": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "deleted_at": {
+          "dataType": "timestamp",
+          "nullable": true
+        }
+      },
+      "primaryKey": {
+        "columns": ["id"]
+      },
+      "indexes": {
+        "topics_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

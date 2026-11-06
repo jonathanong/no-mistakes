@@ -21,6 +21,7 @@ pub(super) fn bound(
                     SqlBoundInputMode::Streaming
                 },
                 capped: aggregate::pure_aggregate(select)
+                    || super::distinct_on::fixed(select, &items, scope, positions)
                     || super::super::predicate::rejects_all(select.selection.as_ref()),
                 items,
                 outputs,

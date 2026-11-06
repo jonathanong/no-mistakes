@@ -5763,23 +5763,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "current_database_mixed_view_audit": {
-    "exitCode": 1,
+    "exitCode": 0,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [
-        {
-          "file": "copied/temporary-mixed-current-database-view.sql",
-          "line": 7,
-          "message": "copied/temporary-mixed-current-database-view.sql:7: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT * FROM orders AS o JOIN public.accounts AS a ON a.id = o.id WHERE o.id = 1;",
-          "target": "table:accounts"
-        }
-      ],
+      "rules": [],
       "warnings": []
     }
   },
@@ -6930,14 +6921,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.id = a.id WHERE a.id = $1;",
           "target": "table:accounts"
-        },
-        {
-          "file": "sql/temporary-shadow-drop-database.sql",
-          "line": 6,
-          "message": "sql/temporary-shadow-drop-database.sql:6: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.id = a.id WHERE a.id = $1;",
-          "target": "table:orders"
         }
       ],
       "warnings": []
@@ -17526,7 +17509,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "proven_physical_shadow_drop_exposes_the_underlying_temporary_rows_temporary_shad": {
-    "exitCode": 1,
+    "exitCode": 0,
     "report": {
       "advisories": [
         {
@@ -17742,24 +17725,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [
-        {
-          "file": "sql/temporary-shadow-drop.sql",
-          "line": 6,
-          "message": "sql/temporary-shadow-drop.sql:6: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.id = a.id WHERE a.id = $1;",
-          "target": "table:orders"
-        },
-        {
-          "file": "sql/temporary-shadow-drop.sql",
-          "line": 8,
-          "message": "sql/temporary-shadow-drop.sql:8: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.id = a.id WHERE a.id = $1;",
-          "target": "table:orders"
-        }
-      ],
+      "rules": [],
       "warnings": []
     }
   },
@@ -19210,14 +19176,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.id = a.id WHERE a.id = $1;",
           "target": "table:accounts"
-        },
-        {
-          "file": "sql/temporary-shadow-recreate-table.sql",
-          "line": 9,
-          "message": "sql/temporary-shadow-recreate-table.sql:9: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.id = a.id WHERE a.id = $1;",
-          "target": "table:orders"
         }
       ],
       "warnings": []
@@ -30262,27 +30220,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "sql/temporary-shadow-drop-unknown.sql",
-          "line": 14,
-          "message": "sql/temporary-shadow-drop-unknown.sql:14: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.id = a.id WHERE a.id = $1;",
-          "target": "table:orders"
-        },
-        {
-          "file": "sql/temporary-shadow-drop-unknown.sql",
           "line": 7,
           "message": "sql/temporary-shadow-drop-unknown.sql:7: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.id = a.id WHERE a.id = $1;",
           "target": "table:accounts"
-        },
-        {
-          "file": "sql/temporary-shadow-drop-unknown.sql",
-          "line": 7,
-          "message": "sql/temporary-shadow-drop-unknown.sql:7: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.id = a.id WHERE a.id = $1;",
-          "target": "table:orders"
         }
       ],
       "warnings": []

@@ -28,6 +28,14 @@ set operation). A statement is bounded when any of these holds:
   one implicit group when there is no GROUP BY and the select list does not expand rows. A function with the same name in another schema is an ordinary function,
   called once per row, and a set-returning function in the select list
   (`generate_series(1, count(*))`) expands the row again.
+- `DISTINCT ON` names only columns fixed by direct, top-level `WHERE` equalities
+  to literals or bind parameters. The fixed distinct tuple produces at
+  most one row even when its input has many rows. For example,
+  `SELECT DISTINCT ON (i.url_id) i.id FROM items i WHERE i.url_id = $1
+  ORDER BY i.url_id, i.id DESC` is bounded and can supply a bounded CTE row to
+  later key joins. Every distinct expression must be fixed. An `IN` list,
+  `ANY` array, `OR` arm, or a fixed column other than the distinct expression
+  does not establish this row cap.
 - Every base relation in its FROM list is **pinned** to a unique key, or comes from a bounded
   source. A relation is pinned when top-level `AND` conjuncts of `WHERE` and of the `ON`
   that restricts it equate **every** column of one unique key with a value:
@@ -90,6 +98,11 @@ set operation). A statement is bounded when any of these holds:
   bounded; a key equality does not make the source bounded. Both relations are
   reported when neither has its own bound. A bounded source may contain multiple
   rows, including when `columnBounds` establishes its bound on a non-key column.
+  A direct fixed equality crosses an unambiguous join equality even when its
+  source relation has an incomplete composite key: `p.conversation_id = $1`
+  together with `c.id = p.conversation_id` can bound `c` by its primary key
+  while `p` remains reported. This transfer follows a chain of direct
+  equalities to a fixed point; it does not treat a fanout relation as bounded.
   The proof can continue through a middle relation bounded on a non-key column.
   If that middle relation is an unbounded fanout from the root, it and the
   downstream keyed target remain reported. `ON` pins

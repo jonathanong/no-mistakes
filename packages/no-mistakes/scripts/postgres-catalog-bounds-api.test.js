@@ -25,6 +25,8 @@ test(
       ["fixedpoint", "valid.yml", 57],
       ["issue-3037", "valid.yml", 5],
       ["issue-3037", "cte-valid.yml", 0],
+      ["root-proofs", "valid.yml", 16],
+      ["root-proofs", "invalid.yml", 19],
       ["../variants/correlated-append", ".no-mistakes.yml", 1],
       ["../variants/correlated-append", "undeclared.yml", 3],
       ["../variants/correlated-append", "advise.yml", 0],

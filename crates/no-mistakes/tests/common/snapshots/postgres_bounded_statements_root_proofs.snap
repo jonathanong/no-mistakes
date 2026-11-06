@@ -1,0 +1,311 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "complete_source_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/constant-chain.sql",
+          "line": 2,
+          "message": "sql/constant-chain.sql:2: SELECT can return every row of participants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM participants p",
+          "target": "table:participants"
+        },
+        {
+          "file": "sql/constant-chain.sql",
+          "line": 3,
+          "message": "sql/constant-chain.sql:3: SELECT can return every row of sources; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN sources s ON s.feed_id = p.conversation_id",
+          "target": "table:sources"
+        },
+        {
+          "file": "sql/controls.sql",
+          "line": 13,
+          "message": "sql/controls.sql:13: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (a.url_id) a.id FROM items a",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/controls.sql",
+          "line": 17,
+          "message": "sql/controls.sql:17: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id) i.id FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/controls.sql",
+          "line": 21,
+          "message": "sql/controls.sql:21: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id) i.id FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/controls.sql",
+          "line": 26,
+          "message": "sql/controls.sql:26: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/controls.sql",
+          "line": 4,
+          "message": "sql/controls.sql:4: SELECT can return every row of participants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT p.user_id FROM participants p",
+          "target": "table:participants"
+        },
+        {
+          "file": "sql/controls.sql",
+          "line": 7,
+          "message": "sql/controls.sql:7: SELECT can return every row of participants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT p.user_id FROM participants p WHERE p.conversation_id = $1;",
+          "target": "table:participants"
+        },
+        {
+          "file": "sql/controls.sql",
+          "line": 9,
+          "message": "sql/controls.sql:9: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.id) i.id FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/distinct-singleton.sql",
+          "line": 1,
+          "message": "sql/distinct-singleton.sql:1: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id) i.id FROM items i ORDER BY i.url_id;",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/distinct-singleton.sql",
+          "line": 12,
+          "message": "sql/distinct-singleton.sql:12: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id) i.id FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/distinct-singleton.sql",
+          "line": 15,
+          "message": "sql/distinct-singleton.sql:15: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id) i.id FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/distinct-singleton.sql",
+          "line": 18,
+          "message": "sql/distinct-singleton.sql:18: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id) i.id FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/distinct-singleton.sql",
+          "line": 21,
+          "message": "sql/distinct-singleton.sql:21: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id) i.id FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/distinct-singleton.sql",
+          "line": 3,
+          "message": "sql/distinct-singleton.sql:3: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id, i.id) i.id FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/participants.sql",
+          "line": 2,
+          "message": "sql/participants.sql:2: SELECT can return every row of participants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM participants p",
+          "target": "table:participants"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_source_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/constant-chain.sql",
+          "line": 2,
+          "message": "sql/constant-chain.sql:2: SELECT can return every row of participants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM participants p",
+          "target": "table:participants"
+        },
+        {
+          "file": "sql/constant-chain.sql",
+          "line": 3,
+          "message": "sql/constant-chain.sql:3: SELECT can return every row of sources; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN sources s ON s.feed_id = p.conversation_id",
+          "target": "table:sources"
+        },
+        {
+          "file": "sql/controls.sql",
+          "line": 13,
+          "message": "sql/controls.sql:13: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (a.url_id) a.id FROM items a",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/controls.sql",
+          "line": 17,
+          "message": "sql/controls.sql:17: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id) i.id FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/controls.sql",
+          "line": 21,
+          "message": "sql/controls.sql:21: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id) i.id FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/controls.sql",
+          "line": 26,
+          "message": "sql/controls.sql:26: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/controls.sql",
+          "line": 4,
+          "message": "sql/controls.sql:4: SELECT can return every row of participants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT p.user_id FROM participants p",
+          "target": "table:participants"
+        },
+        {
+          "file": "sql/controls.sql",
+          "line": 7,
+          "message": "sql/controls.sql:7: SELECT can return every row of participants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT p.user_id FROM participants p WHERE p.conversation_id = $1;",
+          "target": "table:participants"
+        },
+        {
+          "file": "sql/controls.sql",
+          "line": 9,
+          "message": "sql/controls.sql:9: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.id) i.id FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/cte-sources.sql",
+          "line": 10,
+          "message": "sql/cte-sources.sql:10: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN feeds f ON f.id = s.feed_id AND f.deleted_at IS NULL",
+          "target": "table:feeds"
+        },
+        {
+          "file": "sql/cte-sources.sql",
+          "line": 11,
+          "message": "sql/cte-sources.sql:11: SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN topics t ON t.id = f.topic_id AND t.deleted_at IS NULL",
+          "target": "table:topics"
+        },
+        {
+          "file": "sql/cte-sources.sql",
+          "line": 9,
+          "message": "sql/cte-sources.sql:9: SELECT can return every row of sources; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN sources s ON s.item_id = item.item_id",
+          "target": "table:sources"
+        },
+        {
+          "file": "sql/distinct-singleton.sql",
+          "line": 1,
+          "message": "sql/distinct-singleton.sql:1: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id) i.id FROM items i ORDER BY i.url_id;",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/distinct-singleton.sql",
+          "line": 12,
+          "message": "sql/distinct-singleton.sql:12: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id) i.id FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/distinct-singleton.sql",
+          "line": 15,
+          "message": "sql/distinct-singleton.sql:15: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id) i.id FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/distinct-singleton.sql",
+          "line": 18,
+          "message": "sql/distinct-singleton.sql:18: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id) i.id FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/distinct-singleton.sql",
+          "line": 21,
+          "message": "sql/distinct-singleton.sql:21: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id) i.id FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/distinct-singleton.sql",
+          "line": 3,
+          "message": "sql/distinct-singleton.sql:3: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT DISTINCT ON (i.url_id, i.id) i.id FROM items i",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/participants.sql",
+          "line": 2,
+          "message": "sql/participants.sql:2: SELECT can return every row of participants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM participants p",
+          "target": "table:participants"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

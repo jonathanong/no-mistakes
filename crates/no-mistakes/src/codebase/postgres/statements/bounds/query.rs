@@ -5,6 +5,7 @@ use crate::codebase::postgres::statements::{SqlBoundInputMode, SqlBoundItemKind,
 use sqlparser::ast::{Query, SetExpr, SetOperator, SetQuantifier, Statement};
 mod blocking;
 mod compact;
+mod distinct_on;
 mod outputs;
 
 pub(super) fn caller_value(
