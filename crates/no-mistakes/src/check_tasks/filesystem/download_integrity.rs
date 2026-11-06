@@ -39,9 +39,9 @@ pub(super) fn run(
     // Consume both channels once at the rule boundary. The remaining dispatch
     // must not scan downloads again or rediscover advisories at finalization.
     let mut remaining = config.clone();
-    remaining
-        .rules
-        .retain(|rule| rule.rule != rules::github_actions_download_integrity::RULE_ID);
+    super::handled::mark(&mut remaining, |id| {
+        id == rules::github_actions_download_integrity::RULE_ID
+    });
     let rest = super::redirects::run(
         root,
         &remaining,

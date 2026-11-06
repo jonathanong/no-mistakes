@@ -160,7 +160,9 @@ not become stale merely because an earlier entry also matches it.
 
 New stale diagnostics use `rule: "unused-allow-entry"` in `advisories`, with the
 configuration file and entry line in `file` and `line`, the checked rule ID in
-`import`, and the selector in `target`. Their message names the rule and option.
+`import`, and the selector in `target`. Entry lines refer to the authored
+sequence item under that rule option, even when an earlier rule has already
+been checked or contains the same string. Their message names the rule and option.
 Remove an obsolete entry, or correct its selector if the exception is still
 needed. Reporting unused exceptions prevents obsolete intent from silently
 hiding future violations.

@@ -41,3 +41,13 @@ fn unused_allow_entries_check_json_snapshot() {
     ));
     assert_saved_fixture("unused_allow_entries", &cases);
 }
+
+#[test]
+fn unused_allow_string_locations_check_json_snapshot() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/unused-allow-string-locations");
+    assert_saved_fixture(
+        "unused_allow_string_locations",
+        &[("long_config", root, PathBuf::new())],
+    );
+}

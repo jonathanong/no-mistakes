@@ -38,9 +38,9 @@ pub(super) fn run(
     // Keep both channels from this evaluation; the remaining dispatch must not
     // evaluate the same finite sets again to discover advisories at finalization.
     let mut remaining = config.clone();
-    remaining
-        .rules
-        .retain(|rule| rule.rule != rules::finite_set_consistency::RULE_ID);
+    super::handled::mark(&mut remaining, |id| {
+        id == rules::finite_set_consistency::RULE_ID
+    });
     let rest = super::payload_compatibility::run(
         root,
         &remaining,

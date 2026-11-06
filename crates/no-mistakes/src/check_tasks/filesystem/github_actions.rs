@@ -34,7 +34,7 @@ pub(super) fn run<'a>(
             output.append(no_mistakes::perf_trace::filesystem_rule(id, || {
                 check(root, config, files, sources, defer_suppression)
             })?);
-            remaining.to_mut().rules.retain(|rule| rule.rule != id);
+            super::handled::mark(remaining.to_mut(), |rule| rule == id);
         }
     }
     Ok((remaining, output))

@@ -1,0 +1,45 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "long_config": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "file-extension-policy",
+          "line": 215,
+          "message": "stale file-extension-policy allowlist entry `clean.ts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- clean.ts",
+          "target": "clean.ts"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "import": "lockfile-allowlist",
+          "line": 207,
+          "message": "stale lockfile-allowlist allowed entry `pnpm-lock.yaml` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- pnpm-lock.yaml",
+          "target": "pnpm-lock.yaml"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "import": "package-json-workspace-coverage",
+          "line": 221,
+          "message": "stale package-json-workspace-coverage allowlist entry `packages/a/package.json` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- packages/a/package.json",
+          "target": "packages/a/package.json"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}
