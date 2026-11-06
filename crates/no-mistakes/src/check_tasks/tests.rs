@@ -104,6 +104,7 @@ fn enabled_filesystem_check_runs_both_suppression_modes() {
             true,
             &[],
             no_mistakes::codebase::rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
+                session: None,
                 snapshot: &snapshot,
                 next_config_resolver: None,
                 vitest_catalog: None,

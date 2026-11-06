@@ -136,3 +136,6 @@ pub(super) fn collect_with_helpers(
 mod effect_boundary_coverage_tests;
 #[path = "string_prefix_tests.rs"]
 mod string_prefix_tests;
+
+#[path = "source_prerequisite_tests.rs"]
+mod source_prerequisite_tests;

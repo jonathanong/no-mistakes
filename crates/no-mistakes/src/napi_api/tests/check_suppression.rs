@@ -439,19 +439,27 @@ fn check_json_keeps_inherited_react_suppressions_distinct_by_parent_component() 
 }
 
 #[test]
-fn check_json_rejects_disabled_malformed_helpers_reached_from_active_integration_tests() {
+fn check_json_reports_disabled_malformed_prerequisites_of_integration_tests() {
     let root = static_check_fixture("suppression-integration-malformed-helper");
-    let error = check_json_impl(crate::napi_api::options::test_json_arg(
+    let output = check_json_impl(crate::napi_api::options::test_json_arg(
         json!({ "root": root }).to_string(),
     ))
-    .unwrap_err();
-    let message = format!("{error:#}");
-    assert!(
-        message.contains("helpers/malformed-helper.mts"),
-        "{message}"
-    );
-    assert!(
-        !message.contains("tests/disabled-malformed.test.mts"),
-        "{message}"
-    );
+    .unwrap();
+    let report: serde_json::Value = serde_json::from_str(&output).unwrap();
+    for suffix in [
+        "helpers/malformed-helper.mts",
+        "tests/disabled-malformed.test.mts",
+    ] {
+        assert!(
+            report["incomplete"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|failure| {
+                    failure["consumer"] == "integration-test-no-mocks"
+                        && failure["file"].as_str().unwrap().ends_with(suffix)
+                }),
+            "{report}"
+        );
+    }
 }

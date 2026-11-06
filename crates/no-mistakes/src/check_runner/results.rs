@@ -9,6 +9,8 @@ use no_mistakes::queue::CheckFinding;
 use no_mistakes::react_traits;
 use std::time::Duration;
 mod advisories;
+mod partial;
+pub(crate) use partial::retain_domain_checks;
 mod empty;
 pub(crate) use empty::empty_results;
 mod render;
@@ -39,6 +41,7 @@ pub(crate) struct FinalizeInput<'a> {
 }
 
 pub(crate) struct CheckResults {
+    pub(crate) incomplete: Vec<no_mistakes::codebase::check_outcome::CheckFailure>,
     pub(crate) react: Vec<react_traits::Violation>,
     pub(crate) queues: Vec<CheckFinding>,
     pub(crate) rules: Vec<RuleFinding>,
@@ -55,8 +58,6 @@ pub(crate) struct CheckResults {
     pub(crate) suppressed: Vec<no_mistakes::codebase::rules::SuppressedFinding>,
     pub(crate) include_suppressed: bool,
     pub(crate) timings: Vec<(&'static str, Duration)>,
-    /// Deduped SQL-looking member `.query` calls with no executor proof.
-    /// Omitted from JSON when zero. Not part of `warnings`.
     pub(crate) unproven_member_query_sql: u32,
 }
 
@@ -67,18 +68,6 @@ pub(crate) struct CompletedDomainChecks {
     pub(crate) integration: CheckTask<Vec<IntegrationFinding>>,
     pub(crate) codebase: CheckTask<Vec<PreparedUniqueExportFinding>>,
     pub(crate) filesystem_rules: CheckTask<Vec<RuleFinding>>,
-}
-
-pub(crate) fn complete_domain_checks(results: DomainResults) -> Result<CompletedDomainChecks> {
-    let (react, queues, rules, integration, codebase, filesystem_rules) = results;
-    Ok(CompletedDomainChecks {
-        react: react?,
-        queues: queues?,
-        rules: rules?,
-        integration: integration?,
-        codebase: codebase?,
-        filesystem_rules: filesystem_rules?,
-    })
 }
 
 pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckResults> {
@@ -167,6 +156,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     let (rules_out, codebase_out) = (&mut rules.findings, &mut codebase.findings);
     advisories::demote(config, rules_out, codebase_out, &mut advisories);
     Ok(CheckResults {
+        incomplete: Vec::new(),
         timings: vec![
             ("discover", discover_duration),
             ("parse_extract", facts_duration),

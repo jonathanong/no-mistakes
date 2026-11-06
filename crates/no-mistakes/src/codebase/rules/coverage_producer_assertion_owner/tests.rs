@@ -95,7 +95,6 @@ fn unknowns_limits_and_policy_never_become_assertion_proof() {
         "mixed.yml",
         "applications.yml",
         "unrelated-contract.yml",
-        "parse-error.yml",
     ] {
         let findings = run(name);
         if name == "ignore.yml" {
@@ -104,6 +103,15 @@ fn unknowns_limits_and_policy_never_become_assertion_proof() {
             assert!(!findings.is_empty(), "{name}: {findings:#?}");
         }
     }
+    let error = crate::codebase::rules::run_check(&root, Some(&root.join("parse-error.yml")), None)
+        .unwrap_err();
+    assert!(error
+        .downcast_ref::<crate::codebase::check_outcome::CheckInputFailure>()
+        .unwrap()
+        .file
+        .as_ref()
+        .unwrap()
+        .ends_with("src/broken.mts"));
     let options = crate::napi_api::options::test_json_arg(
         serde_json::json!({"root": root, "config": root.join("advise.yml")}),
     );
@@ -199,3 +207,5 @@ mod source_failures;
 mod public_query;
 
 mod execution;
+
+mod partial;

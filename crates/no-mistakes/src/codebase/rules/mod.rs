@@ -181,3 +181,5 @@ mod tests;
 mod query_reached_per_item_prepared_tests;
 #[cfg(test)]
 mod sql_rule_observer_tests;
+
+mod graph_source_prerequisites;

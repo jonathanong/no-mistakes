@@ -1,0 +1,3 @@
+rules:
+  - rule: required-companion-imports
+    scope: repository

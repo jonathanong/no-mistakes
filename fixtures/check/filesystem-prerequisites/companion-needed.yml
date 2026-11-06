@@ -1,0 +1,8 @@
+rules:
+  - rule: required-companion-imports
+    scope: repository
+    options:
+      sourceGlobs: [src/Good.tsx]
+      sourceExtensions: [.tsx]
+      companionGlobs: [broken.ts]
+      specifierTemplate: '../src/{sourceStem}'

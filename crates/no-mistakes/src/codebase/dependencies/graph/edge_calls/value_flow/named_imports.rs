@@ -25,7 +25,7 @@ impl ValueFlowResolution<'_, '_> {
                     &target,
                     &binding.imported,
                     self.indexes,
-                    &mut Vec::new(),
+                    &mut ExportResolutionTrace::default(),
                 )
             });
         match imported_value {

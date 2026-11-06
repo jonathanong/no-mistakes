@@ -32,6 +32,7 @@ fn prepared_dispatch_rejects_tsconfig_gate_without_workflow_documents() {
         &config,
         &[],
         PreparedFilesystemRuleInputs {
+            session: None,
             snapshot: &snapshot,
             next_config_resolver: None,
             vitest_catalog: None,
@@ -140,6 +141,7 @@ fn enabling_mermaid_validation_preserves_existing_markdown_findings() {
             config,
             &files,
             PreparedFilesystemRuleInputs {
+                session: None,
                 snapshot: &snapshot,
                 next_config_resolver: None,
                 vitest_catalog: None,

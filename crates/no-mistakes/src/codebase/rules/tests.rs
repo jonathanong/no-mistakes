@@ -1,9 +1,7 @@
 use super::*;
 use crate::config::v2::schema::{RuleDef, RuleScope};
-
 mod extended;
 mod gitignore_tsconfig;
-
 fn fixture(path: &str) -> std::path::PathBuf {
     let mut parts = path.splitn(3, '/');
     let category = parts.next().unwrap_or(path);
@@ -498,22 +496,5 @@ fn aggregate_check_propagates_nextjs_api_route_missing_source_error() {
     );
 }
 
-#[test]
-fn aggregate_check_propagates_nextjs_caching_missing_source_error() {
-    let root = fixture("codebase-analysis/no-nextjs-caching");
-    let shared = crate::codebase::check_facts::collect_check_facts(
-        &root,
-        crate::codebase::ts_source::discover_files(&root, &[]),
-        crate::codebase::check_facts::CheckFactPlan::default(),
-    );
-
-    let error = run_check_with_facts(&root, None, None, &shared).unwrap_err();
-
-    assert_eq!(
-        error.to_string(),
-        format!(
-            "nextjs-no-caching requires source facts for {}",
-            root.join("web/app/bad.ts").display()
-        )
-    );
-}
+#[path = "tests/caching_prerequisites.rs"]
+mod caching_prerequisites;

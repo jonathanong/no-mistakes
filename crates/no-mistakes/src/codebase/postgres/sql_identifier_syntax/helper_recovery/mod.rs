@@ -12,6 +12,8 @@ mod signatures;
 mod transports;
 mod validation;
 pub(crate) use project::project;
+#[cfg(test)]
+mod prerequisite_tests;
 mod recovered;
 mod sql_text;
 mod state;

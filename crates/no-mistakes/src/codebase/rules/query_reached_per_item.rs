@@ -1,4 +1,5 @@
 //! Per-item policies project parser-owned positions and canonical call traces.
+mod prerequisites;
 use super::RuleFinding;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, NodeId, ResolvedCallSite, TsFactLookup};
@@ -7,26 +8,24 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use std::collections::BTreeMap;
 use std::path::Path;
-
 mod allow;
+mod candidate_policy;
 mod config;
 mod traces;
 pub(crate) use config::graph_plan;
 use config::{exempt, Options, Sinks};
 use traces::{prefer_nontransaction, source_node, Reach};
-
 pub const RULE_ID: &str = "query-reached-per-item";
-
-pub(crate) fn check_with_graph(
+pub(crate) fn check_with_graph_and_session(
     root: &Path,
     config: &NoMistakesConfig,
     graph: &DepGraph,
     facts: &CheckFactMap,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
+    session: Option<&crate::codebase::analysis_session::AnalysisSession>,
 ) -> Result<Vec<RuleFinding>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let root = root.as_path();
-    // Occurrences have exact offsets, including multiple calls on one line.
     let mut positions = BTreeMap::new();
     for file in facts.graph_file_universe() {
         let Some(ts) = facts.get_ts_facts(file) else {
@@ -60,6 +59,7 @@ pub(crate) fn check_with_graph(
             "allow",
             options.allow.len(),
         );
+        prerequisites::require_sources(graph, facts, &filter, session)?;
         for kind in &options.effects {
             let effect = &config.effects[kind];
             let configured_sinks = Sinks::new(effect, graph);
@@ -88,8 +88,6 @@ pub(crate) fn check_with_graph(
                 .resolved_call_sites()
                 .iter()
                 .filter_map(|site| {
-                    // A source name can refer to different lexical bindings in
-                    // one caller. Correlate each resolved callback by its use offset.
                     positions
                         .get(&(
                             site.file.clone(),
@@ -101,6 +99,16 @@ pub(crate) fn check_with_graph(
                         .map(|position| (site, *position))
                 })
                 .collect::<Vec<_>>();
+            let policy = candidate_policy::CandidatePolicy {
+                options: &options,
+                effect,
+                filter: &filter,
+                excluded: &excluded,
+            };
+            let candidates: Vec<_> = candidates
+                .into_iter()
+                .filter(|(site, position)| policy.includes(site, position))
+                .collect();
             let mut roots = candidates
                 .iter()
                 .flat_map(|(site, _)| site.target_nodes().cloned())
@@ -108,21 +116,14 @@ pub(crate) fn check_with_graph(
             roots.sort();
             roots.dedup();
             roots.retain(|node| excluded.binary_search(node).is_err());
+            prerequisites::require_reachable(
+                graph,
+                candidates.iter().map(|(site, _)| *site),
+                &excluded,
+                session,
+            )?;
             let reachable = traces::reachable(graph, &roots, &sinks, &excluded);
             for (site, position) in candidates {
-                if (options.exempt_capped_cursor_page_reads && position.capped_cursor_page_read)
-                    || !filter.is_match(&site.file)
-                    || exempt(effect, &site.source_callee)
-                    || excluded.binary_search(&source_node(site)).is_ok()
-                    || (site.targets().len() > 0
-                        && site.targets().all(|candidate| {
-                            candidate
-                                .node
-                                .is_some_and(|node| excluded.binary_search(node).is_ok())
-                        }))
-                {
-                    continue;
-                }
                 let direct = configured_sinks.match_site(site).map(|transaction| Reach {
                     path: vec![site.source_callee.clone()],
                     transaction,
@@ -189,9 +190,7 @@ pub(crate) fn check_with_graph(
     }
     Ok(traces::finalize_findings(findings))
 }
-
-#[cfg(test)]
-mod tests;
-
 #[cfg(test)]
 mod allow_tests;
+#[cfg(test)]
+mod tests;

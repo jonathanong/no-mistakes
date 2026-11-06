@@ -60,13 +60,15 @@ impl<R: FnMut(&str, &Path) -> Option<PathBuf>> Callees for Frame<'_, '_, '_, R> 
             args.to_vec(),
         );
         if let Some(known) = self.shared.cache.get(&key) {
-            return known.clone().map_or(Callee::Failed, Callee::Done);
+            self.shared.failures.extend(known.1.iter().cloned());
+            return known.0.clone().map_or(Callee::Failed, Callee::Done);
         }
         let Some(program) = helper_program(self.shared, self.options, &origin, &local) else {
             return Callee::Unresolved;
         };
         let mut stack = self.stack.clone();
         stack.push((origin.clone(), local));
+        let previous = std::mem::take(&mut self.shared.failures);
         let mut child = Frame {
             shared: &mut *self.shared,
             profile: self.profile,
@@ -78,7 +80,10 @@ impl<R: FnMut(&str, &Path) -> Option<PathBuf>> Callees for Frame<'_, '_, '_, R> 
         };
         let stamp = (origin != self.root).then_some(origin.as_path());
         let outcomes = run_helper_program(&program, args, stamp, &mut child);
-        self.shared.cache.insert(key, outcomes.clone());
+        self.shared
+            .cache
+            .insert(key, (outcomes.clone(), self.shared.failures.clone()));
+        self.shared.failures.extend(previous);
         outcomes.map_or(Callee::Failed, Callee::Done)
     }
 }

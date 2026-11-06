@@ -26,6 +26,22 @@ fn queue_memmem_scope_preserves_factory_reexport_facts() {
 }
 
 #[test]
+fn unreadable_queue_candidate_stays_in_the_requested_scope() {
+    let root = fixture("check-facts/family-scope-queue-generic");
+    let mut files = discover_files(&root, &[]);
+    let unreadable = normalize_path(&root.join("src/unreadable-queue-source.ts"));
+    files.push(unreadable.clone());
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let mut scoped = queue_plan(&root);
+    let config = crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml")))
+        .expect("queue fixture config");
+    configure_family_path_scopes(&root, &files, &config, sources.as_ref(), &mut scoped).unwrap();
+
+    assert!(matches!(scoped.queue_paths, FamilyPathScope::Only(_)));
+    assert!(applies(&scoped.queue_paths, &unreadable));
+}
+
+#[test]
 fn queue_generic_add_importer_stays_a_memmem_seed() {
     let root = fixture("check-facts/family-scope-queue-generic");
     let files = discover_files(&root, &[]);

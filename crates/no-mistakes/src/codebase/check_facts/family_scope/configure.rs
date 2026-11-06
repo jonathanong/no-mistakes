@@ -120,6 +120,7 @@ fn queue_scope(
             continue;
         }
         let Ok(source) = sources.read_path(path) else {
+            seeds.insert(normalize_path(path));
             continue;
         };
         if source_may_have_queue_facts(
@@ -129,6 +130,9 @@ fn queue_scope(
         ) {
             seeds.insert(normalize_path(path));
         }
+    }
+    if seeds.is_empty() {
+        return FamilyPathScope::Only(Arc::new(BTreeSet::new()));
     }
     with_import_closure(root, files, sources, seeds)
 }

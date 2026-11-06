@@ -1,0 +1,123 @@
+use super::*;
+
+pub(crate) fn check_with_graph_and_session(
+    root: &Path,
+    config: &NoMistakesConfig,
+    graph: &DepGraph,
+    facts: &CheckFactMap,
+    session: Option<&crate::codebase::analysis_session::AnalysisSession>,
+) -> Result<AnalysisDiagnostics> {
+    let root = crate::codebase::ts_resolver::normalize_path(root);
+    let mut diagnostics = AnalysisDiagnostics::default();
+    let incomplete = traversal::incomplete_sources(graph, facts);
+    prerequisites::record_incomplete(&incomplete, facts, session)?;
+    for application in config.rule_applications(RULE_ID) {
+        let mut chunk = AnalysisDiagnostics::default();
+        let result = (|| -> Result<()> {
+            let options = config::Selection::new(&root, application)?;
+            let filter = RulePathFilter::new(&root, config, application)?;
+            let policy = config.effective_rule_analysis(application)?.unanalyzable;
+            let files = facts.graph_file_universe();
+            let entries = script_entries::ScriptEntries::collect(&root, files);
+            let nextjs_roots = nextjs::project_roots(&root, config);
+            let bases = extends::ProductionBases::collect(graph, |path| options.production(path));
+            for (file, line, reason) in &incomplete {
+                chunk.unanalyzable(policy, uncertain(&root, application, file, *line, reason));
+            }
+            let chunks: Vec<_> = files
+                .par_iter()
+                .filter(|file| {
+                    crate::codebase::dependencies::extract::is_indexable(file)
+                        && options.production(file)
+                        && filter.is_match(file)
+                })
+                .map(|file| {
+                    let mut chunk = AnalysisDiagnostics::default();
+                    let Some(ts) = facts.get_ts_facts(file) else {
+                        return chunk;
+                    };
+                    let Some(symbols) = ts
+                        .symbols
+                        .as_ref()
+                        .filter(|_| ts.parse_error.is_none() && ts.operational_error.is_none())
+                    else {
+                        return chunk;
+                    };
+                    let local_uses = options
+                        .ignore_exports_used_in_file
+                        .then(|| used_in_file::exports(ts));
+                    for export in &symbols.exports {
+                        if forwarded(symbols, export) {
+                            continue;
+                        }
+                        let name = if matches!(export.kind, ExportKind::Default) {
+                            "default"
+                        } else {
+                            &export.name
+                        };
+                        if local_uses.as_ref().is_some_and(|uses| uses.contains(name)) {
+                            continue;
+                        }
+                        if entries.exempts(file, nextjs::consumed_export(file, &nextjs_roots, name))
+                        {
+                            continue;
+                        }
+                        let mut consumers = traversal::consumers(graph, file, name);
+                        let undetermined =
+                            consumers.settle(&export.kind, |file| options.test(file));
+                        if consumers.files.iter().any(|file| !options.test(file)) {
+                            continue;
+                        }
+                        if bases.extends_class(ts, file, export) {
+                            continue;
+                        }
+                        if !consumers.unknown.is_empty() {
+                            if let Some((importer, line, reason)) = selector_advisories::for_export(
+                                &root,
+                                graph,
+                                &consumers.unknown,
+                                &export.name,
+                            ) {
+                                chunk.unanalyzable(
+                                    policy,
+                                    uncertain(&root, application, &importer, line, &reason),
+                                );
+                            }
+                        } else if !undetermined.is_empty() {
+                            let (importer, line, reason) = selector_advisories::undetermined(
+                                &root,
+                                graph,
+                                &undetermined,
+                                &export.name,
+                            );
+                            chunk.unanalyzable(
+                                policy,
+                                uncertain(&root, application, &importer, line, &reason),
+                            );
+                        } else if !consumers.files.is_empty()
+                            && consumers.files.iter().all(|file| options.test(file))
+                        {
+                            chunk
+                                .findings
+                                .push(finding(&root, application, file, export));
+                        }
+                    }
+                    chunk
+                })
+                .collect();
+            for completed in chunks {
+                chunk.append(completed);
+            }
+            Ok(())
+        })();
+        if let Some(session) = session {
+            session.capture_check_result(RULE_ID, result)?;
+        } else {
+            result?;
+        }
+        diagnostics.append(chunk);
+    }
+    crate::codebase::rules::sort_findings(&mut diagnostics.findings);
+    crate::codebase::rules::sort_findings(&mut diagnostics.advisories);
+    Ok(diagnostics)
+}

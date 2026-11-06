@@ -158,6 +158,7 @@ mod finite_sets;
 mod github_actions;
 mod handled;
 mod manifests;
+mod partial;
 mod payload_compatibility;
 mod redirects;
 fn run_enabled_filesystem_rules(
@@ -169,6 +170,14 @@ fn run_enabled_filesystem_rules(
     facts: Option<&no_mistakes::codebase::check_facts::CheckFactMap>,
     defer_suppression: bool,
 ) -> Result<no_mistakes::codebase::rules::analysis_policy::AnalysisDiagnostics> {
+    if enabled
+        && prepared.session.is_some_and(|session| {
+            facts.is_some_and(|facts| facts.stats.parse_errors > 0)
+                || !session.check_failures().is_empty()
+        })
+    {
+        return partial::run(root, config, files, prepared, facts, defer_suppression);
+    }
     finite_sets::run(
         root,
         config,

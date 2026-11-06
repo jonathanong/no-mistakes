@@ -83,6 +83,23 @@ fn analyze_project_roots_with_facts(
     analysis_files.dedup();
     let analysis_files = filter_source_files(&analysis_files);
     let symbol_files = shared_symbol_files(&workspace_files, &analysis_files, shared);
+    if session.partial_checks_enabled() {
+        session.register_check_demand(super::RULE_ID, symbol_files.iter().cloned());
+        let mut failed = false;
+        for file in &symbol_files {
+            if let Some(error) = shared
+                .ts
+                .get(file)
+                .and_then(|facts| facts.parse_error.as_deref())
+            {
+                session.record_check_source_failure(file, error);
+                failed = true;
+            }
+        }
+        if failed {
+            return Ok(Vec::new());
+        }
+    }
     let loaded_tsconfig = (resolution.tsconfig.is_none() && resolution.catalog.is_none())
         .then(|| {
             crate::codebase::ts_resolver::resolve_tsconfig_from_visible(

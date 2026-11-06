@@ -1,4 +1,4 @@
-use super::prepared::{prepare_with_settings, PreparedPlaywrightRules};
+use super::prepared::{prepare_with_settings, PreparationOptions, PreparedPlaywrightRules};
 use crate::codebase::check_facts::PlaywrightFactPlan;
 use crate::config::v2::NoMistakesConfig;
 use crate::playwright::config;
@@ -27,7 +27,7 @@ pub fn prepare(
         snapshot,
         Arc::new(tsconfig),
         Arc::new(workspace),
-        None,
+        PreparationOptions::default(),
         &mut |project, app, snapshot| {
             config::load_settings_from_visible(root, config_path, &[], project, app, snapshot)
         },
@@ -56,7 +56,7 @@ pub fn prepare_from_snapshot(
         snapshot,
         tsconfig,
         workspace,
-        None,
+        PreparationOptions::default(),
         &mut |project, app, snapshot| {
             config::settings_from_loaded_v2(root, config, &[], project, app, snapshot)
         },
@@ -81,7 +81,35 @@ pub fn prepare_from_snapshot_with_catalog(
         snapshot,
         tsconfig,
         workspace,
-        Some(tsconfig_catalog),
+        PreparationOptions {
+            tsconfig_catalog: Some(tsconfig_catalog),
+            partial: false,
+        },
+        &mut |project, app, snapshot| {
+            config::settings_from_loaded_v2(root, config, &[], project, app, snapshot)
+        },
+    )
+}
+
+pub fn prepare_from_snapshot_with_catalog_partial(
+    root: &Path,
+    _config_path: Option<&Path>,
+    config: &NoMistakesConfig,
+    snapshot: Arc<VisiblePathSnapshot>,
+    tsconfig: Arc<crate::codebase::ts_resolver::TsConfig>,
+    tsconfig_catalog: Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
+    workspace: Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
+) -> Result<Option<PreparedPlaywrightRules>> {
+    prepare_with_settings(
+        root,
+        config,
+        snapshot,
+        tsconfig,
+        workspace,
+        PreparationOptions {
+            tsconfig_catalog: Some(tsconfig_catalog),
+            partial: true,
+        },
         &mut |project, app, snapshot| {
             config::settings_from_loaded_v2(root, config, &[], project, app, snapshot)
         },

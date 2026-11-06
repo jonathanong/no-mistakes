@@ -9,20 +9,28 @@ use crate::queue::types::QueueKey;
 use globset::GlobSet;
 use std::path::{Path, PathBuf};
 
+mod input_failures;
+
 pub(super) fn language_queue_sites(
     root: &Path,
     session: &crate::codebase::analysis_session::AnalysisSession,
     config: &NoMistakesConfig,
     cli_filter: Option<&GlobSet>,
-) -> (Vec<InternalProducer>, Vec<InternalWorker>) {
+) -> anyhow::Result<(Vec<InternalProducer>, Vec<InternalWorker>)> {
     let lang = lang_config_from_v2(config);
     let globs = queue_globs_from_v2(config);
     if lang_config_is_empty(&lang) && globs.enqueues.is_empty() && globs.workers.is_empty() {
-        return (Vec::new(), Vec::new());
+        return Ok((Vec::new(), Vec::new()));
     }
     let dataset = session.dataset(root);
     let all_files = dataset.paths_for(root);
     let sources = dataset.sources_for(root);
+    let selected_inputs = input_failures::selected_inputs(root, &all_files, &lang, &globs);
+    crate::queue::outcomes::record_source_failures(
+        session,
+        selected_inputs.clone(),
+        input_failures::read_failures(&selected_inputs, &sources),
+    )?;
     let mut producers = Vec::new();
     let mut workers = Vec::new();
     if !lang_config_is_empty(&lang) {
@@ -44,7 +52,7 @@ pub(super) fn language_queue_sites(
             &mut workers,
         );
     }
-    (producers, workers)
+    Ok((producers, workers))
 }
 
 fn extend_file(

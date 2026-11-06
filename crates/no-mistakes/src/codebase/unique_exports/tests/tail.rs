@@ -217,7 +217,9 @@ fn configured_remix_roots_ignore_non_remix_projects() {
 
 #[test]
 fn covers_reexport_resolution_edge_cases() {
-    let findings = findings("unique-exports-edge-cases");
+    let root = fixture("unique-exports-edge-cases");
+    let findings =
+        analyze_project(&root, Some(&root.join(".no-mistakes.valid.yml")), None).unwrap();
     let names = finding_names(&findings);
     assert!(!names.contains(&("Direct".to_string(), "value".to_string())));
     assert!(!names.contains(&("DirectType".to_string(), "type".to_string())));

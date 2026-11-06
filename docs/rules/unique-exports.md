@@ -79,6 +79,12 @@ Following recall over precision, nothing is silently treated as clean ([how anal
 Use `no-mistakes-disable-file unique-exports` for a framework-generated or
 intentional alias file, with the public ownership reason in the comment.
 
+Selected source parse failures are prerequisites, not suppressible rule findings.
+Aggregate `check` reports the `unique-exports` consumer in `incomplete`, exits
+nonzero, and retains findings from independent applications whose inputs parsed.
+A file disable directive cannot turn a parse failure into empty symbol facts.
+Repair the source syntax or narrow the configured scope explicitly.
+
 ## Related rules
 
 [`required-entrypoint-reachability`](required-entrypoint-reachability.md)

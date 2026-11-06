@@ -52,3 +52,65 @@ fn async_projection_skips_headless_files_and_unresolved_factory_targets() {
         .query_annotation_heads
         .is_none());
 }
+
+#[test]
+fn failed_second_hop_effect_is_reported_and_unresolved_effect_stays_unproven() {
+    use crate::codebase::check_facts::{collect_file_facts_from_program, CheckFactPlan};
+    use crate::codebase::postgres::EmbeddedSqlOptions;
+    let root = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
+        .join("heads-source-prerequisites");
+    let profile = EmbeddedSqlOptions::configured("@bench/db", &["read".into()]);
+    let mut plan = CheckFactPlan {
+        query_annotation_heads: true,
+        query_annotation_options: Some(vec![profile.clone()]),
+        embedded_sql_options: vec![profile],
+        ..Default::default()
+    };
+    plan.graph.imports = true;
+    let prepared = ["async-effects.mts", "async-factory.mts"].map(|name| {
+        let path = root.join(name);
+        let source = std::fs::read_to_string(&path).unwrap();
+        let file = crate::ast::with_program(&path, &source, |program, source| {
+            collect_file_facts_from_program(&root, &path, &plan, None, source, program, None)
+        })
+        .unwrap();
+        (path, file)
+    });
+    let mut files = FileIdMap::from_entries(prepared);
+    let caller = root.join("async-effects.mts");
+    let factory = root.join("async-factory.mts");
+    assert_eq!(
+        files[&caller]
+            .query_annotation_heads
+            .as_ref()
+            .unwrap()
+            .pending_async_returns
+            .len(),
+        1
+    );
+    let summary = &files[&factory]
+        .query_annotation_heads
+        .as_ref()
+        .unwrap()
+        .exported_async_returns["factory"];
+    assert_eq!(summary.required.len(), 1);
+    let broken = root.join("broken.mts");
+    files.insert(
+        broken.clone(),
+        CheckFileFacts {
+            parse_error: Some("saved failed helper".into()),
+            ..Default::default()
+        },
+    );
+    let failures = resolve::project(&mut files, &|specifier, _| match specifier {
+        "./async-factory.mjs" => Some(factory.clone()),
+        "./broken.mjs" => Some(broken.clone()),
+        _ => None,
+    });
+    assert_eq!(failures.len(), 1);
+    assert_eq!(failures[0].2, [broken].into_iter().collect());
+    let failures = resolve::project(&mut files, &|specifier, _| {
+        (specifier == "./async-factory.mjs").then(|| factory.clone())
+    });
+    assert!(failures.is_empty());
+}

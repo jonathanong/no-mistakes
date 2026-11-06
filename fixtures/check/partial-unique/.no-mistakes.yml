@@ -1,0 +1,12 @@
+projects:
+  bad:
+    type: library
+    root: bad
+  good:
+    type: library
+    root: good
+rules:
+  - rule: unique-exports
+    projects: [bad]
+  - rule: unique-exports
+    projects: [good]

@@ -7,6 +7,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "forbidden-lint-suppressions",
+          "file": "src/recovered.ts",
+          "message": "parsing src/recovered.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 46, end: 47 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -196,6 +203,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "forbidden-lint-suppressions",
+          "file": "src/recovered.ts",
+          "message": "parsing src/recovered.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 46, end: 47 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -369,6 +383,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "forbidden-lint-suppressions",
+          "file": "src/recovered.ts",
+          "message": "parsing src/recovered.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 46, end: 47 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -554,6 +575,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "forbidden-lint-suppressions",
+          "file": "src/recovered.ts",
+          "message": "parsing src/recovered.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 46, end: 47 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -777,7 +805,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "no_directives": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [
         {
@@ -806,6 +834,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "forbidden-lint-suppressions",
+          "file": "src/recovered.ts",
+          "message": "parsing src/recovered.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 46, end: 47 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -974,6 +1009,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "forbidden-lint-suppressions",
+          "file": "src/recovered.ts",
+          "message": "parsing src/recovered.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 46, end: 47 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],

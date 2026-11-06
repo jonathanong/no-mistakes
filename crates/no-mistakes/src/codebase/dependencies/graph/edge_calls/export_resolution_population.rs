@@ -101,7 +101,7 @@ fn populate_callable_export_resolutions(
                 &path,
                 &export,
                 indexes,
-                &mut Vec::new(),
+                &mut ExportResolutionTrace::default(),
             );
             if !matches!(resolution, ExportedCallableResolution::Absent) {
                 output.insert((path.clone(), export), resolution);

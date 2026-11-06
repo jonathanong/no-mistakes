@@ -1,0 +1,15 @@
+projects:
+  web:
+    type: nextjs
+    root: .
+unanalyzable: ignore
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      include: ["components/*.tsx"]
+      exclude: [components/Excluded.tsx]
+      stories: []
+      allow_components:
+        "components/Good.tsx#Missing": covered elsewhere
+        "components/Broken.tsx#Broken": covered elsewhere

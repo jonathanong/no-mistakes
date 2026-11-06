@@ -27,11 +27,16 @@ pub(crate) fn check(
     let filter = super::super::path_filter::RulePathFilter::new(root, config, application)?;
     let policy = config.effective_rule_analysis(application)?;
     let context = facts.for_sql_application(index, application.name.as_deref());
-    let local_index = config
-        .rule_applications(rule_id)
-        .iter()
-        .position(|rule| std::ptr::eq(*rule, application))
-        .unwrap_or(index);
+    let local_index = application
+        .resolved_application_index
+        .map(|index| index.saturating_sub(1))
+        .unwrap_or_else(|| {
+            config
+                .rule_applications(rule_id)
+                .iter()
+                .position(|rule| std::ptr::eq(*rule, application))
+                .unwrap_or(index)
+        });
     let application_key =
         crate::codebase::postgres::sql_identifier_syntax::helper_recovery::ApplicationKey::new(
             &options.embedded,

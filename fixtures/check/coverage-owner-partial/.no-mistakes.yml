@@ -1,0 +1,21 @@
+rules:
+  - name: failed-source
+    rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers: [{file: producer.ts, symbol: produce}]
+      assertions: [{module: 'node:assert', export: strictEqual}]
+      unanalyzable: ignore
+  - name: healthy-owner-check
+    rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers: [{file: healthy.ts, symbol: healthy}]
+      assertions: [{module: 'node:assert', export: strictEqual}]
+  - name: dynamic-ignore
+    rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers: [{file: dynamic.ts, symbol: dynamic}]
+      assertions: [{module: 'node:assert', export: strictEqual}]
+      unanalyzable: ignore

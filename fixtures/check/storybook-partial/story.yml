@@ -1,0 +1,12 @@
+projects:
+  web:
+    type: nextjs
+    root: .
+unanalyzable: ignore
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      include: ["components/Good.tsx"]
+      exclude: [components/Excluded.tsx]
+      stories: [stories/Broken.stories.tsx]

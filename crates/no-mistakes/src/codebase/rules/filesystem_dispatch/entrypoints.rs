@@ -157,6 +157,7 @@ fn run_filesystem_rules_with_config_snapshot_path_and_catalog(
         config,
         files,
         super::PreparedFilesystemRuleInputs {
+            session: None,
             snapshot,
             next_config_resolver: None,
             vitest_catalog,

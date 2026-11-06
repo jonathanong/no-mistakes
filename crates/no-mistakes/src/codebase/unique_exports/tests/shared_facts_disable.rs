@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn source_files_from_facts_skips_disabled_parse_errors() {
+fn source_files_from_facts_preserves_disabled_parse_errors() {
     let root = fixture("unique-exports-edge-cases");
     let file = root.join("src/disabled-invalid.ts");
     let files = vec![file];
@@ -15,10 +15,10 @@ fn source_files_from_facts_skips_disabled_parse_errors() {
         },
     );
 
-    let source_files =
-        scan::test_support::collect_source_files_from_facts(&root, &files, &facts, false).unwrap();
-
-    assert_eq!(source_files.len(), 1);
-    assert!(source_files[0].disabled);
-    assert!(source_files[0].symbols.exports.is_empty());
+    let error =
+        match scan::test_support::collect_source_files_from_facts(&root, &files, &facts, false) {
+            Err(error) => error,
+            Ok(_) => panic!("suppression cannot make an unparseable source complete"),
+        };
+    assert!(error.to_string().contains("disabled-invalid.ts"));
 }

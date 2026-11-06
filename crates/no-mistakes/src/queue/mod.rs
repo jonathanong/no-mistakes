@@ -16,6 +16,7 @@ mod graph_model;
 mod graph_related;
 mod graph_resolution;
 mod lang;
+mod outcomes;
 mod resolver;
 mod source;
 mod types;

@@ -40,6 +40,27 @@ test("annotation literal helpers remain an exported option and verdict profile",
   }
 });
 
+test("check reports expose named prerequisite failure contracts", () => {
+  const declarations = readFileSync(join(packageRoot, "check-report-types.d.ts"), "utf8");
+  assert.match(
+    declarations,
+    /export interface CheckFailure \{[\s\S]*?consumer: string;[\s\S]*?file\?: string;[\s\S]*?property\?: string;[\s\S]*?message: string;/,
+  );
+  assert.match(declarations, /incomplete\?: CheckFailure\[\];/);
+  assert.match(
+    readFileSync(join(packageRoot, "report-types.d.ts"), "utf8"),
+    /export \* from "\.\/check-report-types";/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export \* from "\.\/report-types";/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
+    /export \* from "\.\/types";/,
+  );
+});
+
 test("Playwright coverage exposes named optional matcher warnings", () => {
   const declarations = readFileSync(join(packageRoot, "report-types.d.ts"), "utf8");
   assert.match(declarations, /export interface PlaywrightCoverageReport/);

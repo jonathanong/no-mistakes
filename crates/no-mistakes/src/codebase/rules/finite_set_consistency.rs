@@ -109,43 +109,9 @@ pub fn diagnostics_with_files_sources_and_facts(
 }
 
 /// TypeScript files that must have function-call facts prepared for this rule.
-///
-/// Request boundaries use this before collection so the finite-set rule can
-/// borrow the shared fact map instead of parsing its configured files itself.
-#[doc(hidden)]
-pub fn required_call_site_fact_files(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
-    try_required_call_site_fact_files(root, config).unwrap_or_default()
-}
-
-/// Fallible counterpart used by request boundaries that must surface malformed
-/// rule options as configuration errors.
-pub fn try_required_call_site_fact_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-) -> Result<Vec<PathBuf>> {
-    let paths: Result<Vec<Vec<PathBuf>>> = config
-        .rule_applications(RULE_ID)
-        .into_iter()
-        .map(|rule| {
-            let opts: Options = rule.try_rule_options()?;
-            opts.validate()?;
-            if config.effective_rule_analysis(rule)?.effort == crate::config::v2::Effort::Low {
-                return Ok(Vec::new());
-            }
-            let target_roots = super::target_roots(root, config, rule);
-            Ok(opts
-                .sets
-                .into_iter()
-                .filter(|spec| spec.kind == TS_CALL_FIRST_STRING_ARGUMENT)
-                .flat_map(move |spec| extract::resolve_spec_files(root, &spec.file, &target_roots))
-                .collect())
-        })
-        .collect();
-    let mut paths = paths?.into_iter().flatten().collect::<Vec<_>>();
-    paths.sort();
-    paths.dedup();
-    Ok(paths)
-}
+mod demand;
+pub(crate) use demand::call_site_fact_files_from_inventory;
+pub use demand::{required_call_site_fact_files, try_required_call_site_fact_files};
 
 fn finding(
     set: &extract::ExtractedSet,

@@ -73,3 +73,75 @@ impl DepGraph {
         nodes
     }
 }
+
+impl DepGraph {
+    pub(crate) fn runtime_import_sources_with_root_mocks(
+        &self,
+        roots: &[NodeId],
+        max_depth: Option<usize>,
+    ) -> std::collections::BTreeSet<PathBuf> {
+        let mut groups: FxHashMap<Vec<&PathBuf>, Vec<NodeId>> = fx_map();
+        for root in roots {
+            let Some(file) = root.as_file() else { continue };
+            let mut blocked: Vec<_> = self
+                .root_mock_boundaries
+                .get(file)
+                .into_iter()
+                .flat_map(|value| value.blocked.iter())
+                .collect();
+            blocked.sort_unstable();
+            groups.entry(blocked).or_default().push(NodeId::file(file));
+        }
+        let observer = crate::diagnostics::current();
+        groups
+            .into_par_iter()
+            .map(|(blocked, roots)| {
+                let mut files = std::collections::BTreeSet::new();
+                let blocked: FxHashSet<_> = blocked.into_iter().map(PathBuf::as_path).collect();
+                let mut seen = fx_set();
+                let mut queue = VecDeque::new();
+                for node in roots {
+                    if !node.as_file().is_some_and(|file| blocked.contains(file))
+                        && seen.insert(node.clone())
+                    {
+                        queue.push_back((node, 0usize));
+                    }
+                }
+                while let Some((node, depth)) = queue.pop_front() {
+                    let Some(file) = node.as_file() else { continue };
+                    if let Some(observer) = &observer {
+                        observer.increment("graph.runtime_import_visits", 1);
+                    }
+                    files.insert(file.to_path_buf());
+                    if max_depth.is_some_and(|cap| depth >= cap.saturating_sub(1)) {
+                        continue;
+                    }
+                    if let Some(neighbors) = self.dependencies_of_node(&node) {
+                        for (node, kind) in neighbors {
+                            if matches!(
+                                kind,
+                                EdgeKind::Import
+                                    | EdgeKind::WorkspaceImport
+                                    | EdgeKind::Require
+                                    | EdgeKind::DynamicImport
+                                    | EdgeKind::ConditionalDynamicImport
+                            ) && !node.as_file().is_some_and(|file| blocked.contains(file))
+                                && seen.insert(node.clone())
+                            {
+                                queue.push_back((node.clone(), depth + 1));
+                            }
+                        }
+                    }
+                }
+                files
+            })
+            .reduce(std::collections::BTreeSet::new, |mut files, group| {
+                files.extend(group);
+                files
+            })
+    }
+}
+
+#[cfg(test)]
+#[path = "root_mocks_walk_tests.rs"]
+mod runtime_import_walk_tests;

@@ -1,0 +1,10 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+
+rules:
+  - rule: nextjs-no-caching
+    exclude: [web/app/invalid.ts]
+    projects:
+      - web

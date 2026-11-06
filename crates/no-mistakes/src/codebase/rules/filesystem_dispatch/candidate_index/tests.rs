@@ -377,6 +377,7 @@ fn markdown_inventory_keeps_external_project_docs_but_skips_generated_directorie
         &config,
         &files,
         super::super::PreparedFilesystemRuleInputs {
+            session: None,
             snapshot: &snapshot,
             next_config_resolver: None,
             vitest_catalog: None,

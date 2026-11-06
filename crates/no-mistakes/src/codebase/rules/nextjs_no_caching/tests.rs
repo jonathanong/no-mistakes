@@ -132,8 +132,7 @@ fn allows_no_cache_forms_and_disable_comments() {
 fn generic_runner_checks_nextjs_caching() {
     let root = fixture();
     let findings =
-        crate::codebase::rules::run_check(&root, Some(&root.join(".no-mistakes.yml")), None)
-            .unwrap();
+        crate::codebase::rules::run_check(&root, Some(&root.join("valid-only.yml")), None).unwrap();
 
     assert_eq!(
         findings.len(),
@@ -161,7 +160,7 @@ fn fact_runner_checks_nextjs_caching() {
     );
     let findings = crate::codebase::rules::run_check_with_facts(
         &root,
-        Some(&root.join(".no-mistakes.yml")),
+        Some(&root.join("valid-only.yml")),
         None,
         &facts,
     )

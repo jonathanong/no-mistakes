@@ -286,33 +286,61 @@ fn global_check_fails_when_config_is_invalid() {
 }
 
 #[test]
-fn global_check_warns_when_enabled_react_scan_fails() {
+fn global_check_reports_incomplete_for_enabled_react_parse_failure() {
     let root = fixture("react-traits-config", "assert-no-fetch-invalid");
     let output = run(&[
         "check",
         "--root",
         root.to_str().unwrap(),
         "--format",
-        "human",
+        "json",
     ]);
 
     assert_eq!(output.status.code(), Some(1));
-    assert!(stderr(&output).contains("warning: react check skipped:"));
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert!(report["incomplete"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|failure| {
+            failure["consumer"] == "assert-no-fetch"
+                && failure["file"].as_str().is_some_and(|file| {
+                    file.replace('\\', "/")
+                        .ends_with("app/components/Broken.tsx")
+                })
+                && failure["message"].as_str().is_some_and(|message| {
+                    message.starts_with("failed to parse ")
+                        && message
+                            .replace('\\', "/")
+                            .contains("app/components/Broken.tsx:")
+                })
+        }));
 }
 
 #[test]
-fn global_check_warns_when_react_shared_facts_check_errors() {
+fn global_check_reports_incomplete_when_react_frontend_root_is_missing() {
     let root = fixture("react-traits-config", "assert-no-fetch-missing-frontend");
     let output = run(&[
         "check",
         "--root",
         root.to_str().unwrap(),
         "--format",
-        "human",
+        "json",
     ]);
 
     assert_eq!(output.status.code(), Some(1));
-    assert!(stderr(&output).contains("warning: react check skipped:"));
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert!(report["incomplete"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|failure| {
+            failure["consumer"] == "react"
+                && failure["message"].as_str().is_some_and(|message| {
+                    message.starts_with("warning: react check skipped: frontend root not found:")
+                        && message.contains("missing-app")
+                })
+        }));
 }
 
 #[test]
@@ -443,37 +471,5 @@ fn check_unions_selected_vitest_executions_before_excluding_tests() {
     }
 }
 
-#[test]
-fn dynamic_import_reachability_cuts_mocked_intermediaries_per_test() {
-    let root = fixture(
-        "codebase-analysis",
-        "test-no-unmocked-dynamic-imports-mock-cut",
-    );
-    for (config, expected) in [
-        (".no-mistakes-mocked.yml", None),
-        (".no-mistakes-unmocked.yml", Some("src/leaf.mts")),
-        (".no-mistakes-alternate.yml", Some("src/leaf.mts")),
-        (".no-mistakes-direct.yml", Some("src/direct-entry.mts")),
-        (".no-mistakes-mixed.yml", Some("src/leaf.mts")),
-    ] {
-        let output = run(&[
-            "check",
-            "--root",
-            root.to_str().unwrap(),
-            "--config",
-            config,
-            "--json",
-        ]);
-        let body = stdout(&output);
-        let value: serde_json::Value = serde_json::from_str(&body).unwrap();
-        let findings = value["rules"].as_array().unwrap();
-        assert_eq!(
-            findings.len(),
-            usize::from(expected.is_some()),
-            "{config}: {body}"
-        );
-        if let Some(target) = expected {
-            assert_eq!(findings[0]["target"], target, "{config}: {body}");
-        }
-    }
-}
+#[path = "cli_extra/dynamic_imports.rs"]
+mod dynamic_imports;

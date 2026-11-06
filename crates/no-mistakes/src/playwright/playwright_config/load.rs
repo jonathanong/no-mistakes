@@ -180,3 +180,15 @@ fn resolved_config_path(root: &Path, config_path: &Path) -> PathBuf {
     };
     crate::codebase::ts_resolver::normalize_path(&path)
 }
+
+#[doc(hidden)]
+pub fn load_partial_with_sources(
+    root: &Path,
+    path: &Path,
+    sources: &SourceStore,
+) -> Result<(PlaywrightConfig, super::parse::ProjectFailures)> {
+    let path = resolved_config_path(root, path);
+    let source = SourceStore::read_prepared_or_open(Some(sources), &path)
+        .map_err(|error| anyhow::anyhow!("{error}"))?;
+    super::parse::parse_partial(&source, &path, path.parent().unwrap_or(root))
+}

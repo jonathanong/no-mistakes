@@ -1,11 +1,17 @@
 #[test]
 fn aggregate_prepared_domains_do_not_reload_the_unified_config() {
-    let aggregate = include_str!("../prepared.rs");
+    let aggregate = concat!(
+        include_str!("../prepared.rs"),
+        include_str!("../prepared/session_entry.rs")
+    );
     let playwright = concat!(
         include_str!("../../playwright/rules/prepared_entrypoints.rs"),
         include_str!("../../playwright/rules/prepared.rs"),
     );
-    let graph = include_str!("../../codebase/dependencies/graph/files_config_prepared.rs");
+    let graph = concat!(
+        include_str!("../../codebase/dependencies/graph/files_config_prepared.rs"),
+        include_str!("../../codebase/dependencies/graph/files_config_prepared/settings.rs")
+    );
     let rules = concat!(
         include_str!("../../codebase/rules/run/prepared.rs"),
         include_str!("../../codebase/rules/run/prepared/execution.rs"),

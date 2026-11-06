@@ -170,19 +170,27 @@ test(
       const api = require("../index.js");
       const esm = await import("../index.mjs");
       for (const facade of [api, esm]) {
-        await assert.rejects(
-          facade.check({ root, config: join(root, ".no-mistakes.yml") }),
-          (error) => {
-            for (const expected of [
-              "fails closed",
-              "Git-backed configured project",
-              "run_filesystem_rules_with_files()",
-              "trackedRoutesOnly: false",
-            ])
-              assert.ok(error.message.includes(expected), error.message);
-            return true;
-          },
+        const report = await facade.check({ root, config: join(root, ".no-mistakes.yml") });
+        assert.ok(
+          report.incomplete?.length,
+          "missing tracked inventory must be reported incomplete",
         );
+        const failure = report.incomplete.find(
+          (entry) =>
+            entry.consumer === "filesystem" &&
+            entry.message.includes("nextjs-redirect-destinations trackedRoutesOnly"),
+        );
+        assert.ok(failure, "failed filesystem prerequisite must identify the tracked route rule");
+        assert.deepEqual(report.rules, []);
+        assert.deepEqual(report.warnings, []);
+        for (const expected of [
+          "requires a prepared Git index inventory",
+          "fails closed",
+          "Git-backed configured project",
+          "run_filesystem_rules_with_files()",
+          "trackedRoutesOnly: false",
+        ])
+          assert.ok(failure.message.includes(expected), failure.message);
       }
     } finally {
       await rm(root, { recursive: true, force: true });

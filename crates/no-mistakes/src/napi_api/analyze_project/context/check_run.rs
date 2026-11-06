@@ -51,12 +51,18 @@ impl SharedCheckContext {
         &self,
         facts: &crate::codebase::check_facts::CheckFactMap,
         dependency_graph: Option<&std::sync::Arc<crate::codebase::dependencies::graph::DepGraph>>,
-        session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
+        _session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
         include_suppressed: bool,
         include_runner_config_deadlines: bool,
         include_sql_verdicts: bool,
     ) -> Result<crate::check_runner::CheckResults> {
         use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
+        let session = self.session.clone();
+        if let Some(prepared) = &self.prepared.playwright {
+            for failure in prepared.failures() {
+                session.record_check_failure(failure.clone());
+            }
+        }
         let runner_config_deadlines = include_runner_config_deadlines
             .then(|| {
                 self.plan
@@ -104,7 +110,7 @@ impl SharedCheckContext {
         let sources = self.prepared.visible_paths.source_store_for(&self.root);
         let (react, queues, rules, integration, codebase, filesystem_rules) =
             run_domain_checks(DomainCheckInputs {
-                session,
+                session: session.clone(),
                 root: &self.root,
                 config_path: &self.config_path,
                 tsconfig_path: &self.tsconfig_path,
@@ -133,15 +139,15 @@ impl SharedCheckContext {
                 // Hygiene and optional accounting share the same consumed directives.
                 defer_suppression: include_suppressed || config.audits_disable_directives(),
             });
-        let completed = crate::check_runner::complete_domain_checks((
+        let completed = crate::check_runner::results::retain_domain_checks(&session, (
             react,
             queues,
             rules,
             integration,
             codebase,
             filesystem_rules,
-        ))?;
-        crate::check_runner::results::finalize_domain_checks(
+        ));
+        let mut results = crate::check_runner::results::finalize_domain_checks(
             crate::check_runner::results::FinalizeInput {
                 root: &self.root,
                 facts,
@@ -160,6 +166,8 @@ impl SharedCheckContext {
                 sql_verdicts: facts.sql_verdicts(),
                 include_sql_verdicts,
             },
-        )
+        )?;
+        results.incomplete = session.check_failures();
+        Ok(results)
     }
 }

@@ -53,6 +53,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                 || {
                     no_mistakes::diagnostics::with_observer(observer.clone(), || {
                         react_dispatch::run(react_dispatch::Inputs {
+                            session: &session,
                             root,
                             enabled: react_enabled,
                             facts,
@@ -146,6 +147,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                                 filesystem_rules_enabled,
                                                 discovered_files,
                                                 no_mistakes::codebase::rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
+            session: Some(&session),
                                                     snapshot: visible_paths,
                                                     next_config_resolver: next_config_resolver.as_ref(),
                                                     sources: std::sync::Arc::clone(&sources),

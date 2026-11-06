@@ -1,0 +1,21 @@
+projects:
+  good:
+    root: good
+  broken:
+    root: broken
+tests:
+  playwright:
+    apps:
+      good:
+        project: good
+      broken:
+        project: broken
+rules:
+  - rule: forbidden-dependencies
+    projects: [good]
+    tests:
+      playwright: [good]
+  - rule: required-entrypoint-reachability
+    projects: [broken]
+    tests:
+      playwright: [broken]

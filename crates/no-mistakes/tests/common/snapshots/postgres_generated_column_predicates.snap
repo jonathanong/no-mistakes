@@ -128,6 +128,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-generated-column-predicates",
+          "file": "src/query.cjs",
+          "message": "parsing src/query.cjs: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Cannot use import statement outside a module\", labels: [LabeledSpan { label: None, span: Span { start: 0, end: 6 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -149,6 +156,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-generated-column-predicates",
+          "file": "src/query.cjs",
+          "message": "parsing src/query.cjs: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Cannot use import statement outside a module\", labels: [LabeledSpan { label: None, span: Span { start: 0, end: 6 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],

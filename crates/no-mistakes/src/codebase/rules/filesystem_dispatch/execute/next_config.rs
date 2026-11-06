@@ -8,6 +8,7 @@ pub(super) fn run(
     facts: Option<&crate::codebase::check_facts::CheckFactMap>,
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
+    let session = prepared.session;
     if prepared.next_config_resolver.is_none() && rule_enabled(config, NEXTJS_REDIRECT_DESTINATIONS)
     {
         let sources = std::sync::Arc::clone(&prepared.sources);
@@ -27,9 +28,18 @@ pub(super) fn run(
                     },
                     facts,
                     defer_suppression,
+                    session,
                 )
             },
         );
     }
-    run_prepared_filesystem_rules(root, config, files, prepared, facts, defer_suppression)
+    run_prepared_filesystem_rules(
+        root,
+        config,
+        files,
+        prepared,
+        facts,
+        defer_suppression,
+        session,
+    )
 }

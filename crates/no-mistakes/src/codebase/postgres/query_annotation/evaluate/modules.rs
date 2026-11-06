@@ -13,13 +13,19 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     // Any new non-import route into another file must also be represented there
     // before executor-free roots can safely be pruned.
     pub(super) fn module_environment(&mut self, path: &Path) -> Environment {
+        self.modules.sources.consult(path);
         let module_id = self.module_ids().id(path);
         if let Some(env) = self.modules.get(&module_id) {
+            self.modules.sources.replay(path);
             return *env;
         }
-        super::super::progress::trace("postgres.annotation.module", path, None, || {
+        self.modules.sources.begin(path);
+        self.modules.sources.consult(path);
+        let env = super::super::progress::trace("postgres.annotation.module", path, None, || {
             self.initialize_module(path)
-        })
+        });
+        self.modules.sources.finish(path);
+        env
     }
 
     fn initialize_module(&mut self, path: &Path) -> Environment {
@@ -48,7 +54,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 })
                 .collect::<Vec<_>>();
             for target in eager_targets {
-                self.module_environment(&target);
+                if files.contains_key(&target) {
+                    self.module_environment(&target);
+                } else {
+                    self.modules.sources.consult(&target);
+                }
             }
             // Initialize every supplied dependency before invalidating. A
             // missing eager module could itself import and mutate any of them.

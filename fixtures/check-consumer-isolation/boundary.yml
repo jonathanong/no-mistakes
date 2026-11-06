@@ -1,0 +1,8 @@
+projects:
+  api:
+    root: .
+    type: server
+    routes: [routes/**/*.ts]
+rules:
+  - rule: server-route-client-boundary
+    projects: [api]

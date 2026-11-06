@@ -48,7 +48,7 @@ pub(crate) fn check_with_graph(
             root: &root,
             config,
             application,
-            index: index + 1,
+            index: application.resolved_application_index.unwrap_or(index + 1),
             options: &options,
             graph,
             vitest,
@@ -97,6 +97,14 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
         graph_files,
         target_roots: &target_roots,
     })?;
+    if matches!(options.traversal, Traversal::Transitive) {
+        super::super::graph_source_prerequisites::require_import_sources(
+            RULE_ID,
+            graph,
+            &roots,
+            options.max_depth,
+        )?;
+    }
     let path_filter = super::super::path_filter::RulePathFilter::new(root, config, application)?;
     let mock_reach = matches!(options.traversal, Traversal::Transitive)
         .then(|| graph.mock_export_reach(&roots, options.max_depth));

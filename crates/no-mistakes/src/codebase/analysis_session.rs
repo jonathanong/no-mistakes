@@ -9,6 +9,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
+mod check_outcomes;
 pub(crate) mod class_ancestry;
 mod intern;
 mod io;
@@ -23,14 +24,14 @@ pub use io::SourceReadError;
 use registry_extension::{RegistryExtensionCell, RegistryExtensionKey};
 pub(crate) use visible::PreparedVisible;
 
-/// Invocation-owned analysis gateways and memoized work.
-///
-/// The session is deliberately stateless across invocations. Its caches hold
-/// both successes and failures, preventing repeated filesystem work while a
-/// CLI or N-API request is active. OXC programs are not stored here because
-/// they must remain on the parsing thread; parser callbacks return owned facts.
 #[doc(hidden)]
 pub struct AnalysisSession {
+    check_outcomes: check_outcomes::CheckOutcomes,
+    resources: Arc<AnalysisResources>,
+}
+
+#[doc(hidden)]
+pub struct AnalysisResources {
     observer: Option<Arc<InvocationObserver>>,
     datasets: DashMap<PathBuf, Arc<DatasetCell>>,
     supplemental_sources: Arc<SourceStore>,
@@ -69,19 +70,22 @@ impl AnalysisSession {
             observer.clone(),
         ));
         Arc::new(Self {
-            observer,
-            datasets: DashMap::new(),
-            supplemental_sources,
-            visible_scopes: OnceLock::new(),
-            resolver_caches: DashMap::new(),
-            registry_extension_reports: DashMap::new(),
-            parse_attempts: collect_keyed_work.then(DashMap::new),
-            interner: Arc::new(PathInterner::new()),
-            test_filters: DashMap::new(),
-            lang_facts: lang_facts::LangFactsCache::new(),
-            class_ancestry_projections: DashMap::new(),
-            class_declaration_facts: DashMap::new(),
-            declaration_resolutions: DashMap::new(),
+            check_outcomes: check_outcomes::CheckOutcomes::default(),
+            resources: Arc::new(AnalysisResources {
+                observer,
+                datasets: DashMap::new(),
+                supplemental_sources,
+                visible_scopes: OnceLock::new(),
+                resolver_caches: DashMap::new(),
+                registry_extension_reports: DashMap::new(),
+                parse_attempts: collect_keyed_work.then(DashMap::new),
+                interner: Arc::new(PathInterner::new()),
+                test_filters: DashMap::new(),
+                lang_facts: lang_facts::LangFactsCache::new(),
+                class_ancestry_projections: DashMap::new(),
+                class_declaration_facts: DashMap::new(),
+                declaration_resolutions: DashMap::new(),
+            }),
         })
     }
 
@@ -108,10 +112,6 @@ impl AnalysisSession {
         dataset.visible_paths_arc()
     }
 
-    /// Return the invocation-owned workspace projection for `root`.
-    ///
-    /// The projection is built at most once for the exact analysis dataset and
-    /// is shared by catalogs, graph preparation, and domain checks.
     #[doc(hidden)]
     pub fn workspace(&self, root: &Path) -> Arc<crate::codebase::workspaces::IndexedWorkspaceMap> {
         self.dataset(root).workspace()
@@ -190,3 +190,10 @@ impl AnalysisSession {
 
 #[cfg(test)]
 mod tests;
+
+impl std::ops::Deref for AnalysisSession {
+    type Target = AnalysisResources;
+    fn deref(&self) -> &Self::Target {
+        &self.resources
+    }
+}

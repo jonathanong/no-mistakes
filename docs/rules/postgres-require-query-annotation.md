@@ -157,6 +157,10 @@ Executed PostgreSQL SQL must begin with a non-empty block comment. At `max`,
 `advisories`. At `max`, proven missing annotations remain findings under every
 unanalyzable policy, including decidable literal heads at `low`.
 
+A selected source or required helper that cannot be read or parsed makes the
+consumer incomplete in the [aggregate check report](../cli/check.md).
+`unanalyzableSql` and disable comments do not suppress that input failure.
+
 Configuration, SQL helper behavior, and callback forwarding are described in
 [options and helpers](../postgres-query-annotation/options-and-helpers.md).
 Use `check --include-sql-verdicts` for per-call proof and residual evidence;

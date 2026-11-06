@@ -9,6 +9,7 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
     // The independent Rayon branch lives beside this entrypoint. Count its calls too.
     let prepared = concat!(
         include_str!("../prepared.rs"),
+        include_str!("../prepared/session_entry.rs"),
         include_str!("../prepared/independent.rs"),
     );
     let graph_plan = include_str!("../graph_plan.rs");
@@ -79,6 +80,7 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
 fn aggregate_framework_root_inference_reuses_precomputed_visible_roots() {
     let prepared = concat!(
         include_str!("../prepared.rs"),
+        include_str!("../prepared/session_entry.rs"),
         include_str!("../prepared/independent.rs"),
     );
     let runner = concat!(

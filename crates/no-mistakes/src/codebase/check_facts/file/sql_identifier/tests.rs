@@ -115,3 +115,107 @@ fn declared_factory_demand_is_profiled_and_file_scoped() {
     );
     assert!(declared_factories_by_profile(&root, &root.join("src/other.ts"), &plan).is_empty());
 }
+
+#[test]
+fn factory_identity_order_is_deterministic_across_overlapping_applications() {
+    let root = crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
+        .join("effort-low");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let rule = config.rule_applications("postgres-no-unbounded-sql-identifier")[0];
+    let identity = |module: &str, export: &str| EffectTargetConfig {
+        module: module.into(),
+        export: export.into(),
+        category: None,
+    };
+    let first = identity("./a", "begin");
+    let second = identity("./a", "transaction");
+    let third = identity("./z", "begin");
+    let scan = |index, identities: &[EffectTargetConfig]| {
+        SqlIdentifierScan::new(&root, &config, rule, index, &["src/query.ts".into()], &[])
+            .unwrap()
+            .with_declared_factories(identities)
+    };
+    let profile = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let mut plan = CheckFactPlan::default();
+    plan.sql_identifier_profiles.insert(
+        profile.clone(),
+        vec![
+            scan(0, &[third.clone(), second.clone(), first.clone()]),
+            scan(1, std::slice::from_ref(&second)),
+        ],
+    );
+    assert_eq!(
+        declared_factories_by_profile(&root, &root.join("src/query.ts"), &plan),
+        vec![(profile, vec![first, second, third])]
+    );
+    assert!(!selected(&root, &root.join("src/excluded.ts"), &plan));
+    assert!(!policy_selected(
+        &root,
+        &root.join("src/excluded.ts"),
+        &plan
+    ));
+}
+
+#[test]
+fn optional_executor_declarations_preserve_direct_calls_and_empty_scope() {
+    use crate::codebase::ts_source::facts::{
+        collect_file_facts_from_program, TsFactContext, TsFactPlan,
+    };
+    let root = crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
+        .join("effort-low");
+    let path = root.join("src/query.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let rule = config.rule_applications("postgres-no-unbounded-sql-identifier")[0];
+    let profile = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let identity = EffectTargetConfig {
+        module: "@unrelated/db".into(),
+        export: "Executor".into(),
+        category: None,
+    };
+    crate::ast::with_program(&path, &source, |program, source| {
+        let ts = collect_file_facts_from_program(
+            &path,
+            TsFactPlan {
+                imports: true,
+                module_bindings: true,
+                ..Default::default()
+            },
+            &TsFactContext::default(),
+            source,
+            program,
+            None,
+            None,
+        );
+        let empty = collect(
+            &root,
+            &path,
+            source,
+            program,
+            &ts,
+            &CheckFactPlan::default(),
+        );
+        assert!(empty.profiles.is_empty());
+        let mut outputs = Vec::new();
+        for kind in ["plain", "typed", "factory"] {
+            let scan =
+                SqlIdentifierScan::new(&root, &config, rule, 0, &["src/query.ts".into()], &[])
+                    .unwrap();
+            let scan = match kind {
+                "typed" => scan.with_typed_executor_types(std::slice::from_ref(&identity)),
+                "factory" => scan.with_declared_factories(std::slice::from_ref(&identity)),
+                _ => scan,
+            };
+            let mut plan = CheckFactPlan::default();
+            plan.sql_identifier_profiles
+                .insert(profile.clone(), vec![scan]);
+            let facts = collect(&root, &path, source, program, &ts, &plan);
+            assert_eq!(facts.profiles.len(), 1);
+            assert!(!facts.profiles[0].1.is_empty());
+            outputs.push(format!("{:?}", facts.profiles));
+        }
+        assert_eq!(outputs[0], outputs[1]);
+        assert_eq!(outputs[0], outputs[2]);
+    })
+    .unwrap();
+}

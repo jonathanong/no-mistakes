@@ -3,12 +3,20 @@ use crate::codebase::dependencies::extract::extract_import_facts_from_program_wi
 use crate::codebase::ts_source::facts::TsFileFacts;
 
 pub(crate) fn read_facts(
+    root: &std::path::Path,
     path: &std::path::Path,
     plan: &CheckFactPlan,
     error: impl std::fmt::Display,
 ) -> super::CheckFileFacts {
     let parse_error = format!("failed to read {}: {error}", path.display());
     super::CheckFileFacts {
+        sql_source_prerequisites: super::SqlSourcePrerequisites::failed_source(root, path, plan),
+        sql_identifier_syntax: crate::codebase::postgres::sql_identifier_syntax::FileFacts {
+            low_applications: super::sql_source_prerequisites::planned_low_applications(
+                root, path, plan,
+            ),
+            ..Default::default()
+        },
         ts: std::sync::Arc::new(TsFileFacts {
             operational_error: Some(parse_error.clone()),
             parse_error: Some(parse_error.clone()),

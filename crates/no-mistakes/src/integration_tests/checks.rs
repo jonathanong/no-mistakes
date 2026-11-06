@@ -2,70 +2,64 @@ use super::{enforce, project_config, resolve, types, IntegrationFinding};
 use anyhow::Result;
 use std::path::Path;
 
-pub(super) fn fail_on_dropped_files(
-    root: &Path,
-    suites: &[types::Suite],
-    shared: &crate::codebase::check_facts::CheckFactMap,
-) -> Result<()> {
-    let suite_globs = suites
-        .iter()
-        .map(|suite| {
-            Ok((
-                project_config::build_globset(&suite.include)?,
-                project_config::build_globset(&suite.exclude)?,
-            ))
-        })
-        .collect::<Result<Vec<_>>>()?;
-    for (file, facts) in &shared.ts {
-        if let Some(error) = &facts.parse_error {
-            let disabled_suite_test = facts.source.as_deref().is_some_and(|source| {
-                crate::codebase::ts_source::has_disable_file_comment(
-                    source,
-                    "integration-test-no-mocks",
-                )
-            }) && suite_globs.iter().any(|(include, exclude)| {
-                let relative = crate::codebase::ts_source::relative_slash_path(root, file);
-                include.is_match(&relative) && !exclude.is_match(&relative)
-            });
-            if disabled_suite_test {
-                continue;
-            }
-            anyhow::bail!(
-                "failed to parse integration file {}: {error}",
-                file.display()
-            );
-        }
-    }
-    Ok(())
-}
-
 pub(super) fn check_suites(
     root: &Path,
     suites: &[types::Suite],
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
     analyses: &std::collections::BTreeMap<std::path::PathBuf, types::FileAnalysis>,
     session: &crate::codebase::analysis_session::AnalysisSession,
+    shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<IntegrationFinding>> {
-    let visible_files: std::collections::HashSet<std::path::PathBuf> =
-        analyses.keys().cloned().collect();
+    let visible_files: std::collections::HashSet<std::path::PathBuf> = analyses
+        .keys()
+        .cloned()
+        .chain(
+            shared
+                .ts
+                .iter()
+                .filter_map(|(path, facts)| facts.parse_error.as_ref().map(|_| path.clone())),
+        )
+        .collect();
     let import_resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
         tsconfig,
         Some(&visible_files),
         session,
     );
-    check_suites_with_resolver(root, suites, analyses, &import_resolver)
+    check_suites_with_resolver_and_session(
+        root,
+        suites,
+        analyses,
+        &import_resolver,
+        Some(shared),
+        Some(session),
+    )
 }
 
-pub(super) fn check_suites_with_resolver<R: crate::codebase::ts_resolver::ImportResolution>(
+pub(super) fn check_suites_with_resolver_and_session<
+    R: crate::codebase::ts_resolver::ImportResolution,
+>(
     root: &Path,
     suites: &[types::Suite],
     analyses: &std::collections::BTreeMap<std::path::PathBuf, types::FileAnalysis>,
     import_resolver: &R,
+    shared: Option<&crate::codebase::check_facts::CheckFactMap>,
+    session: Option<&crate::codebase::analysis_session::AnalysisSession>,
 ) -> Result<Vec<IntegrationFinding>> {
+    let errors: std::collections::HashMap<_, _> = shared
+        .into_iter()
+        .flat_map(|shared| shared.ts.iter())
+        .filter_map(|(file, facts)| {
+            facts
+                .parse_error
+                .as_deref()
+                .map(|error| (file.clone(), error))
+        })
+        .collect();
     let function_index = resolve::build_function_index(analyses);
     let export_index = resolve::build_export_index(analyses);
-    let remapper =
-        crate::codebase::ts_source::FrozenPathRemapper::from_paths(analyses.keys().cloned());
+    let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
+        analyses.keys().chain(errors.keys()).cloned(),
+    );
     let resolver = resolve::ImportResolution {
         analyses,
         export_index: &export_index,
@@ -77,12 +71,34 @@ pub(super) fn check_suites_with_resolver<R: crate::codebase::ts_resolver::Import
     for suite in suites {
         let include = project_config::build_globset(&suite.include)?;
         let exclude = project_config::build_globset(&suite.exclude)?;
+        for (file, error) in &errors {
+            let rel = crate::codebase::ts_source::relative_slash_path(root, file);
+            if include.is_match(&rel) && !exclude.is_match(&rel) {
+                prerequisites::accept(session, file, error)?;
+            }
+        }
         for (file, file_analysis) in analyses {
             let rel = crate::codebase::ts_source::relative_slash_path(root, file);
             if !include.is_match(&rel) || exclude.is_match(&rel) {
                 continue;
             }
             for test in &file_analysis.tests {
+                let failures = if errors.is_empty() {
+                    Vec::new()
+                } else {
+                    prerequisites::helper_failures(
+                        &test.function_key,
+                        &function_index,
+                        &resolver,
+                        &errors,
+                    )
+                };
+                for file in &failures {
+                    prerequisites::accept(session, file, errors[file])?;
+                }
+                if !failures.is_empty() {
+                    continue;
+                }
                 let integrations =
                     resolve::resolved_integrations(&test.function_key, &function_index, &resolver);
                 findings.extend(enforce::enforce_policy(root, suite, test, &integrations));
@@ -109,3 +125,5 @@ pub(crate) fn sort_findings(findings: &mut Vec<IntegrationFinding>) {
             && a.message == b.message
     });
 }
+
+mod prerequisites;

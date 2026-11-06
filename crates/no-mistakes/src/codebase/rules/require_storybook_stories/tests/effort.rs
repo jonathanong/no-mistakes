@@ -57,7 +57,7 @@ fn run_config(
         &empty_resolver(root),
         None,
         false,
-        &sources,
+        (&sources, None),
     )
     .unwrap()
 }

@@ -1,3 +1,4 @@
+type FailedCallSources = FxHashMap<u32, std::collections::BTreeSet<std::path::PathBuf>>;
 type OpaqueExternalMembers = FxHashMap<u32, FxHashSet<String>>;
 
 /// A non-collapsing, statically resolved call occurrence. Graph edges dedupe

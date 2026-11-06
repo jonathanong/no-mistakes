@@ -21,6 +21,7 @@ pub(super) struct CheckPlan {
 }
 
 pub(super) fn build(
+    session: &no_mistakes::codebase::analysis_session::AnalysisSession,
     root: &Path,
     prepared: &PreparedCheckInputs,
     deadlines: bool,
@@ -33,15 +34,25 @@ pub(super) fn build(
     let canonical_graph_plan = no_mistakes::codebase::rules::try_canonical_graph_plan(config)?;
     let graph_requires_full_file_universe =
         no_mistakes::codebase::rules::canonical_graph_requires_full_file_universe(config);
-    let playwright_built = super::playwright::fact_plan(
-        root,
-        prepared.config_path.as_deref(),
-        config,
-        canonical_graph_plan,
-        prepared.playwright.as_ref(),
-        prepared.visible_paths.as_ref(),
-    );
-    let mut playwright_fact_plan = playwright_built?;
+    let playwright_built = if prepared.playwright_failure.is_some() {
+        Ok(None)
+    } else {
+        super::playwright::fact_plan(
+            root,
+            prepared.config_path.as_deref(),
+            config,
+            canonical_graph_plan,
+            prepared.playwright.as_ref(),
+            prepared.visible_paths.as_ref(),
+        )
+    };
+    let mut playwright_fact_plan = match playwright_built {
+        Ok(plan) => plan,
+        Err(error) => {
+            super::super::graph_plan::failures::record(session, config, &error)?;
+            None
+        }
+    };
     let integration_enabled = integration_configured(config);
     let react_enabled = prepared.react.enabled();
     let dynamic_import_rules = enabled.dynamic_import_rules;
@@ -117,6 +128,7 @@ pub(super) fn build(
         root,
         config,
         graph_plan::PreparedInputs {
+            session,
             codebase_config: &prepared.codebase_config,
             tsconfig: &prepared.tsconfig,
             visible_paths: prepared.visible_paths.as_ref(),

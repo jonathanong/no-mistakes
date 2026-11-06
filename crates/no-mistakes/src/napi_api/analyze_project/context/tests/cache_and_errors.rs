@@ -95,13 +95,12 @@ fn check_report_returns_a_rule_option_error() {
         }))
         .unwrap();
     let context = super::AnalyzeProjectContext::prepare(&options).unwrap();
-    let error = context
-        .project_report(&options.reports[0], &options)
-        .expect_err("missing schema catalog");
-    assert!(
-        error.to_string().contains("schemaCatalogPath: required"),
-        "{error:#}"
-    );
+    let report = context.project_report(&options.reports[0], &options).unwrap();
+    let report: serde_json::Value = serde_json::from_str(report.get()).unwrap();
+    assert!(report["incomplete"].as_array().unwrap().iter().any(|failure| {
+        failure["consumer"] == "postgres-bounded-statements"
+            && failure["message"].as_str().unwrap().contains("schemaCatalogPath: required")
+    }), "{report}");
 }
 
 #[test]

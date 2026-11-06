@@ -1,12 +1,7 @@
-//! Which module declares an exported name, following re-exports.
-//!
-//! Only already-collected import/export facts and the request resolver are
-//! read. Anything that cannot be proven fails closed as [`Located::Unknown`]:
-//! a cycle, a chain longer than [`MAX_REEXPORT_HOPS`], an unresolved or
-//! unscanned module, a namespace re-export, or two different providers for the
-//! same name behind `export *`.
-
-use crate::codebase::check_facts::CheckFileFacts;
+use crate::codebase::check_facts::{
+    sql_source_prerequisites::{source_failed, FailedSqlSources},
+    CheckFileFacts,
+};
 use crate::codebase::dependencies::extract::ImportedBindingKind;
 use crate::codebase::ts_source::FileIdMap;
 use crate::fx::FxHashMap;
@@ -38,7 +33,8 @@ pub(super) struct Locator<'a, R> {
     files: &'a FileIdMap<CheckFileFacts>,
     resolve: R,
     targets: FxHashMap<(PathBuf, String), Option<PathBuf>>,
-    located: FxHashMap<(PathBuf, String), Located>,
+    located: FxHashMap<(PathBuf, String), (Located, FailedSqlSources)>,
+    pub(super) failures: FailedSqlSources,
 }
 
 impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Locator<'a, R> {
@@ -48,6 +44,7 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Locator<'a, R> {
             resolve,
             targets: FxHashMap::default(),
             located: FxHashMap::default(),
+            failures: FailedSqlSources::default(),
         }
     }
 
@@ -66,13 +63,17 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Locator<'a, R> {
     pub(super) fn locate(&mut self, file: &Path, name: &str) -> Located {
         let key = (file.to_path_buf(), name.to_string());
         if let Some(known) = self.located.get(&key) {
-            return known.clone();
+            self.failures.extend(known.1.iter().cloned());
+            return known.0.clone();
         }
         if let Some(observer) = crate::diagnostics::current() {
             observer.increment("postgres.embedded.helper_resolutions", 1);
         }
+        let previous = std::mem::take(&mut self.failures);
         let outcome = self.walk(file, name, MAX_REEXPORT_HOPS, &mut Vec::new());
-        self.located.insert(key, outcome.clone());
+        self.located
+            .insert(key, (outcome.clone(), self.failures.clone()));
+        self.failures.extend(previous);
         outcome
     }
 
@@ -83,6 +84,9 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Locator<'a, R> {
         hops: u8,
         visiting: &mut Vec<(PathBuf, String)>,
     ) -> Located {
+        if source_failed(self.files, file) {
+            self.failures.insert(file.to_path_buf());
+        }
         let key = (file.to_path_buf(), name.to_string());
         if visiting.contains(&key) {
             return Located::Unknown;

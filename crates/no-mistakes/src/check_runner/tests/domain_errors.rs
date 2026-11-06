@@ -51,7 +51,7 @@ fn fact_plan_keeps_boundary_only_rules_to_boundary_facts() {
 }
 
 #[test]
-fn complete_domain_checks_surfaces_each_domain_error() {
+fn retain_domain_checks_records_each_domain_error() {
     assert_domain_error(err_react(), "react");
     assert_domain_error(err_queues(), "queues");
     assert_domain_error(err_rules(), "rules");
@@ -61,8 +61,9 @@ fn complete_domain_checks_surfaces_each_domain_error() {
 }
 
 fn assert_domain_error(results: DomainResults, expected: &str) {
-    let err = complete_domain_checks(results)
-        .err()
-        .expect("expected domain check error");
-    assert_eq!(err.to_string(), expected);
+    let session = no_mistakes::codebase::analysis_session::AnalysisSession::new(None);
+    let _completed = super::super::results::retain_domain_checks(&session, results);
+    let failures = session.check_failures();
+    assert_eq!(failures.len(), 1);
+    assert_eq!(failures[0].message, expected);
 }

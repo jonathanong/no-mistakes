@@ -218,7 +218,7 @@ fn invalid_options_skip_the_check_and_fail() {
 #[test]
 fn a_broken_non_test_file_stops_the_rule_instead_of_reporting() {
     let root = parse_failure_fixture();
-    let prefix = "rules check skipped: unconstructed-error-class: \
+    let prefix = "incomplete unconstructed-error-class: unconstructed-error-class: \
                   cannot prove error classes unconstructed:";
     for (config, named) in [
         // `src/__tests__/broken.ts` is also broken but is a test, and
@@ -292,7 +292,7 @@ fn a_broken_test_file_stops_the_rule_before_it_reports_a_namespace_member() {
     assert_eq!(out.status.code(), Some(1), "{body}");
     assert!(
         body.contains(
-            "rules check skipped: unconstructed-error-class: cannot prove error classes \
+            "incomplete unconstructed-error-class: unconstructed-error-class: cannot prove error classes \
              unconstructed: `src/__tests__/alias.ts` failed to parse: "
         ),
         "{body}"

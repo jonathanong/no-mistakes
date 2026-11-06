@@ -33,3 +33,18 @@ fn actual_snapshot_cache_keys_hash_no_path_bytes_and_retain_shared_identities() 
     }
     assert!(Arc::ptr_eq(cache.ids.get().unwrap(), &ids));
 }
+
+#[test]
+fn failure_sidecars_do_not_change_semantic_cache_equality() {
+    let paths = saved_paths();
+    let ids = Arc::new(ModuleIds::new(paths.clone()));
+    let mut cache = ModuleCache::with_ids(ids);
+    let snapshot = cache.clone();
+    cache.sources = source_dependencies::SourceDependencies::new(Arc::new(
+        [paths[0].clone()].into_iter().collect(),
+    ));
+    cache.sources.consult(&paths[0]);
+    assert!(cache == snapshot);
+    assert_eq!(cache.sources.failures().len(), 1);
+    assert!(snapshot.sources.failures().is_empty());
+}

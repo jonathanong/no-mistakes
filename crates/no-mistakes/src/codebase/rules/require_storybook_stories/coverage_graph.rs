@@ -11,6 +11,7 @@ pub(super) fn transitive_covered_components(
     shared: &CheckFactMap,
     direct: &BTreeSet<String>,
     component_keys: &HashSet<String>,
+    demand: Option<&super::source_failures::SourceFailures<'_>>,
 ) -> BTreeSet<String> {
     if let Some(observer) = crate::diagnostics::current() {
         observer.increment("storybook.transitive_coverage.scans", 1);
@@ -19,6 +20,11 @@ pub(super) fn transitive_covered_components(
     let mut queue: VecDeque<String> = direct.iter().cloned().collect();
     let component_children = component_children(root, project_root, shared);
     while let Some(key) = queue.pop_front() {
+        if let Some((file, _)) = key.rsplit_once('#') {
+            if let Some(demand) = demand {
+                demand.require(&project_root.join(file));
+            }
+        }
         let Some(children) = component_children.get(&key) else {
             continue;
         };
@@ -67,6 +73,7 @@ pub(super) fn dynamic_or_mock_boundary_files(
     project_root: &Path,
     shared: &CheckFactMap,
     resolver: &dyn ImportResolution,
+    demand: Option<&super::source_failures::SourceFailures<'_>>,
 ) -> HashSet<PathBuf> {
     if let Some(observer) = crate::diagnostics::current() {
         observer.increment("storybook.dynamic_boundary.scans", 1);
@@ -75,6 +82,9 @@ pub(super) fn dynamic_or_mock_boundary_files(
     for (file, facts) in &shared.ts {
         if !file.starts_with(project_root) {
             continue;
+        }
+        if let Some(demand) = demand {
+            demand.require(file);
         }
         let Some(dynamic) = facts.dynamic_imports.as_ref() else {
             continue;

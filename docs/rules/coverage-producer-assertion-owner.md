@@ -115,10 +115,16 @@ generators: reaching a generator uses `unanalyzable` policy, even if its import 
 configured as an assertion or dispatch selector. Configured generator producers
 and generator ownership targets follow the same policy.
 
+Read or parse failures in required producer, referenced helper, or modeled owner
+sources always make aggregate `check` incomplete; strict Rust checks return a
+source error. Fix the failing source. `unanalyzable: ignore` and suppression
+directives cannot hide these failures, even when another assertion is reached.
+Independent healthy applications still run.
+
 `maxDepth` (default 64) and `maxNodes` (default 10000, including the producer)
 are positive traversal bounds. A reached bound with unexplored work is
-unanalyzable. Dynamic targets, unknown alternatives, source/parse failures, and
-Node `fs` callback shapes also follow shared `unanalyzable` policy: `report`
+unanalyzable. Dynamic targets, unknown alternatives, and Node `fs` callback
+shapes also follow shared `unanalyzable` policy: `report`
 emits a finding, `advise` emits an advisory, `ignore` explicitly omits that
 uncertain result. Those results never supply assertion evidence, but they are
 deferred: the rule asks whether some owner is reached, so once any owner is

@@ -47,10 +47,7 @@
                         );
                     }
                     SuppliedFactPolicy::RequireComplete if !missing.is_empty() => {
-                        anyhow::bail!(
-                            "prepared graph facts are missing {} indexable file(s)",
-                            missing.len()
-                        );
+                        return Err(missing_prepared_graph_facts(&missing));
                     }
                     SuppliedFactPolicy::RequireComplete if universe_mismatch => {
                         anyhow::bail!(
@@ -105,6 +102,7 @@
         > = fx_map();
         let mut resolved_call_sites = Vec::new();
         let mut opaque_external_members = fx_map();
+        let mut call_prerequisites = fx_map();
         let mut class_declarations = Vec::new();
         let files = graph_files.indexable();
         for file in files {
@@ -130,7 +128,6 @@
             .or(owned_workspace.as_ref())
             .unwrap_or(&empty_workspace);
         let parse_errors = graph_parse_errors(fact_plan, files, facts);
-
         let owned_playwright_snapshot = (plan.playwright_routes || plan.playwright_selectors)
             .then(|| {
                 edge_inputs.visible_paths.is_none().then(|| {
@@ -144,7 +141,6 @@
         let playwright_snapshot = edge_inputs
             .visible_paths
             .or(owned_playwright_snapshot.as_ref());
-
         collect_and_merge_all_edges(
             &edge_inputs,
             playwright_snapshot,
@@ -165,6 +161,7 @@
                 module_files: &mut module_files,
                 resolved_call_sites: &mut resolved_call_sites,
                 opaque_external_members: &mut opaque_external_members,
+                call_prerequisites: &mut call_prerequisites,
                 class_declarations: &mut class_declarations,
             },
         )?;

@@ -1,5 +1,6 @@
 use super::*;
 
+#[derive(Clone, Copy)]
 pub(in crate::codebase::rules::run::prepared::execution) struct GraphRuleRequest<'a> {
     pub(in crate::codebase::rules::run::prepared::execution) root: &'a Path,
     pub(in crate::codebase::rules::run::prepared::execution) config:

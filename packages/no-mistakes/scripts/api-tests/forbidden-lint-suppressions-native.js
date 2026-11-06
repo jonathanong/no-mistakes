@@ -1,5 +1,9 @@
 const assert = require("node:assert/strict");
-const { policyAdvisories } = require("../check-policy-test-helpers");
+const {
+  normalizeCheckFailurePaths,
+  normalizeVerbatimWindowsPath,
+  policyAdvisories,
+} = require("../check-policy-test-helpers");
 const { spawnSync } = require("node:child_process");
 const { dirname, join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
@@ -23,10 +27,30 @@ for (const config of ["default", "ts", "blanket", "custom", "none", "excluded", 
       const pending = cjs.check(options);
       assert.ok(pending instanceof Promise);
       const report = await pending;
-      assert.deepEqual(await esm.check(options), report);
+      assert.deepEqual(
+        normalizeCheckFailurePaths(await esm.check(options)),
+        normalizeCheckFailurePaths(report),
+      );
       const request = { ...options, reports: [{ type: "check" }] };
-      assert.deepEqual((await cjs.analyzeProject(request)).reports[0].result, report);
-      assert.deepEqual((await esm.analyzeProject(request)).reports[0].result, report);
+      assert.deepEqual(
+        normalizeCheckFailurePaths((await cjs.analyzeProject(request)).reports[0].result),
+        normalizeCheckFailurePaths(report),
+      );
+      assert.deepEqual(
+        normalizeCheckFailurePaths((await esm.analyzeProject(request)).reports[0].result),
+        normalizeCheckFailurePaths(report),
+      );
+      if (config === "none") {
+        const failure = report.incomplete?.find(
+          (entry) => entry.consumer === "forbidden-lint-suppressions",
+        );
+        assert.ok(failure, "the selected suppression consumer must report its parser failure");
+        assert.equal(
+          normalizeVerbatimWindowsPath(failure.file),
+          normalizeVerbatimWindowsPath(join(root, "src/recovered.ts")),
+        );
+        assert.match(failure.message, /Unexpected token/);
+      }
       const findings = report.rules.filter((row) => row.rule === "forbidden-lint-suppressions");
       assert.deepEqual(report.warnings, []);
       assert.deepEqual(policyAdvisories(report), []);
@@ -102,8 +126,12 @@ for (const config of ["default", "ts", "blanket", "custom", "none", "excluded", 
         { encoding: "utf8" },
       );
       assert.equal(child.error, undefined);
-      assert.equal(child.status, findings.length ? 1 : 0, child.stderr);
-      assert.deepEqual(JSON.parse(child.stdout), report);
+      const hasFailures = findings.length > 0 || Boolean(report.incomplete?.length);
+      assert.equal(child.status, hasFailures ? 1 : 0, child.stderr);
+      assert.deepEqual(
+        normalizeCheckFailurePaths(JSON.parse(child.stdout)),
+        normalizeCheckFailurePaths(report),
+      );
     },
   );
 }

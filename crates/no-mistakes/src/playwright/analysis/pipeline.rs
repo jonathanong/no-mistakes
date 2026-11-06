@@ -3,7 +3,8 @@ pub(crate) use crate::playwright::analysis::pipeline_entrypoints::{
     analyze_with_policy_and_facts_from_snapshot, analyze_with_policy_from_snapshot,
 };
 pub(crate) use crate::playwright::analysis::pipeline_facts::{
-    extend_standalone_fact_plan, standalone_fact_plan, standalone_facts,
+    extend_fact_plan_with_config, extend_standalone_fact_plan, standalone_fact_plan,
+    standalone_facts,
 };
 use crate::playwright::analysis::pipeline_occurrences::{
     prepare_test_files, PrepareTestFilesOptions,

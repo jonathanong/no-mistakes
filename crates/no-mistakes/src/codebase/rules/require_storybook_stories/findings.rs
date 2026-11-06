@@ -59,13 +59,20 @@ pub(super) fn stale_or_blank_allow_findings(
     component_keys: &HashSet<String>,
     _allow_files: &GlobMatcher,
     shared: &CheckFactMap,
-    scope: Option<&super::super::allow_audit::CheckedScope>,
+    audit: Option<(
+        &super::super::allow_audit::CheckedScope,
+        &super::source_failures::SourceFailures<'_>,
+        &super::source_failures::SourceFailures<'_>,
+    )>,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     for (key, reason) in &opts.allow_components {
         let file = key.split_once('#').map_or(key.as_str(), |(file, _)| file);
-        let eligible = scope
-            .is_none_or(|scope| scope.exact(&relative_slash_path(root, &project_root.join(file))));
+        let eligible = audit.is_none_or(|(scope, selected, catalog)| {
+            scope.exact(&relative_slash_path(root, &project_root.join(file)))
+                && !selected.failed_file(&project_root.join(file))
+                && !catalog.failed()
+        });
         if reason.trim().is_empty() || (eligible && !component_keys.contains(key)) {
             findings.push(component_allow_finding(root, project_root, key, reason));
         }
@@ -82,8 +89,9 @@ pub(super) fn stale_or_blank_allow_findings(
                 && matcher.is_match(&relative_slash_path(project_root, path))
         });
         if !matched
-            && scope.is_none_or(|scope| {
-                scope.glob(&relative_slash_path(root, &project_root.join(pattern)))
+            && audit.is_none_or(|(scope, _, catalog)| {
+                !catalog.failed()
+                    && scope.glob(&relative_slash_path(root, &project_root.join(pattern)))
             })
         {
             findings.push(file_allow_finding(

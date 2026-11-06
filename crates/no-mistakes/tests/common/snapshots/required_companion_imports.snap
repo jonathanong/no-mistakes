@@ -85,6 +85,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "required-companion-imports",
+          "file": "stories/fatal.stories.mts",
+          "message": "parsing stories/fatal.stories.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 76, end: 77 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "required-companion-imports",
+          "file": "stories/legacy.stories.js",
+          "message": "parsing stories/legacy.stories.js: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `from` but found `{`\", labels: [LabeledSpan { label: Some(\"`from` expected\"), span: Span { start: 77, end: 78 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],

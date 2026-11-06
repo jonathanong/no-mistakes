@@ -6,17 +6,29 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
 /// Snapshots copy compact keys and share the request's immutable identity table.
-#[derive(Clone, Default, Eq, PartialEq)]
+#[derive(Clone, Default)]
 pub(in crate::codebase::postgres::query_annotation) struct ModuleCache {
     ids: OnceLock<Arc<ModuleIds>>,
     values: FxHashMap<ModuleId, Environment>,
+    pub(in crate::codebase::postgres::query_annotation) sources:
+        source_dependencies::SourceDependencies,
 }
+
+pub(in crate::codebase::postgres::query_annotation) mod source_dependencies;
+
+impl PartialEq for ModuleCache {
+    fn eq(&self, other: &Self) -> bool {
+        self.ids == other.ids && self.values == other.values
+    }
+}
+impl Eq for ModuleCache {}
 
 impl ModuleCache {
     pub fn with_ids(ids: Arc<ModuleIds>) -> Self {
         Self {
             ids: OnceLock::from(ids),
             values: FxHashMap::default(),
+            sources: Default::default(),
         }
     }
 }

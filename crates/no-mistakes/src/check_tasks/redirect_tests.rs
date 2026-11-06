@@ -32,6 +32,7 @@ fn redirect_task_keeps_standalone_preparation_suppression_and_disabled_paths() {
                     enabled,
                     &files,
                     rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
+                        session: None,
                         snapshot: &snapshot,
                         next_config_resolver: None,
                         vitest_catalog: None,
@@ -91,6 +92,7 @@ fn redirect_task_propagates_rule_and_other_filesystem_errors() {
                     true,
                     &files,
                     rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
+                        session: None,
                         snapshot: &snapshot,
                         next_config_resolver: prepared_resolver,
                         vitest_catalog: None,

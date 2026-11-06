@@ -14,6 +14,7 @@ impl PreparedScopePlan {
         visible_paths: std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot>,
         session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     ) -> Result<Self> {
+        let session = session.scoped_checks();
         let root = super::options::resolve_root(options.root.as_deref())?;
         session.insert_visible_paths(&root, visible_paths.clone());
         let (import_usages, import_usage_files) =
@@ -52,6 +53,7 @@ impl PreparedScopePlan {
             .any(|request| request.report_type == "check")
             .then(|| {
                 SharedCheckContext::prepare(
+                    &session,
                     &root,
                     SharedCheckPreparationOptions {
                         config_path: traversal.config_path(),

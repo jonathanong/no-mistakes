@@ -8,13 +8,24 @@ fn per_item_graph_projection_reuses_each_source_and_parse() {
     }
 }
 
+#[test]
+fn prepared_per_item_audit_marks_only_allowances_suppressing_actual_findings() {
+    let saved =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/unused-allow-entries");
+    assert_prepared_projection(saved, true);
+}
+
 fn assert_prepared_per_item_projection(fixture: &str) {
-    use crate::codebase::dependencies::graph::{
-        DepGraph, PreparedCheckFactGraphBuildRequest, TsFactLookup,
-    };
     let saved = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/query-reached-per-item")
         .join(fixture);
+    assert_prepared_projection(saved, false);
+}
+
+fn assert_prepared_projection(saved: PathBuf, audit: bool) {
+    use crate::codebase::dependencies::graph::{
+        DepGraph, PreparedCheckFactGraphBuildRequest, TsFactLookup,
+    };
     let materialized = crate::test_support::materialize_saved_fixture(&saved);
     let root = crate::codebase::ts_resolver::normalize_path(materialized.path());
     let observer = crate::diagnostics::InvocationObserver::new(true);
@@ -77,22 +88,46 @@ fn assert_prepared_per_item_projection(fixture: &str) {
     )
     .unwrap();
     let before = sources.physical_read_count();
-    let findings = super::query_reached_per_item::check_with_graph(
+    let findings = super::query_reached_per_item::check_with_graph_and_session(
         &root,
         &config,
         &graph,
         &facts,
         Some(&sources),
+        None,
     )
     .unwrap();
     assert!(!findings.is_empty());
+    if audit {
+        assert_eq!(findings.len(), 1, "{findings:?}");
+        assert_eq!(findings[0].rule, "unused-allow-entry");
+        assert_eq!(
+            findings[0].import.as_deref(),
+            Some("query-reached-per-item")
+        );
+        assert!(findings[0].message.contains("src/entry.mts:900#read"));
+    }
     assert_eq!(
         sources.physical_read_count(),
-        before,
-        "policy projection must borrow facts without reading sources"
+        before + usize::from(audit),
+        "only the first allowance audit may read its config source"
     );
+    let repeated = super::query_reached_per_item::check_with_graph_and_session(
+        &root,
+        &config,
+        &graph,
+        &facts,
+        Some(&sources),
+        None,
+    )
+    .unwrap();
+    assert_eq!(repeated.len(), findings.len());
+    assert_eq!(sources.physical_read_count(), before + usize::from(audit));
     let parses = crate::ast::finish_parse_count(&root);
     let reads = observer.source_read_snapshot();
+    if audit {
+        assert_eq!(reads.get(&root.join(".no-mistakes.yml")), Some(&1));
+    }
     for path in facts.graph_file_universe() {
         if facts.get_ts_facts(path).is_none() {
             continue;

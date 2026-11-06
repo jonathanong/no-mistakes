@@ -7,6 +7,7 @@
 
 use super::locate::{Located, Locator};
 use super::CheckFileFacts;
+use crate::codebase::check_facts::sql_source_prerequisites::FailedSqlSources;
 use crate::codebase::dependencies::extract::ImportedBindingKind;
 use crate::codebase::postgres::{
     Callee, Callees, EmbeddedSqlOptions, ImportedSite, Outcome, RecoveredSql, Ret, SiteArg,
@@ -25,7 +26,8 @@ type Key = (usize, PathBuf, PathBuf, String, Vec<SiteArg>);
 pub(super) struct Shared<'a, R> {
     pub(super) files: &'a FileIdMap<CheckFileFacts>,
     locator: Locator<'a, R>,
-    cache: FxHashMap<Key, Option<Vec<Outcome>>>,
+    cache: FxHashMap<Key, (Option<Vec<Outcome>>, FailedSqlSources)>,
+    pub(super) failures: FailedSqlSources,
 }
 
 impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
@@ -34,6 +36,7 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
             files,
             locator,
             cache: FxHashMap::default(),
+            failures: FailedSqlSources::default(),
         }
     }
 
@@ -59,7 +62,9 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
             None => &import.imported,
         };
         let target = self.locator.target(&import.specifier, from)?;
-        match self.locator.locate(&target, exported) {
+        let located = self.locator.locate(&target, exported);
+        self.failures.append(&mut self.locator.failures);
+        match located {
             Located::Found(origin, local) => Some((origin, local)),
             _ => None,
         }

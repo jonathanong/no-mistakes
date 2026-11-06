@@ -13,6 +13,7 @@ struct EdgeMaps<'a> {
     module_files: &'a mut FxHashMap<String, FxHashSet<PathBuf>>,
     resolved_call_sites: &'a mut Vec<ResolvedCallSite>,
     opaque_external_members: &'a mut FxHashMap<PathBuf, OpaqueExternalMembers>,
+    call_prerequisites: &'a mut FxHashMap<PathBuf, FailedCallSources>,
     class_declarations: &'a mut Vec<ClassDeclaration>,
 }
 
@@ -40,6 +41,7 @@ fn collect_and_merge_all_edges(
         module_files,
         resolved_call_sites,
         opaque_external_members,
+        call_prerequisites,
         class_declarations,
     } = maps;
     require_core_edge_facts(edge_inputs.plan, facts)?;
@@ -70,6 +72,7 @@ fn collect_and_merge_all_edges(
         merge_edges(forward, reverse, pass.edges);
         resolved_call_sites.extend(pass.sites);
         opaque_external_members.extend(pass.opaque_external_members);
+        call_prerequisites.extend(pass.call_prerequisites);
         class_declarations.extend(pass.classes);
     }
 
@@ -88,6 +91,7 @@ fn collect_and_merge_all_edges(
             module_files,
             resolved_call_sites,
             opaque_external_members,
+            call_prerequisites,
             class_declarations,
         },
     )

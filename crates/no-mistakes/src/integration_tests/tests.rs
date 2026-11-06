@@ -238,7 +238,6 @@ fn prepared_integration_check_rejects_incomplete_runner_facts_without_reparsing(
     let prepared_body = source
         .split("pub fn check_with_prepared_facts(")
         .nth(1)
-        .and_then(|body| body.split("fn fail_on_dropped_files(").next())
         .expect("prepared integration entrypoint body");
     assert!(!prepared_body.contains("parse_all("));
 }

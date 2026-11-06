@@ -15,10 +15,18 @@ fn audit_report(root: &std::path::Path, config: &str, audit: bool) -> serde_json
 fn malformed_story_direct_matches_aggregate() {
     let root = fixture("malformed-stories");
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    assert_eq!(
-        check(&root, &config, None).unwrap(),
-        crate::codebase::rules::run_check(&root, None, None).unwrap()
-    );
+    assert!(check(&root, &config, None).is_err());
+    assert!(crate::codebase::rules::run_check(&root, None, None).is_err());
+    let report = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        serde_json::json!({"root": root}).to_string(),
+    ))
+    .unwrap();
+    let report: serde_json::Value = serde_json::from_str(&report).unwrap();
+    assert!(report["incomplete"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|failure| failure["consumer"] == super::super::RULE_ID));
 }
 
 #[test]

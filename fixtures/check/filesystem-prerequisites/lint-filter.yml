@@ -1,0 +1,6 @@
+rules:
+  - rule: forbidden-lint-suppressions
+    scope: repository
+    options:
+      files: [raw.ts]
+      ruleIds: [no-console]

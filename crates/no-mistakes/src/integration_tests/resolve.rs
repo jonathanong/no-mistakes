@@ -85,7 +85,7 @@ fn resolved_integrations_inner<R: ImportResolverFacade>(
     }
 }
 
-fn resolve_call<R: ImportResolverFacade>(
+pub(super) fn resolve_call<R: ImportResolverFacade>(
     caller: &FunctionKey,
     call: &CallTarget,
     resolver: &ImportResolution<'_, R>,

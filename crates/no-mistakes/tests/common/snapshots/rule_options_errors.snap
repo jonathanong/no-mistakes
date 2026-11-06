@@ -27,55 +27,55 @@ source: crates/no-mistakes/tests/cli_rule_options_audit.rs
     "stderr": "error: finite-set-consistency: sets[0].kind is required and must not be empty\n"
   },
   "finite-invalid-yaml-low": {
-    "exitCode": 2,
-    "stderr": "error: finite set 'a': could not parse values.yml as YAML: did not find expected node content at line 2 column 1, while parsing a flow node; repair the configured YAML source\n"
+    "exitCode": 1,
+    "stderr": "incomplete filesystem: finite set 'a': could not parse values.yml as YAML: did not find expected node content at line 2 column 1, while parsing a flow node; repair the configured YAML source\n"
   },
   "finite-malformed-low": {
-    "exitCode": 2,
-    "stderr": "error: finite set 'a': could not parse values.yml as YAML: did not find expected node content at line 2 column 1, while parsing a flow node; repair the configured YAML source\n"
+    "exitCode": 1,
+    "stderr": "incomplete filesystem: finite set 'a': could not parse values.yml as YAML: did not find expected node content at line 2 column 1, while parsing a flow node; repair the configured YAML source\n"
   },
   "finite-malformed-max": {
-    "exitCode": 2,
-    "stderr": "error: finite set 'a': could not parse values.yml as YAML: did not find expected node content at line 2 column 1, while parsing a flow node; repair the configured YAML source\n"
+    "exitCode": 1,
+    "stderr": "incomplete finite-set-consistency: finite set 'a': could not parse values.yml as YAML: did not find expected node content at line 2 column 1, while parsing a flow node; repair the configured YAML source\n"
   },
   "version-missing-source-option": {
-    "exitCode": 2,
-    "stderr": "error: version-pin-consistency: sourceFile is required and must not be empty\n"
+    "exitCode": 1,
+    "stderr": "incomplete filesystem: version-pin-consistency: sourceFile is required and must not be empty\n"
   },
   "version-missing-source-key": {
-    "exitCode": 2,
-    "stderr": "error: version-pin-consistency: sourceKey is required and must not be empty\n"
+    "exitCode": 1,
+    "stderr": "incomplete filesystem: version-pin-consistency: sourceKey is required and must not be empty\n"
   },
   "version-missing-anchors": {
-    "exitCode": 2,
-    "stderr": "error: version-pin-consistency: anchors is required\n"
+    "exitCode": 1,
+    "stderr": "incomplete filesystem: version-pin-consistency: anchors is required\n"
   },
   "version-blank-sourceFile": {
-    "exitCode": 2,
-    "stderr": "error: version-pin-consistency: sourceFile is required and must not be empty\n"
+    "exitCode": 1,
+    "stderr": "incomplete filesystem: version-pin-consistency: sourceFile is required and must not be empty\n"
   },
   "version-blank-sourceKey": {
-    "exitCode": 2,
-    "stderr": "error: version-pin-consistency: sourceKey is required and must not be empty\n"
+    "exitCode": 1,
+    "stderr": "incomplete filesystem: version-pin-consistency: sourceKey is required and must not be empty\n"
   },
   "version-missing-options": {
-    "exitCode": 2,
-    "stderr": "error: version-pin-consistency: sourceFile is required and must not be empty\n"
+    "exitCode": 1,
+    "stderr": "incomplete filesystem: version-pin-consistency: sourceFile is required and must not be empty\n"
   },
   "email-missing-required": {
-    "exitCode": 2,
-    "stderr": "error: test-email-domain-policy: bannedDomains is required\n"
+    "exitCode": 1,
+    "stderr": "incomplete test-email-domain-policy: test-email-domain-policy: bannedDomains is required\n"
   },
   "email-missing-options": {
-    "exitCode": 2,
-    "stderr": "error: test-email-domain-policy: bannedDomains is required\n"
+    "exitCode": 1,
+    "stderr": "incomplete test-email-domain-policy: test-email-domain-policy: bannedDomains is required\n"
   },
   "email-null-options": {
-    "exitCode": 2,
-    "stderr": "error: test-email-domain-policy: bannedDomains is required\n"
+    "exitCode": 1,
+    "stderr": "incomplete test-email-domain-policy: test-email-domain-policy: bannedDomains is required\n"
   },
   "timeout-literals-missing-file": {
-    "exitCode": 2,
-    "stderr": "error: github-actions-test-timeout-literals: allow[0].file is required and must not be empty\n"
+    "exitCode": 1,
+    "stderr": "incomplete github-actions-test-timeout-literals: github-actions-test-timeout-literals: allow[0].file is required and must not be empty\n"
   }
 }

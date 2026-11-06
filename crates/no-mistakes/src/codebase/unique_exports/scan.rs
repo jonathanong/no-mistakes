@@ -41,10 +41,11 @@ pub(super) fn collect_source_files_from_facts_with_sources(
             };
             let disabled = has_disable_file_comment(&source, RULE_ID);
             let symbols = if let Some(error) = &facts.parse_error {
-                if !disabled {
-                    anyhow::bail!("failed to parse {}: {error}", path.display());
-                }
-                Default::default()
+                return Err(crate::codebase::check_outcome::CheckInputFailure::source(
+                    path,
+                    format!("failed to parse {}: {error}", path.display()),
+                )
+                .into());
             } else {
                 let Some(symbols) = facts.symbols.clone() else {
                     anyhow::bail!("missing symbol facts for {}", path.display());

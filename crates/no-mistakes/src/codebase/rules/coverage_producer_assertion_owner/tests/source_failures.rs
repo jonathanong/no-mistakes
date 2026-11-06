@@ -66,33 +66,14 @@ pub(super) fn assert_policies(
             ] {
                 let mut configured = config.clone();
                 configured.unanalyzable = Some(policy);
-                let output = check(root, &configured, &graph, &failed, sources).unwrap();
-                let rows = |rows: &[RuleFinding]| {
-                    rows.iter()
-                        .filter(|finding| finding.target.as_deref() == Some("crossProcess"))
-                        .cloned()
-                        .collect::<Vec<_>>()
-                };
-                let findings = rows(&output.findings);
-                let advisories = rows(&output.advisories);
-                match policy {
-                    Unanalyzable::Report => {
-                        assert_eq!(findings.len(), 1);
-                        assert!(advisories.is_empty());
-                    }
-                    Unanalyzable::Advise => {
-                        assert!(findings.is_empty());
-                        assert_eq!(advisories.len(), 1);
-                    }
-                    Unanalyzable::Ignore => {
-                        assert!(findings.is_empty());
-                        assert!(advisories.is_empty());
-                    }
-                }
-                assert!(findings
-                    .iter()
-                    .chain(&advisories)
-                    .all(|finding| finding.message.contains("unanalyzable")));
+                let error = check(root, &configured, &graph, &failed, sources)
+                    .err()
+                    .expect("failed source must remain an error");
+                let input = error
+                    .downcast_ref::<crate::codebase::check_outcome::CheckInputFailure>()
+                    .expect("typed source failure");
+                assert_eq!(input.file.as_ref(), Some(&failed.path));
+                assert!(!input.message.is_empty());
             }
             assert_eq!(
                 sources.physical_read_count(),

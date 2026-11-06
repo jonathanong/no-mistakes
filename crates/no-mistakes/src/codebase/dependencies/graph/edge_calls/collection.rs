@@ -6,6 +6,7 @@ struct CallPass {
     edges: Vec<Edge>,
     sites: Vec<ResolvedCallSite>,
     opaque_external_members: FxHashMap<std::path::PathBuf, OpaqueExternalMembers>,
+    call_prerequisites: FxHashMap<std::path::PathBuf, FailedCallSources>,
     replacement_files: Vec<(
         std::path::PathBuf,
         std::sync::Arc<crate::codebase::dependencies::extract::ValueReplacementFacts>,
@@ -59,6 +60,7 @@ fn collect_call_edges_for_core(
                 namespaces_in_repo,
                 escapes: Default::default(),
                 opaque_external_members: Default::default(),
+                call_prerequisites: Default::default(),
             };
             let mut output = CallPass::default();
             if plan.calls && plan.effect_selectors {
@@ -125,6 +127,8 @@ fn collect_call_edges_for_core(
             if !opaque.is_empty() {
                 output.opaque_external_members.insert(path.clone(), opaque);
             }
+            let prerequisites = resolution.call_prerequisites.take();
+            if !prerequisites.is_empty() { output.call_prerequisites.insert(path.clone(), prerequisites); }
             Some(output)
         })
         .collect::<Vec<_>>();
@@ -144,6 +148,7 @@ fn collect_call_edges_for_core(
             all.edges.extend(part.edges);
             all.sites.extend(part.sites);
             all.opaque_external_members.extend(part.opaque_external_members);
+            all.call_prerequisites.extend(part.call_prerequisites);
             all.replacement_files.extend(part.replacement_files);
             all.classes.extend(part.classes);
             all.class_ids.extend(part.class_ids);

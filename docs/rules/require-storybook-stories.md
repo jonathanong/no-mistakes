@@ -181,6 +181,19 @@ at both efforts.
 
 ### Unanalyzable inputs
 
+Required component sources and actual story/import catalog dependencies with
+parse/read failures are listed in aggregate `check.incomplete` at every effort
+and uncertainty policy. Strict Rust checks return a source error. Component
+selection honors its include/exclude globs, test/private/index exclusions, and
+documented file allowances; unrelated malformed files do not become inputs.
+Story patterns and actual import/render traversals determine catalog demand.
+A failed required story or catalog dependency prevents missing-story conclusions;
+independent healthy components retain findings when their catalog is complete.
+Suppression directives and `unanalyzable: ignore` control diagnostic visibility,
+not these required-input failures. Fix the failing source or narrow the
+configured selection/catalog scope.
+
+
 Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
 
 - Inputs this rule cannot prove (a parse-error file under `include`, and at low effort a child component covered only through a parent's render chain) follow `options.unanalyzable`:

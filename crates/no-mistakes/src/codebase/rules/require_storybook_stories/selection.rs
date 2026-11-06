@@ -15,6 +15,11 @@ use std::path::Path;
 pub(super) struct SelectionOptions<'a> {
     pub(super) options: &'a Options,
     pub(super) defer_suppression: bool,
+    pub(super) demand: Option<(
+        &'a super::source_failures::SourceFailures<'a>,
+        &'a crate::codebase::rules::path_filter::RulePathFilter,
+        &'a GlobMatcher,
+    )>,
 }
 
 pub(super) fn selected_components(
@@ -50,6 +55,13 @@ pub(super) fn selected_components(
             continue;
         }
         let explicit = include.is_match(&project_file);
+        if explicit {
+            if let Some((demand, filter, allow)) = selection.demand {
+                if filter.is_match(path) && !allow.is_match(&project_file) {
+                    demand.require_react(path);
+                }
+            }
+        }
         if should_skip_file(facts, opts, defer_suppression) {
             continue;
         }

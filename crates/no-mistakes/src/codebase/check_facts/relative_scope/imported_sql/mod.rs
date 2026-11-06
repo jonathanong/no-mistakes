@@ -7,6 +7,9 @@
 //! parsed again, and an unproven link leaves the call `Dynamic`.
 
 use super::CheckFileFacts;
+use crate::codebase::check_facts::sql_source_prerequisites::{
+    SqlProjection, SqlSourceKey, SqlSourcePrerequisites,
+};
 use crate::codebase::postgres::{
     splice_imported_sql, EmbeddedSqlCall, EmbeddedSqlOptions, PendingImportedSql,
 };
@@ -38,7 +41,12 @@ pub(super) fn project(
     files: &mut FileIdMap<CheckFileFacts>,
     resolve: impl FnMut(&str, &Path) -> Option<PathBuf>,
 ) {
-    let completed = complete(files, resolve);
+    let (completed, prerequisites) = complete(files, resolve);
+    for (path, prerequisite) in prerequisites {
+        if let Some(file) = files.get_mut(&path) {
+            file.sql_source_prerequisites.merge(prerequisite);
+        }
+    }
     for (path, profile, span, call, lines) in completed {
         if let Some(file) = files.get_mut(&path) {
             file.embedded_sql[profile]
@@ -51,20 +59,32 @@ pub(super) fn project(
 fn complete(
     files: &FileIdMap<CheckFileFacts>,
     resolve: impl FnMut(&str, &Path) -> Option<PathBuf>,
-) -> Vec<Completed> {
+) -> (Vec<Completed>, Vec<(PathBuf, SqlSourcePrerequisites)>) {
     let mut shared = Shared::new(files, Locator::new(files, resolve));
     let mut completed = Vec::new();
+    let mut prerequisites = Vec::new();
     for (path, file) in files {
+        let mut provenance = SqlSourcePrerequisites::default();
         for (profile, (options, embedded)) in file.embedded_sql.iter().enumerate() {
             for pending in &embedded.pending_imported {
-                if let Some(call) = complete_call(&mut shared, path, profile, options, pending) {
+                shared.failures.clear();
+                let call = complete_call(&mut shared, path, profile, options, pending);
+                provenance.record(
+                    &SqlSourceKey::profile(SqlProjection::Embedded, options),
+                    pending.span,
+                    std::mem::take(&mut shared.failures),
+                );
+                if let Some(call) = call {
                     let lines = pending.sites.iter().map(|(_, site)| site.line).collect();
                     completed.push((path.clone(), profile, pending.span, call, lines));
                 }
             }
         }
+        if !provenance.is_empty() {
+            prerequisites.push((path.clone(), provenance));
+        }
     }
-    completed
+    (completed, prerequisites)
 }
 
 fn complete_call(

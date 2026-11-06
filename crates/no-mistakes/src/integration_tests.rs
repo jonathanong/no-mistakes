@@ -42,7 +42,7 @@ pub fn prepare_runner_configs(
 }
 
 pub(crate) use checks::sort_findings;
-use checks::{check_suites, check_suites_with_resolver, fail_on_dropped_files};
+use checks::{check_suites, check_suites_with_resolver_and_session};
 pub use runner_config::{
     configured_runner_config_dirs, configured_runner_config_dirs_from_visible,
 };
@@ -128,7 +128,6 @@ pub fn check_with_prepared_facts_and_session(
         return Ok(Vec::new());
     }
 
-    fail_on_dropped_files(root, &suites, shared)?;
     let analyses: std::collections::BTreeMap<std::path::PathBuf, types::FileAnalysis> = shared
         .ts
         .iter()
@@ -139,63 +138,7 @@ pub fn check_with_prepared_facts_and_session(
                 .map(|analysis| (path.clone(), analysis.clone()))
         })
         .collect();
-    check_suites(root, &suites, tsconfig, &analyses, session)
+    check_suites(root, &suites, tsconfig, &analyses, session, shared)
 }
 
-/// Request-scoped aggregate entry point with per-importer TypeScript resolution.
-#[doc(hidden)]
-pub fn check_with_prepared_facts_catalog_and_session(
-    root: &Path,
-    config: &crate::config::v2::NoMistakesConfig,
-    shared: &crate::codebase::check_facts::CheckFactMap,
-    tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
-    visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
-    session: &crate::codebase::analysis_session::AnalysisSession,
-) -> Result<Vec<IntegrationFinding>> {
-    config::validate_config(config)?;
-
-    let root_paths = visible_paths.paths_for(root);
-    let runner_configs = runner_config::prepare_with_catalog_and_sources(
-        root,
-        config,
-        &root_paths,
-        std::sync::Arc::clone(&tsconfig_catalog),
-        visible_paths.source_store_for(root),
-    );
-    let prepared_runner_configs =
-        runner_config::ParsedRunnerConfigs::with_files(shared.integration_runner_configs.clone());
-    if !prepared_runner_configs.covers(&runner_configs) {
-        anyhow::bail!(
-            "prepared integration runner facts are incomplete; collect shared facts with \
-             CheckFactPlan.integration_runner_configs from prepare_runner_configs()"
-        );
-    }
-    let suites = config::configured_suites_from_runner_configs(
-        root,
-        config,
-        &runner_configs,
-        &prepared_runner_configs,
-    )?;
-    if suites.is_empty() {
-        return Ok(Vec::new());
-    }
-
-    fail_on_dropped_files(root, &suites, shared)?;
-    let analyses: std::collections::BTreeMap<std::path::PathBuf, types::FileAnalysis> = shared
-        .ts
-        .iter()
-        .filter_map(|(path, facts)| {
-            facts
-                .integration
-                .as_ref()
-                .map(|analysis| (path.clone(), analysis.clone()))
-        })
-        .collect();
-    let visible_files: crate::fx::PathSet = analyses.keys().cloned().collect();
-    let import_resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
-        &tsconfig_catalog,
-        &visible_files,
-        session,
-    );
-    check_suites_with_resolver(root, &suites, &analyses, &import_resolver)
-}
+include!("integration_tests/with_prepared_catalog.rs");

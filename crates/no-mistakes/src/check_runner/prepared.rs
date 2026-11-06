@@ -16,6 +16,7 @@ pub(crate) struct PreparedCheckInputs {
     pub(crate) config_path: Option<std::path::PathBuf>,
     pub(crate) codebase_config: no_mistakes::codebase::config::Config,
     pub(crate) playwright: Option<no_mistakes::playwright::rules::PreparedPlaywrightRules>,
+    pub(crate) playwright_failure: Option<String>,
     pub(crate) react: no_mistakes::react_traits::PreparedReactCheck,
     pub(crate) tsconfig: no_mistakes::codebase::ts_resolver::TsConfig,
     pub(crate) tsconfig_catalog: Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
@@ -26,44 +27,6 @@ pub(crate) struct PreparedCheckInputs {
         Option<Arc<no_mistakes::codebase::ci_workflows::PreparedWorkflowTopologyInputs>>,
     pub(crate) tsconfig_gate_project_inputs:
         Option<no_mistakes::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs>,
-}
-
-pub(crate) struct SharedWorkspace {
-    pub(crate) map: Option<Arc<no_mistakes::codebase::workspaces::IndexedWorkspaceMap>>,
-    pub(crate) deadlines: bool,
-}
-
-pub(super) fn prepare_with_session(
-    session: &no_mistakes::codebase::analysis_session::AnalysisSession,
-    root: &Path,
-    config_path: Option<&Path>,
-    tsconfig_path: Option<&Path>,
-    effort: Option<no_mistakes::config::v2::Effort>,
-    deadlines: bool,
-) -> Result<PreparedCheckInputs> {
-    let (visible_paths, _) = no_mistakes::diagnostics::measure_if_enabled(
-        "discovery",
-        no_mistakes::diagnostics::TimingKind::Serial,
-        || session.visible_paths(root),
-    );
-    let (config, effective_config_path) = session.config_with_path(root, config_path)?;
-    let tsconfig = session.tsconfig(root, tsconfig_path)?;
-    let workspace = SharedWorkspace {
-        map: consumers::needs_workspace(&config, tsconfig_path, deadlines)
-            .then(|| session.workspace(root)),
-        deadlines,
-    };
-    let mut config = config.as_ref().clone();
-    config.effort_override = effort;
-    prepare_from_shared(
-        root,
-        effective_config_path.as_deref(),
-        tsconfig_path,
-        visible_paths,
-        config,
-        tsconfig.as_ref().clone(),
-        workspace,
-    )
 }
 
 pub(crate) fn prepare_from_shared(
@@ -130,7 +93,7 @@ pub(crate) fn prepare_from_shared(
     .0;
     let playwright = no_mistakes::playwright::rules::configured(&config)
         .then(|| {
-            no_mistakes::playwright::rules::prepare_from_snapshot_with_catalog(
+            no_mistakes::playwright::rules::prepare_from_snapshot_with_catalog_partial(
                 root,
                 config_path,
                 &config,
@@ -146,8 +109,11 @@ pub(crate) fn prepare_from_shared(
             )
             .context("failed to prepare Playwright shared facts")
         })
-        .transpose()?
-        .flatten();
+        .transpose();
+    let (playwright, playwright_failure) = match playwright {
+        Ok(value) => (value.flatten(), None),
+        Err(error) => (None, Some(format!("{error:#}"))),
+    };
     if let Some(playwright) = &playwright {
         config
             .analysis_warnings
@@ -186,6 +152,7 @@ pub(crate) fn prepare_from_shared(
         config_path: config_path.map(Path::to_path_buf),
         codebase_config,
         playwright,
+        playwright_failure,
         react,
         tsconfig,
         tsconfig_catalog,
@@ -195,3 +162,9 @@ pub(crate) fn prepare_from_shared(
         tsconfig_gate_project_inputs,
     })
 }
+
+pub(crate) mod failures;
+
+include!("prepared/workspace.rs");
+
+include!("prepared/session_entry.rs");

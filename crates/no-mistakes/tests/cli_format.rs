@@ -356,16 +356,33 @@ fn global_check_format_markdown_on_bad_react_fixture() {
 }
 
 #[test]
-fn global_check_warns_when_rules_shared_facts_check_errors() {
+fn global_check_reports_incomplete_when_rules_shared_facts_check_errors() {
     let root = codebase_fixture("test-no-unmocked-dynamic-imports-invalid");
-    let output = run(&["check", "--root", root.to_str().unwrap()]);
+    let output = run(&[
+        "check",
+        "--root",
+        root.to_str().unwrap(),
+        "--format",
+        "json",
+    ]);
 
     assert_eq!(output.status.code(), Some(1));
-    assert!(stderr(&output).contains("warning: rules check skipped:"));
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert!(report["incomplete"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|failure| {
+            failure["consumer"] == "test-no-unmocked-dynamic-imports"
+                && failure["message"].as_str().is_some_and(|message| {
+                    message.starts_with("failed to parse ")
+                        && message.replace('\\', "/").contains("tests/bad.test.mts")
+                })
+        }));
 }
 
 #[test]
-fn global_check_json_fails_and_reports_warning_for_unknown_vitest_project() {
+fn global_check_json_reports_incomplete_for_unknown_vitest_project() {
     let root = codebase_fixture("test-no-unmocked-dynamic-imports-unknown-vitest-project");
     let output = run(&[
         "check",
@@ -376,13 +393,18 @@ fn global_check_json_fails_and_reports_warning_for_unknown_vitest_project() {
     ]);
 
     assert_eq!(output.status.code(), Some(1));
-    assert!(stderr(&output).contains("warning: rules check skipped:"));
     let json: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert!(json["warnings"].as_array().unwrap().iter().any(|warning| {
-        warning
-            .as_str()
-            .is_some_and(|warning| warning.contains("unknown vitest project web"))
-    }));
+    assert!(json["incomplete"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|failure| {
+            failure["consumer"] == "test-no-unmocked-dynamic-imports"
+            && failure["message"].as_str().is_some_and(|message| {
+                message == "test-no-unmocked-dynamic-imports references unknown vitest project web"
+            })
+        }));
+    assert_eq!(json["warnings"].as_array().map(Vec::len), Some(0));
     assert_eq!(json["rules"].as_array().map(Vec::len), Some(0));
 }
 
@@ -474,45 +496,5 @@ fn react_check_succeeds_when_no_violations() {
     assert!(output.status.success());
 }
 
-#[test]
-fn global_check_passes_on_react_fixture_with_no_violations() {
-    let root = react_fixture("react-traits-components", "basic");
-    let output = run(&["check", "--root", root.to_str().unwrap()]);
-    assert!(output.status.success());
-}
-
-#[test]
-fn global_check_relative_root_resolves() {
-    let output = Command::new(bin())
-        .current_dir(
-            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .join("../..")
-                .canonicalize()
-                .unwrap(),
-        )
-        .args(["check", "--root", "test-cases/queue-ast-hop/basic/fixture"])
-        .output()
-        .expect("no-mistakes should run");
-    assert!(output.status.success());
-}
-
-#[test]
-fn react_analyze_relative_root_resolves() {
-    let output = Command::new(bin())
-        .current_dir(
-            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .join("../..")
-                .canonicalize()
-                .unwrap(),
-        )
-        .args([
-            "react",
-            "--root",
-            "test-cases/react-traits-components/basic/fixture",
-            "analyze",
-            "app/components/Greeting.tsx",
-        ])
-        .output()
-        .expect("no-mistakes should run");
-    assert!(output.status.success());
-}
+#[path = "cli_format/root_paths.rs"]
+mod root_paths;

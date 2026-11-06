@@ -1,9 +1,11 @@
 use super::*;
+use crate::codebase::check_outcome::Prerequisite;
 
 mod graph_rules;
 mod helpers;
 mod independent;
 mod independent_collect;
+mod outcomes;
 mod source_store;
 use helpers::{finalize_findings, required_graph_facts, suppress_findings};
 
@@ -43,23 +45,44 @@ pub(super) fn run(
             advisories: Vec::new(),
         });
     }
-    if let Some(graph_plan) = try_canonical_graph_plan(config)? {
+    outcomes::register_demands(root, config, shared, &session)?;
+    let mut graph_plan = match try_canonical_graph_plan(config) {
+        Ok(plan) => Prerequisite::Ready(plan),
+        Err(error) if session.partial_checks_enabled() => {
+            outcomes::graph_failed(config, &session, &format!("{error:#}"));
+            Prerequisite::Failed(session.check_failures())
+        }
+        Err(error) => return Err(error),
+    };
+    if let Prerequisite::Ready(Some(required_plan)) = &graph_plan {
         let (required_facts, _) =
-            required_graph_facts(root, graph_plan, config_path, prepared_graph, &session);
+            required_graph_facts(root, *required_plan, config_path, prepared_graph, &session);
         if !shared.graph_plan().covers(required_facts)
             || !crate::codebase::rules::forbidden_calls::argument_facts_covered(
                 root, config, shared,
             )
         {
-            anyhow::bail!(
-                "shared check facts are missing graph facts required by configured codebase rules"
-            );
+            let message =
+                "shared check facts are missing graph facts required by configured codebase rules";
+            if session.partial_checks_enabled() {
+                outcomes::graph_failed(config, &session, message);
+                graph_plan = Prerequisite::Failed(session.check_failures());
+            } else {
+                anyhow::bail!("{message}");
+            }
         }
     }
+    if let Some(Prerequisite::Failed(failures)) =
+        session.check_prerequisite("codebase.canonical-graph")
+    {
+        graph_plan = Prerequisite::Failed(failures);
+    }
     let owned_graph;
-    let dependency_graph = if let Some(graph) = dependency_graph {
+    let dependency_graph = if matches!(graph_plan, Prerequisite::Failed(_)) {
+        None
+    } else if let Some(graph) = dependency_graph {
         Some(graph)
-    } else if let Some(plan) = try_canonical_graph_plan(config)? {
+    } else if let Prerequisite::Ready(Some(plan)) = graph_plan {
         owned_graph =
             crate::perf_trace::trace(
                 "rules.canonical_dependency_graph",
@@ -90,8 +113,15 @@ pub(super) fn run(
                         session.clone(),
                     ),
                 },
-            )?;
-        Some(&owned_graph)
+            );
+        match owned_graph {
+            Ok(ref graph) => Some(graph),
+            Err(error) if session.partial_checks_enabled() => {
+                outcomes::graph_failed(config, &session, &format!("{error:#}"));
+                None
+            }
+            Err(error) => return Err(error),
+        }
     } else {
         None
     };

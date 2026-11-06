@@ -105,7 +105,7 @@ fn frame_call_fails_on_depth_cycles_and_cached_failure() {
         let mut shared = Shared::new(&files, locator);
         shared.cache.insert(
             (0, path.clone(), path.clone(), "h".to_string(), Vec::new()),
-            None,
+            (None, Default::default()),
         );
         let mut cached = Frame {
             shared: &mut shared,
@@ -137,10 +137,13 @@ fn missing_modules_and_void_programs_fail_closed() {
     assert!(helper_program(&shared, &options, &path, "h").is_none());
     shared.cache.insert(
         (0, path.clone(), path.clone(), "h".to_string(), Vec::new()),
-        Some(vec![Outcome {
-            ret: Ret::Void,
-            suffixes: Vec::new(),
-        }]),
+        (
+            Some(vec![Outcome {
+                ret: Ret::Void,
+                suffixes: Vec::new(),
+            }]),
+            Default::default(),
+        ),
     );
     let site = ImportedSite {
         local: "h".to_string(),
@@ -155,16 +158,19 @@ fn missing_modules_and_void_programs_fail_closed() {
     let repeated = sql("SELECT 1");
     shared.cache.insert(
         (0, path.clone(), path.clone(), "dup".to_string(), Vec::new()),
-        Some(vec![
-            Outcome {
-                ret: Ret::Str("SELECT 1".to_string(), Some(repeated.clone())),
-                suffixes: Vec::new(),
-            },
-            Outcome {
-                ret: Ret::Str("SELECT 1".to_string(), Some(repeated)),
-                suffixes: Vec::new(),
-            },
-        ]),
+        (
+            Some(vec![
+                Outcome {
+                    ret: Ret::Str("SELECT 1".to_string(), Some(repeated.clone())),
+                    suffixes: Vec::new(),
+                },
+                Outcome {
+                    ret: Ret::Str("SELECT 1".to_string(), Some(repeated)),
+                    suffixes: Vec::new(),
+                },
+            ]),
+            Default::default(),
+        ),
     );
     let duplicate = ImportedSite {
         local: "dup".to_string(),
@@ -182,7 +188,7 @@ fn missing_modules_and_void_programs_fail_closed() {
             "abrupt".to_string(),
             Vec::new(),
         ),
-        Some(Vec::new()),
+        (Some(Vec::new()), Default::default()),
     );
     let abrupt = ImportedSite {
         local: "abrupt".to_string(),

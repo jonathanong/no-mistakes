@@ -122,7 +122,7 @@ fn finite_set_effort_propagates_source_and_remaining_rule_errors() {
         ("missing-source-ignore.yml", "absent.ts"),
         ("remaining-rule-error.yml", "banned-paths"),
     ] {
-        let error = run_all_with_options(
+        let report = run_all_with_options(
             root.clone(),
             Some(root.join(config)),
             None,
@@ -133,8 +133,14 @@ fn finite_set_effort_propagates_source_and_remaining_rule_errors() {
                 include_sql_verdicts: false,
             },
         )
-        .err()
-        .expect("invalid saved input must remain an error");
-        assert!(error.to_string().contains(expected), "{config}: {error:#}");
+        .unwrap();
+        assert!(
+            report
+                .incomplete
+                .iter()
+                .any(|failure| failure.message.contains(expected)),
+            "{config}: {:?}",
+            report.incomplete
+        );
     }
 }

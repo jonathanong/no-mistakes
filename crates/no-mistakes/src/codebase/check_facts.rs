@@ -14,7 +14,9 @@ mod relative_scope;
 mod runner;
 mod staged_playwright;
 pub(crate) use staged_playwright::{collect_precollected_route_facts, PrecollectedRouteFacts};
+pub(crate) mod sql_source_prerequisites;
 mod stats;
+pub(crate) use sql_source_prerequisites::SqlSourcePrerequisites;
 
 use rustc_hash::FxHashSet;
 use std::path::{Path, PathBuf};

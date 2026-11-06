@@ -1,0 +1,269 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "coverage-owner-partial": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "coverage-producer-assertion-owner",
+          "file": "broken.ts",
+          "message": "parsing broken.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 23, end: 24 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "healthy.ts",
+          "line": 1,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: healthy.ts#healthy",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function healthy() { return 1; }",
+          "target": "healthy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed-playwright-selection": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "playwright-coverage",
+          "file": "playwright.config.ts",
+          "message": "playwright.config.ts: expected string literal for testDir (project broken)",
+          "property": "testDir"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "healthy/app/page.tsx",
+          "line": 1,
+          "message": "Next.js route `/` is not covered by a Playwright navigation assertion",
+          "rule": "playwright-coverage",
+          "sourceLine": "export default function HealthyPage() { return <button data-testid=\"healthy-only\">Healthy</button>; }",
+          "target": "/"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "partial-playwright": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "playwright-coverage",
+          "file": "playwright.config.ts",
+          "message": "playwright.config.ts: expected string literal for testDir (project auth)",
+          "property": "testDir"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "empty.txt",
+          "line": 1,
+          "message": "file is empty",
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": ""
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "partial-source": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "forbidden-calls",
+          "message": "forbidden-calls: configured root `template.js` failed to parse: parsing template.js: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 16, end: 17 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "empty.txt",
+          "line": 1,
+          "message": "file is empty",
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": ""
+        },
+        {
+          "file": "web/pages/api/legacy.ts",
+          "line": 1,
+          "message": "Next.js API/server routes are disabled; move server endpoints out of the Next.js app",
+          "rule": "nextjs-no-api-routes",
+          "sourceLine": "export default function handler() {}"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "partial-unique": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "bad/broken.ts",
+          "line": 1,
+          "message": "directive for `unique-exports` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file unique-exports",
+          "target": "unique-exports"
+        }
+      ],
+      "codebase": [
+        {
+          "exportKind": "value",
+          "exportName": "duplicate",
+          "file": "good/b.ts",
+          "line": 1,
+          "message": "value export `duplicate` is already exported from good/a.ts:1; rename or consolidate this exported API",
+          "rule": "unique-exports",
+          "sourceLine": "export const duplicate = 2;"
+        }
+      ],
+      "incomplete": [
+        {
+          "consumer": "unique-exports",
+          "file": "bad/broken.ts",
+          "message": "parsing bad/broken.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 66, end: 67 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sql-helper-prerequisite": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-require-query-annotation",
+          "file": "helper.ts",
+          "message": "parsing helper.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `}` but found `EOF`\", labels: [LabeledSpan { label: Some(\"`}` expected\"), span: Span { start: 24, end: 24 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "caller.ts",
+          "line": 3,
+          "message": "caller.ts:3: query annotation cannot be verified because the configured SQL helper requires one static literal argument",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "query(head());",
+          "target": "annotation"
+        },
+        {
+          "file": "empty.txt",
+          "line": 1,
+          "message": "file is empty",
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": ""
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "storybook-catalog-allowances": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "stories/Broken.stories.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file require-storybook-stories",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "catalog/broken.ts",
+          "message": "parsing catalog/broken.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 65, end: 66 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "storybook-source-allowances": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "stories/Broken.stories.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file require-storybook-stories",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/Broken.tsx",
+          "message": "parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 33, end: 34 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "components/Good.tsx",
+          "line": 1,
+          "message": "React component `Good` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "sourceLine": "export function Good() { return <button />; }",
+          "target": "components/Good.tsx#Good"
+        },
+        {
+          "file": "components/Good.tsx",
+          "line": 1,
+          "message": "Storybook component opt-out `components/Good.tsx#Missing` does not match a selected component.",
+          "rule": "require-storybook-stories",
+          "sourceLine": "export function Good() { return <button />; }",
+          "target": "components/Good.tsx#Missing"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -1,7 +1,10 @@
 //! Bounded exact runtime export walk over request-prepared file facts.
 use super::Pending;
 use crate::codebase::{
-    check_facts::CheckFileFacts,
+    check_facts::{
+        sql_source_prerequisites::{source_failed, FailedSqlSources},
+        CheckFileFacts,
+    },
     postgres::query_annotation::heads::HeadProof,
     ts_source::{
         module_facts::{ModuleBinding, TypeScriptModuleFacts},
@@ -15,9 +18,19 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn project(
     resolve: &dyn Fn(&str, &Path) -> Option<PathBuf>,
     from: &Path,
     pending: &Pending,
-) -> Option<HeadProof> {
-    let target = resolve(&pending.specifier, from)?;
-    export(files, resolve, &target, &pending.exported, &mut Vec::new())
+) -> (Option<HeadProof>, FailedSqlSources) {
+    let mut failed = FailedSqlSources::new();
+    let proof = resolve(&pending.specifier, from).and_then(|target| {
+        export(
+            files,
+            resolve,
+            &target,
+            &pending.exported,
+            &mut Vec::new(),
+            &mut failed,
+        )
+    });
+    (proof, failed)
 }
 
 fn export(
@@ -26,13 +39,14 @@ fn export(
     file: &Path,
     name: &str,
     visited: &mut Vec<(PathBuf, String)>,
+    failed: &mut FailedSqlSources,
 ) -> Option<HeadProof> {
     let step = (file.to_path_buf(), name.to_string());
     if visited.len() >= 8 || visited.contains(&step) {
         return None;
     }
     visited.push(step);
-    let module = module(files, file)?;
+    let module = module(files, file, failed)?;
     let mut exports = module.exports.iter().filter(|value| value.exported == name);
     let value = exports.next()?;
     if exports.next().is_some() || value.type_only {
@@ -40,7 +54,7 @@ fn export(
     }
     if let Some(specifier) = &value.specifier {
         let target = resolve(specifier, file)?;
-        return export(files, resolve, &target, &value.local, visited);
+        return export(files, resolve, &target, &value.local, visited, failed);
     }
     let mut bindings = module.bindings.iter().filter(|binding| {
         binding.name == value.local
@@ -55,7 +69,7 @@ fn export(
         return None;
     }
     if binding.imported {
-        return imported(files, resolve, file, module, binding, visited);
+        return imported(files, resolve, file, module, binding, visited, failed);
     }
     files
         .get(file)?
@@ -73,6 +87,7 @@ fn imported(
     module: &TypeScriptModuleFacts,
     binding: &ModuleBinding,
     visited: &mut Vec<(PathBuf, String)>,
+    failed: &mut FailedSqlSources,
 ) -> Option<HeadProof> {
     let mut imports = module
         .imports
@@ -90,19 +105,17 @@ fn imported(
         return None;
     }
     let target = resolve(&import.specifier, file)?;
-    export(files, resolve, &target, &entry.imported, visited)
+    export(files, resolve, &target, &entry.imported, visited, failed)
 }
 
 fn module<'a>(
     files: &'a FileIdMap<CheckFileFacts>,
     file: &Path,
+    failed: &mut FailedSqlSources,
 ) -> Option<&'a TypeScriptModuleFacts> {
     let facts = files.get(file)?;
-    if facts.parse_error.is_some()
-        || facts.ts.parse_error.is_some()
-        || facts.ts.operational_error.is_some()
-        || facts.ts.fatal_parse_error
-    {
+    if source_failed(files, file) {
+        failed.insert(file.to_path_buf());
         return None;
     }
     let module = facts.ts.module_bindings.as_deref()?;

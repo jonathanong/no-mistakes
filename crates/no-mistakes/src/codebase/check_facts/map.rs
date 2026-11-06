@@ -57,6 +57,7 @@ pub struct CheckFactMap {
     pub(crate) files: Vec<PathBuf>,
     pub(crate) graph_files: Vec<PathBuf>,
     pub(crate) graph_files_complete: bool,
+    pub(crate) queue_paths: Option<super::family_scope::FamilyPathScope>,
     pub(crate) ts: FileIdMap<Arc<CheckFileFacts>>,
     pub(crate) call_site_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     pub(crate) graph_plan: crate::codebase::ts_source::facts::TsFactPlan,
@@ -88,10 +89,27 @@ impl CheckFactMap {
     pub fn unproven_member_query_sql(&self) -> u32 {
         self.unproven_member_query_sql
     }
+
+    pub(crate) fn queue_source_files(&self) -> Option<Vec<PathBuf>> {
+        let scope = self.queue_paths.as_ref()?;
+        Some(
+            self.files
+                .iter()
+                .filter(|path| {
+                    matches!(
+                        path.extension().and_then(|ext| ext.to_str()),
+                        Some("ts" | "tsx" | "js" | "jsx" | "mts" | "cts" | "mjs" | "cjs")
+                    ) && super::family_scope::applies(scope, path)
+                })
+                .cloned()
+                .collect(),
+        )
+    }
 }
 
 #[derive(Default)]
 pub(crate) struct CheckFileFacts {
+    pub(crate) sql_source_prerequisites: super::SqlSourcePrerequisites,
     pub ts: Arc<TsFileFacts>,
     pub(crate) lint_suppressions:
         Option<Vec<crate::codebase::rules::forbidden_lint_suppressions::Suppression>>,

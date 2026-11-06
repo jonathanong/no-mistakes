@@ -1,0 +1,9 @@
+version: 2
+tests:
+  playwright:
+    configs:
+      - playwright.good.config.ts
+      - playwright.bad.config.ts
+rules:
+  - rule: playwright-prefer-test-id-locators
+    scope: repository

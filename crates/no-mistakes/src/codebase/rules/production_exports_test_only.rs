@@ -1,7 +1,7 @@
-//! Production exports whose syntactic consumers all belong to configured tests.
 mod config;
 mod extends;
 mod nextjs;
+mod prerequisites;
 mod script_entries;
 mod selector_advisories;
 mod selector_gaps;
@@ -30,114 +30,8 @@ pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     })
 }
 
-pub(crate) fn check_with_graph(
-    root: &Path,
-    config: &NoMistakesConfig,
-    graph: &DepGraph,
-    facts: &CheckFactMap,
-) -> Result<AnalysisDiagnostics> {
-    let root = crate::codebase::ts_resolver::normalize_path(root);
-    let mut diagnostics = AnalysisDiagnostics::default();
-    let incomplete = traversal::incomplete_sources(graph, facts);
-    for application in config.rule_applications(RULE_ID) {
-        let options = config::Selection::new(&root, application)?;
-        let filter = RulePathFilter::new(&root, config, application)?;
-        let policy = config.effective_rule_analysis(application)?.unanalyzable;
-        let files = facts.graph_file_universe();
-        let entries = script_entries::ScriptEntries::collect(&root, files);
-        let nextjs_roots = nextjs::project_roots(&root, config);
-        let bases = extends::ProductionBases::collect(graph, |path| options.production(path));
-        for (file, line, reason) in &incomplete {
-            diagnostics.unanalyzable(policy, uncertain(&root, application, file, *line, reason));
-        }
-        let chunks: Vec<_> = files
-            .par_iter()
-            .filter(|file| {
-                crate::codebase::dependencies::extract::is_indexable(file)
-                    && options.production(file)
-                    && filter.is_match(file)
-            })
-            .map(|file| {
-                let mut chunk = AnalysisDiagnostics::default();
-                let Some(ts) = facts.get_ts_facts(file) else {
-                    return chunk;
-                };
-                let Some(symbols) = ts
-                    .symbols
-                    .as_ref()
-                    .filter(|_| ts.parse_error.is_none() && ts.operational_error.is_none())
-                else {
-                    return chunk;
-                };
-                let local_uses = options
-                    .ignore_exports_used_in_file
-                    .then(|| used_in_file::exports(ts));
-                for export in &symbols.exports {
-                    if forwarded(symbols, export) {
-                        continue;
-                    }
-                    let name = if matches!(export.kind, ExportKind::Default) {
-                        "default"
-                    } else {
-                        &export.name
-                    };
-                    if local_uses.as_ref().is_some_and(|uses| uses.contains(name)) {
-                        continue;
-                    }
-                    // Next.js reads these names. Other exports on the same file stay in scope.
-                    if entries.exempts(file, nextjs::consumed_export(file, &nextjs_roots, name)) {
-                        continue;
-                    }
-                    let mut consumers = traversal::consumers(graph, file, name);
-                    let undetermined = consumers.settle(&export.kind, |file| options.test(file));
-                    if consumers.files.iter().any(|file| !options.test(file)) {
-                        continue;
-                    }
-                    if bases.extends_class(ts, file, export) {
-                        continue;
-                    }
-                    if !consumers.unknown.is_empty() {
-                        if let Some((importer, line, reason)) = selector_advisories::for_export(
-                            &root,
-                            graph,
-                            &consumers.unknown,
-                            &export.name,
-                        ) {
-                            chunk.unanalyzable(
-                                policy,
-                                uncertain(&root, application, &importer, line, &reason),
-                            );
-                        }
-                    } else if !undetermined.is_empty() {
-                        let (importer, line, reason) = selector_advisories::undetermined(
-                            &root,
-                            graph,
-                            &undetermined,
-                            &export.name,
-                        );
-                        chunk.unanalyzable(
-                            policy,
-                            uncertain(&root, application, &importer, line, &reason),
-                        );
-                    } else if !consumers.files.is_empty()
-                        && consumers.files.iter().all(|file| options.test(file))
-                    {
-                        chunk
-                            .findings
-                            .push(finding(&root, application, file, export));
-                    }
-                }
-                chunk
-            })
-            .collect();
-        for chunk in chunks {
-            diagnostics.append(chunk);
-        }
-    }
-    super::sort_findings(&mut diagnostics.findings);
-    super::sort_findings(&mut diagnostics.advisories);
-    Ok(diagnostics)
-}
+mod execution;
+pub(crate) use execution::check_with_graph_and_session;
 
 fn forwarded(symbols: &FileSymbols, export: &crate::codebase::ts_symbols::Export) -> bool {
     matches!(export.kind, ExportKind::ReExport { .. })

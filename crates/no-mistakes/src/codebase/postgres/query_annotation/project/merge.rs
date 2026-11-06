@@ -1,7 +1,10 @@
 use super::super::evaluate::{CallSpan, ExecutionEvents};
 use super::output::{prefix, projected_sql};
 use super::{output, ProjectedCalls, Value};
-use crate::codebase::check_facts::CheckFileFacts;
+use crate::codebase::check_facts::{
+    sql_source_prerequisites::{FailedSqlSources, SqlProjection, SqlSourceKey},
+    CheckFileFacts,
+};
 use crate::codebase::postgres::{sql_requires_query_annotation, EmbeddedSqlOptions};
 use crate::codebase::ts_source::FileIdMap;
 use crate::fx::FxHashMap;
@@ -13,15 +16,30 @@ struct CallUpdate {
     value: Option<String>,
 }
 
+pub(super) type SourceEvents =
+    std::collections::BTreeMap<(PathBuf, CallSpan), Vec<(bool, FailedSqlSources)>>;
+
 pub(super) struct Projection {
     calls: Vec<CallUpdate>,
     executed: ProjectedCalls,
+    pub failures: std::collections::BTreeMap<PathBuf, FailedSqlSources>,
+    fact_failures: std::collections::BTreeMap<(PathBuf, CallSpan), FailedSqlSources>,
 }
 
 pub(super) fn reduce(events: ExecutionEvents, collect_executed: bool) -> Projection {
+    reduce_with_sources(events, collect_executed, SourceEvents::new())
+}
+
+pub(super) fn reduce_with_sources(
+    events: ExecutionEvents,
+    collect_executed: bool,
+    mut sources: SourceEvents,
+) -> Projection {
     let mut projection = Projection {
         calls: Vec::new(),
         executed: ProjectedCalls::new(),
+        failures: Default::default(),
+        fact_failures: Default::default(),
     };
     for ((path, span), events) in events {
         // An exported helper can be called both locally with known SQL and
@@ -29,6 +47,20 @@ pub(super) fn reduce(events: ExecutionEvents, collect_executed: bool) -> Project
         // its contextual preference; executed SQL must include every
         // reachable invocation before it certifies a complete statement.
         let contextual = !collect_executed && events.iter().any(|(generic, _)| !generic);
+        if !sources.is_empty() {
+            let failures = sources
+                .remove(&(path.clone(), span))
+                .into_iter()
+                .flatten()
+                .filter(|(generic, _)| !contextual || !generic)
+                .flat_map(|(_, paths)| paths)
+                .collect::<FailedSqlSources>();
+            if !failures.is_empty() {
+                projection
+                    .fact_failures
+                    .insert((path.clone(), span), failures);
+            }
+        }
         let values = events
             .into_iter()
             .filter(|(generic, _)| !contextual || !generic)
@@ -96,6 +128,21 @@ pub(super) fn apply(
     mut projection: Projection,
     projected: &mut ProjectedCalls,
 ) {
+    let key = SqlSourceKey::profile(SqlProjection::AnnotationMax, options);
+    for (path, failures) in projection.failures {
+        files
+            .get_mut(&originals[&path])
+            .expect("prepared evaluation root")
+            .sql_source_prerequisites
+            .record(&key, (0, 0), failures);
+    }
+    for ((path, span), failures) in projection.fact_failures {
+        files
+            .get_mut(&originals[&path])
+            .expect("prepared event source")
+            .sql_source_prerequisites
+            .record(&key, span, failures);
+    }
     for CallUpdate { path, span, value } in projection.calls {
         let file = files
             .get_mut(&originals[&path])

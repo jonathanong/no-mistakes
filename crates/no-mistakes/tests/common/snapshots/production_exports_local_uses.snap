@@ -241,13 +241,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "production-exports-only-used-by-tests",
+          "message": "invalid options for rule `production-exports-only-used-by-tests` at options.ignoreExportsUsedInFile: invalid type: string \"yes\", expected a boolean"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
       "rules": [],
-      "warnings": [
-        "warning: rules check skipped: invalid options for rule `production-exports-only-used-by-tests` at options.ignoreExportsUsedInFile: invalid type: string \"yes\", expected a boolean"
-      ]
+      "warnings": []
     }
   }
 }

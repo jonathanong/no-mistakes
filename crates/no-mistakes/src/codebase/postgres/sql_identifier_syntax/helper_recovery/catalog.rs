@@ -29,6 +29,7 @@ impl PreparedCatalog<'_> {
         if facts.parse_error.is_some()
             || facts.ts.parse_error.is_some()
             || facts.ts.operational_error.is_some()
+            || facts.ts.fatal_parse_error
         {
             return None;
         }

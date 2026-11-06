@@ -1,0 +1,13 @@
+rules:
+  - name: failed app
+    rule: required-entrypoint-reachability
+    scope: repository
+    options:
+      sourceGlobs: [broken/page.tsx]
+      entrypoints: [tests/good.spec.ts]
+  - name: healthy app
+    rule: required-entrypoint-reachability
+    scope: repository
+    options:
+      sourceGlobs: [good/page.tsx]
+      entrypoints: [tests/good.spec.ts]

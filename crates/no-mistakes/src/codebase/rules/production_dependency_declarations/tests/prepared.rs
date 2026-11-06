@@ -163,6 +163,7 @@ fn prepared_rule_resolves_each_specifier_once_and_never_reads_or_parses_again() 
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &files);
     let boundary = crate::codebase::rules::run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
         &root, &config, &files, crate::codebase::rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
+            session: None,
             snapshot: &snapshot, vitest_catalog: None, sources: snapshot.source_store_for(&root),
             next_config_resolver: None,
             workflow_documents: None, tsconfig_gate_project_inputs: None, config_path: None,

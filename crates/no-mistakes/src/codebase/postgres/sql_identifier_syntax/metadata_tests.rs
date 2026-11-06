@@ -17,6 +17,23 @@ fn callable_factory_executors_retain_values_builder_inputs() {
     let report: serde_json::Value =
         serde_json::from_str(&crate::napi_api::check_json_impl(options).unwrap()).unwrap();
     let rows = report["advisories"].as_array().unwrap();
+    for (rule, index) in [
+        ("postgres-no-offset", 0),
+        ("postgres-no-unbounded-sql-identifier", 1),
+        ("postgres-no-mutable-sql-registry", 2),
+    ] {
+        let messages: Vec<_> = rows
+            .iter()
+            .filter(|row| row["rule"] == rule)
+            .map(|row| row["message"].as_str().unwrap())
+            .collect();
+        assert!(!messages.is_empty(), "{rule}: {report}");
+        let identity = format!("{rule} application #{index}");
+        assert!(
+            messages.iter().all(|message| message.contains(&identity)),
+            "{identity}: {messages:?}"
+        );
+    }
     let guarded = rows
         .iter()
         .filter(|row| row["file"] == "src/guarded.mts")

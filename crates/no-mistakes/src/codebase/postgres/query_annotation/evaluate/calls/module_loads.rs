@@ -77,7 +77,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
 
     fn initialize_runtime_module(&mut self, target: Option<PathBuf>) {
         if let Some(target) = target {
-            self.module_environment(&target);
+            if self.files.contains_key(&target) {
+                self.module_environment(&target);
+            } else {
+                self.modules.sources.consult(&target);
+            }
         } else {
             // An unresolved runtime module can mutate builders owned by any
             // previously initialized supplied module.

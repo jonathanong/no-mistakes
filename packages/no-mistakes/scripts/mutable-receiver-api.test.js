@@ -70,11 +70,12 @@ for (const [name, expected] of [
     async () => {
       const cjs = require("../index.js");
       const esm = await import("../index.mjs");
+      const sourceExtension = name === "mutable-let-wrapped-assertion" ? "ts" : "mts";
       const options = {
         root,
         config,
         kind: "valkey",
-        entry: `src/nested-receiver-containers/${name}.mts`,
+        entry: `src/nested-receiver-containers/${name}.${sourceExtension}`,
       };
       const pending = cjs.effects(options);
       assert.ok(pending instanceof Promise);

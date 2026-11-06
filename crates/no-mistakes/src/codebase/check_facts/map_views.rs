@@ -1,3 +1,4 @@
+use super::super::family_scope::merge;
 use super::CheckFactMap;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -84,6 +85,11 @@ impl CheckFactMap {
             crate::codebase::check_facts::relative_scope::count_unproven_member_queries(
                 ts.values().map(|facts| facts.as_ref()),
             );
+        let queue_paths = match (&self.queue_paths, &supplemental.queue_paths) {
+            (Some(left), Some(right)) => Some(merge(true, left, true, right)),
+            (Some(scope), None) | (None, Some(scope)) => Some(scope.clone()),
+            (None, None) => None,
+        };
         Self {
             sql_application: self.sql_application.clone(),
             sql_verdicts: self.sql_verdicts.clone(),
@@ -97,6 +103,7 @@ impl CheckFactMap {
             integration_route_links: self.integration_route_links.clone(),
             graph_files,
             graph_files_complete: self.graph_files_complete,
+            queue_paths,
             ts,
             graph_plan,
             call_site_paths,

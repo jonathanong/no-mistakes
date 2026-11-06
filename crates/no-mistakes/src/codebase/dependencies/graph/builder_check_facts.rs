@@ -88,7 +88,7 @@ impl DepGraph {
                 root,
                 tsconfig,
                 tsconfig_catalog: Some(tsconfig_catalog),
-                plan,
+                plan: prepared.effective_plan(plan),
                 graph_files: &graph_files,
                 workspace: Some(prepared.workspace()),
                 config_options: prepared.options.as_ref(),

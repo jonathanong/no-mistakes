@@ -175,8 +175,7 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
         ..Default::default()
     };
 
-    let story_files =
-        coverage::reachable_story_files(&root, &shared, &matcher, &resolver, &component_keys);
+    let story_files = coverage::reachable_story_files(&root, &shared, &matcher, &resolver, None);
     assert!(story_files.contains(&story));
     assert!(story_files.iter().any(|path| {
         path.file_name()
@@ -194,6 +193,7 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
             .collect(),
         &resolver,
         &component_keys,
+        None,
     );
     assert_eq!(covered, [component_key].into_iter().collect());
 
@@ -247,6 +247,7 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
         &[story].into_iter().collect(),
         &resolver,
         &component_keys,
+        None
     )
     .is_empty());
 }
@@ -383,6 +384,7 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
         selection::SelectionOptions {
             options: &opts,
             defer_suppression: false,
+            demand: None,
         },
         &include,
         &exclude,
@@ -418,6 +420,7 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
         .into_iter()
         .collect(),
         &HashSet::new(),
+        None,
     );
     assert_eq!(
         covered,
@@ -475,8 +478,12 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
             .collect(),
         ..Default::default()
     };
-    let boundary_files =
-        coverage_graph::dynamic_or_mock_boundary_files(project_root, &boundary_shared, &resolver);
+    let boundary_files = coverage_graph::dynamic_or_mock_boundary_files(
+        project_root,
+        &boundary_shared,
+        &resolver,
+        None,
+    );
     assert!(boundary_files.contains(&normalize_path(&same_project)));
     assert!(!boundary_files.contains(&normalize_path(&other_project)));
 }

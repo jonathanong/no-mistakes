@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 pub(super) struct RuleCheck<'a> {
+    pub(super) session: Option<&'a crate::codebase::analysis_session::AnalysisSession>,
     pub(super) root: &'a std::path::Path,
     pub(super) project_root: &'a std::path::Path,
     pub(super) config: &'a crate::config::v2::schema::NoMistakesConfig,

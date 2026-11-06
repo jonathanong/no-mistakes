@@ -1,0 +1,10 @@
+effects:
+  postgres:
+    targets: [{module: '@db', export: query}]
+    batchFunctions: [load]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    include: [query-entry.ts]
+    options:
+      effects: [postgres]

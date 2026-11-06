@@ -26,9 +26,9 @@ fn prepared_graph_config_reuses_a_supplied_test_filter() {
 
     assert!(!prepared.contains("TestFileFilter::new("));
     assert!(prepared.contains("graph_config_options_from_loaded_with_test_filter("));
-    for source in [graph_plan, check_prepare, standalone] {
+    for source in [graph_plan, standalone] {
         assert!(
-            source.contains("prepare_graph_config_with_test_filter("),
+            source.contains("prepare_graph_config_with_test_filter"),
             "prepared check/graph path must pass a TestFileFilter"
         );
         assert!(
@@ -36,6 +36,14 @@ fn prepared_graph_config_reuses_a_supplied_test_filter() {
             "prepared check/graph path must not rebuild graph config without a filter"
         );
     }
+    assert!(graph_plan.contains("TestFileFilter::new(root, config)"));
+    assert!(graph_plan.contains("let result = prepare("));
+    assert!(graph_plan.contains("prepare_graph_config_with_test_filter_partial"));
+    assert!(check_prepare.contains("graph_plan::prepare("));
+    assert!(check_prepare.contains("codebase_config: &prepared.codebase_config"));
+    assert!(check_prepare.contains("visible_paths: prepared.visible_paths.as_ref()"));
+    assert!(!check_prepare.contains("prepare_graph_config("));
+    assert!(!check_prepare.contains("TestFileFilter::new("));
 }
 
 #[test]

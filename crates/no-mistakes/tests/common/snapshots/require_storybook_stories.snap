@@ -591,13 +591,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "message": "require-storybook-stories requires exactly one project target"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
       "rules": [],
-      "warnings": [
-        "warning: rules check skipped: require-storybook-stories requires exactly one project target"
-      ]
+      "warnings": []
     }
   },
   "mdx_story": {
@@ -822,13 +826,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "selected_advise": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [
         {
           "file": "components/Broken.tsx",
           "line": 1,
-          "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.",
           "rule": "require-storybook-stories",
           "sourceLine": "// Intentionally malformed: explicit selection must not silently pass.",
           "target": "unanalyzable"
@@ -843,6 +847,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/Broken.tsx",
+          "message": "parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/FileDisabled.tsx",
+          "message": "parsing components/FileDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/LineDisabled.tsx",
+          "message": "parsing components/LineDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -851,7 +872,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "selected_allow_file": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [
         {
@@ -864,6 +885,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/FileDisabled.tsx",
+          "message": "parsing components/FileDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/LineDisabled.tsx",
+          "message": "parsing components/LineDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -885,6 +918,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/Broken.tsx",
+          "message": "parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/FileDisabled.tsx",
+          "message": "parsing components/FileDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/LineDisabled.tsx",
+          "message": "parsing components/LineDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -892,7 +942,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "components/Broken.tsx",
           "line": 1,
-          "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.",
           "rule": "require-storybook-stories",
           "sourceLine": "// Intentionally malformed: explicit selection must not silently pass.",
           "target": "unanalyzable"
@@ -931,6 +981,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/Broken.jsx",
+          "message": "parsing components/Broken.jsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -938,7 +995,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "components/Broken.jsx",
           "line": 1,
-          "message": "Selected React source could not be analyzed (parsing components/Broken.jsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "message": "Selected React source could not be analyzed (parsing components/Broken.jsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.",
           "rule": "require-storybook-stories",
           "sourceLine": "// Intentionally malformed JSX is also an explicitly selectable input.",
           "target": "unanalyzable"
@@ -1022,7 +1079,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "selected_ignore": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [
         {
@@ -1051,6 +1108,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/Broken.tsx",
+          "message": "parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/FileDisabled.tsx",
+          "message": "parsing components/FileDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/LineDisabled.tsx",
+          "message": "parsing components/LineDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1065,7 +1139,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "components/Broken.tsx",
           "line": 1,
-          "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.",
           "rule": "require-storybook-stories",
           "sourceLine": "// Intentionally malformed: explicit selection must not silently pass.",
           "target": "unanalyzable"
@@ -1080,6 +1154,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/Broken.tsx",
+          "message": "parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/FileDisabled.tsx",
+          "message": "parsing components/FileDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/LineDisabled.tsx",
+          "message": "parsing components/LineDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1126,6 +1217,73 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/Allowed.tsx",
+          "message": "parsing components/Allowed.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 34, end: 35 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/Broken.jsx",
+          "message": "parsing components/Broken.jsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/Broken.test.tsx",
+          "message": "parsing components/Broken.test.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 31, end: 32 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/Broken.tsx",
+          "message": "parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/Excluded.tsx",
+          "message": "parsing components/Excluded.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 35, end: 36 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/FileDisabled.tsx",
+          "message": "parsing components/FileDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/GenericExcluded.tsx",
+          "message": "parsing components/GenericExcluded.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 42, end: 43 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/LineDisabled.tsx",
+          "message": "parsing components/LineDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/_Private.tsx",
+          "message": "parsing components/_Private.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 34, end: 35 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/index.tsx",
+          "message": "parsing components/index.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 32, end: 33 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/plain.ts",
+          "message": "parsing components/plain.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 22, end: 23 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "outside/NextLine.tsx",
+          "message": "parsing outside/NextLine.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 118, end: 119 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "outside/Unselected.tsx",
+          "message": "parsing outside/Unselected.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 37, end: 38 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1133,10 +1291,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "outside/Valid.tsx",
           "line": 1,
-          "message": "React component `Valid` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "message": "Storybook coverage of `Valid` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
           "rule": "require-storybook-stories",
           "sourceLine": "export function Valid() { return <button />; }",
-          "target": "outside/Valid.tsx#Valid"
+          "target": "unanalyzable"
         }
       ],
       "warnings": []
@@ -1172,6 +1330,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "outside/NextLine.tsx",
+          "message": "parsing outside/NextLine.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 118, end: 119 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1179,7 +1344,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "outside/NextLine.tsx",
           "line": 1,
-          "message": "Selected React source could not be analyzed (parsing outside/NextLine.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 118, end: 119 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "message": "Selected React source could not be analyzed (parsing outside/NextLine.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 118, end: 119 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.",
           "rule": "require-storybook-stories",
           "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "unanalyzable"
@@ -1202,6 +1367,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/Broken.tsx",
+          "message": "parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/FileDisabled.tsx",
+          "message": "parsing components/FileDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/LineDisabled.tsx",
+          "message": "parsing components/LineDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1209,7 +1391,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "components/Broken.tsx",
           "line": 1,
-          "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.",
           "rule": "require-storybook-stories",
           "sourceLine": "// Intentionally malformed: explicit selection must not silently pass.",
           "target": "unanalyzable"
@@ -1256,7 +1438,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "selected_project_exclude": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [
         {
@@ -1269,6 +1451,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/FileDisabled.tsx",
+          "message": "parsing components/FileDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/LineDisabled.tsx",
+          "message": "parsing components/LineDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1290,6 +1484,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/Broken.tsx",
+          "message": "parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/FileDisabled.tsx",
+          "message": "parsing components/FileDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/LineDisabled.tsx",
+          "message": "parsing components/LineDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1297,7 +1508,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "components/Broken.tsx",
           "line": 1,
-          "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.",
           "rule": "require-storybook-stories",
           "sourceLine": "// Intentionally malformed: explicit selection must not silently pass.",
           "target": "unanalyzable"
@@ -1307,7 +1518,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "selected_rule_exclude": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [
         {
@@ -1320,6 +1531,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/FileDisabled.tsx",
+          "message": "parsing components/FileDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "components/LineDisabled.tsx",
+          "message": "parsing components/LineDisabled.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 109, end: 110 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1379,13 +1602,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "web/stories/Broken.stories.tsx",
           "line": 1,
-          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.",
           "rule": "require-storybook-stories",
           "sourceLine": "// Keep this malformed: its hidden imports make this application incomplete.",
           "target": "unanalyzable"
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1407,6 +1647,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1422,7 +1679,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "web/stories/Broken.stories.tsx",
           "line": 1,
-          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.",
           "rule": "require-storybook-stories",
           "sourceLine": "// Keep this malformed: its hidden imports make this application incomplete.",
           "target": "unanalyzable"
@@ -1436,6 +1693,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1465,6 +1739,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1494,6 +1785,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1509,7 +1817,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "web/stories/Broken.stories.tsx",
           "line": 1,
-          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.",
           "rule": "require-storybook-stories",
           "sourceLine": "// Keep this malformed: its hidden imports make this application incomplete.",
           "target": "unanalyzable"
@@ -1523,6 +1831,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1569,6 +1894,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1590,6 +1932,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1613,7 +1972,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "web/stories/Broken.stories.tsx",
           "line": 1,
-          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.",
           "rule": "require-storybook-stories",
           "sourceLine": "// Keep this malformed: its hidden imports make this application incomplete.",
           "target": "unanalyzable"
@@ -1629,13 +1988,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "web/stories/Broken.stories.tsx",
           "line": 1,
-          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.",
           "rule": "require-storybook-stories",
           "sourceLine": "// Keep this malformed: its hidden imports make this application incomplete.",
           "target": "unanalyzable"
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1659,13 +2035,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "web/stories/Broken.stories.tsx",
           "line": 1,
-          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.",
           "rule": "require-storybook-stories",
           "sourceLine": "// Keep this malformed: its hidden imports make this application incomplete.",
           "target": "unanalyzable"
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1704,6 +2097,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1742,6 +2152,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1763,6 +2190,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1792,6 +2236,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1821,6 +2282,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1850,6 +2328,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1879,6 +2374,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1908,6 +2420,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/Broken.stories.tsx",
+          "message": "parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1937,6 +2466,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "message": "parsing web/stories/FileDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "require-storybook-stories",
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "message": "parsing web/stories/LineDisabled.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 109, end: 109 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
