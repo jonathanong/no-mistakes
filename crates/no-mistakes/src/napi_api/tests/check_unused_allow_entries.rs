@@ -34,8 +34,10 @@ fn stale_allow_entries_are_advisory_and_match_batched_check() {
 
 #[test]
 fn unused_allow_policy_matches_batched_check() {
-    let root =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/unused-allow-entries");
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/unused-allow-entries")
+        .canonicalize()
+        .unwrap();
     let mut canonical = None;
     for policy in ["advise", "report", "ignore"] {
         let config = root.join(format!("{policy}.yml"));
