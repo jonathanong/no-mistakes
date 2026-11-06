@@ -36,7 +36,8 @@ use super::{
     swift_viewmodel_main_actor, test_email_domain_policy, test_no_dependency_pins,
     tsconfig_alias_folder_mapping, tsconfig_file_coverage, tsconfig_gate_coverage,
     version_pin_consistency, vitest_ci_path_coverage, vitest_project_mapping,
-    vitest_test_correspondence, workflow_topology_policy, workspace_package_cycles,
+    vitest_project_policy, vitest_test_correspondence, workflow_topology_policy,
+    workspace_package_cycles,
 };
 
 mod call_site_facts;
@@ -82,8 +83,8 @@ use super::{
     STRICT_PACKAGE_LAYOUT, STRUCTURED_CONFIG_POLICY, SWIFT_NO_RAW_PRINT,
     SWIFT_VIEWMODEL_MAIN_ACTOR, TEST_EMAIL_DOMAIN_POLICY, TEST_NO_DEPENDENCY_PINS,
     TSCONFIG_ALIAS_FOLDER_MAPPING, TSCONFIG_FILE_COVERAGE, TSCONFIG_GATE_COVERAGE,
-    VITEST_CI_PATH_COVERAGE, VITEST_PROJECT_MAPPING, VITEST_TEST_CORRESPONDENCE,
-    WORKFLOW_TOPOLOGY_POLICY, WORKSPACE_PACKAGE_CYCLES,
+    VITEST_CI_PATH_COVERAGE, VITEST_PROJECT_MAPPING, VITEST_PROJECT_POLICY,
+    VITEST_TEST_CORRESPONDENCE, WORKFLOW_TOPOLOGY_POLICY, WORKSPACE_PACKAGE_CYCLES,
 };
 pub use entrypoints::{
     run_filesystem_rules, run_filesystem_rules_with_config,

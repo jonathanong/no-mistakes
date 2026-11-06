@@ -1,0 +1,18 @@
+version: 2
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: vitest.config.ts
+      helpers: [helper.ts]
+      parity:
+        - properties: [fileParallelism, maxWorkers]
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{vitest: true}]
+      traversal: file
+      targets: [{global: setTimeout}]

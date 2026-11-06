@@ -214,3 +214,22 @@ test("per-item query configuration exports optional capped cursor exemption", ()
     ),
   );
 });
+
+test("Vitest project property policy exports named configuration types", () => {
+  const types = readFileSync(join(packageRoot, "vitest-project-policy-types.d.ts"), "utf8");
+  assert.match(types, /export type VitestPropertyLiteral = string \| number \| boolean \| null;/);
+  assert.match(types, /export interface VitestPropertyParity/);
+  assert.match(types, /properties: \[string, string\];/);
+  assert.match(types, /compareRoot\?: boolean;/);
+  assert.match(types, /export interface VitestProjectPolicyOptions/);
+  assert.match(types, /config: string;/);
+  assert.match(types, /helpers\?: string\[\];/);
+  assert.match(types, /required\?: Record<string, VitestPropertyLiteral>;/);
+  assert.match(types, /forbidden\?: string\[\];/);
+  assert.match(types, /parity\?: VitestPropertyParity\[\];/);
+  assert.ok(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(
+      'export type * from "./vitest-project-policy-types";',
+    ),
+  );
+});

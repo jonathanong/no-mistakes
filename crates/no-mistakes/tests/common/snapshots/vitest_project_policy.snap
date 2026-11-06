@@ -1,0 +1,873 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "arbitrary-call": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.projects"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "array-required": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "message": "vitest-project-policy required values must be scalar JSON literals"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dotted-property": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "message": "vitest-project-policy property names must be nonempty direct test property names"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dynamic-project": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: extends is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "extends"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: test is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty-property": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "message": "vitest-project-policy property names must be nonempty direct test property names"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "helper": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "helper-chain": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "helper-cycle": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: extends is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "extends"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: test is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "helper-type-only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "helper-type-only.ts",
+          "message": "Vitest project #1 is incomplete: extends is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "extends"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "helper-type-only.ts",
+          "message": "Vitest project #1 is incomplete: test is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line-suppression": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "malformed-helper": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: extends is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "extends"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: test is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "malformed-source": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.projects"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "mismatch": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "vitest.config.ts",
+          "line": 3,
+          "message": "Vitest project drift: test.fileParallelism must equal false to match the first complete project; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "{ test: { name: 'drift', fileParallelism: true, maxWorkers: 2 } },"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 3,
+          "message": "Vitest project drift: test.maxWorkers must equal 1.0 to match the first complete project; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "{ test: { name: 'drift', fileParallelism: true, maxWorkers: 2 } },"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "vitest.config.ts",
+          "line": 2,
+          "message": "Vitest project missing-workers: test.fileParallelism and test.maxWorkers must be declared together (found false); declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "{ test: { name: 'missing-workers', fileParallelism: false } },"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing-helper": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: extends is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "extends"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: test is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "missing-root-test": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.projects"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "missing-source": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.projects"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "missing-test": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "vitest.config.ts",
+          "line": 1,
+          "message": "Vitest project #1: test.isolate must equal true; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export default { test: { projects: [{}] } };"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mutable-binding": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: maxWorkers is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "maxWorkers"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "mutated-object": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.projects"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "next-line-suppression": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no-config": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "message": "vitest-project-policy requires options.config naming an explicit config file"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "nonliteral": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project dynamic is incomplete: maxWorkers is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "maxWorkers"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "nonliteral-root": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.projects"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "object-required": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "message": "vitest-project-policy required values must be scalar JSON literals"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "parity-length": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "message": "invalid options for rule `vitest-project-policy` at options.parity[0].properties: invalid length 1, expected an array of length 2"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "projects-nonarray": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.projects"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reexport-undeclared": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: extends is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "extends"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: test is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "required-forbidden": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "vitest.config.ts",
+          "line": 3,
+          "message": "Vitest project missing-required: test.isolate must equal true; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "{ test: { name: 'missing-required', pool: 'forks' } },"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 3,
+          "message": "Vitest project missing-required: test.pool is forbidden; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "{ test: { name: 'missing-required', pool: 'forks' } },"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 4,
+          "message": "Vitest project wrong-literal: test.isolate must equal true; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "{ test: { name: 'wrong-literal', isolate: false } },"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "root-mismatch": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "vitest.config.ts",
+          "line": 2,
+          "message": "Vitest project root-drift: test.fileParallelism must match the root test.fileParallelism; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "{ test: { name: 'root-drift', fileParallelism: true, maxWorkers: 2 } },"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 2,
+          "message": "Vitest project root-drift: test.maxWorkers must match the root test.maxWorkers; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "{ test: { name: 'root-drift', fileParallelism: true, maxWorkers: 2 } },"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "root-missing": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project <root> is incomplete: maxWorkers is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "maxWorkers"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "signed-literal": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "spread": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: fileParallelism is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "fileParallelism"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: maxWorkers is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "maxWorkers"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "spread-after": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: fileParallelism is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "fileParallelism"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: maxWorkers is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "maxWorkers"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "spread-before": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suffix-undeclared": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "suffix-undeclared.ts",
+          "message": "Vitest project #1 is incomplete: extends is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "extends"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "suffix-undeclared.ts",
+          "message": "Vitest project #1 is incomplete: test is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suppression": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "undeclared-helper": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: extends is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "extends"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: test is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unknown-inheritance": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: extends is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "extends"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project #1 is incomplete: maxWorkers is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "maxWorkers"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unknown-option": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "message": "invalid options for rule `vitest-project-policy` at options.surprise: unknown field `surprise`, expected one of `config`, `helpers`, `required`, `forbidden`, `parity`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "wrapper-alias": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "wrapper-type-only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "wrapper-type-only.ts",
+          "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.projects"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

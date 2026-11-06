@@ -437,3 +437,11 @@ rules:
     options:
       maxLines: 3
 ```
+
+
+### Vitest project properties
+
+[`vitest-project-policy`](../rules/vitest-project-policy.md) accepts an explicit
+`options.config` and finite `options.helpers` source list, with `required`
+scalar properties, `forbidden` names, and `parity` pairs. It reads only these
+sources and reports non-literal values as incomplete without executing config.

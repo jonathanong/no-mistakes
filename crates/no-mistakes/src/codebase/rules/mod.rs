@@ -135,6 +135,7 @@ pub mod version_pin_consistency;
 pub mod vitest_ci_path_coverage;
 mod vitest_project_catalog;
 pub mod vitest_project_mapping;
+pub mod vitest_project_policy;
 pub mod vitest_test_correspondence;
 pub mod workflow_topology_policy;
 pub mod workspace_package_cycles;

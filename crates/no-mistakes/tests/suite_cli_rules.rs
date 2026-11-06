@@ -226,3 +226,6 @@ mod cli_config_fragments;
 
 #[path = "cli_rule_options_audit.rs"]
 mod cli_rule_options_audit;
+
+#[path = "cli_snapshot_vitest_project_policy.rs"]
+mod cli_snapshot_vitest_project_policy;

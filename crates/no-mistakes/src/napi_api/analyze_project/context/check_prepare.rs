@@ -38,6 +38,12 @@ impl SharedCheckContext {
                 deadlines,
             },
         )?;
+        session.prepare_vitest_project_policy(
+            &root,
+            &prepared.config,
+            &prepared.visible_paths.paths_for(&root),
+            &prepared.visible_paths.source_store_for(&root),
+        )?;
         crate::check_runner::prepared::failures::record(&session, &prepared);
         let config = &prepared.config;
         let queues_enabled = queues_configured(config);

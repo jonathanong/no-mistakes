@@ -200,3 +200,10 @@ fn github_actions_max_inline_script_lines_is_in_the_public_rule_inventory() {
     assert!(rule_ids_from_source(&repo_root()).contains(rule));
     assert!(repo_root().join(format!("docs/rules/{rule}.md")).is_file());
 }
+
+#[test]
+fn vitest_project_policy_is_in_the_public_rule_inventory() {
+    let rule = "vitest-project-policy";
+    assert!(rule_ids_from_source(&repo_root()).contains(rule));
+    assert!(repo_root().join(format!("docs/rules/{rule}.md")).is_file());
+}
