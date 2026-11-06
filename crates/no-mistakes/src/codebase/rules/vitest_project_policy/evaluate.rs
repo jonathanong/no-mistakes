@@ -40,13 +40,15 @@ pub(super) fn check(root: &Path, options: &Options, config: Value) -> Diagnostic
         assertions::check(root, options, project, &test, &name, &mut output);
         for (pair, baseline) in options.parity.iter().zip(&mut baselines) {
             parity::check(
-                root,
+                &parity::Project {
+                    root,
+                    root_test: &root_test,
+                    object: project,
+                    test: &test,
+                    name: &name,
+                },
                 pair,
                 baseline,
-                &root_test,
-                project,
-                &test,
-                &name,
                 &mut output,
             );
         }

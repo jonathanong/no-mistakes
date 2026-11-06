@@ -1,16 +1,27 @@
 use super::*;
 type Baseline = Option<[serde_json::Value; 2]>;
 
+pub(super) struct Project<'a> {
+    pub(super) root: &'a Path,
+    pub(super) root_test: &'a Value,
+    pub(super) object: &'a Value,
+    pub(super) test: &'a Value,
+    pub(super) name: &'a str,
+}
+
 pub(super) fn check(
-    root: &Path,
+    project: &Project<'_>,
     pair: &Parity,
     baseline: &mut Baseline,
-    root_test: &Value,
-    project: &Value,
-    test: &Value,
-    name: &str,
     output: &mut Diagnostics,
 ) {
+    let Project {
+        root,
+        root_test,
+        object: project,
+        test,
+        name,
+    } = project;
     let [left, right] = &pair.properties;
     let values = [test.property(left), test.property(right)];
     if unknown_values(root, pair, &values, name, output) {
