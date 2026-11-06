@@ -1,7 +1,7 @@
 use super::super::{pins::Resolver, Scope};
 use crate::codebase::postgres::idents::unwrap_expr;
 use crate::codebase::postgres::statements::value::{is_placeholder_ident_at, PlaceholderPositions};
-use crate::codebase::postgres::statements::SqlBoundItem;
+use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind};
 use sqlparser::ast::{BinaryOperator, Distinct, Expr, Select};
 
 pub(super) fn fixed(
@@ -16,7 +16,9 @@ pub(super) fn fixed(
     let Some(selection) = select.selection.as_ref() else {
         return false;
     };
-    if super::super::aggregate::projection_may_erase_input(select, scope) {
+    if super::super::aggregate::projection_may_erase_input(select, scope)
+        || has_opaque_row_inputs(items)
+    {
         return false;
     }
     let resolver = Resolver::new(items, scope.names(), positions);
@@ -26,6 +28,14 @@ pub(super) fn fixed(
                 .column(expr)
                 .is_some_and(|column| fixed_by_where(selection, &column, &resolver, positions))
         })
+}
+
+fn has_opaque_row_inputs(items: &[SqlBoundItem]) -> bool {
+    items.iter().any(|item| match &item.kind {
+        SqlBoundItemKind::Opaque => true,
+        SqlBoundItemKind::Query(query) => query.has_opaque_row_inputs(),
+        _ => false,
+    })
 }
 
 fn fixed_by_where(

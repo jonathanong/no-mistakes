@@ -100,6 +100,19 @@ fn postgres_bounded_statements_root_proofs_check_json_snapshot() {
         targets(&complete, "sql/distinct-singleton.sql"),
         vec!["table:items"; 6]
     );
+    let recursive: Vec<_> = complete["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|finding| finding["file"] == "sql/recursive-distinct.sql")
+        .map(|finding| {
+            (
+                finding["line"].as_u64().unwrap(),
+                finding["target"].as_str().unwrap(),
+            )
+        })
+        .collect();
+    assert_eq!(recursive, [(4, "table:items")]);
     assert_eq!(complete["warnings"], serde_json::json!([]), "{complete}");
     assert_eq!(
         incomplete["warnings"],
