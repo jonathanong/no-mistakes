@@ -1,3 +1,4 @@
+reportUnusedAllowEntries: report
 rules:
   - rule: postgres-object-naming
     scope: repository

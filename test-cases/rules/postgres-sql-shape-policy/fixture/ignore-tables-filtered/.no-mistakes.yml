@@ -1,8 +1,10 @@
+reportUnusedAllowEntries: report
 rules:
   - rule: postgres-sql-shape-policy
     scope: repository
     include: [queries.sql]
     options:
+      executorNames: []
       sqlInclude: ["*.sql"]
       bannedShapes: [keyset-only-sweep]
       shapeOptions:
