@@ -350,8 +350,10 @@ fn forbidden_calls_max_depth_retains_failed_barrel_prerequisites() {
             assert_eq!(failures.len(), 1, "{report}");
             assert_eq!(failures[0]["consumer"], "forbidden-calls");
             assert_eq!(
-                PathBuf::from(failures[0]["file"].as_str().unwrap()),
-                root.join("src/implementation.mts")
+                PathBuf::from(failures[0]["file"].as_str().unwrap())
+                    .canonicalize()
+                    .unwrap(),
+                root.join("src/implementation.mts").canonicalize().unwrap()
             );
         } else {
             assert!(output.status.success(), "{report}");

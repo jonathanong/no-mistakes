@@ -11,7 +11,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "forbidden-calls",
           "file": "src/implementation.mts",
-          "message": "forbidden-calls: required source src/implementation.mts could not be analyzed: parsing src/implementation.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `}` but found `EOF`\", labels: [LabeledSpan { label: Some(\"`}` expected\"), span: Span { start: 23, end: 23 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+          "message": "forbidden-calls: required source src/implementation.mts could not be analyzed: parsing src/implementation.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 19, end: 20 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
         }
       ],
       "integration": [],
