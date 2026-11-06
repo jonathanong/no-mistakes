@@ -83,7 +83,7 @@ fn from_facts(
                     path.display()
                 )
             })?;
-        projects.extend(result.map_err(anyhow::Error::msg)?);
+        projects.extend(result.map_err(anyhow::Error::from)?);
     }
     Ok(projects)
 }

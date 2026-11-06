@@ -15,7 +15,7 @@ impl PreparedIntegrationRunnerConfigs {
                 framework: spec.framework,
                 raw: spec.raw.clone(),
                 deadline_error: None,
-                projects: Err(message.clone()),
+                projects: Err(CheckInputFailure::source(path.clone(), message.clone())),
             })
             .collect::<Vec<_>>();
         (!results.is_empty()).then_some(RunnerConfigFileFacts {

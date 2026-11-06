@@ -1,0 +1,160 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "binary_both": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "binary_caching": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "binary_dependencies": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dangling_symlink": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "directory": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "healthy_both": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app/page.ts",
+          "line": 1,
+          "message": "Next.js `revalidate` cache segment config is disabled; remove static caching",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "export const revalidate = 60;"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "malformed_required_json": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "production-dependency-declarations",
+          "file": "package.json",
+          "message": "failed to load workspace manifest package.json: EOF while parsing a value at line 2 column 0"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app/page.ts",
+          "line": 1,
+          "message": "Next.js `revalidate` cache segment config is disabled; remove static caching",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "export const revalidate = 60;"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "malformed_required_ts": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "nextjs-no-caching",
+          "file": "app/page.ts",
+          "message": "parsing app/page.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 13, end: 14 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        },
+        {
+          "consumer": "production-dependency-declarations",
+          "file": "app/page.ts",
+          "message": "parsing app/page.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 13, end: 14 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unreadable_required_ts": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "nextjs-no-caching",
+          "file": "app/page.ts",
+          "message": "failed to read app/page.ts: invalid utf-8 sequence of 1 bytes from index 0"
+        },
+        {
+          "consumer": "production-dependency-declarations",
+          "file": "app/page.ts",
+          "message": "failed to read app/page.ts: invalid utf-8 sequence of 1 bytes from index 0"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

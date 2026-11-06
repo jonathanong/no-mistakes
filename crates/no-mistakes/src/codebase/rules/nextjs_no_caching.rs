@@ -47,6 +47,9 @@ macro_rules! record_aggregate_scope_check {
 #[macro_use]
 mod tests;
 
+mod inputs;
+pub(crate) use inputs::SourceInputs;
+
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     super::check_indexed_standalone(root, config, check_files)
 }
@@ -64,15 +67,7 @@ pub(crate) fn diagnostics_with_facts_for_aggregate(
     for rule in config.rule_applications(RULE_ID) {
         let policy = config.effective_rule_analysis(rule)?;
         let low = policy.effort == crate::config::v2::Effort::Low;
-        let target_roots =
-            super::target_roots_with_inferred(&root, config, rule, &mut inferred_roots);
-        let filter = super::path_filter::RulePathFilter::new_with_inferred(
-            &root,
-            config,
-            rule,
-            &mut inferred_roots,
-        );
-        let filter = filter?;
+        let inputs = SourceInputs::new(&root, config, rule, &mut inferred_roots)?;
         for path in shared.files() {
             if !is_indexable(path) {
                 continue;
@@ -90,14 +85,7 @@ pub(crate) fn diagnostics_with_facts_for_aggregate(
             if facts.source.is_some() && selected.as_ref().is_some_and(Vec::is_empty) {
                 continue;
             }
-            if !target_roots
-                .iter()
-                .any(|target_root| path.starts_with(target_root))
-                || !{
-                    record_aggregate_scope_check!();
-                    filter.is_match(path)
-                }
-            {
+            if !inputs.contains(path) {
                 continue;
             }
             if facts.parse_error.is_some() {

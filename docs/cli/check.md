@@ -154,7 +154,12 @@ links; see [finite-set-consistency](../rules/finite-set-consistency.md).
 If a requested check consumer cannot finish because a prerequisite failed, `check`
 records a structured `incomplete` entry identifying the consumer and failure.
 Only consumers whose declared inputs need the failed source or configuration
-property are incomplete.
+property are incomplete. Enabling another rule cannot widen a consumer's required
+source inputs. Assets, directories, and dangling links outside those inputs do
+not cause an incomplete report or a failing exit status. Needed source read or
+parse failures remain incomplete. Unsupported Vitest include/exclude values identify the
+config in `file`, the property (for example, `test.include`) in `property`, and
+the config line in `message`.
 Findings from other consumers whose prerequisites succeeded remain in the
 report, and the command exits 1. These failures cannot be suppressed and are
 not advisory findings. The `incomplete` field is omitted when no prerequisite

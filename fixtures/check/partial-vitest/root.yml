@@ -1,0 +1,6 @@
+tests:
+  vitest:
+    configs: root-include.config.ts
+rules:
+  - rule: vitest-project-mapping
+    scope: repository

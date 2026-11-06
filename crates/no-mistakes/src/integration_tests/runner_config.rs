@@ -1,4 +1,5 @@
 use super::types::{ConfigProject, FileAnalysis, Framework};
+use crate::codebase::check_outcome::CheckInputFailure;
 use anyhow::Result;
 use std::collections::{BTreeMap, HashSet};
 use std::path::PathBuf;
@@ -48,7 +49,7 @@ pub struct PreparedIntegrationRunnerConfigs {
 struct ProjectResult {
     framework: Framework,
     raw: String,
-    projects: Result<Vec<ConfigProject>, String>,
+    projects: Result<Vec<ConfigProject>, CheckInputFailure>,
     deadline_error: Option<String>,
 }
 
@@ -83,14 +84,14 @@ impl RunnerConfigFileFacts {
         }
     }
 
-    pub(crate) fn vitest_projects(&self) -> Option<Result<Vec<ConfigProject>, String>> {
+    pub(crate) fn vitest_projects(&self) -> Option<Result<Vec<ConfigProject>, CheckInputFailure>> {
         self.projects_for(Framework::Vitest)
     }
 
     pub(crate) fn projects_for(
         &self,
         framework: Framework,
-    ) -> Option<Result<Vec<ConfigProject>, String>> {
+    ) -> Option<Result<Vec<ConfigProject>, CheckInputFailure>> {
         self.results
             .iter()
             .find(|result| result.framework == framework)
@@ -160,7 +161,7 @@ impl ParsedRunnerConfigs {
                 .iter()
                 .find(|result| result.framework == framework && result.raw == spec.raw)
                 .expect("prepared runner config result must match its spec");
-            projects.extend(result.projects.clone().map_err(anyhow::Error::msg)?);
+            projects.extend(result.projects.clone().map_err(anyhow::Error::from)?);
         }
         Ok(projects)
     }

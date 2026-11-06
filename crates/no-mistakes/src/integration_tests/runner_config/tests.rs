@@ -43,30 +43,6 @@ fn prepare_vitest(root: &Path, config_path: StringOrList) -> PreparedIntegration
 }
 
 #[test]
-fn prepared_runner_records_cached_parse_errors_as_project_results() {
-    let root = fixture_root("parse-errors");
-    let prepared = prepare_vitest(
-        &root,
-        StringOrList::One("vitest.syntax-error.mts".to_string()),
-    );
-    let path = root.join("vitest.syntax-error.mts");
-
-    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
-    let facts = prepared
-        .parse_path_for_facts_with_session(&session, &path)
-        .unwrap();
-    assert_eq!(facts.results.len(), 1);
-    assert!(facts.results[0]
-        .projects
-        .as_ref()
-        .unwrap_err()
-        .contains("failed to parse"));
-    assert!(prepared
-        .parse_error(&root.join("unprepared.mts"), "ignored".to_string())
-        .is_none());
-}
-
-#[test]
 fn prepared_runner_records_config_read_errors_as_project_results() {
     let root = fixture_root("parse-errors");
     let prepared = prepare_vitest(&root, StringOrList::One("src".to_string()));
@@ -501,3 +477,5 @@ mod declared_deadlines;
 mod public_deadlines;
 mod review_deadlines;
 mod runner_roots;
+
+mod partial_input;

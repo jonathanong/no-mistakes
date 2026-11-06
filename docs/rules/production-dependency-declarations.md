@@ -179,3 +179,9 @@ suppression does not make a pruned production install safe.
 [`strict-package-layout`](strict-package-layout.md) checks workspace structure;
 [`required-entrypoint-reachability`](required-entrypoint-reachability.md)
 checks that selected runtime files are registered.
+
+Required prerequisites are the selected JavaScript/TypeScript sources and workspace
+package manifests. Failed reads or parses of these inputs make the rule incomplete.
+The legacy import projection also inspects readable text in other extensions, but
+those opportunistic candidates are not required source inputs: an unrelated binary
+asset, directory, or dangling link cannot make the rule incomplete.

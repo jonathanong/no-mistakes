@@ -49,7 +49,7 @@ impl PreparedIntegrationRunnerConfigs {
                             },
                             Some(Err(error)) => ConfigDeadlineEvidence::Failed {
                                 config: relative_slash_path(&self.root, &spec.path),
-                                error: error.clone(),
+                                error: error.to_string(),
                             },
                             None => ConfigDeadlineEvidence::Failed {
                                 config: relative_slash_path(&self.root, &spec.path),

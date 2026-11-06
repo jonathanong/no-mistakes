@@ -9,7 +9,7 @@ pub(super) fn evidence_error(
     framework: Framework,
     path: &Path,
     program: &Program<'_>,
-    projects: &Result<Vec<ConfigProject>, String>,
+    projects: &Result<Vec<ConfigProject>, crate::codebase::check_outcome::CheckInputFailure>,
 ) -> Option<String> {
     if !projects.as_ref().is_ok_and(Vec::is_empty) {
         return None;

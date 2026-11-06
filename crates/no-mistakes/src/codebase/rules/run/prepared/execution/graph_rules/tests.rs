@@ -281,7 +281,8 @@ fn source_demand_failure_is_partial_or_strict_for_the_same_saved_source() {
         if partial {
             session.enable_partial_checks();
         }
-        let result = super::super::outcomes::register_demands(&root, &config, &shared, &session);
+        let result =
+            super::super::outcomes::register_demands(&root, &config, &shared, &session, None);
         assert_eq!(result.is_ok(), partial);
         let failures = session.check_failures();
         assert_eq!(failures.len(), 1);
@@ -304,7 +305,8 @@ fn invalid_demand_filter_is_recorded_before_partial_source_registration() {
         if partial {
             session.enable_partial_checks();
         }
-        let result = super::super::outcomes::register_demands(root, &config, &shared, &session);
+        let result =
+            super::super::outcomes::register_demands(root, &config, &shared, &session, None);
         assert_eq!(result.is_ok(), partial);
         if partial {
             let failures = session.check_failures();

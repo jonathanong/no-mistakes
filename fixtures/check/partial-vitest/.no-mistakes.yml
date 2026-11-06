@@ -1,0 +1,12 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - rule: no-empty-or-comments-only-files
+    scope: repository
+  - rule: vitest-project-mapping
+    scope: repository
+  - rule: vitest-ci-path-coverage
+    scope: repository
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository

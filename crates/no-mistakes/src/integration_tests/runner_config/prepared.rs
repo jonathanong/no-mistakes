@@ -3,6 +3,7 @@ use super::{
     ParsedRunnerConfigs, PreparedIntegrationRunnerConfigs, ProjectResult, RunnerConfigFileFacts,
     RunnerConfigSpec,
 };
+use crate::codebase::check_outcome::CheckInputFailure;
 use crate::config::v2::schema::{NoMistakesConfig, StringOrList, TestProjectPolicy};
 use crate::integration_tests::project_config::{self, ConfigProjectInput};
 use crate::integration_tests::{analysis, types::Framework};
@@ -88,7 +89,7 @@ impl PreparedIntegrationRunnerConfigs {
                         program,
                         Some(&self.visible_files),
                     )
-                    .map_err(|error| error.to_string());
+                    .map_err(CheckInputFailure::from_error);
                     ProjectResult {
                         framework: spec.framework,
                         raw: spec.raw.clone(),

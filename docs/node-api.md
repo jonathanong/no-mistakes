@@ -77,7 +77,12 @@ was evaluated. These isolated source or configuration failures resolve to the
 partial report rather than rejecting the API call. Global invocation or
 configuration errors that make the request unusable still reject the API call.
 The CLI reports incomplete consumers and exits 1 for the same isolated
-failures.
+failures. Prerequisites follow each consumer's source and configuration input
+selection, independently of other enabled rules. Binary assets, directories, and
+dangling links outside that selection do not make a consumer incomplete. A required
+source that fails to read or parse still names that consumer and input.
+Vitest config failures identify the config file and property (for example,
+`test.include`), with the source line in the message.
 
 A rule application with `severity: advisory` (see
 [rule applications](configuration/rules.md#severity)) moves that rule's
