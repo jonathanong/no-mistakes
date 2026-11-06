@@ -319,3 +319,43 @@ fn forbidden_calls_mock_boundaries_json_matches_snapshot() {
     .collect();
     assert_saved_fixture("forbidden_calls_mock_boundaries", &cases);
 }
+
+#[test]
+fn forbidden_calls_barrel_prerequisites_json_matches_snapshot() {
+    let fixture = root("barrel-prerequisites");
+    assert_saved_fixture(
+        "forbidden_calls_barrel_prerequisites",
+        &["broken", "healthy"].map(|kind| {
+            let root = fixture.join(kind);
+            (kind, root.clone(), root.join(".no-mistakes.yml"))
+        }),
+    );
+}
+
+#[test]
+fn forbidden_calls_max_depth_retains_failed_barrel_prerequisites() {
+    let fixture = root("barrel-prerequisites");
+    for kind in ["broken", "healthy"] {
+        let root = fixture.join(kind);
+        let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+            .args(["check", "--root"])
+            .arg(&root)
+            .args(["--format", "json"])
+            .output()
+            .unwrap();
+        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        if kind == "broken" {
+            assert_eq!(output.status.code(), Some(1), "{report}");
+            let failures = report["incomplete"].as_array().expect("incomplete report");
+            assert_eq!(failures.len(), 1, "{report}");
+            assert_eq!(failures[0]["consumer"], "forbidden-calls");
+            assert_eq!(
+                PathBuf::from(failures[0]["file"].as_str().unwrap()),
+                root.join("src/implementation.mts")
+            );
+        } else {
+            assert!(output.status.success(), "{report}");
+            assert!(report.get("incomplete").is_none(), "{report}");
+        }
+    }
+}

@@ -102,7 +102,7 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
             RULE_ID,
             graph,
             &roots,
-            options.max_depth,
+            None,
         )?;
     }
     let path_filter = super::super::path_filter::RulePathFilter::new(root, config, application)?;

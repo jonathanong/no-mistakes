@@ -89,6 +89,10 @@ Transitive source selection shares one breadth-first traversal across expanded
 roots with ordinary reachability, and groups mocked roots by their declaring
 file without constructing per-root call traces. At `maxDepth: N`, only call
 sites whose owners are fewer than N call hops from a root are selected.
+Source prerequisite checks follow the runtime import closure independently of
+`maxDepth`, honoring root-local mock boundaries. A parse-failed required source
+behind a re-export barrel reports `incomplete` with its path, even when the
+barrel chain exceeds the call-hop limit. Healthy prerequisites remain complete.
 
 `traversal` defaults to `direct`, `unknownCalls` defaults to `finding`, and
 `invocations` defaults to `call`. An omitted `maxDepth` is unbounded for
