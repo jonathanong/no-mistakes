@@ -285,6 +285,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "table:disputes"
         },
         {
+          "file": "src/issue-2961-append.mts",
+          "line": 93,
+          "message": "src/issue-2961-append.mts:93: SELECT can return every row of groups; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(",
+          "target": "table:groups"
+        },
+        {
+          "file": "src/issue-2961-append.mts",
+          "line": 93,
+          "message": "src/issue-2961-append.mts:93: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(",
+          "target": "table:items"
+        },
+        {
           "file": "src/issue-2961-page.mts",
           "line": 79,
           "message": "src/issue-2961-page.mts:79: SELECT can return every row of messages; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",

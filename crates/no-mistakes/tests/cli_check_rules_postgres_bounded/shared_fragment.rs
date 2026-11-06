@@ -15,8 +15,11 @@ fn statements_appending_a_shared_fragment_are_reported_at_each_caller() {
     assert_eq!(
         lines_of(".no-mistakes.yml"),
         [
+            ("src/first.ts".to_string(), 5),
             ("src/first.ts".to_string(), 6),
             ("src/full-from.ts".to_string(), 9),
+            ("src/full-from.ts".to_string(), 9),
+            ("src/full-from.ts".to_string(), 15),
             ("src/full-from.ts".to_string(), 15),
             ("src/full-from.ts".to_string(), 21),
             ("src/full-from.ts".to_string(), 21),
@@ -32,6 +35,7 @@ fn statements_appending_a_shared_fragment_are_reported_at_each_caller() {
             ("src/full-from.ts".to_string(), 93),
             ("src/imported-full-from.ts".to_string(), 5),
             ("src/imported-full-from.ts".to_string(), 9),
+            ("src/second.ts".to_string(), 5),
             ("src/second.ts".to_string(), 7),
             ("src/third.ts".to_string(), 7),
             ("src/third.ts".to_string(), 7),
@@ -87,7 +91,17 @@ fn same_file_full_from_fragments_keep_both_callers_and_ignore_a_suppressed_openi
             (
                 "src/full-from.ts".to_string(),
                 9,
+                "table:accounts".to_string()
+            ),
+            (
+                "src/full-from.ts".to_string(),
+                9,
                 "table:orders".to_string()
+            ),
+            (
+                "src/full-from.ts".to_string(),
+                15,
+                "table:accounts".to_string()
             ),
             (
                 "src/full-from.ts".to_string(),
