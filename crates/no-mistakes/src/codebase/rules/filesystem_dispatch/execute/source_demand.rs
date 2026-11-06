@@ -20,12 +20,9 @@ pub(super) fn files(
             )?
         }
         PRODUCTION_DEPENDENCY_DECLARATIONS => {
-            crate::codebase::rules::production_dependency_declarations::required_import_fact_files(
-                root, config, candidates,
+            crate::codebase::rules::production_dependency_declarations::inputs::required_sources(
+                root, config, candidates, sources,
             )?
-            .iter()
-            .cloned()
-            .collect()
         }
         FORBIDDEN_LINT_SUPPRESSIONS => {
             crate::codebase::rules::forbidden_lint_suppressions::required_files(

@@ -10,6 +10,7 @@
 
 mod discovery;
 mod findings;
+pub(crate) mod inputs;
 mod manifest;
 mod reachability;
 mod scan;

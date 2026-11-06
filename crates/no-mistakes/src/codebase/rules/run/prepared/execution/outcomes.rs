@@ -33,14 +33,21 @@ pub(super) fn register_demands(
     config: &crate::config::v2::NoMistakesConfig,
     shared: &crate::codebase::check_facts::CheckFactMap,
     session: &AnalysisSession,
+    inferred: Option<&crate::codebase::config::InferredRoots>,
 ) -> Result<()> {
+    let mut inferred = inferred.cloned().unwrap_or_default();
     for consumer in [NEXTJS_NO_CACHING] {
         for rule in config.rule_applications(consumer) {
-            let filter = match session.capture_check_result(
+            let inputs = match session.capture_check_result(
                 consumer,
-                crate::codebase::rules::path_filter::RulePathFilter::new(root, config, rule),
+                crate::codebase::rules::nextjs_no_caching::SourceInputs::new(
+                    root,
+                    config,
+                    rule,
+                    &mut inferred,
+                ),
             )? {
-                Some(filter) => filter,
+                Some(inputs) => inputs,
                 None => continue,
             };
             session.register_check_demand(
@@ -48,7 +55,7 @@ pub(super) fn register_demands(
                 shared
                     .files()
                     .iter()
-                    .filter(|file| filter.is_match(file))
+                    .filter(|file| inputs.contains(file))
                     .cloned(),
             );
         }

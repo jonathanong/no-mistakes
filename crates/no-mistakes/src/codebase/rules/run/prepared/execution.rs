@@ -45,7 +45,7 @@ pub(super) fn run(
             advisories: Vec::new(),
         });
     }
-    outcomes::register_demands(root, config, shared, &session)?;
+    outcomes::register_demands(root, config, shared, &session, inferred_roots)?;
     let mut graph_plan = match try_canonical_graph_plan(config) {
         Ok(plan) => Prerequisite::Ready(plan),
         Err(error) if session.partial_checks_enabled() => {
