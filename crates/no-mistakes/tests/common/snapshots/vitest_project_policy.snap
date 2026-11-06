@@ -858,6 +858,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "suppression-incomplete": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "vitest.config.ts",
+          "line": 1,
+          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
+          "target": "vitest-project-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "undeclared-helper": {
     "exitCode": 1,
     "report": {

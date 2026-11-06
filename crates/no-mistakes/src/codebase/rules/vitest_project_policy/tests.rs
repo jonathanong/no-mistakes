@@ -32,6 +32,7 @@ fn literal_projects_and_declared_helper_inheritance_pass() {
         "helper-chain",
         "spread-before",
         "excluded-root",
+        "suppression-incomplete",
     ] {
         let output = run(case);
         assert!(output.findings.is_empty(), "{case}: {:?}", output.findings);

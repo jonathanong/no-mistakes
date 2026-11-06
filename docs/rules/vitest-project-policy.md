@@ -114,8 +114,8 @@ project object; a present property's diagnostic points at that property.
 
 Suppression caveat: put directives in the source file and at the location shown
 by the report, including helper files. A comment in an importing file does not
-suppress a finding located in its helper. Incomplete prerequisite evidence is
-separate from suppressible findings.
+suppress a finding located in its helper. A file directive also suppresses incomplete evidence attributed to that source.
+Incomplete evidence has no line, so line directives apply only to findings.
 
 ## Node API
 

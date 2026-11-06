@@ -13,6 +13,7 @@ fn vitest_project_policy_json_matches_snapshot() {
         "helper",
         "required-forbidden",
         "suppression",
+        "suppression-incomplete",
         "line-suppression",
         "next-line-suppression",
         "spread",

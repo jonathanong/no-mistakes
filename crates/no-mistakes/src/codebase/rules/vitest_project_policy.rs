@@ -66,6 +66,13 @@ pub fn diagnostics_with_files_and_sources(
         let mut reader = Reader::new(sources, allowed);
         let value = reader.read(&path);
         let mut application = evaluate::check(root, &options, value);
+        application.incomplete.retain(|failure| {
+            !failure.file.as_ref().is_some_and(|file| {
+                sources.read_path(&root.join(file)).is_ok_and(|source| {
+                    crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID)
+                })
+            })
+        });
         if !defer_suppression {
             super::suppress_rule_findings_with_sources(root, &mut application.findings, sources);
         }
