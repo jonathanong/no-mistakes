@@ -1,5 +1,11 @@
 # Feature Parity
 
+GitHub Actions `workflow-topology-policy` supports opt-in
+[`forbiddenActivityTypes`](configuration/workflow-topology-policy-activity-types.md)
+with the same explicit trigger matching, event filters, source locations, and
+suppressions in Rust, CLI `check`, async Node `check()`, and `analyzeProject()`
+check reports.
+
 Native GitHub Actions checks include opt-in
 [`github-actions-job-permissions`](rules/github-actions-job-permissions.md).
 Rust, CLI `check`, async Node `check()` and `analyzeProject()` check reports use

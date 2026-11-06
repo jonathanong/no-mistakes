@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 mod concurrency_compile;
 mod concurrency_scope;
 mod evaluate;
+mod evaluate_activity_types;
 mod evaluate_collisions;
 mod evaluate_concurrency;
 mod evaluate_graph;
@@ -26,6 +27,7 @@ pub(crate) struct Options {
     pub(crate) unlocked_workflow_reasons: BTreeMap<String, String>,
     pub(crate) required_jobs: Vec<String>,
     pub(crate) forbidden_jobs: Vec<String>,
+    pub(crate) forbidden_activity_types: Vec<ForbiddenActivityTypes>,
     pub(crate) required_direct_edges: Vec<[String; 2]>,
     pub(crate) forbidden_direct_edges: Vec<[String; 2]>,
     pub(crate) required_transitive_edges: Vec<[String; 2]>,
@@ -37,6 +39,13 @@ pub(crate) struct Options {
     pub(crate) concurrency_policy: BTreeMap<String, concurrency_compile::ConcurrencyIntent>,
     pub(crate) forbid_concurrency_group_collisions: bool,
     pub(crate) secret_inventory: Option<secret_inventory::SecretInventory>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct ForbiddenActivityTypes {
+    pub(crate) types: Vec<String>,
+    pub(crate) events: Option<Vec<String>>,
 }
 
 #[derive(Deserialize, Default, Clone)]
@@ -117,7 +126,7 @@ pub(super) enum FindingOwner<'a> {
 
 pub(super) struct LocatedFinding {
     finding: RuleFinding,
-    job: Option<String>,
+    path: crate::config::source_locations::ConfigPath,
 }
 
 pub(super) fn finding(owner: FindingOwner<'_>, message: String) -> LocatedFinding {
@@ -136,7 +145,14 @@ pub(super) fn finding(owner: FindingOwner<'_>, message: String) -> LocatedFindin
             import: None,
             target: None,
         },
-        job,
+        path: job.map_or_else(
+            crate::config::source_locations::ConfigPath::default,
+            |job| {
+                crate::config::source_locations::ConfigPath::default()
+                    .key("jobs")
+                    .key(job)
+            },
+        ),
     }
 }
 
