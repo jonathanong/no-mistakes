@@ -15,7 +15,7 @@ use serde::Deserialize;
 pub(crate) struct ShapeOptions {
     pub(super) banned_function_call: super::functions::BannedFunctionCall,
     literal_limit: LiteralLimit,
-    keyset_only_sweep: KeysetOnlySweep,
+    pub(super) keyset_only_sweep: KeysetOnlySweep,
 }
 
 #[derive(Deserialize, Default)]
@@ -26,12 +26,13 @@ struct LiteralLimit {
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
-struct KeysetOnlySweep {
+pub(super) struct KeysetOnlySweep {
     non_selective_predicates: Vec<String>,
-    ignore_tables: Vec<String>,
+    pub(super) ignore_tables: Vec<String>,
 }
 
 pub(crate) struct IterationOptions {
+    pub(super) audit: Option<super::audit::SweepAudit>,
     allowed_limits: Vec<u64>,
     /// Normalized conjuncts that do not narrow a walk.
     non_selective: Vec<String>,
@@ -65,6 +66,7 @@ pub(super) fn compile(options: &ShapeOptions) -> Result<IterationOptions> {
         .map(|name| crate::codebase::postgres::decoded_parts(name))
         .collect();
     Ok(IterationOptions {
+        audit: None,
         allowed_limits,
         non_selective,
         ignore_tables,
@@ -95,9 +97,15 @@ impl IterationOptions {
     /// An entry names the table as `schema.table` or by its last name part alone. A dot inside a
     /// quoted name belongs to that part: `items` does not match `"work.items"`.
     fn ignored(&self, parts: &[String]) -> bool {
-        self.ignore_tables
+        let matches = self
+            .ignore_tables
             .iter()
-            .any(|entry| entry == parts || (entry.len() == 1 && entry.last() == parts.last()))
+            .map(|entry| entry == parts || (entry.len() == 1 && entry.last() == parts.last()));
+        if let Some(audit) = &self.audit {
+            audit.audit.usage.suppress(matches)
+        } else {
+            matches.into_iter().any(|matched| matched)
+        }
     }
 }
 

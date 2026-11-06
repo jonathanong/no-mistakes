@@ -29,7 +29,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "allow_suppresses_real_finding": {
     "exitCode": 0,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "<repo>/test-cases/rules/postgres-column-naming/configs/proposed.yml",
+          "import": "postgres-column-naming",
+          "line": 25,
+          "message": "stale postgres-column-naming ignoreTablePatterns entry `^link__` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "ignoreTablePatterns: ['^link__']",
+          "target": "^link__"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -731,7 +741,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "proposed_stale_allow": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "<repo>/test-cases/rules/postgres-column-naming/configs/proposed.yml",
+          "import": "postgres-column-naming",
+          "line": 25,
+          "message": "stale postgres-column-naming ignoreTablePatterns entry `^link__` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "ignoreTablePatterns: ['^link__']",
+          "target": "^link__"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],

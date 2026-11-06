@@ -140,7 +140,9 @@ impl ConfigAnchor {
         let Some(rule) = self.rule_path.clone() else {
             return 1;
         };
-        let mut path = rule.clone().key("options").key(key);
+        let mut path = key
+            .split('.')
+            .fold(rule.clone().key("options"), |path, key| path.key(key));
         if let Some(item) = item {
             path = path.index(item);
         }

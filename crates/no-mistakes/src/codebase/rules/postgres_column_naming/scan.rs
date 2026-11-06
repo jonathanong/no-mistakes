@@ -10,15 +10,17 @@ use crate::codebase::postgres::{
 use crate::codebase::rules::RuleFinding;
 use rayon::prelude::*;
 
-pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> Vec<RuleFinding> {
+pub(super) fn scan(
+    catalog: &SchemaCatalog,
+    compiled: &Compiled,
+    path: &str,
+    usage: &super::super::allow_audit::AllowUsage,
+) -> Vec<RuleFinding> {
     let mut findings = catalog
         .logical_tables()
         .collect::<Vec<_>>()
         .into_par_iter()
         .flat_map_iter(|table| {
-            if ignored(&table.name, compiled) {
-                return Vec::new().into_iter();
-            }
             table
                 .columns
                 .iter()
@@ -30,6 +32,14 @@ pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> 
                     };
                     column_texts(column, table, catalog, compiled)
                         .into_iter()
+                        .filter(|_| {
+                            !usage.suppress(
+                                compiled
+                                    .ignore
+                                    .iter()
+                                    .map(|pattern| pattern.is_match(&table.name)),
+                            )
+                        })
                         .map(move |text| {
                             let mut finding = catalog_finding(RULE_ID, path, &object, &text);
                             finding.line = catalog.column_line(&table.name, &column.name);
@@ -137,8 +147,4 @@ fn apply_message(compiled: &Compiled, findings: &mut [RuleFinding]) {
         let target = finding.target.as_deref().unwrap_or_default();
         finding.message = format!("{}: {target}: {message}", finding.file);
     }
-}
-
-fn ignored(name: &str, compiled: &Compiled) -> bool {
-    compiled.ignore.iter().any(|pattern| pattern.is_match(name))
 }

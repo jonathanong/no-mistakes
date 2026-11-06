@@ -1,0 +1,21 @@
+reportUnusedAllowEntries: report
+rules:
+  - rule: postgres-required-comments
+    scope: repository
+    options:
+      schemaCatalogPath: partial.json
+      objects: [column]
+      exemptColumnNamePatterns: ['^bad$', 'bad', '^good$', '^missing$']
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: partial.json
+      forbiddenColumnNames:
+        - {pattern: '^bad$', hint: rename the column}
+      ignoreTablePatterns: ['^legacy$', 'legacy', '^clean$', '^missing$']
+  - rule: postgres-finite-text-columns
+    scope: repository
+    options:
+      schemaCatalogPath: partial.json
+      namePatterns: ['^bad$']
+      ignoreTablePatterns: ['^legacy$', 'legacy', '^clean$', '^missing$']

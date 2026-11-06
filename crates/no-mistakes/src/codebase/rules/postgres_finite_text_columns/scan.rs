@@ -1,28 +1,41 @@
 use super::compile::Compiled;
-use super::pin::pinned_literals_expr;
 use super::text::{literal_text, name_text};
 use super::RULE_ID;
-use crate::codebase::postgres::{
-    catalog_finding, CatalogColumn, CatalogObjectRef, CatalogTable, SchemaCatalog,
-};
+use crate::codebase::postgres::{catalog_finding, CatalogObjectRef, SchemaCatalog};
 use crate::codebase::rules::RuleFinding;
-use sqlparser::ast::Expr;
 use std::collections::BTreeMap;
 
-struct Seen {
-    table: String,
-    column: String,
-    data_type: String,
-    candidate: bool,
-    values: Vec<String>,
+pub(super) struct Seen {
+    pub(super) table: String,
+    pub(super) column: String,
+    pub(super) data_type: String,
+    pub(super) candidate: bool,
+    pub(super) ignored: bool,
+    pub(super) values: Vec<String>,
 }
 
-pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> Vec<RuleFinding> {
-    let seen = collect(catalog, compiled);
+pub(super) fn scan(
+    catalog: &SchemaCatalog,
+    compiled: &Compiled,
+    path: &str,
+    usage: &super::super::allow_audit::AllowUsage,
+) -> Vec<RuleFinding> {
+    let seen = super::collect::collect(catalog, compiled);
     let peers = peer_index(&seen);
     let mut findings = Vec::new();
     for item in &seen {
         if !item.candidate {
+            continue;
+        }
+        let violates = !item.values.is_empty() || compiled.matching_pattern(&item.column).is_some();
+        if violates
+            && usage.suppress(
+                compiled
+                    .ignore
+                    .iter()
+                    .map(|pattern| pattern.is_match(&item.table)),
+            )
+        {
             continue;
         }
         let object = CatalogObjectRef::Column {
@@ -86,76 +99,13 @@ fn column_finding(
     finding
 }
 
-fn collect(catalog: &SchemaCatalog, compiled: &Compiled) -> Vec<Seen> {
-    let mut seen = Vec::new();
-    for table in catalog.logical_tables() {
-        if compiled.ignores(&table.name) {
-            continue;
-        }
-        let mut checks: Vec<_> = table
-            .check_constraints
-            .iter()
-            .filter(|check| check.validated)
-            .collect();
-        checks.sort_by(|left, right| left.name.cmp(&right.name));
-        let parsed_checks: Vec<_> = checks
-            .into_iter()
-            .filter_map(|check| super::parse::expression(&check.definition))
-            .collect();
-        for column in &table.columns {
-            if !compiled.type_matches(&column.data_type) {
-                continue;
-            }
-            seen.push(Seen {
-                table: table.name.clone(),
-                column: column.name.clone(),
-                data_type: column.data_type.clone(),
-                candidate: candidate(column, table, compiled),
-                values: values_for(&parsed_checks, &column.name),
-            });
-        }
-    }
-    seen
-}
-
-fn candidate(column: &CatalogColumn, table: &CatalogTable, compiled: &Compiled) -> bool {
-    if compiled.skip_generated && column.generated.is_some() {
-        return false;
-    }
-    !sole_foreign_key(table, &column.name)
-}
-
-fn sole_foreign_key(table: &CatalogTable, column: &str) -> bool {
-    table
-        .foreign_keys
-        .iter()
-        .any(|foreign_key| foreign_key.columns.len() == 1 && foreign_key.columns[0] == column)
-}
-
-fn values_for(checks: &[Expr], column: &str) -> Vec<String> {
-    let mut pinned_checks = Vec::new();
-    for check in checks {
-        let Some(values) = pinned_literals_expr(check, column) else {
-            continue;
-        };
-        pinned_checks.push(values);
-    }
-    let Some(mut values) = pinned_checks.first().cloned() else {
-        return Vec::new();
-    };
-    for check_values in pinned_checks.iter().skip(1) {
-        values.retain(|value| check_values.contains(value));
-    }
-    values
-}
-
 type PeerIndex = BTreeMap<Vec<String>, Vec<(String, String)>>;
 
 fn peer_index(seen: &[Seen]) -> PeerIndex {
     let mut index: PeerIndex = BTreeMap::new();
     for item in seen
         .iter()
-        .filter(|item| item.candidate && !item.values.is_empty())
+        .filter(|item| item.candidate && !item.ignored && !item.values.is_empty())
     {
         let mut key = item.values.clone();
         key.sort();

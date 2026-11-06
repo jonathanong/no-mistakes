@@ -1,0 +1,11 @@
+reportUnusedAllowEntries: report
+rules:
+  - rule: postgres-required-comments
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      objects: [table]
+      exemptColumnNamePatterns: ['^bad$', '^missing$']
+      allow:
+        - {object: 'table:legacy', reason: table comments outside this control}
+        - {object: 'table:clean', reason: table comments outside this control}

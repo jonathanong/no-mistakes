@@ -228,25 +228,25 @@ manifest fields define valid input rather than individual finding exceptions.
 They are not audited as suppressions. File and root exclusions continue to
 control analysis scope rather than becoming allow entries.
 
-### Coverage boundaries and deferred exception accounting
+### Coverage boundaries
 
 The lists above describe implemented hygiene coverage, not every option whose
-name contains `allow`, `ignore`, or `exempt`. The following exception selectors
-do not currently produce `unused-allow-entry` diagnostics:
+name contains `allow`, `ignore`, or `exempt`. These additional exception selectors
+use the same finding-based accounting:
 
-| Rule | Option | Accounting still required |
+| Rule | Option | Complete-scope requirement |
 | --- | --- | --- |
-| `no-empty-or-comments-only-files` | `intentionallyEmpty` | Inspect the selected file before skipping it, count an exception only for empty or comment-only content, and withhold stale reports for missing, excluded, unreadable, or unsupported-extension files. |
-| `postgres-required-comments` | `exemptColumnNamePatterns` | Track every overlapping pattern against otherwise reportable missing comments in the complete applicable catalog. |
-| `postgres-column-naming` | `ignoreTablePatterns` | Evaluate otherwise applicable column policies before applying table exclusions, with complete catalog coverage. |
-| `postgres-finite-text-columns` | `ignoreTablePatterns` | Evaluate otherwise applicable finite-text findings before applying table exclusions, with complete catalog coverage. |
-| `postgres-object-naming` | `plural.ignorePatterns` | Track overlapping patterns against otherwise reportable pluralization findings in the complete applicable catalog. |
-| `postgres-sql-shape-policy` | `shapeOptions.keysetOnlySweep.ignoreTables` | Track table selectors against otherwise reportable full-table sweeps, requiring complete configured SQL and embedded-executor coverage; uncertain SQL cannot prove an entry stale. |
+| `no-empty-or-comments-only-files` | `intentionallyEmpty` | The exact selected file was read successfully with a supported extension. Only empty or comment-only content uses the exception; missing, excluded, unreadable, or unsupported files cannot prove staleness. |
+| `postgres-required-comments` | `exemptColumnNamePatterns` | Column checks are enabled and the applicable catalog is complete. Only otherwise reportable missing or short comments use each overlapping pattern. |
+| `postgres-column-naming` | `ignoreTablePatterns` | The applicable catalog is complete. Only otherwise reportable column-policy findings use each overlapping table pattern. |
+| `postgres-finite-text-columns` | `ignoreTablePatterns` | The applicable catalog is complete. Only otherwise reportable finite-text findings use each overlapping table pattern. |
+| `postgres-object-naming` | `plural.ignorePatterns` | Plural checks are enabled and the applicable catalog is complete. Only otherwise reportable pluralization findings use each overlapping pattern. |
+| `postgres-sql-shape-policy` | `shapeOptions.keysetOnlySweep.ignoreTables` | The configured SQL and embedded-executor domain is fully checked. Only otherwise reportable full-table sweeps use matching selectors; partial, failed, or unrecoverable analysis cannot prove staleness. |
 
-These extensions are deferred rather than inferred from selector existence.
-They need rule-specific pre-filter finding accounting and saved regression
-fixtures for overlapping entries, partial runs, and analysis failures. The
-hygiene setting does not add that missing analysis or widen a run.
+For example, a table ignore pattern matching only compliant columns is stale;
+matching a table name alone does not use the exception. Every overlapping
+entry that would suppress a finding counts as used. The hygiene setting does
+not widen the analysis scope or add another source/parse pass.
 
 Several other exception lists already have their own stale diagnostics:
 `postgres-no-add-column.allowedMigrations`,

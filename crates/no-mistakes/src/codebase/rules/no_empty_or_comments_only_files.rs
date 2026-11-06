@@ -5,7 +5,6 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
 use serde::Deserialize;
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "no-empty-or-comments-only-files";
@@ -40,41 +39,55 @@ fn scan(
     opts: &Options,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    audit: &super::allow_audit::AllowAudit,
 ) -> Result<Vec<RuleFinding>> {
     let extensions = effective_extensions(opts);
-    let exempt: HashSet<&str> = opts
+    let exempt: std::collections::HashSet<_> = opts
         .intentionally_empty
         .iter()
         .map(String::as_str)
         .collect();
+    let checked = dashmap::DashSet::new();
     let mut findings: Vec<RuleFinding> = files
         .par_iter()
         .flat_map(|path| {
             let rel = relative_slash_path(root, path);
-            if exempt.contains(rel.as_str()) {
-                return Vec::new();
-            }
             let has_ext = extensions.iter().any(|ext| rel.ends_with(*ext));
             if !has_ext {
                 return Vec::new();
             }
-            check_file_with_sources(path, root, sources)
+            let content = match super::source_access::checked_source(sources, path, root, RULE_ID) {
+                Ok(content) => content,
+                Err(finding) => {
+                    return if exempt.contains(rel.as_str()) {
+                        Vec::new()
+                    } else {
+                        vec![*finding]
+                    };
+                }
+            };
+            if exempt.contains(rel.as_str()) {
+                checked.insert(rel);
+            }
+            check_source(path, root, &content)
+                .into_iter()
+                .filter(|finding| {
+                    !exempt.contains(finding.file.as_str())
+                        || !audit.usage.suppress(
+                            opts.intentionally_empty
+                                .iter()
+                                .map(|entry| entry == &finding.file),
+                        )
+                })
+                .collect()
         })
         .collect();
+    findings.extend(audit.finish(
+        |index| checked.contains(&opts.intentionally_empty[index]),
+        |index| opts.intentionally_empty[index].clone(),
+    ));
     findings.sort_by(|a, b| a.file.cmp(&b.file));
     Ok(findings)
-}
-
-fn check_file_with_sources(
-    path: &Path,
-    root: &Path,
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Vec<RuleFinding> {
-    let content = match super::source_access::checked_source(sources, path, root, RULE_ID) {
-        Ok(source) => source,
-        Err(finding) => return vec![*finding],
-    };
-    check_source(path, root, &content)
 }
 
 fn check_source(path: &Path, root: &Path, content: &str) -> Vec<RuleFinding> {
@@ -99,3 +112,6 @@ fn check_source(path: &Path, root: &Path, content: &str) -> Vec<RuleFinding> {
 mod tests;
 #[cfg(test)]
 mod tests_support;
+
+#[cfg(test)]
+mod allow_tests;

@@ -23,3 +23,38 @@ pub(crate) fn run_catalog_rule<C>(
         Ok(scan(compiled, catalog, &path))
     })
 }
+
+pub(crate) fn run_audited_catalog_rule<C>(
+    context: super::PreparedRuleContext<'_>,
+    rule_id: &str,
+    option: &str,
+    compile: impl Fn(&RuleDef) -> Result<(String, C, Vec<String>)>,
+    scan: impl Fn(&SchemaCatalog, &C, &str, &super::allow_audit::AllowUsage) -> Vec<RuleFinding>,
+) -> Result<Vec<RuleFinding>> {
+    run_catalog_rule(
+        context.root,
+        context.config,
+        context.facts,
+        rule_id,
+        |rule| {
+            let (path, compiled, selectors) = compile(rule)?;
+            let audit = super::allow_audit::AllowAudit::new(
+                context.root,
+                context.config,
+                rule,
+                Some(context.sources),
+                option,
+                selectors.len(),
+            );
+            Ok((path, (compiled, audit, selectors)))
+        },
+        |(compiled, audit, selectors), catalog, path| {
+            let mut findings = scan(catalog, &compiled, path, &audit.usage);
+            findings.extend(audit.finish(
+                |_| catalog.coverage() == crate::codebase::postgres::CatalogCoverage::Complete,
+                |index| selectors[index].clone(),
+            ));
+            findings
+        },
+    )
+}

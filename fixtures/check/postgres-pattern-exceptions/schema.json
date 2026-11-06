@@ -1,0 +1,33 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "legacy": {
+      "relationKind": "table",
+      "columns": {
+        "bad": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "good": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2,
+          "comment": "Documented"
+        }
+      }
+    },
+    "clean": {
+      "relationKind": "table",
+      "columns": {
+        "good": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1,
+          "comment": "Documented"
+        }
+      }
+    }
+  }
+}

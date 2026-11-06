@@ -281,3 +281,11 @@ Stale allow reporting retains this rule's established diagnostic messages and
 severity for checked inputs. Entries outside the checked scope stay silent;
 uncertain or partial selector coverage cannot prove staleness. See
 [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
+
+`plural.ignorePatterns` entries count as used only when they suppress a plural
+naming finding for a configured object kind. Every matching entry counts, including
+overlapping expressions. A pattern that only matches an already plural name is
+stale. `unused-allow-entry` reports stale patterns on their configuration entries;
+remove them to keep naming exceptions intentional. Auditing requires enabled
+plural checking and a complete catalog that the application includes. Ordering-only
+catalogs and excluded catalog paths cannot prove an entry stale.

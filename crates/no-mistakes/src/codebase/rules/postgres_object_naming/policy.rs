@@ -9,6 +9,7 @@ pub(super) struct PluralPolicy {
     uncountable: Vec<String>,
     non_plural: Vec<String>,
     pub(super) ignore: Vec<Regex>,
+    pub(super) audit: Option<std::sync::Arc<super::super::allow_audit::AllowAudit>>,
 }
 
 impl PluralPolicy {
@@ -34,6 +35,7 @@ impl PluralPolicy {
             uncountable: lower_all(uncountable),
             non_plural: lower_all(non_plural),
             ignore,
+            audit: None,
         }
     }
 
@@ -42,7 +44,12 @@ impl PluralPolicy {
     }
 
     pub(super) fn ignored(&self, name: &str) -> bool {
-        self.ignore.iter().any(|pattern| pattern.is_match(name))
+        let matches = self.ignore.iter().map(|pattern| pattern.is_match(name));
+        if let Some(audit) = &self.audit {
+            audit.usage.suppress(matches)
+        } else {
+            matches.into_iter().any(|matched| matched)
+        }
     }
 
     pub(super) fn findings(&self, kind_word: &str, name: &str) -> Vec<String> {
@@ -174,4 +181,13 @@ fn lower_all(values: Vec<String>) -> Vec<String> {
         .into_iter()
         .map(|value| value.to_ascii_lowercase())
         .collect()
+}
+
+pub(super) fn kind_word(kind: &str) -> &str {
+    match kind {
+        "materializedView" => "materialized view",
+        "triggerFunction" => "trigger function",
+        "uniqueIndex" => "index",
+        other => other,
+    }
 }

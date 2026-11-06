@@ -131,19 +131,37 @@ pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
     config: &NoMistakesConfig,
     _all_files: &[PathBuf],
-    _sources: &crate::codebase::ts_source::SourceStore,
+    sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let options: Options = rule.try_rule_options()?;
-        let compiled = compile::compile(&options, rule.message.clone())?;
+        let mut compiled = compile::compile(&options, rule.message.clone())?;
         let filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
         if !filter.is_match(Path::new(&options.schema_catalog_path)) {
             continue;
         }
         let catalog = facts.postgres_schema_catalog(&options.schema_catalog_path)?;
+        let audit = std::sync::Arc::new(super::allow_audit::AllowAudit::new(
+            root,
+            config,
+            rule,
+            Some(sources),
+            "plural.ignorePatterns",
+            options.plural.ignore_patterns.len(),
+        ));
+        if let Some(plural) = &mut compiled.plural {
+            plural.audit = Some(std::sync::Arc::clone(&audit));
+        }
         findings.extend(scan::scan(catalog, &compiled, &options.schema_catalog_path));
+        findings.extend(audit.finish(
+            |_| {
+                options.plural.enabled
+                    && catalog.coverage() == crate::codebase::postgres::CatalogCoverage::Complete
+            },
+            |index| options.plural.ignore_patterns[index].clone(),
+        ));
     }
     super::sort_findings(&mut findings);
     Ok(findings)

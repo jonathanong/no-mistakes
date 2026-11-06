@@ -377,7 +377,10 @@ fn explicit_file_rule_exemptions_preserve_output_and_allow_audits_borrow_sources
         );
         assert_eq!(
             sources.physical_read_count(),
-            if rule == "no-raw-ephemeral-port" {
+            if matches!(
+                rule,
+                "no-raw-ephemeral-port" | "no-empty-or-comments-only-files"
+            ) {
                 files.len()
             } else {
                 0

@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-object-naming
+    scope: repository
+    options:
+      plural:
+        ignorePatterns:
+          - '^legacy$'
+      shapeOptions:
+        keysetOnlySweep:
+          ignoreTables:
+            - public.legacy
