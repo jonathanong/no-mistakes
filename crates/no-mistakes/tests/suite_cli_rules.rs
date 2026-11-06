@@ -2,6 +2,8 @@
 
 #[path = "cli_check_partial.rs"]
 mod cli_check_partial;
+#[path = "cli_check_partial_input_scope.rs"]
+mod cli_check_partial_input_scope;
 #[path = "cli_check_unused_allow_entries.rs"]
 mod cli_check_unused_allow_entries;
 
