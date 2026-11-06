@@ -186,3 +186,29 @@ fn reserved_diagnostic_job_name_still_produces_definite_findings() {
         assert!(output.advisories.is_empty());
     }
 }
+
+#[test]
+fn location_collection_tolerates_saved_malformed_and_nonmapping_jobs() {
+    for source in [
+        include_str!("../../../../../../test-cases/rules/github-actions-local-action-checkout/fixture/diagnostics/.github/workflows/malformed.yml"),
+        include_str!("../../../../../../test-cases/rules/github-actions-local-action-checkout/fixture/diagnostics/.github/workflows/shape.yml"),
+    ] {
+        assert!(super::locations::collect(source).is_empty());
+    }
+}
+
+#[test]
+fn nonworkflow_sources_are_ignored_and_invalid_policy_is_rejected() {
+    let (root, mut config, _) = diagnostics_fixture();
+    let files = vec![root.join(".no-mistakes.yml")];
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    config.rules[0].include = vec!["**/*".to_owned(), ".no-mistakes.yml".to_owned()];
+    let output =
+        super::diagnostics_with_files_and_sources(&root, &config, &files, &sources, false).unwrap();
+    assert!(output.findings.is_empty());
+    assert!(output.advisories.is_empty());
+    config.rules[0].options = serde_yaml::from_str("unanalyzable: unknown").unwrap();
+    assert!(
+        super::diagnostics_with_files_and_sources(&root, &config, &files, &sources, false).is_err()
+    );
+}
