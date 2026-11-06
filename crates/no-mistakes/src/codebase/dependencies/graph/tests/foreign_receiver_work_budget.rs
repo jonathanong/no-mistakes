@@ -40,6 +40,7 @@ fn import_projection_keeps_complete_import_facts_when_value_flow_is_incomplete()
         &files,
         TsFactPlan {
             imports: true,
+            function_calls: true,
             value_flow: true,
             ..Default::default()
         },

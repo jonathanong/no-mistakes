@@ -1,0 +1,225 @@
+{
+  "baselineRevision": "099f69b44a21f5b88ef83db459f4504fe0ed3a20",
+  "candidateProductionRevision": "a27051bc7c0d91597bbdb33a9da50c47f905ef30",
+  "baselineBinarySha256": "b1cde38589ec21cbf112046d5162af4cdc96fb5cfb525ff3dffedc93112463d1",
+  "candidateBinarySha256": "a306b24ac9af6c8dc23e6a0871110f30ccc424bda938038630c37d473488264b",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "supabaseRevision": "b360605842ed537d137778765ec98f4c3482749a",
+  "releaseProfile": {
+    "optLevel": 3,
+    "lto": "full",
+    "codegenUnits": 1,
+    "features": [
+      "default",
+      "mermaid-validation"
+    ]
+  },
+  "virtualMemoryLimitKiB": 20971520,
+  "rule": "unconstructed-error-class",
+  "samples": [
+    {
+      "label": "before-4",
+      "rssKiB": 19037664,
+      "wall": "0:52.78",
+      "userSeconds": 50.5,
+      "systemSeconds": 7.29,
+      "rssGiB": 18.156,
+      "exitStatus": 134,
+      "reportSha256": null
+    },
+    {
+      "label": "after-4a",
+      "rssKiB": 3045068,
+      "wall": "0:26.42",
+      "userSeconds": 31.88,
+      "systemSeconds": 2.09,
+      "rssGiB": 2.904,
+      "exitStatus": 1,
+      "reportSha256": "921eecea2790e393dca53734efc81c49e763e29214e952dddf27a2efe898f0ea",
+      "incomplete": [
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "/tmp/nm-3052-supabase/apps/studio/public/monaco-editor/vs/language/typescript/tsWorker.js",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        }
+      ],
+      "findingCount": 0,
+      "advisoryCount": 0
+    },
+    {
+      "label": "after-4b",
+      "rssKiB": 3088360,
+      "wall": "0:29.73",
+      "userSeconds": 32.01,
+      "systemSeconds": 1.83,
+      "rssGiB": 2.945,
+      "exitStatus": 1,
+      "reportSha256": "921eecea2790e393dca53734efc81c49e763e29214e952dddf27a2efe898f0ea",
+      "incomplete": [
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "/tmp/nm-3052-supabase/apps/studio/public/monaco-editor/vs/language/typescript/tsWorker.js",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        }
+      ],
+      "findingCount": 0,
+      "advisoryCount": 0
+    },
+    {
+      "label": "before-4b",
+      "rssKiB": 19040212,
+      "wall": "0:57.16",
+      "userSeconds": 51.1,
+      "systemSeconds": 7.12,
+      "rssGiB": 18.158,
+      "exitStatus": 134,
+      "reportSha256": null
+    },
+    {
+      "label": "after-1",
+      "rssKiB": 2436284,
+      "wall": "0:33.10",
+      "userSeconds": 31.78,
+      "systemSeconds": 1.3,
+      "rssGiB": 2.323,
+      "exitStatus": 1,
+      "reportSha256": "921eecea2790e393dca53734efc81c49e763e29214e952dddf27a2efe898f0ea",
+      "incomplete": [
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "/tmp/nm-3052-supabase/apps/studio/public/monaco-editor/vs/language/typescript/tsWorker.js",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        }
+      ],
+      "findingCount": 0,
+      "advisoryCount": 0
+    },
+    {
+      "label": "before-1",
+      "rssKiB": 19297204,
+      "wall": "0:59.82",
+      "userSeconds": 51.75,
+      "systemSeconds": 7.96,
+      "rssGiB": 18.403,
+      "exitStatus": 134,
+      "reportSha256": null
+    },
+    {
+      "label": "after-default",
+      "rssKiB": 3355972,
+      "wall": "0:24.71",
+      "userSeconds": 32.54,
+      "systemSeconds": 3.13,
+      "rssGiB": 3.201,
+      "exitStatus": 1,
+      "reportSha256": "921eecea2790e393dca53734efc81c49e763e29214e952dddf27a2efe898f0ea",
+      "incomplete": [
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "/tmp/nm-3052-supabase/apps/studio/public/monaco-editor/vs/language/typescript/tsWorker.js",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        }
+      ],
+      "findingCount": 0,
+      "advisoryCount": 0
+    },
+    {
+      "label": "control-repo-before-a",
+      "rssKiB": 2944968,
+      "wall": "0:09.49",
+      "userSeconds": 13.15,
+      "systemSeconds": 2.14,
+      "rssGiB": 2.809,
+      "exitStatus": 1,
+      "reportSha256": "6d3678774d099be133fe88cfe3771c374fbcbadf6c4cca5211f843a579470231",
+      "incomplete": [
+        {
+          "consumer": "unconstructed-error-class",
+          "message": "unconstructed-error-class: cannot prove error classes unconstructed: `apps/www/data/BetaPage.js` (and 18 other files) failed to parse: parsing /tmp/nm-3052-supabase-control/apps/www/data/BetaPage.js: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected JSX expression\", labels: [LabeledSpan { label: None, span: Span { start: 52, end: 53 }, primary: false }], help: Some(\"JSX syntax is disabled and should be enabled via the parser options\"), note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
+      "findingCount": 0,
+      "advisoryCount": 0
+    },
+    {
+      "label": "control-repo-after-a",
+      "rssKiB": 2931540,
+      "wall": "0:09.26",
+      "userSeconds": 13.09,
+      "systemSeconds": 1.86,
+      "rssGiB": 2.796,
+      "exitStatus": 1,
+      "reportSha256": "6d3678774d099be133fe88cfe3771c374fbcbadf6c4cca5211f843a579470231",
+      "incomplete": [
+        {
+          "consumer": "unconstructed-error-class",
+          "message": "unconstructed-error-class: cannot prove error classes unconstructed: `apps/www/data/BetaPage.js` (and 18 other files) failed to parse: parsing /tmp/nm-3052-supabase-control/apps/www/data/BetaPage.js: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected JSX expression\", labels: [LabeledSpan { label: None, span: Span { start: 52, end: 53 }, primary: false }], help: Some(\"JSX syntax is disabled and should be enabled via the parser options\"), note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
+      "findingCount": 0,
+      "advisoryCount": 0
+    },
+    {
+      "label": "control-repo-after-b",
+      "rssKiB": 2950508,
+      "wall": "0:09.35",
+      "userSeconds": 13.06,
+      "systemSeconds": 1.84,
+      "rssGiB": 2.814,
+      "exitStatus": 1,
+      "reportSha256": "6d3678774d099be133fe88cfe3771c374fbcbadf6c4cca5211f843a579470231",
+      "incomplete": [
+        {
+          "consumer": "unconstructed-error-class",
+          "message": "unconstructed-error-class: cannot prove error classes unconstructed: `apps/www/data/BetaPage.js` (and 18 other files) failed to parse: parsing /tmp/nm-3052-supabase-control/apps/www/data/BetaPage.js: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected JSX expression\", labels: [LabeledSpan { label: None, span: Span { start: 52, end: 53 }, primary: false }], help: Some(\"JSX syntax is disabled and should be enabled via the parser options\"), note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
+      "findingCount": 0,
+      "advisoryCount": 0
+    },
+    {
+      "label": "control-repo-before-b",
+      "rssKiB": 2926592,
+      "wall": "0:09.62",
+      "userSeconds": 13.37,
+      "systemSeconds": 1.82,
+      "rssGiB": 2.791,
+      "exitStatus": 1,
+      "reportSha256": "6d3678774d099be133fe88cfe3771c374fbcbadf6c4cca5211f843a579470231",
+      "incomplete": [
+        {
+          "consumer": "unconstructed-error-class",
+          "message": "unconstructed-error-class: cannot prove error classes unconstructed: `apps/www/data/BetaPage.js` (and 18 other files) failed to parse: parsing /tmp/nm-3052-supabase-control/apps/www/data/BetaPage.js: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected JSX expression\", labels: [LabeledSpan { label: None, span: Span { start: 52, end: 53 }, primary: false }], help: Some(\"JSX syntax is disabled and should be enabled via the parser options\"), note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
+      "findingCount": 0,
+      "advisoryCount": 0
+    },
+    {
+      "label": "control-before",
+      "rssKiB": 34528,
+      "wall": "0:00.03",
+      "userSeconds": 0.01,
+      "systemSeconds": 0.02,
+      "rssGiB": 0.033,
+      "exitStatus": 1,
+      "reportSha256": "c5e037d6d5d7390fed5caad50800304b38204a5becac7b9f32b2737cdd8c495a",
+      "incomplete": [],
+      "findingCount": 89,
+      "advisoryCount": 30
+    },
+    {
+      "label": "control-after",
+      "rssKiB": 34948,
+      "wall": "0:00.04",
+      "userSeconds": 0.01,
+      "systemSeconds": 0.02,
+      "rssGiB": 0.033,
+      "exitStatus": 1,
+      "reportSha256": "c5e037d6d5d7390fed5caad50800304b38204a5becac7b9f32b2737cdd8c495a",
+      "incomplete": [],
+      "findingCount": 89,
+      "advisoryCount": 30
+    }
+  ]
+}

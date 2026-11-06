@@ -59,10 +59,52 @@ The command is `no-mistakes check --root <clone> --config <config> --format json
 `099f69b44a21f5b88ef83db459f4504fe0ed3a20`; its frozen executable SHA-256 is
 `b1cde38589ec21cbf112046d5162af4cdc96fb5cfb525ff3dffedc93112463d1`.
 
-| Revision / sample | Peak RSS | Wall | User CPU | System CPU | Outcome |
-| --- | ---: | ---: | ---: | ---: | --- |
-| Baseline, first | 18.16 GiB | 52.78 s | 50.50 s | 7.29 s | Allocation abort at 20 GiB virtual limit |
+The candidate production source is `a27051bc7c0d91597bbdb33a9da50c47f905ef30`;
+its frozen executable SHA-256 is
+`a306b24ac9af6c8dc23e6a0871110f30ccc424bda938038630c37d473488264b`.
+The two jobs-4 samples per binary run in baseline/candidate/candidate/baseline
+order; each invocation starts fresh. Results are observations, not throughput
+guarantees: baseline aborts while the candidate returns an incomplete report.
 
-Candidate measurements and reverse baseline samples are recorded after final
-release validation. The temporary counter build is diagnostic only (LTO off,
-16 codegen units); its timings are not used as a release performance comparison.
+| Revision / jobs / sample | Peak RSS | Wall | User CPU | System CPU | Outcome |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Baseline / 4 / first | 18.16 GiB | 52.78 s | 50.50 s | 7.29 s | Allocation abort |
+| Candidate / 4 / first | 2.90 GiB | 26.42 s | 31.88 s | 2.09 s | Explicit incomplete file |
+| Candidate / 4 / second | 2.95 GiB | 29.73 s | 32.01 s | 1.83 s | Explicit incomplete file |
+| Baseline / 4 / reverse | 18.16 GiB | 57.16 s | 51.10 s | 7.12 s | Allocation abort |
+| Candidate / 1 | 2.32 GiB | 33.10 s | 31.78 s | 1.30 s | Explicit incomplete file |
+| Baseline / 1 | 18.40 GiB | 59.82 s | 51.75 s | 7.96 s | Allocation abort |
+| Candidate / default | 3.20 GiB | 24.71 s | 32.54 s | 3.13 s | Explicit incomplete file |
+
+All four candidate reports are byte-identical, name `tsWorker.js`, explain the
+budget, and include the repair hint. They exit 1 rather than claiming successful
+complete analysis. All three baseline runs abort with status 134 under the
+virtual-memory guard. No baseline/default sample was run.
+
+## Controls and limits
+
+A second checkout of the same Supabase revision removes only `tsWorker.js`.
+Two samples per binary run in baseline/candidate/candidate/baseline order:
+
+| Binary | Peak RSS | Wall | User CPU | System CPU |
+| --- | ---: | ---: | ---: | ---: |
+| Baseline | 2.79–2.81 GiB | 9.49–9.62 s | 13.15–13.37 s | 1.82–2.14 s |
+| Candidate | 2.80–2.81 GiB | 9.26–9.35 s | 13.06–13.09 s | 1.84–1.86 s |
+
+These four reports are byte-identical. They retain the pre-existing JSX parse
+failure (`BetaPage.js` and 18 other `.js` files), so this control does not establish
+a successful complete Supabase check. It establishes unchanged preparation,
+report, and exit behavior for the remaining repository. No workload speedup is
+claimed for this control.
+
+The ordinary saved `unconstructed-error-class/fixture` control produces
+byte-identical findings before/after (89 findings, 30 advisories, exit 1), wall 0.03/0.04 s,
+user CPU 0.01/0.01 s, system CPU 0.02/0.02 s, peak RSS 34,528/34,948 KiB.
+Below-budget full fact equality and existing foreign-provider cases also pass.
+
+[Raw measurements and report hashes](foreign-receiver-work-budget-data.json)
+record the samples, revisions, binary hashes, and release flags. Measurements
+are Linux x64 only; macOS/Windows performance and a successful full Supabase
+analysis remain unverified. The temporary counter build uses LTO off and 16
+codegen units; its timings are diagnostic only and excluded from this release
+comparison.
