@@ -18,7 +18,7 @@ test(
       ["catalog-resolution", "view-suppression.yml", 0],
       ["catalog-resolution-identity", "view-identity.yml", 1],
       ["schemaless-key-resolution", "qualified-bare-tables.yml", 4],
-      ["column-policy", "../../configs/column-bounds.yml", 7],
+      ["column-policy", "../../configs/column-bounds.yml", 8],
       ["column-policy", "../../configs/column-bounds-composite-prefix.yml", 1],
       ["column-policy", "../../configs/recursive-depth.yml", 10],
       ["join-roots", "valid.yml", 41],
