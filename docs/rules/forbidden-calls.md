@@ -358,3 +358,10 @@ not collect argument summaries.
 Argument evidence is collected only for files accepted by applications with
 `whenArguments`, using the same project, include, and exclude filters as findings.
 Other call graph consumers retain their requested facts.
+
+Large branching receiver-provider histories can exceed the per-file value-flow
+work budget. The check then reports the file as `incomplete`, with a reason and
+repair hint, and emits no definitive findings from the incomplete graph. Use a
+narrower analysis root that omits generated assets or simplify shared receiver
+mutations. Rule include/exclude filters do not remove full-graph evidence.
+See [check prerequisites](../cli/check.md).

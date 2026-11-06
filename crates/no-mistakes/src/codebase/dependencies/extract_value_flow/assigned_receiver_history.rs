@@ -8,14 +8,15 @@ impl ReceiverHistories {
         &self,
         key: &(usize, String),
         path: &[Option<String>],
-    ) -> Vec<(nested::ReceiverWrite, Option<CallableId>, (u32, u32))> {
+        budget: &mut mutable_origins::WorkBudget,
+    ) -> Option<nested::ForeignMemberReferences> {
         let Some(origins) = &self.assigned_origins else {
-            return Vec::new();
+            return Some(Vec::new());
         };
         let Some(id) = self.names.get(&key.0).and_then(|names| names.get(&key.1)) else {
-            return Vec::new();
+            return Some(Vec::new());
         };
-        origins.foreign_references(self.root(*id), path)
+        origins.foreign_references(self.root(*id), path, budget)
     }
 
     pub(in super::super) fn has_rhs_reference_demand(&self, scope: usize, name: &str) -> bool {
@@ -114,3 +115,7 @@ impl ReceiverHistories {
         )
     }
 }
+
+#[cfg(test)]
+#[path = "foreign_provider_budget_tests.rs"]
+mod budget_tests;

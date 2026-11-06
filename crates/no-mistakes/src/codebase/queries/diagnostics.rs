@@ -65,6 +65,9 @@ fn incomplete_reason(facts: Option<&TsFileFacts>) -> Option<(&'static str, Strin
     if let Some(error) = &facts.operational_error {
         return Some(("operational-error", error.clone()));
     }
+    if let Some(error) = &facts.value_flow.incomplete_reason {
+        return Some(("operational-error", error.clone()));
+    }
     if let Some(error) = &facts.parse_error {
         return Some(("parse-error", error.clone()));
     }

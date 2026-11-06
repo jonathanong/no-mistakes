@@ -20,3 +20,19 @@ fn missing_prepared_graph_facts(missing: &[PathBuf]) -> anyhow::Error {
     )
     .into()
 }
+
+fn require_complete_value_flow(files: &[PathBuf], facts: Option<&dyn TsFactLookup>) -> Result<()> {
+    for file in files {
+        if let Some(reason) = facts
+            .and_then(|facts| facts.get_ts_facts(file))
+            .and_then(|facts| facts.value_flow.incomplete_reason.as_ref())
+        {
+            return Err(crate::codebase::check_outcome::CheckInputFailure::source(
+                file.clone(),
+                format!("{}: {reason}", file.display()),
+            )
+            .into());
+        }
+    }
+    Ok(())
+}

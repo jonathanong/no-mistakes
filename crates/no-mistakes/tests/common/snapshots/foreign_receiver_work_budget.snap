@@ -1,0 +1,82 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "incomplete": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/argument-diamond-16.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/argument-diamond-20.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/shared-2048.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/shared-4096.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "independent": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/argument-diamond-16.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/argument-diamond-20.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/shared-2048.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/shared-4096.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/shared-4096.mts",
+          "line": 8264,
+          "message": "src/shared-4096.mts:8264: `eslint-disable-next-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable-next-line react/purity",
+          "target": "react/purity"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

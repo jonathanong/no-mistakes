@@ -19,11 +19,17 @@ pub(super) const GRAPH_CONSUMERS: &[&str] = &[
 pub(super) fn graph_failed(
     config: &crate::config::v2::NoMistakesConfig,
     session: &AnalysisSession,
-    message: &str,
+    error: &anyhow::Error,
 ) {
     for consumer in GRAPH_CONSUMERS {
         if config.rule_configured(consumer) {
-            session.record_check_failure(CheckFailure::new(*consumer, message));
+            let source = error.downcast_ref::<crate::codebase::check_outcome::CheckInputFailure>();
+            session.record_check_failure(CheckFailure {
+                consumer: (*consumer).into(),
+                file: source.and_then(|failure| failure.file.clone()),
+                property: source.and_then(|failure| failure.property.clone()),
+                message: format!("{error:#}"),
+            });
         }
     }
 }
@@ -69,6 +75,13 @@ pub(super) fn register_demands(
             session.record_check_source_failure(file, error);
         }
     }
+    if try_canonical_graph_plan(config)
+        .ok()
+        .flatten()
+        .is_some_and(|plan| plan.ts_fact_plan().needs_value_flow())
+    {
+        register_value_flow_failures(config, shared, session);
+    }
     if !session.partial_checks_enabled() {
         if let Some(failure) = session.check_failures().first() {
             anyhow::bail!("{}: {}", failure.consumer, failure.message);
@@ -76,3 +89,46 @@ pub(super) fn register_demands(
     }
     Ok(())
 }
+
+fn register_value_flow_failures(
+    config: &crate::config::v2::NoMistakesConfig,
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    session: &AnalysisSession,
+) {
+    let mut failures = Vec::new();
+    for file in shared.files() {
+        let Some(reason) = shared
+            .ts
+            .get(file)
+            .and_then(|facts| facts.ts.value_flow.incomplete_reason.as_ref())
+        else {
+            continue;
+        };
+        for consumer in GRAPH_CONSUMERS
+            .iter()
+            .filter(|consumer| config.rule_configured(consumer))
+        {
+            failures.push(CheckFailure {
+                consumer: (*consumer).into(),
+                file: Some(file.clone()),
+                property: None,
+                message: reason.clone(),
+            });
+        }
+    }
+    if !failures.is_empty() {
+        if let Some(crate::codebase::check_outcome::Prerequisite::Failed(previous)) =
+            session.check_prerequisite("codebase.canonical-graph")
+        {
+            failures.extend(previous);
+        }
+        session.set_check_prerequisite(
+            "codebase.canonical-graph",
+            crate::codebase::check_outcome::Prerequisite::Failed(failures),
+        );
+    }
+}
+
+#[cfg(test)]
+#[path = "value_flow_prerequisite_tests.rs"]
+mod budget_tests;

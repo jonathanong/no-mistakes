@@ -4,6 +4,7 @@ type Receiver = ((usize, String), ValueMutationPath);
 pub(super) type ReceiverRead = Option<(u32, Option<CallableId>)>;
 pub(super) type RootRead = (u32, Option<CallableId>);
 pub(super) type ReceiverWrite<R = RootRead> = (Receiver, Vec<ReceiverRead>, R);
+pub(super) type ForeignMemberReferences = Vec<(ReceiverWrite, Option<CallableId>, (u32, u32))>;
 /// Root tracking is selected once per physical writer. Ordinary receiver-read
 /// timing remains present in both specializations.
 pub(super) trait RootCoordinate: Copy {

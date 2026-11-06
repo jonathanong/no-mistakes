@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: unconstructed-error-class
+    scope: repository
+    include: ["src/*.mts"]
+  - rule: forbidden-lint-suppressions
+    scope: repository
+    include: ["src/shared-4096.mts"]
+    options:
+      files: ["src/shared-4096.mts"]
+      ruleIds: ["react/purity"]

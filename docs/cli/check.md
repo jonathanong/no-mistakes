@@ -167,6 +167,15 @@ failures were captured; absence does not prove arbitrary dynamic JavaScript
 configuration was evaluated. Global invocation or configuration errors that
 make the request unusable still fail with an error.
 
+Value-flow extraction bounds foreign receiver finalization to 100,000 work units
+per file, including retained paths, provider scans, argument expansion, and replay.
+If a file exceeds that budget, dependent graph checks are `incomplete`; each
+exhausted file is named with the reason and a repair hint. Partial value-flow
+facts cannot prove findings. Independent source checks still run. Analyze a
+narrower `--root` that omits generated assets, or simplify shared receiver mutations.
+Rule `include`/`exclude` filters select diagnostics and do not remove evidence
+from this full graph analysis. See [the work-budget investigation](../performance/foreign-receiver-work-budget.md).
+
 Invalid rule option values are configuration errors, not implicit defaults.
 `check` exits with a diagnostic naming the rule application and the exact
 `options` path whose YAML type does not match the rule's schema. Omitted options

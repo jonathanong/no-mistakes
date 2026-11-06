@@ -81,6 +81,12 @@ failures. Prerequisites follow each consumer's source and configuration input
 selection, independently of other enabled rules. Binary assets, directories, and
 dangling links outside that selection do not make a consumer incomplete. A required
 source that fails to read or parse still names that consumer and input.
+Per-file foreign receiver work-budget exhaustion uses the same `incomplete`
+contract, with the affected file and an actionable message. `check()` and
+`analyzeProject()` discard partial value-flow facts and preserve independent
+source-check findings. Narrow `root` or simplify shared receiver mutations;
+application `include`/`exclude` filters do not narrow the full graph evidence.
+Reverse-query diagnostics classify exhausted value flow as `operational-error`.
 Vitest config failures identify the config file and property (for example,
 `test.include`), with the source line in the message.
 

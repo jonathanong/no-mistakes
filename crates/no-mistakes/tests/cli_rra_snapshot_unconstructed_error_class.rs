@@ -302,3 +302,26 @@ fn unconstructed_error_class_json_matches_snapshot() {
         ],
     );
 }
+
+#[test]
+fn foreign_receiver_budget_check_json_snapshot() {
+    let fixture = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/foreign-receiver-work-budget/fixture"),
+    );
+    assert_saved_fixture(
+        "foreign_receiver_work_budget",
+        &[
+            (
+                "incomplete",
+                fixture.clone(),
+                fixture.join(".no-mistakes.yml"),
+            ),
+            (
+                "independent",
+                fixture.clone(),
+                fixture.join("independent-config.yml"),
+            ),
+        ],
+    );
+}

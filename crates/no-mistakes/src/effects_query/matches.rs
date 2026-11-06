@@ -72,6 +72,7 @@ fn needs_effect_call_graph(
     graph_files.indexable().iter().any(|path| {
         facts.get(path).is_none_or(|file| {
             file.operational_error.is_some()
+                || file.value_flow.incomplete_reason.is_some()
                 || file.parse_error.is_some()
                 || file.fatal_parse_error
                 || file.value_flow.has_receiver_replacement_facts()

@@ -1,5 +1,10 @@
 use super::*;
 use std::collections::BTreeMap;
+#[path = "foreign_work_budget.rs"]
+mod budget;
+#[path = "foreign_projection_budget.rs"]
+mod projection_budget;
+pub(super) use budget::WorkBudget;
 #[path = "mutable_origin_data.rs"]
 mod data;
 #[path = "mutable_foreign_writes.rs"]

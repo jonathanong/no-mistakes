@@ -21,8 +21,14 @@ impl PreparedScopePlan {
         self.traversal.seed_cached_program_facts(&self.configs);
         let traversal_graph = self.traversal.graph_files();
         let graph_fact_files = graph_facts.graph_file_universe();
-        let check_shares_traversal_graph_universe = graph_fact_files.len()
-            == traversal_graph.visible_len()
+        let incomplete_check_only = self
+            .options
+            .reports
+            .iter()
+            .all(|request| request.report_type == "check")
+            && graph_fact_files.iter().any(|file| graph_facts.ts.get(file).is_some_and(|facts| facts.ts.value_flow.incomplete_reason.is_some()));
+        let check_shares_traversal_graph_universe = !incomplete_check_only
+            && graph_fact_files.len() == traversal_graph.visible_len()
             && graph_fact_files
                 .iter()
                 .all(|path| traversal_graph.contains_visible(path));
@@ -99,6 +105,26 @@ impl ScopeFactPlan {
             plan: self.plan.clone(),
             playwright: self.playwright.clone(),
             sources: std::sync::Arc::clone(&self.sources),
+        }
+    }
+}
+
+fn union_import_args(
+    existing: &mut crate::codebase::dependencies::TraverseArgs,
+    args: crate::codebase::dependencies::TraverseArgs,
+) {
+    existing.files.extend(args.files);
+    existing.file_symbols.extend(args.file_symbols);
+    existing.depth = match (existing.depth, args.depth) {
+        (Some(left), Some(right)) => Some(left.max(right)),
+        _ => None,
+    };
+    existing
+        .file_entrypoints_are_structured
+        .extend(args.file_entrypoints_are_structured);
+    for relationship in args.relationships {
+        if !existing.relationships.contains(&relationship) {
+            existing.relationships.push(relationship);
         }
     }
 }

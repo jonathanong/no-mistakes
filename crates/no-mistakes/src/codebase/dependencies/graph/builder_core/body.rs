@@ -90,6 +90,9 @@
             .map(|lookup| lookup as &dyn TsFactLookup)
             .or(facts)
             .or_else(|| owned_facts.as_ref().map(|facts| facts as &dyn TsFactLookup));
+        if fact_plan.needs_value_flow() {
+            require_complete_value_flow(graph_files.indexable(), facts)?;
+        }
         let mut forward: EdgeMap = EdgeMap::default();
         let mut reverse: EdgeMap = EdgeMap::default();
         let mut selector_import_sites = fx_map();

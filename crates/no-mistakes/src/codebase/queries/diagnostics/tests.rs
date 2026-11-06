@@ -3,6 +3,37 @@ use crate::codebase::ts_symbols::FileSymbols;
 use std::sync::Arc;
 
 #[test]
+fn exhausted_value_flow_is_reported_as_a_query_failure() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/foreign-receiver-work-budget/fixture");
+    let files = [root.join("src/shared-4096.mts")];
+    let facts = crate::codebase::ts_source::facts::collect_ts_facts(
+        &files,
+        crate::codebase::ts_source::facts::TsFactPlan {
+            imports: true,
+            value_flow: true,
+            symbols: true,
+            ..Default::default()
+        },
+    );
+    let flow = &facts[&files[0]].value_flow;
+    assert!(flow.incomplete_reason.is_some());
+    assert!(
+        flow.bindings.is_empty(),
+        "partial value flow must be discarded"
+    );
+    let diagnostics = QueryDiagnostics::from_prepared(&files, &facts, &root);
+    let report = serde_json::to_value(diagnostics).unwrap();
+    assert_eq!(report["partial"], true);
+    assert_eq!(report["incompleteFiles"][0]["file"], "src/shared-4096.mts");
+    assert_eq!(report["incompleteFiles"][0]["reason"], "operational-error");
+    assert!(report["incompleteFiles"][0]["message"]
+        .as_str()
+        .unwrap()
+        .contains("per-file work budget"));
+}
+
+#[test]
 fn prepared_failure_reasons_are_distinct_and_deterministic() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/queries-incomplete/fixture");
