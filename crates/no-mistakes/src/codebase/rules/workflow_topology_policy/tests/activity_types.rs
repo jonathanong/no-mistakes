@@ -71,3 +71,20 @@ fn requires_typed_configuration_and_rejects_unknown_policy_fields() {
         );
     }
 }
+
+#[test]
+fn custom_messages_apply_only_to_their_rule_application() {
+    let root = super::fixture("activity-types");
+    let mut config =
+        super::config("forbiddenActivityTypes: [{types: [ready_for_review], events: [issues]}]");
+    config.rules[0].message = Some("Remove this unwanted activity type.".to_owned());
+    config
+        .rules
+        .extend(super::config("forbiddenActivityTypes: [{types: [converted_to_draft]}]").rules);
+    let found = super::super::prepare::check_with_files(&root, &config, &[]).unwrap();
+    assert_eq!(found.len(), 2);
+    assert_eq!(found[0].line, 5);
+    assert!(found[0].message.contains("converted_to_draft"));
+    assert_eq!(found[1].line, 7);
+    assert_eq!(found[1].message, "Remove this unwanted activity type.");
+}

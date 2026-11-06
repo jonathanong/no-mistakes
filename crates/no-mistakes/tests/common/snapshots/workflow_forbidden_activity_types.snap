@@ -1,0 +1,210 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "all-events": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/events.yml",
+          "line": 3,
+          "message": "forbidden workflow activity type: pull_request: ready_for_review; remove it from on.pull_request.types to avoid unwanted workflow runs",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "types: [opened, ready_for_review, ready_for_review, 42]"
+        },
+        {
+          "file": ".github/workflows/events.yml",
+          "line": 5,
+          "message": "forbidden workflow activity type: pull_request_target: converted_to_draft; remove it from on.pull_request_target.types to avoid unwanted workflow runs",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "types: converted_to_draft"
+        },
+        {
+          "file": ".github/workflows/events.yml",
+          "line": 7,
+          "message": "forbidden workflow activity type: issues: ready_for_review; remove it from on.issues.types to avoid unwanted workflow runs",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "types:"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom-message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/events.yml",
+          "line": 3,
+          "message": "Remove draft transitions; these workflows do not read draft state.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "types: [opened, ready_for_review, ready_for_review, 42]"
+        },
+        {
+          "file": ".github/workflows/events.yml",
+          "line": 5,
+          "message": "Remove draft transitions; these workflows do not read draft state.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "types: converted_to_draft"
+        },
+        {
+          "file": ".github/workflows/events.yml",
+          "line": 7,
+          "message": "Remove draft transitions; these workflows do not read draft state.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "types:"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/suppressed-file.yml",
+          "line": 1,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/suppressed-line.yml",
+          "line": 3,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "types: ready_for_review # no-mistakes-disable-line workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/suppressed-next.yml",
+          "line": 3,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty-event-filter": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/suppressed-file.yml",
+          "line": 1,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/suppressed-line.yml",
+          "line": 3,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "types: ready_for_review # no-mistakes-disable-line workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/suppressed-next.yml",
+          "line": 3,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "event-filter": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/events.yml",
+          "line": 3,
+          "message": "forbidden workflow activity type: pull_request: ready_for_review; remove it from on.pull_request.types to avoid unwanted workflow runs",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "types: [opened, ready_for_review, ready_for_review, 42]"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid-options": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/suppressed-file.yml",
+          "line": 1,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/suppressed-line.yml",
+          "line": 3,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "types: ready_for_review # no-mistakes-disable-line workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/suppressed-next.yml",
+          "line": 3,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "workflow-topology-policy",
+          "message": "invalid options for rule `workflow-topology-policy` at options.forbiddenActivityTypes[0].types: invalid type: string \"ready_for_review\", expected a sequence"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

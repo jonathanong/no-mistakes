@@ -85,6 +85,7 @@ pub(crate) fn check_prepared(
     let mut locations = locations::Locations::default();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
+        let first_finding = findings.len();
         let concurrency = concurrency_compile::compile(&opts.concurrency_policy)?;
         let inventory = opts
             .secret_inventory
@@ -112,6 +113,11 @@ pub(crate) fn check_prepared(
                 &inventory,
                 authored.map(|(path, _)| path).or(config_path),
             ));
+        }
+        if let Some(message) = &rule.message {
+            for finding in &mut findings[first_finding..] {
+                finding.message.clone_from(message);
+            }
         }
     }
     super::sort_findings(&mut findings);

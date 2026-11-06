@@ -31,6 +31,23 @@ test(
     assert.ok(report.rules[2].message.includes("issues: ready_for_review"));
     assert.deepEqual(await esm.check(options), report);
 
+    const custom = await cjs.check({
+      root,
+      config: join(root, "../../configs/activity-types-custom.yml"),
+    });
+    assert.deepEqual(
+      custom.rules.map(({ message }) => message),
+      Array(3).fill("Remove draft transitions; these workflows do not read draft state."),
+    );
+    const filtered = await cjs.check({
+      root,
+      config: join(root, "../../configs/activity-types-filter.yml"),
+    });
+    assert.deepEqual(
+      filtered.rules.map(({ rule, file, line }) => [rule, file, line]),
+      [["workflow-topology-policy", ".github/workflows/events.yml", 3]],
+    );
+
     const request = { ...options, reports: [{ type: "check", id: "activity-types" }] };
     const preparedPending = cjs.analyzeProject(request);
     assert.ok(preparedPending instanceof Promise);
