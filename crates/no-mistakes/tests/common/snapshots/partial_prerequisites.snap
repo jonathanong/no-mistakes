@@ -305,5 +305,25 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       ],
       "warnings": []
     }
+  },
+  "vitest-root-property": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-mapping",
+          "file": "root-include.config.ts",
+          "message": "root-include.config.ts:1: include: expected string literal or string array for include",
+          "property": "include"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
   }
 }

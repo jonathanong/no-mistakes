@@ -197,5 +197,11 @@ fn check_json_snapshot_partial_prerequisites() {
     ] {
         cases.push((label, root.clone(), root.join(config)));
     }
+    let root = fixture("../test-config/vitest-include-location");
+    cases.push((
+        "vitest-root-property",
+        root,
+        fixture("partial-vitest").join("root.yml"),
+    ));
     crate::check_json_snapshot::assert_saved_fixture("partial_prerequisites", &cases);
 }
