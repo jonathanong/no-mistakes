@@ -74,7 +74,10 @@ line.
 C# maintainability check; it does not alter async delegate behavior.
 
 An `allow` glob that matches only successfully checked files and suppresses no
-raw finding produces an `unused-allow-entry` advisory. Remove the stale entry.
+raw finding produces an `unused-allow-entry` advisory by default. Remove the stale entry.
 Overlapping entries are all considered used when they match a raw finding,
 even when an inline suppression also applies. Partial or uncertain scopes do
 not produce stale-entry advisories.
+
+Repository `reportUnusedAllowEntries: report` makes these diagnostics fail;
+`ignore` omits them. See [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

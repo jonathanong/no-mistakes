@@ -79,8 +79,11 @@ Counterexample: `git config user.email bot@example.com` in setup scripts.
 Fix: read git identity when needed, but configure identity outside repository
 scripts.
 
-Unused `conditionallyAllowedWorkflows` entries produce `unused-allow-entry` advisories
+Unused `conditionallyAllowedWorkflows` entries produce `unused-allow-entry` advisories by default
 when the complete relevant file scope was successfully checked. Remove stale
 entries. Every overlapping exception that suppresses a raw finding is used;
 matching text that would not violate the rule does not use an exception.
 Partial scopes and failed reads or parses do not prove an entry stale.
+
+Repository `reportUnusedAllowEntries: report` makes these diagnostics fail;
+`ignore` omits them. See [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

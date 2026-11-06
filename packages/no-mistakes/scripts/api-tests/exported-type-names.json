@@ -435,6 +435,7 @@
   "UniqueExportFinding",
   "UnresolvedExecutorReceiverSummary",
   "UnsupportedApiCall",
+  "UnusedAllowEntryPolicy",
   "VitestProjectPolicy",
   "VitestSetupImpactEdgeDetail",
   "WhyStep",

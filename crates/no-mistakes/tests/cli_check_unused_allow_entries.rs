@@ -51,3 +51,23 @@ fn unused_allow_string_locations_check_json_snapshot() {
         &[("long_config", root, PathBuf::new())],
     );
 }
+
+#[test]
+fn unused_allow_policy_check_json_snapshot() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/unused-allow-entries");
+    let cases: Vec<_> = [
+        "advise",
+        "report",
+        "ignore",
+        "advise-violation",
+        "report-violation",
+        "ignore-violation",
+        "report-narrowed",
+        "report-advisory",
+    ]
+    .into_iter()
+    .map(|policy| (policy, root.clone(), root.join(format!("{policy}.yml"))))
+    .collect();
+    assert_saved_fixture("unused_allow_policy", &cases);
+}

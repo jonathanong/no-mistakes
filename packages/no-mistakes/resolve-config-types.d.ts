@@ -102,7 +102,12 @@ export interface DeclaredRule extends DeclaredConfigObject {
   name?: string | null;
   options?: DeclaredConfigValue;
 }
+/** Repository policy for proven stale configured exception entries. */
+export type UnusedAllowEntryPolicy = "advise" | "report" | "ignore";
+
 /** Canonical source-level merge, before defaults, expansion, or materialization. */
 export interface DeclaredConfig extends DeclaredConfigObject {
+  /** Defaults to `advise`; incomplete selector coverage never proves staleness. */
+  reportUnusedAllowEntries?: UnusedAllowEntryPolicy;
   rules?: DeclaredRule[];
 }

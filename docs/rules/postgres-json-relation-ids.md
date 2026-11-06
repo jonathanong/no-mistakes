@@ -239,4 +239,7 @@ types. [`postgres-column-naming`](postgres-column-naming.md) enforces configured
 column naming policies. This rule covers references hidden in JSON or unique
 fingerprints that those declared-column checks cannot see.
 
-Unused explicit exception entries produce non-failing `unused-allow-entry` advisories when their complete selector scope was checked. Remove stale entries; narrowed or unproven scopes stay silent. An entry is used only when it suppresses a finding, and overlapping exceptions are all credited.
+Unused explicit exception entries produce non-failing `unused-allow-entry` advisories by default when their complete selector scope was checked. Remove stale entries; narrowed or unproven scopes stay silent. An entry is used only when it suppresses a finding, and overlapping exceptions are all credited.
+
+Repository `reportUnusedAllowEntries: report` makes these diagnostics fail;
+`ignore` omits them. See [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

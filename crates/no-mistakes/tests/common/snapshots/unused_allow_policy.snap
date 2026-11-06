@@ -1,0 +1,180 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "advise.yml",
+          "import": "query-reached-per-item",
+          "line": 14,
+          "message": "stale query-reached-per-item allow entry `src/entry.mts:900#read` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {file: src/entry.mts, callee: read, line: 900}",
+          "target": "src/entry.mts:900#read"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "advise-violation": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "advise-violation.yml",
+          "import": "query-reached-per-item",
+          "line": 12,
+          "message": "stale query-reached-per-item allow entry `src/entry.mts:900#read` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {file: src/entry.mts, callee: read, line: 900}",
+          "target": "src/entry.mts:900#read"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry.mts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `database` via run/<anonymous:1> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "return items.map(item => read(item));",
+          "target": "database: run/<anonymous:1> → read"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ignore-violation": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry.mts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `database` via run/<anonymous:1> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "return items.map(item => read(item));",
+          "target": "database: run/<anonymous:1> → read"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "report.yml",
+          "import": "query-reached-per-item",
+          "line": 14,
+          "message": "stale query-reached-per-item allow entry `src/entry.mts:900#read` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {file: src/entry.mts, callee: read, line: 900}",
+          "target": "src/entry.mts:900#read"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report-advisory": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "report-advisory.yml",
+          "import": "query-reached-per-item",
+          "line": 15,
+          "message": "stale query-reached-per-item allow entry `src/entry.mts:900#read` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {file: src/entry.mts, callee: read, line: 900}",
+          "target": "src/entry.mts:900#read"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report-narrowed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "report-violation": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "report-violation.yml",
+          "import": "query-reached-per-item",
+          "line": 12,
+          "message": "stale query-reached-per-item allow entry `src/entry.mts:900#read` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {file: src/entry.mts, callee: read, line: 900}",
+          "target": "src/entry.mts:900#read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `database` via run/<anonymous:1> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "return items.map(item => read(item));",
+          "target": "database: run/<anonymous:1> → read"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
