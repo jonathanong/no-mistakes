@@ -354,3 +354,10 @@ have empty `targets`. Package-wide fallback requires `tests.rust.packages`.
 Visible exact external Cargo target entries retain their selected declaring
 packages; shared entries can return several deterministic target selectors.
 This does not assign neighboring helper files to those packages.
+
+
+For source-only Vitest project settings, configure `vitest-project-policy` with
+an explicit `config`, finite `helpers`, required/forbidden literal properties,
+and parity pairs, then run `no-mistakes check --root . --format json`. Inspect
+`incomplete` as well as findings: dynamic values require a literal rewrite.
+This policy never executes config or discovers additional source files.

@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: vitest.config.ts
+      required: { isolate: true }

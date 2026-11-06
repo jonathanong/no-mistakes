@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: root-only-inheritance-explicit.ts
+      required: { isolate: true }
+      forbidden: [name, projects, globalSetup]

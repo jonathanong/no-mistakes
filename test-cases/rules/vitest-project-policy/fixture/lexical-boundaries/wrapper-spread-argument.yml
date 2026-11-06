@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: wrapper-spread-argument.ts
+      helpers: []
+      required: { isolate: true }
+      forbidden: [pool]

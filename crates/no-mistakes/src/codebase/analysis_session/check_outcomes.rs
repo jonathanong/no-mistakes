@@ -5,9 +5,14 @@ use std::collections::BTreeSet;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 
+mod vitest_project_policy;
+
 #[derive(Default)]
 pub(super) struct CheckOutcomes {
     partial: AtomicBool,
+    vitest_project_policy: std::sync::OnceLock<
+        std::sync::Arc<crate::codebase::rules::vitest_project_policy::Diagnostics>,
+    >,
     demands: DashMap<String, BTreeSet<PathBuf>>,
     failures: DashMap<CheckFailure, ()>,
     source_failures: DashMap<PathBuf, String>,

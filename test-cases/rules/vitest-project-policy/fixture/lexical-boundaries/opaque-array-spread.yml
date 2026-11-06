@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: opaque-array-spread.ts
+      helpers: []
+      required: { isolate: true }
+      forbidden: [pool]

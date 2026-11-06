@@ -268,3 +268,9 @@ Configured allow entries that match no finding in their fully checked selector
 scope produce non-failing `unused-allow-entry` advisories at the config entry.
 Partial or uncertain scope stays silent. Existing rule-specific stale findings
 retain their severity; see [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
+
+
+Enable [`vitest-project-policy`](../rules/vitest-project-policy.md) to check
+literal properties across declared Vitest projects. Its explicit `config` and
+`helpers` inputs bound source reads; non-literal settings appear in the JSON
+`incomplete` list. The rule never imports or executes Vitest configuration.

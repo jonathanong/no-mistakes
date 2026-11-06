@@ -1092,3 +1092,10 @@ await, alias or effect paths keep the existing unanalyzable policy.
 TypeScript namespace bodies (nested, dotted, reopened, and `declare namespace`)
 keep PostgreSQL executor and resource bindings local to each body. Namespace
 `var` declarations hoist within that body without shadowing outer imports.
+
+
+TS/JS [`vitest-project-policy`](rules/vitest-project-policy.md) checks per-project
+literal properties through CLI `check`, asynchronous Node `check()`, and batched
+`analyzeProject()` checks. It reads an explicit config and helper list, reuses
+Vitest config parsing, and reports non-literal values as incomplete. Config is
+never executed and the rule does not discover repository files.

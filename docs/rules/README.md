@@ -171,6 +171,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`version-pin-consistency`](version-pin-consistency.md)                       | Keep a structured source pin in lockstep with other files.                      |
 | [`vitest-ci-path-coverage`](vitest-ci-path-coverage.md)                       | Require Vitest inputs to be covered by CI path filters.                         |
 | [`vitest-project-mapping`](vitest-project-mapping.md)                         | Require Vitest tests to map to exactly one project.                             |
+| [`vitest-project-policy`](vitest-project-policy.md) | Enforce literal properties and parity across declared Vitest projects. |
 | [`vitest-test-correspondence`](vitest-test-correspondence.md)                 | Enforce source/test correspondence for Vitest.                                  |
 | [`workflow-topology-policy`](workflow-topology-policy.md)                     | Declarative GitHub Actions topology inventory, edges, and step order.           |
 | [`workspace-package-cycles`](workspace-package-cycles.md)                     | Prevent dependency cycles between workspace packages.                           |

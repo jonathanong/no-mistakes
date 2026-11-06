@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: update-mutation.ts
+      helpers: [helper.ts]
+      parity: [{properties: [fileParallelism, maxWorkers]}]

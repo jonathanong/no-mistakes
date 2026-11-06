@@ -12,6 +12,7 @@ mod resolve;
 pub(crate) mod runner_config;
 mod standalone;
 mod test_config;
+pub(crate) use test_config::vitest::lexical_policy as vitest_lexical_policy;
 #[cfg(test)]
 mod test_support;
 #[cfg(test)]

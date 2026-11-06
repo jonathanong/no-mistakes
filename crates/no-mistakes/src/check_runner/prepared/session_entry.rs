@@ -29,7 +29,12 @@ pub(super) fn prepare_with_session(
         tsconfig.as_ref().clone(),
         workspace,
     )?;
+    session.prepare_vitest_project_policy(
+        root,
+        &prepared.config,
+        &prepared.visible_paths.paths_for(root),
+        &prepared.visible_paths.source_store_for(root),
+    )?;
     failures::record(session, &prepared);
     Ok(prepared)
 }
-

@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: missing-namespace-member.ts
+      helpers: [known.ts]
+      required: { isolate: true }
+      forbidden: [pool]

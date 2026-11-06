@@ -25,6 +25,7 @@ macro_rules! filesystem_rules {
             FORBIDDEN_LINT_SUPPRESSIONS => forbidden_lint_suppressions::check_with_files => include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/rules/filesystem-dispatch/all-rules/lint-suppression-options.yml")),
             FORBIDDEN_WORKSPACE_CLOSURE => forbidden_workspace_closure::check_with_files => "",
             DECLARED_PAYLOAD_COMPATIBILITY => declared_payload_compatibility::check_with_files => "",
+            VITEST_PROJECT_POLICY => vitest_project_policy::check_with_files => include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/rules/filesystem-dispatch/all-rules/vitest-project-policy-options.yml")),
             STRUCTURED_CONFIG_POLICY => structured_config_policy::check_with_files => "",
             SWIFT_NO_RAW_PRINT => swift_no_raw_print::check_with_files => "",
             SWIFT_VIEWMODEL_MAIN_ACTOR => swift_viewmodel_main_actor::check_with_files => "",

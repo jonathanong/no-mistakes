@@ -23,12 +23,17 @@ pub fn prepare_vitest_project_catalog(
 ) -> PreparedVitestProjectCatalog {
     let config_projects = if config_projects_required(root, config) {
         let root_visible_paths = visible_paths.paths_for(root);
-        project_config::load_projects_from_visible_with_catalog(
-            root,
-            Framework::Vitest,
-            config.tests.vitest.configs.as_ref(),
-            &root_visible_paths,
-            tsconfig_catalog,
+        crate::integration_tests::runner_config::with_request_sources(
+            visible_paths.source_store_for(root),
+            || {
+                project_config::load_projects_from_visible_with_catalog(
+                    root,
+                    Framework::Vitest,
+                    config.tests.vitest.configs.as_ref(),
+                    &root_visible_paths,
+                    tsconfig_catalog,
+                )
+            },
         )
         .map_err(CheckInputFailure::from_error)
     } else {

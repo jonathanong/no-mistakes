@@ -22,7 +22,7 @@ pub(super) fn run_all_with_session_options(
     options: AnalysisOptions,
 ) -> Result<CheckResults> {
     let include_sql_verdicts = options.include_sql_verdicts;
-    let session = Arc::clone(session);
+    let session = session.scoped_checks();
     session.enable_partial_checks();
     no_mistakes::invocation::set_timeout_phase("check.prepare");
     no_mistakes::invocation::check_timeout()?;
