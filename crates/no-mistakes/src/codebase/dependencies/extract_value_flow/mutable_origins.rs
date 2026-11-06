@@ -137,7 +137,7 @@ impl ReceiverBindingOrigins {
         &self,
         key: &(usize, String),
         coordinates: (&[Option<String>], &[nested::ReceiverRead], nested::RootRead),
-        output: &mut impl Extend<nested::ReceiverWrite<R>>,
+        output: &mut impl nested::ReceiverOutput<R>,
         foreign_before: usize,
         version: RootVersion,
         defer_module: bool,
@@ -168,6 +168,9 @@ impl ReceiverBindingOrigins {
         }
         // Arena links share alternatives without recursive traversal or drop.
         while let Some((id, foreign)) = pending.pop() {
+            if !output.active() {
+                break;
+            }
             #[cfg(feature = "test-instrumentation")]
             self.visits.set(self.visits.get() + 1);
             match &self.arena[id] {

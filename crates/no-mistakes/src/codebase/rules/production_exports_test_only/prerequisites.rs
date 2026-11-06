@@ -3,6 +3,37 @@ use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_outcome::CheckFailure;
 use std::path::PathBuf;
 
+pub(super) fn complete_value_flow(
+    facts: &CheckFactMap,
+    session: Option<&AnalysisSession>,
+) -> Result<bool> {
+    let mut complete = true;
+    for file in facts.graph_file_universe() {
+        let Some(reason) = facts
+            .get_ts_facts(file)
+            .and_then(|source| source.value_flow.incomplete_reason.as_ref())
+        else {
+            continue;
+        };
+        complete = false;
+        if let Some(session) = session.filter(|session| session.partial_checks_enabled()) {
+            session.record_check_failure(CheckFailure {
+                consumer: RULE_ID.into(),
+                file: Some(file.clone()),
+                property: None,
+                message: reason.clone(),
+            });
+        } else {
+            return Err(crate::codebase::check_outcome::CheckInputFailure::source(
+                file.clone(),
+                reason.clone(),
+            )
+            .into());
+        }
+    }
+    Ok(complete)
+}
+
 pub(super) fn record_incomplete(
     incomplete: &[(PathBuf, usize, String)],
     facts: &CheckFactMap,

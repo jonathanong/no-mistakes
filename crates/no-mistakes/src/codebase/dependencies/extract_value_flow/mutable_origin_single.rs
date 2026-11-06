@@ -90,8 +90,11 @@ impl ReceiverBindingOrigins {
         value: &SingleNamedField,
         path: &[Option<String>],
         reads: &[nested::ReceiverRead],
-        output: &mut impl Extend<nested::ReceiverWrite<R>>,
+        output: &mut impl nested::ReceiverOutput<R>,
     ) {
+        if !output.visit() {
+            return;
+        }
         if let Some((head, tail)) = path.split_first() {
             if head
                 .as_ref()

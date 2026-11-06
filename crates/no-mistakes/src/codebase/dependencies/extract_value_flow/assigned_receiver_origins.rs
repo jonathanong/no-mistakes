@@ -47,9 +47,12 @@ impl Selection<'_> {
         &self,
         path: &[Option<String>],
         reads: &[nested::ReceiverRead],
-        output: &mut impl Extend<nested::ReceiverWrite<R>>,
+        output: &mut impl nested::ReceiverOutput<R>,
     ) {
         for (value, prefix) in &self.values {
+            if !output.active() {
+                break;
+            }
             nested::write_receiver_references(value, &path[*prefix..], &reads[*prefix..], output);
         }
     }

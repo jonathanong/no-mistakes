@@ -30,6 +30,18 @@ fn ordinary_projection_keeps_order_and_allocations_while_bounded_projection_stop
     assert_eq!(first, Some(reference()));
     assert!(overflow.is_empty());
 }
+
+#[test]
+fn bounded_output_stops_consuming_input_after_the_first_rejected_reference() {
+    let generated = std::cell::Cell::new(0);
+    let mut bounded = output(Some(3));
+    bounded.extend((0..1024).map(|_| {
+        generated.set(generated.get() + 1);
+        reference()
+    }));
+    assert!(bounded.exceeded);
+    assert_eq!(generated.get(), 2);
+}
 #[cfg(feature = "test-instrumentation")]
 #[test]
 fn exhausted_projection_is_discarded_before_pending_queue_append() {

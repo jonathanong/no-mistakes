@@ -14,3 +14,10 @@ No test writes fixture content at runtime.
 The `argument-diamond-N.mts` cases forward a provider parameter through two
 calls per level before storing it on the shared receiver. They exercise the
 branching provider-expansion path with only a few kilobytes of saved source.
+
+`scalar-wildcard.mts` projects a wildcard path over a shared object of scalar
+values. It exercises node-visit accounting even when projection emits no
+references. The saved forward-receiver controls in
+`../../value-flow-forward-receiver-alias/fixture/src/budget-N.mts` contain 128
+or 256 distinct writers over a 20-member deferred receiver path; both stop at
+a reduced test budget and preserve complete facts without that limit.

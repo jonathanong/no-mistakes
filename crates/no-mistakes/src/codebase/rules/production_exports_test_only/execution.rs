@@ -7,6 +7,9 @@ pub(crate) fn check_with_graph_and_session(
     facts: &CheckFactMap,
     session: Option<&crate::codebase::analysis_session::AnalysisSession>,
 ) -> Result<AnalysisDiagnostics> {
+    if !prerequisites::complete_value_flow(facts, session)? {
+        return Ok(AnalysisDiagnostics::default());
+    }
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut diagnostics = AnalysisDiagnostics::default();
     let incomplete = traversal::incomplete_sources(graph, facts);

@@ -19,12 +19,12 @@ valid paths or allow cycles that grow member paths indefinitely. Provider-index
 sharing alone does not bound this expansion.
 
 The implementation therefore uses an explicit per-file budget of 100,000 units
-for foreign receiver finalization. It charges deferred path coordinates, provider
-scans and projected references, parameter expansion and its active paths, replay
-roots, successor outputs, and alias fanout. Output sinks stop retaining entries
-when exhausted. This is a finalization work-growth limit, not a byte limit or a
-limit on parsing and the initial source walk. A single stored expression may
-still be traversed after its output sink stops retaining entries.
+for receiver finalization. It charges deferred forward and foreign path
+coordinates, provider scans, expression-node visits and projected references,
+parameter expansion and its active paths, replay roots, successor outputs, and
+alias fanout. Projection stops traversing expressions when the budget is
+exhausted. This is a finalization work-growth limit, not a byte limit or a limit
+on parsing and the initial source walk.
 
 Exhaustion discards partial value-flow facts and retains an explicit reason.
 Call/value-flow graph construction rejects those facts before projection.
@@ -36,8 +36,9 @@ filters select diagnostics and cannot remove full-graph evidence.
 Saved fixtures include 64 distinct providers and 16, 64, 2,048, or 4,096 writers
 on a shared receiver (largest source approximately 262 KB), plus compact
 parameter-forwarding diamonds. The 2,048/4,096 writer controls consume
-270,466/540,802 units with the budget disabled, and at most 100,000 units with
-it enabled. Ordinary full facts are compared with the unrestricted path, and
+270,531/540,867 units without the budget and at most 100,000 units with it
+enabled. Deferred forward and scalar-only wildcard controls exercise work that
+can occur before replay or without emitting references. Ordinary full facts are compared with the unrestricted path, and
 ordinary CLI findings are compared with the frozen baseline executable.
 
 ## Release reproduction

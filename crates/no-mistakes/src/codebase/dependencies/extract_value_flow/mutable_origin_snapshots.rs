@@ -10,16 +10,19 @@ impl Default for RootSnapshots {
     }
 }
 impl RootSnapshots {
-    pub(super) fn reversed(&self, mut visit: impl FnMut(u32, usize)) {
+    pub(super) fn try_reversed(
+        &self,
+        mut visit: impl FnMut(u32, usize) -> Option<()>,
+    ) -> Option<()> {
         match self {
             Self::Ordered(entries) => entries
                 .iter()
                 .rev()
-                .for_each(|(offset, selected)| visit(*offset, *selected)),
+                .try_for_each(|(offset, selected)| visit(*offset, *selected)),
             Self::Tree(entries) => entries
                 .iter()
                 .rev()
-                .for_each(|(offset, selected)| visit(*offset, *selected)),
+                .try_for_each(|(offset, selected)| visit(*offset, *selected)),
         }
     }
     pub(super) fn unordered(&self) -> bool {

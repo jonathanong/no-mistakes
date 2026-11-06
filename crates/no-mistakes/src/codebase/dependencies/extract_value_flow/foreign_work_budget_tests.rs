@@ -94,6 +94,20 @@ fn ordinary_files_keep_identical_complete_facts() {
     }
     assert!(compared > 0);
 }
+
+#[test]
+fn scalar_wildcard_projection_spends_work_without_emitting_references() {
+    let file = root().join("scalar-wildcard.mts");
+    let (bounded, work) = collect(&file, Some(64), true);
+    assert!(bounded.value_flow.incomplete_reason.is_some());
+    assert!(bounded.value_flow.bindings.is_empty());
+    assert!(work[0] <= 64);
+    assert_eq!(work[1], 1);
+    let (complete, work) = collect(&file, Some(usize::MAX), true);
+    assert!(complete.value_flow.incomplete_reason.is_none());
+    assert!(work[0] > 64);
+    assert_eq!(collect(&file, None, false).1, [0; 2]);
+}
 #[test]
 fn exhausted_outputs_and_zero_remaining_never_extend_partial_facts() {
     let _mode = Mode(LIMIT_OVERRIDE.with(|mode| mode.replace(Some(1))));
@@ -104,6 +118,20 @@ fn exhausted_outputs_and_zero_remaining_never_extend_partial_facts() {
     let mut output = budget.output();
     output.extend([(((0, "receiver".into()), Vec::new()), Vec::new(), (0, None))]);
     assert!(output.finish().is_none());
+}
+
+#[test]
+fn exhausted_output_stops_constructing_remaining_receiver_paths() {
+    let _mode = Mode(LIMIT_OVERRIDE.with(|mode| mode.replace(Some(1))));
+    let mut budget = WorkBudget::default();
+    let generated = std::cell::Cell::new(0);
+    let mut output = budget.output();
+    output.extend((0..1024).map(|_| {
+        generated.set(generated.get() + 1);
+        (((0, "receiver".into()), Vec::new()), Vec::new(), (0, None))
+    }));
+    assert!(output.finish().is_none());
+    assert_eq!(generated.get(), 2);
 }
 
 #[test]
@@ -165,3 +193,6 @@ fn parameter_provider_construction_exhaustion_cannot_return_partial_facts() {
         assert_eq!(work[1], 1);
     }
 }
+
+#[path = "forward_budget_tests.rs"]
+mod forward_budget_tests;

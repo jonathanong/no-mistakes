@@ -22,9 +22,28 @@ impl<R> Extend<nested::ReceiverWrite<R>> for ProjectionOutput<R> {
                 self.output.extend(std::iter::once(value));
             } else {
                 self.exceeded = true;
+                break;
             }
         }
         self.remaining = Some(remaining);
+    }
+}
+impl<R> nested::ReceiverOutput<R> for ProjectionOutput<R> {
+    fn visit(&mut self) -> bool {
+        let Some(remaining) = self.remaining else {
+            return true;
+        };
+        if let Some(next) = remaining.checked_sub(1).filter(|_| !self.exceeded) {
+            self.remaining = Some(next);
+            self.used += 1;
+            true
+        } else {
+            self.exceeded = true;
+            false
+        }
+    }
+    fn active(&self) -> bool {
+        !self.exceeded
     }
 }
 impl ImportCollector {

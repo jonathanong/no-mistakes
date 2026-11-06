@@ -1,5 +1,13 @@
 use super::*;
 
+#[path = "nested_output.rs"]
+mod receiver_output;
+pub(super) use receiver_output::ReceiverOutput;
+
+#[cfg(test)]
+#[path = "nested_output_tests.rs"]
+mod output_tests;
+
 type Receiver = ((usize, String), ValueMutationPath);
 pub(super) type ReceiverRead = Option<(u32, Option<CallableId>)>;
 pub(super) type RootRead = (u32, Option<CallableId>);
@@ -31,17 +39,26 @@ pub(super) fn receiver_references(
     path: &[Option<String>],
     output: &mut Vec<Receiver>,
 ) {
-    walk_references(value, path, 0, &mut |receiver, _, _| output.push(receiver));
+    walk_references(value, path, 0, &mut |value| {
+        if let Some((receiver, _, _)) = value {
+            output.push(receiver);
+        }
+        true
+    });
 }
 
 pub(super) fn write_receiver_references<R: RootCoordinate>(
     value: &ValueExpression,
     path: &[Option<String>],
     reads: &[ReceiverRead],
-    output: &mut impl Extend<ReceiverWrite<R>>,
+    output: &mut impl ReceiverOutput<R>,
 ) {
-    walk_references(value, path, 0, &mut |receiver, acquired, read| {
-        append_write(receiver, acquired, read, reads, output);
+    walk_references(value, path, 0, &mut |value| match value {
+        None => output.visit(),
+        Some((receiver, acquired, read)) => {
+            append_write(receiver, acquired, read, reads, output);
+            output.active()
+        }
     });
 }
 
@@ -49,8 +66,11 @@ fn walk_references(
     value: &ValueExpression,
     path: &[Option<String>],
     acquired: usize,
-    output: &mut impl FnMut(Receiver, usize, (u32, Option<CallableId>)),
-) {
+    output: &mut impl FnMut(Option<(Receiver, usize, RootRead)>) -> bool,
+) -> bool {
+    if !output(None) {
+        return false;
+    }
     match value {
         ValueExpression::Named {
             name,
@@ -58,17 +78,28 @@ fn walk_references(
             offset,
             context,
         } => {
-            named_reference(name, *scope, (*offset, *context), path, acquired, output);
+            return named_reference(
+                name,
+                *scope,
+                (*offset, *context),
+                path,
+                acquired,
+                &mut |receiver, acquired, read| output(Some((receiver, acquired, read))),
+            );
         }
         ValueExpression::Object(fields, _) | ValueExpression::Array(fields) => {
             if let Some((head, tail)) = path.split_first() {
                 if let Some(head) = head {
                     if let Some(value) = fields.get(head) {
-                        walk_references(value, tail, acquired.saturating_sub(1), output);
+                        if !walk_references(value, tail, acquired.saturating_sub(1), output) {
+                            return false;
+                        }
                     }
                 } else {
                     for value in fields.values() {
-                        walk_references(value, tail, acquired.saturating_sub(1), output);
+                        if !walk_references(value, tail, acquired.saturating_sub(1), output) {
+                            return false;
+                        }
                     }
                 }
             }
@@ -77,15 +108,16 @@ fn walk_references(
             let fields = std::iter::once(Some(field.clone()))
                 .chain(path.iter().cloned())
                 .collect::<Vec<_>>();
-            walk_references(base, &fields, acquired + 1, output);
+            return walk_references(base, &fields, acquired + 1, output);
         }
         ValueExpression::Default(value, fallback) | ValueExpression::Either(value, fallback) => {
-            walk_references(value, path, acquired, output);
-            walk_references(fallback, path, acquired, output);
+            return walk_references(value, path, acquired, output)
+                && walk_references(fallback, path, acquired, output);
         }
-        ValueExpression::Awaited(value) => walk_references(value, path, acquired, output),
+        ValueExpression::Awaited(value) => return walk_references(value, path, acquired, output),
         _ => {}
     }
+    true
 }
 
 /// Both full values and compact root facts share named receiver/read projection.
@@ -95,8 +127,11 @@ pub(super) fn write_named_receiver_references<R: RootCoordinate>(
     read: RootRead,
     path: &[Option<String>],
     reads: &[ReceiverRead],
-    output: &mut impl Extend<ReceiverWrite<R>>,
+    output: &mut impl ReceiverOutput<R>,
 ) {
+    if !output.visit() {
+        return;
+    }
     named_reference(
         name,
         scope,
@@ -105,6 +140,7 @@ pub(super) fn write_named_receiver_references<R: RootCoordinate>(
         0,
         &mut |receiver, acquired, read| {
             append_write(receiver, acquired, read, reads, output);
+            output.active()
         },
     );
 }
@@ -114,8 +150,8 @@ fn named_reference(
     read: RootRead,
     path: &[Option<String>],
     acquired: usize,
-    output: &mut impl FnMut(Receiver, usize, RootRead),
-) {
+    output: &mut impl FnMut(Receiver, usize, RootRead) -> bool,
+) -> bool {
     let mut names = name.split('.');
     let base = names.next().expect("binding name");
     let tail = names
@@ -127,14 +163,14 @@ fn named_reference(
         ((scope.unwrap_or(0), base.to_string()), tail),
         acquired,
         read,
-    );
+    )
 }
 fn append_write<R: RootCoordinate>(
     receiver: Receiver,
     acquired: usize,
     read: RootRead,
     reads: &[ReceiverRead],
-    output: &mut impl Extend<ReceiverWrite<R>>,
+    output: &mut impl ReceiverOutput<R>,
 ) {
     let retained = receiver.1.len() - acquired;
     let reads = std::iter::repeat_n(Some(read), acquired)

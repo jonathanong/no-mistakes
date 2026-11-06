@@ -27,7 +27,8 @@ struct ForeignWrite {
 pub(in super::super::super) struct ForeignReceiverWrites {
     writes: FxHashMap<WriteKey, ForeignWrite>,
     finishing: bool,
-    work: WorkBudget,
+    budgeting: bool,
+    pub(in super::super) work: WorkBudget,
 }
 
 #[cfg(feature = "test-instrumentation")]
@@ -44,6 +45,14 @@ pub(super) fn count(index: usize, amount: usize) {
 }
 
 impl ImportCollector {
+    pub(in super::super) fn begin_receiver_finalization(&mut self) {
+        if self.collect_value_flow || self.collect_per_item_calls {
+            self.foreign_receiver_writes
+                .get_or_insert_with(Default::default)
+                .budgeting = true;
+        }
+    }
+
     pub(in super::super) fn retain_foreign_receiver_write(
         &mut self,
         key: &(usize, String),

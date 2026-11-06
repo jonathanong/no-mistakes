@@ -1,5 +1,32 @@
 use super::*;
 
+impl RootSnapshots {
+    fn reversed(&self, mut visit: impl FnMut(u32, usize)) {
+        let _ = self.try_reversed(|offset, selected| {
+            visit(offset, selected);
+            Some(())
+        });
+    }
+}
+
+#[test]
+fn reverse_snapshot_visits_stop_when_projection_cancels() {
+    for snapshots in [
+        RootSnapshots::Ordered((0..1024).map(|i| (i, i as usize)).collect()),
+        RootSnapshots::Tree((0..1024).map(|i| (i, i as usize)).collect()),
+    ] {
+        let mut visits = 0;
+        assert_eq!(
+            snapshots.try_reversed(|_, _| {
+                visits += 1;
+                (visits < 2).then_some(())
+            }),
+            None
+        );
+        assert_eq!(visits, 2);
+    }
+}
+
 fn assert_queries(snapshots: &RootSnapshots, expected: &BTreeMap<u32, usize>) {
     #[cfg(feature = "test-instrumentation")]
     assert_eq!(snapshots.last_key_value(), expected.last_key_value());

@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: unconstructed-error-class
+    scope: repository
+  - rule: production-exports-only-used-by-tests
+    scope: repository
+    include: ["src/*.mts"]
+    options:
+      productionRoots: [src]
+      testGlobs: ["tests/**/*.test.mts"]

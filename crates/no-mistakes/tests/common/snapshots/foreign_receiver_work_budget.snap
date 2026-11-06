@@ -78,5 +78,59 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       ],
       "warnings": []
     }
+  },
+  "production_exports": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "production-exports-only-used-by-tests",
+          "file": "src/argument-diamond-16.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "production-exports-only-used-by-tests",
+          "file": "src/argument-diamond-20.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "production-exports-only-used-by-tests",
+          "file": "src/shared-2048.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "production-exports-only-used-by-tests",
+          "file": "src/shared-4096.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/argument-diamond-16.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/argument-diamond-20.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/shared-2048.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "src/shared-4096.mts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
   }
 }

@@ -61,15 +61,14 @@ impl ReceiverBindingOrigins {
             let mut end = u32::MAX;
             states
                 .snapshots
-                .reversed(|start, selected| match &self.arena[selected] {
-                    Origin::Either(_, leaf) => {
-                        let _ = append(*leaf, start, end);
-                    }
+                .try_reversed(|start, selected| match &self.arena[selected] {
+                    Origin::Either(_, leaf) => append(*leaf, start, end),
                     _ => {
-                        let _ = append(selected, start, end);
+                        append(selected, start, end)?;
                         end = start;
+                        Some(())
                     }
-                });
+                })?;
         }
         if budget.exhausted() {
             return None;

@@ -63,8 +63,18 @@ impl Extend<nested::ReceiverWrite> for Output<'_> {
                 .is_some()
             {
                 self.values.push(value);
+            } else {
+                break;
             }
         }
+    }
+}
+impl nested::ReceiverOutput<nested::RootRead> for Output<'_> {
+    fn visit(&mut self) -> bool {
+        self.budget.charge(1).is_some()
+    }
+    fn active(&self) -> bool {
+        !self.budget.exhausted()
     }
 }
 impl Output<'_> {

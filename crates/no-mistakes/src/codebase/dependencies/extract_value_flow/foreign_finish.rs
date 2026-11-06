@@ -5,6 +5,10 @@ impl ImportCollector {
         let Some(mut writes) = self.foreign_receiver_writes.take() else {
             return;
         };
+        if writes.work.exhausted() {
+            self.value_flow.incomplete_reason = Some(super::super::budget::REASON.into());
+            return;
+        }
         for (_, path, ..) in writes.writes.keys() {
             if writes.work.charge(1 + path.len()).is_none() {
                 self.value_flow.incomplete_reason = Some(super::super::budget::REASON.into());
@@ -142,7 +146,7 @@ impl ImportCollector {
         match self
             .foreign_receiver_writes
             .as_mut()
-            .filter(|writes| writes.finishing)
+            .filter(|writes| writes.budgeting || writes.finishing)
         {
             Some(writes) => writes.work.charge(amount),
             None => Some(()),
@@ -151,7 +155,7 @@ impl ImportCollector {
     pub(in super::super::super) fn remaining_foreign_work(&self) -> Option<usize> {
         self.foreign_receiver_writes
             .as_ref()
-            .filter(|writes| writes.finishing)
+            .filter(|writes| writes.budgeting || writes.finishing)
             .map(|writes| writes.work.remaining())
     }
     pub(in super::super::super) fn foreign_work_exhausted(&self) -> bool {
