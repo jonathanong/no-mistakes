@@ -99,10 +99,7 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
     })?;
     if matches!(options.traversal, Traversal::Transitive) {
         super::super::graph_source_prerequisites::require_import_sources(
-            RULE_ID,
-            graph,
-            &roots,
-            options.max_depth,
+            RULE_ID, graph, &roots, None,
         )?;
     }
     let path_filter = super::super::path_filter::RulePathFilter::new(root, config, application)?;
