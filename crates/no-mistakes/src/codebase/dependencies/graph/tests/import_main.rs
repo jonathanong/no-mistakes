@@ -29,7 +29,7 @@ fn module_initialization_excludes_main_guards_but_preserves_direct_calls() {
             "{name}"
         );
     }
-    for name in ["alternate", "negated", "after"] {
+    for name in ["alternate", "negated", "after", "shared"] {
         assert!(
             sources.iter().any(
                 |node| matches!(node, NodeId::Symbol { symbol, .. } if symbol.as_ref() == name)
@@ -48,13 +48,30 @@ fn module_initialization_excludes_main_guards_but_preserves_direct_calls() {
         callback.caller_id.unwrap(),
     );
     assert!(!sources.contains(&callback_owner));
-    assert!(!graph
-        .resolved_call_sites()
-        .iter()
-        .any(|site| site.file == file
-            && site.caller_id.is_none()
-            && ["plain", "strict", "conjunction", "command", "namedCallback"]
-                .contains(&site.source_callee.as_str())));
+    for root in [
+        CallRoot::File(file.clone()),
+        CallRoot::Files {
+            files: vec![file.clone()],
+        },
+    ] {
+        let all_sources = graph.expand_call_roots(&[root]);
+        for name in ["plain", "strict", "conjunction", "command", "namedCallback"] {
+            let site = graph
+                .resolved_call_sites()
+                .iter()
+                .find(|site| site.file == file && site.source_callee == name)
+                .unwrap();
+            assert_eq!(site.caller.as_deref(), Some("<entry-point>"));
+            let owner = NodeId::callable(
+                &file,
+                site.caller.as_deref().unwrap(),
+                site.caller_id.unwrap(),
+            );
+            assert!(all_sources.contains(&owner), "{name}");
+            assert!(!sources.contains(&owner), "{name}");
+        }
+        assert!(all_sources.contains(&callback_owner));
+    }
     let direct = graph.expand_call_roots(&[CallRoot::Module(root.join("direct.test.ts"))]);
     let direct_sources = graph.call_source_nodes(&direct, CallTraversal::Transitive, None);
     assert!(direct_sources

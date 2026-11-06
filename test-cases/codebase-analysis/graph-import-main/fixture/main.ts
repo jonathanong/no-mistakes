@@ -18,3 +18,6 @@ if (import.meta.main) {
   if (import.meta.main) { plain(); }
   strict();
 }
+function shared() { sharedEffect(); }
+if (import.meta.main) { shared(); }
+shared();

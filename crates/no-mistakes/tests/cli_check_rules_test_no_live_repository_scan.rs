@@ -272,6 +272,8 @@ fn import_meta_main_reachability_check_json_snapshot() {
         ("guarded_import", ".no-mistakes.yml"),
         ("reachable_controls", "controls.yml"),
         ("direct_call", "direct.yml"),
+        ("forbidden_explicit_file", "forbidden-file.yml"),
+        ("forbidden_explicit_glob", "forbidden-glob.yml"),
     ]
     .into_iter()
     .map(|(label, config)| (label, root.clone(), root.join(config)))

@@ -363,6 +363,12 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   [rule](rules/forbidden-calls.md) for conservative factory proof and fallback.
   Automock selection also retains adjacent manual mock callables and real
   module initializers through the same prepared import and call edges.
+  Positive module-level `import.meta.main` guards (including `=== true` and
+  required `&&` conjuncts) assign their bodies to synthetic `<entry-point>`
+  callable owners. Module roots exclude those owners on import; explicit
+  whole-file roots retain them. Else branches, negated guards, and statements
+  after the guard keep their ordinary initialization owners. Callable facts
+  remain available when tests call an exported function directly.
   Cyclic object or array member initializers remain unresolved during
   value projection; they do not abort analysis or prevent later independent
   member reads from resolving. Call traversal is cycle-safe and reports each target once at its

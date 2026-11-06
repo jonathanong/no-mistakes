@@ -97,14 +97,12 @@ fn collect_call_edges_for_core(
                     .function_calls
                     .iter()
                     .filter(|call| is_traversable_call(&index, call))
-                    .filter(|call| import_call_is_active(file, call.caller_id, call.offset))
                 {
                     let (edge, site) = resolution.resolve(call);
                     output.edges.extend(edge);
                     output.sites.push(site);
                 }
-                output.sites.extend(resolution.unknown_sites(file).into_iter()
-                    .filter(|site| import_call_is_active(file, site.caller_id, site.offset)));
+                output.sites.extend(resolution.unknown_sites(file));
             } else if plan.extends && namespaces_in_repo {
                 // No call edge is wanted, but a construction that cannot be
                 // followed into a namespace still keeps its classes quiet.
@@ -194,5 +192,6 @@ fn collect_call_edges_for_core(
         }
         mark_escaped_namespaces(&mut pass.classes, &escapes);
     }
+    project_import_execution(edge_inputs, facts, &mut pass);
     pass
 }

@@ -24,6 +24,50 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "forbidden_explicit_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/command.mts",
+          "import": "setTimeout",
+          "line": 3,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "sourceLine": "setTimeout(work, 100);",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "forbidden_explicit_glob": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/command.mts",
+          "import": "setTimeout",
+          "line": 3,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "sourceLine": "setTimeout(work, 100);",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "guarded_import": {
     "exitCode": 0,
     "report": {

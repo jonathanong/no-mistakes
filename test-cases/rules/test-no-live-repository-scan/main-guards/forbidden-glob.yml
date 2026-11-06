@@ -1,0 +1,9 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - glob: src/command.mts
+      traversal: file
+      targets:
+        - global: setTimeout

@@ -83,6 +83,8 @@ The `else` branch, statements after the guarded block, and the body of
 does not establish an entry-only body. Calls in the condition remain analyzed.
 An exported scanning function still produces a finding when a test calls it
 directly, even if the module also calls it inside an entry-point guard.
+The canonical graph retains entry-point calls for policies that explicitly
+select an entire file, such as `forbidden-calls` with `traversal: file`.
 
 ## Allowed input
 
