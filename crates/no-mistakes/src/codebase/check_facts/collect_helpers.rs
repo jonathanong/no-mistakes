@@ -76,8 +76,29 @@ pub(crate) fn collect_fact_map_with_sources(
                 || plan.production_import_paths.contains(*path)
                 || (plan.storybook && super::is_mdx_file(path))
         }));
+    let cache = crate::ast::current_request_parse_cache().filter(|cache| cache.entry_count() > 0);
+    let (cached, files): (Vec<_>, Vec<_>) = match cache {
+        Some(cache) => files
+            .into_iter()
+            .partition(|path| cache.contains_path(path)),
+        None => (Vec::new(), files),
+    };
+    // OXC programs stay on their preparing thread; only uncached sources enter Rayon.
+    let mut collected: Vec<_> = cached
+        .iter()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
+        .filter_map(|path| {
+            super::collect_file_facts_with_session_and_sources(
+                session, root, path, plan, playwright, sources, true,
+            )
+            .map(|facts| (path.clone(), facts))
+        })
+        .collect();
+    for path in &cached {
+        crate::ast::evict_request_parse_cache_path(path);
+    }
     let observer = crate::diagnostics::current();
-    let collected: Vec<(PathBuf, CheckFileFacts)> = files
+    let parallel: Vec<(PathBuf, CheckFileFacts)> = files
         .par_iter()
         .map(|path| {
             crate::diagnostics::with_observer(observer.clone(), || {
@@ -92,6 +113,7 @@ pub(crate) fn collect_fact_map_with_sources(
         .while_some()
         .flatten()
         .collect();
+    collected.extend(parallel);
     FileIdMap::from_iter_with_inventory(collected, Arc::clone(sources.inventory()))
 }
 

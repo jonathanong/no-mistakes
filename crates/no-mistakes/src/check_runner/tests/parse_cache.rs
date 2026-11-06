@@ -241,10 +241,23 @@ fn vitest_runner_and_project_policy_share_prepared_parses() {
     let fixture = crate::test_support::materialize_saved_fixture(&source);
     let root = fixture.path().canonicalize().unwrap();
     let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
+    let session =
+        no_mistakes::codebase::analysis_session::AnalysisSession::new(Some(Arc::clone(&observer)));
     no_mistakes::ast::begin_parse_count(&root);
     let result = {
         let _guard = no_mistakes::diagnostics::InvocationGuard::install(Arc::clone(&observer));
-        run_all(root.clone(), None, None).unwrap()
+        no_mistakes::ast::with_owned_request_parse_cache(|| {
+            super::super::run_all::run_all_with_session_options(
+                &session,
+                root.clone(),
+                None,
+                None,
+                false,
+                false,
+                crate::check_runner::AnalysisOptions::default(),
+            )
+            .unwrap()
+        })
     };
     assert!(result
         .rules
@@ -261,8 +274,10 @@ fn vitest_runner_and_project_policy_share_prepared_parses() {
         "{work:#?}"
     );
     let counts = no_mistakes::ast::finish_parse_count(&root);
+    let reads = session.work_snapshot().source_reads;
     for file in ["vitest.config.ts", "helper.ts", "unit.test.ts"] {
         assert_eq!(counts.get(&root.join(file)), Some(&1), "{counts:#?}");
+        assert_eq!(reads.get(&root.join(file)), Some(&1), "{reads:#?}");
     }
 }
 

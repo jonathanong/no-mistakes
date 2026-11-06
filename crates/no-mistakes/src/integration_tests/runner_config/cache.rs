@@ -79,6 +79,7 @@ thread_local! {
 mod source;
 pub(in crate::integration_tests) use source::read_request_source;
 pub(super) use source::read_request_source_with_session;
+pub(crate) use source::with_request_sources;
 
 impl PreparedIntegrationRunnerConfigs {
     pub(crate) fn with_request_cache<T>(
