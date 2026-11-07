@@ -155,6 +155,8 @@ impl ImportCollector {
     }
 }
 
+#[path = "closed_identifier_hex.rs"]
+mod hex;
 #[path = "closed_identifier_names.rs"]
 mod names;
 #[path = "closed_identifier_registries.rs"]

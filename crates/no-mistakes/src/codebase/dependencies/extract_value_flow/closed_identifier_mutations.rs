@@ -18,7 +18,9 @@ impl super::super::super::ImportCollector {
     }
 
     pub(super) fn bounded_source(&self, init: &Expression<'_>) -> Option<Option<(String, usize)>> {
-        if super::names::stripped_temp_name(init, &|call| self.trusted_uuid_call(call)) {
+        if super::names::stripped_temp_name(init, &|call| self.trusted_uuid_call(call))
+            || self.generated_hex_name(init)
+        {
             return Some(None);
         }
         if let Some(map) = super::names::map_get_receiver(init) {
