@@ -27,6 +27,11 @@ pub(super) fn complete(
         });
     let mut calls = Vec::new();
     if let Some(summary) = summary {
+        if summary.calls.iter().any(|query| {
+            invocation.accesses.get(query.executor).copied().flatten() != Some(query.access)
+        }) {
+            return vec![invocation.call.clone()];
+        }
         for query in summary
             .calls
             .iter()

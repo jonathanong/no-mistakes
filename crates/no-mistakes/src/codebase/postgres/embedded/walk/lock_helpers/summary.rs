@@ -5,6 +5,7 @@ pub(crate) struct Summary {
 }
 #[derive(Clone, PartialEq, Eq)]
 pub(crate) struct Query {
+    pub(crate) access: ExecutorAccess,
     pub(crate) executor: usize,
     pub(crate) sql: String,
     pub(crate) line: u32,
@@ -18,12 +19,29 @@ pub(crate) enum Parameter {
 }
 #[derive(Clone, PartialEq, Eq)]
 pub(crate) struct Invocation {
+    pub(crate) accesses: Vec<Option<ExecutorAccess>>,
     pub(crate) resolve_helper: bool,
     pub(crate) name: String,
     pub(crate) executor: usize,
     pub(crate) arguments: Vec<Option<String>>,
     pub(crate) call: EmbeddedSqlCall,
     pub(crate) span: (u32, u32),
+}
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ExecutorAccess {
+    Callable,
+    Object,
+}
+pub(super) fn access(expression: &Expression<'_>) -> Option<ExecutorAccess> {
+    match unwrap_ts_wrappers(expression) {
+        Expression::Identifier(_) => Some(ExecutorAccess::Object),
+        Expression::StaticMemberExpression(member)
+            if member.property.name == "query" && !member.optional =>
+        {
+            Some(ExecutorAccess::Callable)
+        }
+        _ => None,
+    }
 }
 pub(super) fn summaries(helpers: &LockHelpers<'_>, source: &str) -> FxHashMap<String, Summary> {
     helpers
@@ -32,7 +50,7 @@ pub(super) fn summaries(helpers: &LockHelpers<'_>, source: &str) -> FxHashMap<St
             let calls = helper
                 .calls
                 .iter()
-                .map(|(executor, query)| {
+                .map(|(executor, access, query)| {
                     let parameters = match query
                         .arguments
                         .get(1)
@@ -62,6 +80,7 @@ pub(super) fn summaries(helpers: &LockHelpers<'_>, source: &str) -> FxHashMap<St
                         _ => Vec::new(),
                     };
                     Query {
+                        access: *access,
                         executor: *executor,
                         sql: crate::codebase::postgres::embedded::sql_text(
                             query.arguments[0].as_expression().unwrap(),

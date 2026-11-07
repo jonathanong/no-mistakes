@@ -4,14 +4,15 @@ use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use crate::fx::FxHashMap;
 use oxc_ast::ast::{CallExpression, Expression};
 mod collect;
+mod invocation;
 mod summary;
 pub(super) use collect::collect;
-pub(crate) use summary::{Invocation, Parameter, Summary};
+pub(crate) use summary::{ExecutorAccess, Invocation, Parameter, Summary};
 
 #[derive(Clone)]
 pub(super) struct Helper<'a> {
     params: Vec<&'a str>,
-    calls: Vec<(usize, &'a CallExpression<'a>)>,
+    calls: Vec<(usize, ExecutorAccess, &'a CallExpression<'a>)>,
 }
 pub(super) type LockHelpers<'a> = FxHashMap<String, Helper<'a>>;
 
@@ -24,7 +25,15 @@ impl<'a> ScopeVisitor<'a> {
             self.record_unknown_lock_helper(call, name.name.as_str());
             return;
         };
-        if self.lookup(name.name.as_str()).is_some()
+        if !self.awaited_lock_helper_calls.contains(&call.span.start)
+            || helper.calls.iter().any(|(index, expected, _)| {
+                call.arguments
+                    .get(*index)
+                    .and_then(|argument| argument.as_expression())
+                    .and_then(summary::access)
+                    != Some(*expected)
+            })
+            || self.lookup(name.name.as_str()).is_some()
             || call.optional
             || call
                 .arguments
@@ -34,7 +43,7 @@ impl<'a> ScopeVisitor<'a> {
             self.record_unknown_lock_helper(call, name.name.as_str());
             return;
         }
-        for (executor, query) in helper.calls {
+        for (executor, _, query) in helper.calls {
             let Some(receiver) = call
                 .arguments
                 .get(executor)
@@ -113,7 +122,7 @@ impl<'a> ScopeVisitor<'a> {
                 helper
                     .calls
                     .iter()
-                    .map(|(_, call)| (call.span.start, call.span.end))
+                    .map(|(_, _, call)| (call.span.start, call.span.end))
             })
             .collect();
         for (call, span) in self.calls.iter_mut().zip(&self.call_spans) {
@@ -125,62 +134,5 @@ impl<'a> ScopeVisitor<'a> {
 impl ScopeVisitor<'_> {
     pub(super) fn lock_helper_summaries(&self) -> FxHashMap<String, Summary> {
         summary::summaries(&self.lock_helpers, self.source)
-    }
-    fn record_unknown_lock_helper(&mut self, call: &CallExpression<'_>, name: &str) {
-        for (executor, argument) in call.arguments.iter().enumerate() {
-            let Some(Expression::StaticMemberExpression(member)) =
-                argument.as_expression().map(unwrap_ts_wrappers)
-            else {
-                continue;
-            };
-            if member.property.name != "query" || member.optional {
-                continue;
-            }
-            let mut fact = EmbeddedSqlCall::default();
-            super::transaction::annotate_receiver(self, &member.object, call.span.start, &mut fact);
-            if !fact.executor_transaction_known || fact.transaction_id.is_none() {
-                continue;
-            }
-            fact.lock_scope_analysis = true;
-            fact.line = byte_offset_to_line(self.source, call.span.start as usize);
-            fact.callee = name.to_owned();
-            fact.kind = EmbeddedSqlKind::Dynamic;
-            fact.execution_unconditional = self.helper_execution_unconditional();
-            let arguments = call
-                .arguments
-                .iter()
-                .map(|argument| {
-                    argument
-                        .as_expression()
-                        .and_then(|expression| super::transaction::identity(self, expression))
-                })
-                .collect();
-            self.imported_lock_helpers.push(Invocation {
-                resolve_helper: !call.optional
-                    && self.imported_names.contains(name)
-                    && self.lookup(name).is_none()
-                    && call
-                        .arguments
-                        .iter()
-                        .all(|argument| argument.as_expression().is_some()),
-                name: name.to_owned(),
-                executor,
-                arguments,
-                call: fact,
-                span: (call.span.start, call.span.end),
-            });
-        }
-    }
-}
-
-impl ScopeVisitor<'_> {
-    fn helper_execution_unconditional(&self) -> bool {
-        let owner = self
-            .member_query_proof
-            .function_ids
-            .last()
-            .copied()
-            .unwrap_or(0);
-        self.control_depth == 0 && self.loop_depth == 0 && !self.exited_functions.contains(&owner)
     }
 }

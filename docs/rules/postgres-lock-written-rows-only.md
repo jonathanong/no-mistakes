@@ -63,6 +63,13 @@ its immutable argument bindings before comparing the helper's locked relations
 and keys with the caller's writes. For example, `lockUser(tx.query, userId)`
 requires an update or delete of that same user in `tx`; an update of a membership
 does not satisfy the lock. Diagnostics name the helper and its lock line.
+Helper effects require a direct `await helper(...)` (including `return await`).
+A plain `return helper(...)` or discarded promise is unanalyzable because an
+`await using` transaction can be disposed before the helper finishes. Within a
+summarized helper, each executor call must itself be awaited or returned.
+Executor shapes must match: `q(sql)` accepts `tx.query`, while `q.query(sql)`
+accepts `tx`. A mismatch makes the entire helper call unanalyzable.
+
 Unsupported local and imported helpers receiving a configured transaction
 executor retain the unanalyzable policy, including dynamic SQL, optional calls,
 shadowed or mutated helpers, and bodies with other control flow. Named imported helpers and re-exports use the same summaries through the prepared
