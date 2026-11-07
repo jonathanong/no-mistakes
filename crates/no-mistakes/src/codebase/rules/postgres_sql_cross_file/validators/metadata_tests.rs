@@ -20,9 +20,11 @@ fn canonical_helper_calls_prove_only_guarded_static_metadata_fields() {
     let prepared = collect_ts_facts(std::slice::from_ref(&file), plan);
     let ts = prepared.get(&file).unwrap();
     assert!(ts.parse_error.is_none());
-    let mut facts = CheckFactMap::default();
-    facts.files.push(file.clone());
-    facts.graph_plan = plan;
+    let mut facts = CheckFactMap {
+        files: vec![file.clone()],
+        graph_plan: plan,
+        ..Default::default()
+    };
     facts.ts.insert(
         file.clone(),
         CheckFileFacts {

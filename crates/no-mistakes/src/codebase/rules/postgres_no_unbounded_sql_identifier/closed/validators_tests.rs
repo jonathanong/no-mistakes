@@ -40,9 +40,11 @@ fn configured_module_validators_demand_and_match_canonical_reexport_targets() {
         ..TsFactPlan::imports()
     };
     let prepared = collect_ts_facts(&files, fact_plan);
-    let mut facts = CheckFactMap::default();
-    facts.files = files.clone();
-    facts.graph_plan = fact_plan;
+    let mut facts = CheckFactMap {
+        files: files.clone(),
+        graph_plan: fact_plan,
+        ..Default::default()
+    };
     for file in &files {
         let ts = prepared.get(file).unwrap();
         assert!(ts.parse_error.is_none(), "{}", file.display());
