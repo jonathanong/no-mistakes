@@ -1,9 +1,11 @@
 use super::super::ScopeVisitor;
 use super::Recovered;
 use crate::fx::FxHashMap;
-use oxc_ast::ast::{ConditionalExpression, IfStatement, LogicalExpression};
+use oxc_ast::ast::{ConditionalExpression, LogicalExpression};
 use oxc_ast_visit::Visit;
 mod abrupt;
+mod if_statement;
+pub(in crate::codebase::postgres::embedded::walk) use if_statement::if_statement;
 mod join;
 mod paths;
 mod selection;
@@ -61,61 +63,6 @@ impl ScopeVisitor<'_> {
                 state.variants = joined(a, b, id, arms, off);
             }
         }
-    }
-}
-pub(in crate::codebase::postgres::embedded::walk) fn if_statement<'a>(
-    visitor: &mut ScopeVisitor<'a>,
-    statement: &IfStatement<'a>,
-) {
-    let (id, truth_arm) =
-        super::conditions::choice_id(visitor, &statement.test, statement.span.start);
-    let taken = super::conditions::truth_at(visitor, &statement.test);
-    visitor.visit_variant_guard(&statement.test);
-    let original = visitor.variant_snapshot();
-    let paths = visitor.variant_paths.clone();
-    let (yes, no) = truthiness::branches(visitor, &statement.test, &paths, id, truth_arm);
-    let taken = paths::taken(&yes, &no).or(taken);
-    let transaction_before = super::super::transaction_flow::Snapshot::capture(visitor);
-    visitor.restore_variants(&paths::restrict(&original, &yes));
-    visitor.variant_paths = yes;
-    visitor.with_control_flow(|visitor| visitor.visit_statement(&statement.consequent));
-    let left = visitor.variant_snapshot();
-    let transaction_left = super::super::transaction_flow::Snapshot::capture(visitor);
-    transaction_before.restore(visitor);
-    visitor.restore_variants(&paths::restrict(&original, &no));
-    visitor.variant_paths = no;
-    if let Some(alternate) = &statement.alternate {
-        visitor.with_control_flow(|visitor| visitor.visit_statement(alternate));
-    }
-    let right = visitor.variant_snapshot();
-    let transaction_right = super::super::transaction_flow::Snapshot::capture(visitor);
-    if visitor.executor_options.track_transaction_helpers {
-        let exits = super::super::transaction_flow::exits;
-        match taken {
-            Some(true) => transaction_left.restore(visitor),
-            Some(false) => transaction_right.restore(visitor),
-            None if exits(&statement.consequent) => {
-                transaction_before.resume_after(&transaction_left, &transaction_right, visitor)
-            }
-            None if statement.alternate.as_ref().is_some_and(exits) => {
-                transaction_before.resume_after(&transaction_right, &transaction_left, visitor)
-            }
-            None => transaction_left.join(&transaction_right, visitor),
-        }
-    }
-    visitor.variant_paths = paths;
-    match taken {
-        Some(true) => select(visitor, &left, &right),
-        Some(false) => select(visitor, &right, &left),
-        None if abrupt::throws(&statement.consequent) => select(visitor, &right, &left),
-        None if statement
-            .alternate
-            .as_ref()
-            .is_some_and(|arm| abrupt::throws(arm)) =>
-        {
-            select(visitor, &left, &right)
-        }
-        None => visitor.join_variants(&left, &right, id, (truth_arm, 1 - truth_arm)),
     }
 }
 pub(in crate::codebase::postgres::embedded::walk) fn conditional<'a>(
