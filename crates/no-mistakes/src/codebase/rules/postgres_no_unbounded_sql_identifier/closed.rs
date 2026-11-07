@@ -1,4 +1,4 @@
-use super::super::postgres_sql_cross_file::CompiledOptions;
+use super::super::postgres_sql_cross_file::{metadata_helper_call, CompiledOptions};
 use super::*;
 use crate::codebase::dependencies::extract::{
     unique_closed_collection, FiniteIdentifierGuard, GuardKind, GuardSubject, RegistryKind,
@@ -29,7 +29,9 @@ pub(super) fn proven(
     };
     let flow = &ts.value_flow;
     if let Some(binding) = bindings.value(&call.file, *scope, name, *offset) {
-        if bounded(flow, binding, members, false) {
+        if bounded(flow, binding, members, false)
+            || members.is_empty() && metadata_helper_call(graph, facts, &call.file, &binding.value)
+        {
             return true;
         }
         if members.len() == 1 && registry_member(flow, binding, &members[0]) {

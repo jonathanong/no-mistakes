@@ -18,6 +18,7 @@ pub(crate) use provenance::{
     literal_array, scans_identifier, Bindings, Provenance,
 };
 pub(crate) use sql::{identifier_placeholder, sql_calls, SqlCall};
+pub(crate) use validators::metadata_helper_call;
 
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::DepGraph;

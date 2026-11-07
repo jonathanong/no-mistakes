@@ -91,6 +91,8 @@ mod fragment_members;
 mod hex;
 #[path = "closed_identifier_metadata.rs"]
 pub(super) mod metadata;
+#[path = "closed_identifier_metadata_mutations.rs"]
+mod metadata_mutations;
 #[path = "closed_identifier_names.rs"]
 mod names;
 #[path = "closed_identifier_registries.rs"]

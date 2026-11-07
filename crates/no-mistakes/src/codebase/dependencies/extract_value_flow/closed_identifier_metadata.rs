@@ -12,7 +12,9 @@ pub(super) fn note_call(collector: &mut ImportCollector, call: &CallExpression<'
     let Some(name) = names::identifier_name(&member.object) else {
         return;
     };
-    if collector.metadata_registry_names.contains(&name) && lookup_collection(call).is_none() {
+    if collector.metadata_registry_names.contains(&name)
+        && !collector.metadata_lookup_calls.contains(&call.span.start)
+    {
         collector.record_registry_mutation(&name);
     }
 }
@@ -109,6 +111,7 @@ pub(super) fn note_lookup(
         return;
     };
     let source = Some((collection, registry.scope));
+    collector.metadata_lookup_calls.insert(call.span.start);
     for key in &registry.keys {
         collector.value_flow.bounded_bindings.push(BoundedBinding {
             name: identifier.name.to_string(),

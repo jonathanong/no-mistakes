@@ -391,6 +391,11 @@ set the scan can see:
   be an expression arrow comparing one entry property to a name or string
   literal with `===` or `!==`. Open metadata values, mutations, aliases to
   entries, escaping lookups, and predicates with effects end this proof.
+  A synchronous helper may return that guarded string field, for example
+  `getTableOrThrow("user")` returning `selected.table`. Every return must be
+  a guarded field from closed metadata. A return of the row object, a missing
+  presence guard, an unchecked fallback, or an async/generator helper is outside
+  this proof.
 
 - A parameter annotated `number` or `bigint`, interpolated directly
   (`events_${n}`) or beside a catalog name (`${table}__p_${yyyy}_${mm}`). A

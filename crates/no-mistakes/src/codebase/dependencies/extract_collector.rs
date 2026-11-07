@@ -49,6 +49,7 @@ struct ImportCollector {
     value_flow: ValueFlowFacts,
     finite_guard_call_indexes: FxHashMap<u32, usize>,
     metadata_registry_names: FxHashSet<String>,
+    metadata_lookup_calls: FxHashSet<u32>,
     callable_assignment_state: Option<Box<CallableAssignmentState>>,
     /// Cutoff for the current callable's body when its suffix is unreachable.
     /// Saved and restored around body traversal; absent for ordinary bodies.
