@@ -240,3 +240,14 @@ async function overriddenSqlCommitReturn(skip: boolean, id: string) {
   }
   await query('UPDATE items SET active = true WHERE id = $1', [id], options);
 }
+async function escapedReceiverClose(skip: boolean, id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const options = { query: tx.query };
+  if (skip) {
+    Object.assign(tx, { commit: async () => {} });
+    await tx.commit();
+    return;
+  }
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
