@@ -4,7 +4,9 @@ use napi::Task;
 #[test]
 fn ordinary_outputs_and_errors_remain_unwrapped() {
     assert_eq!(finish(Ok("[1,2]".into()), None).unwrap().as_ref(), b"[1,2]");
-    let error = finish(Err(napi::Error::from_reason("original error")), None).unwrap_err();
+    let error = finish(Err(napi::Error::from_reason("original error")), None)
+        .err()
+        .unwrap();
     assert_eq!(error.reason, "original error");
     let request = DiagnosticRequestGuard::extract(
         &mut serde_json::json!({"diagnosticsId":"progress-only-finish"}),
@@ -31,13 +33,15 @@ fn verbose_transport_preserves_array_results_and_authoritative_errors() {
         Err(napi::Error::from_reason("original error")),
         Some(&request),
     )
-    .unwrap_err();
+    .err()
+    .unwrap();
     let (message, diagnostics) = error.reason.split_once(DIAGNOSTICS_JSON_MARKER).unwrap();
     assert_eq!(message, "original error");
     let diagnostics: Value = serde_json::from_str(diagnostics).unwrap();
     assert_eq!(diagnostics["work"]["output.errors"], 1);
     assert!(finish(Ok("invalid JSON".into()), Some(&request))
-        .unwrap_err()
+        .err()
+        .unwrap()
         .reason
         .contains(DIAGNOSTICS_JSON_MARKER));
 }
