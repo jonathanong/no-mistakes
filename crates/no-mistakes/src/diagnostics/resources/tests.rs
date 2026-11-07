@@ -107,8 +107,27 @@ fn resource_history_formatting_does_not_hold_worker_locks() {
             })
         });
         capture.recv().unwrap();
-        observer.trace("worker", TimingKind::Serial, || ());
+        let (finished, finish) = mpsc::channel();
+        let worker_observer = Arc::clone(&observer);
+        scope.spawn(move || {
+            rayon::ThreadPoolBuilder::new()
+                .num_threads(2)
+                .build()
+                .unwrap()
+                .install(|| {
+                    rayon::join(
+                        || worker_observer.trace("first", TimingKind::Parallel, || ()),
+                        || worker_observer.trace("second", TimingKind::Parallel, || ()),
+                    );
+                });
+            finished.send(()).unwrap();
+        });
+        let workers_finished = finish.recv_timeout(Duration::from_secs(5));
         release.send(()).unwrap();
+        assert!(
+            workers_finished.is_ok(),
+            "aggregation blocked span entry or cleanup"
+        );
     });
     assert_eq!(
         observer.resources.as_ref().unwrap().lock().unwrap().active,
