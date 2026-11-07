@@ -7,6 +7,7 @@ use std::sync::Arc;
 #[derive(Clone)]
 pub struct EmbeddedSqlRuleScan {
     pub(crate) rule_id: String,
+    pub(crate) annotation_root: bool,
     include: Vec<String>,
     exclude: Vec<String>,
     pub(crate) paths: Arc<crate::codebase::rules::RuleGlobFilter>,
@@ -16,6 +17,7 @@ impl EmbeddedSqlRuleScan {
     pub(crate) fn new(rule_id: &str, include: &[String], exclude: &[String]) -> Result<Self> {
         Ok(Self {
             rule_id: rule_id.to_string(),
+            annotation_root: false,
             include: include.to_vec(),
             exclude: exclude.to_vec(),
             paths: Arc::new(crate::codebase::rules::RuleGlobFilter::new(
@@ -26,6 +28,7 @@ impl EmbeddedSqlRuleScan {
 
     pub(crate) fn same_application(&self, other: &Self) -> bool {
         self.rule_id == other.rule_id
+            && self.annotation_root == other.annotation_root
             && self.include == other.include
             && self.exclude == other.exclude
     }
@@ -38,9 +41,11 @@ pub(super) fn record(
     profile: EmbeddedSqlOptions,
     rule_id: &str,
     options: &super::EmbeddedSqlRuleOptions,
+    annotation_root: bool,
 ) -> Result<()> {
     let include = include(rule_id, options);
-    let scan = EmbeddedSqlRuleScan::new(rule_id, &include, &options.exclude)?;
+    let mut scan = EmbeddedSqlRuleScan::new(rule_id, &include, &options.exclude)?;
+    scan.annotation_root = annotation_root;
     let scans = grouped.entry(profile).or_default();
     if !scans
         .iter()

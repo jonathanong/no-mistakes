@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 mod demand;
-mod evaluator;
+pub(super) mod evaluator;
 mod merge;
 mod output;
 mod parallel;
