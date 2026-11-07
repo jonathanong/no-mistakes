@@ -51,3 +51,17 @@ fn aggregate_boundaries_preserve_filter_and_subquery_predicates_with_locations()
         ]
     );
 }
+
+#[test]
+fn driving_values_leave_the_joined_key_bare_but_residuals_remain_checked() {
+    let facts = facts("probe-direction.sql");
+    let lines: Vec<_> = facts
+        .transformed_column_uses
+        .iter()
+        .map(|fact| fact.line)
+        .collect();
+    assert_eq!(
+        lines,
+        [3, 3, 4, 4, 6, 6, 7, 7, 8, 8, 9, 9, 9, 10, 10, 11, 12]
+    );
+}

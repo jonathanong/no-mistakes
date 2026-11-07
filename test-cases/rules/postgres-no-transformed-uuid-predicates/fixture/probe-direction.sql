@@ -1,0 +1,12 @@
+SELECT 1 FROM orders c JOIN accounts root ON root.id = COALESCE(c.account_id, c.id);
+SELECT 1 FROM orders c JOIN accounts root ON COALESCE(c.account_id, c.id) = root.id;
+SELECT 1 FROM orders c JOIN accounts root ON COALESCE(root.id, c.id) = c.account_id;
+SELECT 1 FROM orders c JOIN accounts root ON c.account_id = COALESCE(root.id, c.id);
+SELECT 1 FROM accounts c JOIN accounts root ON root.id = COALESCE(c.token, c.id);
+SELECT 1 FROM accounts c JOIN accounts root ON COALESCE(root.id, c.id) = c.token;
+SELECT 1 FROM accounts WHERE id = $1 AND COALESCE(token, id) = $2 LIMIT 1;
+SELECT 1 FROM orders WHERE id = $1 AND COALESCE(account_id, id) = $2 LIMIT 1;
+SELECT 1 FROM orders c JOIN accounts root ON root.id::text = COALESCE(c.account_id::text, c.id::text);
+SELECT 1 FROM orders c JOIN accounts root ON root.id > COALESCE(c.account_id, c.id);
+SELECT 1 FROM orders c JOIN accounts root ON root.id = COALESCE(missing.id, c.id);
+SELECT 1 FROM orders c JOIN accounts root ON root.id = COALESCE(c.account_id, root.token);
