@@ -635,6 +635,172 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "helper-glob-config-excluded": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "helper-glob-config-skipped": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "helper-glob-skip": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "helpers/new-visible.ts",
+          "line": 1,
+          "message": "Vitest declaration retries: literal 2 is forbidden by declared.forbiddenValues; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export const newlyAdded = { test: { retries: 2 } };"
+        },
+        {
+          "file": "helpers/skipped/project.ts",
+          "line": 1,
+          "message": "Vitest declaration retries: literal 2 is forbidden by declared.forbiddenValues; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export const project = { test: { name: \"unit\", retries: 2 } };"
+        },
+        {
+          "file": "helpers/skipped/project.ts",
+          "line": 1,
+          "message": "Vitest project unit: test.retries must equal 0; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export const project = { test: { name: \"unit\", retries: 2 } };"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "helper-literal-dir-brackets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "helpers/[shared]/project.ts",
+          "line": 1,
+          "message": "Vitest declaration retries: literal 2 is forbidden by declared.forbiddenValues; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export const project = { test: { name: \"unit\", retries: 2 } };"
+        },
+        {
+          "file": "helpers/[shared]/project.ts",
+          "line": 1,
+          "message": "Vitest project unit: test.retries must equal 0; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export const project = { test: { name: \"unit\", retries: 2 } };"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "helper-literal-dir-open-bracket": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "helpers/[shared/project.ts",
+          "line": 1,
+          "message": "Vitest declaration retries: literal 2 is forbidden by declared.forbiddenValues; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export const project = { test: { name: \"unit\", retries: 2 } };"
+        },
+        {
+          "file": "helpers/[shared/project.ts",
+          "line": 1,
+          "message": "Vitest project unit: test.retries must equal 0; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export const project = { test: { name: \"unit\", retries: 2 } };"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "helper-literal-file-brackets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "helpers/project[shared].ts",
+          "line": 1,
+          "message": "Vitest declaration retries: literal 2 is forbidden by declared.forbiddenValues; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export const project = { test: { name: \"unit\", retries: 2 } };"
+        },
+        {
+          "file": "helpers/project[shared].ts",
+          "line": 1,
+          "message": "Vitest project unit: test.retries must equal 0; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export const project = { test: { name: \"unit\", retries: 2 } };"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "helper-literal-file-open-bracket": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "helpers/project[shared.ts",
+          "line": 1,
+          "message": "Vitest declaration retries: literal 2 is forbidden by declared.forbiddenValues; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export const project = { test: { name: \"unit\", retries: 2 } };"
+        },
+        {
+          "file": "helpers/project[shared.ts",
+          "line": 1,
+          "message": "Vitest project unit: test.retries must equal 0; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export const project = { test: { name: \"unit\", retries: 2 } };"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "helper-type-only": {
     "exitCode": 1,
     "report": {

@@ -12,11 +12,20 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         root,
         config,
         files,
+        snapshot,
         sources,
         facts,
         defer_suppression,
         ..
     } = request;
+    if rule_id == VITEST_PROJECT_POLICY {
+        return vitest_project_policy::check_with_files_and_sources(
+            root,
+            config,
+            &snapshot.paths_for(root),
+            sources,
+        );
+    }
     if let Some(out) = postgres::run(rule_id, root, config, files, sources, facts) {
         return out;
     }

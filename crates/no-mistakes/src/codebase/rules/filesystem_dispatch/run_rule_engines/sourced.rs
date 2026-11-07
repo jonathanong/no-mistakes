@@ -29,9 +29,6 @@ pub(super) fn run(
                 root, config, files, sources,
             )
         }
-        VITEST_PROJECT_POLICY => {
-            vitest_project_policy::check_with_files_and_sources(root, config, files, sources)
-        }
         STRUCTURED_CONFIG_POLICY => {
             structured_config_policy::check_with_files_and_sources(root, config, files, sources)
         }
