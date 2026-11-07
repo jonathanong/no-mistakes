@@ -1,4 +1,5 @@
 mod boundary;
+pub(super) use boundary::callable;
 pub(in crate::codebase::postgres::embedded::walk::transaction) use boundary::end_alias;
 
 use super::{receiver, value_receiver, EmbeddedSqlCall, ScopeVisitor};
@@ -155,15 +156,17 @@ impl ScopeVisitor<'_> {
             return;
         };
         if matches!(unwrap_ts_wrappers(init), Expression::ObjectExpression(_)) {
-            let Some(Some(value)) =
-                receiver(init, &self.executor_options.executor_option_properties)
-            else {
+            let Some(Some(value)) = receiver(
+                self,
+                init,
+                &self.executor_options.executor_option_properties,
+            ) else {
                 return;
             };
             if let Some(captured) = captured(self, value) {
                 self.transaction_options.objects.insert(identity, captured);
             }
-        } else if let Some(value) = value_receiver(init) {
+        } else if let Some(value) = value_receiver(self, init) {
             if let Some(mut captured) = captured(self, value) {
                 captured.callable |= matches!(
                     unwrap_ts_wrappers(init),

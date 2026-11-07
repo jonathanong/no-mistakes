@@ -29,7 +29,7 @@ pub(super) fn annotate(
             };
             found = Some(captured);
         } else {
-            match receiver(expression, properties) {
+            match receiver(visitor, expression, properties) {
                 Some(Some(receiver)) => {
                     if found.is_some() {
                         return Some(false);
@@ -60,6 +60,7 @@ pub(super) fn annotate_alias(
 }
 
 fn receiver<'a>(
+    visitor: &ScopeVisitor<'_>,
     expression: &'a Expression<'a>,
     properties: &[String],
 ) -> Option<Option<&'a Expression<'a>>> {
@@ -87,7 +88,7 @@ fn receiver<'a>(
         if selected.is_some() || property.method || property.kind != PropertyKind::Init {
             return Some(None);
         }
-        selected = Some(match value_receiver(&property.value) {
+        selected = Some(match value_receiver(visitor, &property.value) {
             Some(value) => Some(value),
             None => return Some(None),
         });
@@ -95,12 +96,15 @@ fn receiver<'a>(
     selected
 }
 
-fn value_receiver<'a>(expression: &'a Expression<'a>) -> Option<&'a Expression<'a>> {
+fn value_receiver<'a>(
+    visitor: &ScopeVisitor<'_>,
+    expression: &'a Expression<'a>,
+) -> Option<&'a Expression<'a>> {
     let value = unwrap_ts_wrappers(expression);
     match value {
         Expression::Identifier(_) => Some(value),
         Expression::StaticMemberExpression(member) if member.property.name == "query" => {
-            Some(unwrap_ts_wrappers(&member.object))
+            (!state::callable(visitor, &member.object)).then(|| unwrap_ts_wrappers(&member.object))
         }
         _ => None,
     }

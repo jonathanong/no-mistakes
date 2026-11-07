@@ -46,3 +46,20 @@ pub(super) fn mutate(visitor: &mut ScopeVisitor<'_>, expression: &Expression<'_>
         .unwrap_or(identity);
     visitor.transaction_options.mutated.insert(origin);
 }
+
+pub(in crate::codebase::postgres::embedded::walk::transaction) fn callable(
+    visitor: &ScopeVisitor<'_>,
+    expression: &Expression<'_>,
+) -> bool {
+    if visitor.transaction_options.aliases.is_empty() {
+        return false;
+    }
+    let Expression::Identifier(id) = unwrap_ts_wrappers(expression) else {
+        return false;
+    };
+    visitor
+        .lookup(id.name.as_str())
+        .and_then(|binding| binding.value_identity)
+        .and_then(|identity| visitor.transaction_options.aliases.get(&identity))
+        .is_some_and(|captured| captured.callable)
+}

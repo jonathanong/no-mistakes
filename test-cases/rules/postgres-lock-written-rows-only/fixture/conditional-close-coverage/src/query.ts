@@ -180,3 +180,32 @@ async function unrelatedPropertyClose(skip: boolean, id: string) {
   }
   await query('UPDATE items SET active = true WHERE id = $1', [id], options);
 }
+async function callableMemberOptions(id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const execute = tx.query;
+  const options = { query: execute.query };
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
+async function callableMemberAlias(id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const execute = tx.query;
+  const nested = execute.query;
+  const options = { query: nested };
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
+async function inlineCallableMemberOptions(id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const execute = tx.query;
+  await query('UPDATE items SET active = true WHERE id = $1', [id], { query: execute.query });
+}
+async function objectAliasMemberOptions(id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const alias = tx;
+  const execute = alias.query;
+  const options = { query: execute };
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
