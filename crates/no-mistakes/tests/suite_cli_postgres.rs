@@ -275,3 +275,6 @@ mod cli_postgres_snapshot_identifier_compositions;
 
 #[path = "cli_postgres_snapshot_four_joined_lock_aliases.rs"]
 mod cli_postgres_snapshot_four_joined_lock_aliases;
+
+#[path = "cli_postgres_transformed_sites.rs"]
+mod cli_postgres_transformed_sites;

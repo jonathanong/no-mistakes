@@ -26,18 +26,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/bounded_nonkey_key_chain.sql",
           "line": 3,
-          "message": "sql/bounded_nonkey_key_chain.sql:3: SELECT can return every row of sources; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/bounded_nonkey_key_chain.sql:3: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of sources; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "JOIN sources s ON s.item_id = p.user_id",
-          "target": "table:sources"
-        },
-        {
-          "file": "sql/bounded_nonkey_key_chain.sql",
-          "line": 4,
-          "message": "sql/bounded_nonkey_key_chain.sql:4: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "JOIN posts x ON x.id = s.post_id",
-          "target": "table:posts"
+          "target": "table:posts, table:sources"
         },
         {
           "file": "sql/unbounded_key_join.sql",
@@ -50,18 +42,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/unbounded_key_target.sql",
           "line": 2,
-          "message": "sql/unbounded_key_target.sql:2: SELECT can return every row of sources; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/unbounded_key_target.sql:2: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of sources; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM sources s",
-          "target": "table:sources"
-        },
-        {
-          "file": "sql/unbounded_key_target.sql",
-          "line": 3,
-          "message": "sql/unbounded_key_target.sql:3: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "JOIN posts p ON p.id = s.post_id",
-          "target": "table:posts"
+          "target": "table:posts, table:sources"
         }
       ],
       "warnings": []

@@ -6,6 +6,18 @@ use crate::codebase::postgres::SqlStatementFileFacts;
 use crate::codebase::rules::RuleFinding;
 
 impl<'a> VariantFindingDedup<'a> {
+    pub(crate) fn push_attributed(
+        &mut self,
+        output: &mut super::PostgresFindings,
+        facts: &SqlStatementFileFacts,
+        site: crate::codebase::postgres::statements::SqlFactSite,
+        source: Option<&str>,
+        finding: RuleFinding,
+    ) {
+        self.seen.clear();
+        self.push(output, facts, site, source, finding);
+    }
+
     /// The caller-side line whose directive suppresses `rule`, when SQL
     /// recovered from another module is executed by a call that opts out. The
     /// executor call and each imported-helper call count, as does a file-level

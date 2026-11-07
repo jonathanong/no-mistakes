@@ -1,0 +1,10 @@
+SELECT 1 FROM accounts WHERE CAST(CAST(id AS text) AS text) = $1;
+SELECT 1 FROM accounts WHERE id::text::text = $1;
+SELECT 1 FROM accounts WHERE CAST(id::text AS text) = $1;
+SELECT 1 FROM accounts WHERE CAST(id AS text)::text = $1;
+SELECT 1 FROM accounts WHERE CAST(CAST(id AS text) = $1 AS boolean);
+SELECT 1 FROM accounts WHERE CAST(id::text = $1 AS boolean);
+SELECT CAST((SELECT 1 FROM accounts WHERE id::text = $1) AS text);
+SELECT CAST((SELECT 1 FROM accounts WHERE CAST(id AS text) = $1) AS text);
+SELECT 1 FROM accounts WHERE CAST(id = $1 AS boolean);
+SELECT 1 FROM accounts WHERE CAST(COALESCE(id, token) AS text) = $1;

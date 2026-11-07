@@ -1,0 +1,14 @@
+version: 2
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    include:
+      - multi-argument-shared-casts.ts
+      - cast-site-controls.sql
+      - schema.json
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: db
+      executorNames: [query]
+      sqlInclude: [cast-site-controls.sql]
+effort: low

@@ -1,4 +1,4 @@
-<!-- cspell:ignore uuidv -->
+<!-- cspell:ignore uuidv nonnulls -->
 
 # `postgres-no-transformed-uuid-predicates`
 
@@ -54,6 +54,20 @@ comparison in `WHERE`, `JOIN ON`, or `HAVING`. It covers UUID primary keys,
 foreign keys, unique keys, and ordinary UUID columns, including columns with
 plain indexes. The catalog's column type determines the scope; a conventional
 name such as `id` does not.
+
+Each transformed expression produces one finding listing all affected UUID
+columns. For example, `COALESCE(a.id, b.id) = $1` reports once with both
+catalog-qualified columns in the message and a comma-separated `target`.
+Nested scalar calls belong to their outer transformed expression;
+`num_nonnulls(COALESCE(a.id, b.id)) = 1` also reports once. Separate
+expressions remain separate sites, including on the same line. Repeated
+references to the same column appear once in the column list. The finding
+uses the earliest remaining affected column's source location after attribution; otherwise identical findings
+on the same line include their SQL expression positions to distinguish the sites.
+When those positions and origins also match, a local `site 1`, `site 2` ordinal
+distinguishes them. These labels stay stable when unrelated SQL inputs or verdict
+reporting are enabled.
+Single-column messages and targets keep their existing shape.
 
 The rule checks which operand contains the UUID column. Casting a parameter to
 UUID or computing a bound on the other side of a comparison to a bare UUID

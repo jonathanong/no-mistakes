@@ -1,24 +1,13 @@
 use super::{check_in, findings_of, fixture_dir};
 
 #[test]
-fn cascading_descendant_walks_report_each_unbounded_relation() {
+fn cascading_descendant_walks_report_once_per_statement() {
     let root = fixture_dir("variants/cascading-statements");
     let findings = findings_of(check_in(&root, ".no-mistakes.yml"));
-    assert_eq!(findings.len(), 4, "{findings:?}");
-    assert_eq!(
-        findings
-            .iter()
-            .filter(|(_, _, target)| target == "table:accounts")
-            .count(),
-        2
-    );
-    assert_eq!(
-        findings
-            .iter()
-            .filter(|(_, _, target)| target == "table:orders")
-            .count(),
-        2
-    );
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert!(findings
+        .iter()
+        .all(|(_, _, target)| target == "table:accounts, table:orders"));
 }
 
 #[test]
@@ -31,11 +20,11 @@ fn aggregated_statement_roots_preserve_allow_usage_and_relation_suppressions() {
         .all(|(_, _, target)| target == "table:accounts"));
     let mut suppressed = findings_of(check_in(&root, "suppression.yml"));
     suppressed.sort();
-    assert_eq!(suppressed.len(), 4, "{suppressed:?}");
+    assert_eq!(suppressed.len(), 3, "{suppressed:?}");
     assert_eq!(
         suppressed
             .iter()
-            .filter(|(_, _, target)| target == "table:accounts")
+            .filter(|(_, _, target)| target.split(", ").any(|target| target == "table:accounts"))
             .count(),
         2
     );
@@ -44,17 +33,18 @@ fn aggregated_statement_roots_preserve_allow_usage_and_relation_suppressions() {
         .any(|(_, _, target)| target == "table:invoices"));
     assert!(suppressed
         .iter()
-        .any(|(_, _, target)| target == "table:orders"));
+        .any(|(_, _, target)| target.split(", ").any(|target| target == "table:orders")));
 }
 
 #[test]
-fn alternatives_share_one_finding_per_unbounded_root() {
+fn alternatives_share_one_finding_with_every_unbounded_root() {
     let root = fixture_dir("variants/cascading-statements");
     let findings = findings_of(check_in(&root, "variants.yml"));
-    assert_eq!(findings.len(), 3, "{findings:?}");
-    assert_eq!(findings[0].2, "table:accounts");
-    assert_eq!(findings[1].2, "table:invoices");
-    assert_eq!(findings[2].2, "table:orders");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(
+        findings[0].2,
+        "table:accounts, table:invoices, table:orders"
+    );
 }
 
 #[test]

@@ -70,3 +70,40 @@ impl FromIterator<LocatedRuleFinding> for PostgresFindings {
         Self(findings.into_iter().collect())
     }
 }
+
+pub(super) fn site_suffixes<'a>(
+    sites: impl Iterator<Item = (&'a RuleFinding, &'a str, (usize, usize))> + Clone,
+    kind: &str,
+) -> Vec<Option<String>> {
+    let mut totals = std::collections::BTreeMap::new();
+    let mut coordinates = std::collections::BTreeMap::new();
+    for (finding, origin, position) in sites.clone() {
+        *totals.entry(finding).or_insert(0usize) += 1;
+        coordinates
+            .entry((finding, origin, position))
+            .or_insert((0usize, 0usize))
+            .0 += 1;
+    }
+    sites
+        .map(|(finding, origin, position)| {
+            if totals[&finding] < 2 {
+                return None;
+            }
+            let (total, ordinal) = coordinates.get_mut(&(finding, origin, position)).unwrap();
+            let tie = if *total > 1 {
+                *ordinal += 1;
+                format!("; site {ordinal}")
+            } else {
+                String::new()
+            };
+            Some(format!(
+                " ({kind} at SQL {}:{} from {origin}{tie})",
+                position.0, position.1
+            ))
+        })
+        .collect()
+}
+
+#[cfg(test)]
+#[path = "postgres_findings_tests.rs"]
+mod tests;

@@ -2,7 +2,11 @@ use super::{bare, owner, qualifier, Inputs, SqlTransformedColumnUseFact};
 use sqlparser::ast::{Expr, Spanned};
 
 impl Inputs<'_, '_, '_> {
-    pub(super) fn transformed(&mut self, expr: &Expr, transformation: &str) {
+    pub(super) fn transformed(
+        &mut self,
+        expr: &Expr,
+        (transformation, expression_site): (&str, (usize, usize)),
+    ) {
         let Some((_, column)) = bare(expr, self.positions) else {
             return;
         };
@@ -28,6 +32,7 @@ impl Inputs<'_, '_, '_> {
             column_position: expr.span().start.column.max(1) as usize,
             transformation: transformation.into(),
             driving_probe,
+            expression_site,
         });
     }
 }

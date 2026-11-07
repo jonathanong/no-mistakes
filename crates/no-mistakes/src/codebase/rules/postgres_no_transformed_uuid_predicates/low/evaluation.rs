@@ -40,7 +40,10 @@ pub(super) struct EvaluationContext<'a> {
     pub suppressed: bool,
 }
 
-pub(super) fn evaluate(context: &EvaluationContext<'_>) -> (Outcome, Vec<RuleFinding>) {
+pub(super) fn evaluate(
+    context: &EvaluationContext<'_>,
+    groups: &mut super::super::groups::Groups,
+) -> (Outcome, Vec<RuleFinding>) {
     let EvaluationContext {
         relative,
         call,
@@ -51,10 +54,10 @@ pub(super) fn evaluate(context: &EvaluationContext<'_>) -> (Outcome, Vec<RuleFin
     let mut findings = Vec::new();
     match &call.input {
         Input::Sql { source_span, .. } => {
-            direct(context, *source_span, &mut outcome, &mut findings)
+            direct(context, *source_span, &mut outcome, &mut findings, groups)
         }
         Input::Recovered(proof) => {
-            recovered::recovered(context, proof, &mut outcome, &mut findings)
+            recovered::recovered(context, proof, &mut outcome, &mut findings, groups)
         }
         _ => {
             cache::mark_input_unknown(
@@ -73,6 +76,7 @@ fn direct(
     source_span: (u32, u32),
     outcome: &mut Outcome,
     findings: &mut Vec<RuleFinding>,
+    groups: &mut super::super::groups::Groups,
 ) {
     let EvaluationContext {
         relative,
@@ -94,7 +98,15 @@ fn direct(
                         if *suppressed {
                             finding.line = call_line;
                         }
-                        findings.push(finding);
+                        groups.push(
+                            (
+                                relative.to_string(),
+                                None,
+                                use_.expression_site,
+                                Some((false, source_span.0 as usize)),
+                            ),
+                            finding.into(),
+                        );
                     }
                     Err(reason) => {
                         mark_reason(outcome, reason);

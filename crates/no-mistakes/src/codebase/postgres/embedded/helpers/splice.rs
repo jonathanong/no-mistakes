@@ -66,7 +66,15 @@ pub(crate) fn splice(template: &EmbeddedSqlCall, holes: &Holes) -> Option<Embedd
     };
     let sql = unpublish(published, &template.recovered_placeholder_positions)?;
     let caller = RecoveredSql {
-        origins: vec![0; sql.len()],
+        origins: if template.sql_source_offsets.is_empty() {
+            vec![0; sql.len()]
+        } else {
+            unpublish_origins(
+                published,
+                &template.recovered_placeholder_positions,
+                &template.sql_source_offsets,
+            )?
+        },
         positions: template.sql_source_positions.clone(),
         line: first_line,
         sql,
@@ -88,6 +96,7 @@ pub(crate) fn splice(template: &EmbeddedSqlCall, holes: &Holes) -> Option<Embedd
         });
     }
     let joined = filled.pop()?;
+    let sql_source_offsets = rewrite_origins(&joined.sql, &joined.origins, 0, true);
     let (sql_text, recovered_placeholder_positions) =
         publish_placeholders_with_positions(joined.sql);
     Some(EmbeddedSqlCall {
@@ -95,6 +104,7 @@ pub(crate) fn splice(template: &EmbeddedSqlCall, holes: &Holes) -> Option<Embedd
         kind: EmbeddedSqlKind::Composed,
         declaration_line: Some(joined.line),
         sql_source_positions: joined.positions,
+        sql_source_offsets,
         recovered_placeholder_positions,
         ..template.clone()
     })

@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      viewBounds: {activity: unbounded}
+      sqlInclude: ['sql/*.sql']

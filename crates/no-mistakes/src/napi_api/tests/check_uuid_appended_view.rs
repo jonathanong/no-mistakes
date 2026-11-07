@@ -25,18 +25,18 @@ fn appended_view_probe_matches_literal_through_public_check_and_project() {
             let findings = check["rules"].as_array().unwrap();
             assert_eq!(
                 findings.len(),
-                2 * usize::from(status == "positive"),
+                usize::from(status == "positive"),
                 "{name}: {check}"
             );
             for finding in findings {
                 assert_eq!(finding["rule"], "postgres-no-transformed-uuid-predicates");
                 assert_eq!(finding["file"], format!("{name}.ts"));
                 let targets = if matches!(shape, "object" | "text") {
-                    [json!("plain_view.id"), json!("plain_view.parent_id")]
+                    "plain_view.id, plain_view.parent_id"
                 } else {
-                    [json!("view_posts.id"), json!("view_posts.root_id")]
+                    "view_posts.id, view_posts.root_id"
                 };
-                assert!(targets.contains(&finding["target"]));
+                assert_eq!(finding["target"], targets);
                 assert_eq!(finding["line"], if shape == "literal" { 5 } else { 6 });
             }
             let project: serde_json::Value = crate::test_support::without_hygiene_advisory_json(

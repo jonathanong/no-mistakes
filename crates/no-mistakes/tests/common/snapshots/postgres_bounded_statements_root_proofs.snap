@@ -14,18 +14,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/constant-chain.sql",
           "line": 2,
-          "message": "sql/constant-chain.sql:2: SELECT can return every row of participants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/constant-chain.sql:2: SELECT can return every row of participants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of sources; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM participants p",
-          "target": "table:participants"
-        },
-        {
-          "file": "sql/constant-chain.sql",
-          "line": 3,
-          "message": "sql/constant-chain.sql:3: SELECT can return every row of sources; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "JOIN sources s ON s.feed_id = p.conversation_id",
-          "target": "table:sources"
+          "target": "table:participants, table:sources"
         },
         {
           "file": "sql/controls.sql",
@@ -179,18 +171,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/constant-chain.sql",
           "line": 2,
-          "message": "sql/constant-chain.sql:2: SELECT can return every row of participants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/constant-chain.sql:2: SELECT can return every row of participants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of sources; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM participants p",
-          "target": "table:participants"
-        },
-        {
-          "file": "sql/constant-chain.sql",
-          "line": 3,
-          "message": "sql/constant-chain.sql:3: SELECT can return every row of sources; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "JOIN sources s ON s.feed_id = p.conversation_id",
-          "target": "table:sources"
+          "target": "table:participants, table:sources"
         },
         {
           "file": "sql/controls.sql",
@@ -250,27 +234,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "sql/cte-sources.sql",
-          "line": 10,
-          "message": "sql/cte-sources.sql:10: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "JOIN feeds f ON f.id = s.feed_id AND f.deleted_at IS NULL",
-          "target": "table:feeds"
-        },
-        {
-          "file": "sql/cte-sources.sql",
-          "line": 11,
-          "message": "sql/cte-sources.sql:11: SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "JOIN topics t ON t.id = f.topic_id AND t.deleted_at IS NULL",
-          "target": "table:topics"
-        },
-        {
-          "file": "sql/cte-sources.sql",
           "line": 9,
-          "message": "sql/cte-sources.sql:9: SELECT can return every row of sources; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/cte-sources.sql:9: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of sources; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "JOIN sources s ON s.item_id = item.item_id",
-          "target": "table:sources"
+          "target": "table:feeds, table:sources, table:topics"
         },
         {
           "file": "sql/distinct-singleton.sql",

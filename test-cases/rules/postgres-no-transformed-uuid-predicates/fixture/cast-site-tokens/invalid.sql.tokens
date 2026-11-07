@@ -1,0 +1,9 @@
+id.::text
+id[1]::text
+id::text.
+id::text[1]
+CAST(id AS text + 1)
+fake_CAST(id AS text)
+"CAST"(id AS text)
+((id
+CAST(id AS text) + 1

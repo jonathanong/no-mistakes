@@ -16,12 +16,8 @@ fn statements_appending_a_shared_fragment_are_reported_at_each_caller() {
         lines_of(".no-mistakes.yml"),
         [
             ("src/first.ts".to_string(), 5),
-            ("src/first.ts".to_string(), 6),
-            ("src/full-from.ts".to_string(), 9),
             ("src/full-from.ts".to_string(), 9),
             ("src/full-from.ts".to_string(), 15),
-            ("src/full-from.ts".to_string(), 15),
-            ("src/full-from.ts".to_string(), 21),
             ("src/full-from.ts".to_string(), 21),
             ("src/full-from.ts".to_string(), 38),
             ("src/full-from.ts".to_string(), 42),
@@ -36,8 +32,6 @@ fn statements_appending_a_shared_fragment_are_reported_at_each_caller() {
             ("src/imported-full-from.ts".to_string(), 5),
             ("src/imported-full-from.ts".to_string(), 9),
             ("src/second.ts".to_string(), 5),
-            ("src/second.ts".to_string(), 7),
-            ("src/third.ts".to_string(), 7),
             ("src/third.ts".to_string(), 7),
         ]
     );
@@ -91,32 +85,17 @@ fn same_file_full_from_fragments_keep_both_callers_and_ignore_a_suppressed_openi
             (
                 "src/full-from.ts".to_string(),
                 9,
-                "table:accounts".to_string()
-            ),
-            (
-                "src/full-from.ts".to_string(),
-                9,
-                "table:orders".to_string()
+                "table:accounts, table:orders".to_string()
             ),
             (
                 "src/full-from.ts".to_string(),
                 15,
-                "table:accounts".to_string()
-            ),
-            (
-                "src/full-from.ts".to_string(),
-                15,
-                "table:orders".to_string()
+                "table:accounts, table:orders".to_string()
             ),
             (
                 "src/full-from.ts".to_string(),
                 21,
-                "table:invoices".to_string()
-            ),
-            (
-                "src/full-from.ts".to_string(),
-                21,
-                "table:orders".to_string()
+                "table:invoices, table:orders".to_string()
             ),
             (
                 "src/full-from.ts".to_string(),

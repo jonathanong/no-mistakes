@@ -1,4 +1,6 @@
 use crate::codebase::postgres::{extract_sql_statement_facts, SqlStatementFileFacts};
+#[path = "cast_sites_tests.rs"]
+mod cast_sites_tests;
 
 fn facts(name: &str) -> SqlStatementFileFacts {
     let source = std::fs::read_to_string(
@@ -144,5 +146,56 @@ fn recovered_transform_binds_preserve_real_columns_and_quoted_marker_names() {
             .transformed_column_uses
             .len(),
         4
+    );
+}
+
+#[test]
+fn expression_sites_group_arguments_and_nested_calls_without_merging_siblings() {
+    let facts = facts("multi-argument-sites.sql");
+    let uses = &facts.transformed_column_uses;
+    for (line, count) in [(1, 2), (2, 4), (3, 8)] {
+        let arguments: Vec<_> = uses.iter().filter(|use_| use_.line == line).collect();
+        assert_eq!(arguments.len(), count);
+        assert!(arguments
+            .iter()
+            .all(|use_| use_.expression_site == arguments[0].expression_site));
+    }
+    let siblings: std::collections::BTreeSet<_> = uses
+        .iter()
+        .filter(|use_| use_.line == 4)
+        .map(|use_| use_.expression_site)
+        .collect();
+    assert_eq!(siblings.len(), 2);
+    let multiline: Vec<_> = uses
+        .iter()
+        .filter(|use_| [6, 7].contains(&use_.line))
+        .collect();
+    assert_eq!(multiline.len(), 2);
+    assert_eq!(multiline[0].expression_site, multiline[1].expression_site);
+    assert_eq!(multiline[0].expression_site.0, 5);
+}
+
+#[test]
+fn cast_sites_use_operator_tokens_without_inheriting_boolean_or_subquery_wrappers() {
+    let facts = facts("cast-site-controls.sql");
+    let sites: Vec<_> = facts
+        .transformed_column_uses
+        .iter()
+        .map(|use_| use_.expression_site)
+        .collect();
+    assert_eq!(
+        sites,
+        [
+            (1, 30),
+            (2, 38),
+            (3, 30),
+            (4, 46),
+            (5, 35),
+            (6, 37),
+            (7, 45),
+            (8, 43),
+            (10, 35),
+            (10, 35),
+        ]
     );
 }

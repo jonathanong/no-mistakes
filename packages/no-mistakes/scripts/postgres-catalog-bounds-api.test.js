@@ -10,25 +10,28 @@ test(
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
     for (const [directory, config, expected] of [
-      ["catalog-resolution", "key-resolution.yml", 6],
-      ["catalog-resolution", "key-operators.yml", 4],
+      ["catalog-resolution", "key-resolution.yml", 5],
+      ["catalog-resolution", "key-operators.yml", 2],
       ["catalog-resolution", "key-booleans.yml", 1],
       ["catalog-resolution", "view-bounds.yml", 1],
       ["catalog-resolution", "view-allow.yml", 0],
       ["catalog-resolution", "view-suppression.yml", 0],
       ["catalog-resolution-identity", "view-identity.yml", 1],
-      ["schemaless-key-resolution", "qualified-bare-tables.yml", 4],
-      ["column-policy", "../../configs/column-bounds.yml", 8],
+      ["schemaless-key-resolution", "qualified-bare-tables.yml", 3],
+      ["column-policy", "../../configs/column-bounds.yml", 6],
       ["column-policy", "../../configs/column-bounds-composite-prefix.yml", 1],
       ["column-policy", "../../configs/recursive-depth.yml", 10],
-      ["join-roots", "valid.yml", 41],
-      ["fixedpoint", "valid.yml", 57],
-      ["issue-3037", "valid.yml", 5],
+      ["join-roots", "valid.yml", 22],
+      ["fixedpoint", "valid.yml", 27],
+      ["issue-3037", "valid.yml", 3],
       ["issue-3037", "cte-valid.yml", 0],
-      ["root-proofs", "valid.yml", 19],
-      ["root-proofs", "invalid.yml", 22],
+      ["root-proofs", "valid.yml", 18],
+      ["root-proofs", "invalid.yml", 19],
+      ["../statement-groups/fixture", "valid.yml", 7],
+      ["../statement-groups/fixture", "controls.yml", 6],
+      ["../statement-groups/fixture", "embedded.yml", 4],
       ["../variants/correlated-append", ".no-mistakes.yml", 1],
-      ["../variants/correlated-append", "undeclared.yml", 3],
+      ["../variants/correlated-append", "undeclared.yml", 2],
       ["../variants/correlated-append", "advise.yml", 0],
     ]) {
       const root = join(
@@ -46,7 +49,7 @@ test(
       };
       for (const target of relationTargets[config] || []) {
         assert.ok(
-          standalone.rules.some((finding) => finding.target === target),
+          standalone.rules.some((finding) => finding.target?.split(", ").includes(target)),
           `${config}: ${target}`,
         );
       }

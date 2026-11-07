@@ -34,7 +34,13 @@ fn targets(report: &Value, file: &str) -> Vec<String> {
                 .as_str()
                 .is_some_and(|path| path.ends_with(file))
         })
-        .map(|finding| finding["target"].as_str().unwrap().to_string())
+        .flat_map(|finding| {
+            finding["target"]
+                .as_str()
+                .unwrap()
+                .split(", ")
+                .map(str::to_string)
+        })
         .collect::<Vec<_>>();
     targets.sort();
     targets

@@ -8,8 +8,7 @@ mod parse;
 mod policy;
 mod projection;
 mod sources;
-use crate::codebase::postgres::parse::PreparedSql;
-use crate::codebase::postgres::statement_facts::SqlLocationDemand;
+use crate::codebase::postgres::{parse::PreparedSql, statement_facts::SqlLocationDemand};
 use collect::{collect_one, FactOut};
 pub(crate) use lifecycle::project_bounds;
 use lifecycle::LifecycleBuilder;
@@ -113,6 +112,7 @@ fn extract_from_parsed_and_sources(
             super::transformed_predicates::collect(
                 statement,
                 placeholder_positions,
+                sources.location_tokens(index, tokens.all()),
                 &mut transformed_column_uses,
             );
             collect_one(

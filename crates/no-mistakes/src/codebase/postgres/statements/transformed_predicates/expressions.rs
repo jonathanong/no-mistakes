@@ -7,7 +7,7 @@ use crate::codebase::postgres::statements::bounds::is_aggregate;
 use crate::codebase::postgres::statements::select::uses::{columns::bare, scope::BaseRel};
 use crate::codebase::postgres::statements::value::PlaceholderPositions;
 use crate::codebase::postgres::statements::SqlTransformedColumnProbeFact as Probe;
-use sqlparser::ast::{BinaryOperator as Op, Expr, FunctionArguments};
+use sqlparser::ast::{BinaryOperator as Op, Expr, FunctionArguments, Spanned};
 
 pub(super) fn collect(
     expression: &Expr,
@@ -15,12 +15,14 @@ pub(super) fn collect(
     relations: &[BaseRel],
     probed: Option<&[BaseRel]>,
     positions: PlaceholderPositions<'_>,
+    tokens: &[sqlparser::tokenizer::TokenWithSpan],
     out: &mut Vec<SqlTransformedColumnUseFact>,
 ) {
     Inputs {
         clause,
         relations,
         positions,
+        tokens,
         probed,
         probe_value: None,
         probes: Vec::new(),
@@ -39,6 +41,7 @@ struct Inputs<'a, 'b, 'c> {
     positive_conjunct: bool,
     null_test: bool,
     positions: PlaceholderPositions<'b>,
+    tokens: &'a [sqlparser::tokenizer::TokenWithSpan],
     out: &'c mut Vec<SqlTransformedColumnUseFact>,
 }
 impl Inputs<'_, '_, '_> {
@@ -72,7 +75,7 @@ impl Inputs<'_, '_, '_> {
         self.walk(expr, None);
         (self.probe_value, self.null_test) = previous;
     }
-    fn walk(&mut self, expr: &Expr, transformation: Option<&str>) {
+    fn walk(&mut self, expr: &Expr, transformation: Option<(&str, (usize, usize))>) {
         let previous = self.probe_value;
         let positive_conjunct = self.positive_conjunct;
         let null_test = self.null_test;
@@ -93,7 +96,7 @@ impl Inputs<'_, '_, '_> {
         self.positive_conjunct = positive_conjunct;
         self.null_test = null_test;
     }
-    fn walk_value(&mut self, expr: &Expr, transformation: Option<&str>) {
+    fn walk_value(&mut self, expr: &Expr, transformation: Option<(&str, (usize, usize))>) {
         // A surrounding transformation consumes the boolean result, not its UUID operands.
         let transformation = if boolean_result(expr) {
             None
@@ -141,7 +144,10 @@ impl Inputs<'_, '_, '_> {
                 // FILTER predicates and nested queries still get independent analysis.
                 if !is_aggregate(&function.name) {
                     let name = function.name.to_string();
-                    let transform = transformation.unwrap_or(&name);
+                    let transform = transformation.unwrap_or_else(|| {
+                        let at = function.name.span().start;
+                        (&name, (at.line as usize, at.column as usize))
+                    });
                     for args in [&function.parameters, &function.args] {
                         if let FunctionArguments::List(list) = args {
                             // Argument labels and ordering are syntax, not transformed inputs.
@@ -155,7 +161,16 @@ impl Inputs<'_, '_, '_> {
                     self.walk_condition(filter);
                 }
             }
-            Expr::Cast { expr, .. } => self.walk(expr, Some(transformation.unwrap_or("cast"))),
+            Expr::Cast {
+                expr: value, kind, ..
+            } => {
+                let transform = transformation.unwrap_or_else(|| {
+                    let span = expr.span();
+                    let at = super::cast_sites::site(self.tokens, span, kind).unwrap_or(span.start);
+                    ("cast", (at.line as usize, at.column as usize))
+                });
+                self.walk(value, Some(transform));
+            }
             Expr::Identifier(_) | Expr::CompoundIdentifier(_)
                 if transformation.is_some() && !self.null_test =>
             {
