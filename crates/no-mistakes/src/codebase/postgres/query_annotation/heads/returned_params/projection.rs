@@ -1,10 +1,6 @@
 //! One prepared source hop for a returned first-parameter builder.
-use super::Root;
 use crate::codebase::postgres::query_annotation::heads::{
-    bindings::Bindings,
-    helper_records,
-    syntax::{Head, Syntax},
-    HeadProof, Span,
+    bindings::Bindings, syntax::Syntax, HeadProof, Span,
 };
 use crate::codebase::ts_source::module_facts::{ModuleBinding, TypeScriptModuleFacts};
 use crate::fx::{FxHashMap, FxHashSet};
@@ -15,8 +11,7 @@ use source::source_proof;
 #[derive(Clone, Debug)]
 pub(crate) struct Pending {
     pub span: Span,
-    pub specifier: String,
-    pub imported: String,
+    pub imports: Vec<(String, String)>,
     pub proof: HeadProof,
 }
 
@@ -100,49 +95,30 @@ pub(in super::super) fn module_projection(
         .iter()
         .filter(|call| executors.contains(&call.span))
     {
-        let Some(owner) =
-            helper_records::candidate(syntax, bindings, call).filter(|owner| owner.imported)
-        else {
+        let Some(declaration) = super::lifetime::declaration(syntax, bindings, call) else {
             continue;
         };
-        let Head::FieldReference(reference) = call.head else {
-            continue;
-        };
-        let Some(result) = bindings.owner(reference) else {
-            continue;
-        };
-        let declaration = (result.span.start, result.span.end);
-        let Some(root) = syntax.returned_param_roots.get(&declaration) else {
-            continue;
-        };
-        let Some((_, initializer)) = syntax.record_initializers.get(&declaration) else {
-            continue;
-        };
-        if !bindings.declaration_safe(*initializer) || !bindings.declaration_safe(call.span) {
-            continue;
+        let root = &syntax.returned_param_roots[&declaration];
+        let required = root
+            .sources
+            .iter()
+            .map(|&(callee, tag)| {
+                let callee = bindings.owner(callee).filter(|owner| owner.imported)?;
+                let tag = bindings.owner(tag)?;
+                if !tag.imported || !bindings.trusted_import(tag.id) {
+                    return None;
+                }
+                let (specifier, imported) = imports.get(&callee.id).copied().flatten()?;
+                Some((specifier.to_string(), imported.to_string()))
+            })
+            .collect::<Option<Vec<_>>>();
+        if let Some(imports) = required {
+            pending.push(Pending {
+                span: call.span,
+                imports,
+                proof: root.proof,
+            });
         }
-        if !caller_root(bindings, owner, root) {
-            continue;
-        }
-        let Some((specifier, imported)) = imports.get(&owner.id).copied().flatten() else {
-            continue;
-        };
-        pending.push(Pending {
-            span: call.span,
-            specifier: specifier.to_string(),
-            imported: imported.to_string(),
-            proof: root.proof,
-        });
     }
     (exported, pending)
-}
-
-fn caller_root(bindings: &Bindings<'_>, callee: &ModuleBinding, root: &Root) -> bool {
-    let Some(actual) = bindings.owner(root.callee) else {
-        return false;
-    };
-    let Some(tag) = bindings.owner(root.tag) else {
-        return false;
-    };
-    actual.id == callee.id && tag.imported && bindings.trusted_import(tag.id)
 }

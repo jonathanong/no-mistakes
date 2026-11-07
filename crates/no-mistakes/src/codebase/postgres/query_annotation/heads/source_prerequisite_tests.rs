@@ -33,6 +33,8 @@ fn prepared() -> (FileIdMap<CheckFileFacts>, PathBuf) {
         "healthy",
         "unused",
         "returned",
+        "returned-conditional",
+        "literal-helper",
         "async-effects",
         "async-factory",
     ]

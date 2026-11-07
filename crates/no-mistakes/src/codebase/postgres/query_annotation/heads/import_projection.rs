@@ -66,17 +66,10 @@ pub(crate) fn project(
             completed.push((path.clone(), pending.span, proof));
         }
         for pending in &heads.pending_returned_params {
-            let Some(target) = resolve(&pending.specifier, path) else {
-                continue;
-            };
-            if source_failed(files, &target) {
-                failed_sources.push((path.clone(), pending.span, [target].into_iter().collect()));
-                continue;
+            let (proven, failed) = super::returned_params::project(files, &resolve, path, pending);
+            if !failed.is_empty() {
+                failed_sources.push((path.clone(), pending.span, failed));
             }
-            let proven = files
-                .get(&target)
-                .and_then(|target| target.query_annotation_heads.as_deref())
-                .is_some_and(|heads| heads.exported_returned_params.contains(&pending.imported));
             if proven {
                 completed.push((path.clone(), pending.span, pending.proof));
             }

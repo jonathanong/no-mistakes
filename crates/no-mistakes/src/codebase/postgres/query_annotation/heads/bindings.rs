@@ -96,7 +96,7 @@ impl<'a> Bindings<'a> {
             }
         }
         index.trusted_roots = index.trusted_roots(syntax);
-        let effects = super::effects::prepare(syntax, &index, module, &index.trusted_roots);
+        let effects = super::effects::prepare(syntax, &index, module, low);
         index.effects = effects;
         if low {
             index.returned_prefix_roots =

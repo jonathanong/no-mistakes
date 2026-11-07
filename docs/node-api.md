@@ -159,6 +159,12 @@ and unresolved mixed or escaped forms without running the annotation evaluator.
 They also include an exact directly imported helper that returns an immutable
 append alias of one fresh tagged builder argument, with an inert native default
 and a closed paired `.text`/`.values` executor read.
+The one-hop proof also accepts a one-parameter imported helper whose complete
+body creates a const append alias with literal-only suffixes and returns it.
+Both conditional helper-call arms must prove the head; the private local result
+may receive discarded literal/tagged appends before its paired field read.
+Statements received as function parameters remain unanalyzable; see the
+[low-effort contract](postgres-query-annotation/low-effort.md).
 An exact top-level namespace destructure can follow unique explicit source
 reexports to a fixed-head helper through the same prepared check projection;
 other namespace shapes remain unresolved. At low effort, a helper's own

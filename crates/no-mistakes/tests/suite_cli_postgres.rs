@@ -261,5 +261,8 @@ mod cli_postgres_executor_names;
 #[path = "cli_postgres_snapshot_fixedpoint.rs"]
 mod cli_postgres_snapshot_fixedpoint;
 
+#[path = "cli_postgres_snapshot_low_executor_shapes.rs"]
+mod cli_postgres_snapshot_low_executor_shapes;
+
 #[path = "cli_postgres_snapshot_lock_written_rows.rs"]
 mod cli_postgres_snapshot_lock_written_rows;

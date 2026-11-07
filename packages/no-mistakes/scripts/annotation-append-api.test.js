@@ -79,3 +79,53 @@ test(
     }
   },
 );
+
+test(
+  "compiled async annotation APIs preserve imported builder heads and parameter uncertainty",
+  { skip: !addon?.endsWith(".node") },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const base = join(__dirname, "../../../test-cases/rules/postgres-require-query-annotation");
+    const cli =
+      process.env.NO_MISTAKES_TEST_CLI_PATH ||
+      join(dirname(addon), process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes");
+    for (const [fixture, configName, missing, advisory] of [
+      ["imported-builder-head", "imported-builder-head.yml", [], []],
+      ["imported-builder-head", "imported-builder-parameter.yml", [], [["parameter.ts", 6]]],
+      [
+        "low-heads",
+        "builder-suffix-proof-ignore.yml",
+        [
+          ["builder-suffix-proof.mts", 16],
+          ["builder-suffix-proof.mts", 21],
+          ["builder-suffix-proof.mts", 47],
+        ],
+        [],
+      ],
+    ]) {
+      const root = join(base, "fixture", fixture);
+      const config = join(base, "configs", configName);
+      const pending = cjs.check({ root, config });
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.deepEqual(report.warnings, []);
+      const locations = (findings) => findings.map(({ file, line }) => [file, line]);
+      assert.deepEqual(locations(report.rules), missing, configName);
+      assert.deepEqual(locations(policyAdvisories(report)), advisory, configName);
+      const esmPending = esm.check({ root, config });
+      assert.ok(esmPending instanceof Promise);
+      assert.deepEqual(await esmPending, report);
+      for (const jobs of [1, 2]) {
+        const child = spawnSync(
+          cli,
+          ["check", "--root", root, "--config", config, "--format", "json", "--jobs", String(jobs)],
+          { encoding: "utf8", env: process.env },
+        );
+        assert.equal(child.error, undefined);
+        assert.equal(child.status, missing.length ? 1 : 0, child.stderr);
+        assert.deepEqual(JSON.parse(child.stdout), report);
+      }
+    }
+  },
+);

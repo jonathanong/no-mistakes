@@ -6,14 +6,18 @@ use oxc_ast::ast::{
 };
 
 mod caller;
+mod lifetime;
+mod literal;
 mod projection;
+mod resolve;
 pub(super) use caller::root;
 pub(super) use projection::{module_projection, Pending};
+pub(crate) use resolve::project;
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub(super) struct Root {
-    pub callee: Span,
-    pub tag: Span,
+    pub initializer: Span,
+    pub sources: Vec<(Span, Span)>,
     pub proof: super::HeadProof,
 }
 
@@ -23,12 +27,16 @@ pub(super) struct Candidate {
     pub alias: Span,
     pub allowed_parameter: Span,
     pub allowed_alias: Vec<Span>,
-    pub default_tag: Span,
+    pub tags: Vec<Span>,
     pub function: Span,
     pub body: Span,
 }
 
 pub(super) fn function(value: &Function<'_>) -> Option<Candidate> {
+    literal::function(value).or_else(|| guarded_function(value))
+}
+
+fn guarded_function(value: &Function<'_>) -> Option<Candidate> {
     if value.r#type != FunctionType::FunctionDeclaration || value.r#async || value.generator {
         return None;
     }
@@ -101,7 +109,7 @@ pub(super) fn function(value: &Function<'_>) -> Option<Candidate> {
         alias: span(alias.span),
         allowed_parameter: parameter_use.1,
         allowed_alias: vec![first_alias, from_alias, second_alias, span(returned.span)],
-        default_tag: span(tag.span),
+        tags: vec![span(tag.span)],
         function: span(value.span),
         body: span(body.span),
     })

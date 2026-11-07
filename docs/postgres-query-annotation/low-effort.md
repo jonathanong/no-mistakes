@@ -216,6 +216,38 @@ while its use remains in the same function and is neither captured nor passed
 to another helper. References to the builder inside a suffix expression count
 as an unsafe use.
 
+A proven same-file append-only helper also preserves a continuation-safe missing
+head on a trusted local builder, including paired `.text`/`.values` reads.
+These calls report a definite missing annotation even with `unanalyzable: ignore`.
+Partial comments, transaction keywords that a suffix can extend, unknown tags,
+and escaping builders remain unresolved.
+
+A same-file helper can return a same-function `const` initialized directly with
+a string or ordinary template. The declaration must precede the return and have
+no writes. Named heads resolve and complete missing heads report a finding.
+Captured strings, mutable locals, and parameter forwarding remain unresolved;
+low does not infer literal arguments across every caller of a helper.
+
+Configured literal pass-through wrappers preserve their caller's literal SQL
+argument. For example, `sqlLiteralHelpers: [pg-copy-streams#from,
+pg-copy-streams#to]` recognizes imports aliased as `copyFrom` and `copyTo`:
+
+```ts
+import { from as copyFrom, to as copyTo } from "pg-copy-streams";
+client.query(copyFrom("/* copy/in */ COPY items FROM STDIN"));
+client.query(copyTo("/* copy/out */ COPY items TO STDOUT"));
+```
+
+The wrapper must be a direct non-optional call with exactly one literal string
+or interpolation-free ordinary template argument. Unannotated literals report
+a missing annotation; dynamic arguments, wrappers outside the configured list, and optional
+calls remain unresolved. Matching uses import identity, not the local name.
+
+A conditional callee such as `(flag ? write : read)(sql)` qualifies when both
+arms are independently proven configured executors. An immutable local alias of
+that conditional also qualifies. SQL still needs the ordinary low-effort head
+proof; an unknown or shadowed callee arm does not establish an executor.
+
 A captured local builder also keeps its fixed named head when **every** runtime
 reference to its exact binding is closed: a discarded static one-argument
 `.append(...)`, a configured executor read, or a proven local append-only
@@ -383,6 +415,36 @@ unavailable implementations remain unresolved. A definite missing annotation
 still fails under every unanalyzable policy. This syntax proof does not request
 the annotation evaluator or change max's append fallback. For unresolved results,
 put a named literal at the executor instead of passing an opaque `.text` field.
+
+A direct imported helper can also preserve a fresh native builder passed as its
+only argument. The helper must be synchronous, take one plain parameter, and
+contain exactly a `const` alias initialized by 1–8 static `.append` calls followed
+by `return alias`. Suffixes inside this helper must be string literals or trusted
+`sql-template-strings` templates without interpolations. The parameter and alias
+cannot have other uses. This proof follows one canonical graph import edge;
+re-exports and nested helper calls remain unresolved.
+
+```ts
+// select.ts
+export function select(head: SQLStatement) {
+  const statement = head.append(sql`id, name`).append(' FROM items')
+  return statement
+}
+// get.ts: select is imported from ./select.ts; sql is the native tag.
+const query = byId
+  ? select(sql`/* itemById */ SELECT `).append(sql` WHERE id = ${id}`)
+  : select(sql`/* itemByName */ SELECT `).append(sql` WHERE name = ${name}`)
+query.append(sql` LIMIT 1`)
+read(query.text, query.values)
+```
+
+Every conditional arm must independently prove its helper and annotated head.
+The private local result may receive discarded literal/tagged suffix appends
+before one paired `.text`/`.values` executor read in the same function. Escapes,
+writes, captures, dynamic statement-level suffixes, and a statement received as
+a function parameter remain unanalyzable. The normal suppression directives and
+`unanalyzable` policy apply to those unresolved forms; keep the annotated head
+at the call site to make this bounded proof possible.
 
 For a configured relative factory or executor type, the helper head is used
 only after the request resolver confirms that the executor import belongs to

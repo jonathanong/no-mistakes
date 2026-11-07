@@ -226,3 +226,50 @@ fn postgres_annotation_timings_check_json_snapshot() {
         &[("max_effort", root.clone(), root.join(".no-mistakes.yml"))],
     );
 }
+
+#[test]
+fn postgres_helper_local_text_check_json_snapshot() {
+    assert_saved_fixture(
+        "postgres_helper_local_text",
+        &[case(
+            "low_report",
+            "helper-local-text",
+            "helper-arrow-heads-report.yml",
+        )],
+    );
+}
+
+#[test]
+fn postgres_builder_suffix_proof_check_json_snapshot() {
+    assert_saved_fixture(
+        "postgres_builder_suffix_proof",
+        &[
+            case("report", "low-heads", "builder-suffix-proof.yml"),
+            case("ignore", "low-heads", "builder-suffix-proof-ignore.yml"),
+        ],
+    );
+}
+
+#[test]
+fn postgres_imported_builder_head_check_json_snapshot() {
+    assert_saved_fixture(
+        "postgres_imported_builder_head",
+        &[
+            case(
+                "repro",
+                "imported-builder-head",
+                "imported-builder-head.yml",
+            ),
+            case(
+                "parameter",
+                "imported-builder-head",
+                "imported-builder-parameter.yml",
+            ),
+            case(
+                "controls",
+                "imported-builder-head",
+                "imported-builder-controls.yml",
+            ),
+        ],
+    );
+}
