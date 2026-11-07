@@ -15,11 +15,9 @@ fn four_joined_lock_aliases_are_checked_against_each_write_relation() {
     partial.sort();
     assert_eq!(partial.len(), 2, "{findings:?}");
     assert!(partial.iter().any(|message| message.contains("in reviews")));
-    assert!(
-        partial
-            .iter()
-            .any(|message| message.contains("in decisions"))
-    );
+    assert!(partial
+        .iter()
+        .any(|message| message.contains("in decisions")));
     assert!(
         findings
             .iter()

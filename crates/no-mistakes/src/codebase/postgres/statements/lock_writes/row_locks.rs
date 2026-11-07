@@ -1,6 +1,6 @@
 use super::{
-    RowAccess,
     helpers::{access, generated_name, qualifier},
+    RowAccess,
 };
 use crate::codebase::postgres::idents::{ident_key, object_name_identity, relation_part_key};
 use crate::codebase::postgres::statements::value::PlaceholderPositions;

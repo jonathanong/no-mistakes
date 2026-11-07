@@ -69,7 +69,8 @@ including a caller that passes its `TransactionQuery` parameter onward. A type
 annotation alone does not prove a transaction; unrelated transaction instances
 and different keys remain distinct. Recursive helper cycles remain unresolved.
 
-Helper effects require a direct `await helper(...)` (including `return await`).
+At the known transaction caller, helper effects require a direct
+`await helper(...)` (including `return await`).
 A plain `return helper(...)` or discarded promise is unanalyzable because an
 `await using` transaction can be disposed before the helper finishes. Within a
 summarized helper, each executor call must itself be awaited or returned. Helper
@@ -234,10 +235,10 @@ non-failing advisory, and `ignore` omits the diagnostic. The legacy
 Dynamic relation names, key columns, aliases, and `FOR UPDATE OF` targets also
 follow this policy; recovered SQL placeholders cannot establish their identity.
 A possible earlier return or throw prevents a later write from proving that a
-locked row is written while the transaction remains open. A branch that commits
+locked row is written while the transaction remains open. A branch that awaits a commit or rollback
 and returns ends that transaction path; a matching write on the remaining
-fall-through path can still satisfy the lock. An uncommitted return, a commit on
-a continuing path, or an explicit SQL transaction boundary remains unresolved.
+fall-through path can still satisfy the lock. An uncommitted return, a boundary that is not awaited, a commit on a continuing
+path, or an explicit SQL transaction boundary remains unresolved.
 Recovery is conservative when another live transaction remains open on the
 returning path: later writes retain the unresolved policy. Keep matching writes
 on every continuing transaction path, or remove the lock.
@@ -291,7 +292,7 @@ const options = { query };
 await write('UPDATE items SET active = true WHERE id = $1', [id], options);
 ```
 
-Unknown values, computed properties, spreads, mutations, and conflicting executor
+Unknown values, getters, computed properties, spreads, mutations, and conflicting executor
 overrides follow the unanalyzable policy; they never establish autocommit
 membership. Use a static object and the configured transaction binding to make
 routing clear.
