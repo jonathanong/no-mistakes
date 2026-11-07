@@ -91,6 +91,7 @@ impl CheckFactMap {
             (None, None) => None,
         };
         Self {
+            postgres_executor_warning_scans: Arc::clone(&self.postgres_executor_warning_scans),
             sql_application: self.sql_application.clone(),
             sql_verdicts: self.sql_verdicts.clone(),
             sql_advisories: Arc::clone(&self.sql_advisories),

@@ -10,7 +10,7 @@ impl SharedCheckContext {
         workspace: std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
     ) -> Result<Self> {
         use crate::check_runner::enabled::{
-            fact_plan, integration_configured, ConfiguredChecks, EnabledChecks,
+            ConfiguredChecks, EnabledChecks, fact_plan, integration_configured,
         };
         use crate::check_tasks::{
             filesystem_rules_configured, queues_configured, unique_exports_configured,
@@ -84,6 +84,7 @@ impl SharedCheckContext {
             config, &mut plan,
         )?;
         crate::codebase::postgres::assign_prepared_embedded_sql_options(config, &mut plan)?;
+        crate::codebase::postgres::configure_executor_warnings(&root, config, &mut plan)?;
         plan.postgres_schema_catalog_paths =
             crate::codebase::postgres::configured_schema_catalog_paths(
                 config,

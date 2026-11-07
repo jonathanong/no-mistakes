@@ -9,19 +9,19 @@ use crate::config::v2::schema::{
 };
 use anyhow::{bail, Result};
 use serde_yaml::Value;
-
 const RESTATED: &[&str] = &[
     "importSpecifier",
     "executorNames",
+    "extraExecutorNames",
+    "excludeExecutorNames",
     "executorFactoryNames",
     "executorTypeNames",
     "trustedSqlTags",
     "schemaCatalogPath",
     "unanalyzableSql",
 ];
-
 pub(super) fn apply(config: &mut NoMistakesConfig) -> Result<bool> {
-    validate_project_globs(config)?;
+    super::validate::project_options(config)?;
     let mut plans = Vec::new();
     for (index, rule) in config.rules.iter().enumerate() {
         if let Some(plan) = plan_rule(config, rule)? {
@@ -38,7 +38,6 @@ pub(super) fn apply(config: &mut NoMistakesConfig) -> Result<bool> {
     }
     Ok(applied)
 }
-
 fn plan_rule(config: &NoMistakesConfig, rule: &RuleDef) -> Result<Option<(Scope, bool)>> {
     if !rule.enabled || !rule.rule.starts_with("postgres-") {
         return Ok(None);
@@ -61,7 +60,6 @@ fn plan_rule(config: &NoMistakesConfig, rule: &RuleDef) -> Result<Option<(Scope,
     }
     Ok(Some((scope, keep_rule_sql)))
 }
-
 fn referenced<'a>(
     config: &'a NoMistakesConfig,
     rule: &RuleDef,
@@ -87,7 +85,6 @@ fn referenced<'a>(
     }
     Ok(found)
 }
-
 fn reject_restate(rule: &RuleDef) -> Result<()> {
     if rule.scope == Some(RuleScope::Repository) {
         bail!(
@@ -111,7 +108,6 @@ fn reject_restate(rule: &RuleDef) -> Result<()> {
     }
     Ok(())
 }
-
 fn narrow(rule: &RuleDef, scope: &Scope) -> Result<bool> {
     for pattern in &rule.include {
         validate_glob(pattern, &format!("{} include", rule.rule))?;
@@ -158,13 +154,25 @@ fn narrow(rule: &RuleDef, scope: &Scope) -> Result<bool> {
     )?;
     Ok(true)
 }
-
 fn write_scope(rule: &str, options: &mut serde_yaml::Mapping, scope: &Scope, keep_rule_sql: bool) {
     if super::yaml::write_catalog_only(rule, options, &scope.schema_catalog_path) {
         return;
     }
     if !scope.import_specifier.is_empty() {
         set_string(options, "importSpecifier", &scope.import_specifier);
+    }
+    if let Some(names) = &scope.executor_names {
+        set_strings(options, "executorNames", names);
+    }
+    if let Some(names) = &scope.extra_executor_names {
+        set_strings(options, "extraExecutorNames", names);
+    }
+    if !scope.exclude_executor_names.is_empty() {
+        set_strings(
+            options,
+            "excludeExecutorNames",
+            &scope.exclude_executor_names,
+        );
     }
     if !scope.factory_names.is_empty() {
         set_strings(options, "executorFactoryNames", &scope.factory_names);
@@ -185,15 +193,4 @@ fn write_scope(rule: &str, options: &mut serde_yaml::Mapping, scope: &Scope, kee
         set_strings(options, "sqlInclude", &scope.sql_include);
     }
     set_bool(options, "sqlIncludeLocked", true);
-}
-
-fn validate_project_globs(config: &NoMistakesConfig) -> Result<()> {
-    for (name, project) in &config.projects {
-        if let Some(postgres) = &project.postgres {
-            for pattern in &postgres.sql_include {
-                validate_glob(pattern, &format!("projects.{name}.postgres.sqlInclude"))?;
-            }
-        }
-    }
-    Ok(())
 }

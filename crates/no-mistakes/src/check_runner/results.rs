@@ -123,7 +123,9 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     .into_iter()
     .flatten()
     .collect();
-    let analysis_warning_count = config.analysis_warnings.len();
+    let executor_warnings = no_mistakes::codebase::postgres::executor_config_warnings(root, facts);
+    let analysis_warning_count = config.analysis_warnings.len() + executor_warnings.len();
+    warnings.extend(executor_warnings);
     warnings.extend(config.analysis_warnings.iter().cloned());
     let accounting = suppression::apply_if_requested(
         retain_suppression,

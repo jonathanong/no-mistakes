@@ -1,5 +1,3 @@
-//! Opt-in `reportUnmatchedExecutorNames` pass shared by the embedded-SQL rules.
-//!
 use super::path_filter::GlobMatcher;
 use super::RuleFinding;
 use crate::codebase::check_facts::CheckFactMap;
@@ -11,36 +9,40 @@ use serde::Deserialize;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
-struct Options {
+pub(super) struct Options {
     include: Vec<String>,
     test_globs: Vec<String>,
     helper_roots: Vec<String>,
     exclude: Vec<String>,
-    import_specifier: String,
+    import_specifier: Option<String>,
     executor_names: Vec<String>,
+    extra_executor_names: Option<Vec<String>>,
+    exclude_executor_names: Vec<String>,
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
     trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
     sql_literal_helpers: Vec<String>,
     report_unmatched_executor_names: bool,
 }
-
 impl Options {
     fn profile(&self, rule_id: &str) -> EmbeddedSqlOptions {
-        EmbeddedSqlOptions::configured(&self.import_specifier, &self.executor_names)
-            .with_scoped_executors(&self.executor_factory_names, &self.executor_type_names)
-            .with_trusted_sql_tags(&self.trusted_sql_tags)
-            .with_sql_literal_helpers(if rule_id == "postgres-require-query-annotation" {
-                &self.sql_literal_helpers
-            } else {
-                &[]
-            })
+        EmbeddedSqlOptions::configured(
+            self.import_specifier.as_deref().unwrap_or_default(),
+            &self.executor_names,
+        )
+        .with_extra_executor_names(self.extra_executor_names.as_deref())
+        .with_exclude_executor_names(&self.exclude_executor_names)
+        .with_scoped_executors(&self.executor_factory_names, &self.executor_type_names)
+        .with_trusted_sql_tags(&self.trusted_sql_tags)
+        .with_sql_literal_helpers(if rule_id == "postgres-require-query-annotation" {
+            &self.sql_literal_helpers
+        } else {
+            &[]
+        })
     }
 }
-
 pub(crate) fn is_requested(config: &NoMistakesConfig, rule_id: &str) -> Result<bool> {
     for rule in config.rule_applications(rule_id) {
         if rule
@@ -52,7 +54,6 @@ pub(crate) fn is_requested(config: &NoMistakesConfig, rule_id: &str) -> Result<b
     }
     Ok(false)
 }
-
 /// Report configured names absent from all selected imports.
 pub(crate) fn check(
     root: &Path,
@@ -125,7 +126,7 @@ pub(crate) fn check(
         let ctx = Context {
             rule_id,
             config_file: &config_file,
-            specifier: &opts.import_specifier,
+            specifier: opts.import_specifier.as_deref().unwrap_or_default(),
             scanned,
         };
         findings.extend(unmatched(
@@ -144,12 +145,10 @@ pub(crate) fn check(
     super::sort_findings(&mut findings);
     Ok(findings)
 }
-
 fn record(file: &EmbeddedSqlFileFacts, matched: &mut (BTreeSet<String>, BTreeSet<String>)) {
     matched.0.extend(file.matched_factory_names.iter().cloned());
     matched.1.extend(file.matched_type_names.iter().cloned());
 }
-
 struct Context<'a> {
     rule_id: &'a str,
     config_file: &'a str,

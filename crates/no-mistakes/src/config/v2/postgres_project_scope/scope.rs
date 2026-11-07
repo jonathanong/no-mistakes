@@ -23,6 +23,15 @@ fn disagree(rule: &RuleDef, left: &Scope, right: &Scope) -> Result<()> {
             "importSpecifier",
             left.import_specifier != right.import_specifier,
         ),
+        ("executorNames", left.executor_names != right.executor_names),
+        (
+            "extraExecutorNames",
+            left.extra_executor_names != right.extra_executor_names,
+        ),
+        (
+            "excludeExecutorNames",
+            left.exclude_executor_names != right.exclude_executor_names,
+        ),
         (
             "factoryNames",
             sorted(&left.factory_names) != sorted(&right.factory_names),
@@ -67,6 +76,13 @@ fn scope_of(name: &str, project: &Project) -> Scope {
     Scope {
         name: name.to_string(),
         import_specifier: executors.import_specifier.trim().to_string(),
+        executor_names: executors
+            .executor_names
+            .map(|names| sorted(&unique_preserve(names))),
+        extra_executor_names: executors
+            .extra_executor_names
+            .map(|names| sorted(&unique_preserve(names))),
+        exclude_executor_names: sorted(&unique_preserve(executors.exclude_executor_names)),
         factory_names: unique_preserve(executors.factory_names),
         type_names: unique_preserve(executors.type_names),
         trusted_sql_tags: tags,

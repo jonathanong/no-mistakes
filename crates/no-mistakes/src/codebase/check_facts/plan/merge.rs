@@ -16,6 +16,8 @@ impl CheckFactPlan {
             Arc::make_mut(&mut self.lint_suppression_paths)
                 .extend(other.lint_suppression_paths.iter().cloned());
         }
+        Arc::make_mut(&mut self.postgres_executor_warning_scans)
+            .extend(other.postgres_executor_warning_scans.iter().cloned());
         self.imports |= other.imports;
         self.query_annotation_heads |= other.query_annotation_heads;
         crate::codebase::postgres::sql_identifier_syntax::plan::merge(

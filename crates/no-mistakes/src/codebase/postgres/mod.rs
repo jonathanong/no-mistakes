@@ -122,6 +122,11 @@ pub(crate) use profiles::{
 };
 pub use rule_options::fail_unanalyzable_sql;
 pub use rule_options::{has_sql_advice, unanalyzable_sql_mode, UnanalyzableSqlMode};
+mod executor_warnings;
+#[doc(hidden)]
+pub use executor_warnings::{
+    configure_executor_warnings, executor_config_warnings, ExecutorWarningScan,
+};
 mod verdict;
 pub use schema::extract_create_table_metadata;
 pub use source::*;

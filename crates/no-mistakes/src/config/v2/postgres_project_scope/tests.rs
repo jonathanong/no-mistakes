@@ -4,6 +4,7 @@ use crate::config::v2::discover::parse_v2_config_quiet;
 use crate::config::v2::schema::NoMistakesConfig;
 
 mod edges;
+mod executor_names;
 
 pub(super) fn parse(yaml: &str) -> anyhow::Result<NoMistakesConfig> {
     parse_v2_config_quiet(yaml, Path::new(".no-mistakes.yml"))

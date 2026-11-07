@@ -8,6 +8,8 @@ use std::{collections::HashSet, path::PathBuf};
 #[derive(Clone, Default)]
 pub struct CheckFactPlan {
     pub imports: bool,
+    #[doc(hidden)]
+    pub postgres_executor_warning_scans: Arc<Vec<crate::codebase::postgres::ExecutorWarningScan>>,
     /// Exact configured files whose AST comments are requested.
     pub lint_suppression_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     /// Exact call-source demand; broad `graph.call_sites` remains independent.

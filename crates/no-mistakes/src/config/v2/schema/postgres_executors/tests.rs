@@ -49,3 +49,32 @@ fn unrelated_rules_and_malformed_shapes_keep_their_existing_validation() {
         assert!(validate(&rule).is_ok());
     }
 }
+
+#[test]
+fn replacement_and_extension_conflict_even_when_empty_for_every_executor_rule() {
+    let config: crate::config::v2::NoMistakesConfig = serde_yaml::from_str(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/config/postgres-executor-names/conflict.yml"
+    )))
+    .unwrap();
+    for id in ALL_RULE_IDS {
+        let mut rule = config.rules[0].clone();
+        rule.rule = (*id).into();
+        let error = rule.try_rule_options::<Value>().unwrap_err().to_string();
+        assert!(error.contains("cannot both be set"), "{error}");
+    }
+}
+
+#[test]
+fn executor_validation_covers_every_prepared_public_rule() {
+    let ids = |values: &[&str]| {
+        values
+            .iter()
+            .map(|value| (*value).to_owned())
+            .collect::<std::collections::BTreeSet<_>>()
+    };
+    assert_eq!(
+        ids(ALL_RULE_IDS),
+        ids(crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS)
+    );
+}

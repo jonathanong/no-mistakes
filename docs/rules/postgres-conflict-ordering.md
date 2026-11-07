@@ -1,6 +1,18 @@
 # `postgres-conflict-ordering`
 
-A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+`executorNames` replaces the default `[query, read, write]` list; it does not
+extend it. Use `extraExecutorNames: [readPool, writePool]` to keep the defaults
+and add names. Setting both options is a configuration error. When a replacement
+omits a default name imported from `importSpecifier` and called in scoped files,
+`check` emits a configuration warning naming the rule or project, the omitted
+name, an example call site, and the fix. See
+[executor selection](../configuration/rules.md#postgresql-executor-selection).
+`excludeExecutorNames: [query]` removes names after replacement or default-plus-extra
+selection and acknowledges intentional omitted defaults. `check` warns about
+exclusions that are not default names or are never imported from the selected
+module and called in scoped files.
+
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `extraExecutorNames`, `excludeExecutorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
 
 Requires every analyzable multi-row `INSERT … ON CONFLICT` to acquire unique-index
 conflict locks in the committed schema catalog's canonical key order. It prevents
@@ -32,6 +44,29 @@ rules:
       unanalyzableSql: fail
       safeDirective: deadlock-safe
 ```
+
+When `read` is reserved for read-only SQL, it cannot create `INSERT … ON CONFLICT`
+conflicts. Select the writer executors and acknowledge that omission:
+
+```yaml
+rules:
+  - rule: postgres-conflict-ordering
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorNames: [query, write]
+      excludeExecutorNames: [read]
+      schemaCatalogPath: db/schema.json
+      include: ["backend/**/*.ts"]
+```
+
+This checks calls through `query` and `write`. The `read` executor does not
+participate in conflict-ordering checks, and its exclusion acknowledges the
+intentional omission even when scoped files import and call it. Exclusions may
+accompany `executorNames`; only combining `executorNames` with
+`extraExecutorNames` is a configuration error. Remove the exclusion if scoped
+files never import and call `read`, because it would produce an unused-entry
+warning.
 
 `schemaCatalogPath` is required and must name a repository-relative catalog
 generated with [`no-mistakes postgres catalog`](../cli/postgres.md). The catalog, not a

@@ -1,6 +1,18 @@
 # postgres-required-predicates — Executor SQL built by helpers
 
-A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+`executorNames` replaces the default `[query, read, write]` list; it does not
+extend it. Use `extraExecutorNames: [readPool, writePool]` to keep the defaults
+and add names. Setting both options is a configuration error. When a replacement
+omits a default name imported from `importSpecifier` and called in scoped files,
+`check` emits a configuration warning naming the rule or project, the omitted
+name, an example call site, and the fix. See
+[executor selection](../configuration/rules.md#postgresql-executor-selection).
+`excludeExecutorNames: [query]` removes names after replacement or default-plus-extra
+selection and acknowledges intentional omitted defaults. `check` warns about
+exclusions that are not default names or are never imported from the selected
+module and called in scoped files.
+
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `extraExecutorNames`, `excludeExecutorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
 
 ### Executor SQL built by helpers
 

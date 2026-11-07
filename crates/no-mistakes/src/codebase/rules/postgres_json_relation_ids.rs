@@ -30,6 +30,8 @@ pub(crate) struct Options {
     pub(crate) sql_include_locked: bool,
     pub(crate) import_specifier: String,
     pub(crate) executor_names: Vec<String>,
+    pub(crate) extra_executor_names: Option<Vec<String>>,
+    pub(crate) exclude_executor_names: Vec<String>,
     pub(crate) executor_factory_names: Vec<String>,
     pub(crate) executor_type_names: Vec<String>,
     pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,

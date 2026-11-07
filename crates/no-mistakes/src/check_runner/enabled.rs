@@ -56,6 +56,7 @@ pub(crate) struct EnabledChecks {
 
 pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
     CheckFactPlan {
+        postgres_executor_warning_scans: Default::default(),
         forbidden_call_arguments: None,
         sql_identifier_profiles: Default::default(),
         imports: enabled.dynamic_import_rules,
@@ -124,7 +125,8 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
 }
 
 pub(crate) fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
-    !plan.production_import_paths.is_empty()
+    !plan.postgres_executor_warning_scans.is_empty()
+        || !plan.production_import_paths.is_empty()
         || plan.postgres_dml
         || plan.postgres_variants
         || plan.postgres_fragments

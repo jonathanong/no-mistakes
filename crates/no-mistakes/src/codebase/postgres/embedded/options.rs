@@ -19,6 +19,8 @@ pub struct TrustedSqlTag {
 pub struct EmbeddedSqlOptions {
     pub import_specifier: String,
     pub executor_names: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub exclude_executor_names: Vec<String>,
     /// Named imports whose call result bound to a local is an executor.
     pub executor_factory_names: Vec<String>,
     /// Imported type names whose annotated parameters are executors.
@@ -43,6 +45,10 @@ impl EmbeddedSqlOptions {
                 .any(|candidate| candidate == name)
     }
 
+    pub(crate) fn uses_legacy_executor_defaults(&self) -> bool {
+        self.executor_names.is_empty() && self.exclude_executor_names.is_empty()
+    }
+
     pub(crate) fn selects_executors(&self) -> bool {
         !self.executor_names.is_empty()
             || !self.executor_factory_names.is_empty()
@@ -65,11 +71,32 @@ impl EmbeddedSqlOptions {
         Self {
             import_specifier: import_specifier.to_string(),
             executor_names: names,
+            exclude_executor_names: Vec::new(),
             executor_factory_names: Vec::new(),
             executor_type_names: Vec::new(),
             trusted_sql_tags: Vec::new(),
             sql_literal_helpers: Vec::new(),
         }
+    }
+
+    /// Extend the standard executor imports while retaining all defaults.
+    pub fn with_extra_executor_names(mut self, extras: Option<&[String]>) -> Self {
+        if let Some(extras) = extras {
+            self.executor_names
+                .extend(DEFAULT_EXECUTOR_NAMES.iter().map(|name| (*name).into()));
+            self.executor_names.extend_from_slice(extras);
+            self.executor_names.sort();
+            self.executor_names.dedup();
+        }
+        self
+    }
+
+    /// Remove intentionally excluded imports after replacement or extension.
+    pub fn with_exclude_executor_names(mut self, exclusions: &[String]) -> Self {
+        self.exclude_executor_names = sorted_unique(exclusions);
+        self.executor_names
+            .retain(|name| !exclusions.contains(name));
+        self
     }
 
     /// Add scoped executor sources: factory imports and executor type imports.

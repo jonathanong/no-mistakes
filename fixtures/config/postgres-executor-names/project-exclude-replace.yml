@@ -1,0 +1,11 @@
+projects:
+  db:
+    include: ["src/**"]
+    postgres:
+      executors:
+        importSpecifier: "@example/db"
+        executorNames: [run]
+        excludeExecutorNames: [read, run]
+rules:
+  - rule: postgres-require-query-annotation
+    projects: [db]

@@ -28,7 +28,7 @@ pub(crate) struct ExtraGeneratedColumn {
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
-struct Options {
+pub(super) struct Options {
     include: Vec<String>,
     exclude: Vec<String>,
     sql_include: Vec<String>,
@@ -36,6 +36,8 @@ struct Options {
     sql_include_locked: bool,
     import_specifier: String,
     executor_names: Vec<String>,
+    extra_executor_names: Option<Vec<String>>,
+    exclude_executor_names: Vec<String>,
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
     trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,

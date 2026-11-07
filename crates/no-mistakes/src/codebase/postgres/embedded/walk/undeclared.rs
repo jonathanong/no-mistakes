@@ -177,7 +177,7 @@ fn static_method_name<'e>(expression: &'e Expression<'e>) -> Option<std::borrow:
 }
 
 pub(super) fn methods(options: &super::super::EmbeddedSqlOptions) -> Vec<String> {
-    let mut methods = if options.executor_names.is_empty() {
+    let mut methods = if options.uses_legacy_executor_defaults() {
         vec!["query".into(), "read".into(), "write".into()]
     } else {
         options.executor_names.clone()

@@ -59,6 +59,7 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         &plan.postgres_schema_catalog_paths,
     );
     let mut map = CheckFactMap {
+        postgres_executor_warning_scans: Arc::clone(&plan.postgres_executor_warning_scans),
         sql_application: None,
         sql_verdicts: None,
         sql_advisories: Arc::default(),

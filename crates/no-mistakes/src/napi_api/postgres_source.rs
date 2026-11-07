@@ -43,6 +43,10 @@ struct ExecutedSqlRequest {
     #[serde(default)]
     executor_names: Vec<String>,
     #[serde(default)]
+    extra_executor_names: Option<Vec<String>>,
+    #[serde(default)]
+    exclude_executor_names: Vec<String>,
+    #[serde(default)]
     executor_factory_names: Vec<String>,
     #[serde(default)]
     executor_type_names: Vec<String>,
@@ -59,9 +63,16 @@ struct ExecutedSqlRequest {
 pub(crate) fn extract_executed_postgres_sql_json_impl(
     value: serde_json::Value,
 ) -> napi::Result<String> {
+    if value.get("executorNames").is_some() && value.get("extraExecutorNames").is_some() {
+        return Err(napi::Error::from_reason(
+            "executorNames and extraExecutorNames cannot both be set; use extraExecutorNames to extend the defaults",
+        ));
+    }
     let request = super::options::parse_options_value::<ExecutedSqlRequest>(value)?;
     let options =
         EmbeddedSqlOptions::configured(&request.import_specifier, &request.executor_names)
+            .with_extra_executor_names(request.extra_executor_names.as_deref())
+            .with_exclude_executor_names(&request.exclude_executor_names)
             .with_scoped_executors(
                 &request.executor_factory_names,
                 &request.executor_type_names,

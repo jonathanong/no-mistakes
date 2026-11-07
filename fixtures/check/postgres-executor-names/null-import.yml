@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    options:
+      importSpecifier: null
+      executorNames: []
+      include: [src/annotated.ts]

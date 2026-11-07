@@ -11,6 +11,7 @@ mod scope;
 mod tests;
 #[cfg(test)]
 mod tests_effects;
+mod validate;
 mod yaml;
 
 /// Copied project PostgreSQL scope. Lists that rules compare are already in the
@@ -18,6 +19,9 @@ mod yaml;
 struct Scope {
     name: String,
     import_specifier: String,
+    executor_names: Option<Vec<String>>,
+    extra_executor_names: Option<Vec<String>>,
+    exclude_executor_names: Vec<String>,
     factory_names: Vec<String>,
     type_names: Vec<String>,
     trusted_sql_tags: Vec<ProjectPostgresTrustedSqlTag>,

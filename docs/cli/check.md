@@ -284,3 +284,10 @@ helpers. Computed expressions remain allowed. Declared-only checks do not report
 dynamic projects as incomplete; unreadable or malformed selected sources and
 unresolved effective settings appear in the JSON `incomplete` list. Declaration
 sources honor each application's include/exclude filters and source suppressions. The rule never imports or executes Vitest configuration.
+
+PostgreSQL executor selection accepts `excludeExecutorNames` in rule options and
+`projects.<name>.postgres.executors`. Exclusions apply after replacement or
+default-plus-extra selection and suppress omitted-default warnings for those
+names. `check` warns when an exclusion is not a default name or is never imported
+from the configured module and called in scoped files. See
+[executor selection](../configuration/rules.md#postgresql-executor-selection).

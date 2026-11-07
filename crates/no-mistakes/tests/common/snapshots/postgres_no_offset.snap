@@ -1512,7 +1512,9 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
-      "warnings": []
+      "warnings": [
+        "postgres-no-offset: executorNames replaces the defaults [query, read, write] and omits `query`, imported from `@example/db` and called at src/namespace.ts:4; this call is not selected by this executor list. Use extraExecutorNames instead to extend the defaults, add `query` to executorNames, or list `query` in excludeExecutorNames to acknowledge an intentional exclusion."
+      ]
     }
   },
   "namespace_methods_max": {
@@ -1525,7 +1527,9 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [],
       "unprovenMemberQuerySql": 1,
-      "warnings": []
+      "warnings": [
+        "postgres-no-offset: executorNames replaces the defaults [query, read, write] and omits `query`, imported from `@example/db` and called at src/namespace.ts:4; this call is not selected by this executor list. Use extraExecutorNames instead to extend the defaults, add `query` to executorNames, or list `query` in excludeExecutorNames to acknowledge an intentional exclusion."
+      ]
     }
   },
   "offset_in_prose": {

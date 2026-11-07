@@ -451,3 +451,52 @@ literal in these sources, including unimported helpers, and permit computed
 expressions without resolving constants. Declared-only policies never report
 dynamic projects as incomplete. Effective policies still report unresolved
 values as incomplete. Config is never executed.
+
+### PostgreSQL executor selection
+
+For every PostgreSQL rule accepting `executorNames`, that option **replaces**
+the default `[query, read, write]` list. For example,
+`executorNames: [readPool, writePool]` excludes `read`, `write`, and `query`.
+Use `extraExecutorNames` to extend the defaults instead:
+
+```yaml
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      extraExecutorNames: [readPool, writePool]
+```
+
+This selects `query`, `read`, `write`, `readPool`, and `writePool` from the
+configured module. Setting both `executorNames` and `extraExecutorNames`,
+including empty lists, is a configuration error. `excludeExecutorNames` may
+accompany either option. Existing explicit
+`executorNames: []` without a module still selects no executor calls. With a
+nonempty `importSpecifier`, an omitted or empty `executorNames` retains the
+existing default list.
+`extraExecutorNames: []` retains the defaults even without `importSpecifier`;
+without a module, those names match named imports from any module.
+
+If an explicit replacement omits a default executor imported from
+`importSpecifier` and called in the files that scope selects, `check` emits a
+configuration warning. It names the rule or project, the omitted executor,
+one example call site, and how to fix the selection. An unused or unimported
+omitted default does not warn. Switch to `extraExecutorNames` to preserve all
+defaults, or include the omitted default in `executorNames`. The warning makes
+otherwise silent gaps visible; it does not widen the configured scan.
+
+`excludeExecutorNames` applies last: it removes names from the replacement list
+or the defaults plus extras. For example, `extraExecutorNames: [readPool]` with
+`excludeExecutorNames: [query]` selects `read`, `write`, and `readPool`.
+Exclusions may accompany either selection option and suppress the omitted-default
+warning for intentionally excluded names. `check` emits an unused-entry warning
+for an exclusion that is not a default executor name, or whose default is never
+imported from the configured module and called in scoped files. Remove unused
+entries or correct their names; exclusions do not broaden the scan. Excluding all
+selected names keeps the imported-executor set empty; it does not restore defaults.
+Configured factory/type receivers still use their independent selection.
+
+The same options and mutual exclusion apply to
+[`projects.<name>.postgres.executors`](projects.md#postgresql-scope). Declare
+selection there when a rule inherits a project PostgreSQL scope.

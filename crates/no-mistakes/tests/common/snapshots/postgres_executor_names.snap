@@ -1,0 +1,503 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "exclude-all": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-all-scoped": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/excluded-all.ts",
+          "line": 11,
+          "message": "src/excluded-all.ts:11: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await transaction.query('SELECT 7');",
+          "target": "annotation"
+        },
+        {
+          "file": "src/excluded-all.ts",
+          "line": 9,
+          "message": "src/excluded-all.ts:9: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await transaction.query('SELECT 6');",
+          "target": "annotation"
+        }
+      ],
+      "unprovenMemberQuerySql": 1,
+      "warnings": []
+    }
+  },
+  "exclude-any-module": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/sites.ts",
+          "line": 2,
+          "message": "src/sites.ts:2: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query('SELECT 1');",
+          "target": "annotation"
+        },
+        {
+          "file": "src/sites.ts",
+          "line": 4,
+          "message": "src/sites.ts:4: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await write('SELECT 3');",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude-defaults": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/sites.ts",
+          "line": 2,
+          "message": "src/sites.ts:2: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query('SELECT 1');",
+          "target": "annotation"
+        },
+        {
+          "file": "src/sites.ts",
+          "line": 4,
+          "message": "src/sites.ts:4: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await write('SELECT 3');",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude-extras": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/sites.ts",
+          "line": 2,
+          "message": "src/sites.ts:2: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query('SELECT 1');",
+          "target": "annotation"
+        },
+        {
+          "file": "src/sites.ts",
+          "line": 4,
+          "message": "src/sites.ts:4: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await write('SELECT 3');",
+          "target": "annotation"
+        },
+        {
+          "file": "src/sites.ts",
+          "line": 5,
+          "message": "src/sites.ts:5: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await readPool('SELECT 4');",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude-invalid": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/sites.ts",
+          "line": 2,
+          "message": "src/sites.ts:2: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query('SELECT 1');",
+          "target": "annotation"
+        },
+        {
+          "file": "src/sites.ts",
+          "line": 3,
+          "message": "src/sites.ts:3: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await fetchRows('SELECT 2');",
+          "target": "annotation"
+        },
+        {
+          "file": "src/sites.ts",
+          "line": 4,
+          "message": "src/sites.ts:4: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await write('SELECT 3');",
+          "target": "annotation"
+        }
+      ],
+      "warnings": [
+        "postgres-require-query-annotation: excludeExecutorNames entry `readPool` is unused: it is not a default executor [query, read, write], or is never imported and called from the configured module in scoped files. Remove the entry or correct its spelling and scope. Unused exclusions can hide configuration mistakes."
+      ]
+    }
+  },
+  "exclude-override": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/sites.ts",
+          "line": 2,
+          "message": "src/sites.ts:2: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query('SELECT 1');",
+          "target": "annotation"
+        },
+        {
+          "file": "src/sites.ts",
+          "line": 4,
+          "message": "src/sites.ts:4: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await write('SELECT 3');",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude-unimported": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "postgres-require-query-annotation: excludeExecutorNames entry `read` is unused: it is not a default executor [query, read, write], or is never imported and called from the configured module in scoped files. Remove the entry or correct its spelling and scope. Unused exclusions can hide configuration mistakes."
+      ]
+    }
+  },
+  "exclude-unused": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "postgres-require-query-annotation: excludeExecutorNames entry `read` is unused: it is not a default executor [query, read, write], or is never imported and called from the configured module in scoped files. Remove the entry or correct its spelling and scope. Unused exclusions can hide configuration mistakes."
+      ]
+    }
+  },
+  "excluded": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "extension": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/sites.ts",
+          "line": 2,
+          "message": "src/sites.ts:2: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query('SELECT 1');",
+          "target": "annotation"
+        },
+        {
+          "file": "src/sites.ts",
+          "line": 3,
+          "message": "src/sites.ts:3: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await fetchRows('SELECT 2');",
+          "target": "annotation"
+        },
+        {
+          "file": "src/sites.ts",
+          "line": 4,
+          "message": "src/sites.ts:4: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await write('SELECT 3');",
+          "target": "annotation"
+        },
+        {
+          "file": "src/sites.ts",
+          "line": 5,
+          "message": "src/sites.ts:5: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await readPool('SELECT 4');",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "namespace": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "postgres-require-query-annotation: executorNames replaces the defaults [query, read, write] and omits `read`, imported from `@example/db` and called at src/namespace.ts:2; this call is not selected by this executor list. Use extraExecutorNames instead to extend the defaults, add `read` to executorNames, or list `read` in excludeExecutorNames to acknowledge an intentional exclusion."
+      ]
+    }
+  },
+  "never-imported": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "null-import": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "offset": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "postgres-no-offset: executorNames replaces the defaults [query, read, write] and omits `read`, imported from `@example/db` and called at src/annotated.ts:2; this call is not selected by this executor list. Use extraExecutorNames instead to extend the defaults, add `read` to executorNames, or list `read` in excludeExecutorNames to acknowledge an intentional exclusion."
+      ]
+    }
+  },
+  "override": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/sites.ts",
+          "line": 5,
+          "message": "src/sites.ts:5: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await readPool('SELECT 4');",
+          "target": "annotation"
+        }
+      ],
+      "warnings": [
+        "postgres-require-query-annotation: executorNames replaces the defaults [query, read, write] and omits `query`, imported from `@example/db` and called at src/sites.ts:2; this call is not selected by this executor list. Use extraExecutorNames instead to extend the defaults, add `query` to executorNames, or list `query` in excludeExecutorNames to acknowledge an intentional exclusion.",
+        "postgres-require-query-annotation: executorNames replaces the defaults [query, read, write] and omits `read`, imported from `@example/db` and called at src/sites.ts:3; this call is not selected by this executor list. Use extraExecutorNames instead to extend the defaults, add `read` to executorNames, or list `read` in excludeExecutorNames to acknowledge an intentional exclusion.",
+        "postgres-require-query-annotation: executorNames replaces the defaults [query, read, write] and omits `write`, imported from `@example/db` and called at src/sites.ts:4; this call is not selected by this executor list. Use extraExecutorNames instead to extend the defaults, add `write` to executorNames, or list `write` in excludeExecutorNames to acknowledge an intentional exclusion."
+      ]
+    }
+  },
+  "project-exclude": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "unprovenMemberQuerySql": 2,
+      "warnings": []
+    }
+  },
+  "project-extension": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "unprovenMemberQuerySql": 2,
+      "warnings": []
+    }
+  },
+  "project-override": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "unprovenMemberQuerySql": 3,
+      "warnings": [
+        "postgres-require-query-annotation (projects: db): executorNames replaces the defaults [query, read, write] and omits `read`, imported from `@example/db` and called at src/annotated.ts:2; this call is not selected by this executor list. Use extraExecutorNames instead to extend the defaults, add `read` to executorNames, or list `read` in excludeExecutorNames to acknowledge an intentional exclusion."
+      ]
+    }
+  },
+  "sequence": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "postgres-require-query-annotation: executorNames replaces the defaults [query, read, write] and omits `read`, imported from `@example/db` and called at src/sequence.ts:2; this call is not selected by this executor list. Use extraExecutorNames instead to extend the defaults, add `read` to executorNames, or list `read` in excludeExecutorNames to acknowledge an intentional exclusion."
+      ]
+    }
+  },
+  "shadowed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "type-only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unrelated": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unused": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "warning-only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "postgres-require-query-annotation: executorNames replaces the defaults [query, read, write] and omits `read`, imported from `@example/db` and called at src/annotated.ts:2; this call is not selected by this executor list. Use extraExecutorNames instead to extend the defaults, add `read` to executorNames, or list `read` in excludeExecutorNames to acknowledge an intentional exclusion."
+      ]
+    }
+  },
+  "wrapped": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "postgres-require-query-annotation: executorNames replaces the defaults [query, read, write] and omits `read`, imported from `@example/db` and called at src/wrapped.ts:2; this call is not selected by this executor list. Use extraExecutorNames instead to extend the defaults, add `read` to executorNames, or list `read` in excludeExecutorNames to acknowledge an intentional exclusion."
+      ]
+    }
+  }
+}

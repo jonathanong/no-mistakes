@@ -18,8 +18,12 @@ export interface ExecutedPostgresSqlOptions<Diagnostics extends boolean = false>
   sources: ExecutedPostgresSource[];
   /** Module whose named imports provide the configured executors. */
   importSpecifier: string;
-  /** Defaults to query, read, write when importSpecifier is nonempty. */
+  /** Replaces default executor names; mutually exclusive with extraExecutorNames. */
   executorNames?: string[];
+  /** Extends query/read/write; mutually exclusive with executorNames. */
+  extraExecutorNames?: string[];
+  /** Removes names after replacement/defaults and extras are selected. */
+  excludeExecutorNames?: string[];
   executorFactoryNames?: string[];
   executorTypeNames?: string[];
   trustedSqlTags?: ExecutedPostgresTrustedSqlTag[];

@@ -35,7 +35,7 @@ pub(crate) fn collect_calls<'a>(
         executor_options: options,
         query_members: !options.import_specifier.is_empty()
             || options.executor_names.iter().any(|name| name == "query"),
-        query_binding: options.executor_names.is_empty()
+        query_binding: options.uses_legacy_executor_defaults()
             || options.executor_names.iter().any(|name| name == "query"),
         bindings,
         scoped,

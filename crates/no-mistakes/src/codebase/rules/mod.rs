@@ -185,3 +185,6 @@ mod query_reached_per_item_prepared_tests;
 mod sql_rule_observer_tests;
 
 mod graph_source_prerequisites;
+
+#[cfg(test)]
+mod postgres_executor_options_tests;

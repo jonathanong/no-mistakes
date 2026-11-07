@@ -175,3 +175,16 @@ For annotation checks, configure `sqlLiteralHelpers: [pg-copy-streams#from]` to 
 Low-effort annotation checks can read `.text`/`.values` from a safe local `sql-template-strings` builder and follow one direct imported immutable string constant with a fixed literal head; re-exports and mutable values remain unresolved.
 They can also follow one fresh trusted builder returned by a source-visible helper into a local `const` used only by a configured executor and discarded static appends, or through a direct `helper().append(...)` executor argument. Plain records and strings do not acquire builder trust.
 An exact imported source helper may forward a fixed named head to a direct inline configured executor callback; unknown callback uses remain under the configured uncertainty policy.
+
+Executor selection uses `executorNames` to replace the default
+`[query, read, write]` list. Use `extraExecutorNames: [readPool, writePool]` to
+extend it; setting both options is a configuration error. The same options
+apply to rule options and `projects.<name>.postgres.executors`. Inspect `check`
+configuration warnings for omitted default executors imported from the selected
+module and called in scoped files. Fix the list or use `extraExecutorNames`
+before interpreting a reduced finding count as resolved work. To omit names
+intentionally, use `excludeExecutorNames: [query]`; it removes names after
+replacement or defaults plus extras and suppresses omitted-default warnings.
+Remove exclusions flagged as unused: they either are not default names or are
+never imported from the selected module and called in scoped files. See
+[executor selection](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/rules.md#postgresql-executor-selection).

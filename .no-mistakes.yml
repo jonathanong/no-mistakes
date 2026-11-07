@@ -16,6 +16,11 @@ checks:
         - .no-mistakes.yml
       command: [cargo, test, --locked, --workspace, --all-features, --lib, --bins, --tests]
       fileArgs: none
+    - name: rule-doc-snippets
+      include:
+        - "docs/rules/**/*.md"
+      command: [cargo, test, --locked, -p, no-mistakes, --test, suite_contracts, docs_rule_snippet_execution]
+      fileArgs: none
     - name: jscpd
       include:
         - "crates/**/*.rs"
