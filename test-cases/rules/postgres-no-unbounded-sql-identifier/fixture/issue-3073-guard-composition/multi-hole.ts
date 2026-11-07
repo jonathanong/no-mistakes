@@ -8,7 +8,7 @@ export async function load(provider: Provider, region: Region) {
   const options = { column: "id" } as const
   const prefix = "tenant_"
   const base = `${prefix}${provider}_${prefix}${region}`
-  const table = base + `${"_accounts"}_${2}`
+  const table = base + `${options.column}_${"_accounts"}_${2}`
   const alias = table
   const query = await beginTransaction()
   await query(`/* first */ SELECT 1 FROM ${alias}`)

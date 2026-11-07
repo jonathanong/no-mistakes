@@ -8,7 +8,7 @@ export async function unchecked(provider: Provider) {
   return query(`/* second */ SELECT 1 FROM ${table}`)
 }
 export async function asserted(provider: string) {
-  if (!providers.includes(provider as Provider)) throw new Error("unknown provider")
+  if (!providers.includes(((provider as Provider)))) throw new Error("unknown provider")
   const table = `${provider}_accounts`
   const query = await beginTransaction()
   await query(`/* first */ SELECT 1 FROM ${table}`)
