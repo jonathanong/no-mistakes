@@ -7,6 +7,8 @@ use sqlparser::ast::{
     WildcardAdditionalOptions,
 };
 use std::collections::{BTreeMap, BTreeSet};
+#[path = "view_columns/owners.rs"]
+mod owners;
 
 pub(super) fn mapped(
     catalog: &SchemaCatalog,
@@ -26,9 +28,6 @@ pub(super) fn mapped(
     let [from] = select.from.as_slice() else {
         return None;
     };
-    if !from.joins.is_empty() {
-        return None;
-    }
     let TableFactor::Table {
         name,
         alias,
@@ -53,11 +52,28 @@ pub(super) fn mapped(
     let qualifier = alias
         .as_ref()
         .map(|alias| relation_part_key(&ident_key(&alias.name)));
+    let joined = owners::joined(&from.joins)?;
+    let owns = |owner: &str| {
+        !joined.contains(owner)
+            && qualifier.as_ref().map_or_else(
+                || catalog.same_relation(owner, &table.name),
+                |alias| alias == owner,
+            )
+    };
+    project_columns(&select.projection, columns, owns, !from.joins.is_empty())
+}
+
+fn project_columns(
+    projection: &[SelectItem],
+    columns: &BTreeMap<String, bool>,
+    owns: impl Fn(&str) -> bool,
+    joined: bool,
+) -> Option<BTreeMap<String, bool>> {
     let mut mapped = BTreeMap::new();
     let mut outputs = BTreeSet::new();
-    for item in &select.projection {
+    for item in projection {
         match item {
-            SelectItem::Wildcard(options) if plain_star(options) => {
+            SelectItem::Wildcard(options) if plain_star(options) && !joined => {
                 append_star(&mut mapped, &mut outputs, columns)?;
                 continue;
             }
@@ -66,11 +82,7 @@ pub(super) fn mapped(
                 options,
             ) if plain_star(options) => {
                 let owner = object_name_identity(name);
-                let valid = qualifier.as_ref().map_or_else(
-                    || catalog.same_relation(&owner, &table.name),
-                    |alias| alias == &owner,
-                );
-                if !valid {
+                if !owns(&owner) {
                     return None;
                 }
                 append_star(&mut mapped, &mut outputs, columns)?;
@@ -103,13 +115,11 @@ pub(super) fn mapped(
                 .map(|part| relation_part_key(part))
                 .collect::<Vec<_>>()
                 .join(".");
-            let valid = qualifier.as_ref().map_or_else(
-                || catalog.same_relation(&owner, &table.name),
-                |alias| alias == &owner,
-            );
-            if !valid {
+            if !owns(&owner) {
                 continue;
             }
+        } else if joined {
+            continue;
         }
         if let Some(uuid) = columns.get(column) {
             let output = output.unwrap_or_else(|| column.clone());

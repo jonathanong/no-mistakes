@@ -130,4 +130,6 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
 mod cache_tests;
 
 #[cfg(test)]
+mod joined_view_tests;
+#[cfg(test)]
 mod low_contract_tests;

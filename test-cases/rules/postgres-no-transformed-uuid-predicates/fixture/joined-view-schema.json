@@ -1,0 +1,51 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "a": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "parent_id": {
+          "dataType": "uuid"
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    },
+    "b": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "a_id": {
+          "dataType": "uuid"
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    }
+  },
+  "views": {
+    "plain_view": {
+      "definition": "SELECT a.id, a.parent_id FROM a JOIN b ON b.a_id = a.id"
+    },
+    "lateral_view": {
+      "definition": "SELECT a.id, a.parent_id FROM a LEFT JOIN LATERAL (SELECT b.id FROM b WHERE b.a_id = a.id LIMIT 1) related ON true"
+    },
+    "view_join": {
+      "definition": "SELECT a.id, a.parent_id FROM a JOIN other_view related ON related.a_id = a.id"
+    },
+    "other_view": {
+      "definition": "SELECT b.id, b.a_id FROM b"
+    }
+  }
+}

@@ -856,6 +856,152 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "joined_view_pass_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "joined_view_pass_max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "joined_view_positive_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "joined-view-positive.sql",
+          "line": 1,
+          "message": "joined-view-positive.sql:1: JOIN ON applies COALESCE to UUID column plain_view.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT t.id FROM a t JOIN plain_view v ON COALESCE(v.parent_id, v.id) = t.id WHERE t.id = $1;",
+          "target": "plain_view.id"
+        },
+        {
+          "file": "joined-view-positive.sql",
+          "line": 1,
+          "message": "joined-view-positive.sql:1: JOIN ON applies COALESCE to UUID column plain_view.parent_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT t.id FROM a t JOIN plain_view v ON COALESCE(v.parent_id, v.id) = t.id WHERE t.id = $1;",
+          "target": "plain_view.parent_id"
+        },
+        {
+          "file": "joined-view-positive.sql",
+          "line": 2,
+          "message": "joined-view-positive.sql:2: JOIN ON applies COALESCE to UUID column lateral_view.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT t.id FROM a t JOIN lateral_view v ON COALESCE(v.parent_id, v.id) = t.id WHERE t.id = $1;",
+          "target": "lateral_view.id"
+        },
+        {
+          "file": "joined-view-positive.sql",
+          "line": 2,
+          "message": "joined-view-positive.sql:2: JOIN ON applies COALESCE to UUID column lateral_view.parent_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT t.id FROM a t JOIN lateral_view v ON COALESCE(v.parent_id, v.id) = t.id WHERE t.id = $1;",
+          "target": "lateral_view.parent_id"
+        },
+        {
+          "file": "joined-view-positive.sql",
+          "line": 3,
+          "message": "joined-view-positive.sql:3: JOIN ON applies COALESCE to UUID column view_join.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT t.id FROM a t JOIN view_join v ON COALESCE(v.parent_id, v.id) = t.id WHERE t.id = $1;",
+          "target": "view_join.id"
+        },
+        {
+          "file": "joined-view-positive.sql",
+          "line": 3,
+          "message": "joined-view-positive.sql:3: JOIN ON applies COALESCE to UUID column view_join.parent_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT t.id FROM a t JOIN view_join v ON COALESCE(v.parent_id, v.id) = t.id WHERE t.id = $1;",
+          "target": "view_join.parent_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "joined_view_positive_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "joined-view-positive.sql",
+          "line": 1,
+          "message": "joined-view-positive.sql:1: JOIN ON applies COALESCE to UUID column plain_view.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT t.id FROM a t JOIN plain_view v ON COALESCE(v.parent_id, v.id) = t.id WHERE t.id = $1;",
+          "target": "plain_view.id"
+        },
+        {
+          "file": "joined-view-positive.sql",
+          "line": 1,
+          "message": "joined-view-positive.sql:1: JOIN ON applies COALESCE to UUID column plain_view.parent_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT t.id FROM a t JOIN plain_view v ON COALESCE(v.parent_id, v.id) = t.id WHERE t.id = $1;",
+          "target": "plain_view.parent_id"
+        },
+        {
+          "file": "joined-view-positive.sql",
+          "line": 2,
+          "message": "joined-view-positive.sql:2: JOIN ON applies COALESCE to UUID column lateral_view.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT t.id FROM a t JOIN lateral_view v ON COALESCE(v.parent_id, v.id) = t.id WHERE t.id = $1;",
+          "target": "lateral_view.id"
+        },
+        {
+          "file": "joined-view-positive.sql",
+          "line": 2,
+          "message": "joined-view-positive.sql:2: JOIN ON applies COALESCE to UUID column lateral_view.parent_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT t.id FROM a t JOIN lateral_view v ON COALESCE(v.parent_id, v.id) = t.id WHERE t.id = $1;",
+          "target": "lateral_view.parent_id"
+        },
+        {
+          "file": "joined-view-positive.sql",
+          "line": 3,
+          "message": "joined-view-positive.sql:3: JOIN ON applies COALESCE to UUID column view_join.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT t.id FROM a t JOIN view_join v ON COALESCE(v.parent_id, v.id) = t.id WHERE t.id = $1;",
+          "target": "view_join.id"
+        },
+        {
+          "file": "joined-view-positive.sql",
+          "line": 3,
+          "message": "joined-view-positive.sql:3: JOIN ON applies COALESCE to UUID column view_join.parent_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT t.id FROM a t JOIN view_join v ON COALESCE(v.parent_id, v.id) = t.id WHERE t.id = $1;",
+          "target": "view_join.parent_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "literal_view_pass": {
     "exitCode": 0,
     "report": {
@@ -1028,6 +1174,47 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT 1 FROM (accounts a JOIN (orders o JOIN accounts b ON o.id::text = $1) ON a.id = b.id) WHERE a.id::text = $1;",
           "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "object_view_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "object_view_positive": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "append-view-object-positive.ts",
+          "line": 6,
+          "message": "append-view-object-positive.ts:6: JOIN ON applies COALESCE to UUID column plain_view.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "JOIN plain_view v ON COALESCE(v.parent_id, v.id) = t.id",
+          "target": "plain_view.id"
+        },
+        {
+          "file": "append-view-object-positive.ts",
+          "line": 6,
+          "message": "append-view-object-positive.ts:6: JOIN ON applies COALESCE to UUID column plain_view.parent_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "JOIN plain_view v ON COALESCE(v.parent_id, v.id) = t.id",
+          "target": "plain_view.parent_id"
         }
       ],
       "warnings": []
@@ -3515,6 +3702,47 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "text_view_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "text_view_positive": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "append-view-text-positive.ts",
+          "line": 6,
+          "message": "append-view-text-positive.ts:6: JOIN ON applies COALESCE to UUID column plain_view.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "JOIN plain_view v ON COALESCE(v.parent_id, v.id) = t.id",
+          "target": "plain_view.id"
+        },
+        {
+          "file": "append-view-text-positive.ts",
+          "line": 6,
+          "message": "append-view-text-positive.ts:6: JOIN ON applies COALESCE to UUID column plain_view.parent_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "JOIN plain_view v ON COALESCE(v.parent_id, v.id) = t.id",
+          "target": "plain_view.parent_id"
+        }
+      ],
       "warnings": []
     }
   },

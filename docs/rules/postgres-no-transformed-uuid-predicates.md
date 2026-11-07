@@ -90,7 +90,11 @@ qualified key or the catalog's explicit matching schema can establish that ident
 
 The bare probe key may belong to a view when its output column maps through
 a direct bare projection to a base-table catalog UUID column. Renamed
-projections and plain wildcard projections are supported.
+projections and plain wildcard projections are supported. A view may join other
+tables, views, or lateral subqueries when the projected key explicitly names its
+base-table owner, such as `a.id` or `a.*`. Unqualified columns and `*` in joined
+views do not establish ownership; conflicting relation aliases also remain
+unproven. Joining another view does not require resolving columns through it.
 Computed, missing, ambiguous, recursive, or chained view columns do not establish that
 proof, so their driving transforms remain reported.
 
@@ -186,7 +190,10 @@ unanalyzable. Dynamic relation names, including temp tables, column lists, and
 JavaScript escapes and other construction follow the
 unanalyzable policy. At `effort: max`, it also analyzes supported prepared SQL
 builders and helper-returned statements. A `sql-template-strings` statement
-assembled with `.append` can be passed as `read(statement.text, statement.values)`.
+assembled with `.append` can be passed as `read(statement)` or
+`read(statement.text, statement.values)`, using any configured executor name.
+For directly tracked builders with statically recoverable appends, both call
+shapes produce the same findings.
 The recovered query retains its view relation for probe classification; transforming
 the probed view column still reports. The two arguments must belong to the same
 tracked builder. Unanalyzable or dynamic query text
