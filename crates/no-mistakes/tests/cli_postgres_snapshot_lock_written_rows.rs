@@ -253,6 +253,18 @@ fn postgres_lock_written_rows_helpers_check_json_snapshot() {
             ("unwritten", "helper-unwritten", "checks-fail.yml"),
             ("different_key", "helper-key-mismatch", "checks-fail.yml"),
             ("written", "helper-written", "checks-fail.yml"),
+            ("dead_write", "helper-dead-write", "checks-fail.yml"),
+            ("caller_exited", "helper-caller-exited", "checks-fail.yml"),
+            (
+                "imported_caller_exited",
+                "helper-imported-caller-exited",
+                "checks-fail.yml",
+            ),
+            (
+                "option_override",
+                "helper-option-override",
+                "helper-option-override.yml",
+            ),
             (
                 "imported_unwritten",
                 "helper-imported-unwritten",
