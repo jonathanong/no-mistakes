@@ -58,12 +58,13 @@ four passes (at most forty records total): `parse`, `value_flow.extract`,
 `value_flow.finalize`, and `postgres.annotation`.
 
 ```text
-[hot-file] value_flow.extract src/app.ts: 12.411ms units=4096 (parallel; non-additive)
+[hot] value_flow.extract: src/app.ts 12.411ms units=4096 (parallel; non-additive)
 ```
 
 Each record identifies the pass, file path, elapsed milliseconds and work units.
 For parsing and value flow, units are source bytes. For PostgreSQL annotation,
-units are one evaluation activity (a root or module). Records can overlap:
+units are one root evaluation. Repeated paths retain their most expensive
+operation rather than a sum across profiles or parse modes. Records can overlap:
 these elapsed durations are non-additive. Basic timings and progress alone do
 not collect hot-file records.
 

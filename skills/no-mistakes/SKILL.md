@@ -166,8 +166,8 @@ context, option propagation, and safe command execution.
 - `--verbose-timings` adds Unix resource samples for sequential top-level phases
   and bounded expensive-file summaries. RSS is a process-lifetime high-water
   mark; elapsed rankings can vary between runs. See
-  [diagnostics](../../docs/cli/diagnostics.md) and
-  [heap profiling](../../docs/development/heap-profiling.md).
+  [diagnostics](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/diagnostics.md) and
+  [heap profiling](https://github.com/jonathanong/no-mistakes/blob/main/docs/development/heap-profiling.md).
 - `--timings` and `--verbose-timings` write diagnostics to stderr, leaving
   successful stdout machine-readable. Add `--progress` for flushed live phase
   snapshots in long or externally killed jobs; `--progress-interval <ms>`

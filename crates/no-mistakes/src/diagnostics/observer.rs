@@ -39,6 +39,7 @@ pub struct DiagnosticsSnapshot {
 }
 
 pub struct InvocationObserver {
+    pub(super) resources: Option<Mutex<super::resources::ResourceState>>,
     verbose: bool,
     pub(super) hot_files: Option<Mutex<super::hot_files::HotFiles>>,
     started: Instant,
@@ -55,6 +56,7 @@ impl InvocationObserver {
 
     pub fn with_progress(verbose: bool, progress: bool) -> Arc<Self> {
         Arc::new(Self {
+            resources: verbose.then(|| Mutex::new(super::resources::ResourceState::default())),
             verbose,
             hot_files: verbose.then(|| Mutex::new(super::hot_files::HotFiles::default())),
             started: Instant::now(),

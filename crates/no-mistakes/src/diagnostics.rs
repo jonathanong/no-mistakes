@@ -10,6 +10,7 @@ mod memory;
 mod observer;
 mod progress;
 mod request;
+mod resources;
 mod timeout;
 
 use std::sync::Arc;

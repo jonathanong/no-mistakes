@@ -52,6 +52,7 @@ impl super::InvocationObserver {
             kind: TimingKind::Serial,
         });
         let mut output = format_block(&snapshot, self.verbose, peak_rss_kib);
+        output.push_str(&self.resource_block());
         output.push_str(&self.hot_file_block());
         output
     }

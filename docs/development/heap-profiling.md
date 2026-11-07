@@ -1,3 +1,4 @@
+<!-- cspell:ignore rustup rustc heaptrack unprofiled -->
 # Heap profiling
 
 Start with `--verbose-timings` to locate expensive phases and files. Phase RSS
