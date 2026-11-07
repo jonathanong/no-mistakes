@@ -29,7 +29,7 @@ impl ExecutorWarningScan {
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 struct Options {
-    import_specifier: String,
+    import_specifier: Option<String>,
     executor_names: Option<Vec<String>>,
     exclude_executor_names: Vec<String>,
     include: Vec<String>,
@@ -52,10 +52,11 @@ pub fn configure_executor_warnings(
                 .contains(&rule.rule.as_str())
     }) {
         let options: Options = rule.try_rule_options()?;
+        let import_specifier = options.import_specifier.unwrap_or_default();
         let exclusions = options.exclude_executor_names;
         let mut omitted = if let Some(names) = options
             .executor_names
-            .filter(|names| !names.is_empty() && !options.import_specifier.is_empty())
+            .filter(|names| !names.is_empty() && !import_specifier.is_empty())
         {
             ["query", "read", "write"]
                 .into_iter()
@@ -88,7 +89,7 @@ pub fn configure_executor_warnings(
         scans.push(ExecutorWarningScan {
             scan: SqlIdentifierScan::new(root, config, rule, index, &include, &options.exclude)?,
             label,
-            import_specifier: options.import_specifier,
+            import_specifier,
             omitted,
             exclusions,
         });
@@ -143,7 +144,7 @@ pub fn executor_config_warnings(root: &Path, facts: &CheckFactMap) -> Vec<String
                 continue;
             }
             warnings.push(format!(
-                "{}: executorNames replaces the defaults [query, read, write] and omits `{name}`, imported from `{}` and called at {file}:{line}; this call is not selected by this executor list. Use extraExecutorNames instead to extend the defaults, or add `{name}` to executorNames.",
+                "{}: executorNames replaces the defaults [query, read, write] and omits `{name}`, imported from `{}` and called at {file}:{line}; this call is not selected by this executor list. Use extraExecutorNames instead to extend the defaults, add `{name}` to executorNames, or list `{name}` in excludeExecutorNames to acknowledge an intentional exclusion.",
                 scan.label, scan.import_specifier
             ));
         }

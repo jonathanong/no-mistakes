@@ -83,6 +83,7 @@ fn executor_names_warnings_do_not_fail_checks_and_follow_project_inheritance() {
 #[test]
 fn executor_names_do_not_warn_for_unused_or_out_of_scope_defaults() {
     for config in [
+        "null-import",
         "never-imported",
         "shadowed",
         "type-only",
@@ -127,6 +128,9 @@ fn excluded_executors_are_removed_after_selection_without_omission_warnings() {
     for (config, findings) in [
         ("exclude-override", 2),
         ("exclude-defaults", 2),
+        ("exclude-any-module", 2),
+        ("exclude-all", 0),
+        ("exclude-all-scoped", 2),
         ("exclude-extras", 3),
         ("project-exclude", 0),
     ] {
@@ -170,6 +174,9 @@ fn postgres_executor_names_check_json_snapshot() {
     let cases = [
         "exclude-override",
         "exclude-defaults",
+        "exclude-any-module",
+        "exclude-all",
+        "exclude-all-scoped",
         "exclude-extras",
         "exclude-invalid",
         "exclude-unused",
@@ -178,6 +185,7 @@ fn postgres_executor_names_check_json_snapshot() {
         "override",
         "extension",
         "warning-only",
+        "null-import",
         "never-imported",
         "shadowed",
         "type-only",

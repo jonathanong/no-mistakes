@@ -491,3 +491,6 @@ fn analyze_project_preserves_prepared_low_sql_advisory_locations() {
 
 #[path = "tests/check_graph_ownership.rs"]
 mod check_graph_ownership;
+
+#[path = "tests/postgres_executor_warnings.rs"]
+mod postgres_executor_warnings;

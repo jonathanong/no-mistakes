@@ -69,7 +69,7 @@ fn member_query_enabled(options: &EmbeddedSqlOptions) -> bool {
 
 fn executor_name_enabled(options: &EmbeddedSqlOptions, imported: &str) -> bool {
     options.executor_names.iter().any(|name| name == imported)
-        || (options.executor_names.is_empty()
+        || (options.uses_legacy_executor_defaults()
             && !options.import_specifier.is_empty()
             && ["query", "read", "write"].contains(&imported))
 }

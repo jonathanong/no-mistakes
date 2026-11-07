@@ -28,6 +28,29 @@ in incompatible orders.
 
 ## Options and defaults
 
+When `read` is reserved for read-only SQL, it cannot create `INSERT … ON CONFLICT`
+conflicts. Select the writer executors and acknowledge that omission:
+
+```yaml
+rules:
+  - rule: postgres-conflict-ordering
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorNames: [query, write]
+      excludeExecutorNames: [read]
+      schemaCatalogPath: db/schema.json
+      include: ["backend/**/*.ts"]
+```
+
+This checks calls through `query` and `write`. The `read` executor does not
+participate in conflict-ordering checks, and its exclusion acknowledges the
+intentional omission even when scoped files import and call it. Exclusions may
+accompany `executorNames`; only combining `executorNames` with
+`extraExecutorNames` is a configuration error. Remove the exclusion if scoped
+files never import and call `read`, because it would produce an unused-entry
+warning.
+
 `unanalyzableSql: advise` reports residual uncertainty in non-failing advisories.
 `--include-sql-verdicts` adds [per-subcheck SQL verdicts](../postgres-sql-verdicts.md).
 
