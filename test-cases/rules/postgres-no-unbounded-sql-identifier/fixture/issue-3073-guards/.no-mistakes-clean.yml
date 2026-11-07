@@ -4,7 +4,7 @@ rules:
   - rule: postgres-no-unbounded-sql-identifier
     scope: repository
     options:
-      include: ["src/guarded.ts"]
+      include: ["src/guarded.ts", "src/metadata-row-helpers.ts"]
       importSpecifier: "@example/db"
       identifierValidators:
         - module: "./validators"
