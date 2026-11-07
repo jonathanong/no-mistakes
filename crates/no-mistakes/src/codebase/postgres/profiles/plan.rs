@@ -50,6 +50,7 @@ pub fn configure_prepared_postgres_plan(
                 &options.executor_factory_names,
                 &options.executor_type_names,
             )
+            .with_executor_option_properties(&options.executor_option_properties)
             .with_trusted_sql_tags(&options.trusted_sql_tags);
             let postgres_effects = config.effects.get("postgres");
             let typed_executor_types = postgres_effects

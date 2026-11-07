@@ -100,6 +100,9 @@ impl EmbeddedSqlCall {
                     .filter(move |_| !mirrored)
                     .map(|variant| {
                         Cow::Owned(Self {
+                            lock_scope_analysis: self.lock_scope_analysis,
+                            helper_definition: self.helper_definition,
+                            lock_helper: self.lock_helper.clone(),
                             transaction_id: self.transaction_id,
                             transaction_line: self.transaction_line,
                             executor_transaction_known: self.executor_transaction_known,

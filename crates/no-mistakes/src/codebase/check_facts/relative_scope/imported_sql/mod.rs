@@ -21,6 +21,7 @@ use std::path::{Path, PathBuf};
 
 mod constants;
 mod locate;
+mod lock_helpers;
 mod program;
 
 #[cfg(test)]
@@ -28,20 +29,41 @@ mod tests;
 
 pub(super) fn has_candidates(files: &FileIdMap<CheckFileFacts>) -> bool {
     files.into_iter().any(|(_, file)| {
-        file.embedded_sql
-            .iter()
-            .any(|(_, embedded)| !embedded.pending_imported.is_empty())
+        file.embedded_sql.iter().any(|(_, embedded)| {
+            !embedded.pending_imported.is_empty() || !embedded.imported_lock_helpers.is_empty()
+        })
     })
 }
 
 /// A completed call and where it goes: file, profile index, original span.
 type Completed = (PathBuf, usize, (u32, u32), EmbeddedSqlCall, Vec<u32>);
+type LockCompleted = (PathBuf, usize, (u32, u32), Vec<EmbeddedSqlCall>);
+type CompletedBatch = (
+    Vec<Completed>,
+    Vec<(PathBuf, SqlSourcePrerequisites)>,
+    Vec<LockCompleted>,
+    lock_helpers::Definitions,
+);
 
 pub(super) fn project(
     files: &mut FileIdMap<CheckFileFacts>,
     resolve: impl FnMut(&str, &Path) -> Option<PathBuf>,
 ) {
-    let (completed, prerequisites) = complete(files, resolve);
+    let (completed, prerequisites, locks, definitions) = complete(files, resolve);
+    for ((path, profile), spans) in definitions {
+        let embedded = &mut files.get_mut(&path).unwrap().embedded_sql[profile].1;
+        for (call, span) in embedded.calls.iter_mut().zip(&embedded.call_spans) {
+            call.helper_definition |= spans.contains(span);
+        }
+    }
+    for (path, profile, span, calls) in locks {
+        let embedded = &mut files.get_mut(&path).unwrap().embedded_sql[profile].1;
+        for call in calls {
+            embedded.calls.push(call);
+            embedded.call_spans.push(span);
+        }
+        embedded.imported_lock_helpers.clear();
+    }
     for (path, prerequisite) in prerequisites {
         if let Some(file) = files.get_mut(&path) {
             file.sql_source_prerequisites.merge(prerequisite);
@@ -59,13 +81,25 @@ pub(super) fn project(
 fn complete(
     files: &FileIdMap<CheckFileFacts>,
     resolve: impl FnMut(&str, &Path) -> Option<PathBuf>,
-) -> (Vec<Completed>, Vec<(PathBuf, SqlSourcePrerequisites)>) {
+) -> CompletedBatch {
     let mut shared = Shared::new(files, Locator::new(files, resolve));
     let mut completed = Vec::new();
     let mut prerequisites = Vec::new();
+    let mut locks = Vec::new();
+    let mut definitions = lock_helpers::Definitions::default();
     for (path, file) in files {
         let mut provenance = SqlSourcePrerequisites::default();
         for (profile, (options, embedded)) in file.embedded_sql.iter().enumerate() {
+            for invocation in &embedded.imported_lock_helpers {
+                let calls = lock_helpers::complete(
+                    &mut shared,
+                    path,
+                    options,
+                    invocation,
+                    &mut definitions,
+                );
+                locks.push((path.clone(), profile, invocation.span, calls));
+            }
             for pending in &embedded.pending_imported {
                 shared.failures.clear();
                 let call = complete_call(&mut shared, path, profile, options, pending);
@@ -84,7 +118,7 @@ fn complete(
             prerequisites.push((path.clone(), provenance));
         }
     }
-    (completed, prerequisites)
+    (completed, prerequisites, locks, definitions)
 }
 
 fn complete_call(

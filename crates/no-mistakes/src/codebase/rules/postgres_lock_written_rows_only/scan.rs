@@ -110,6 +110,9 @@ fn scan_file(
         }
     }
     for (index, call) in embedded.calls.iter().enumerate() {
+        if call.helper_definition {
+            continue;
+        }
         let site = Site {
             file: &file,
             source: &source,
@@ -137,7 +140,7 @@ fn scan_file(
                     output.emit(&site, CHECKS[2], None, Some(&key), "constant advisory key serializes unrelated writes; use a key derived from the written row");
                 }
             }
-            for lock in &access.locks {
+            for (lock_index, lock) in access.locks.iter().enumerate() {
                 if !rows::enabled_for(call, check_written, check_outside) {
                     continue;
                 }
@@ -155,7 +158,7 @@ fn scan_file(
                             "locked relation is unresolved; lock a single explicit base relation",
                         );
                     }
-                } else {
+                } else if !access.self_contained_locks.contains(&lock_index) {
                     output.emit(&site, CHECKS[3], lock.relation.as_deref(), None, "row lock in autocommit is released immediately; move the lock and write into the same transaction");
                 }
             }

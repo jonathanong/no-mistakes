@@ -35,6 +35,8 @@ export interface PostgresLockWrittenRowsOnlyOptions {
   excludeExecutorNames?: string[];
   executorFactoryNames?: string[];
   executorTypeNames?: string[];
+  /** Static options properties overriding the transaction executor. Empty by default. */
+  executorOptionProperties?: string[];
   trustedSqlTags?: { module: string; name: string }[];
   effort?: Effort;
   unanalyzable?: Unanalyzable;

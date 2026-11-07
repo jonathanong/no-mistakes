@@ -18,6 +18,8 @@ fn verdict_recording_errors_when_embedded_path_has_no_statement_facts() {
     file.embedded_sql.push((
         opts.embedded.clone(),
         crate::codebase::postgres::EmbeddedSqlFileFacts {
+            lock_helper_summaries: Default::default(),
+            imported_lock_helpers: Default::default(),
             path: embedded_path.clone(),
             executor_bindings: Vec::new(),
             calls: Vec::new(),

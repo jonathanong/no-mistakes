@@ -14,6 +14,7 @@ pub(super) enum StatementProjection {
     #[default]
     Complete,
     ConflictPolicy,
+    LockScope,
 }
 
 #[derive(Default)]
@@ -25,6 +26,20 @@ pub(super) struct StatementSources<'a> {
     // `recovery` is parallel to statements after a failed strict parse.
     pub(super) policy: StatementPolicySources<'a>,
     pub(super) recovery: Option<&'a crate::codebase::postgres::conflict::ConflictChunks<'a>>,
+}
+
+impl StatementProjection {
+    pub(super) fn locks(
+        self,
+        statements: &[sqlparser::ast::Statement],
+        positions: super::super::value::PlaceholderPositions<'_>,
+    ) -> super::super::lock_writes::LockWriteFacts {
+        if self == StatementProjection::LockScope {
+            super::super::lock_writes::collect::<true>(statements, positions)
+        } else {
+            super::super::lock_writes::collect::<false>(statements, positions)
+        }
+    }
 }
 
 impl<'a> StatementSources<'a> {

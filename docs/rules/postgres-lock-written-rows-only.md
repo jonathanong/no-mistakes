@@ -1,9 +1,10 @@
 # `postgres-lock-written-rows-only`
 
-<!-- cspell:ignore xact -->
+<!-- cspell:ignore xact hashtext hashtextextended -->
 
 Opt-in PostgreSQL transaction lock checks. Findings point at the lock statement;
-there is no autofix because changing a transaction's locking needs application
+static helper locks are reported at their caller, with the helper lock line.
+There is no autofix because changing a transaction's locking needs application
 review.
 
 ## Why and when
@@ -19,8 +20,8 @@ check already acquires the required parent KEY SHARE lock.
 | --- | --- | --- |
 | `row-lock-unwritten-relation` | `FOR UPDATE`, `FOR NO KEY UPDATE`, `FOR SHARE`, or `FOR KEY SHARE` on a relation the same transaction never updates or deletes; provable keys must match too. | Lock the written row, or rely on the foreign-key check. |
 | `table-lock` | `LOCK TABLE` in any mode. | Use a bounded row lock on the written row. |
-| `constant-advisory-lock` | Literal or constant keys to `pg_advisory_lock`, `pg_advisory_xact_lock`, their `try_` forms, and two-key variants. | Use a key derived from the written entity. |
-| `row-lock-outside-transaction` | A row lock on a known non-transaction executor. | Move the lock and write into one transaction. |
+| `constant-advisory-lock` | Literal or constant keys (including builtin `hashtext` / `hashtextextended` of constants) to `pg_advisory_lock`, `pg_advisory_xact_lock`, their `try_` forms, and two-key variants. | Use a key derived from the written entity. |
+| `row-lock-outside-transaction` | A row lock on a known non-transaction executor, unless the same SQL statement writes the locked relation. | Move the lock and write into one transaction. |
 
 Each check defaults to `advise`. `fail` emits a failing finding and `ignore`
 disables that check. Never interpret an unresolved statement as a proven write.
@@ -56,6 +57,26 @@ export async function updateChild(childId: string, name: string) {
 ```
 
 The same relation and key are locked and updated within one transaction.
+A top-level helper with a straight-line body of static executor calls can accept
+an executor parameter. Each invocation through a known transaction substitutes
+its immutable argument bindings before comparing the helper's locked relations
+and keys with the caller's writes. For example, `lockUser(tx.query, userId)`
+requires an update or delete of that same user in `tx`; an update of a membership
+does not satisfy the lock. Diagnostics name the helper and its lock line.
+Helper effects require a direct `await helper(...)` (including `return await`).
+A plain `return helper(...)` or discarded promise is unanalyzable because an
+`await using` transaction can be disposed before the helper finishes. Within a
+summarized helper, each executor call must itself be awaited or returned. Helper
+SQL must be a string literal or an interpolation-free untagged template. Tagged
+templates and JavaScript interpolations remain unanalyzable in helper summaries.
+Executor shapes must match: `q(sql)` accepts `tx.query`, while `q.query(sql)`
+accepts `tx`. A mismatch makes the entire helper call unanalyzable.
+
+Unsupported local and imported helpers receiving a configured transaction
+executor retain the unanalyzable policy, including dynamic SQL, optional calls,
+shadowed or mutated helpers, and bodies with other control flow. Named imported
+helpers and re-exports use the same summaries through the prepared module resolver. Unresolved imports retain the unanalyzable policy.
+
 An advisory key derived from the written row's id also passes the constant-key
 check.
 
@@ -90,6 +111,33 @@ export async function broadLocks(childId: string) {
 
 The final call uses a known non-transaction executor, so its row lock is released
 at the end of that statement.
+
+## Hashed keys and atomic statements
+
+At configured executors, `pg_advisory_xact_lock(hashtext('global'))` and
+`pg_advisory_xact_lock(hashtextextended('global', 0))` serialize unrelated rows.
+The rule recognizes both unqualified and `pg_catalog`-qualified hash functions,
+including module `const` values passed as SQL parameters. Every argument,
+including the extended hash seed, must be proven constant. A row-derived bound
+parameter, such as `hashtextextended($1, 0)` with `[rowId]`, remains compliant.
+Arbitrary functions are outside this constant proof.
+
+An autocommit queue claim can safely lock and write in one statement:
+
+```sql
+WITH candidates AS (
+  SELECT id FROM jobs ORDER BY id LIMIT 50 FOR UPDATE SKIP LOCKED
+), claimed AS (
+  UPDATE jobs SET claimed_at = now() FROM candidates
+  WHERE jobs.id = candidates.id RETURNING jobs.id
+)
+SELECT id FROM claimed
+```
+
+This passes because the same statement writes `jobs`. A write to another
+relation, a separate SQL statement in the same string, or a later executor call
+does not exempt the lock. CTE names cannot establish a base relation identity.
+The ordinary `SELECT ... FOR UPDATE` autocommit finding remains enabled.
 
 ## Fix
 
@@ -131,10 +179,10 @@ The rule inherits the selected project's `postgres` executor scope. Without
 project scope, configure `importSpecifier` or explicit `executorNames`.
 `include` and `exclude` default to empty and narrow the selected file scope.
 `executorFactoryNames`, `executorTypeNames`, and `trustedSqlTags` default to
-empty; factories identify transaction executor bindings declared with `const tx =
-await beginTransaction()`. Callback transaction membership is unresolved in
-phase 1 and follows the unanalyzable policy. With an import
-specifier, executor names default to `query`, `read`, and `write`.
+empty; factories identify transaction executor bindings declared with `const`,
+`using`, or `await using`. Callback transaction membership is unresolved and
+follows the unanalyzable policy. With an import specifier, executor names default
+to `query`, `read`, and `write`.
 `executorNames` replaces that list; use `extraExecutorNames` to extend it instead.
 The two options are mutually exclusive, including when either list is empty.
 `extraExecutorNames` defaults to absent and `excludeExecutorNames` defaults to
@@ -165,8 +213,9 @@ used only when it covers an otherwise-unwritten row lock.
 ### Analysis and unresolved SQL
 
 `effort: max` is the default; `low` uses syntax proofs without the cross-file
-max-effort evaluator. Phase 1 checks configured TS/JS executor calls and transaction-local write
-sets. Standalone SQL files are outside this rule’s phase 1 scope. SQL or transaction membership that cannot be resolved follows the shared
+max-effort evaluator. The rule checks configured TS/JS executor calls and
+transaction-local write sets. Standalone SQL files are outside this rule’s scope.
+SQL or transaction membership that cannot be resolved follows the shared
 unanalyzable policy: `unanalyzable: report` (default) fails, `advise` adds a
 non-failing advisory, and `ignore` omits the diagnostic. The legacy
 `unanalyzableSql` option accepts `fail`, `advise`, and `ignore`; `fail` means
@@ -177,7 +226,7 @@ A possible earlier return or throw also prevents a later write from proving
 that a locked row is written. Keep the matching write on every path that takes
 the lock, or remove the lock.
 
-Phase 1 does not establish advisory-key provenance from unwritten relations,
+The rule does not establish advisory-key provenance from unwritten relations,
 unbounded recursive read sets, duplication of unique-index guarantees, or
 lock ordering across transactions. Key equality is checked only when provable;
 unresolved inputs follow the selected policy rather than guessed equivalence.
@@ -199,3 +248,24 @@ await tx.query('LOCK TABLE maintenance_jobs IN EXCLUSIVE MODE');
 bounds. [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) restricts SQL
 shapes. See [executor bindings](../postgres-facts/executor-bindings.md) for
 configured executor ownership.
+
+### Resource-scoped transactions and executor options
+
+Configured factory results bound with `using` or `await using` retain transaction
+membership until the enclosing block ends, just like an immutable `const` binding.
+Nested blocks and shadowed bindings keep distinct transaction identities.
+
+`executorOptionProperties` defaults to `[]`. Configure explicit property names
+(such as `[query]`) when an executor accepts an inline options object that routes
+SQL to another executor:
+
+```ts
+await using tx = await beginTransaction();
+await query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id], { query: tx });
+await query('UPDATE items SET active = true WHERE id = $1', [id], { query: tx });
+```
+
+A configured property may hold the transaction binding or its `.query` member.
+Unknown values, computed properties, spreads, and conflicting executor overrides
+follow the unanalyzable policy; they never establish autocommit membership. Use an
+inline static object and the configured transaction binding to make routing clear.

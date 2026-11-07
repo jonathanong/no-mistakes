@@ -23,6 +23,8 @@ fn facts(path: &Path, profile: &EmbeddedSqlOptions, calls: Vec<EmbeddedSqlCall>)
     file.embedded_sql.push((
         profile.clone(),
         EmbeddedSqlFileFacts {
+            lock_helper_summaries: Default::default(),
+            imported_lock_helpers: Default::default(),
             path: path.to_path_buf(),
             executor_bindings: Vec::new(),
             calls,

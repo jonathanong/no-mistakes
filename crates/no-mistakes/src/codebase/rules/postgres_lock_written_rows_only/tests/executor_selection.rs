@@ -50,3 +50,27 @@ fn unused_default_exclusion_keeps_other_default_executors_selected() {
     assert_eq!(findings[0].line, 2);
     assert_eq!(findings[0].target.as_deref(), Some(CHECKS[3]));
 }
+
+#[test]
+fn resource_scopes_and_executor_options_route_locks_without_certifying_unknowns() {
+    let root = fixture("resource-options");
+    let path = root
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("configs/resource-options.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&path)).unwrap();
+    let mut findings = check(&root, &config).unwrap();
+    findings.sort_by_key(|finding| finding.line);
+    assert_eq!(findings.len(), 4, "{findings:?}");
+    assert_eq!(findings[0].line, 8);
+    assert_eq!(findings[0].target.as_deref(), Some(CHECKS[0]));
+    for finding in &findings[1..] {
+        assert_eq!(finding.target.as_deref(), Some("unanalyzable"));
+    }
+    assert_eq!(findings[1].line, 10);
+    assert_eq!(findings[2].line, 11);
+    assert_eq!(findings[3].line, 13);
+    assert!(findings.iter().all(|finding| finding.line != 12));
+}

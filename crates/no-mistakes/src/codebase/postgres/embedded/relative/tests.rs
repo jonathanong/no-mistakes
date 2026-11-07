@@ -38,6 +38,8 @@ fn candidate(
 
 fn facts(calls: Vec<EmbeddedSqlCall>, pending: PendingRelativeScope) -> EmbeddedSqlFileFacts {
     EmbeddedSqlFileFacts {
+        lock_helper_summaries: Default::default(),
+        imported_lock_helpers: Vec::new(),
         path: PathBuf::from("file.ts"),
         executor_bindings: Vec::new(),
         call_spans: vec![(0, 0); calls.len()],

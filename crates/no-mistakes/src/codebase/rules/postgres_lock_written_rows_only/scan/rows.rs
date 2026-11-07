@@ -65,17 +65,28 @@ fn identity(value: &str, call: &EmbeddedSqlCall) -> Option<String> {
     Some(format!("literal:{value}"))
 }
 
-pub(super) fn constant_key(keys: &[String], call: &EmbeddedSqlCall) -> Option<String> {
+pub(super) fn constant_key(
+    keys: &[crate::codebase::postgres::statements::lock_writes::AdvisoryKey],
+    call: &EmbeddedSqlCall,
+) -> Option<String> {
+    use crate::codebase::postgres::statements::lock_writes::AdvisoryKey;
+    fn resolve(key: &AdvisoryKey, call: &EmbeddedSqlCall) -> Option<String> {
+        match key {
+            AdvisoryKey::Constant(value) => Some(value.clone()),
+            AdvisoryKey::Parameter(value) => identity(value, call)?
+                .strip_prefix("literal:")
+                .map(str::to_owned),
+            AdvisoryKey::Hash(name, args) => Some(format!(
+                "{name}({})",
+                args.iter()
+                    .map(|key| resolve(key, call))
+                    .collect::<Option<Vec<_>>>()?
+                    .join(", ")
+            )),
+        }
+    }
     keys.iter()
-        .map(|key| {
-            if key.starts_with('$') {
-                identity(key, call)?
-                    .strip_prefix("literal:")
-                    .map(str::to_owned)
-            } else {
-                Some(key.clone())
-            }
-        })
+        .map(|key| resolve(key, call))
         .collect::<Option<Vec<_>>>()
         .map(|keys| keys.join(", "))
 }

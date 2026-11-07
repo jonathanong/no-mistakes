@@ -216,3 +216,91 @@ fn lock_written_rows_executor_replacement_and_extension_cannot_both_be_configure
         assert!(diagnostic.contains(expected), "{diagnostic}");
     }
 }
+
+#[test]
+fn postgres_lock_written_rows_hashed_keys_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_hashed_keys",
+        &[("hashes", "hashed-advisory", "checks-fail.yml")],
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_atomic_cte_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_atomic_cte",
+        &[("atomic", "atomic-cte", "checks-fail.yml")],
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_resource_options_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_resource_options",
+        &[(
+            "resource_options",
+            "resource-options",
+            "resource-options.yml",
+        )],
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_helpers_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_helpers",
+        &[
+            ("unwritten", "helper-unwritten", "checks-fail.yml"),
+            ("completion", "helper-completion", "checks-fail.yml"),
+            (
+                "imported_completion",
+                "helper-imported-completion",
+                "checks-fail.yml",
+            ),
+            ("reexports", "helper-reexport", "checks-fail.yml"),
+            ("sql_proof", "helper-sql-proof", "checks-fail.yml"),
+            (
+                "imported_sql_proof",
+                "helper-imported-sql-proof",
+                "checks-fail.yml",
+            ),
+            (
+                "unsupported",
+                "helper-unsupported-shapes",
+                "checks-fail.yml",
+            ),
+            ("different_key", "helper-key-mismatch", "checks-fail.yml"),
+            ("written", "helper-written", "checks-fail.yml"),
+            ("dead_write", "helper-dead-write", "checks-fail.yml"),
+            ("caller_exited", "helper-caller-exited", "checks-fail.yml"),
+            (
+                "imported_caller_exited",
+                "helper-imported-caller-exited",
+                "checks-fail.yml",
+            ),
+            (
+                "option_override",
+                "helper-option-override",
+                "helper-option-override.yml",
+            ),
+            (
+                "imported_unwritten",
+                "helper-imported-unwritten",
+                "checks-fail.yml",
+            ),
+            (
+                "imported_written",
+                "helper-imported-written",
+                "checks-fail.yml",
+            ),
+        ],
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_resources_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_resources",
+        &[("resources", "resource-transactions", "checks-fail.yml")],
+    );
+}

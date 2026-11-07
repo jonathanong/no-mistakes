@@ -742,3 +742,7 @@ contracts are `PostgresLockWrittenRowsOnlyOptions`,
 `extraExecutorNames`, and `excludeExecutorNames` with the selection contract
 above. Per-check severity defaults to `advise`. Unresolved SQL or transaction
 membership follows the configured unanalyzable policy.
+
+`PostgresLockWrittenRowsOnlyOptions.executorOptionProperties` selects static inline
+executor-routing options (for example `{ query: tx }`); it defaults to `[]`.
+Configured factory bindings support `const`, `using`, and `await using`.

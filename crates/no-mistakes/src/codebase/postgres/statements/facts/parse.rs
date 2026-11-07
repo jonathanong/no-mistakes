@@ -100,6 +100,23 @@ pub(crate) fn extract_sql_statement_facts_with_json_writes(
     )
 }
 
+pub(crate) fn extract_sql_lock_scope_facts(
+    sql: &str,
+    collect_bounds: bool,
+    positions: &[(u32, u32)],
+    demand: SqlLocationDemand,
+    collect_json_writes: bool,
+) -> SqlStatementFileFacts {
+    extract_sql_statement_facts_with_placeholder_positions(
+        sql,
+        collect_bounds,
+        Some(positions),
+        demand,
+        StatementProjection::LockScope,
+        collect_json_writes,
+    )
+}
+
 /// Prepare only the fields consumed by the sole conflict-ordering policy.
 pub(crate) fn extract_sql_conflict_policy_facts(
     sql: &str,

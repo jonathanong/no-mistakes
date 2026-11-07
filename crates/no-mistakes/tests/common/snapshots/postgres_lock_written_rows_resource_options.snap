@@ -1,0 +1,50 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "resource_options": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 10,
+          "message": "src/query.ts:10: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id], { query: options?.query });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 11,
+          "message": "src/query.ts:11: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id], options);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 13,
+          "message": "src/query.ts:13: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id], ...[options]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 8,
+          "message": "src/query.ts:8: row-lock-unwritten-relation: locked row in items is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id], { query: tx });",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

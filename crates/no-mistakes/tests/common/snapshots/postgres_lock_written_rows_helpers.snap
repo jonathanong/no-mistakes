@@ -1,0 +1,1006 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "caller_exited": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 7,
+          "message": "src/query.ts:7: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [userId]);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "completion": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 33,
+          "message": "src/query.ts:33: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 34,
+          "message": "src/query.ts:34: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await writeCallable(tx, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 38,
+          "message": "src/query.ts:38: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 39,
+          "message": "src/query.ts:39: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await writeObject(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 43,
+          "message": "src/query.ts:43: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 44,
+          "message": "src/query.ts:44: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await writeMixed(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 48,
+          "message": "src/query.ts:48: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 49,
+          "message": "src/query.ts:49: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "void writeCallable(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 53,
+          "message": "src/query.ts:53: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 54,
+          "message": "src/query.ts:54: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "return writeCallable(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 58,
+          "message": "src/query.ts:58: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 59,
+          "message": "src/query.ts:59: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await writeBare(tx.query, id);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dead_write": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 9,
+          "message": "src/query.ts:9: row-lock-unwritten-relation: locked row in users is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock; helper lockUser locks at line 3",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await lockUser(tx.query, userId);",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "different_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 7,
+          "message": "src/query.ts:7: row-lock-unwritten-relation: locked row in users is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock; helper lockUser locks at line 3",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await lockUser(tx.query, userId);",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "imported_caller_exited": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [userId]);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "imported_completion": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 20,
+          "message": "src/query.ts:20: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 21,
+          "message": "src/query.ts:21: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await writeCallable(tx, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 25,
+          "message": "src/query.ts:25: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 26,
+          "message": "src/query.ts:26: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await writeObject(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 30,
+          "message": "src/query.ts:30: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 31,
+          "message": "src/query.ts:31: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await writeMixed(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 35,
+          "message": "src/query.ts:35: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 36,
+          "message": "src/query.ts:36: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "void writeCallable(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 40,
+          "message": "src/query.ts:40: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 41,
+          "message": "src/query.ts:41: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "return writeCallable(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 45,
+          "message": "src/query.ts:45: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 46,
+          "message": "src/query.ts:46: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await writeBare(tx.query, id);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "imported_sql_proof": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/helper.ts",
+          "line": 10,
+          "message": "src/helper.ts:10: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(unknownTag`UPDATE users SET value = 1 WHERE id = $1`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/helper.ts",
+          "line": 13,
+          "message": "src/helper.ts:13: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(unknownTag`UPDATE users SET value = 1 WHERE id = ${otherId}`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/helper.ts",
+          "line": 16,
+          "message": "src/helper.ts:16: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(unknownTag`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/helper.ts",
+          "line": 26,
+          "message": "src/helper.ts:26: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(unknownTag`SELECT 1`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/helper.ts",
+          "line": 32,
+          "message": "src/helper.ts:32: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT 1 FROM ${first} WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/helper.ts",
+          "line": 33,
+          "message": "src/helper.ts:33: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`UPDATE ${second} SET value = 1 WHERE id = $1`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/helper.ts",
+          "line": 4,
+          "message": "src/helper.ts:4: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`UPDATE users SET value = 1 WHERE id = ${otherId}`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/helper.ts",
+          "line": 7,
+          "message": "src/helper.ts:7: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT 1 FROM users WHERE id = ${otherId} FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 10,
+          "message": "src/query.ts:10: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 11,
+          "message": "src/query.ts:11: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await taggedWrite(tx.query, id, otherId);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 15,
+          "message": "src/query.ts:15: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 16,
+          "message": "src/query.ts:16: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await taggedInterpolatedWrite(tx.query, id, otherId);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 30,
+          "message": "src/query.ts:30: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await interpolatedLock(tx.query, id, otherId);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 35,
+          "message": "src/query.ts:35: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await taggedLock(tx.query, id, otherId);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 40,
+          "message": "src/query.ts:40: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 41,
+          "message": "src/query.ts:41: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await mixedWrite(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 50,
+          "message": "src/query.ts:50: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await interpolatedRelationLock(tx.query, \"users\", \"memberships\", id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 6,
+          "message": "src/query.ts:6: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await interpolatedWrite(tx.query, id, otherId);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "imported_unwritten": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: row-lock-unwritten-relation: locked row in users is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock; helper acquireUser locks at line 3",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await acquireUser(tx.query, userId);",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "imported_written": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "option_override": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 8,
+          "message": "src/query.ts:8: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [userId]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 9,
+          "message": "src/query.ts:9: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await writeUser(tx.query, userId, other.query);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "reexports": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 10,
+          "message": "src/query.ts:10: row-lock-unwritten-relation: locked row in users is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock; helper acquireUser locks at line 3",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await acquireUser(tx.query, id);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 20,
+          "message": "src/query.ts:20: unanalyzable: row key identity is unresolved; use the same immutable binding and equality column for the lock and write; helper lockUnknown locks at line 9",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await lockUnknown(tx.query, id);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "sql_proof": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 10,
+          "message": "src/query.ts:10: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(unknownTag`UPDATE users SET value = 1 WHERE id = $1`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 13,
+          "message": "src/query.ts:13: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(unknownTag`UPDATE users SET value = 1 WHERE id = ${otherId}`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 16,
+          "message": "src/query.ts:16: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(unknownTag`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 26,
+          "message": "src/query.ts:26: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 27,
+          "message": "src/query.ts:27: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await interpolatedWrite(tx.query, id, otherId);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 31,
+          "message": "src/query.ts:31: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 32,
+          "message": "src/query.ts:32: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await taggedWrite(tx.query, id, otherId);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 36,
+          "message": "src/query.ts:36: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 37,
+          "message": "src/query.ts:37: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await taggedInterpolatedWrite(tx.query, id, otherId);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`UPDATE users SET value = 1 WHERE id = ${otherId}`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 51,
+          "message": "src/query.ts:51: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await interpolatedLock(tx.query, id, otherId);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 56,
+          "message": "src/query.ts:56: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await taggedLock(tx.query, id, otherId);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 61,
+          "message": "src/query.ts:61: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(unknownTag`SELECT 1`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 65,
+          "message": "src/query.ts:65: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 66,
+          "message": "src/query.ts:66: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await mixedWrite(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 7,
+          "message": "src/query.ts:7: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT 1 FROM users WHERE id = ${otherId} FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 77,
+          "message": "src/query.ts:77: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT 1 FROM ${first} WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 78,
+          "message": "src/query.ts:78: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`UPDATE ${second} SET value = 1 WHERE id = $1`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 82,
+          "message": "src/query.ts:82: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await interpolatedRelationLock(tx.query, \"users\", \"memberships\", id);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unsupported": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 102,
+          "message": "src/query.ts:102: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 103,
+          "message": "src/query.ts:103: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await optionalWriter(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 107,
+          "message": "src/query.ts:107: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 108,
+          "message": "src/query.ts:108: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await optionalWriter(...[], tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 19,
+          "message": "src/query.ts:19: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(runtimeSql, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 42,
+          "message": "src/query.ts:42: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 43,
+          "message": "src/query.ts:43: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await optionalWriter?.(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 47,
+          "message": "src/query.ts:47: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 48,
+          "message": "src/query.ts:48: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await generatorWriter(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 52,
+          "message": "src/query.ts:52: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 53,
+          "message": "src/query.ts:53: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await restWriter(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 57,
+          "message": "src/query.ts:57: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 58,
+          "message": "src/query.ts:58: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await defaultWriter(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 62,
+          "message": "src/query.ts:62: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 63,
+          "message": "src/query.ts:63: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await dynamicWriter(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 67,
+          "message": "src/query.ts:67: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 68,
+          "message": "src/query.ts:68: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await optionWriter(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 72,
+          "message": "src/query.ts:72: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 73,
+          "message": "src/query.ts:73: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await objectWriter(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 77,
+          "message": "src/query.ts:77: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 78,
+          "message": "src/query.ts:78: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await spreadWriter(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 82,
+          "message": "src/query.ts:82: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 83,
+          "message": "src/query.ts:83: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await mutatedWriter(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 87,
+          "message": "src/query.ts:87: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 88,
+          "message": "src/query.ts:88: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await arrowWriter(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 92,
+          "message": "src/query.ts:92: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 93,
+          "message": "src/query.ts:93: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await expressionWriter(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 97,
+          "message": "src/query.ts:97: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 98,
+          "message": "src/query.ts:98: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await missingHelper(tx.query, id);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unwritten": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 7,
+          "message": "src/query.ts:7: row-lock-unwritten-relation: locked row in users is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock; helper lockUser locks at line 3",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await lockUser(tx.query, userId);",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "written": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}
