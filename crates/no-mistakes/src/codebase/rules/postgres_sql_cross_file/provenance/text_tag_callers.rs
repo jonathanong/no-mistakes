@@ -64,9 +64,7 @@ pub(super) fn parameter_bound(
             {
                 return false;
             }
-            call.arguments
-                .get(parameter.index)
-                .is_none_or(|value| origins::ordinary(bindings, file, value, &path, tags, state))
+            origins::caller_argument(bindings, file, call, parameter.index, &path, tags, state)
         })
     })
 }

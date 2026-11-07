@@ -26,7 +26,11 @@ impl TextOrigins {
 }
 
 impl ImportCollector {
-    pub(super) fn note_text_call_origins(&mut self, call: &CallExpression<'_>, value: &ValueCall) {
+    pub(in super::super) fn note_text_call_origins(
+        &mut self,
+        call: &CallExpression<'_>,
+        value: &ValueCall,
+    ) {
         if value.bound
             || value.arguments.len() != call.arguments.len()
             || value.callee != self.value_expression(&call.callee)
@@ -46,7 +50,7 @@ impl ImportCollector {
         }
     }
 
-    pub(super) fn note_text_binding_origin(
+    pub(in super::super) fn note_text_binding_origin(
         &mut self,
         pattern: &BindingPattern<'_>,
         init: &Expression<'_>,
@@ -107,9 +111,18 @@ fn origin(expr: &Expression<'_>, value: &ValueExpression) -> Option<TextOrigin> 
             let mut fields = FxHashMap::default();
             for property in &object.properties {
                 let ObjectPropertyKind::ObjectProperty(property) = property else {
+                    fields.clear();
                     continue;
                 };
+                if property.method || property.kind != oxc_ast::ast::PropertyKind::Init {
+                    return None;
+                }
+                if property.computed {
+                    fields.clear();
+                    continue;
+                }
                 let Some(key) = write_targets::property_key(&property.key) else {
+                    fields.clear();
                     continue;
                 };
                 if let Some(origin) = values

@@ -81,7 +81,7 @@ fn ordinary(
         ValueExpression::Object(fields, _) | ValueExpression::Array(fields)
             if !members.is_empty() =>
         {
-            fields.get(&members[0]).is_none_or(|value| {
+            fields.get(&members[0]).is_some_and(|value| {
                 ordinary(
                     bindings,
                     file,
@@ -160,6 +160,11 @@ fn named(
         .bindings
         .iter()
         .any(|binding| binding.scope == scope && binding.name == name)
+        || ts
+            .value_flow
+            .identifier_writes
+            .iter()
+            .any(|write| write.scope == scope && write.name == name)
     {
         return false;
     }

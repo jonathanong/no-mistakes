@@ -49,6 +49,42 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/text-callers.ts",
+          "import": "directSpreadSlot",
+          "line": 102,
+          "message": "Unbounded identifier source `directSpreadSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "query(`SELECT * FROM ${directSpreadSlot.text}`);",
+          "target": "directSpreadSlot"
+        },
+        {
+          "file": "src/text-callers.ts",
+          "import": "forwardedSpreadSlot",
+          "line": 108,
+          "message": "Unbounded identifier source `forwardedSpreadSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "query(`SELECT * FROM ${forwardedSpreadSlot.text}`);",
+          "target": "forwardedSpreadSlot"
+        },
+        {
+          "file": "src/text-callers.ts",
+          "import": "laterSpreadSlot",
+          "line": 116,
+          "message": "Unbounded identifier source `laterSpreadSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "query(`SELECT * FROM ${laterSpreadSlot.text}`);",
+          "target": "laterSpreadSlot"
+        },
+        {
+          "file": "src/text-callers.ts",
+          "import": "mutableCallerSlot",
+          "line": 77,
+          "message": "Unbounded identifier source `mutableCallerSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "query(`SELECT * FROM ${mutableCallerSlot.text}`);",
+          "target": "mutableCallerSlot"
+        },
+        {
+          "file": "src/text-callers.ts",
           "import": "objectCallerSlot",
           "line": 30,
           "message": "Unbounded identifier source `objectCallerSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
@@ -82,6 +118,96 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-unbounded-sql-identifier",
           "sourceLine": "query(`SELECT * FROM ${writtenParameterSlot.text}`);",
           "target": "writtenParameterSlot"
+        },
+        {
+          "file": "src/text-opaque-callers.ts",
+          "import": "opaqueAccessorSlot",
+          "line": 101,
+          "message": "Unbounded identifier source `opaqueAccessorSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "query(`SELECT * FROM ${opaqueAccessorSlot.text}`);",
+          "target": "opaqueAccessorSlot"
+        },
+        {
+          "file": "src/text-opaque-callers.ts",
+          "import": "opaqueAliasSlot",
+          "line": 21,
+          "message": "Unbounded identifier source `opaqueAliasSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "query(`SELECT * FROM ${opaqueAliasSlot.text}`);",
+          "target": "opaqueAliasSlot"
+        },
+        {
+          "file": "src/text-opaque-callers.ts",
+          "import": "opaqueComputedObjectSlot",
+          "line": 87,
+          "message": "Unbounded identifier source `opaqueComputedObjectSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "query(`SELECT * FROM ${opaqueComputedObjectSlot.text}`);",
+          "target": "opaqueComputedObjectSlot"
+        },
+        {
+          "file": "src/text-opaque-callers.ts",
+          "import": "opaqueDuplicateSlot",
+          "line": 42,
+          "message": "Unbounded identifier source `opaqueDuplicateSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "query(`SELECT * FROM ${opaqueDuplicateSlot.text}`);",
+          "target": "opaqueDuplicateSlot"
+        },
+        {
+          "file": "src/text-opaque-callers.ts",
+          "import": "opaqueFactorySlot",
+          "line": 15,
+          "message": "Unbounded identifier source `opaqueFactorySlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "query(`SELECT * FROM ${opaqueFactorySlot.text}`);",
+          "target": "opaqueFactorySlot"
+        },
+        {
+          "file": "src/text-opaque-callers.ts",
+          "import": "opaqueMixedSlot",
+          "line": 36,
+          "message": "Unbounded identifier source `opaqueMixedSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "query(`SELECT * FROM ${opaqueMixedSlot.text}`);",
+          "target": "opaqueMixedSlot"
+        },
+        {
+          "file": "src/text-opaque-callers.ts",
+          "import": "opaqueObjectSlot",
+          "line": 29,
+          "message": "Unbounded identifier source `opaqueObjectSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "query(`SELECT * FROM ${opaqueObjectSlot.text}`);",
+          "target": "opaqueObjectSlot"
+        },
+        {
+          "file": "src/text-opaque-callers.ts",
+          "import": "opaqueOptionalSlot",
+          "line": 9,
+          "message": "Unbounded identifier source `opaqueOptionalSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "query(`SELECT * FROM ${opaqueOptionalSlot.text}`);",
+          "target": "opaqueOptionalSlot"
+        },
+        {
+          "file": "src/text-opaque-callers.ts",
+          "import": "opaquePrototypeSlot",
+          "line": 94,
+          "message": "Unbounded identifier source `opaquePrototypeSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "query(`SELECT * FROM ${opaquePrototypeSlot.text}`);",
+          "target": "opaquePrototypeSlot"
+        },
+        {
+          "file": "src/text-opaque-callers.ts",
+          "import": "opaqueSpreadObjectSlot",
+          "line": 81,
+          "message": "Unbounded identifier source `opaqueSpreadObjectSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "query(`SELECT * FROM ${opaqueSpreadObjectSlot.text}`);",
+          "target": "opaqueSpreadObjectSlot"
         },
         {
           "file": "src/text-raw.ts",

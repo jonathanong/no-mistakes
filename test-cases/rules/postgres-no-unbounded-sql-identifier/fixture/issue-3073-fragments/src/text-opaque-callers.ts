@@ -75,3 +75,32 @@ function literalConditionalSink(value) {
   query(`SELECT * FROM ${literalConditionalActualSlot.text}`);
 }
 literalConditionalSink(flag ? "first" : "second");
+
+function spreadObjectSink({ value }) {
+  const opaqueSpreadObjectSlot = sql`${value}`;
+  query(`SELECT * FROM ${opaqueSpreadObjectSlot.text}`);
+}
+spreadObjectSink({ value: "ordinary", ...{ value: makeRaw?.("raw") } });
+
+function computedObjectSink({ value }) {
+  const opaqueComputedObjectSlot = sql`${value}`;
+  query(`SELECT * FROM ${opaqueComputedObjectSlot.text}`);
+}
+declare const key: string;
+computedObjectSink({ value: "ordinary", [key]: makeRaw?.("raw") });
+
+function prototypeSink({ value }) {
+  const opaquePrototypeSlot = sql`${value}`;
+  query(`SELECT * FROM ${opaquePrototypeSlot.text}`);
+}
+prototypeSink({ __proto__: { value: sql.raw(process.env.PROTOTYPE_TABLE) } });
+
+function accessorSink(config) {
+  config.other;
+  const opaqueAccessorSlot = sql`${config.value}`;
+  query(`SELECT * FROM ${opaqueAccessorSlot.text}`);
+}
+accessorSink({
+  value: "ordinary",
+  get other() { this.value = sql.raw(process.env.ACCESSOR_TABLE); return ""; },
+});
