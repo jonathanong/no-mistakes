@@ -2,7 +2,10 @@ use super::{InvocationObserver, TimingKind};
 use std::fmt::Write;
 use std::time::Duration;
 
+mod aggregation;
 mod usage;
+use super::report::PhaseResourceDiagnostic;
+use aggregation::aggregate;
 use usage::{sample, Usage};
 
 #[derive(Default)]
@@ -31,8 +34,8 @@ impl<'a> ResourceGuard<'a> {
         kind: TimingKind,
     ) -> Option<Self> {
         let state = observer.resources.as_ref()?;
-        // The dispatch envelope is transparent so its sequential children own attribution.
-        if label == "invocation.dispatch" {
+        // Preparation and dispatch envelopes leave attribution to their sequential children.
+        if matches!(label, "invocation.dispatch" | "facts.prepare") {
             return None;
         }
         let top_level = {
@@ -83,75 +86,38 @@ impl Drop for ResourceGuard<'_> {
 }
 
 impl InvocationObserver {
-    pub(super) fn resource_snapshot(&self) -> Vec<super::report::PhaseResourceDiagnostic> {
+    pub(super) fn resource_snapshot(&self) -> Vec<PhaseResourceDiagnostic> {
+        self.resource_snapshot_with(aggregate)
+    }
+
+    fn resource_snapshot_with(
+        &self,
+        aggregate: impl FnOnce(Vec<PhaseResources>) -> Vec<PhaseResourceDiagnostic>,
+    ) -> Vec<PhaseResourceDiagnostic> {
         let Some(state) = &self.resources else {
             return Vec::new();
         };
         let completed = state.lock().unwrap().completed.clone();
-        completed
-            .into_iter()
-            .map(|phase| {
-                let user = phase.end.user.saturating_sub(phase.start.user);
-                let sys = phase.end.sys.saturating_sub(phase.start.sys);
-                super::report::PhaseResourceDiagnostic {
-                    label: phase.label,
-                    wall_ms: phase.wall.as_secs_f64() * 1000.0,
-                    user_ms: user.as_secs_f64() * 1000.0,
-                    system_ms: sys.as_secs_f64() * 1000.0,
-                    utilization: if phase.wall.is_zero() {
-                        0.0
-                    } else {
-                        (user + sys).as_secs_f64() / phase.wall.as_secs_f64()
-                    },
-                    peak_rss_kib: phase.end.peak_rss_kib,
-                    peak_rss_delta_kib: phase
-                        .end
-                        .peak_rss_kib
-                        .saturating_sub(phase.start.peak_rss_kib),
-                }
-            })
-            .collect()
-    }
-    pub(super) fn resource_block(&self) -> String {
-        self.resource_block_with(format_resources)
+        aggregate(completed)
     }
 
-    fn resource_block_with(&self, format: impl FnOnce(Vec<PhaseResources>) -> String) -> String {
-        let Some(state) = &self.resources else {
-            return String::new();
-        };
-        let completed = state.lock().unwrap().completed.clone();
-        format(completed)
+    pub(super) fn resource_block(&self) -> String {
+        format_resources(self.resource_snapshot())
     }
 }
 
-fn format_resources(completed: Vec<PhaseResources>) -> String {
+fn format_resources(phases: Vec<PhaseResourceDiagnostic>) -> String {
     let mut output = String::new();
-    for phase in completed {
-        let user = phase.end.user.saturating_sub(phase.start.user);
-        let sys = phase.end.sys.saturating_sub(phase.start.sys);
-        let util = if phase.wall.is_zero() {
-            0.0
-        } else {
-            (user + sys).as_secs_f64() / phase.wall.as_secs_f64()
-        };
+    for phase in phases {
         let _ = writeln!(
             output,
             "[cpu] {}: user={:.3}ms sys={:.3}ms util={:.3}x",
-            phase.label,
-            user.as_secs_f64() * 1000.0,
-            sys.as_secs_f64() * 1000.0,
-            util
+            phase.label, phase.user_ms, phase.system_ms, phase.utilization
         );
         let _ = writeln!(
             output,
             "[memory] {}: peak_rss_kib={} delta_kib={}",
-            phase.label,
-            phase.end.peak_rss_kib,
-            phase
-                .end
-                .peak_rss_kib
-                .saturating_sub(phase.start.peak_rss_kib)
+            phase.label, phase.peak_rss_kib, phase.peak_rss_delta_kib
         );
     }
     output

@@ -629,12 +629,15 @@ excluded.
 
 Phase records contain `label`, `wallMs`, user/system CPU milliseconds
 (`userMs`, `systemMs`), `utilization` as CPU/wall time, process-lifetime peak RSS
-(`peakRssKiB`) and its increase (`peakRssDeltaKiB`). Resource sampling is Unix
-only; unsupported or failed samples have no resource record. Nested and
-parallel spans retain elapsed timings without CPU/RSS attribution. Hot-file
-records contain `pass`, `path`, `durationMs` and `units`, bounded to ten per
-pass. See [diagnostic semantics](cli/diagnostics.md) for pass units, ranking,
-RSS caveats and overlapping durations.
+(`peakRssKiB`) and its increase (`peakRssDeltaKiB`). Each label appears once,
+in first-appearance order. Repeated eligible spans sum wall/user/system time;
+utilization divides total CPU by total wall time. Peak RSS takes the maximum
+phase-end sample and its delta sums the individual nonnegative span increases.
+Resource sampling is Unix only; unsupported or failed samples have no resource
+record. Nested and parallel spans retain elapsed timings without CPU/RSS
+attribution. Hot-file records contain `pass`, `path`, `durationMs` and `units`,
+bounded to ten per pass. See [diagnostic semantics](cli/diagnostics.md) for pass
+units, ranking, RSS caveats and overlapping durations.
 
 CPU/RSS samples cover the whole Node process, including concurrent work in
 other requests. Use an otherwise idle process for phase attribution.
