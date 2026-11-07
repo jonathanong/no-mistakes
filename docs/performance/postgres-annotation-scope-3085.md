@@ -56,8 +56,12 @@ The [workflow](../../.github/workflows/annotation-scope-performance.yml) builds
 the merge base and exact PR head independently on `macos-15`. Both use stable
 Rust, default features, release mode, thin LTO, 16 code generation units and
 `CARGO_BUILD_JOBS=6`. Heavy Cargo commands use `flock /tmp/nm-heavy.lock`.
-Each source worktree and isolated target is created in the OS temporary
-directory. Executables are frozen before the owned targets are removed.
+Dependency compilation and final executable compilation use separate bounded
+jobs. The dependency archive excludes every root-crate product and binds the
+source, compiler, profile and native toolchain; the final job verifies a clean
+checkout and compiles the actual crate. Each source worktree and isolated target
+is created in the OS temporary directory. Executables are frozen before the
+owned targets are removed.
 
 A fresh macOS measurement job validates source SHAs, compiler, runner image,
 architecture, profile, executable version and distinct binary digests. Both

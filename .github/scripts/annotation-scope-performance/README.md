@@ -1,9 +1,29 @@
 # Native annotation scope comparison
 
-The pull-request workflow builds the merge base and exact PR head independently
-on `macos-15`, with stable Rust, default features, ThinLTO and 16 codegen units.
-Each build freezes its executable and source/compiler/hash manifest before
-removing its isolated target directory. No Cargo target cache is restored. Heavy builds use `flock /tmp/nm-heavy.lock` and `CARGO_BUILD_JOBS=6`.
+The pull-request workflow uses an event-driven dependency → executable →
+measurement DAG on `macos-15`. Each build phase has a 30-minute job deadline and
+a 24-minute compiler subprocess cap. Base and candidate are separate matrix
+entries pinned to the merge base and exact PR head, with stable Rust, default
+features, ThinLTO and 16 codegen units.
+
+Dependency jobs replace only the owned worktree's library/binary entrypoints
+with empty stubs to compile the exact dependency feature graph. They then remove
+all root-crate executables, dependency products, fingerprints and build-script
+outputs, verify their absence, and upload a gzip level-1 compiler-target archive.
+Its manifest records exact source refs, compiler/profile, OS/architecture/image,
+Cargo manifests/lockfile hashes, source tree hash, linker/SDK identity, effective
+Cargo/Rust environment and archive SHA256. Incremental compilation is disabled. This is compiler artifact
+sharing between workflow phases; it creates no analysis cache.
+
+Final build jobs validate that provenance before extracting the target-only
+archive with path/link validation and Python's data extraction filter. Both
+phases use the same exclusively created `/tmp/nm-annotation-{variant}/source`
+path, preserving native dependency linker-search paths. An existing parent path
+is rejected rather than adopted. Final jobs verify root products remain absent,
+HEAD matches the immutable source, and tracked source is clean before compiling
+the actual crate. Each job deletes only its owned target/worktree in `finally`.
+Frozen executables/manifests are copied out before cleanup and uploaded afterward.
+Heavy builds use `flock /tmp/nm-heavy.lock` and `CARGO_BUILD_JOBS=6`.
 
 The measurement job downloads artifacts from that same workflow run, checks
 source refs, compiler equality, architecture, profile, executable version and

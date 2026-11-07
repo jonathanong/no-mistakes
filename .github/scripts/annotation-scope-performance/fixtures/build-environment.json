@@ -1,0 +1,20 @@
+{
+  "input": {
+    "CARGO_REGISTRIES_EXAMPLE_TOKEN": "fixture-secret",
+    "CARGO_REGISTRY_TOKEN": "fixture-secret",
+    "RUST_ARBITRARY_TOKEN": "fixture-secret",
+    "CC_UNTRUSTED_TOKEN": "fixture-secret",
+    "CARGO_BUILD_JOBS": "6",
+    "CARGO_PROFILE_RELEASE_LTO": "thin",
+    "CFLAGS": "-O2",
+    "CARGO_ENCODED_RUSTFLAGS": "",
+    "NO_MISTAKES_BUILD_NAPI": "0"
+  },
+  "expected": {
+    "CARGO_BUILD_JOBS": "6",
+    "CARGO_PROFILE_RELEASE_LTO": "thin",
+    "CFLAGS": "-O2",
+    "CARGO_ENCODED_RUSTFLAGS": "",
+    "NO_MISTAKES_BUILD_NAPI": "0"
+  }
+}

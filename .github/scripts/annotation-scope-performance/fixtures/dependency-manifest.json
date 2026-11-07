@@ -1,0 +1,10 @@
+{
+  "variant": "candidate",
+  "source": "0123456789abcdef0123456789abcdef01234567",
+  "base": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "head": "0123456789abcdef0123456789abcdef01234567",
+  "compiler": "saved rustc identity",
+  "profile": {"lto": "thin", "codegenUnits": 16, "features": "default", "cargoBuildJobs": 6, "rustflags": ""},
+  "sourceTree": "/tmp/nm-annotation-candidate/source",
+  "sourceManifests": {"Cargo.lock": "saved-lock-hash", "Cargo.toml": "saved-manifest-hash"}
+}
