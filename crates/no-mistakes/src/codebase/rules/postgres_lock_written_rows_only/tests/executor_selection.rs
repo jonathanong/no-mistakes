@@ -88,7 +88,7 @@ fn const_executor_options_route_writes_and_reject_mutated_or_unwritten_controls(
     let findings = check(&root, &config).unwrap();
     let mut unwritten = findings
         .iter()
-        .filter(|finding| finding.target.as_deref() == Some(CHECKS[0]))
+        .filter(|finding| finding.line <= 110 && finding.target.as_deref() == Some(CHECKS[0]))
         .map(|finding| finding.line)
         .collect::<Vec<_>>();
     unwritten.sort();
@@ -103,6 +103,16 @@ fn const_executor_options_route_writes_and_reject_mutated_or_unwritten_controls(
             .any(|finding| finding.line == 91 && finding.target.as_deref() == Some("unanalyzable")),
         "{findings:?}"
     );
+    for line in [114, 120, 126] {
+        assert!(
+            findings.iter().any(|finding| finding.line == line
+                && matches!(
+                    finding.target.as_deref(),
+                    Some("row-lock-unwritten-relation" | "unanalyzable")
+                )),
+            "{line}: {findings:?}"
+        );
+    }
     assert!(
         findings.iter().all(|finding| finding.line > 21),
         "{findings:?}"

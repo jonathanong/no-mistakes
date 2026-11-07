@@ -109,3 +109,24 @@ async function mutatedReceiverBeforeCapture(id: string) {
   const options = { query: tx.query };
   await query('UPDATE items SET active = true WHERE id = $1', [id], options);
 }
+async function getterOptions(id: string) {
+  await using tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const options = { get query() { return tx.query; } };
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
+async function spreadOptions(id: string) {
+  await using tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const options = { ...{}, query: tx.query };
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
+async function nestedFunctionOptions(id: string) {
+  await using tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const options = { query: tx.query };
+  async function write() {
+    await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+  }
+  await write();
+}
