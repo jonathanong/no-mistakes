@@ -96,4 +96,5 @@ fn suppression_filters_literal_policy_findings() {
 
 mod errors;
 
+mod declared;
 mod ownership;

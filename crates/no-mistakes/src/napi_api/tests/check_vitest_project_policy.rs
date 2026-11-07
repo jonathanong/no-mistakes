@@ -4,6 +4,10 @@ use super::*;
 fn vitest_project_policy_async_check_matches_cli() {
     for name in [
         "pass",
+        "declared",
+        "declared-line",
+        "declared-next-line",
+        "declared-file",
         "missing",
         "mismatch",
         "nonliteral",
@@ -53,7 +57,14 @@ fn vitest_project_policy_async_check_matches_cli() {
 
 #[test]
 fn vitest_policy_suppression_survives_prepared_check_reuse() {
-    for case in ["suppression", "line-suppression", "next-line-suppression"] {
+    for case in [
+        "suppression",
+        "line-suppression",
+        "next-line-suppression",
+        "declared-line",
+        "declared-next-line",
+        "declared-file",
+    ] {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/vitest-project-policy/fixture")
             .join(case)

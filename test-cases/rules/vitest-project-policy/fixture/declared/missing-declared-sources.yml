@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: missing-config.ts
+      helpers: [missing.ts]
+      declared:
+        forbiddenValues:
+          fileParallelism: [false]

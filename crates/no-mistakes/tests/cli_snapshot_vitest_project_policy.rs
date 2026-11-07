@@ -4,6 +4,10 @@ use super::check_json_snapshot::{assert_saved_fixture, rules_path};
 fn vitest_project_policy_json_matches_snapshot() {
     let mut cases = [
         "pass",
+        "declared",
+        "declared-line",
+        "declared-next-line",
+        "declared-file",
         "literal-forms",
         "custom-advisory",
         "excluded-root",
@@ -48,6 +52,22 @@ fn vitest_project_policy_json_matches_snapshot() {
         (name, root.clone(), root.join(".no-mistakes.yml"))
     })
     .collect::<Vec<_>>();
+    for name in [
+        "effective",
+        "combined",
+        "array-value",
+        "object-value",
+        "empty-key",
+        "dotted-key",
+        "invalid-kind",
+        "removed-required",
+        "invalid-glob",
+        "missing-declared-sources",
+        "malformed-declared-sources",
+    ] {
+        let root = rules_path("vitest-project-policy", "fixture", "declared");
+        cases.push((name, root.clone(), root.join(format!("{name}.yml"))));
+    }
     for name in [
         "no-config",
         "array-required",

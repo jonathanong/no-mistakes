@@ -38,50 +38,63 @@ pub fn diagnostics_with_files_and_sources(
     sources: &SourceStore,
     defer_suppression: bool,
 ) -> Result<Diagnostics> {
-    let normalized_root = crate::codebase::ts_source::normalize_discovery_path(root);
-    let root = normalized_root.as_path();
-    let mut output = Diagnostics::default();
-    for rule in config.rule_applications(RULE_ID) {
-        let options: Options = rule.try_rule_options()?;
-        options.validate()?;
-        let path = crate::codebase::ts_resolver::normalize_path(&root.join(&options.config));
-        let (selected, _) =
-            super::selected_rule_files_with_roots(root, config, rule, std::slice::from_ref(&path))?;
-        let selected = super::path_filter::filter_rule_files(root, config, rule, &selected)?;
-        if !selected.contains(&path) {
-            continue;
-        }
-        let allowed = options.source_paths(root, &path, files)?;
-        let mut application = Diagnostics::default();
-        if options.check_effective() {
-            let mut reader = Reader::new(sources, allowed.clone());
-            application = evaluate::check(root, &options, reader.read(&path));
-        }
-        application
-            .findings
-            .extend(declared::check(root, &options.declared, &allowed, sources));
-        application.incomplete.retain(|failure| {
-            !failure.file.as_ref().is_some_and(|file| {
-                sources.read_path(&root.join(file)).is_ok_and(|source| {
-                    crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID)
-                })
-            })
-        });
-        if !defer_suppression {
-            super::suppress_rule_findings_with_sources(root, &mut application.findings, sources);
-        }
-        if let Some(message) = &rule.message {
-            for finding in &mut application.findings {
-                finding.message = message.clone();
+    crate::ast::with_request_parse_cache(|| {
+        let normalized_root = crate::codebase::ts_source::normalize_discovery_path(root);
+        let root = normalized_root.as_path();
+        let mut output = Diagnostics::default();
+        for rule in config.rule_applications(RULE_ID) {
+            let options: Options = rule.try_rule_options()?;
+            options.validate()?;
+            let path = crate::codebase::ts_resolver::normalize_path(&root.join(&options.config));
+            let (selected, _) = super::selected_rule_files_with_roots(
+                root,
+                config,
+                rule,
+                std::slice::from_ref(&path),
+            )?;
+            let selected = super::path_filter::filter_rule_files(root, config, rule, &selected)?;
+            if !selected.contains(&path) {
+                continue;
             }
+            let allowed = options.source_paths(root, &path, files)?;
+            let mut application = Diagnostics::default();
+            if options.check_effective() {
+                let mut reader = Reader::new(sources, allowed.clone());
+                application = evaluate::check(root, &options, reader.read(&path));
+            }
+            application.findings.extend(declared::check(
+                root,
+                &options.declared,
+                &allowed,
+                sources,
+            ));
+            application.incomplete.retain(|failure| {
+                !failure.file.as_ref().is_some_and(|file| {
+                    sources.read_path(&root.join(file)).is_ok_and(|source| {
+                        crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID)
+                    })
+                })
+            });
+            if !defer_suppression {
+                super::suppress_rule_findings_with_sources(
+                    root,
+                    &mut application.findings,
+                    sources,
+                );
+            }
+            if let Some(message) = &rule.message {
+                for finding in &mut application.findings {
+                    finding.message = message.clone();
+                }
+            }
+            output.findings.extend(application.findings);
+            output.incomplete.extend(application.incomplete);
         }
-        output.findings.extend(application.findings);
-        output.incomplete.extend(application.incomplete);
-    }
-    super::sort_findings(&mut output.findings);
-    output.incomplete.sort();
-    output.incomplete.dedup();
-    Ok(output)
+        super::sort_findings(&mut output.findings);
+        output.incomplete.sort();
+        output.incomplete.dedup();
+        Ok(output)
+    })
 }
 
 pub fn check_with_files_and_sources(

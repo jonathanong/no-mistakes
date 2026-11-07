@@ -15,8 +15,8 @@ pub(super) fn check(
         return Vec::new();
     };
     let programs = crate::ast::current_request_parse_cache().unwrap_or_default();
-    paths
-        .par_iter()
+    let declarations = paths
+        .iter()
         .flat_map(|path| {
             let Ok(source) = sources.read_path(path) else {
                 return Vec::new();
@@ -24,26 +24,45 @@ pub(super) fn check(
             programs
                 .with_program(path, source, |program, source| {
                     let mut visitor = Declarations {
-                        root,
                         path,
                         source,
-                        options,
-                        findings: Vec::new(),
+                        values: Vec::new(),
                     };
                     visitor.visit_program(program);
-                    visitor.findings
+                    visitor.values
                 })
                 .unwrap_or_default()
         })
-        .collect()
+        .collect::<Vec<_>>();
+    declarations.into_par_iter().filter_map(|declaration| {
+        let (key, value) = (&declaration.key, &declaration.value);
+        let forbidden = options.forbidden_values.get(key)
+            .is_some_and(|values| values.iter().any(|banned| value.matches(banned)));
+        let kind = options.forbid_literal_kinds.get(key)
+            .is_some_and(|kinds| kinds.iter().any(|kind| match kind {
+                LiteralKind::Number => matches!(value, Literal::Number(_)),
+                LiteralKind::String => matches!(value, Literal::Other(serde_json::Value::String(_))),
+                LiteralKind::Boolean => matches!(value, Literal::Other(serde_json::Value::Bool(_))),
+            }));
+        (forbidden || kind).then(|| RuleFinding {
+            rule: RULE_ID.into(), file: relative_slash_path(root, &declaration.path), line: declaration.line,
+            message: format!("Vitest declaration {key}: literal {value} is forbidden by {}; use an allowed literal or a computed expression to keep configuration policy explicit",
+                if forbidden { "declared.forbiddenValues" } else { "declared.forbidLiteralKinds" }),
+            import: None, target: None,
+        })
+    }).collect()
 }
 
+struct Declaration {
+    path: PathBuf,
+    line: usize,
+    key: String,
+    value: Literal,
+}
 struct Declarations<'a> {
-    root: &'a Path,
     path: &'a Path,
     source: &'a str,
-    options: &'a Declared,
-    findings: Vec<RuleFinding>,
+    values: Vec<Declaration>,
 }
 
 impl<'a> Visit<'a> for Declarations<'_> {
@@ -53,49 +72,50 @@ impl<'a> Visit<'a> for Declarations<'_> {
                 static_property_key_name(&property.key),
                 literal(&property.value),
             ) {
-                let forbidden = self
-                    .options
-                    .forbidden_values
-                    .get(key.as_ref())
-                    .is_some_and(|values| values.iter().any(|banned| equal(banned, &value)));
-                let kind = self
-                    .options
-                    .forbid_literal_kinds
-                    .get(key.as_ref())
-                    .is_some_and(|kinds| {
-                        kinds.iter().any(|kind| match kind {
-                            LiteralKind::Number => value.is_number(),
-                            LiteralKind::String => value.is_string(),
-                            LiteralKind::Boolean => value.is_boolean(),
-                        })
-                    });
-                if forbidden || kind {
-                    self.findings.push(RuleFinding {
-                        rule: RULE_ID.into(), file: relative_slash_path(self.root, self.path),
-                        line: crate::codebase::ts_source::byte_offset_to_line(self.source, property.span.start as usize) as usize,
-                        message: format!("Vitest declaration {key}: literal {value} is forbidden by {}; use an allowed literal or a computed expression to keep configuration policy explicit",
-                            if forbidden { "declared.forbiddenValues" } else { "declared.forbidLiteralKinds" }),
-                        import: None, target: None,
-                    });
-                }
+                self.values.push(Declaration {
+                    path: self.path.to_path_buf(),
+                    line: crate::codebase::ts_source::byte_offset_to_line(
+                        self.source,
+                        property.span.start as usize,
+                    ) as usize,
+                    key: key.into_owned(),
+                    value,
+                });
             }
         }
         walk::walk_object_property(self, property);
     }
 }
 
-fn equal(left: &serde_json::Value, right: &serde_json::Value) -> bool {
-    left == right || (left.is_number() && right.is_number() && left.as_f64() == right.as_f64())
+enum Literal {
+    Number(f64),
+    Other(serde_json::Value),
+}
+impl Literal {
+    fn matches(&self, banned: &serde_json::Value) -> bool {
+        match self {
+            Self::Number(number) => banned.as_f64() == Some(*number),
+            Self::Other(value) => value == banned,
+        }
+    }
+}
+impl std::fmt::Display for Literal {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Number(number) => write!(formatter, "{number}"),
+            Self::Other(value) => write!(formatter, "{value}"),
+        }
+    }
 }
 
-fn literal(expression: &Expression<'_>) -> Option<serde_json::Value> {
+fn literal(expression: &Expression<'_>) -> Option<Literal> {
     match unwrap_ts_wrappers(expression) {
-        Expression::BooleanLiteral(value) => Some(value.value.into()),
-        Expression::NullLiteral(_) => Some(serde_json::Value::Null),
-        Expression::StringLiteral(value) => Some(crate::ast::js_literal(value).as_ref().into()),
-        Expression::NumericLiteral(value) => {
-            serde_json::Number::from_f64(value.value).map(Into::into)
-        }
+        Expression::BooleanLiteral(value) => Some(Literal::Other(value.value.into())),
+        Expression::NullLiteral(_) => Some(Literal::Other(serde_json::Value::Null)),
+        Expression::StringLiteral(value) => Some(Literal::Other(
+            crate::ast::js_literal(value).as_ref().into(),
+        )),
+        Expression::NumericLiteral(value) => Some(Literal::Number(value.value)),
         Expression::UnaryExpression(unary) => {
             let Expression::NumericLiteral(value) = unwrap_ts_wrappers(&unary.argument) else {
                 return None;
@@ -105,7 +125,7 @@ fn literal(expression: &Expression<'_>) -> Option<serde_json::Value> {
                 oxc_ast::ast::UnaryOperator::UnaryPlus => value.value,
                 _ => return None,
             };
-            serde_json::Number::from_f64(number).map(Into::into)
+            Some(Literal::Number(number))
         }
         _ => None,
     }
