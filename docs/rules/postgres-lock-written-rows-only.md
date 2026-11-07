@@ -76,6 +76,9 @@ A plain `return helper(...)` or discarded promise is unanalyzable because an
 summarized helper, each executor call must itself be awaited or returned. Helper
 SQL must be a string literal or an interpolation-free untagged template. Tagged
 templates and JavaScript interpolations remain unanalyzable in helper summaries.
+SQL binding arrays must use identifiers or static primitive values. Compute
+dynamic values at the caller and pass plain helper parameters; calls, assignments,
+and property reads inside bindings could hide transaction side effects.
 Executor shapes must match: `q(sql)` accepts `tx.query`, while `q.query(sql)`
 accepts `tx`. A mismatch makes the entire helper call unanalyzable.
 

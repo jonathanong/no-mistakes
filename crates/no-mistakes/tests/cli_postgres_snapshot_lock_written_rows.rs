@@ -345,3 +345,38 @@ fn postgres_lock_written_rows_nested_query_check_json_snapshot() {
         )],
     );
 }
+
+#[test]
+fn postgres_lock_written_rows_options_coverage_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_options_coverage",
+        &[(
+            "options_coverage",
+            "options-coverage",
+            "resource-options.yml",
+        )],
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_flow_coverage_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_flow_coverage",
+        &[
+            ("flow", "flow-coverage", "checks-fail.yml"),
+            ("no_factory", "flow-coverage-no-factory", "checks-fail.yml"),
+        ],
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_helper_summary_boundaries_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_helper_summary_boundaries",
+        &[(
+            "forwarding_and_effect_bounds",
+            "helper-summary-boundaries",
+            "checks-fail.yml",
+        )],
+    );
+}
