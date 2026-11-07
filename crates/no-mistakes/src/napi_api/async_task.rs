@@ -1,6 +1,7 @@
 use napi::bindgen_prelude::Buffer;
 use napi::{Env, Task};
 pub(crate) mod independent;
+mod observed;
 mod pure;
 #[cfg(not(coverage))]
 pub use pure::PureJsonTask;
@@ -30,34 +31,7 @@ impl Task for JsonValueTask {
     type JsValue = Buffer;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
-        let options_json = utf8_json(&self.options_json)?;
-        let (mut options, invocation_options) =
-            crate::invocation::extract_napi_options_value(options_json).map_err(to_napi_error)?;
-        let _diagnostics = crate::diagnostics::DiagnosticRequestGuard::extract(&mut options)
-            .map_err(to_napi_error)?;
-        let prepare = || crate::invocation::InvocationGuard::acquire(invocation_options);
-        let _guard = match &_diagnostics {
-            Some(request) => request.observer.trace(
-                "invocation.prepare",
-                crate::diagnostics::TimingKind::Serial,
-                prepare,
-            ),
-            None => prepare(),
-        }
-        .map_err(to_invocation_napi_error)?;
-        let jobs_warning = crate::cli::init_rayon_threads_if_requested(invocation_options.jobs);
-        crate::invocation::check_timeout().map_err(to_invocation_napi_error)?;
-        let run = || crate::ast::with_request_parse_cache(|| (self.run)(options));
-        let output = match &_diagnostics {
-            Some(request) => request.observer.trace(
-                "invocation.dispatch",
-                crate::diagnostics::TimingKind::Serial,
-                run,
-            ),
-            None => run(),
-        };
-        crate::invocation::check_timeout().map_err(to_invocation_napi_error)?;
-        buffer_with_jobs_warning(output, jobs_warning)
+        observed::execute_json(&self.options_json, self.run)
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
@@ -78,49 +52,14 @@ impl Task for JsonTask {
     type JsValue = Buffer;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
-        let options_json = utf8_json(&self.options_json)?;
-        let (mut options, invocation_options) =
-            crate::invocation::extract_napi_options_value(options_json).map_err(to_napi_error)?;
-        let _diagnostics = crate::diagnostics::DiagnosticRequestGuard::extract(&mut options)
-            .map_err(to_napi_error)?;
-        let options_json = serde_json::to_string(&options)
-            .map_err(|error| napi::Error::from_reason(error.to_string()))?;
-        let prepare = || crate::invocation::InvocationGuard::acquire(invocation_options);
-        let _guard = match &_diagnostics {
-            Some(request) => request.observer.trace(
-                "invocation.prepare",
-                crate::diagnostics::TimingKind::Serial,
-                prepare,
-            ),
-            None => prepare(),
-        }
-        .map_err(to_invocation_napi_error)?;
-        let jobs_warning = crate::cli::init_rayon_threads_if_requested(invocation_options.jobs);
-        crate::invocation::check_timeout().map_err(to_invocation_napi_error)?;
-        let run = || crate::ast::with_request_parse_cache(|| (self.run)(options_json));
-        let output = match &_diagnostics {
-            Some(request) => request.observer.trace(
-                "invocation.dispatch",
-                crate::diagnostics::TimingKind::Serial,
-                run,
-            ),
-            None => run(),
-        };
-        crate::invocation::check_timeout().map_err(to_invocation_napi_error)?;
-        buffer_with_jobs_warning(output, jobs_warning)
+        observed::execute_json(&self.options_json, |options| {
+            (self.run)(serde_json::to_string(&options).map_err(to_napi_error)?)
+        })
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
         Ok(output)
     }
-}
-
-fn buffer_with_jobs_warning(
-    output: napi::Result<String>,
-    warning: Option<crate::cli::JobsPoolWarning>,
-) -> napi::Result<Buffer> {
-    output
-        .map(|json| Buffer::from(crate::cli::attach_jobs_pool_warning(json, warning).into_bytes()))
 }
 
 fn utf8_json(options_json: &Buffer) -> napi::Result<&str> {

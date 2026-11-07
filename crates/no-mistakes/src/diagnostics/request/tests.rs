@@ -66,3 +66,50 @@ fn invalid_ids_are_rejected_without_installing_an_observer() {
         assert!(super::super::current().is_none());
     }
 }
+
+#[test]
+fn structured_collection_is_opt_in_and_does_not_register_completed_payloads() {
+    let mut disabled = serde_json::json!({"__collectDiagnostics":false,"root":"."});
+    assert!(DiagnosticRequestGuard::extract(&mut disabled)
+        .unwrap()
+        .is_none());
+    assert_eq!(disabled, serde_json::json!({"root":"."}));
+    let mut enabled = serde_json::json!({"__collectDiagnostics":true,"root":"."});
+    let guard = DiagnosticRequestGuard::extract(&mut enabled)
+        .unwrap()
+        .unwrap();
+    assert_eq!(enabled, serde_json::json!({"root":"."}));
+    assert!(guard.id.is_none());
+    assert!(!guard.observer.progress_enabled());
+    assert!(guard.report(true).is_some());
+    drop(guard);
+    assert!(super::super::current().is_none());
+    for value in [
+        serde_json::json!(null),
+        serde_json::json!(1),
+        serde_json::json!("yes"),
+    ] {
+        assert!(DiagnosticRequestGuard::extract(
+            &mut serde_json::json!({"__collectDiagnostics":value})
+        )
+        .is_err());
+        assert!(super::super::current().is_none());
+    }
+}
+
+#[test]
+fn verbose_collection_can_share_a_live_progress_id_without_retaining_it() {
+    let mut options =
+        serde_json::json!({"__collectDiagnostics":true,"diagnosticsId":"verbose-progress-test"});
+    let guard = DiagnosticRequestGuard::extract(&mut options)
+        .unwrap()
+        .unwrap();
+    assert!(guard.observer.verbose());
+    assert!(progress_for_request("verbose-progress-test").is_some());
+    guard
+        .observer
+        .trace("phase", super::super::TimingKind::Serial, || ());
+    assert!(!guard.report(true).unwrap().timings.is_empty());
+    drop(guard);
+    assert!(progress_for_request("verbose-progress-test").is_none());
+}

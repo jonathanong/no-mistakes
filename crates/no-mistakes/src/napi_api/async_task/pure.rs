@@ -18,7 +18,7 @@ impl Task for PureJsonTask {
     fn compute(&mut self) -> napi::Result<Buffer> {
         let input = serde_json::from_str(super::utf8_json(&self.input)?)
             .map_err(|error| napi::Error::from_reason(error.to_string()))?;
-        (self.run)(input).map(|output| Buffer::from(output.into_bytes()))
+        super::observed::execute_pure(input, self.run)
     }
     fn resolve(&mut self, _: Env, output: Buffer) -> napi::Result<Buffer> {
         Ok(output)

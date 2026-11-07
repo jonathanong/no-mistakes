@@ -83,6 +83,35 @@ impl Drop for ResourceGuard<'_> {
 }
 
 impl InvocationObserver {
+    pub(super) fn resource_snapshot(&self) -> Vec<super::report::PhaseResourceDiagnostic> {
+        let Some(state) = &self.resources else {
+            return Vec::new();
+        };
+        let completed = state.lock().unwrap().completed.clone();
+        completed
+            .into_iter()
+            .map(|phase| {
+                let user = phase.end.user.saturating_sub(phase.start.user);
+                let sys = phase.end.sys.saturating_sub(phase.start.sys);
+                super::report::PhaseResourceDiagnostic {
+                    label: phase.label,
+                    wall_ms: phase.wall.as_secs_f64() * 1000.0,
+                    user_ms: user.as_secs_f64() * 1000.0,
+                    system_ms: sys.as_secs_f64() * 1000.0,
+                    utilization: if phase.wall.is_zero() {
+                        0.0
+                    } else {
+                        (user + sys).as_secs_f64() / phase.wall.as_secs_f64()
+                    },
+                    peak_rss_kib: phase.end.peak_rss_kib,
+                    peak_rss_delta_kib: phase
+                        .end
+                        .peak_rss_kib
+                        .saturating_sub(phase.start.peak_rss_kib),
+                }
+            })
+            .collect()
+    }
     pub(super) fn resource_block(&self) -> String {
         self.resource_block_with(format_resources)
     }

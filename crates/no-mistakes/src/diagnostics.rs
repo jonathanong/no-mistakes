@@ -9,6 +9,7 @@ pub(crate) mod hot_files;
 mod memory;
 mod observer;
 mod progress;
+mod report;
 mod request;
 mod resources;
 mod timeout;
@@ -19,8 +20,12 @@ pub use context::{
     current, current_timing_kind, measure_if_enabled, with_observer, with_timing_kind,
     InvocationGuard, LegacyDiagnosticsGuard,
 };
+pub use hot_files::FilePass as DiagnosticFilePass;
 pub use observer::{DiagnosticsSnapshot, InvocationObserver, TimingDiagnostic, TimingKind};
 pub use progress::{ActiveSpanSnapshot, CompletedSpanSnapshot, ProgressGuard, ProgressSnapshot};
+pub use report::{
+    DiagnosticTiming, HotFileDiagnostic, PhaseResourceDiagnostic, VerboseDiagnostics,
+};
 pub use request::{progress_for_request, DiagnosticRequestGuard};
 // The native invocation harness compiles watchdog source across this crate boundary.
 #[doc(hidden)]
