@@ -17,6 +17,7 @@ struct Options {
     exclude: Vec<String>,
     import_specifier: Option<String>,
     executor_names: Vec<String>,
+    extra_executor_names: Vec<String>,
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
     trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
@@ -53,6 +54,7 @@ pub(crate) fn check(
         };
         let paths = RuleGlobFilter::new(rule_id, &opts.include, &opts.exclude)?;
         let profile = EmbeddedSqlOptions::configured(&specifier, &opts.executor_names)
+            .with_extra_executor_names(&opts.extra_executor_names)
             .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
             .with_trusted_sql_tags(&opts.trusted_sql_tags)
             .with_sql_literal_helpers(if rule_id == "postgres-require-query-annotation" {

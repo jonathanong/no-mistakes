@@ -1,5 +1,3 @@
-//! Opt-in `reportUnmatchedExecutorNames` pass shared by the embedded-SQL rules.
-//!
 use super::path_filter::GlobMatcher;
 use super::RuleFinding;
 use crate::codebase::check_facts::CheckFactMap;
@@ -21,6 +19,7 @@ struct Options {
     exclude: Vec<String>,
     import_specifier: String,
     executor_names: Vec<String>,
+    extra_executor_names: Vec<String>,
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
     trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
@@ -31,6 +30,7 @@ struct Options {
 impl Options {
     fn profile(&self, rule_id: &str) -> EmbeddedSqlOptions {
         EmbeddedSqlOptions::configured(&self.import_specifier, &self.executor_names)
+            .with_extra_executor_names(&self.extra_executor_names)
             .with_scoped_executors(&self.executor_factory_names, &self.executor_type_names)
             .with_trusted_sql_tags(&self.trusted_sql_tags)
             .with_sql_literal_helpers(if rule_id == "postgres-require-query-annotation" {

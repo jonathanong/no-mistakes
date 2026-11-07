@@ -72,6 +72,18 @@ impl EmbeddedSqlOptions {
         }
     }
 
+    /// Extend the standard executor imports while retaining all defaults.
+    pub fn with_extra_executor_names(mut self, extras: &[String]) -> Self {
+        if !extras.is_empty() {
+            self.executor_names
+                .extend(DEFAULT_EXECUTOR_NAMES.iter().map(|name| (*name).into()));
+            self.executor_names.extend_from_slice(extras);
+            self.executor_names.sort();
+            self.executor_names.dedup();
+        }
+        self
+    }
+
     /// Add scoped executor sources: factory imports and executor type imports.
     pub fn with_scoped_executors(mut self, factories: &[String], types: &[String]) -> Self {
         self.executor_factory_names = sorted_unique(factories);

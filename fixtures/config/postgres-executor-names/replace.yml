@@ -1,0 +1,5 @@
+rules:
+  - rule: postgres-require-query-annotation
+    options:
+      importSpecifier: "@example/db"
+      executorNames: [run]

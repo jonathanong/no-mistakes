@@ -1,0 +1,43 @@
+use super::parse;
+
+fn saved(name: &str) -> String {
+    std::fs::read_to_string(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/config/postgres-executor-names")
+            .join(name),
+    )
+    .unwrap()
+}
+
+#[test]
+fn extras_extend_defaults_and_replacements_remain_replacements() {
+    for (file, expected) in [
+        ("extra.yml", vec!["query", "read", "run", "write"]),
+        ("replace.yml", vec!["run"]),
+        ("project-extra.yml", vec!["query", "read", "run", "write"]),
+        ("project-replace.yml", vec!["run"]),
+    ] {
+        let config = parse(&saved(file)).unwrap();
+        let profiles = crate::codebase::postgres::configured_embedded_sql_options(
+            &config,
+            &["postgres-require-query-annotation"],
+        )
+        .unwrap();
+        assert_eq!(profiles[0].executor_names, expected, "{file}");
+        let key = if file.contains("extra") {
+            "extraExecutorNames"
+        } else {
+            "executorNames"
+        };
+        assert!(config.rules[0].options.get(key).is_some(), "{file}");
+    }
+}
+
+#[test]
+fn project_rejects_both_names_options_even_when_empty() {
+    let error = parse(&saved("project-conflict.yml"))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("projects.db.postgres.executors"), "{error}");
+    assert!(error.contains("cannot both be set"), "{error}");
+}

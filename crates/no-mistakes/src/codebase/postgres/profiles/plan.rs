@@ -44,6 +44,7 @@ pub fn configure_prepared_postgres_plan(
                 options.import_specifier.as_deref().unwrap_or_default(),
                 &options.executor_names,
             )
+            .with_extra_executor_names(&options.extra_executor_names)
             .with_scoped_executors(
                 &options.executor_factory_names,
                 &options.executor_type_names,
@@ -179,13 +180,11 @@ pub fn configure_prepared_postgres_plan(
     plan.raw_source |= !plan.sql_identifier_profiles.is_empty();
     Ok(())
 }
-
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 struct WriteOptions {
     include: Vec<String>,
 }
-
 pub(super) fn write_patterns(config: &NoMistakesConfig) -> Result<Vec<String>> {
     let mut patterns = Vec::new();
     for rule in config.rule_applications("postgres-no-generated-column-writes") {
