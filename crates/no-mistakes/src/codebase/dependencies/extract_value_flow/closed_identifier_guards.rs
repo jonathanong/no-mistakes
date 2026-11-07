@@ -144,11 +144,7 @@ impl ImportCollector {
                 && write.name == name
                 && reference::write_overlaps(&write.members, &members)
                 && write.at < from
-                && (write.at >= call.span.start
-                    || write
-                        .assigned
-                        .as_deref()
-                        .is_none_or(|assigned| assigned.owner != self.current_function_id()))
+                && (write.at >= call.span.start || write.context != self.current_function_id())
         }) {
             return;
         }
