@@ -3,6 +3,7 @@ use crate::codebase::postgres::embedded::EmbeddedSqlCall;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression, ObjectPropertyKind, PropertyKind};
 mod state;
+pub(super) use state::end_alias;
 pub(in crate::codebase::postgres::embedded::walk) use state::State;
 
 pub(super) fn annotate(

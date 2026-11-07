@@ -92,7 +92,17 @@ fn const_executor_options_route_writes_and_reject_mutated_or_unwritten_controls(
         .map(|finding| finding.line)
         .collect::<Vec<_>>();
     unwritten.sort();
-    assert_eq!(unwritten, [24, 30, 37, 44, 50], "{findings:?}");
+    assert_eq!(
+        unwritten,
+        [24, 30, 37, 44, 50, 57, 65, 74, 82],
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.line == 91 && finding.target.as_deref() == Some("unanalyzable")),
+        "{findings:?}"
+    );
     assert!(
         findings.iter().all(|finding| finding.line > 21),
         "{findings:?}"

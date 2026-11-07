@@ -129,13 +129,19 @@ pub(super) fn end_boundary(
     call: &CallExpression<'_>,
     before: usize,
 ) {
-    let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
+    let (receiver, method_end) = match unwrap_ts_wrappers(&call.callee) {
+        Expression::StaticMemberExpression(member) => (
+            &member.object,
+            matches!(member.property.name.as_str(), "commit" | "rollback"),
+        ),
+        Expression::Identifier(_) if visitor.executor_options.track_transaction_helpers => {
+            (&call.callee, false)
+        }
+        _ => return,
+    };
+    let Expression::Identifier(id) = unwrap_ts_wrappers(receiver) else {
         return;
     };
-    let Expression::Identifier(id) = unwrap_ts_wrappers(&member.object) else {
-        return;
-    };
-    let method_end = matches!(member.property.name.as_str(), "commit" | "rollback");
     let sql_end = visitor.calls[before..].iter().any(|fact| {
         fact.sql_text.as_deref().is_some_and(|sql| {
             matches!(
@@ -148,6 +154,12 @@ pub(super) fn end_boundary(
             )
         })
     });
+    if (method_end || sql_end)
+        && visitor.executor_options.track_transaction_helpers
+        && options::end_alias(visitor, receiver)
+    {
+        return;
+    }
     if (method_end || sql_end) && visitor.scoped.transactions.contains_key(id.name.as_str()) {
         for scope in visitor.scopes.iter_mut().rev() {
             if let Some(binding) = scope.get_mut(id.name.as_str()) {

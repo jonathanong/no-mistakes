@@ -52,3 +52,45 @@ async function committed(id: string) {
   await tx.commit();
   await query('UPDATE items SET active = true WHERE id = $1', [id], options);
 }
+async function committedObjectAlias(id: string) {
+  await using tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const alias = tx;
+  const options = { query: alias.query };
+  await alias.commit();
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
+async function rolledBackObjectAliasChain(id: string) {
+  await using tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const alias = tx;
+  const other = alias;
+  const options = { query: other.query };
+  await other.rollback();
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
+async function optionsBeforeAliasCommit(id: string) {
+  await using tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const options = { query: tx.query };
+  const alias = tx;
+  await alias.commit();
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
+async function optionsBeforeAliasRollbackChain(id: string) {
+  await using tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const options = { query: tx.query };
+  const alias = tx;
+  const other = alias;
+  await other.rollback();
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
+async function callableAliasCommit(id: string) {
+  await using tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const execute = tx.query;
+  const options = { query: execute };
+  await execute('COMMIT');
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}

@@ -1,3 +1,6 @@
+mod boundary;
+pub(super) use boundary::end_alias;
+
 use super::{receiver, value_receiver, EmbeddedSqlCall, ScopeVisitor};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::{FxHashMap, FxHashSet};

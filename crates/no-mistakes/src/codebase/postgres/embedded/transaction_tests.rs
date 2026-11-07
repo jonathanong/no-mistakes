@@ -191,7 +191,7 @@ fn const_options_preserve_transaction_membership_without_certifying_controls() {
         assert!(write.executor_transaction_known, "{write:?}");
         assert_eq!(lock.bound_parameters, write.bound_parameters);
     }
-    for line in [33, 40, 46, 53] {
+    for line in [33, 40, 46, 53, 61, 70, 78, 87, 95] {
         let call = facts.calls.iter().find(|call| call.line == line).unwrap();
         assert!(call.transaction_id.is_none(), "{call:?}");
         assert!(!call.executor_transaction_known, "{call:?}");
