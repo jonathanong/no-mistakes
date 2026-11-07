@@ -237,6 +237,13 @@ test("declared config exports its unused allow-entry policy", () => {
 test("Vitest project property policy exports named configuration types", () => {
   const types = readFileSync(join(packageRoot, "vitest-project-policy-types.d.ts"), "utf8");
   assert.match(types, /export type VitestPropertyLiteral = string \| number \| boolean \| null;/);
+  assert.match(types, /export type VitestPropertyLiteralKind = "number" \| "string" \| "boolean";/);
+  assert.match(types, /export interface VitestDeclaredProjectPolicy/);
+  assert.match(types, /forbiddenValues\?: Record<string, VitestPropertyLiteral\[\]>;/);
+  assert.match(types, /forbidLiteralKinds\?: Record<string, VitestPropertyLiteralKind\[\]>;/);
+  assert.match(types, /declared\?: VitestDeclaredProjectPolicy;/);
+  const declared = types.match(/export interface VitestDeclaredProjectPolicy \{([^}]+)\}/)[1];
+  assert.doesNotMatch(declared, /required/);
   assert.match(types, /export interface VitestPropertyParity/);
   assert.match(types, /properties: \[string, string\];/);
   assert.match(types, /compareRoot\?: boolean;/);

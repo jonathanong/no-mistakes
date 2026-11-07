@@ -357,7 +357,13 @@ This does not assign neighboring helper files to those packages.
 
 
 For source-only Vitest project settings, configure `vitest-project-policy` with
-an explicit `config`, finite `helpers`, required/forbidden literal properties,
-and parity pairs, then run `no-mistakes check --root . --format json`. Inspect
-`incomplete` as well as findings: dynamic values require a literal rewrite.
-This policy never executes config or discovers additional source files.
+an explicit `config`, `helpers` paths/globs, effective required/forbidden literal
+properties, and parity pairs, then run `no-mistakes check --root . --format json`.
+Use `declared.forbiddenValues` to ban particular literal assignments or
+`declared.forbidLiteralKinds` to require computed values for selected properties.
+These inspect every object literal in config and matched helpers, including
+unimported helpers; identifiers, calls, and member expressions remain allowed.
+Helper globs select only the prepared visible-file inventory. Declared-only
+policies do not report dynamic projects as incomplete. For effective policies,
+inspect `incomplete` as well as findings: unresolved values require a static
+rewrite. This policy never executes config or discovers additional source files.

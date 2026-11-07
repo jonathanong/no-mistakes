@@ -442,6 +442,12 @@ rules:
 ### Vitest project properties
 
 [`vitest-project-policy`](../rules/vitest-project-policy.md) accepts an explicit
-`options.config` and finite `options.helpers` source list, with `required`
-scalar properties, `forbidden` names, and `parity` pairs. It reads only these
-sources and reports non-literal values as incomplete without executing config.
+`options.config` and `options.helpers` paths or globs, with `required` scalar
+properties, `forbidden` names, and `parity` pairs. Helper globs select only the
+prepared visible-file inventory. Optional `declared.forbiddenValues` maps
+property names to forbidden literal arrays; `declared.forbidLiteralKinds` maps
+names to arrays of `number`, `string`, or `boolean`. They check every object
+literal in these sources, including unimported helpers, and permit computed
+expressions without resolving constants. Declared-only policies never report
+dynamic projects as incomplete. Effective policies still report unresolved
+values as incomplete. Config is never executed.
