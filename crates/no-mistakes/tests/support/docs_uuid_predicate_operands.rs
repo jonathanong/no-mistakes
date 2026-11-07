@@ -5,7 +5,7 @@ fn uuid_predicate_docs_execute_aggregate_values_and_every_transformed_operand() 
     let rule = "postgres-no-transformed-uuid-predicates";
     let page = docs_rule_snippets::load_page(&repo_root(), rule);
     let config = docs_rule_snippets::rule_config_yaml(&page.body, rule);
-    for (heading, expected) in [("Valid example", 0), ("Counterexample", 7)] {
+    for (heading, expected) in [("Valid example", 0), ("Counterexample", 10)] {
         let section = docs_rule_snippets::heading_section(&page.body, heading);
         let fences = docs_rule_snippets::fences(&section);
         let runs = docs_rule_snippets::snippet_runs(&fences);
@@ -18,7 +18,8 @@ fn uuid_predicate_docs_execute_aggregate_values_and_every_transformed_operand() 
         }
         // Count each documented operand, including both sides of the join and FILTER.
         for (pattern, expected) in [
-            ("WHERE applies cast to UUID column users.id", 2),
+            ("WHERE applies cast to UUID column users.id", 3),
+            ("WHERE applies COALESCE to UUID column users.id", 2),
             (
                 "WHERE applies uuid_extract_timestamp to UUID column users.id",
                 1,
