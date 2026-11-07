@@ -104,13 +104,13 @@ pub fn with_owned_request_parse_cache<T>(collect: impl FnOnce() -> T) -> T {
 }
 
 pub(crate) fn parse<'a>(
-    path: &Path,
+    _path: &Path,
     allocator: &'a Allocator,
     source: &'a str,
     source_type: SourceType,
 ) -> ParserReturn<'a> {
     #[cfg(any(test, feature = "test-instrumentation"))]
-    parse_count::record_parse_path(path);
+    parse_count::record_parse_path(_path);
     module_names::enforce(
         Parser::new(allocator, source, source_type).parse(),
         allocator,
