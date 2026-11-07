@@ -33,6 +33,7 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
                 &options.executor_factory_names,
                 &options.executor_type_names,
             )
+            .with_executor_option_properties(&options.executor_option_properties)
             .with_trusted_sql_tags(&options.trusted_sql_tags)
             .with_sql_literal_helpers(
                 if *rule_id == "postgres-require-query-annotation" {

@@ -153,3 +153,7 @@ position use line 1 rather than an inferred line.
 - [Infrastructure (Terraform/OpenTofu)](infra.md)
 
 Configure opt-in [coverage producer assertion ownership](../rules/coverage-producer-assertion-owner.md) through rule options: exact producer functions, binding-aware assertion imports, explicit ownership contracts, and traversal bounds.
+
+The `postgres-lock-written-rows-only` rule accepts `executorOptionProperties`
+(default `[]`) for explicit static transaction-routing options such as
+`{ query: tx }`. See the [rule options](../rules/postgres-lock-written-rows-only.md#resource-scoped-transactions-and-executor-options).

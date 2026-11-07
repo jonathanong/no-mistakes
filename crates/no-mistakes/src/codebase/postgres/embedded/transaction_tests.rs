@@ -59,3 +59,29 @@ fn transaction_metadata_survives_statement_variant_projection() {
         assert_eq!(version.bound_parameters, call.bound_parameters);
     }
 }
+
+#[test]
+fn resource_bindings_and_explicit_option_receivers_preserve_transaction_identity() {
+    let path = super::tests::fixture("transaction-resource-options.ts");
+    let source = super::tests::read_fixture("transaction-resource-options.ts");
+    let options = EmbeddedSqlOptions::configured("@example/db", &["query".into()])
+        .with_scoped_executors(&["openTransaction".into()], &[])
+        .with_executor_option_properties(&["query".into()]);
+    let calls = extract_embedded_sql_from_source(&path, &source, &options).calls;
+    assert_eq!(calls.len(), 13, "{calls:?}");
+    let outer = calls[0].transaction_id;
+    assert!(outer.is_some());
+    for index in [0, 1, 2, 5] {
+        assert_eq!(calls[index].transaction_id, outer, "{index}");
+        assert!(calls[index].executor_transaction_known, "{index}");
+    }
+    assert!(calls[3].transaction_id.is_some());
+    assert_ne!(calls[3].transaction_id, outer);
+    assert_eq!(calls[3].transaction_id, calls[4].transaction_id);
+    for call in &calls[6..12] {
+        assert!(!call.executor_transaction_known, "{call:?}");
+        assert!(call.transaction_id.is_none());
+    }
+    assert!(calls[12].executor_transaction_known);
+    assert!(calls[12].transaction_id.is_none());
+}
