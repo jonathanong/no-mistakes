@@ -19,6 +19,18 @@ fn prepared() -> (PathBuf, Vec<PathBuf>, CheckFactMap) {
         "opaque.ts",
         "quoted.ts",
         "quoted-consumer.ts",
+        "namespace-exports.ts",
+        "namespace-star.ts",
+        "namespace-ambiguous.ts",
+        "namespace-unknown.ts",
+        "namespace-unrelated.ts",
+        "namespace-consumer.ts",
+        "namespace-other.ts",
+        "namespace-collision.ts",
+        "namespace-quoted.ts",
+        "namespace-quoted-star.ts",
+        "external-member.ts",
+        "external-member-consumer.ts",
     ]
     .iter()
     .map(|file| root.join(file))
@@ -142,10 +154,16 @@ fn value_import_selectors_are_opt_in_and_preserve_existing_imports_and_calls() {
     });
     assert!(merged.value_import_selectors);
     for file in &files {
-        assert_eq!(
-            plain.dependencies_of_node(&NodeId::file(file)),
-            selected.dependencies_of_node(&NodeId::file(file))
-        );
+        let imports = |graph: &DepGraph| {
+            graph
+                .dependencies_of_node(&NodeId::file(file))
+                .into_iter()
+                .flatten()
+                .filter(|(_, kind)| *kind != EdgeKind::SymbolReexport)
+                .cloned()
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(imports(&plain), imports(&selected));
         assert_eq!(
             plain.call_sites_in_file(file),
             selected.call_sites_in_file(file)
@@ -161,3 +179,6 @@ fn value_import_selectors_are_opt_in_and_preserve_existing_imports_and_calls() {
 
 #[path = "value_import_selectors_controls.rs"]
 mod controls;
+
+#[path = "value_import_namespaces.rs"]
+mod namespaces;

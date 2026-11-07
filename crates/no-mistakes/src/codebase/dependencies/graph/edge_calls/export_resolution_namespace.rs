@@ -8,12 +8,45 @@ fn resolve_exported_namespace_reexport_member(
     visited: &mut ExportResolutionTrace,
 ) -> ExportedCallableResolution {
     let (file, namespace, member) = export;
+    if indexes.value_imports {
+        let root = resolve_exported_callable(
+            edge_inputs,
+            facts,
+            resolver,
+            path,
+            namespace,
+            indexes,
+            visited,
+        );
+        return match root {
+            ExportedCallableResolution::Namespace(target) => resolve_exported_callable(
+                edge_inputs,
+                facts,
+                resolver,
+                &target,
+                member,
+                indexes,
+                visited,
+            ),
+            ExportedCallableResolution::Unknown => ExportedCallableResolution::Unknown,
+            _ => resolve_star_export(
+                edge_inputs,
+                facts,
+                resolver,
+                (path, &format!("{namespace}.{member}"), file),
+                indexes,
+                visited,
+            ),
+        };
+    }
     if member.contains('.') {
         return ExportedCallableResolution::Absent;
     }
-    let Some(binding) = file.exported.get(namespace).filter(|binding| {
-        binding.local == "*" && binding.specifier.is_some()
-    }) else {
+    let Some(binding) = file
+        .exported
+        .get(namespace)
+        .filter(|binding| binding.local == "*" && binding.specifier.is_some())
+    else {
         return ExportedCallableResolution::Absent;
     };
     let specifier = binding.specifier.as_ref().expect("checked above");
@@ -36,6 +69,35 @@ fn resolve_exported_namespace_reexport_member(
     } else {
         ExportedCallableResolution::Unknown
     }
+}
+
+fn resolve_exported_namespace_import(
+    inputs: &GraphEdgeBuildInputs<'_>,
+    facts: &dyn TsFactLookup,
+    resolver: &dyn ImportResolution,
+    path: &std::path::Path,
+    alias: (&CallableFileIndex, &str),
+    indexes: &CallableResolutionIndexes,
+    visited: &mut ExportResolutionTrace,
+) -> Option<ExportedCallableResolution> {
+    if !indexes.value_imports {
+        return None;
+    }
+    let binding = alias.0.imported.get(alias.1).filter(|binding| {
+        binding.kind == crate::codebase::dependencies::extract::ImportedBindingKind::Namespace
+    })?;
+    Some(
+        match resolver
+            .resolve(&binding.specifier, path)
+            .and_then(|target| inputs.graph_files.visible_path(&target))
+        {
+            Some(target) => {
+                visited.record_source(facts, target, true);
+                ExportedCallableResolution::Namespace(target.to_path_buf())
+            }
+            None => ExportedCallableResolution::Unknown,
+        },
+    )
 }
 
 fn resolve_exported_namespace_member_alias(
