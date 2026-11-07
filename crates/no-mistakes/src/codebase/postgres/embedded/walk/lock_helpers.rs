@@ -65,7 +65,7 @@ impl<'a> ScopeVisitor<'a> {
             fact.lock_scope_analysis = true;
             fact.line = byte_offset_to_line(self.source, call.span.start as usize);
             fact.callee = name.name.to_string();
-            fact.execution_unconditional = self.control_depth == 0 && self.loop_depth == 0;
+            fact.execution_unconditional = self.helper_execution_unconditional();
             fact.lock_helper = Some((
                 name.name.to_string(),
                 byte_offset_to_line(self.source, query.span.start as usize),
@@ -155,7 +155,7 @@ impl ScopeVisitor<'_> {
             fact.line = byte_offset_to_line(self.source, call.span.start as usize);
             fact.callee = name.to_owned();
             fact.kind = EmbeddedSqlKind::Dynamic;
-            fact.execution_unconditional = self.control_depth == 0 && self.loop_depth == 0;
+            fact.execution_unconditional = self.helper_execution_unconditional();
             let arguments = call
                 .arguments
                 .iter()
@@ -173,5 +173,17 @@ impl ScopeVisitor<'_> {
                 span: (call.span.start, call.span.end),
             });
         }
+    }
+}
+
+impl ScopeVisitor<'_> {
+    fn helper_execution_unconditional(&self) -> bool {
+        let owner = self
+            .member_query_proof
+            .function_ids
+            .last()
+            .copied()
+            .unwrap_or(0);
+        self.control_depth == 0 && self.loop_depth == 0 && !self.exited_functions.contains(&owner)
     }
 }
