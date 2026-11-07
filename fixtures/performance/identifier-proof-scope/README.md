@@ -8,13 +8,14 @@ For the matched comparison, build both revisions with stable Rust, default
 features and the Darwin release settings from `.github/workflows/release.yml`:
 `CARGO_PROFILE_RELEASE_LTO=thin` and
 `CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16`. Use
-`flock /tmp/nm-heavy.lock env CARGO_BUILD_JOBS=6` around release builds, and
+`flock --close /tmp/nm-heavy.lock env CARGO_BUILD_JOBS=6` around release builds, and
 freeze each verified executable before building the other revision. A Linux
 host using those settings measures the release profile, not macOS hardware.
+Closing the child descriptor keeps compiler-cache daemons from inheriting the lock.
 
 ```sh
 python3 fixtures/performance/identifier-proof-scope/generate.py --out /tmp/identifier-proof-fixture
-flock /tmp/nm-heavy.lock python3 fixtures/performance/identifier-proof-scope/measure.py \
+flock --close /tmp/nm-heavy.lock python3 fixtures/performance/identifier-proof-scope/measure.py \
   --baseline /tmp/baseline-no-mistakes --candidate /tmp/candidate-no-mistakes \
   --fixture /tmp/identifier-proof-fixture --out /tmp/identifier-proof-results \
   --jobs 4 --observers off on
