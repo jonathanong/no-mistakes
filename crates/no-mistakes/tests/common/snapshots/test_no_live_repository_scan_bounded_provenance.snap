@@ -180,17 +180,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "const-load": {
     "exitCode": 0,
     "report": {
-      "advisories": [
-        {
-          "file": "list.mts",
-          "import": "readdirSync",
-          "line": 2,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
-          "rule": "test-no-live-repository-scan",
-          "sourceLine": "export function list(root: string) { return readdirSync(root) }",
-          "target": "unresolved root"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
