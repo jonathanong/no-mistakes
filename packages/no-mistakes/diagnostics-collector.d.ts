@@ -20,7 +20,9 @@ export function collectDiagnostics(
 export function collectDiagnostics(
   operation: "symbols",
   options: Api.WithInvocationOptions<Api.SymbolsOptions>,
-): Promise<DiagnosticsResult<Api.WithInvocationResult<Api.SymbolsResult | Api.SignatureImpactResult>>>;
+): Promise<
+  DiagnosticsResult<Api.WithInvocationResult<Api.SymbolsResult | Api.SignatureImpactResult>>
+>;
 export function collectDiagnostics(
   operation: "resolveCheck",
   options: Api.WithInvocationOptions<Api.ResolveCheckOptions>,
