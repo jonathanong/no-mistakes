@@ -142,6 +142,8 @@ for (const name of [
   "nested-recursion",
   "same-file-call-chain",
   "options-root",
+  "assignment-target-options",
+  "assignment-read-options",
   "glob-options-flow",
   "disposable-root",
   "rewritten-spread",
@@ -177,6 +179,7 @@ for (const name of [
           const targets = current.advisories.map(({ target }) => target).sort();
           const advisories =
             {
+              "assignment-target-options": Array(10).fill("unresolved root"),
               "glob-options-flow": ["unresolved root"],
               "hook-env-restore": ["unresolved root"],
               "rewritten-spread": ["runtime asset", "unresolved root"],

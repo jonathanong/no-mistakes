@@ -115,15 +115,55 @@ impl<'a> Projector<'a, '_> {
             if invoked {
                 return false;
             }
-            if matches!(
-                semantic.nodes().parent_kind(member),
-                AstKind::AssignmentExpression(_)
-                    | AstKind::UpdateExpression(_)
-                    | AstKind::UnaryExpression(_)
-            ) {
+            if member_assignment_target(semantic.nodes(), member)
+                || matches!(
+                    semantic.nodes().parent_kind(member),
+                    AstKind::UpdateExpression(_) | AstKind::UnaryExpression(_)
+                )
+            {
                 return false;
             }
         }
         true
     }
+}
+
+fn member_assignment_target(
+    nodes: &oxc_semantic::AstNodes<'_>,
+    member: oxc_semantic::NodeId,
+) -> bool {
+    let span = nodes.kind(member).span();
+    nodes
+        .ancestors(member)
+        .find_map(|ancestor| match ancestor.kind() {
+            AstKind::AssignmentExpression(assignment) => {
+                Some(assignment.left.span().contains_inclusive(span))
+            }
+            AstKind::ForInStatement(statement) => {
+                Some(statement.left.span().contains_inclusive(span))
+            }
+            AstKind::ForOfStatement(statement) => {
+                Some(statement.left.span().contains_inclusive(span))
+            }
+            AstKind::AssignmentTargetPropertyProperty(property)
+                if property.binding.span().contains_inclusive(span) =>
+            {
+                None
+            }
+            AstKind::AssignmentTargetWithDefault(default)
+                if default.binding.span().contains_inclusive(span) =>
+            {
+                None
+            }
+            AstKind::ArrayAssignmentTarget(_)
+            | AstKind::ObjectAssignmentTarget(_)
+            | AstKind::AssignmentTargetRest(_)
+            | AstKind::ParenthesizedExpression(_)
+            | AstKind::TSAsExpression(_)
+            | AstKind::TSTypeAssertion(_)
+            | AstKind::TSNonNullExpression(_)
+            | AstKind::TSSatisfiesExpression(_) => None,
+            _ => Some(false),
+        })
+        .unwrap_or(false)
 }
