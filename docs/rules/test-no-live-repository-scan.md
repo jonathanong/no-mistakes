@@ -210,7 +210,12 @@ parameter, and an options parameter read through a static property such as
 `options.root` can retain the caller proof. An object argument must expose the
 requested property in a literal object, without mutation or escape. Method and
 constructor calls on that object prevent this proof because they may mutate its
-properties. Anything else keeps the finding, because a caller
+properties. A member written through an object or array assignment target,
+including nested patterns, rest elements, defaults, and loop targets, also
+invalidates ownership. For example, `({ root: options.root } = { root: process.cwd() })`
+before `readdirSync(options.root)` remains reported even when the caller supplied
+an owned root. Reads in default initializers or computed property keys do not
+write the member. Anything else keeps the finding, because a caller
 the call graph cannot see may pass anything:
 
 - The callee is a named function declaration or function-valued `const`, not
