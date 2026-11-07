@@ -32,6 +32,8 @@ pub struct EmbeddedSqlOptions {
     /// Exact module#export identities of annotation-only literal wrappers.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub sql_literal_helpers: Vec<String>,
+    #[serde(skip)]
+    pub track_transaction_helpers: bool,
 }
 
 impl EmbeddedSqlOptions {
@@ -79,6 +81,7 @@ impl EmbeddedSqlOptions {
             executor_option_properties: Vec::new(),
             trusted_sql_tags: Vec::new(),
             sql_literal_helpers: Vec::new(),
+            track_transaction_helpers: false,
         }
     }
 

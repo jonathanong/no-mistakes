@@ -29,6 +29,10 @@ pub(crate) fn collect_calls<'a>(
         super::super::finite_identifiers::vitest_it_imports(program)
     };
     let mut visitor = ScopeVisitor {
+        lock_helpers: super::super::lock_helpers::collect(
+            program,
+            options.track_transaction_helpers,
+        ),
         exited_functions: Default::default(),
         scalar_literals: Default::default(),
         head_calls_only,
@@ -104,6 +108,7 @@ pub(crate) fn collect_calls<'a>(
     };
     visitor.visit_program(program);
     visitor.flush_plain_returns();
+    visitor.mark_lock_helper_definitions();
     visitor.downgrade_escaped_member_calls();
     if !head_calls_only {
         visitor.finish_const_splices();

@@ -87,6 +87,10 @@ impl<'a> Output<'a> {
         if allowed {
             return;
         }
+        let message = site.call.lock_helper.as_ref().map_or_else(
+            || message.to_owned(),
+            |(name, line)| format!("{message}; helper {name} locks at line {line}"),
+        );
         if mode == Mode::Fail {
             self.findings.push(finding(
                 site.file,

@@ -28,6 +28,7 @@ pub(crate) struct BindingState {
 }
 
 pub(crate) struct ScopeVisitor<'a> {
+    pub(super) lock_helpers: super::lock_helpers::LockHelpers<'a>,
     pub(super) exited_functions: crate::fx::FxHashSet<u32>,
     pub(super) scalar_literals: crate::fx::FxHashMap<std::num::NonZeroU32, String>,
     pub(crate) head_calls_only: bool,
