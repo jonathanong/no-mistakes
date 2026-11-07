@@ -51,9 +51,8 @@ pub(super) fn compose(
                 }
                 _ => return None,
             };
-            let Parameter::Argument(executor) = parameter(receiver, params) else {
-                return None;
-            };
+            let executor = params.iter().position(|param|
+                matches!(receiver, Expression::Identifier(id) if *param == id.name.as_str()))?;
             let mut projected = query.clone();
             projected.executor = executor;
             projected.access = access;

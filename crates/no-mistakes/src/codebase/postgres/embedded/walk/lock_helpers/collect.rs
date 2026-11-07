@@ -26,10 +26,10 @@ pub(in crate::codebase::postgres::embedded::walk) fn collect<'a>(
                 },
                 _ => None,
             };
-            let Some(function) = function.filter(|function| !function.generator) else {
-                continue;
-            };
-            let Some(name) = function.id.as_ref().map(|id| id.name.as_str()) else {
+            let Some((function, name)) = function
+                .filter(|function| !function.generator)
+                .and_then(|function| function.id.as_ref().map(|id| (function, id.name.as_str())))
+            else {
                 continue;
             };
             if reassigned.contains(name) || helpers.contains_key(name) {

@@ -1,4 +1,4 @@
-use super::{summary::Query, ExecutorAccess};
+use super::{ExecutorAccess, summary::Query};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression};
 
@@ -33,37 +33,25 @@ pub(super) fn summarize(call: &CallExpression<'_>, params: &[&str], source: &str
         return None;
     }
     let sql = crate::codebase::postgres::embedded::sql_text(sql)?;
-    if let Some(argument) = call.arguments.get(1) {
-        let Expression::ArrayExpression(array) = unwrap_ts_wrappers(argument.as_expression()?)
-        else {
-            return None;
-        };
-        if array
-            .elements
-            .iter()
-            .any(|element| element.as_expression().is_none())
-        {
-            return None;
+    let parameters = match call.arguments.get(1) {
+        None => Vec::new(),
+        Some(argument) => {
+            let Expression::ArrayExpression(array) = unwrap_ts_wrappers(argument.as_expression()?)
+            else {
+                return None;
+            };
+            array
+                .elements
+                .iter()
+                .map(|element| {
+                    Some(super::parameters::parameter(
+                        element.as_expression()?,
+                        params,
+                    ))
+                })
+                .collect::<Option<Vec<_>>>()?
         }
-    }
-    let parameters = call
-        .arguments
-        .get(1)
-        .and_then(|argument| argument.as_expression())
-        .map(unwrap_ts_wrappers)
-        .and_then(|expression| match expression {
-            Expression::ArrayExpression(array) => Some(
-                array
-                    .elements
-                    .iter()
-                    .map(|element| {
-                        super::parameters::parameter(element.as_expression().unwrap(), params)
-                    })
-                    .collect(),
-            ),
-            _ => None,
-        })
-        .unwrap_or_default();
+    };
     Some(super::summary::Query {
         executor,
         access,
