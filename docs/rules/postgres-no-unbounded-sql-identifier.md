@@ -523,7 +523,9 @@ An exported `sql-template-strings` statement or fragment may be imported through
 named or namespace imports and static re-exports. Its constructor and append
 arguments must remain proven. Reassignment, member writes, unsupported member
 access, and unsafe aliases or escapes in the producer or consumers end the
-proof. An escaping namespace invalidates only the statements it actually
+proof. Dynamic imports, including conditional loaders, and CommonJS consumers
+also end an exported statement's proof because their reads are not checked.
+An escaping namespace invalidates only the statements it actually
 exports; importing a module does not expose all of that module's private
 imports. Copy an imported fragment into a fresh empty `sql` tagged template with
 `.append(fragment)`. A synchronous factory may return its own local

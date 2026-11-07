@@ -33,3 +33,21 @@ fn postgres_identifier_imported_builders_check_json_snapshot() {
         &[("max", root.clone(), root.join(".no-mistakes-negative.yml"))],
     );
 }
+
+#[test]
+fn postgres_identifier_builder_runtime_consumers_check_json_snapshot() {
+    let fixtures = rules_path(
+        "postgres-no-unbounded-sql-identifier",
+        "fixture",
+        "builder-runtime-consumers",
+    );
+    let cases: Vec<_> = ["dynamic", "conditional", "clean"]
+        .into_iter()
+        .map(|scenario| {
+            let root = fixtures.join(scenario);
+            let config = root.join(".no-mistakes.yml");
+            (scenario, root, config)
+        })
+        .collect();
+    assert_saved_fixture("postgres_identifier_builder_runtime_consumers", &cases);
+}

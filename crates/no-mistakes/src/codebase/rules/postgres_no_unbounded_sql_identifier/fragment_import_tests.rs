@@ -47,6 +47,13 @@ pub(super) fn prepared() -> (CheckFactMap, DepGraph, PathBuf) {
     .iter()
     .map(|name| root.join("src").join(name))
     .collect();
+    prepared_files(root, files)
+}
+
+pub(super) fn prepared_files(
+    root: PathBuf,
+    files: Vec<PathBuf>,
+) -> (CheckFactMap, DepGraph, PathBuf) {
     let plan = TsFactPlan {
         value_flow: true,
         ..TsFactPlan::imports()
@@ -198,3 +205,6 @@ mod namespace_escapes;
 
 #[path = "fragment_import_copy_tests.rs"]
 mod copies;
+
+#[path = "fragment_import_dynamic_tests.rs"]
+mod dynamic;

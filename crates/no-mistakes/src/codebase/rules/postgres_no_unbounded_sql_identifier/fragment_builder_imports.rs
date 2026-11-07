@@ -128,7 +128,12 @@ fn affected(proof: &mut Proof<'_, '_>, producer: &Path) -> Option<Vec<PathBuf>> 
                 }
                 if let Some(edges) = graph.dependents_of_node(&NodeId::file(file)) {
                     for (target, kind) in edges {
-                        if *kind == EdgeKind::Require {
+                        if matches!(
+                            kind,
+                            EdgeKind::Require
+                                | EdgeKind::DynamicImport
+                                | EdgeKind::ConditionalDynamicImport
+                        ) {
                             return None;
                         }
                         if *kind == EdgeKind::Import {
