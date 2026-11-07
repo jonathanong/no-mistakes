@@ -20,8 +20,8 @@ check already acquires the required parent KEY SHARE lock.
 | --- | --- | --- |
 | `row-lock-unwritten-relation` | `FOR UPDATE`, `FOR NO KEY UPDATE`, `FOR SHARE`, or `FOR KEY SHARE` on a relation the same transaction never updates or deletes; provable keys must match too. | Lock the written row, or rely on the foreign-key check. |
 | `table-lock` | `LOCK TABLE` in any mode. | Use a bounded row lock on the written row. |
-| `constant-advisory-lock` | Literal or constant keys to `pg_advisory_lock`, `pg_advisory_xact_lock`, their `try_` forms, and two-key variants. | Use a key derived from the written entity. |
-| `row-lock-outside-transaction` | A row lock on a known non-transaction executor. | Move the lock and write into one transaction. |
+| `constant-advisory-lock` | Literal or constant keys (including builtin `hashtext` / `hashtextextended` of constants) to `pg_advisory_lock`, `pg_advisory_xact_lock`, their `try_` forms, and two-key variants. | Use a key derived from the written entity. |
+| `row-lock-outside-transaction` | A row lock on a known non-transaction executor, unless the same SQL statement writes the locked relation. | Move the lock and write into one transaction. |
 
 Each check defaults to `advise`. `fail` emits a failing finding and `ignore`
 disables that check. Never interpret an unresolved statement as a proven write.
@@ -100,6 +100,33 @@ export async function broadLocks(childId: string) {
 
 The final call uses a known non-transaction executor, so its row lock is released
 at the end of that statement.
+
+## Hashed keys and atomic statements
+
+At configured executors, `pg_advisory_xact_lock(hashtext('global'))` and
+`pg_advisory_xact_lock(hashtextextended('global', 0))` serialize unrelated rows.
+The rule recognizes both unqualified and `pg_catalog`-qualified hash functions,
+including module `const` values passed as SQL parameters. Every argument,
+including the extended hash seed, must be proven constant. A row-derived bound
+parameter, such as `hashtextextended($1, 0)` with `[rowId]`, remains compliant.
+Arbitrary functions are outside this constant proof.
+
+An autocommit queue claim can safely lock and write in one statement:
+
+```sql
+WITH candidates AS (
+  SELECT id FROM jobs ORDER BY id LIMIT 50 FOR UPDATE SKIP LOCKED
+), claimed AS (
+  UPDATE jobs SET claimed_at = now() FROM candidates
+  WHERE jobs.id = candidates.id RETURNING jobs.id
+)
+SELECT id FROM claimed
+```
+
+This passes because the same statement writes `jobs`. A write to another
+relation, a separate SQL statement in the same string, or a later executor call
+does not exempt the lock. CTE names cannot establish a base relation identity.
+The ordinary `SELECT ... FOR UPDATE` autocommit finding remains enabled.
 
 ## Fix
 

@@ -9,7 +9,7 @@ pub(crate) enum AdvisoryKey {
     Hash(String, Vec<AdvisoryKey>),
 }
 
-pub(super) fn keys(expr: &Expr) -> Option<Vec<AdvisoryKey>> {
+pub(super) fn keys(expr: &Expr, hashed: bool) -> Option<Vec<AdvisoryKey>> {
     let Expr::Function(function) = expr else {
         return None;
     };
@@ -28,24 +28,24 @@ pub(super) fn keys(expr: &Expr) -> Option<Vec<AdvisoryKey>> {
     ) {
         return None;
     }
-    let args = arguments(&function.args)?;
+    let args = arguments(&function.args, hashed)?;
     matches!(args.len(), 1 | 2).then_some(args)
 }
 
-fn arguments(args: &FunctionArguments) -> Option<Vec<AdvisoryKey>> {
+fn arguments(args: &FunctionArguments, hashed: bool) -> Option<Vec<AdvisoryKey>> {
     let FunctionArguments::List(args) = args else {
         return None;
     };
     args.args
         .iter()
         .map(|arg| match arg {
-            FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => key(expr),
+            FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => key(expr, hashed),
             _ => None,
         })
         .collect()
 }
 
-fn key(expr: &Expr) -> Option<AdvisoryKey> {
+fn key(expr: &Expr, hashed: bool) -> Option<AdvisoryKey> {
     if constant(expr) {
         return Some(AdvisoryKey::Constant(expr.to_string()));
     }
@@ -53,7 +53,7 @@ fn key(expr: &Expr) -> Option<AdvisoryKey> {
         Expr::Value(value) if matches!(value.value, Value::Placeholder(_)) => {
             Some(AdvisoryKey::Parameter(value.to_string()))
         }
-        Expr::Function(function) => {
+        Expr::Function(function) if hashed => {
             let name = object_name_identity(&function.name);
             let name = name.strip_prefix("pg_catalog.").unwrap_or(&name);
             let arity = match name {
@@ -61,10 +61,10 @@ fn key(expr: &Expr) -> Option<AdvisoryKey> {
                 "hashtextextended" => 2,
                 _ => return None,
             };
-            let args = arguments(&function.args)?;
+            let args = arguments(&function.args, hashed)?;
             (args.len() == arity).then(|| AdvisoryKey::Hash(name.to_owned(), args))
         }
-        Expr::Cast { expr, .. } => key(expr),
+        Expr::Cast { expr, .. } => key(expr, hashed),
         _ => None,
     }
 }

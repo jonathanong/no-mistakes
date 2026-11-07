@@ -27,7 +27,7 @@ pub(crate) struct RowAccess {
     pub has_predicate: bool,
 }
 
-pub(super) fn collect(
+pub(super) fn collect<const ADVANCED: bool>(
     statements: &[Statement],
     positions: PlaceholderPositions<'_>,
 ) -> LockWriteFacts {
@@ -41,36 +41,51 @@ pub(super) fn collect(
         for statement in executed {
             let first_lock = out.locks.len();
             let first_write = out.writes.len();
-            let _ = statement.visit(&mut Collector {
+            let _ = statement.visit(&mut Collector::<ADVANCED> {
                 out: &mut out,
                 scopes: Vec::new(),
+                cte_depth: 0,
+                with_stack: Vec::new(),
                 positions,
             });
-            scope::mark_self_contained(&mut out, first_lock, first_write);
+            if ADVANCED {
+                scope::mark_self_contained(&mut out, first_lock, first_write);
+            }
         }
     }
     out
 }
-struct Collector<'a, 'p> {
+struct Collector<'a, 'p, const ADVANCED: bool> {
     out: &'a mut LockWriteFacts,
     scopes: Vec<BTreeSet<String>>,
+    cte_depth: usize,
+    with_stack: Vec<bool>,
     positions: PlaceholderPositions<'p>,
 }
-impl Visitor for Collector<'_, '_> {
+impl<const ADVANCED: bool> Visitor for Collector<'_, '_, ADVANCED> {
     type Break = ();
     fn pre_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
-        self.scopes.push(scope::cte_names(query));
+        if ADVANCED {
+            self.scopes.push(scope::cte_names(query));
+        } else {
+            self.with_stack.push(query.with.is_some());
+            self.cte_depth += usize::from(query.with.is_some());
+        }
         if !query.locks.is_empty() {
             let access = match query.body.as_ref() {
                 SetExpr::Select(select)
-                    if select.from.len() == 1 && select.from[0].joins.is_empty() =>
+                    if (ADVANCED || self.cte_depth == 0)
+                        && select.from.len() == 1
+                        && select.from[0].joins.is_empty() =>
                 {
                     let mut row = access(
                         &select.from[0].relation,
                         select.selection.as_ref(),
                         self.positions,
                     );
-                    scope::hide_cte(&mut row, &self.scopes);
+                    if ADVANCED {
+                        scope::hide_cte(&mut row, &self.scopes);
+                    }
                     row
                 }
                 _ => RowAccess {
@@ -106,7 +121,11 @@ impl Visitor for Collector<'_, '_> {
         ControlFlow::Continue(())
     }
     fn post_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
-        self.scopes.pop().expect("balanced SQL query");
+        if ADVANCED {
+            self.scopes.pop().expect("balanced SQL query");
+        } else {
+            self.cte_depth -= usize::from(self.with_stack.pop().expect("balanced SQL query"));
+        }
         ControlFlow::Continue(())
     }
     fn pre_visit_statement(&mut self, statement: &Statement) -> ControlFlow<()> {
@@ -152,7 +171,7 @@ impl Visitor for Collector<'_, '_> {
         ControlFlow::Continue(())
     }
     fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
-        if let Some(keys) = advisory::keys(expr) {
+        if let Some(keys) = advisory::keys(expr, ADVANCED) {
             self.out.advisory_keys.push(keys);
         }
         ControlFlow::Continue(())

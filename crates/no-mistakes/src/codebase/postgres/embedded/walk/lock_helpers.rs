@@ -57,6 +57,7 @@ impl<'a> ScopeVisitor<'a> {
             else {
                 continue;
             };
+            fact.lock_scope_analysis = true;
             fact.sql_text = Some(sql);
             fact.kind = EmbeddedSqlKind::Inline;
             fact.line = byte_offset_to_line(self.source, call.span.start as usize);
