@@ -9,6 +9,9 @@ pub(super) fn complete(
     options: &EmbeddedSqlOptions,
     invocation: &Invocation,
 ) -> Vec<EmbeddedSqlCall> {
+    if !invocation.resolve_helper {
+        return vec![invocation.call.clone()];
+    }
     let summary = shared
         .find(path, &invocation.name, None)
         .and_then(|(path, name)| {

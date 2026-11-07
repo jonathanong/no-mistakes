@@ -75,7 +75,7 @@ fn helper_executor_option_does_not_prove_a_write_on_the_callee_transaction() {
     assert!(
         findings
             .iter()
-            .any(|finding| finding.line == 8 && finding.target.as_deref() == Some(CHECKS[0])),
+            .any(|finding| finding.line == 8 && finding.target.as_deref() == Some("unanalyzable")),
         "{findings:?}"
     );
 }

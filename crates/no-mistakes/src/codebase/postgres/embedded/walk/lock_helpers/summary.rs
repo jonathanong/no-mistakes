@@ -18,6 +18,7 @@ pub(crate) enum Parameter {
 }
 #[derive(Clone, PartialEq, Eq)]
 pub(crate) struct Invocation {
+    pub(crate) resolve_helper: bool,
     pub(crate) name: String,
     pub(crate) executor: usize,
     pub(crate) arguments: Vec<Option<String>>,
