@@ -526,4 +526,9 @@ map sets `fail`, `advise` (default), or `ignore` independently for
 with required reasons. `writeSets` asserts helper-written relations for one
 file and transaction factory line. Both lists default to empty and participate
 in unused-entry accounting. Unresolved SQL and transaction membership follow
-`unanalyzable` / `unanalyzableSql`; see the rule page for the phase 1 limits.
+`unanalyzable` / `unanalyzableSql`. Its `executorOptionProperties` defaults to
+`[]`; for example, `[query]` selects inline `{ query: tx }` or
+`{ query: tx.query }` overrides at configured executors. An unresolved override
+follows the unanalyzable policy and is never classified as autocommit.
+Configured factory bindings support `const`, `using`, and `await using` with
+block scope. See the rule page for helper summaries and supported proof limits.

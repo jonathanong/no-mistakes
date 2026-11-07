@@ -170,8 +170,8 @@ project scope, configure `importSpecifier` or explicit `executorNames`.
 `include` and `exclude` default to empty and narrow the selected file scope.
 `executorFactoryNames`, `executorTypeNames`, and `trustedSqlTags` default to
 empty; factories identify transaction executor bindings declared with `const`,
-`using`, or `await using`. Callback transaction membership is unresolved and follows the unanalyzable policy. With an import
-specifier, executor names default to `query`, `read`, and `write`.
+`using`, or `await using`. Callback transaction membership is unresolved and
+follows the unanalyzable policy. With an import specifier, executor names default to `query`, `read`, and `write`.
 `executorNames` replaces that list; use `extraExecutorNames` to extend it instead.
 The two options are mutually exclusive, including when either list is empty.
 `extraExecutorNames` defaults to absent and `excludeExecutorNames` defaults to
