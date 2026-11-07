@@ -104,7 +104,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         path: &Path,
     ) -> Option<Environment> {
         let shared = Arc::clone(self.modules.shared_initials.as_ref()?);
-        if self.files[path].facts.root_eligible != Some(false) {
+        if self.files[path].facts.in_scope != Some(false) {
             return None;
         }
         let entry = match shared.values.get(path) {

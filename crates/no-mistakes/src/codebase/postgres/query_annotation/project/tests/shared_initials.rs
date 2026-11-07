@@ -8,7 +8,7 @@ fn shared_unknown_calls_preserve_intrinsic_trust_without_adding_builder_invalida
         for (_, file) in &mut files {
             file.query_annotation.truncate(1);
             file.embedded_sql.truncate(1);
-            file.query_annotation[0].1.root_eligible = Some(false);
+            file.query_annotation[0].1.in_scope = Some(false);
             file.query_annotation[0].1.precise_records = precise;
         }
         let resolve = |_: &str, _: &std::path::Path| None;
@@ -47,7 +47,7 @@ fn contextual_closures_are_rejected_before_standalone_evaluation() {
     for (_, file) in &mut files {
         file.query_annotation.truncate(1);
         file.embedded_sql.truncate(1);
-        file.query_annotation[0].1.root_eligible = Some(false);
+        file.query_annotation[0].1.in_scope = Some(false);
     }
     let resolve = |_: &str, _: &std::path::Path| None;
     let mut profiles = super::super::prepare::profiles(&files, &resolve);
@@ -77,7 +77,7 @@ fn excluded_self_contained_module_initializes_once_and_keeps_closure_bindings() 
         file.query_annotation.truncate(1);
         file.embedded_sql.truncate(1);
         if path.ends_with("helper.mts") || path.ends_with("unused.mts") {
-            file.query_annotation[0].1.root_eligible = Some(false);
+            file.query_annotation[0].1.in_scope = Some(false);
         }
     }
     let candidates = files.keys().cloned().collect::<BTreeSet<_>>();

@@ -440,13 +440,16 @@ SQL recovered from an imported helper is reported in the helper's module at the 
 Detailed mutation and invocation behavior is described in
 [advanced helper semantics](../postgres-query-annotation/advanced-helper-semantics.md).
 
-At max effort, only files selected by an evaluated annotation application's
-`include` and `exclude` can start annotation evaluation. Other rules sharing
-executor settings do not widen these roots. Excluded files remain available
-when imported by selected roots, without speculative calls to their exported
-entrypoints. Dependency-free excluded modules with portable scalar values and
-module-local closures share their initialized state across roots within one
-run; each root receives its own mutable scope. Imports, cycles and values with
+At max effort, only executor sites selected by evaluated annotation applications'
+`include` and `exclude` seed annotation demand. Other rules sharing executor
+settings do not widen those seeds. Excluded modules that cannot reach a scoped
+executor are never evaluated as roots. Reverse-reachable callers remain roots
+when needed to preserve SQL arguments flowing into scoped helpers, including
+through cyclic re-exports. Binding-only slicing of those callers is not yet implemented.
+
+Eligible dependency-free excluded modules with scalar preparation and
+module-local leaf closures share initialized state across roots within each
+executor profile and run; each root receives its own mutable scope. Imports, cycles and values with
 heap identities retain contextual evaluation. No state persists between runs.
 
 ## Related rules

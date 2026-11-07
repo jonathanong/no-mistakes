@@ -26,11 +26,11 @@ pub(super) fn collect(
         .into_iter()
         .map(|options| {
             let mut facts = query_annotation::collect(program, source, &options);
-            facts.root_eligible = plan.query_annotation_options.as_ref().and_then(|_| {
+            facts.in_scope = plan.query_annotation_options.as_ref().and_then(|_| {
                 plan.embedded_sql_rule_ids.get(&options).map(|scans| {
                     scans
                         .iter()
-                        .any(|scan| scan.annotation_root && scan.paths.includes(&relative))
+                        .any(|scan| scan.annotation_seed && scan.paths.includes(&relative))
                 })
             });
             (options, facts)
