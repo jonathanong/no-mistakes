@@ -6,9 +6,8 @@ use crate::codebase::postgres::embedded::walk::variants::expression;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression, TemplateLiteral};
 
-/// The template and builder identifier of an executor call with exactly this
-/// shape. Any other interpolation, a different second argument, or an extra
-/// argument is not recognized.
+/// The optional template and builder identifier for either executor overload.
+/// Paired text and values must use the same builder.
 pub(in crate::codebase::postgres::embedded::walk) fn shape<'a>(
     call: &'a CallExpression<'a>,
 ) -> Option<(Option<&'a TemplateLiteral<'a>>, &'a Expression<'a>)> {

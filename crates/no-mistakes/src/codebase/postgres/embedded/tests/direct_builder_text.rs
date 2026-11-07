@@ -69,11 +69,17 @@ fn direct_builder_text_rejects_unproven_owners_arguments_and_mutations() {
 #[test]
 fn direct_builder_object_keeps_alias_ownership_and_non_appended_classification() {
     let file = extract_view("append-view-object-controls.ts");
-    let [alias, untouched] = file.calls.as_slice() else {
-        panic!("expected two executor calls: {file:#?}");
+    let [alias, untouched, conditional] = file.calls.as_slice() else {
+        panic!("expected three executor calls: {file:#?}");
     };
     assert_eq!(alias.kind, EmbeddedSqlKind::Dynamic);
     assert!(alias.variants.is_empty());
     assert_eq!(untouched.kind, EmbeddedSqlKind::ImmutableLocal);
     assert!(untouched.variants.is_empty());
+    assert_eq!(conditional.kind, EmbeddedSqlKind::Dynamic);
+    assert_eq!(
+        conditional.sql_text.as_deref(),
+        Some("SELECT id FROM threads")
+    );
+    assert_eq!(conditional.variants.len(), 2);
 }

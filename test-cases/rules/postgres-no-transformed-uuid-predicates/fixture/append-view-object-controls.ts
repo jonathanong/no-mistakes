@@ -11,3 +11,9 @@ export function untouched() {
   const statement = sql`SELECT id FROM threads`;
   return read(statement);
 }
+
+export function conditional(flag: boolean) {
+  const statement = sql`SELECT id FROM threads`;
+  if (flag) statement.append(sql` WHERE published = true`);
+  return read(statement);
+}

@@ -1,10 +1,9 @@
-//! Executor calls shaped ``read(`... ${b.text}`, b.values)``.
+//! Executor calls receiving tracked SQL builders or their text and values.
 
 use super::super::super::{EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlVariant};
 use super::super::variants::ValueKind;
 use super::super::ScopeVisitor;
-use crate::codebase::ts_source::byte_offset_to_line;
-use crate::codebase::ts_source::unwrap_ts_wrappers;
+use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use oxc_ast::ast::{CallExpression, Expression};
 
 /// The call recovered from the template and the builder's final state, or
@@ -26,8 +25,7 @@ pub(super) fn executor_call(
         let Expression::Identifier(id) = argument else {
             return None;
         };
-        let kind = visitor.lookup(id.name.as_str())?.kind;
-        if super::executor::variants::revoked_static_alias(visitor, argument, kind, &versions) {
+        if visitor.lookup(id.name.as_str())?.kind != EmbeddedSqlKind::Composed {
             return None;
         }
     }

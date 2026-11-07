@@ -2,7 +2,7 @@ use super::super::super::{first_call_argument, EmbeddedSqlCall, EmbeddedSqlKind}
 use super::{classify_init, BindingState, ScopeVisitor};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression};
-pub(super) mod variants;
+mod variants;
 
 fn legacy_executor_call(
     visitor: &ScopeVisitor<'_>,
