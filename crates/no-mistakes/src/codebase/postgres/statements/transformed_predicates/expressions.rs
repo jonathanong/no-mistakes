@@ -22,6 +22,7 @@ pub(super) fn collect(
         positions,
         probed,
         probe_value: false,
+        positive_conjunct: true,
         out,
     }
     .walk(expression, None);
@@ -31,22 +32,49 @@ struct Inputs<'a, 'b, 'c> {
     relations: &'a [BaseRel],
     probed: Option<&'a [BaseRel]>,
     probe_value: bool,
+    positive_conjunct: bool,
     positions: PlaceholderPositions<'b>,
     out: &'c mut Vec<SqlTransformedColumnUseFact>,
 }
 impl Inputs<'_, '_, '_> {
     fn equality_operand(&mut self, operand: &Expr, other: &Expr) {
-        let previous = self.probe_value;
-        self.probe_value = bare(other, self.positions).is_some_and(|(qualifier, _)| {
+        let previous = (self.probe_value, self.positive_conjunct);
+        self.positive_conjunct = false;
+        self.probe_value = bare(other, self.positions).is_some_and(|_| {
+            let qualifier = qualifier(other);
             let (table, _) = owner(self.probed.unwrap(), qualifier.as_deref());
             qualifier.is_some()
                 && !table.is_empty()
                 && owner(self.relations, qualifier.as_deref()).0 == table
         });
         self.walk(operand, None);
+        (self.probe_value, self.positive_conjunct) = previous;
+    }
+    fn walk_condition(&mut self, expr: &Expr) {
+        let previous = self.probe_value;
+        self.probe_value = false;
+        self.walk(expr, None);
         self.probe_value = previous;
     }
     fn walk(&mut self, expr: &Expr, transformation: Option<&str>) {
+        let previous = self.probe_value;
+        let positive_conjunct = self.positive_conjunct;
+        self.positive_conjunct &= matches!(
+            expr,
+            Expr::Nested(_)
+                | Expr::BinaryOp {
+                    op: Op::Eq | Op::And,
+                    ..
+                }
+        );
+        if boolean_result(expr) {
+            self.probe_value = false;
+        }
+        self.walk_value(expr, transformation);
+        self.probe_value = previous;
+        self.positive_conjunct = positive_conjunct;
+    }
+    fn walk_value(&mut self, expr: &Expr, transformation: Option<&str>) {
         // A surrounding transformation consumes the boolean result, not its UUID operands.
         let transformation = if boolean_result(expr) {
             None
@@ -58,7 +86,7 @@ impl Inputs<'_, '_, '_> {
                 left,
                 op: Op::Eq,
                 right,
-            } if self.probed.is_some() => {
+            } if self.probed.is_some() && self.positive_conjunct => {
                 self.equality_operand(left, right);
                 self.equality_operand(right, left);
             }
@@ -69,10 +97,10 @@ impl Inputs<'_, '_, '_> {
                 ..
             } => {
                 if let Some(operand) = operand {
-                    self.walk(operand, None);
+                    self.walk_condition(operand);
                 }
                 for branch in conditions {
-                    self.walk(&branch.condition, None);
+                    self.walk_condition(&branch.condition);
                     self.walk(&branch.result, transformation);
                 }
                 if let Some(result) = else_result {
@@ -101,16 +129,7 @@ impl Inputs<'_, '_, '_> {
             Expr::Cast { expr, .. } => self.walk(expr, Some(transformation.unwrap_or("cast"))),
             Expr::Identifier(_) | Expr::CompoundIdentifier(_) if transformation.is_some() => {
                 if let Some((_, column)) = bare(expr, self.positions) {
-                    let qualifier = match expr {
-                        Expr::CompoundIdentifier(parts) => Some(
-                            parts[..parts.len() - 1]
-                                .iter()
-                                .map(|part| relation_part_key(&ident_key(part)))
-                                .collect::<Vec<_>>()
-                                .join("."),
-                        ),
-                        _ => None,
-                    };
+                    let qualifier = qualifier(expr);
                     if self.probe_value
                         && qualifier.is_some()
                         && owner(self.probed.unwrap(), qualifier.as_deref())
@@ -156,5 +175,19 @@ fn owner(relations: &[BaseRel], qualifier: Option<&str>) -> (String, Option<Vec<
             (relation.table.clone(), Some(vec![relation.table.clone()]))
         }
         _ => (String::new(), None),
+    }
+}
+
+fn qualifier(expr: &Expr) -> Option<String> {
+    match expr {
+        Expr::Nested(expr) => qualifier(expr),
+        Expr::CompoundIdentifier(parts) => Some(
+            parts[..parts.len() - 1]
+                .iter()
+                .map(|part| relation_part_key(&ident_key(part)))
+                .collect::<Vec<_>>()
+                .join("."),
+        ),
+        _ => None,
     }
 }

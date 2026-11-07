@@ -62,6 +62,9 @@ fn driving_values_leave_the_joined_key_bare_but_residuals_remain_checked() {
         .collect();
     assert_eq!(
         lines,
-        [3, 3, 4, 4, 6, 6, 7, 7, 8, 8, 9, 9, 9, 10, 10, 11, 12]
+        [
+            3, 3, 4, 4, 6, 6, 7, 7, 8, 8, 9, 9, 9, 10, 10, 11, 12, 13, 14, 15, 15, 19, 19, 20, 20,
+            21, 21, 22, 22, 25, 27, 28, 29, 30, 30, 31, 31
+        ]
     );
 }

@@ -108,7 +108,9 @@ pub(super) fn finding(file: &str, table: &str, use_: &SqlTransformedColumnUseFac
         Clause::Having => "HAVING",
     };
     let line = use_.line.max(1);
-    let residual_rewrite = if use_.transformation.eq_ignore_ascii_case("coalesce") {
+    let residual_rewrite = if use_.clause == Clause::Where
+        && use_.transformation.eq_ignore_ascii_case("coalesce")
+    {
         "; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows"
     } else {
         ""
