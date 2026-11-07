@@ -163,6 +163,9 @@ non-failing advisory, and `ignore` omits the diagnostic. The legacy
 `report`. These policies never certify an unknown transaction as safe.
 Dynamic relation names, key columns, aliases, and `FOR UPDATE OF` targets also
 follow this policy; recovered SQL placeholders cannot establish their identity.
+A possible earlier return or throw also prevents a later write from proving
+that a locked row is written. Keep the matching write on every path that takes
+the lock, or remove the lock.
 
 Phase 1 does not establish advisory-key provenance from unwritten relations,
 unbounded recursive read sets, duplication of unique-index guarantees, or

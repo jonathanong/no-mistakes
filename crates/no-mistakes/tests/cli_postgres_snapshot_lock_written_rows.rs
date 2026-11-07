@@ -142,6 +142,8 @@ fn postgres_lock_written_rows_proofs_check_json_snapshot() {
                 "placeholder-table-lock.yml",
             ),
             ("sql_lock_forms", "sql-lock-forms", "checks-fail.yml"),
+            ("destructured_keys", "destructured-keys", "checks-fail.yml"),
+            ("early_exit", "early-exit", "checks-fail.yml"),
             ("key_proofs", "key-proof", "checks-fail.yml"),
             (
                 "key_proofs_unknown_ignored",

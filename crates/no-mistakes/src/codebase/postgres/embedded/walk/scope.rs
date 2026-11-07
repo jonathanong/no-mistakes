@@ -56,8 +56,10 @@ impl ScopeVisitor<'_> {
 
     pub(super) fn bind_param(&mut self, pattern: &BindingPattern<'_>, sql_builder: bool) {
         let mut names = Vec::new();
-        resolve::for_each_bound_name(pattern, &mut |name| names.push(name.to_string()));
-        for name in names {
+        resolve::for_each_bound_identifier(pattern, &mut |ident| {
+            names.push((ident.name.to_string(), ident.span.start));
+        });
+        for (name, start) in names {
             let executor = self
                 .scoped
                 .contains_declaration(&name, pattern.span().start);
@@ -67,7 +69,7 @@ impl ScopeVisitor<'_> {
                 scope.insert(
                     name.clone(),
                     BindingState {
-                        value_identity: super::transaction::source_identity(pattern.span().start),
+                        value_identity: super::transaction::source_identity(start),
                         executor_alias: executor
                             .then_some(true)
                             .or(relative_executor_proof.map(|_| false)),

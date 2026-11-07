@@ -73,6 +73,80 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "destructured_keys": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 14,
+          "message": "src/query.ts:14: row-lock-unwritten-relation: locked row in items is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [lockId]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 25,
+          "message": "src/query.ts:25: row-lock-unwritten-relation: locked row in items is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [lockId]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 37,
+          "message": "src/query.ts:37: row-lock-unwritten-relation: locked row in items is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [lockId]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: row-lock-unwritten-relation: locked row in items is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [lockId]);",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "early_exit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 10,
+          "message": "src/query.ts:10: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "key_proofs": {
     "exitCode": 1,
     "report": {

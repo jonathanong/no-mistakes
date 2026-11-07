@@ -1,5 +1,6 @@
 use super::*;
 
+mod binding_control_flow;
 mod placeholder_provenance;
 mod proof;
 mod sql_forms;

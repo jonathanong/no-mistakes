@@ -141,15 +141,15 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
     fn visit_throw_statement(&mut self, statement: &oxc_ast::ast::ThrowStatement<'a>) {
         walk::walk_throw_statement(self, statement);
-        self.invalidate_execution_variants();
+        self.invalidate_exited_execution();
     }
     fn visit_break_statement(&mut self, statement: &oxc_ast::ast::BreakStatement<'a>) {
         walk::walk_break_statement(self, statement);
-        self.invalidate_execution_variants();
+        self.invalidate_exited_execution();
     }
     fn visit_continue_statement(&mut self, statement: &oxc_ast::ast::ContinueStatement<'a>) {
         walk::walk_continue_statement(self, statement);
-        self.invalidate_execution_variants();
+        self.invalidate_exited_execution();
     }
     fn visit_try_statement(&mut self, statement: &oxc_ast::ast::TryStatement<'a>) {
         flow::try_statement(self, statement);

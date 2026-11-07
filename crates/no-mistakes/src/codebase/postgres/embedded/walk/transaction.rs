@@ -8,7 +8,15 @@ pub(super) fn annotate(
     call: &CallExpression<'_>,
     fact: &mut EmbeddedSqlCall,
 ) {
-    fact.execution_unconditional = visitor.control_depth == 0 && visitor.loop_depth == 0;
+    let owner = visitor
+        .member_query_proof
+        .function_ids
+        .last()
+        .copied()
+        .unwrap_or(0);
+    fact.execution_unconditional = visitor.control_depth == 0
+        && visitor.loop_depth == 0
+        && !visitor.exited_functions.contains(&owner);
     let receiver = member_query_receiver(call).unwrap_or(&call.callee);
     if let Expression::Identifier(id) = unwrap_ts_wrappers(receiver) {
         let name = id.name.as_str();
