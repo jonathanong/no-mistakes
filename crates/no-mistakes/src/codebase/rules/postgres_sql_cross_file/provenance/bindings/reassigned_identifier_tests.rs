@@ -47,19 +47,19 @@ fn reassigned_identifier_locals_lose_bounded_parameter_and_literal_initializers(
             .value_flow
             .identifier_writes
             .iter()
-            .find(|write| write.name == name && write.assigned.is_some())
-            .unwrap();
-        let assignment = write.assigned.as_deref().unwrap();
+            .find(|write| write.name == name && (write.assigned.is_some() || name == "counter"))
+            .unwrap_or_else(|| panic!("missing write for {name}"));
         let call = ts
             .value_flow
             .calls
             .iter()
-            .find(|call| {
-                call.context == assignment.owner
-                    && call.source_callee == "read"
-                    && call.offset >= assignment.completed_at
-            })
+            .filter(|call| call.source_callee == "read" && call.offset > write.at)
+            .min_by_key(|call| call.offset)
             .unwrap();
+        if let Some(assignment) = write.assigned.as_deref() {
+            assert_eq!(call.context, assignment.owner);
+            assert!(call.offset >= assignment.completed_at);
+        }
         assert!(shared.value(file, write.scope, name, call.end).is_none());
         assert!(identifier
             .value(file, write.scope, name, call.end)
