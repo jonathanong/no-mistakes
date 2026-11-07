@@ -2,6 +2,7 @@ import { beginTransaction, type Query } from "db"
 import { providers, type Provider, regions, type Region } from "@scope/pkg/config"
 
 export async function load(input: { provider: Provider; other?: string }) {
+  input.provider = input.provider
   const updateOther = () => { input.other = "updated"; return false }
   if (!providers.includes(input.provider) || updateOther()) throw new Error("unknown provider")
   const table = `${input.provider}_accounts`

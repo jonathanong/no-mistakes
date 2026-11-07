@@ -74,6 +74,7 @@ pub(crate) struct RegistryMutation {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct IdentifierWrite {
+    pub(crate) context: Option<CallableId>,
     pub(crate) scope: usize,
     pub(crate) name: String,
     pub(crate) members: Vec<Option<String>>,

@@ -21,7 +21,7 @@ fn guarded_compositions_preserve_capture_context_for_every_query() {
         ("helper", 2, true),
         ("property", 2, true),
         ("captured", 2, true),
-        ("negative", 18, false),
+        ("negative", 20, false),
     ] {
         let config: NoMistakesConfig = serde_yaml::from_str(
             &std::fs::read_to_string(root.join(format!(".no-mistakes-{name}.yml"))).unwrap(),
