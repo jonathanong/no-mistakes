@@ -228,3 +228,19 @@ fn fixed_measurements_render_identically_with_one_or_two_rayon_workers() {
     };
     assert_eq!(render(1), render(2));
 }
+
+#[test]
+fn disabled_file_cost_skips_the_observer_clock() {
+    let observer = InvocationObserver::new(false);
+    assert_eq!(
+        observer.trace_file_with_clock(
+            FilePass::Parse,
+            Path::new("file.ts"),
+            1,
+            || panic!("disabled file diagnostics read the clock"),
+            || 7
+        ),
+        7
+    );
+    assert!(observer.hot_file_block().is_empty());
+}
