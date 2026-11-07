@@ -6,10 +6,11 @@ use oxc_ast_visit::Visit;
 mod abrupt;
 mod join;
 mod paths;
+mod selection;
 pub(super) use join::joined;
+use selection::select;
 mod truthiness;
 pub(in crate::codebase::postgres::embedded::walk) use paths::branch_paths;
-
 pub(super) type Snapshot = Vec<FxHashMap<String, Option<Vec<Recovered>>>>;
 impl ScopeVisitor<'_> {
     pub(in crate::codebase::postgres::embedded::walk) fn variant_snapshot(&self) -> Snapshot {
@@ -62,7 +63,6 @@ impl ScopeVisitor<'_> {
         }
     }
 }
-
 pub(in crate::codebase::postgres::embedded::walk) fn if_statement<'a>(
     visitor: &mut ScopeVisitor<'a>,
     statement: &IfStatement<'a>,
@@ -75,16 +75,32 @@ pub(in crate::codebase::postgres::embedded::walk) fn if_statement<'a>(
     let paths = visitor.variant_paths.clone();
     let (yes, no) = truthiness::branches(visitor, &statement.test, &paths, id, truth_arm);
     let taken = paths::taken(&yes, &no).or(taken);
+    let transaction_before = super::super::transaction_flow::Snapshot::capture(visitor);
     visitor.restore_variants(&paths::restrict(&original, &yes));
     visitor.variant_paths = yes;
     visitor.with_control_flow(|visitor| visitor.visit_statement(&statement.consequent));
     let left = visitor.variant_snapshot();
+    let transaction_left = super::super::transaction_flow::Snapshot::capture(visitor);
+    transaction_before.restore(visitor);
     visitor.restore_variants(&paths::restrict(&original, &no));
     visitor.variant_paths = no;
     if let Some(alternate) = &statement.alternate {
         visitor.with_control_flow(|visitor| visitor.visit_statement(alternate));
     }
     let right = visitor.variant_snapshot();
+    let transaction_right = super::super::transaction_flow::Snapshot::capture(visitor);
+    let exits = super::super::transaction_flow::exits;
+    match taken {
+        Some(true) => transaction_left.restore(visitor),
+        Some(false) => transaction_right.restore(visitor),
+        None if exits(&statement.consequent) => {
+            transaction_before.resume_after(&transaction_left, &transaction_right, visitor)
+        }
+        None if statement.alternate.as_ref().is_some_and(exits) => {
+            transaction_before.resume_after(&transaction_right, &transaction_left, visitor)
+        }
+        None => transaction_left.join(&transaction_right, visitor),
+    }
     visitor.variant_paths = paths;
     match taken {
         Some(true) => select(visitor, &left, &right),
@@ -100,7 +116,6 @@ pub(in crate::codebase::postgres::embedded::walk) fn if_statement<'a>(
         None => visitor.join_variants(&left, &right, id, (truth_arm, 1 - truth_arm)),
     }
 }
-
 pub(in crate::codebase::postgres::embedded::walk) fn conditional<'a>(
     visitor: &mut ScopeVisitor<'a>,
     expression: &ConditionalExpression<'a>,
@@ -128,7 +143,6 @@ pub(in crate::codebase::postgres::embedded::walk) fn conditional<'a>(
         None => visitor.join_variants(&left, &right, id, (truth_arm, 1 - truth_arm)),
     }
 }
-
 pub(in crate::codebase::postgres::embedded::walk) fn logical<'a>(
     visitor: &mut ScopeVisitor<'a>,
     expression: &LogicalExpression<'a>,
@@ -166,27 +180,9 @@ pub(in crate::codebase::postgres::embedded::walk) fn logical<'a>(
     let right = visitor.variant_snapshot();
     let original = paths::restrict(&original, &omitted_paths);
     visitor.variant_paths = paths;
-
     match take_right {
         Some(true) => select(visitor, &right, &original),
         Some(false) => select(visitor, &original, &right),
         None => visitor.join_variants(&original, &right, id, (1 - right_arm, right_arm)),
-    }
-}
-
-fn select(visitor: &mut ScopeVisitor<'_>, selected: &Snapshot, other: &Snapshot) {
-    visitor.restore_variants(selected);
-    for (index, scope) in visitor.scopes.iter_mut().enumerate() {
-        for (name, state) in scope {
-            let selected = selected.get(index).and_then(|scope| scope.get(name));
-            let other = other.get(index).and_then(|scope| scope.get(name));
-            if selected != other {
-                if let Some(values) = &mut state.variants {
-                    for value in values {
-                        value.enumerated = true;
-                    }
-                }
-            }
-        }
     }
 }

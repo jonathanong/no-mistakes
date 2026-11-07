@@ -7,37 +7,45 @@ use oxc_ast::ast::{
 pub(in crate::codebase::postgres::embedded::walk) fn collect<'a>(
     program: &'a Program<'a>,
     enabled: bool,
-) -> LockHelpers<'a> {
+    source: &str,
+) -> LockHelpers {
     let mut helpers = LockHelpers::default();
     if !enabled {
         return helpers;
     }
     let reassigned =
         super::super::resolve::functions::reassigned::ReassignedNames::collect(program);
-    for statement in &program.body {
-        let function = match statement {
-            Statement::FunctionDeclaration(function) => Some(function.as_ref()),
-            Statement::ExportDeclaration(export) => match &export.declaration {
-                Declaration::FunctionDeclaration(function) => Some(function.as_ref()),
+    for _ in 0..program.body.len() {
+        let mut added = false;
+        for statement in &program.body {
+            let function = match statement {
+                Statement::FunctionDeclaration(function) => Some(function.as_ref()),
+                Statement::ExportDeclaration(export) => match &export.declaration {
+                    Declaration::FunctionDeclaration(function) => Some(function.as_ref()),
+                    _ => None,
+                },
                 _ => None,
-            },
-            _ => None,
-        };
-        let Some(function) = function.filter(|function| !function.generator) else {
-            continue;
-        };
-        let Some(name) = function.id.as_ref().map(|id| id.name.as_str()) else {
-            continue;
-        };
-        if reassigned.contains(name) {
-            continue;
+            };
+            let Some(function) = function.filter(|function| !function.generator) else {
+                continue;
+            };
+            let Some(name) = function.id.as_ref().map(|id| id.name.as_str()) else {
+                continue;
+            };
+            if reassigned.contains(name) || helpers.contains_key(name) {
+                continue;
+            }
+            if let Some(helper) = function
+                .body
+                .as_ref()
+                .and_then(|body| summarize(&function.params, body, &helpers, source))
+            {
+                helpers.insert(name.to_owned(), helper);
+                added = true;
+            }
         }
-        if let Some(helper) = function
-            .body
-            .as_ref()
-            .and_then(|body| summarize(&function.params, body))
-        {
-            helpers.insert(name.to_owned(), helper);
+        if !added {
+            break;
         }
     }
     helpers
@@ -45,7 +53,9 @@ pub(in crate::codebase::postgres::embedded::walk) fn collect<'a>(
 fn summarize<'a>(
     params: &'a FormalParameters<'a>,
     body: &'a FunctionBody<'a>,
-) -> Option<Helper<'a>> {
+    helpers: &LockHelpers,
+    source: &str,
+) -> Option<Helper> {
     if params.rest.is_some() {
         return None;
     }
@@ -74,7 +84,29 @@ fn summarize<'a>(
         let Expression::CallExpression(call) = expression else {
             return None;
         };
-        if call.optional || call.arguments.len() > 2 {
+        if call.optional
+            || call
+                .arguments
+                .iter()
+                .any(|argument| argument.as_expression().is_none())
+        {
+            return None;
+        }
+        if let Expression::Identifier(id) = unwrap_ts_wrappers(&call.callee) {
+            if !params.contains(&id.name.as_str()) {
+                let helper = helpers.get(id.name.as_str())?;
+                let projected = super::parameters::compose(helper, call, &params)?;
+                if calls.len() + projected.len() > 256 {
+                    return None;
+                }
+                calls.extend(projected);
+                if matches!(statement, Statement::ReturnStatement(_)) {
+                    break;
+                }
+                continue;
+            }
+        }
+        if call.arguments.len() > 2 {
             return None;
         }
         let access = if matches!(
@@ -117,10 +149,38 @@ fn summarize<'a>(
                 return None;
             }
         }
-        calls.push((executor, access, call.as_ref()));
+        let parameters = call
+            .arguments
+            .get(1)
+            .and_then(|argument| argument.as_expression())
+            .map(unwrap_ts_wrappers)
+            .and_then(|expression| match expression {
+                Expression::ArrayExpression(array) => Some(
+                    array
+                        .elements
+                        .iter()
+                        .map(|element| {
+                            super::parameters::parameter(element.as_expression().unwrap(), &params)
+                        })
+                        .collect(),
+                ),
+                _ => None,
+            })
+            .unwrap_or_default();
+        if calls.len() >= 256 {
+            return None;
+        }
+        calls.push(super::summary::Query {
+            executor,
+            access,
+            parameters,
+            span: (call.span.start, call.span.end),
+            sql: crate::codebase::postgres::embedded::sql_text(sql)?,
+            line: crate::codebase::ts_source::byte_offset_to_line(source, call.span.start as usize),
+        });
         if matches!(statement, Statement::ReturnStatement(_)) {
             break;
         }
     }
-    (!calls.is_empty()).then_some(Helper { params, calls })
+    (!calls.is_empty()).then_some(Helper { calls })
 }

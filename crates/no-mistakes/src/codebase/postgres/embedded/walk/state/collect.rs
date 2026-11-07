@@ -37,6 +37,7 @@ pub(crate) fn collect_calls<'a>(
         lock_helpers: super::super::lock_helpers::collect(
             program,
             options.track_transaction_helpers,
+            source,
         ),
         exited_functions: Default::default(),
         scalar_literals: Default::default(),
