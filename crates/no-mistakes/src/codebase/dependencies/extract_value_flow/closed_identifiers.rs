@@ -1,88 +1,14 @@
 use super::*;
-use crate::codebase::dependencies::extract::CallableId;
+#[path = "sql_builder_reads.rs"]
+mod sql_builder_reads;
 use oxc_ast::ast::{BindingPattern, CallExpression, Expression};
 
 #[path = "closed_identifier_guards.rs"]
 mod guards;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct ClosedStringRegistry {
-    pub(crate) name: String,
-    pub(crate) scope: usize,
-    pub(crate) declared_at: u32,
-    pub(crate) keys: Vec<String>,
-    pub(crate) kind: RegistryKind,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum RegistryKind {
-    Object,
-    Array,
-    Map,
-    Set,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct BoundedBinding {
-    pub(crate) name: String,
-    pub(crate) scope: usize,
-    pub(crate) declared_at: u32,
-    pub(crate) source: Option<(String, usize)>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct FiniteIdentifierGuard {
-    pub(crate) context: Option<CallableId>,
-    pub(crate) name: String,
-    pub(crate) from: u32,
-    pub(crate) until: u32,
-    pub(crate) kind: GuardKind,
-    pub(crate) subject: Option<GuardSubject>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum GuardKind {
-    ClosedSet {
-        collection: String,
-        method: SetMethod,
-    },
-    Assertion {
-        callee: String,
-        argument: usize,
-    },
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum SetMethod {
-    Has,
-    Includes,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct RegistryMutation {
-    pub(crate) name: String,
-    pub(crate) scope: usize,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct IdentifierWrite {
-    pub(crate) scope: usize,
-    pub(crate) name: String,
-    pub(crate) at: u32,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum GuardSubject {
-    Binding {
-        scope: usize,
-        declared_at: u32,
-    },
-    Parameter {
-        scope: usize,
-        owner: CallableId,
-        index: usize,
-    },
-}
+#[path = "closed_identifier_types.rs"]
+mod types;
+pub(crate) use types::*;
 
 pub(crate) fn unique_closed_collection(
     flow: &ValueFlowFacts,
@@ -120,6 +46,25 @@ pub(crate) fn unique_closed_collection(
 }
 
 impl ImportCollector {
+    fn registry_builtins_visible(&self, init: &Expression<'_>, kind: RegistryKind) -> bool {
+        let visible = |name: &str| {
+            self.callee_binding_scope(name).is_none()
+                && !self
+                    .call_import_bindings
+                    .iter()
+                    .any(|binding| !binding.is_type_only && binding.local == name)
+        };
+        let constructor = match kind {
+            RegistryKind::Set => visible("Set"),
+            RegistryKind::Map => visible("Map"),
+            _ => true,
+        };
+        constructor
+            && (registries::frozen_argument(crate::codebase::ts_source::unwrap_ts_wrappers(init))
+                .is_none()
+                || visible("Object"))
+    }
+
     pub(crate) fn note_closed_identifier(
         &mut self,
         pattern: &BindingPattern<'_>,
@@ -133,7 +78,13 @@ impl ImportCollector {
         let scope = self
             .callee_binding_scope(&name)
             .unwrap_or_else(|| self.current_lexical_scope_id());
-        if let Some((kind, keys)) = registries::registry(init) {
+        rows::note_binding(self, &name, scope, init);
+        if let Some((kind, keys)) = registries::registry(init)
+            .filter(|(kind, _)| self.registry_builtins_visible(init, *kind))
+        {
+            if kind == RegistryKind::MetadataArray {
+                self.metadata_registry_names.insert(name.clone());
+            }
             self.value_flow
                 .closed_string_registries
                 .push(ClosedStringRegistry {
@@ -150,11 +101,25 @@ impl ImportCollector {
                 scope,
                 declared_at,
                 source,
+                members: Vec::new(),
+                requires_guard: false,
             });
         }
+        metadata::note_lookup(self, identifier.name.as_str(), init, scope, declared_at);
     }
 }
 
+#[path = "sql_fragment_members.rs"]
+mod fragment_members;
+#[path = "closed_identifier_generated.rs"]
+mod generated;
+#[path = "closed_identifier_hex.rs"]
+mod hex;
+pub(crate) use generated::GeneratedIdentifierReturn;
+#[path = "closed_identifier_metadata.rs"]
+pub(super) mod metadata;
+#[path = "closed_identifier_metadata_mutations.rs"]
+mod metadata_mutations;
 #[path = "closed_identifier_names.rs"]
 mod names;
 #[path = "closed_identifier_registries.rs"]
@@ -163,6 +128,8 @@ mod registries;
 mod registry_escapes;
 #[path = "closed_identifier_mutations.rs"]
 mod registry_mutations;
+#[path = "closed_identifier_rows.rs"]
+pub(crate) mod rows;
 
 pub(super) fn plain_call<'a>(expr: &'a Expression<'a>) -> Option<&'a CallExpression<'a>> {
     let expr = crate::codebase::ts_source::unwrap_ts_wrappers(expr);

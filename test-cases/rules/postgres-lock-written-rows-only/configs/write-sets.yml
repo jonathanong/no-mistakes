@@ -1,0 +1,18 @@
+version: 2
+rules:
+  - rule: postgres-lock-written-rows-only
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [TransactionQuery]
+      unanalyzableSql: fail
+      writeSets:
+        - file: src/query.ts
+          transactionLine: 3
+          relations: [parents]
+          reason: Helper performs the parent write
+        - file: src/query.ts
+          transactionLine: 99
+          relations: [unused_relation]
+          reason: Stale write-set entry must be reported

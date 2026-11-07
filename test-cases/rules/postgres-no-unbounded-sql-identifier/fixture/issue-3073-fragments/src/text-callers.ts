@@ -1,0 +1,126 @@
+import { query } from "@example/db";
+import { sql } from "@example/sql";
+
+declare function makeRaw(value: string): unknown;
+
+function directSink(value) {
+  const directCallerSlot = sql`${value}`;
+  query(`SELECT * FROM ${directCallerSlot.text}`);
+}
+directSink(sql.raw(process.env.CALLER_TABLE));
+
+function aliasSink(value) {
+  const aliasCallerSlot = sql`${value}`;
+  query(`SELECT * FROM ${aliasCallerSlot.text}`);
+}
+const raw = sql.raw(process.env.ALIAS_CALLER_TABLE);
+const alias = raw;
+aliasSink(alias);
+
+function chainSink(value) {
+  const chainCallerSlot = sql`${value}`;
+  query(`SELECT * FROM ${chainCallerSlot.text}`);
+}
+function first(value) { chainSink(value); }
+function second(value) { first(value); }
+second(sql.raw(process.env.CHAIN_CALLER_TABLE));
+
+function objectSink({ value }) {
+  const objectCallerSlot = sql`${value}`;
+  query(`SELECT * FROM ${objectCallerSlot.text}`);
+}
+objectSink({ value: sql.raw(process.env.OBJECT_CALLER_TABLE) });
+
+function defaultSink(value) {
+  const defaultCallerSlot = sql`${value}`;
+  query(`SELECT * FROM ${defaultCallerSlot.text}`);
+}
+function defaultForward(value = sql.raw(process.env.DEFAULT_CALLER_TABLE)) {
+  defaultSink(value);
+}
+defaultForward();
+
+function optionalSink(value) {
+  const optionalCallerSlot = sql`${value}`;
+  query(`SELECT * FROM ${optionalCallerSlot.text}`);
+}
+function optionalForward(value = makeRaw?.("raw")) {
+  optionalSink(value);
+}
+optionalForward();
+
+function ordinarySink(value) {
+  const ordinaryCallerSlot = sql`records WHERE value = ${value}`;
+  query(`SELECT * FROM ${ordinaryCallerSlot.text}`);
+}
+const ordinary = "ordinary";
+ordinarySink(ordinary);
+export function ordinaryForward(value) { ordinarySink(value); }
+
+function ordinaryMemberSink({ value }) {
+  const ordinaryMemberSlot = sql`records WHERE value = ${value}`;
+  query(`SELECT * FROM ${ordinaryMemberSlot.text}`);
+}
+ordinaryMemberSink({ value: "ordinary" });
+
+function diamondSink(value) {
+  const ordinaryDiamondSlot = sql`records WHERE value = ${value} OR value = ${value}`;
+  query(`SELECT * FROM ${ordinaryDiamondSlot.text}`);
+}
+function left(value) { diamondSink(value); }
+function right(value) { diamondSink(value); }
+export function diamondForward(value) { left(value); right(value); }
+diamondForward("ordinary");
+
+function mutableSink(value) {
+  const mutableCallerSlot = sql`${value}`;
+  query(`SELECT * FROM ${mutableCallerSlot.text}`);
+}
+let changed = "ordinary";
+changed = sql.raw(process.env.MUTABLE_CALLER_TABLE);
+mutableSink(changed);
+
+function writtenForward(value) {
+  value = sql.raw(process.env.WRITTEN_CALLER_TABLE);
+  writtenSink(value);
+}
+function writtenSink(value) {
+  const writtenParameterSlot = sql`${value}`;
+  query(`SELECT * FROM ${writtenParameterSlot.text}`);
+}
+writtenForward("ordinary");
+
+function recursiveSink(value) {
+  const recursiveCallerSlot = sql`${value}`;
+  query(`SELECT * FROM ${recursiveCallerSlot.text}`);
+}
+function recursiveForward(value) { recursiveSink(value); recursiveForward(value); }
+recursiveForward(sql.raw(process.env.RECURSIVE_CALLER_TABLE));
+
+function directSpreadSink(value) {
+  const directSpreadSlot = sql`${value}`;
+  query(`SELECT * FROM ${directSpreadSlot.text}`);
+}
+directSpreadSink(...[sql.raw(process.env.SPREAD_CALLER_TABLE)]);
+
+function forwardedSpreadSink(value) {
+  const forwardedSpreadSlot = sql`${value}`;
+  query(`SELECT * FROM ${forwardedSpreadSlot.text}`);
+}
+export function unknownSpreadForward(values: unknown[]) {
+  forwardedSpreadSink(...values);
+}
+
+function laterSpreadSink(prefix, value) {
+  const laterSpreadSlot = sql`${value}`;
+  query(`SELECT * FROM ${laterSpreadSlot.text}`);
+}
+laterSpreadSink("ordinary", ...[sql.raw(process.env.LATER_SPREAD_TABLE)]);
+
+function fixedPrefixSink(value, ignored) {
+  const fixedPrefixSlot = sql`records WHERE value = ${value}`;
+  query(`SELECT * FROM ${fixedPrefixSlot.text}`);
+}
+export function fixedPrefixForward(values: unknown[]) {
+  fixedPrefixSink("ordinary", ...values);
+}

@@ -35,7 +35,7 @@ impl ScopeVisitor<'_> {
 
     pub(in crate::codebase::postgres::embedded::walk) fn record_argument_append_effects(
         &mut self,
-        appends: &[(String, Option<u32>, Option<usize>)],
+        appends: &[(String, Option<std::num::NonZeroU32>, Option<usize>)],
         position: u32,
     ) {
         if self.argument_frames == 0 || self.variant_paths.is_empty() {
@@ -67,7 +67,7 @@ impl ScopeVisitor<'_> {
 
     pub(in crate::codebase::postgres::embedded::walk) fn record_argument_helper_effects(
         &mut self,
-        effects: &[(String, Option<u32>)],
+        effects: &[(String, Option<std::num::NonZeroU32>)],
         position: u32,
     ) {
         if self.argument_frames > 0 && !self.variant_paths.is_empty() {

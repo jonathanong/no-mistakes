@@ -63,13 +63,26 @@ fn scan(
     let mut candidates = 0;
     let mut sinks = 0;
     let calls = sql_calls(root, opts, facts);
-    let bindings = Bindings::with_calls(facts, &calls).with_graph(graph);
+    let returns = closed::configured::prepare(opts, graph, facts);
+    let bindings = Bindings::with_calls(facts, &calls)
+        .with_graph(graph)
+        .with_trusted_tags(&opts.embedded.trusted_sql_tags)
+        .with_identifier_returns(&returns);
+    let mut fragment_proofs = fragments::Proofs::new(graph, opts, facts, &bindings);
+    let catalog_proof = catalogs::CatalogProof::new(graph, facts, &bindings);
     for call in &calls {
         candidates += 1;
         if !scans_identifier(call.call) {
             continue;
         }
         for provenance in identifier_sources(graph, facts, call, &bindings) {
+            if closed::proven(graph, opts, facts, &bindings, call, &provenance)
+                || catalog_proof.proven(call, &provenance)
+                || closed_calls::proven(graph, facts, &bindings, call, &provenance)
+                || fragment_proofs.proven(call, &provenance)
+            {
+                continue;
+            }
             if let Provenance::Reference {
                 name,
                 scope,
@@ -93,11 +106,6 @@ fn scan(
                     continue;
                 }
             }
-            if closed::proven(opts, facts, &bindings, call, &provenance)
-                || closed_calls::proven(graph, facts, &bindings, call, &provenance)
-            {
-                continue;
-            }
             if let Some(finding) =
                 identifier_finding(root, graph, facts, &bindings.routes, call, &provenance)
             {
@@ -111,81 +119,19 @@ fn scan(
     findings
 }
 
-fn identifier_finding(
-    root: &Path,
-    graph: &DepGraph,
-    facts: &CheckFactMap,
-    routes: &RegistryRoutes<'_>,
-    call: &SqlCall<'_>,
-    provenance: &Provenance,
-) -> Option<RuleFinding> {
-    match provenance {
-        Provenance::ProcessEnv(key) => {
-            if shadowed_process(facts, &call.file) {
-                return None;
-            }
-            Some(message(
-                root,
-                call,
-                &format!("process.env.{key}"),
-                Some(format!("process.env.{key}")),
-            ))
-        }
-        Provenance::Reference { name, scope, .. } => {
-            named_finding(root, graph, facts, routes, call, (*scope, name))
-        }
-        Provenance::Namespace {
-            local, exported, ..
-        } => {
-            let unique = unique_namespace_member(graph, facts, &call.file, local, exported)?;
-            imported_unbounded(root, facts, call, unique.producer, &unique.exported, local)
-        }
-    }
-}
-
-fn named_finding(
-    root: &Path,
-    graph: &DepGraph,
-    facts: &CheckFactMap,
-    routes: &RegistryRoutes<'_>,
-    call: &SqlCall<'_>,
-    (scope, name): (usize, &str),
-) -> Option<RuleFinding> {
-    if local_env_alias(facts, &call.file, name) || parameter(facts, &call.file, scope, name) {
-        return Some(message(root, call, name, Some(name.to_string())));
-    }
-    if query_result_binding(facts, &call.file, name) {
-        return Some(message(root, call, name, Some(name.to_string())));
-    }
-    let unique = unique_export(graph, facts, routes, &call.file, name)?;
-    if unique.producer == call.file {
-        return None;
-    }
-    imported_unbounded(root, facts, call, unique.producer, &unique.exported, name)
-}
-
-fn message(root: &Path, call: &SqlCall<'_>, producer: &str, import: Option<String>) -> RuleFinding {
-    finding(
-        root,
-        RULE_ID,
-        &call.file,
-        call.call.line,
-        diagnostic_message(producer),
-        import,
-        Some(producer.to_string()),
-    )
-}
-
-pub(super) fn diagnostic_message(producer: &str) -> String {
-    format!("Unbounded identifier source `{producer}` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.")
-}
-
+mod findings;
 #[cfg(test)]
 mod tests;
-
+pub(super) use findings::diagnostic_message;
+use findings::{identifier_finding, message};
+mod catalogs;
 mod closed;
 mod closed_calls;
 mod local_sources;
 use local_sources::{
     imported_unbounded, local_env_alias, parameter, query_result_binding, shadowed_process,
 };
+
+mod fragments;
+#[cfg(test)]
+mod fragments_tests;

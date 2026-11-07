@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - rule: postgres-lock-written-rows-only
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [TransactionQuery]
+      unanalyzableSql: fail
+      allow:
+        - relation: items
+          key: $1
+          file: src/query.ts
+          line: 4
+          reason: Reviewed row coordination protocol

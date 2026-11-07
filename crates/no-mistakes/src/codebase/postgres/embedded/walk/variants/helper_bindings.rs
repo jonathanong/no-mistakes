@@ -11,7 +11,7 @@ impl ScopeVisitor<'_> {
     pub(in crate::codebase::postgres::embedded::walk) fn builder_identity_for_init(
         &self,
         expression: &Expression<'_>,
-    ) -> Option<u32> {
+    ) -> Option<std::num::NonZeroU32> {
         let mut current = expression;
         loop {
             match unwrap_ts_wrappers(current) {
@@ -21,11 +21,12 @@ impl ScopeVisitor<'_> {
                 Expression::TaggedTemplateExpression(tagged) => {
                     return self
                         .trusted_builder_tag(&tagged.tag)
-                        .then_some(current.span().start);
+                        .then(|| super::super::transaction::source_identity(current.span().start))
+                        .flatten();
                 }
                 Expression::CallExpression(call) => {
                     if self.fresh_builder_call(call) {
-                        return Some(current.span().start);
+                        return super::super::transaction::source_identity(current.span().start);
                     }
                     if matches!(unwrap_ts_wrappers(&call.callee), Expression::StaticMemberExpression(member) if member.property.name != "append")
                     {
@@ -66,7 +67,7 @@ impl ScopeVisitor<'_> {
     pub(in crate::codebase::postgres::embedded::walk) fn assignment_builder_identity(
         &mut self,
         assignment: &AssignmentExpression<'_>,
-    ) -> Option<u32> {
+    ) -> Option<std::num::NonZeroU32> {
         let AssignmentTarget::AssignmentTargetIdentifier(id) = &assignment.left else {
             return None;
         };
@@ -82,7 +83,7 @@ impl ScopeVisitor<'_> {
     pub(in crate::codebase::postgres::embedded::walk) fn set_builder_identity(
         &mut self,
         name: &str,
-        identity: Option<u32>,
+        identity: Option<std::num::NonZeroU32>,
     ) {
         if let Some(binding) = self
             .scopes

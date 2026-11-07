@@ -5,6 +5,11 @@ use crate::codebase::dependencies::graph::{DepGraph, TsFactLookup};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use std::path::Path;
 
+mod metadata;
+mod metadata_rows;
+pub(crate) use metadata::helper_call as metadata_helper_call;
+pub(crate) use metadata_rows::projection as metadata_row_projection;
+
 pub(crate) fn is_finite_validator(
     graph: &DepGraph,
     facts: &CheckFactMap,
@@ -12,6 +17,9 @@ pub(crate) fn is_finite_validator(
     file: &Path,
     callee: &ValueExpression,
 ) -> bool {
+    if metadata_helper_call(graph, facts, file, callee) {
+        return true;
+    }
     let ValueExpression::Named { name, .. } = callee else {
         return false;
     };

@@ -10,6 +10,8 @@ fn origin(anchor: PathAnchor, segments: &[&str]) -> PathOrigin {
         dynamic: false,
         env: None,
         param: None,
+        param_member: None,
+        param_owner: None,
     }
 }
 

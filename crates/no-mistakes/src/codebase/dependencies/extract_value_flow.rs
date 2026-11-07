@@ -9,6 +9,8 @@ mod assignment_member_values;
 #[path = "extract_value_flow/assignment_rhs_frame.rs"]
 pub(super) mod assignment_rhs_frame;
 use super::*;
+#[path = "extract_value_flow/literal_catalogs.rs"]
+pub(super) mod literal_catalogs;
 
 include!("extract_value_flow/declarations.rs");
 #[path = "extract_value_flow/mutation_sources.rs"]
@@ -19,35 +21,32 @@ mod receiver_histories;
 mod reference_output;
 
 include!("extract_value_flow/value_flow_facts.rs");
-#[path = "extract_value_flow/collect.rs"]
-mod collect;
-#[path = "extract_value_flow/collect_helpers.rs"]
-mod collect_helpers;
-#[path = "extract_value_flow/receiver_escapes.rs"]
-pub(super) mod receiver_escapes;
-#[path = "extract_value_flow/value_descriptors.rs"]
-mod value_descriptors;
-
-#[path = "extract_value_flow/assignment_root_values.rs"]
-mod assignment_root_values;
-#[path = "extract_value_flow/expressions.rs"]
-mod expressions;
-
 #[path = "extract_value_flow/adapters.rs"]
 mod adapters;
 #[path = "extract_value_flow/assigned_members.rs"]
 mod assigned_members;
+#[path = "extract_value_flow/assignment_root_values.rs"]
+mod assignment_root_values;
 #[path = "extract_value_flow/bind_prefix.rs"]
 mod bind_prefix;
+#[path = "extract_value_flow/collect.rs"]
+mod collect;
+#[path = "extract_value_flow/collect_helpers.rs"]
+mod collect_helpers;
 #[path = "extract_value_flow/completion.rs"]
 mod completion;
+#[path = "extract_value_flow/expressions.rs"]
+mod expressions;
 #[path = "extract_value_flow/mutations.rs"]
 mod mutations;
+#[path = "extract_value_flow/receiver_escapes.rs"]
+pub(super) mod receiver_escapes;
 #[path = "extract_value_flow/references.rs"]
 mod references;
-
 #[path = "extract_value_flow/result_kind.rs"]
 mod result_kind;
+#[path = "extract_value_flow/value_descriptors.rs"]
+mod value_descriptors;
 
 #[path = "extract_value_flow/default_export.rs"]
 mod default_export;
@@ -197,3 +196,5 @@ mod phase_changed_roots_tests;
 pub(super) mod closed_identifiers;
 #[path = "extract_value_flow/row_literal_overwrites.rs"]
 mod row_literal_overwrites;
+#[path = "extract_value_flow/sql_placeholder_lists.rs"]
+mod sql_placeholder_lists;

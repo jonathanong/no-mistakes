@@ -1,0 +1,270 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "all_defaults_excluded_scoped_retained": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 9,
+          "message": "src/query.ts:9: row-lock-unwritten-relation: locked row in scoped_items is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query('SELECT id FROM scoped_items FOR UPDATE');",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "defaults": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "query('SELECT id FROM query_items FOR UPDATE');",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 3,
+          "message": "src/query.ts:3: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "read('SELECT id FROM read_items FOR UPDATE');",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "write('SELECT id FROM write_items FOR UPDATE');",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 9,
+          "message": "src/query.ts:9: row-lock-unwritten-relation: locked row in scoped_items is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query('SELECT id FROM scoped_items FOR UPDATE');",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "excluded_default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 3,
+          "message": "src/query.ts:3: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "read('SELECT id FROM read_items FOR UPDATE');",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "write('SELECT id FROM write_items FOR UPDATE');",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "custom('SELECT id FROM custom_items FOR UPDATE');",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 9,
+          "message": "src/query.ts:9: row-lock-unwritten-relation: locked row in scoped_items is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query('SELECT id FROM scoped_items FOR UPDATE');",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "extras": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "query('SELECT id FROM query_items FOR UPDATE');",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 3,
+          "message": "src/query.ts:3: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "read('SELECT id FROM read_items FOR UPDATE');",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "write('SELECT id FROM write_items FOR UPDATE');",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "custom('SELECT id FROM custom_items FOR UPDATE');",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 9,
+          "message": "src/query.ts:9: row-lock-unwritten-relation: locked row in scoped_items is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query('SELECT id FROM scoped_items FOR UPDATE');",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "project_inherited_extras_and_exclusion": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 3,
+          "message": "src/query.ts:3: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "read('SELECT id FROM read_items FOR UPDATE');",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "write('SELECT id FROM write_items FOR UPDATE');",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "custom('SELECT id FROM custom_items FOR UPDATE');",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 9,
+          "message": "src/query.ts:9: row-lock-unwritten-relation: locked row in scoped_items is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query('SELECT id FROM scoped_items FOR UPDATE');",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "replacement_warnings": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "custom('SELECT id FROM custom_items FOR UPDATE');",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 9,
+          "message": "src/query.ts:9: row-lock-unwritten-relation: locked row in scoped_items is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query('SELECT id FROM scoped_items FOR UPDATE');",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": [
+        "postgres-lock-written-rows-only: executorNames replaces the defaults [query, read, write] and omits `query`, imported from `@example/db` and called at src/query.ts:2; this call is not selected by this executor list. Use extraExecutorNames instead to extend the defaults, add `query` to executorNames, or list `query` in excludeExecutorNames to acknowledge an intentional exclusion.",
+        "postgres-lock-written-rows-only: executorNames replaces the defaults [query, read, write] and omits `read`, imported from `@example/db` and called at src/query.ts:3; this call is not selected by this executor list. Use extraExecutorNames instead to extend the defaults, add `read` to executorNames, or list `read` in excludeExecutorNames to acknowledge an intentional exclusion.",
+        "postgres-lock-written-rows-only: executorNames replaces the defaults [query, read, write] and omits `write`, imported from `@example/db` and called at src/query.ts:4; this call is not selected by this executor list. Use extraExecutorNames instead to extend the defaults, add `write` to executorNames, or list `write` in excludeExecutorNames to acknowledge an intentional exclusion."
+      ]
+    }
+  },
+  "unused_exclusion_warning": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "query('SELECT id FROM selected_items FOR UPDATE');",
+          "target": "row-lock-outside-transaction"
+        }
+      ],
+      "warnings": [
+        "postgres-lock-written-rows-only: excludeExecutorNames entry `write` is unused: it is not a default executor [query, read, write], or is never imported and called from the configured module in scoped files. Remove the entry or correct its spelling and scope. Unused exclusions can hide configuration mistakes."
+      ]
+    }
+  }
+}

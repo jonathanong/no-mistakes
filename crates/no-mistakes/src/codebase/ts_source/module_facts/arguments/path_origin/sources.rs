@@ -92,18 +92,10 @@ impl<'a> Projector<'a, '_> {
             .iter()
             .position(|item| item.span == parameter.span)?;
         let owner = semantic.nodes().parent_id(list.id());
-        let reference = semantic.scoping().get_reference(id.reference_id.get()?);
-        let innermost = semantic
-            .nodes()
-            .ancestors(reference.node_id())
-            .find(|node| {
-                matches!(
-                    node.kind(),
-                    AstKind::Function(_) | AstKind::ArrowFunctionExpression(_)
-                )
-            })?;
-        (innermost.id() == owner).then(|| PathOrigin {
+        use oxc_span::GetSpan;
+        Some(PathOrigin {
             param: Some(index),
+            param_owner: Some(semantic.nodes().kind(owner).span().start),
             ..PathOrigin::unknown()
         })
     }

@@ -24,7 +24,7 @@ impl ScopeVisitor<'_> {
     pub(super) fn escaped_builder_effect(
         &self,
         call: &CallExpression<'_>,
-    ) -> Vec<(String, Option<u32>)> {
+    ) -> Vec<(String, Option<std::num::NonZeroU32>)> {
         if self.known_builder_consumer(call) {
             return Vec::new();
         }

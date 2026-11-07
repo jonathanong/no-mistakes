@@ -91,13 +91,18 @@ select an entire file, such as `forbidden-calls` with `traversal: file`.
 An enumeration passes when its root is provably bounded:
 
 - Any path segment equals a `fixtureDirs` entry (`fixtures` or `__fixtures__` by
-- Any path segment equals a `fixtureDirs` entry (`fixtures` or `__fixtures__` by
   default), such as `join(import.meta.dirname, "fixtures", name)`. This includes
   `.github/fixtures`; the directory name is the boundary, regardless of depth.
   Thus `.github/fixtures/x` is allowed, while `.github/fixtures/../workflows`
   is reported: normalization removes the `fixtures` segment before matching.
 - The root is anchored at the result of `mkdtemp`/`mkdtempSync`, held directly,
   through a `const`, or through a `let` whose every write is such a root.
+  Same-file zero-argument helpers with no reassignment may create local bindings before their final
+  return, including an awaited `mkdtemp` in a nested async helper. Owned paths
+  returned as object properties can be read through `const` destructuring.
+  `mkdtempDisposableSync` results provide an owned root through their `.path`
+  property, including a `using` binding. Destructuring needs direct literal fields without
+  defaults, rest properties, computed keys, or spreads.
 - The root is a parameter, or an environment variable, and the test supplies an
   owned root (see [Owned parameters and env vars](#owned-parameters-and-env-vars)).
 - The call forwards a mock's own arguments unchanged
@@ -173,13 +178,20 @@ Provenance is syntactic. The rule follows `join`, `resolve`, `normalize`,
 `dirname`, `fileURLToPath`, `new URL(..., import.meta.url)`, `import.meta.dirname`,
 `__dirname`, `process.cwd()`, `tmpdir()`, `mkdtemp`, template literals, and
 immutable `const` aliases, including a `const` glob options object with a `cwd`.
+A relative literal glob pattern uses that bounded `cwd` proof. An unknown
+pattern remains advisory even with an owned `cwd`: absolute glob patterns can
+ignore that directory. In `patterns.flatMap(pattern => globSync(pattern,
+{ cwd: directory }))`, the callback parameter has no proven array-element
+provenance through the caller. The saved `glob-options-flow` case therefore
+remains advisory even when the visible caller supplies a relative pattern array.
+Use direct literal patterns so the analysis can prove their root.
 Parent traversal is resolved, so `fixtures/../src` is a live path, not a fixture
 path. A generic helper such as
 `listFiles(dir: string)` is an unresolved root at its enumeration unless every
 reachable caller passes an owned root or a module- or `cwd`-anchored fixture
-path through an imported binding (see
+path through a named call (see
 [Owned parameters and env vars](#owned-parameters-and-env-vars)); a caller that
-passes a relative literal, a variable, or nothing keeps the finding. Otherwise
+passes a relative literal, an unproven variable, or nothing keeps the finding. Otherwise
 enumerate with a path the helper builds itself from a fixture root, or suppress
 the helper.
 
@@ -189,36 +201,44 @@ Two provenance gaps resolve when every route into the enumeration is proven.
 
 **Parameters.** `sync(user, dir = DEFAULT_DIR)` enumerates `dir`. If every
 reachable call site passes an owned or fixture root at that argument position,
-the enumeration is accepted for those calls. A call that omits the argument
-resolves to the default, so one omitting caller keeps the finding. The callee
-must enumerate the parameter itself, in the function that declares it, and must
-not reassign it. Only one shape is accepted; anything else keeps the finding, because a caller the
-call graph cannot see may pass anything:
+the enumeration is accepted for those calls. Same-file call chains and recursive
+helpers retain this proof only when every external entry supplies a bounded root;
+a recursive call cannot establish ownership by itself. A call that omits the
+argument resolves to the default, so one omitting caller keeps the finding. The callee
+must not reassign the parameter. Derived paths, nested helpers capturing the
+parameter, and an options parameter read through a static property such as
+`options.root` can retain the caller proof. An object argument must expose the
+requested property in a literal object, without mutation or escape. Method and
+constructor calls on that object prevent this proof because they may mutate its
+properties. Anything else keeps the finding, because a caller
+the call graph cannot see may pass anything:
 
-- The callee is a top-level function declaration or function-valued `const`, not
+- The callee is a named function declaration or function-valued `const`, not
   a class or object member.
 - Every reference to it is a direct call.
 - Every file that consumes its module does so through named static imports
   (`import { sync } from "./sync"`) whose uses are all direct calls. A namespace
-  import, a default import, `import()`, `require`, a re-export (`export * from`,
-  `export { sync } from`), and `vi.mock`/`vi.importActual` of the module make its
-  consumers unknowable. A load whose specifier is not a string literal does the
-  same for every module.
+  import, a default import, `import()`, `require`, an unsupported re-export,
+  and `vi.mock`/`vi.importActual` of the module make its consumers unknowable.
+  A named static barrel re-export can preserve the route when all consumers
+  remain named direct calls. A load through a `const` string specifier is
+  attributed to that module; a specifier that cannot be resolved statically
+  makes consumers unknowable for every module.
 
 A consumer is matched to the callee by resolved file, not by specifier text: the
 resolver the dependency graph uses (relative paths, tsconfig `paths` aliases,
 workspace packages, `package.json` `exports`) maps each such specifier to a file,
 so `import * as m from "@lib"` consumes the file `@lib` points at. A specifier
 that is neither a bare package nor resolvable to a file keeps the finding for
-every callee. A default import, a barrel re-export, and a type-only import of the
-callee also keep the finding. Class and object-literal methods can be
+every callee. A default import, an unsupported barrel re-export, and a type-only
+import of the callee also keep the finding. Class and object-literal methods can be
 reached from a file root; when a method's enumeration root depends on an
 unresolved parameter or expression, the rule reports an unresolved-root
 advisory at that call.
 
 Callers are the repository call sites in the canonical call graph; only calls
-through an imported binding record their argument roots. A function reached only
-through `import()` or a namespace is not scanned at all unless a resolved call
+through imported bindings or same-file named functions record their argument roots.
+A function reached only through `import()` or a namespace is not scanned at all unless a resolved call
 reaches it.
 
 **Environment variables.** A getter such as
@@ -242,6 +262,14 @@ owned write, and that write does not dominate the call.
 The env read must happen at the call: a value captured into a module- or
 function-level `const` (`const dir = process.env.X ?? "."`) keeps the finding, as
 does a `beforeAll`/`beforeEach` registered inside a branch.
+
+A setup-and-restore pair remains unresolved: assigning an owned root in
+`beforeAll` and restoring the prior value (or deleting the variable) in
+`afterAll` does not establish that every write is owned. The analysis does not
+prove a lifecycle interval for every imported caller, concurrent test, and hook;
+it cannot discard the restore write merely because a visible caller is in an
+`it` callback. Pass the owned root as an argument to a statically named helper
+instead, or keep the advisory with a reasoned suppression.
 
 The finding is kept when the write comes after the call, sits in an `if`, loop,
 or `try`, or is overwritten with a live value elsewhere. Writes are read from
@@ -340,6 +368,15 @@ argument (`original("./x", ...args)`, `original(...args.slice(1))`), or a
 rebound rest parameter keeps the advisory; so does any other use of the rest
 binding (an index write, `splice`, `push`, `length = ...`, or a nested closure), as does forwarding outside
 `mockImplementation`/`mockImplementationOnce`.
+
+A conditional rewrite such as `if (args[0] === migrations) args[0] = root`
+before `original(...args)` remains unresolved. This is no longer identity
+forwarding: the analysis does not connect every mocked caller to the rewritten
+argument tuple, and other argument values pass through unchanged. A
+`runtimeAssets` declaration for `migrations` accounts for the visible asset read
+but does not prove that the forwarding call receives only bounded roots. Use
+an explicit bounded path in the replacement implementation, or suppress that
+forwarding call with the reason its callers are safe.
 
 ## Runtime assets
 

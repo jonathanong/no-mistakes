@@ -96,13 +96,24 @@ pub fn configure_prepared_postgres_plan(
         plan.query_annotation = true;
     }
     plan.postgres_variants |= evaluated_annotation
-        || ["postgres-lock-ordering", "postgres-conflict-ordering"]
-            .iter()
-            .any(|id| !config.rule_applications(id).is_empty());
-    let ordering = ["postgres-lock-ordering", "postgres-conflict-ordering"]
+        || [
+            "postgres-lock-ordering",
+            "postgres-conflict-ordering",
+            "postgres-lock-written-rows-only",
+        ]
         .iter()
         .any(|id| !config.rule_applications(id).is_empty());
+    let ordering = [
+        "postgres-lock-ordering",
+        "postgres-conflict-ordering",
+        "postgres-lock-written-rows-only",
+    ]
+    .iter()
+    .any(|id| !config.rule_applications(id).is_empty());
     plan.postgres_dml |= ordering;
+    plan.postgres_exact_locations |= !config
+        .rule_applications("postgres-lock-written-rows-only")
+        .is_empty();
     plan.postgres_exact_locations |= !config
         .rule_applications("postgres-lock-ordering")
         .is_empty();
@@ -181,20 +192,5 @@ pub fn configure_prepared_postgres_plan(
     plan.raw_source |= !plan.sql_identifier_profiles.is_empty();
     Ok(())
 }
-#[derive(Default, Deserialize)]
-#[serde(default, rename_all = "camelCase")]
-struct WriteOptions {
-    include: Vec<String>,
-}
-pub(super) fn write_patterns(config: &NoMistakesConfig) -> Result<Vec<String>> {
-    let mut patterns = Vec::new();
-    for rule in config.rule_applications("postgres-no-generated-column-writes") {
-        let options: WriteOptions = rule.try_rule_options()?;
-        patterns.extend(if options.include.is_empty() {
-            vec!["**/*.sql".into()]
-        } else {
-            options.include
-        });
-    }
-    Ok(patterns)
-}
+mod write_patterns;
+pub(super) use write_patterns::write_patterns;

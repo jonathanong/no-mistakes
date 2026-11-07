@@ -19,6 +19,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn hoist_vars(
     if let Some(scope) = visitor.current_scope() {
         for (name, position) in names {
             scope.entry(name).or_insert_with(|| BindingState {
+                value_identity: None,
                 executor_alias: None,
                 builder_identity: None,
                 builder_effect_revision: 0,

@@ -36,26 +36,33 @@ pub(super) fn for_each_bound_name<'a>(
     pattern: &BindingPattern<'a>,
     on_name: &mut impl FnMut(&'a str),
 ) {
+    for_each_bound_identifier(pattern, &mut |ident| on_name(ident.name.as_str()));
+}
+
+pub(super) fn for_each_bound_identifier<'a>(
+    pattern: &BindingPattern<'a>,
+    on_name: &mut impl FnMut(&oxc_ast::ast::BindingIdentifier<'a>),
+) {
     match pattern {
-        BindingPattern::BindingIdentifier(ident) => on_name(ident.name.as_str()),
+        BindingPattern::BindingIdentifier(ident) => on_name(ident),
         BindingPattern::ObjectPattern(object) => {
             for property in &object.properties {
-                for_each_bound_name(&property.value, on_name);
+                for_each_bound_identifier(&property.value, on_name);
             }
             if let Some(rest) = &object.rest {
-                for_each_bound_name(&rest.argument, on_name);
+                for_each_bound_identifier(&rest.argument, on_name);
             }
         }
         BindingPattern::ArrayPattern(array) => {
             for element in array.elements.iter().flatten() {
-                for_each_bound_name(element, on_name);
+                for_each_bound_identifier(element, on_name);
             }
             if let Some(rest) = &array.rest {
-                for_each_bound_name(&rest.argument, on_name);
+                for_each_bound_identifier(&rest.argument, on_name);
             }
         }
         BindingPattern::AssignmentPattern(assignment) => {
-            for_each_bound_name(&assignment.left, on_name);
+            for_each_bound_identifier(&assignment.left, on_name);
         }
     }
 }
@@ -111,6 +118,7 @@ fn record_function_declaration(function: &Function<'_>, visitor: &mut ScopeVisit
         scope.insert(
             id.name.to_string(),
             BindingState {
+                value_identity: None,
                 executor_alias: None,
                 builder_identity: None,
                 builder_effect_revision: 0,

@@ -33,3 +33,4 @@ export type * from "./test-no-live-repository-scan-types";
 export type * from "./postgres-bounded-statements-types";
 export type * from "./query-reached-per-item-types";
 export type * from "./vitest-project-policy-types";
+export type * from "./postgres-lock-written-rows-types";

@@ -1,5 +1,7 @@
 //! Cli postgres integration tests, linked in one harness.
 
+#[path = "common/check_json_clean.rs"]
+mod check_json_clean;
 #[path = "common/check_json_snapshot.rs"]
 mod check_json_snapshot;
 #[path = "cli_mrf_snapshot_file_extension_policy.rs"]
@@ -66,10 +68,20 @@ mod cli_postgres_snapshot_fk_on_delete;
 mod cli_postgres_snapshot_generated_column_predicates;
 #[path = "cli_postgres_snapshot_generated_column_writes.rs"]
 mod cli_postgres_snapshot_generated_column_writes;
+#[path = "cli_postgres_snapshot_generated_identifier_returns.rs"]
+mod cli_postgres_snapshot_generated_identifier_returns;
+#[path = "cli_postgres_snapshot_generated_identifiers.rs"]
+mod cli_postgres_snapshot_generated_identifiers;
 #[path = "cli_postgres_snapshot_idempotent_insert.rs"]
 mod cli_postgres_snapshot_idempotent_insert;
+#[path = "cli_postgres_snapshot_identifier_builders.rs"]
+mod cli_postgres_snapshot_identifier_builders;
+#[path = "cli_postgres_snapshot_identifier_catalogs.rs"]
+mod cli_postgres_snapshot_identifier_catalogs;
 #[path = "cli_postgres_snapshot_identifier_length.rs"]
 mod cli_postgres_snapshot_identifier_length;
+#[path = "cli_postgres_snapshot_identifier_repros.rs"]
+mod cli_postgres_snapshot_identifier_repros;
 #[path = "cli_postgres_snapshot_issue_3030_schema.rs"]
 mod cli_postgres_snapshot_issue_3030_schema;
 #[path = "cli_postgres_snapshot_issue_3037.rs"]
@@ -251,3 +263,6 @@ mod cli_postgres_snapshot_fixedpoint;
 
 #[path = "cli_postgres_snapshot_low_executor_shapes.rs"]
 mod cli_postgres_snapshot_low_executor_shapes;
+
+#[path = "cli_postgres_snapshot_lock_written_rows.rs"]
+mod cli_postgres_snapshot_lock_written_rows;

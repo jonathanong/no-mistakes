@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    include: [src/text-raw.ts, src/text-callers.ts, src/text-opaque-callers.ts]
+    options:
+      effort: max
+      importSpecifier: "@example/db"
+      trustedSqlTags:
+        - module: "@example/sql"
+          name: sql

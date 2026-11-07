@@ -6,6 +6,7 @@
 mod bindings;
 mod calls;
 mod composite;
+mod members;
 mod sources;
 
 pub(super) use self::composite::{callee_root, imported_locals};
@@ -21,6 +22,8 @@ impl PathOrigin {
             dynamic: true,
             env: None,
             param: None,
+            param_member: None,
+            param_owner: None,
         }
     }
 
@@ -31,6 +34,8 @@ impl PathOrigin {
             dynamic: false,
             env: None,
             param: None,
+            param_member: None,
+            param_owner: None,
         }
     }
 
@@ -46,6 +51,8 @@ impl PathOrigin {
             dynamic: false,
             env: None,
             param: None,
+            param_member: None,
+            param_owner: None,
         };
         origin.extend(
             text.split(['/', '\\'])
@@ -94,7 +101,8 @@ impl<'a> Projector<'a, '_> {
                 if module {
                     PathOrigin::anchored(PathAnchor::Module)
                 } else {
-                    self.env_origin(expression)
+                    self.member_origin(&member.object, member.property.name.as_str(), depth)
+                        .unwrap_or_else(|| self.env_origin(expression))
                 }
             }
             Expression::ComputedMemberExpression(_) => self.env_origin(expression),
@@ -135,7 +143,8 @@ impl<'a> Projector<'a, '_> {
                 }
             }
             None => self
-                .param_origin(id)
+                .destructured_origin(id, depth)
+                .or_else(|| self.param_origin(id))
                 .or_else(|| self.owned_binding(id, depth))
                 .unwrap_or_else(PathOrigin::unknown),
         }

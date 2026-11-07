@@ -16,6 +16,7 @@ fn resolve_star_export(
         } else {
             let mut candidates = Vec::new();
             let mut values = Vec::new();
+            let mut external = Vec::new();
             let mut has_unknown_candidate = false;
             for specifier in &file.stars {
                 // An unresolved or excluded star source can still export this
@@ -45,8 +46,8 @@ fn resolve_star_export(
                         candidates.push((path, scope, callable_id))
                     }
                     ExportedCallableResolution::Value(path, local) => values.push((path, local)),
-                    ExportedCallableResolution::ExternalModuleExport(_, _)
-                    | ExportedCallableResolution::Unknown => has_unknown_candidate = true,
+                    ExportedCallableResolution::ExternalModuleExport(module, name) => external.push((module, name)),
+                    ExportedCallableResolution::Unknown => has_unknown_candidate = true,
                 }
                 visited.failures.extend(branch_visited.failures);
             }
@@ -54,8 +55,12 @@ fn resolve_star_export(
             candidates.dedup();
             values.sort();
             values.dedup();
-            if has_unknown_candidate || candidates.len() + values.len() > 1 {
+            external.sort();
+            external.dedup();
+            if has_unknown_candidate || candidates.len() + values.len() + external.len() > 1 {
                 ExportedCallableResolution::Unknown
+            } else if let Some((module, name)) = external.pop() {
+                ExportedCallableResolution::ExternalModuleExport(module, name)
             } else if let Some((path, local)) = values.pop() {
                 ExportedCallableResolution::Value(path, local)
             } else if let Some((path, scope, callable_id)) = candidates.pop() {

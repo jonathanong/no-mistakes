@@ -2,6 +2,23 @@ use super::check_json_snapshot::{assert_saved_fixture, rules_path};
 use std::path::{Path, PathBuf};
 
 #[test]
+fn postgres_guard_provenance_check_json_snapshot() {
+    let root = rules_path(
+        "postgres-no-unbounded-sql-identifier",
+        "fixture",
+        "issue-3073-guards",
+    );
+    assert_saved_fixture(
+        "postgres_guard_provenance",
+        &[("guards", root.clone(), root.join(".no-mistakes.yml"))],
+    );
+    assert_saved_fixture(
+        "postgres_identifier_guards_clean",
+        &[("max", root.clone(), root.join(".no-mistakes-clean.yml"))],
+    );
+}
+
+#[test]
 fn low_values_executors_check_json_snapshot() {
     let root = rules_path("postgres-no-offset", "fixture", "low-values-executors");
     assert_saved_fixture(
@@ -351,4 +368,23 @@ fn postgres_low_await_using_check_json_snapshot() {
             ("max", root.clone(), root.join(".no-mistakes-max.yml")),
         ],
     );
+}
+
+#[test]
+fn postgres_identifier_fragments_check_json_snapshot() {
+    let root = rules_path(
+        "postgres-no-unbounded-sql-identifier",
+        "fixture",
+        "issue-3073-fragments",
+    );
+    for shape in ["text", "joins", "union", "negative", "raw"] {
+        assert_saved_fixture(
+            &format!("postgres_identifier_fragments_{shape}"),
+            &[(
+                "max",
+                root.clone(),
+                root.join(format!(".no-mistakes-{shape}.yml")),
+            )],
+        );
+    }
 }

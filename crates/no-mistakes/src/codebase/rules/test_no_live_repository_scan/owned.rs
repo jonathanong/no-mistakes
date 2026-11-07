@@ -3,9 +3,9 @@
 //! Recall first: any caller, write, or file this pass cannot read keeps the finding.
 mod consumers;
 pub(super) mod env;
+mod parameters;
 pub(crate) use consumers::Resolution;
 
-use super::provenance::{classify, Verdict};
 use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::{DepGraph, NodeId, ResolvedCallSite, TsFactLookup};
 use crate::codebase::rules::forbidden_calls::site_source_node;
@@ -20,15 +20,24 @@ pub(super) fn path_provenance(facts: &TsFileFacts) -> Option<&PathProvenance> {
         && facts.parse_error.is_none()
         && !facts.fatal_parse_error;
     let module = facts.module_bindings.as_deref()?;
-    (parsed && module.diagnostics.is_empty())
-        .then_some(module.path_provenance.as_deref())
-        .flatten()
+    let provenance = module.path_provenance.as_deref()?;
+    let understood = module.diagnostics.iter().all(|diagnostic| {
+        diagnostic.kind == "unsupported"
+            && diagnostic.message == "Non-literal dynamic import specifier"
+            && diagnostic.span.as_ref().is_some_and(|span| {
+                provenance
+                    .resolved_import_spans
+                    .contains(&(span.start, span.end))
+            })
+    });
+    (parsed && understood).then_some(provenance)
 }
 
 pub(super) struct Owners<'g> {
     /// Reachable call sites by the callable they invoke.
     callers: FxHashMap<NodeId, Vec<&'g ResolvedCallSite>>,
     env: env::EnvWrites,
+    nodes: FxHashMap<PathBuf, FxHashMap<u32, NodeId>>,
     /// Names of functions referenced other than as a direct callee, anywhere.
     escaped: FxHashSet<String>,
     /// Files consumed other than by named static imports used only as calls.
@@ -48,7 +57,24 @@ impl<'g> Owners<'g> {
         config: &crate::config::v2::NoMistakesConfig,
     ) -> Self {
         let mut callers: FxHashMap<NodeId, Vec<&ResolvedCallSite>> = FxHashMap::default();
+        let mut nodes: FxHashMap<PathBuf, FxHashMap<u32, NodeId>> = FxHashMap::default();
         for site in graph.resolved_call_sites() {
+            for node in [Some(site_source_node(site)), site.target_node.clone()]
+                .into_iter()
+                .flatten()
+            {
+                if let NodeId::Symbol {
+                    file,
+                    callable_id: Some(id),
+                    ..
+                } = &node
+                {
+                    nodes
+                        .entry(file.to_path_buf())
+                        .or_default()
+                        .insert(id.0, node);
+                }
+            }
             if site.invocation == InvocationKind::Call
                 && reachable.contains(&site_source_node(site))
             {
@@ -71,10 +97,11 @@ impl<'g> Owners<'g> {
                 None => escape_unknown |= ts.module_bindings.is_some(),
             }
         }
-        let consumed = consumers::Consumed::new(facts, graph_files, resolution);
+        let consumed = consumers::Consumed::new(graph, facts, graph_files, resolution);
         escape_unknown |= consumed.unknown();
         Self {
             callers,
+            nodes,
             env: env::EnvWrites::new(facts, graph_files, root, config),
             escaped,
             consumed,
@@ -96,43 +123,23 @@ impl<'g> Owners<'g> {
         }
         match (&origin.env, origin.param) {
             (Some(name), _) => self.env_owned(name, site, facts),
-            (None, Some(index)) => self.param_owned(index, site, facts, fixture_dirs),
+            (None, Some(index)) => self.param_owned(index, origin, site, facts, fixture_dirs),
             (None, None) => false,
         }
     }
 
-    /// A top-level named function, referenced only as a direct callee, in a module
+    /// A named function, referenced only as a direct callee, in a module
     /// every consumer imports by name and only calls.
     fn proven_target(&self, source: &NodeId) -> bool {
         let NodeId::Symbol { file, symbol, .. } = source else {
             return false;
         };
         let name: &str = symbol;
-        !name.contains('.') && !self.escaped.contains(name) && !self.consumed.contains(file)
-    }
-
-    /// Every caller passes an argument at `index` that is itself owned or bounded.
-    /// A caller that omits it falls back to the default and keeps the finding.
-    fn param_owned(
-        &self,
-        index: usize,
-        site: &ResolvedCallSite,
-        facts: &dyn TsFactLookup,
-        fixture_dirs: &[&str],
-    ) -> bool {
-        let source = site_source_node(site);
-        let escapes = self.escape_unknown || !self.proven_target(&source);
-        let Some(callers) = self.callers.get(&source).filter(|_| !escapes) else {
-            return false;
-        };
-        callers.iter().all(|caller| {
-            facts
-                .get_ts_facts(&caller.file)
-                .and_then(path_provenance)
-                .and_then(|provenance| provenance.arg_paths.get(&caller.offset))
-                .and_then(|paths| paths.iter().find(|(position, _)| *position == index))
-                .is_some_and(|(_, origin)| classify(Some(origin), fixture_dirs) == Verdict::Allowed)
-        })
+        !self.escaped.contains(name)
+            && !self
+                .escaped
+                .contains(name.rsplit('.').next().unwrap_or(name))
+            && !self.consumed.contains(file)
     }
 
     /// Call sites that start a chain reaching `target`: sites whose own

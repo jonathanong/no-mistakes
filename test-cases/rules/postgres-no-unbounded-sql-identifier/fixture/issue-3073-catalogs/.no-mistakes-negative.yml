@@ -1,0 +1,9 @@
+version: 2
+effort: max
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      include: [src/open.ts, src/mutated.ts, src/escaped.ts, src/collections-unsafe.ts, src/shared-unsafe-consumer.ts, src/namespace-member-consumer.ts, src/namespace-object-consumer.ts]
+      importSpecifier: db
+      executorTypeNames: [Query]

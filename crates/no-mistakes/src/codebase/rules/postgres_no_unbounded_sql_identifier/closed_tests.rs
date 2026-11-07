@@ -14,6 +14,11 @@ use std::sync::Arc;
 #[test]
 fn missing_facts_and_unmatched_calls_stay_unproven() {
     let opts = compile("postgres-no-unbounded-sql-identifier", &Options::default()).unwrap();
+    let graph = crate::codebase::dependencies::graph::test_support::from_raw_maps(
+        PathBuf::from("/repo"),
+        Default::default(),
+        Default::default(),
+    );
     let file = PathBuf::from("src/query.ts");
     let embedded = EmbeddedSqlCall::default();
     let call = SqlCall {
@@ -30,13 +35,14 @@ fn missing_facts_and_unmatched_calls_stay_unproven() {
     let facts = CheckFactMap::default();
     let bindings = Bindings::new(&facts);
     assert!(!proven(
+        &graph,
         &opts,
         &facts,
         &bindings,
         &call,
         &Provenance::ProcessEnv("SCHEMA".into()),
     ));
-    assert!(!proven(&opts, &facts, &bindings, &call, &reference));
+    assert!(!proven(&graph, &opts, &facts, &bindings, &call, &reference));
 
     let mut facts = CheckFactMap::default();
     facts.ts.insert(
@@ -48,7 +54,7 @@ fn missing_facts_and_unmatched_calls_stay_unproven() {
         .into(),
     );
     let bindings = Bindings::new(&facts);
-    assert!(!proven(&opts, &facts, &bindings, &call, &reference));
+    assert!(!proven(&graph, &opts, &facts, &bindings, &call, &reference));
 }
 
 #[test]
@@ -147,11 +153,13 @@ fn identifier_guard(subject: Option<GuardSubject>) -> FiniteIdentifierGuard {
     FiniteIdentifierGuard {
         context: None,
         name: "table".to_string(),
+        members: Vec::new(),
         from: 0,
         until: 20,
         kind: GuardKind::Assertion {
             callee: "assertWhitelistedSqlIdentifier".to_string(),
             argument: 0,
+            call: 0,
         },
         subject,
     }

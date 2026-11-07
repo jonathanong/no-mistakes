@@ -48,6 +48,8 @@ pub(crate) struct PathOrigin {
     pub(crate) env: Option<String>,
     /// Index of the enclosing function's parameter the leading component reads.
     pub(crate) param: Option<usize>,
+    pub(crate) param_member: Option<String>,
+    pub(crate) param_owner: Option<u32>,
 }
 
 /// Where a `process.env` write sits relative to the code it must dominate.
@@ -75,8 +77,7 @@ pub(crate) struct EnvWrite {
 /// Facts that let a rule trace a path through callers, env vars, and mocks.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct PathProvenance {
-    /// Call offset to `(argument index, origin)` for path-like arguments of calls
-    /// through an imported binding.
+    pub(crate) arg_member_paths: FxHashMap<u32, Vec<(usize, String, PathOrigin)>>,
     pub(crate) arg_paths: FxHashMap<u32, Vec<(usize, PathOrigin)>>,
     /// Calls that forward their enclosing mock implementation's rest arguments unchanged.
     pub(crate) pass_through: crate::fx::FxHashMap<u32, String>,
@@ -93,4 +94,5 @@ pub(crate) struct PathProvenance {
     pub(crate) unsafe_modules: crate::fx::FxHashSet<String>,
     /// A `require`/`import()`/`vi.mock` whose module cannot be read.
     pub(crate) modules_unknown: bool,
+    pub(crate) resolved_import_spans: Vec<(u32, u32)>,
 }

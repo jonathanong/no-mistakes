@@ -24,8 +24,7 @@ use policy::table_keyword;
 pub(crate) use sources::StatementPolicySources;
 use sources::StatementSources;
 use sqlparser::ast::{Spanned, Statement};
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 mod prepared;
 use prepared::PreparedStatements;
 fn extract_from_parsed_and_sources(
@@ -52,8 +51,8 @@ fn extract_from_parsed_and_sources(
     let mut insert_n = 0usize;
     let tokens = Tokens::with_prepared(sql, prepared_sql.tokens());
     let has_table_token = tokens.all().iter().any(table_keyword);
-    let need_table_tokens = collect_bounds || has_table_token;
-    let table_index = need_table_tokens.then(|| bounds::TableTokenIndex::new(tokens.all()));
+    let table_index =
+        (collect_bounds || has_table_token).then(|| bounds::TableTokenIndex::new(tokens.all()));
     let mut recovered_indexes = HashMap::new();
     let insert_sources = super::lines::InsertSources::with_tokens(sql, &tokens);
     let policy_arbiters: crate::fx::FxHashMap<_, _> = prepared_sql
@@ -160,6 +159,7 @@ fn extract_from_parsed_and_sources(
     let (statement_kinds, setting_uses, function_calls) =
         policy::collect(sql, prepared_sql, statements, sources.policy);
     let mut facts = SqlStatementFileFacts {
+        lock_writes: super::lock_writes::collect(statements, placeholder_positions),
         statement_kinds,
         setting_uses,
         function_calls,

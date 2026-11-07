@@ -1,0 +1,11 @@
+version: 2
+effort: max
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      include: [controls.ts]
+      importSpecifier: db
+      executorTypeNames: [Query]
+      identifierValidators:
+        - {module: sqlid, name: assertWhitelistedSqlIdentifier, argument: 0}

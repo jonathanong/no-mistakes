@@ -34,6 +34,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
         [
             "postgres-idempotent-insert",
             "postgres-conflict-ordering",
+            "postgres-lock-written-rows-only",
             "postgres-lock-ordering",
             "postgres-required-predicates",
             "postgres-generated-column-predicates",

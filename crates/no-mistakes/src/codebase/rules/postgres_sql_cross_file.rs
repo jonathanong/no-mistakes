@@ -9,15 +9,16 @@ mod validators;
 
 pub(crate) use expressions::walk_expression;
 pub(crate) use graph::{
-    graph_plan, registry_route, unique_export, unique_namespace_member, unique_type_export,
-    RegistryRoutes, UniqueExport,
+    graph_plan, possible_exports, registry_route, unique_export, unique_namespace_member,
+    unique_type_export, RegistryRoutes, UniqueExport,
 };
 pub(crate) use options::{compile, CompiledOptions, Options};
 pub(crate) use provenance::{
-    identifier_sources, interpolations, is_process_env, is_process_specifier, literal_array,
-    scans_identifier, Bindings, Provenance,
+    identifier_sources, interpolations, is_process_env, is_process_specifier, is_text_tag,
+    literal_array, scans_identifier, Bindings, IdentifierReturns, Provenance,
 };
 pub(crate) use sql::{identifier_placeholder, sql_calls, SqlCall};
+pub(crate) use validators::{metadata_helper_call, metadata_row_projection};
 
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::DepGraph;
