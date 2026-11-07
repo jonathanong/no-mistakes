@@ -70,6 +70,11 @@ fn scan(
             continue;
         }
         for provenance in identifier_sources(graph, facts, call, &bindings) {
+            if closed::proven(opts, facts, &bindings, call, &provenance)
+                || closed_calls::proven(graph, facts, &bindings, call, &provenance)
+            {
+                continue;
+            }
             if let Provenance::Reference {
                 name,
                 scope,
@@ -92,11 +97,6 @@ fn scan(
                 if bindings.closed_parameter(&call.file, *scope, name) {
                     continue;
                 }
-            }
-            if closed::proven(opts, facts, &bindings, call, &provenance)
-                || closed_calls::proven(graph, facts, &bindings, call, &provenance)
-            {
-                continue;
             }
             if let Some(finding) =
                 identifier_finding(root, graph, facts, &bindings.routes, call, &provenance)
