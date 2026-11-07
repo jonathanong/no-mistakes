@@ -41,3 +41,8 @@ function unknownTag(suffix) {
   appendSuffix(statement, suffix)
   read(statement)
 }
+function nestedFields(suffix) {
+  const statement = sql`SELECT 1`
+  appendNested(statement, suffix)
+  read(statement.text, statement.values)
+}

@@ -429,6 +429,11 @@ Low's bounded helper proofs also cover one fresh literal `{ text, values }`
 return or trusted tagged builder read through one local const and exactly paired
 `.text`/`.values` executor arguments. Mutated, escaped, optional, or opaque helper
 results remain unresolved; see the [low-effort contract](../postgres-query-annotation/low-effort.md).
+One direct imported helper may instead append literal-only suffixes to its sole
+fresh native builder argument and return a const alias. Named heads survive
+conditional calls to proven helpers, append chains, and discarded literal/tagged
+appends before the paired field read. A statement received as a function
+parameter stays unanalyzable; under `unanalyzable: advise` it remains an advisory.
 
 ## Suppression
 

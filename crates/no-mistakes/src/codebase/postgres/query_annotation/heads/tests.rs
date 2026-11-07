@@ -38,6 +38,8 @@ mod primitive_result_tests;
 mod primitive_stability_cache_tests;
 #[path = "returned_captured_tests.rs"]
 mod returned_captured_tests;
+#[path = "returned_literal_tests.rs"]
+mod returned_literal_tests;
 #[path = "returned_param_tests.rs"]
 mod returned_param_tests;
 #[path = "support.rs"]

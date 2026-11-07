@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    include: [controls.ts, controls-helpers.ts, select-with-owner.ts]
+    options:
+      importSpecifier: db
+      executorNames: [read]
+      effort: low
+      unanalyzable: report

@@ -416,6 +416,36 @@ still fails under every unanalyzable policy. This syntax proof does not request
 the annotation evaluator or change max's append fallback. For unresolved results,
 put a named literal at the executor instead of passing an opaque `.text` field.
 
+A direct imported helper can also preserve a fresh native builder passed as its
+only argument. The helper must be synchronous, take one plain parameter, and
+contain exactly a `const` alias initialized by 1–8 static `.append` calls followed
+by `return alias`. Suffixes inside this helper must be string literals or trusted
+`sql-template-strings` templates without interpolations. The parameter and alias
+cannot have other uses. This proof follows one canonical graph import edge;
+re-exports and nested helper calls remain unresolved.
+
+```ts
+// select.ts
+export function select(head: SQLStatement) {
+  const statement = head.append(sql`id, name`).append(' FROM items')
+  return statement
+}
+// get.ts: select is imported from ./select.ts; sql is the native tag.
+const query = byId
+  ? select(sql`/* itemById */ SELECT `).append(sql` WHERE id = ${id}`)
+  : select(sql`/* itemByName */ SELECT `).append(sql` WHERE name = ${name}`)
+query.append(sql` LIMIT 1`)
+read(query.text, query.values)
+```
+
+Every conditional arm must independently prove its helper and annotated head.
+The private local result may receive discarded literal/tagged suffix appends
+before one paired `.text`/`.values` executor read in the same function. Escapes,
+writes, captures, dynamic statement-level suffixes, and a statement received as
+a function parameter remain unanalyzable. The normal suppression directives and
+`unanalyzable` policy apply to those unresolved forms; keep the annotated head
+at the call site to make this bounded proof possible.
+
 For a configured relative factory or executor type, the helper head is used
 only after the request resolver confirms that the executor import belongs to
 the configured package. An unconfirmed relative call cannot make a local

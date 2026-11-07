@@ -2,8 +2,27 @@
 use super::Root;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::Expression;
+use oxc_span::GetSpan;
 
-pub(in super::super) fn root<'a>(mut expression: &'a Expression<'a>) -> Option<Root> {
+pub(in super::super) fn root<'a>(expression: &'a Expression<'a>) -> Option<Root> {
+    let mut root = bounded_root(expression, 8)?;
+    root.initializer = (expression.span().start, expression.span().end);
+    Some(root)
+}
+
+fn bounded_root<'a>(mut expression: &'a Expression<'a>, depth: u8) -> Option<Root> {
+    if let Expression::ConditionalExpression(branch) = unwrap_ts_wrappers(expression) {
+        if depth == 0 {
+            return None;
+        }
+        let mut left = bounded_root(&branch.consequent, depth - 1)?;
+        let right = bounded_root(&branch.alternate, depth - 1)?;
+        if left.proof != right.proof {
+            return None;
+        }
+        left.sources.extend(right.sources);
+        return Some(left);
+    }
     let mut appends = 0;
     loop {
         let Expression::CallExpression(call) = unwrap_ts_wrappers(expression) else {
@@ -37,8 +56,11 @@ pub(in super::super) fn root<'a>(mut expression: &'a Expression<'a>) -> Option<R
         // The factory appends before returning, even without outer append links.
         let proof = super::super::syntax::head(call.arguments[0].as_expression()?).proof(true);
         return (proof != super::super::HeadProof::Unproven).then_some(Root {
-            callee: (callee.span.start, callee.span.end),
-            tag: (tag.span.start, tag.span.end),
+            initializer: (call.span.start, call.span.end),
+            sources: vec![(
+                (callee.span.start, callee.span.end),
+                (tag.span.start, tag.span.end),
+            )],
             proof,
         });
     }

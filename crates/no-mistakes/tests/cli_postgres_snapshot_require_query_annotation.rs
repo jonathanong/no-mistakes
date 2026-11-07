@@ -249,3 +249,27 @@ fn postgres_builder_suffix_proof_check_json_snapshot() {
         ],
     );
 }
+
+#[test]
+fn postgres_imported_builder_head_check_json_snapshot() {
+    assert_saved_fixture(
+        "postgres_imported_builder_head",
+        &[
+            case(
+                "repro",
+                "imported-builder-head",
+                "imported-builder-head.yml",
+            ),
+            case(
+                "parameter",
+                "imported-builder-head",
+                "imported-builder-parameter.yml",
+            ),
+            case(
+                "controls",
+                "imported-builder-head",
+                "imported-builder-controls.yml",
+            ),
+        ],
+    );
+}

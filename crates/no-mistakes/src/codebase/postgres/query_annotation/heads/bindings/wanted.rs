@@ -110,11 +110,11 @@ pub(super) fn references(syntax: &Syntax) -> FxHashSet<Span> {
             syntax
                 .returned_param_roots
                 .values()
-                .flat_map(|root| [root.callee, root.tag]),
+                .flat_map(|root| root.sources.iter().flat_map(|&(callee, tag)| [callee, tag])),
         )
         .chain(syntax.returned_params.values().flat_map(|candidate| {
-            [candidate.allowed_parameter, candidate.default_tag]
-                .into_iter()
+            std::iter::once(candidate.allowed_parameter)
+                .chain(candidate.tags.iter().copied())
                 .chain(candidate.allowed_alias.iter().copied())
         }))
         .chain(

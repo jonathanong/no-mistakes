@@ -48,10 +48,11 @@ fn prove(
     {
         return false;
     }
-    let Some(tag) = bindings.owner(candidate.default_tag) else {
-        return false;
-    };
-    if !tag.imported || !bindings.trusted_import(tag.id) {
+    if !candidate.tags.iter().all(|&reference| {
+        bindings
+            .owner(reference)
+            .is_some_and(|tag| tag.imported && bindings.trusted_import(tag.id))
+    }) {
         return false;
     }
     let Some(parameter) = bindings.owner(candidate.allowed_parameter) else {
