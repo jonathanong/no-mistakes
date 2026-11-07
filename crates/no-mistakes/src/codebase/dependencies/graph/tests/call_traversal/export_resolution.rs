@@ -56,3 +56,41 @@ fn call_export_resolution_keeps_missing_facts_and_nonvisible_stars_unknown() {
         ExportedCallableResolution::Unknown
     ));
 }
+
+#[test]
+fn call_export_resolution_deduplicates_external_stars_without_selecting_collisions() {
+    let (root, graph) = call_fixture_graph();
+    let consumer = root.join("src/external-star-identities-consumer.mts");
+    let sites = graph.call_sites_in_file(&consumer);
+    let same = sites
+        .iter()
+        .find(|site| site.source_callee == "sameOrigin")
+        .unwrap();
+    assert!(
+        matches!(&same.target, ResolvedCallTarget::ModuleExport {
+            specifier,
+            export_path,
+            repository_target: None,
+            callable_id: None,
+        } if specifier == "vitest" && export_path == "mock"),
+        "duplicate star paths must retain the one canonical external export: {same:#?}"
+    );
+    assert!(same.target_node.is_none(), "{same:#?}");
+    for callee in [
+        "distinctModules",
+        "distinctNames",
+        "localCollision",
+        "unresolvedStar",
+    ] {
+        let site = sites
+            .iter()
+            .find(|site| site.source_callee == callee)
+            .unwrap_or_else(|| panic!("missing {callee}: {sites:#?}"));
+        assert_eq!(
+            site.target,
+            ResolvedCallTarget::Unknown,
+            "{callee}: {site:#?}"
+        );
+        assert!(site.target_node.is_none(), "{callee}: {site:#?}");
+    }
+}
