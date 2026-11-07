@@ -3,7 +3,9 @@ use super::*;
 fn returning_commit_preserves_fallthrough_transaction_and_helper_effects() {
     let findings = check(&fixture("returning-commit"), &config()).unwrap();
     assert!(
-        findings.iter().all(|finding| finding.line > 14),
+        findings
+            .iter()
+            .all(|finding| finding.line > 14 && finding.line < 86),
         "{findings:?}"
     );
     assert!(

@@ -80,7 +80,7 @@ impl Snapshot {
                         .is_some_and(|(_, ended)| ended != identity)
                 })
             });
-        if !live || !all_ended || !ended.incomplete.is_empty() {
+        if !live || !all_ended || ended.incomplete.contains(&owner(visitor)) {
             visitor
                 .exited_functions
                 .extend(ended.exited.iter().copied());
@@ -128,13 +128,15 @@ pub(super) fn note_boundary(
         && visitor.executor_options.track_transaction_helpers
         && !visitor.awaited_lock_helper_calls.contains(&call.span.start)
     {
-        visitor.incomplete_transaction_owners.insert(
-            visitor
-                .member_query_proof
-                .function_ids
-                .last()
-                .copied()
-                .unwrap_or(0),
-        );
+        visitor.incomplete_transaction_owners.insert(owner(visitor));
     }
+}
+
+fn owner(visitor: &ScopeVisitor<'_>) -> u32 {
+    visitor
+        .member_query_proof
+        .function_ids
+        .last()
+        .copied()
+        .unwrap_or(0)
 }

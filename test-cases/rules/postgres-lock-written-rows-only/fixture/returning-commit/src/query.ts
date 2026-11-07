@@ -84,3 +84,10 @@ export async function unresolvedContinuingRollback(key: string) {
   tx.rollback();
   await tx.query(`DELETE FROM claims WHERE key = $1`, [key]);
 }
+
+export async function validAfterIncompleteSibling(key: string) {
+  const tx = await beginTransaction();
+  await tx.query(`SELECT 1 FROM claims WHERE key = $1 FOR UPDATE`, [key]);
+  if (key) { await tx.commit(); return; }
+  await tx.query(`DELETE FROM claims WHERE key = $1`, [key]);
+}
