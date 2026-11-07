@@ -311,6 +311,13 @@ does not construct an observer, start clocks, or retain work ledgers. Enabled
 runs memoize successful and failed discovery/read/parse operations in memory
 for the duration of that invocation only.
 
+The async Node API provides the same verbose observation through
+`collectDiagnostics(operation, ...args)`, returning `{ result, diagnostics }`
+without stderr. The ordinary result retains its existing shape; the caller owns
+the completed report. Errors may carry `.diagnostics` if observation began
+before rejection. No completed-request registry is retained. See the
+[Node API](../node-api.md) for supported selectors and exported report types.
+
 The async Node API remains stderr-free. `impactedChecks({ timings: true })`
 retains its structured `{ phase, duration_ms }[]` response. `check({ timings: true })`
 returns phase and rule entries as `{ label, durationMs, parallel }[]`. Repository-analysis calls accept `diagnosticsId` to

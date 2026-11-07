@@ -173,6 +173,9 @@ context, option propagation, and safe command execution.
   snapshots in long or externally killed jobs; `--progress-interval <ms>`
   defaults to 1000 and requires `--progress`. Node callers use `diagnosticsId`
   and async `diagnosticsSnapshot({ id })` for stderr-free live progress.
+  Use async `collectDiagnostics("check", options)` (or another supported public
+  operation name) for `{ result, diagnostics }` with verbose observation and
+  unchanged ordinary results. Errors may carry optional `.diagnostics`.
 - Pass `--root <workspace>` explicitly. In normal monorepos omit `--tsconfig`
   so each importing file uses its owning config; pass a package tsconfig only
   to force one resolver for debugging or a deliberately scoped request.

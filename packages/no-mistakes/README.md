@@ -47,6 +47,12 @@ const report = await analyzeProject({
 });
 ```
 
+Use `collectDiagnostics("check", options)` (or another supported operation name)
+to return `{ result, diagnostics }` with verbose timings, work counts, Unix phase
+CPU/RSS and bounded expensive-file summaries, without stderr. The normal result
+shape is preserved. See the [Node API guide](../../docs/node-api.md) for selectors
+and report types.
+
 Use `analyzeProject()` when reports share a root and configuration. Dedicated
 functions remain convenient for a single query:
 
