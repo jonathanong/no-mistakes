@@ -72,6 +72,9 @@ pub(super) fn alias(
     expression: &Expression<'_>,
     fact: &mut EmbeddedSqlCall,
 ) -> bool {
+    if visitor.transaction_options.aliases.is_empty() {
+        return false;
+    }
     let Expression::Identifier(id) = unwrap_ts_wrappers(expression) else {
         return false;
     };
