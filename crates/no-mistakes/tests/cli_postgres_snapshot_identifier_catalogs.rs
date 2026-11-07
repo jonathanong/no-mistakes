@@ -57,6 +57,7 @@ fn postgres_workspace_identifier_sources_check_json_snapshot() {
     }
     for shape in [
         "unused",
+        "unused-name",
         "wrong",
         "typo",
         "member",

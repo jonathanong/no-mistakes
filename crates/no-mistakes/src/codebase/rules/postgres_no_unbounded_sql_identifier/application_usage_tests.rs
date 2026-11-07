@@ -3,9 +3,6 @@ use super::*;
 #[test]
 fn unused_identifier_sources_report_the_authored_config_entry() {
     let root = fixture();
-    let config =
-        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes-unused.yml")))
-            .unwrap();
     let facts = CheckFactMap::default();
     let sources = super::super::super::source_store_for_files(&[]);
     let graph = crate::codebase::dependencies::graph::test_support::from_raw_maps(
@@ -13,23 +10,28 @@ fn unused_identifier_sources_report_the_authored_config_entry() {
         Default::default(),
         Default::default(),
     );
-    let findings = check(
-        &root,
-        &config,
-        &config.rules[0],
-        &graph,
-        &facts,
-        Some(&sources),
-    )
-    .unwrap();
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].rule, "unused-allow-entry");
-    assert_eq!(findings[0].file, ".no-mistakes-unused.yml");
-    assert_eq!(findings[0].line, 10);
-    assert_eq!(
-        findings[0].target.as_deref(),
-        Some("@example/catalog#getRelationTableNameOrThrow")
-    );
+    for (shape, selector) in [
+        ("unused", "@example/catalog#getRelationTableNameOrThrow"),
+        ("unused-name", "getRelationTableNameOrThrow"),
+    ] {
+        let config_file = format!(".no-mistakes-{shape}.yml");
+        let config =
+            crate::config::v2::load_v2_config(&root, Some(&root.join(&config_file))).unwrap();
+        let findings = check(
+            &root,
+            &config,
+            &config.rules[0],
+            &graph,
+            &facts,
+            Some(&sources),
+        )
+        .unwrap();
+        assert_eq!(findings.len(), 1);
+        assert_eq!(findings[0].rule, "unused-allow-entry");
+        assert_eq!(findings[0].file, config_file);
+        assert_eq!(findings[0].line, 10);
+        assert_eq!(findings[0].target.as_deref(), Some(selector));
+    }
 }
 
 #[test]
