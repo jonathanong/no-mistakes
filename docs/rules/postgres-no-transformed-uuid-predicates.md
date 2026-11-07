@@ -88,6 +88,23 @@ A qualified probe must also match the resolved catalog relation's schema identit
 A schema-less catalog's bare table key cannot prove a qualified probe; an exact
 qualified key or the catalog's explicit matching schema can establish that identity.
 
+The bare probe key may belong to a view when its output column maps through
+a direct bare projection to a base-table catalog UUID column. Renamed
+projections and plain wildcard projections are supported.
+Computed, missing, ambiguous, recursive, or chained view columns do not establish that
+proof, so their driving transforms remain reported.
+
+`IS DISTINCT FROM` and `IS NOT DISTINCT FROM` also allow a transformed
+comparison value opposite a catalog-backed bare UUID column, including
+`WHERE id IS DISTINCT FROM COALESCE(token, id)`. A transformed UUID operand
+compared against a parameter or another transformed operand remains reported.
+
+`IS NULL` and `IS NOT NULL` test whether a value is null rather than probing a UUID value.
+Scalar transformations used only to compute that null-tested value are allowed.
+Nested predicates remain checked, including CASE conditions, aggregate FILTER
+conditions, and
+`COALESCE(id::text = $1, false) IS NOT NULL`.
+
 A transformed residual predicate remains reported even after an indexed or
 primary-key equality on the same table, including queries with `LIMIT 1`.
 The rule does not prove PostgreSQL's access path from a sibling conjunct.
@@ -213,6 +230,12 @@ SELECT id FROM users WHERE id >= uuidv7_lower_bound($1);
 -- A computed bound on the other operand leaves the UUID column bare.
 SELECT id FROM users WHERE id >= fn_min_child_uuidv7($1);
 
+-- Null tests and comparison values leave UUID value probes bare.
+SELECT id FROM users WHERE COALESCE(id, id) IS NOT NULL;
+SELECT id FROM users WHERE COALESCE(id, id) IS NULL;
+SELECT id FROM users WHERE id IS DISTINCT FROM COALESCE(id, id);
+SELECT id FROM users WHERE id IS NOT DISTINCT FROM COALESCE(id, id);
+
 -- A projection can derive a timestamp without wrapping a predicate key.
 SELECT uuid_extract_timestamp(id) FROM users WHERE id = $1;
 
@@ -263,6 +286,9 @@ SELECT COUNT(*) FROM users HAVING lower(MIN(id)::text) = $1;
 SELECT id FROM users WHERE id::text = $1;
 SELECT id FROM users WHERE CAST(id AS text) = $1;
 SELECT id FROM users WHERE uuid_extract_timestamp(id) >= $1;
+SELECT id FROM users WHERE COALESCE(id, id) IS DISTINCT FROM $1;
+SELECT id FROM users WHERE COALESCE(id, id) IS NOT DISTINCT FROM $1;
+SELECT id FROM users WHERE COALESCE(id::text = $1, false) IS NOT NULL;
 
 SELECT s.id
 FROM sessions s

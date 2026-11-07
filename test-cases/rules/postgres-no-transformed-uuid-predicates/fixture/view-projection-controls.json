@@ -1,0 +1,157 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "accounts": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "email": {
+          "dataType": "text"
+        },
+        "token": {
+          "dataType": "pg_catalog.uuid"
+        },
+        "custom": {
+          "dataType": "\"UUID\""
+        },
+        "array": {
+          "dataType": "uuid[]"
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    },
+    "orders": {
+      "columns": {
+        "id": {
+          "dataType": "UUID"
+        },
+        "account_id": {
+          "dataType": "\"pg_catalog\".\"uuid\""
+        },
+        "value": {
+          "dataType": "integer"
+        }
+      }
+    }
+  },
+  "views": {
+    "pass_bare": {
+      "definition": "SELECT id FROM accounts"
+    },
+    "pass_star": {
+      "definition": "SELECT * FROM accounts"
+    },
+    "pass_qualified_star": {
+      "definition": "SELECT accounts.* FROM accounts"
+    },
+    "pass_alias_star": {
+      "definition": "SELECT a.* FROM accounts a"
+    },
+    "pass_alias_column": {
+      "definition": "SELECT a.id AS id FROM accounts a"
+    },
+    "pass_quoted_alias": {
+      "definition": "SELECT \"A\".* FROM accounts \"A\""
+    },
+    "pass_qualified_column": {
+      "definition": "SELECT public.accounts.id FROM public.accounts"
+    },
+    "pass_partial": {
+      "definition": "SELECT id, COALESCE(token, id) AS other FROM accounts"
+    },
+    "empty_definition": {
+      "definition": ""
+    },
+    "invalid_definition": {
+      "definition": "SELECT ("
+    },
+    "nonquery_definition": {
+      "definition": "DELETE FROM accounts"
+    },
+    "multiple_statements": {
+      "definition": "SELECT id FROM accounts; SELECT id FROM accounts"
+    },
+    "cte_definition": {
+      "definition": "WITH a AS (SELECT id FROM accounts) SELECT id FROM a"
+    },
+    "union_definition": {
+      "definition": "SELECT id FROM accounts UNION SELECT id FROM accounts"
+    },
+    "multiple_from": {
+      "definition": "SELECT a.id FROM accounts a, orders o"
+    },
+    "joined_definition": {
+      "definition": "SELECT a.id FROM accounts a JOIN orders o ON o.account_id = a.id"
+    },
+    "derived_definition": {
+      "definition": "SELECT a.id FROM (SELECT id FROM accounts) a"
+    },
+    "renamed_base_columns": {
+      "definition": "SELECT a.id FROM accounts a(id, renamed_email, renamed_token)"
+    },
+    "wrong_schema": {
+      "definition": "SELECT id FROM audit.accounts"
+    },
+    "missing_base": {
+      "definition": "SELECT id FROM missing"
+    },
+    "duplicate_explicit": {
+      "definition": "SELECT id, id FROM accounts"
+    },
+    "duplicate_alias": {
+      "definition": "SELECT id AS key, token AS key FROM accounts"
+    },
+    "duplicate_computed": {
+      "definition": "SELECT id, COALESCE(token, id) AS id FROM accounts"
+    },
+    "duplicate_computed_first": {
+      "definition": "SELECT COALESCE(token, id) AS id, id FROM accounts"
+    },
+    "duplicate_star": {
+      "definition": "SELECT *, id FROM accounts"
+    },
+    "duplicate_qualified_star": {
+      "definition": "SELECT a.*, a.* FROM accounts a"
+    },
+    "duplicate_star_after_computed": {
+      "definition": "SELECT COALESCE(token, id) AS id, * FROM accounts"
+    },
+    "wrong_star_owner": {
+      "definition": "SELECT other.* FROM accounts a"
+    },
+    "wrong_column_owner": {
+      "definition": "SELECT other.id FROM accounts a"
+    },
+    "missing_column": {
+      "definition": "SELECT missing AS id FROM accounts"
+    },
+    "computed_column": {
+      "definition": "SELECT COALESCE(token, id) AS id FROM accounts"
+    },
+    "modified_exclude": {
+      "definition": "SELECT * EXCLUDE (email) FROM accounts"
+    },
+    "modified_except": {
+      "definition": "SELECT * EXCEPT (email) FROM accounts"
+    },
+    "modified_replace": {
+      "definition": "SELECT * REPLACE (token AS id) FROM accounts"
+    },
+    "modified_rename": {
+      "definition": "SELECT * RENAME (token AS id) FROM accounts"
+    },
+    "modified_ilike": {
+      "definition": "SELECT * ILIKE 'id' FROM accounts"
+    },
+    "modified_alias": {
+      "definition": "SELECT * AS (id, email, token, custom, array) FROM accounts"
+    }
+  }
+}

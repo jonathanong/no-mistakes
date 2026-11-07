@@ -96,3 +96,62 @@ fn transformed_uuid_predicates_public_raw_sql_advice_does_not_fail() {
         assert_eq!(report["warnings"], json!([]));
     }
 }
+
+#[test]
+fn transformed_uuid_followup_probes_match_public_check_and_analyze_project() {
+    let root = crate::test_support::rule_fixture_root("postgres-no-transformed-uuid-predicates");
+    for kind in ["view", "distinct", "null"] {
+        for status in ["pass", "positive"] {
+            let mut previous = None;
+            for effort in ["low", "max"] {
+                let config = root
+                    .parent()
+                    .unwrap()
+                    .join("configs")
+                    .join(format!("probe-followup-{kind}-{status}-{effort}.yml"));
+                let check: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
+                    serde_json::from_str(
+                        &check_json_impl(crate::napi_api::options::test_json_arg(
+                            json!({"root": root, "config": config}).to_string(),
+                        ))
+                        .unwrap(),
+                    )
+                    .unwrap(),
+                );
+                let label = format!("{kind}-{status}-{effort}");
+                assert_eq!(check["warnings"], json!([]), "{label}: {check}");
+                assert_eq!(check["advisories"], json!([]), "{label}: {check}");
+                let findings = check["rules"].as_array().unwrap();
+                assert_eq!(findings.is_empty(), status == "pass", "{label}: {check}");
+                for finding in findings {
+                    assert_eq!(finding["rule"], "postgres-no-transformed-uuid-predicates");
+                    assert_eq!(
+                        finding["file"],
+                        format!("probe-followup-{kind}-{status}.sql")
+                    );
+                }
+                let project: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
+                    serde_json::from_str(
+                        &crate::napi_api::analyze_project::analyze_project_json_impl(
+                            crate::napi_api::options::test_json_arg(
+                                json!({
+                                    "root": root,
+                                    "config": config,
+                                    "reports": [{"type": "check"}],
+                                })
+                                .to_string(),
+                            ),
+                        )
+                        .unwrap(),
+                    )
+                    .unwrap(),
+                );
+                assert_eq!(project["reports"][0]["result"], check, "{label}");
+                if let Some(previous) = &previous {
+                    assert_eq!(&check, previous, "effort parity: {kind}-{status}");
+                }
+                previous = Some(check);
+            }
+        }
+    }
+}

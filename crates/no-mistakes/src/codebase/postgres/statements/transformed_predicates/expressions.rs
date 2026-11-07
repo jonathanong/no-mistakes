@@ -1,3 +1,4 @@
+mod columns;
 use super::boolean::boolean_result;
 use super::scope::{owner, qualifier};
 use super::{Clause, SqlTransformedColumnUseFact};
@@ -6,7 +7,7 @@ use crate::codebase::postgres::statements::bounds::is_aggregate;
 use crate::codebase::postgres::statements::select::uses::{columns::bare, scope::BaseRel};
 use crate::codebase::postgres::statements::value::PlaceholderPositions;
 use crate::codebase::postgres::statements::SqlTransformedColumnProbeFact as Probe;
-use sqlparser::ast::{BinaryOperator as Op, Expr, FunctionArguments, Spanned};
+use sqlparser::ast::{BinaryOperator as Op, Expr, FunctionArguments};
 
 pub(super) fn collect(
     expression: &Expr,
@@ -24,6 +25,7 @@ pub(super) fn collect(
         probe_value: None,
         probes: Vec::new(),
         positive_conjunct: true,
+        null_test: false,
         out,
     }
     .walk(expression, None);
@@ -35,6 +37,7 @@ struct Inputs<'a, 'b, 'c> {
     probe_value: Option<usize>,
     probes: Vec<Probe>,
     positive_conjunct: bool,
+    null_test: bool,
     positions: PlaceholderPositions<'b>,
     out: &'c mut Vec<SqlTransformedColumnUseFact>,
 }
@@ -44,12 +47,18 @@ impl Inputs<'_, '_, '_> {
         self.positive_conjunct = false;
         self.probe_value = bare(other, self.positions).and_then(|(_, column)| {
             let qualifier = qualifier(other);
-            let (table, _) = owner(self.probed.unwrap(), qualifier.as_deref());
-            (qualifier.is_some()
-                && !table.is_empty()
-                && owner(self.relations, qualifier.as_deref()).0 == table)
+            let scope = self.probed.unwrap_or(self.relations);
+            let (table, candidate_tables) = owner(scope, qualifier.as_deref());
+            (self.probed.is_none()
+                || (qualifier.is_some()
+                    && !table.is_empty()
+                    && owner(self.relations, qualifier.as_deref()).0 == table))
                 .then(|| {
-                    self.probes.push(Probe { table, column });
+                    self.probes.push(Probe {
+                        table,
+                        column,
+                        candidate_tables,
+                    });
                     self.probes.len() - 1
                 })
         });
@@ -57,14 +66,16 @@ impl Inputs<'_, '_, '_> {
         (self.probe_value, self.positive_conjunct) = previous;
     }
     fn walk_condition(&mut self, expr: &Expr) {
-        let previous = self.probe_value;
+        let previous = (self.probe_value, self.null_test);
         self.probe_value = None;
+        self.null_test = false;
         self.walk(expr, None);
-        self.probe_value = previous;
+        (self.probe_value, self.null_test) = previous;
     }
     fn walk(&mut self, expr: &Expr, transformation: Option<&str>) {
         let previous = self.probe_value;
         let positive_conjunct = self.positive_conjunct;
+        let null_test = self.null_test;
         self.positive_conjunct &= matches!(
             expr,
             Expr::Nested(_)
@@ -74,11 +85,13 @@ impl Inputs<'_, '_, '_> {
                 }
         );
         if boolean_result(expr) {
+            self.null_test = false;
             self.probe_value = None;
         }
         self.walk_value(expr, transformation);
         self.probe_value = previous;
         self.positive_conjunct = positive_conjunct;
+        self.null_test = null_test;
     }
     fn walk_value(&mut self, expr: &Expr, transformation: Option<&str>) {
         // A surrounding transformation consumes the boolean result, not its UUID operands.
@@ -95,6 +108,16 @@ impl Inputs<'_, '_, '_> {
             } if self.probed.is_some() && self.positive_conjunct => {
                 self.equality_operand(left, right);
                 self.equality_operand(right, left);
+            }
+            Expr::IsDistinctFrom(left, right) | Expr::IsNotDistinctFrom(left, right)
+                if self.clause == Clause::Where =>
+            {
+                self.equality_operand(left, right);
+                self.equality_operand(right, left);
+            }
+            Expr::IsNull(value) | Expr::IsNotNull(value) => {
+                self.null_test = true;
+                self.walk(value, None);
             }
             Expr::Case {
                 operand,
@@ -129,35 +152,14 @@ impl Inputs<'_, '_, '_> {
                     }
                 }
                 if let Some(filter) = &function.filter {
-                    self.walk(filter, None);
+                    self.walk_condition(filter);
                 }
             }
             Expr::Cast { expr, .. } => self.walk(expr, Some(transformation.unwrap_or("cast"))),
-            Expr::Identifier(_) | Expr::CompoundIdentifier(_) if transformation.is_some() => {
-                if let Some((_, column)) = bare(expr, self.positions) {
-                    let qualifier = qualifier(expr);
-                    let driving_probe = self
-                        .probe_value
-                        .filter(|_| {
-                            qualifier.is_some()
-                                && owner(self.probed.unwrap(), qualifier.as_deref())
-                                    .0
-                                    .is_empty()
-                                && !owner(self.relations, qualifier.as_deref()).0.is_empty()
-                        })
-                        .map(|index| self.probes[index].clone());
-                    let (table, candidate_tables) = owner(self.relations, qualifier.as_deref());
-                    self.out.push(SqlTransformedColumnUseFact {
-                        table,
-                        column,
-                        candidate_tables,
-                        clause: self.clause,
-                        line: expr.span().start.line.max(1) as usize,
-                        column_position: expr.span().start.column.max(1) as usize,
-                        transformation: transformation.unwrap().into(),
-                        driving_probe,
-                    });
-                }
+            Expr::Identifier(_) | Expr::CompoundIdentifier(_)
+                if transformation.is_some() && !self.null_test =>
+            {
+                self.transformed(expr, transformation.unwrap());
             }
             // The shared walker skips scalar subquery columns. Their predicates get their own scope.
             _ => visit_child_exprs(expr, &mut |child| self.walk(child, transformation)),

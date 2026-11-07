@@ -81,3 +81,68 @@ fn driving_values_retain_probe_metadata_for_catalog_classification() {
         ]
     );
 }
+
+#[test]
+fn null_tests_ignore_scalar_transforms_but_retain_nested_predicates() {
+    assert!(facts("probe-followup-null-pass.sql")
+        .transformed_column_uses
+        .is_empty());
+    let facts = facts("probe-followup-null-positive.sql");
+    let lines: Vec<_> = facts
+        .transformed_column_uses
+        .iter()
+        .map(|fact| fact.line)
+        .collect();
+    assert_eq!(lines, [1, 1, 2, 3, 4, 5, 6, 7]);
+}
+
+#[test]
+fn distinct_bare_operands_retain_catalog_probe_candidates_in_both_directions() {
+    let pass = facts("probe-followup-distinct-pass.sql");
+    assert_eq!(pass.transformed_column_uses.len(), 8);
+    for fact in pass.transformed_column_uses {
+        let probe = fact.driving_probe.expect("bare opposite operand");
+        assert_eq!(probe.column, "id");
+        assert_eq!(probe.candidate_tables, Some(vec!["accounts".into()]));
+    }
+    let facts = facts("probe-followup-distinct-positive.sql");
+    assert!(facts
+        .transformed_column_uses
+        .iter()
+        .filter(|fact| fact.line <= 6)
+        .all(|fact| fact
+            .driving_probe
+            .as_ref()
+            .is_none_or(|probe| probe.column == "email")));
+}
+
+#[test]
+fn recovered_transform_binds_preserve_real_columns_and_quoted_marker_names() {
+    let source = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-no-transformed-uuid-predicates")
+            .join("recovered-transform-bind.sql"),
+    )
+    .unwrap();
+    let column = source.find("sql_placeholder_1").unwrap() as u32 + 1;
+    let facts = super::super::extract_sql_statement_facts_with_recovered_placeholders(
+        &source,
+        true,
+        &[(1, column)],
+    );
+    assert!(!facts.parse_failed);
+    let columns: Vec<_> = facts
+        .transformed_column_uses
+        .iter()
+        .map(|use_| (use_.line, use_.column.as_str()))
+        .collect();
+    assert_eq!(
+        columns,
+        [(1, "token"), (2, "sql_placeholder_1"), (2, "token")]
+    );
+    assert_eq!(
+        super::super::extract_sql_statement_facts(&source)
+            .transformed_column_uses
+            .len(),
+        4
+    );
+}

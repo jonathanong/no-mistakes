@@ -1002,14 +1002,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "operand-boundaries-positive.sql",
-          "line": 12,
-          "message": "operand-boundaries-positive.sql:12: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
-          "rule": "postgres-no-transformed-uuid-predicates",
-          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(id::text IS NOT NULL AS boolean);",
-          "target": "accounts.id"
-        },
-        {
-          "file": "operand-boundaries-positive.sql",
           "line": 13,
           "message": "operand-boundaries-positive.sql:13: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
@@ -1107,14 +1099,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "operand-boundaries-positive.sql:11: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT 1 FROM accounts WHERE COALESCE(id::text LIKE $1, false);",
-          "target": "accounts.id"
-        },
-        {
-          "file": "operand-boundaries-positive.sql",
-          "line": 12,
-          "message": "operand-boundaries-positive.sql:12: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
-          "rule": "postgres-no-transformed-uuid-predicates",
-          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(id::text IS NOT NULL AS boolean);",
           "target": "accounts.id"
         },
         {
@@ -1614,14 +1598,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "predicate-forms.sql:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT 1 FROM accounts WHERE id::text BETWEEN $1 AND $2;",
-          "target": "accounts.id"
-        },
-        {
-          "file": "predicate-forms.sql",
-          "line": 4,
-          "message": "predicate-forms.sql:4: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
-          "rule": "postgres-no-transformed-uuid-predicates",
-          "sourceLine": "SELECT 1 FROM accounts WHERE id::text IS NULL;",
           "target": "accounts.id"
         },
         {
@@ -2425,6 +2401,764 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT 1 FROM orders c JOIN accounts root ON root.id::text = COALESCE(c.account_id::text, c.id::text);",
           "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "probe_followup_distinct_pass_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "probe_followup_distinct_pass_max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "probe_followup_distinct_positive_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 1,
+          "message": "probe-followup-distinct-positive.sql:1: WHERE applies COALESCE to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) IS DISTINCT FROM $1;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 1,
+          "message": "probe-followup-distinct-positive.sql:1: WHERE applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) IS DISTINCT FROM $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 2,
+          "message": "probe-followup-distinct-positive.sql:2: WHERE applies COALESCE to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) IS NOT DISTINCT FROM $1;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 2,
+          "message": "probe-followup-distinct-positive.sql:2: WHERE applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) IS NOT DISTINCT FROM $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 3,
+          "message": "probe-followup-distinct-positive.sql:3: WHERE applies COALESCE to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE $1 IS DISTINCT FROM COALESCE(token, id);",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 3,
+          "message": "probe-followup-distinct-positive.sql:3: WHERE applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE $1 IS DISTINCT FROM COALESCE(token, id);",
+          "target": "accounts.token"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 4,
+          "message": "probe-followup-distinct-positive.sql:4: WHERE applies COALESCE to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE $1 IS NOT DISTINCT FROM COALESCE(token, id);",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 4,
+          "message": "probe-followup-distinct-positive.sql:4: WHERE applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE $1 IS NOT DISTINCT FROM COALESCE(token, id);",
+          "target": "accounts.token"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 5,
+          "message": "probe-followup-distinct-positive.sql:5: WHERE applies COALESCE to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) IS DISTINCT FROM id::uuid;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 5,
+          "message": "probe-followup-distinct-positive.sql:5: WHERE applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) IS DISTINCT FROM id::uuid;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 5,
+          "message": "probe-followup-distinct-positive.sql:5: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) IS DISTINCT FROM id::uuid;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 6,
+          "message": "probe-followup-distinct-positive.sql:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE email IS DISTINCT FROM COALESCE(token, id)::text;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 6,
+          "message": "probe-followup-distinct-positive.sql:6: WHERE applies cast to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE email IS DISTINCT FROM COALESCE(token, id)::text;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 7,
+          "message": "probe-followup-distinct-positive.sql:7: WHERE applies COALESCE to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT a.id FROM accounts a CROSS JOIN computed_account_view v WHERE id IS DISTINCT FROM COALESCE(a.token, a.id);",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 7,
+          "message": "probe-followup-distinct-positive.sql:7: WHERE applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT a.id FROM accounts a CROSS JOIN computed_account_view v WHERE id IS DISTINCT FROM COALESCE(a.token, a.id);",
+          "target": "accounts.token"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 8,
+          "message": "probe-followup-distinct-positive.sql:8: WHERE applies COALESCE to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT a.id FROM accounts a CROSS JOIN partial_account_view v WHERE id IS DISTINCT FROM COALESCE(a.token, a.id);",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 8,
+          "message": "probe-followup-distinct-positive.sql:8: WHERE applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT a.id FROM accounts a CROSS JOIN partial_account_view v WHERE id IS DISTINCT FROM COALESCE(a.token, a.id);",
+          "target": "accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "probe_followup_distinct_positive_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 1,
+          "message": "probe-followup-distinct-positive.sql:1: WHERE applies COALESCE to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) IS DISTINCT FROM $1;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 1,
+          "message": "probe-followup-distinct-positive.sql:1: WHERE applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) IS DISTINCT FROM $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 2,
+          "message": "probe-followup-distinct-positive.sql:2: WHERE applies COALESCE to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) IS NOT DISTINCT FROM $1;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 2,
+          "message": "probe-followup-distinct-positive.sql:2: WHERE applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) IS NOT DISTINCT FROM $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 3,
+          "message": "probe-followup-distinct-positive.sql:3: WHERE applies COALESCE to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE $1 IS DISTINCT FROM COALESCE(token, id);",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 3,
+          "message": "probe-followup-distinct-positive.sql:3: WHERE applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE $1 IS DISTINCT FROM COALESCE(token, id);",
+          "target": "accounts.token"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 4,
+          "message": "probe-followup-distinct-positive.sql:4: WHERE applies COALESCE to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE $1 IS NOT DISTINCT FROM COALESCE(token, id);",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 4,
+          "message": "probe-followup-distinct-positive.sql:4: WHERE applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE $1 IS NOT DISTINCT FROM COALESCE(token, id);",
+          "target": "accounts.token"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 5,
+          "message": "probe-followup-distinct-positive.sql:5: WHERE applies COALESCE to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) IS DISTINCT FROM id::uuid;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 5,
+          "message": "probe-followup-distinct-positive.sql:5: WHERE applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) IS DISTINCT FROM id::uuid;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 5,
+          "message": "probe-followup-distinct-positive.sql:5: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) IS DISTINCT FROM id::uuid;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 6,
+          "message": "probe-followup-distinct-positive.sql:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE email IS DISTINCT FROM COALESCE(token, id)::text;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 6,
+          "message": "probe-followup-distinct-positive.sql:6: WHERE applies cast to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE email IS DISTINCT FROM COALESCE(token, id)::text;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 7,
+          "message": "probe-followup-distinct-positive.sql:7: WHERE applies COALESCE to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT a.id FROM accounts a CROSS JOIN computed_account_view v WHERE id IS DISTINCT FROM COALESCE(a.token, a.id);",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 7,
+          "message": "probe-followup-distinct-positive.sql:7: WHERE applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT a.id FROM accounts a CROSS JOIN computed_account_view v WHERE id IS DISTINCT FROM COALESCE(a.token, a.id);",
+          "target": "accounts.token"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 8,
+          "message": "probe-followup-distinct-positive.sql:8: WHERE applies COALESCE to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT a.id FROM accounts a CROSS JOIN partial_account_view v WHERE id IS DISTINCT FROM COALESCE(a.token, a.id);",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-distinct-positive.sql",
+          "line": 8,
+          "message": "probe-followup-distinct-positive.sql:8: WHERE applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT a.id FROM accounts a CROSS JOIN partial_account_view v WHERE id IS DISTINCT FROM COALESCE(a.token, a.id);",
+          "target": "accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "probe_followup_null_pass_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "probe_followup_null_pass_max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "probe_followup_null_positive_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "probe-followup-null-positive.sql",
+          "line": 1,
+          "message": "probe-followup-null-positive.sql:1: WHERE applies COALESCE to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) = $1;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-null-positive.sql",
+          "line": 1,
+          "message": "probe-followup-null-positive.sql:1: WHERE applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "probe-followup-null-positive.sql",
+          "line": 2,
+          "message": "probe-followup-null-positive.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(id::text = $1, false) IS NOT NULL;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-null-positive.sql",
+          "line": 3,
+          "message": "probe-followup-null-positive.sql:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(id::text = $1, false) IS NULL;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-null-positive.sql",
+          "line": 4,
+          "message": "probe-followup-null-positive.sql:4: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE (CASE WHEN id::text = $1 THEN token ELSE id END) IS NULL;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-null-positive.sql",
+          "line": 5,
+          "message": "probe-followup-null-positive.sql:5: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE (SELECT COALESCE(token, id) FROM accounts WHERE id::text = $1) IS NOT NULL;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-null-positive.sql",
+          "line": 6,
+          "message": "probe-followup-null-positive.sql:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE (CASE id::text WHEN $1 THEN 1 ELSE 0 END) IS NULL;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-null-positive.sql",
+          "line": 7,
+          "message": "probe-followup-null-positive.sql:7: HAVING applies custom_bool to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts GROUP BY id HAVING COUNT(*) FILTER (WHERE custom_bool(id)) IS NULL;",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "probe_followup_null_positive_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "probe-followup-null-positive.sql",
+          "line": 1,
+          "message": "probe-followup-null-positive.sql:1: WHERE applies COALESCE to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) = $1;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-null-positive.sql",
+          "line": 1,
+          "message": "probe-followup-null-positive.sql:1: WHERE applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(token, id) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "probe-followup-null-positive.sql",
+          "line": 2,
+          "message": "probe-followup-null-positive.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(id::text = $1, false) IS NOT NULL;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-null-positive.sql",
+          "line": 3,
+          "message": "probe-followup-null-positive.sql:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE COALESCE(id::text = $1, false) IS NULL;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-null-positive.sql",
+          "line": 4,
+          "message": "probe-followup-null-positive.sql:4: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE (CASE WHEN id::text = $1 THEN token ELSE id END) IS NULL;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-null-positive.sql",
+          "line": 5,
+          "message": "probe-followup-null-positive.sql:5: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE (SELECT COALESCE(token, id) FROM accounts WHERE id::text = $1) IS NOT NULL;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-null-positive.sql",
+          "line": 6,
+          "message": "probe-followup-null-positive.sql:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE (CASE id::text WHEN $1 THEN 1 ELSE 0 END) IS NULL;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "probe-followup-null-positive.sql",
+          "line": 7,
+          "message": "probe-followup-null-positive.sql:7: HAVING applies custom_bool to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts GROUP BY id HAVING COUNT(*) FILTER (WHERE custom_bool(id)) IS NULL;",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "probe_followup_view_pass_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "probe_followup_view_pass_max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "probe_followup_view_positive_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 1,
+          "message": "probe-followup-view-positive.sql:1: JOIN ON applies COALESCE to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN account_view v ON COALESCE(o.account_id, o.id) = v.token::uuid;",
+          "target": "orders.account_id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 1,
+          "message": "probe-followup-view-positive.sql:1: JOIN ON applies COALESCE to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN account_view v ON COALESCE(o.account_id, o.id) = v.token::uuid;",
+          "target": "orders.id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 1,
+          "message": "probe-followup-view-positive.sql:1: JOIN ON applies cast to UUID column account_view.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN account_view v ON COALESCE(o.account_id, o.id) = v.token::uuid;",
+          "target": "account_view.token"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 2,
+          "message": "probe-followup-view-positive.sql:2: JOIN ON applies COALESCE to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN computed_account_view v ON v.id = COALESCE(o.account_id, o.id);",
+          "target": "orders.account_id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 2,
+          "message": "probe-followup-view-positive.sql:2: JOIN ON applies COALESCE to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN computed_account_view v ON v.id = COALESCE(o.account_id, o.id);",
+          "target": "orders.id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 3,
+          "message": "probe-followup-view-positive.sql:3: JOIN ON applies COALESCE to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN unknown_account_view v ON v.id = COALESCE(o.account_id, o.id);",
+          "target": "orders.account_id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 3,
+          "message": "probe-followup-view-positive.sql:3: JOIN ON applies COALESCE to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN unknown_account_view v ON v.id = COALESCE(o.account_id, o.id);",
+          "target": "orders.id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 4,
+          "message": "probe-followup-view-positive.sql:4: JOIN ON applies COALESCE to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN recursive_account_view v ON v.id = COALESCE(o.account_id, o.id);",
+          "target": "orders.account_id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 4,
+          "message": "probe-followup-view-positive.sql:4: JOIN ON applies COALESCE to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN recursive_account_view v ON v.id = COALESCE(o.account_id, o.id);",
+          "target": "orders.id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 5,
+          "message": "probe-followup-view-positive.sql:5: JOIN ON applies COALESCE to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o RIGHT JOIN account_view v ON v.id = COALESCE(o.account_id, o.id);",
+          "target": "orders.account_id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 5,
+          "message": "probe-followup-view-positive.sql:5: JOIN ON applies COALESCE to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o RIGHT JOIN account_view v ON v.id = COALESCE(o.account_id, o.id);",
+          "target": "orders.id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 6,
+          "message": "probe-followup-view-positive.sql:6: JOIN ON applies COALESCE to UUID column account_view.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN account_view v ON COALESCE(v.id, o.id) = o.account_id;",
+          "target": "account_view.id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 6,
+          "message": "probe-followup-view-positive.sql:6: JOIN ON applies COALESCE to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN account_view v ON COALESCE(v.id, o.id) = o.account_id;",
+          "target": "orders.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "probe_followup_view_positive_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 1,
+          "message": "probe-followup-view-positive.sql:1: JOIN ON applies COALESCE to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN account_view v ON COALESCE(o.account_id, o.id) = v.token::uuid;",
+          "target": "orders.account_id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 1,
+          "message": "probe-followup-view-positive.sql:1: JOIN ON applies COALESCE to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN account_view v ON COALESCE(o.account_id, o.id) = v.token::uuid;",
+          "target": "orders.id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 1,
+          "message": "probe-followup-view-positive.sql:1: JOIN ON applies cast to UUID column account_view.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN account_view v ON COALESCE(o.account_id, o.id) = v.token::uuid;",
+          "target": "account_view.token"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 2,
+          "message": "probe-followup-view-positive.sql:2: JOIN ON applies COALESCE to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN computed_account_view v ON v.id = COALESCE(o.account_id, o.id);",
+          "target": "orders.account_id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 2,
+          "message": "probe-followup-view-positive.sql:2: JOIN ON applies COALESCE to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN computed_account_view v ON v.id = COALESCE(o.account_id, o.id);",
+          "target": "orders.id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 3,
+          "message": "probe-followup-view-positive.sql:3: JOIN ON applies COALESCE to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN unknown_account_view v ON v.id = COALESCE(o.account_id, o.id);",
+          "target": "orders.account_id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 3,
+          "message": "probe-followup-view-positive.sql:3: JOIN ON applies COALESCE to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN unknown_account_view v ON v.id = COALESCE(o.account_id, o.id);",
+          "target": "orders.id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 4,
+          "message": "probe-followup-view-positive.sql:4: JOIN ON applies COALESCE to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN recursive_account_view v ON v.id = COALESCE(o.account_id, o.id);",
+          "target": "orders.account_id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 4,
+          "message": "probe-followup-view-positive.sql:4: JOIN ON applies COALESCE to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN recursive_account_view v ON v.id = COALESCE(o.account_id, o.id);",
+          "target": "orders.id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 5,
+          "message": "probe-followup-view-positive.sql:5: JOIN ON applies COALESCE to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o RIGHT JOIN account_view v ON v.id = COALESCE(o.account_id, o.id);",
+          "target": "orders.account_id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 5,
+          "message": "probe-followup-view-positive.sql:5: JOIN ON applies COALESCE to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o RIGHT JOIN account_view v ON v.id = COALESCE(o.account_id, o.id);",
+          "target": "orders.id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 6,
+          "message": "probe-followup-view-positive.sql:6: JOIN ON applies COALESCE to UUID column account_view.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN account_view v ON COALESCE(v.id, o.id) = o.account_id;",
+          "target": "account_view.id"
+        },
+        {
+          "file": "probe-followup-view-positive.sql",
+          "line": 6,
+          "message": "probe-followup-view-positive.sql:6: JOIN ON applies COALESCE to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN account_view v ON COALESCE(v.id, o.id) = o.account_id;",
+          "target": "orders.id"
         }
       ],
       "warnings": []

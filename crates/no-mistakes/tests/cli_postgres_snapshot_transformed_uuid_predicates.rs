@@ -13,6 +13,54 @@ fn postgres_no_transformed_uuid_predicates_check_json_snapshot() {
     // in the unit test. Advise keeps `rules` empty. Ignore is empty rules and
     // empty advisories.
     let rows = [
+        (
+            "probe_followup_view_pass_low",
+            "probe-followup-view-pass-low.yml",
+        ),
+        (
+            "probe_followup_view_pass_max",
+            "probe-followup-view-pass-max.yml",
+        ),
+        (
+            "probe_followup_view_positive_low",
+            "probe-followup-view-positive-low.yml",
+        ),
+        (
+            "probe_followup_view_positive_max",
+            "probe-followup-view-positive-max.yml",
+        ),
+        (
+            "probe_followup_distinct_pass_low",
+            "probe-followup-distinct-pass-low.yml",
+        ),
+        (
+            "probe_followup_distinct_pass_max",
+            "probe-followup-distinct-pass-max.yml",
+        ),
+        (
+            "probe_followup_distinct_positive_low",
+            "probe-followup-distinct-positive-low.yml",
+        ),
+        (
+            "probe_followup_distinct_positive_max",
+            "probe-followup-distinct-positive-max.yml",
+        ),
+        (
+            "probe_followup_null_pass_low",
+            "probe-followup-null-pass-low.yml",
+        ),
+        (
+            "probe_followup_null_pass_max",
+            "probe-followup-null-pass-max.yml",
+        ),
+        (
+            "probe_followup_null_positive_low",
+            "probe-followup-null-positive-low.yml",
+        ),
+        (
+            "probe_followup_null_positive_max",
+            "probe-followup-null-positive-max.yml",
+        ),
         ("probe_schema_identity_low", "probe-schema-identity-low.yml"),
         ("probe_schema_identity_max", "probe-schema-identity-max.yml"),
         ("probe_direction_low", "probe-direction-low.yml"),
@@ -47,7 +95,7 @@ fn postgres_no_transformed_uuid_predicates_check_json_snapshot() {
         // Seven findings, every target unanalyzable.
         ("unknown_scope", "unknown-scope.yml"),
         ("unknown_scope_ignore", "unknown-scope-ignore.yml"),
-        // Seven findings, and none are target unanalyzable.
+        // Six findings; the null test on line 4 is clean, and none are target unanalyzable.
         ("predicate_forms", "predicate-forms.yml"),
         ("exclude_sql", "exclude-sql.yml"),
         ("exclude_ts", "exclude-ts.yml"),
@@ -55,7 +103,7 @@ fn postgres_no_transformed_uuid_predicates_check_json_snapshot() {
         ("nested_joins", "nested-joins.yml"),
         ("operand_pass_low", "operand-pass-low.yml"),
         ("operand_pass_max", "operand-pass-max.yml"),
-        // Lines 2 through 13, every target accounts.id.
+        // Lines 2 through 11 and 13, every target accounts.id; the null test on 12 is clean.
         ("operand_positive_low", "operand-positive-low.yml"),
         ("operand_positive_max", "operand-positive-max.yml"),
         // Lines 8, 9, 10, and 11 must remain.

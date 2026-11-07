@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "accounts": {"columns": {"id": {"dataType": "uuid"}}},
+    "orders": {"columns": {"id": {"dataType": "uuid"}, "account_id": {"dataType": "uuid"}}}
+  },
+  "views": {
+    "qualified_source": {"definition": "SELECT a.id FROM public.accounts a"},
+    "wildcard_alias": {"definition": "SELECT * AS expanded FROM accounts"}
+  }
+}
