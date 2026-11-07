@@ -5,6 +5,7 @@ impl GraphBuildPlan {
         self.mock_boundaries |= other.mock_boundaries;
         self.effect_selectors |= other.effect_selectors;
         self.value_import_selectors |= other.value_import_selectors;
+        self.identifier_provenance |= other.identifier_provenance;
         self.extends |= other.extends;
         self.imports |= other.imports;
         self.route_imports |= other.route_imports;

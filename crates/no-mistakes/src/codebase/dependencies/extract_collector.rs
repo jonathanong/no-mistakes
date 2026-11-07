@@ -82,6 +82,7 @@ struct ImportCollector {
     opaque_text_parameter_defaults: FxHashSet<usize>,
     text_origins: extract_value_flow::TextOrigins,
     collect_value_flow: bool,
+    collect_identifier_provenance: bool,
     collect_per_item_calls: bool,
     per_item_calls: Vec<PerItemCall>,
     capped_cursor_calls: FxHashSet<u32>,

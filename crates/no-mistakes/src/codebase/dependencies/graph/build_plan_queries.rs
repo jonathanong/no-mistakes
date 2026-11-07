@@ -32,6 +32,7 @@ impl GraphBuildPlan {
                 || self.resources,
             call_eligibility: self.assertion_owners,
             value_flow: self.calls,
+            identifier_provenance: self.identifier_provenance,
             resources: self.resources,
             symbols: self.symbols || self.symbol_import_selectors || self.queues,
             react: self.react,

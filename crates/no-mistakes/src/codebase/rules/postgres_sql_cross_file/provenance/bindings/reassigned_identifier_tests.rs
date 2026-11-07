@@ -14,6 +14,7 @@ fn reassigned_identifier_locals_lose_bounded_parameter_and_literal_initializers(
     let files = [unchecked.clone(), guarded.clone()];
     let plan = TsFactPlan {
         value_flow: true,
+        identifier_provenance: true,
         ..TsFactPlan::imports()
     };
     let collected = collect_ts_facts(&files, plan);

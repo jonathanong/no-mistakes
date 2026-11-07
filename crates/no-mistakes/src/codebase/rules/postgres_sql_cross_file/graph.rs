@@ -12,16 +12,20 @@ pub(crate) use route_index::RegistryRoutes;
 pub(crate) use routes::registry_route;
 
 pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
-    super::needs_deep_analysis(config).then_some(GraphBuildPlan {
-        calls: true,
-        imports: true,
-        effect_selectors: needs_module_validators(config),
-        value_import_selectors: needs_value_import_selectors(config),
-        ..GraphBuildPlan::default()
+    super::needs_deep_analysis(config).then(|| {
+        let identifier_provenance = needs_identifier_provenance(config);
+        GraphBuildPlan {
+            calls: true,
+            imports: true,
+            effect_selectors: needs_module_validators(config),
+            value_import_selectors: identifier_provenance,
+            identifier_provenance,
+            ..GraphBuildPlan::default()
+        }
     })
 }
 
-fn needs_value_import_selectors(config: &NoMistakesConfig) -> bool {
+fn needs_identifier_provenance(config: &NoMistakesConfig) -> bool {
     config
         .rule_applications("postgres-no-unbounded-sql-identifier")
         .iter()

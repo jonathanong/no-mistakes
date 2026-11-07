@@ -3,6 +3,9 @@ use oxc_ast::ast::{AssignmentExpression, AssignmentTarget, VariableDeclarator};
 
 impl ImportCollector {
     pub(crate) fn note_identifier_initializer(&mut self, declarator: &VariableDeclarator<'_>) {
+        if !self.collect_identifier_provenance {
+            return;
+        }
         let BindingPattern::BindingIdentifier(identifier) = &declarator.id else {
             return;
         };
@@ -41,7 +44,7 @@ impl ImportCollector {
         &self,
         assignment: &AssignmentExpression<'_>,
     ) -> Option<Box<IdentifierAssignment>> {
-        if !self.collect_value_flow || !assignment.operator.is_assign() {
+        if !self.collect_identifier_provenance || !assignment.operator.is_assign() {
             return None;
         }
         let AssignmentTarget::AssignmentTargetIdentifier(target) = &assignment.left else {
@@ -145,3 +148,7 @@ impl ImportCollector {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "identifier_provenance_demand_tests.rs"]
+mod tests;

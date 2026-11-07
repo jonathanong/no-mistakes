@@ -14,6 +14,7 @@ pub(super) fn prepared(names: &[&str]) -> (CheckFactMap, Vec<PathBuf>) {
         .collect();
     let plan = TsFactPlan {
         value_flow: true,
+        identifier_provenance: true,
         ..TsFactPlan::imports()
     };
     let collected = collect_ts_facts(&files, plan);
