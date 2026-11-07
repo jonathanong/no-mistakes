@@ -5,7 +5,7 @@ fn returning_commit_preserves_fallthrough_transaction_and_helper_effects() {
     assert!(
         findings
             .iter()
-            .all(|finding| finding.line > 14 && finding.line < 86),
+            .all(|finding| finding.line > 14 && !(86..94).contains(&finding.line)),
         "{findings:?}"
     );
     assert!(
@@ -18,7 +18,7 @@ fn returning_commit_preserves_fallthrough_transaction_and_helper_effects() {
             .any(|finding| finding.line == 38 && finding.target.as_deref() == Some("unanalyzable")),
         "{findings:?}"
     );
-    for line in [45, 55, 65, 71] {
+    for line in [45, 55, 65, 71, 100] {
         assert!(
             findings
                 .iter()

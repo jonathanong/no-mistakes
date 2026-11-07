@@ -18,14 +18,14 @@ pub(super) struct Helper {
 pub(super) type LockHelpers = FxHashMap<String, Helper>;
 
 impl<'a> ScopeVisitor<'a> {
-    pub(super) fn record_lock_helper_call(&mut self, call: &CallExpression<'a>) {
+    pub(super) fn proven_lock_helper(&self, call: &CallExpression<'_>) -> Option<&Helper> {
+        if !self.executor_options.track_transaction_helpers {
+            return None;
+        }
         let Expression::Identifier(name) = unwrap_ts_wrappers(&call.callee) else {
-            return;
+            return None;
         };
-        let Some(helper) = self.lock_helpers.get(name.name.as_str()).cloned() else {
-            self.record_unknown_lock_helper(call, name.name.as_str());
-            return;
-        };
+        let helper = self.lock_helpers.get(name.name.as_str())?;
         if !self.awaited_lock_helper_calls.contains(&call.span.start)
             || helper.calls.iter().any(|query| {
                 call.arguments
@@ -41,9 +41,19 @@ impl<'a> ScopeVisitor<'a> {
                 .iter()
                 .any(|argument| argument.as_expression().is_none())
         {
+            return None;
+        }
+        Some(helper)
+    }
+
+    pub(super) fn record_lock_helper_call(&mut self, call: &CallExpression<'a>) {
+        let Expression::Identifier(name) = unwrap_ts_wrappers(&call.callee) else {
+            return;
+        };
+        let Some(helper) = self.proven_lock_helper(call).cloned() else {
             self.record_unknown_lock_helper(call, name.name.as_str());
             return;
-        }
+        };
         for query in helper.calls {
             let Some(receiver) = call
                 .arguments

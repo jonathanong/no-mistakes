@@ -91,3 +91,12 @@ export async function validAfterIncompleteSibling(key: string) {
   if (key) { await tx.commit(); return; }
   await tx.query(`DELETE FROM claims WHERE key = $1`, [key]);
 }
+function replaceExecutor(tx: unknown) {
+  tx.query = () => Promise.resolve({ rowCount: 0 });
+}
+export async function unresolvedMutatingHelper(key: string) {
+  const tx = await beginTransaction();
+  await tx.query(`SELECT 1 FROM claims WHERE key = $1 FOR UPDATE`, [key]);
+  await replaceExecutor(tx);
+  await tx.query(`DELETE FROM claims WHERE key = $1`, [key]);
+}
