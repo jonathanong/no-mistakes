@@ -38,6 +38,11 @@ pub(super) fn prepared() -> (CheckFactMap, DepGraph, PathBuf) {
         "namespace-escape-barrel.ts",
         "namespace-escapes.ts",
         "namespace-escape-reader.ts",
+        "chain-fragment.ts",
+        "chain-copy.ts",
+        "cjs-producer.ts",
+        "cjs-reader.ts",
+        "cjs-mutator.js",
     ]
     .iter()
     .map(|name| root.join("src").join(name))
@@ -190,3 +195,6 @@ mod prefixes;
 
 #[path = "fragment_namespace_escape_tests.rs"]
 mod namespace_escapes;
+
+#[path = "fragment_import_copy_tests.rs"]
+mod copies;
