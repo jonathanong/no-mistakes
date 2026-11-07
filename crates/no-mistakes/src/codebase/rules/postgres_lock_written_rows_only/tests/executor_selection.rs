@@ -94,7 +94,7 @@ fn const_executor_options_route_writes_and_reject_mutated_or_unwritten_controls(
     unwritten.sort();
     assert_eq!(
         unwritten,
-        [24, 30, 37, 44, 50, 57, 65, 74, 82],
+        [24, 30, 37, 44, 50, 57, 65, 74, 82, 99, 107],
         "{findings:?}"
     );
     assert!(

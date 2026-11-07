@@ -94,3 +94,18 @@ async function callableAliasCommit(id: string) {
   await execute('COMMIT');
   await query('UPDATE items SET active = true WHERE id = $1', [id], options);
 }
+async function mutatedObjectAlias(id: string) {
+  await using tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const alias = tx;
+  alias.query = query;
+  const options = { query: alias.query };
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
+async function mutatedReceiverBeforeCapture(id: string) {
+  await using tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  tx.query = query;
+  const options = { query: tx.query };
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}

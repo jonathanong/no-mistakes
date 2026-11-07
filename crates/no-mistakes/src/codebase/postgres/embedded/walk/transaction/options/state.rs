@@ -21,6 +21,7 @@ pub(in crate::codebase::postgres::embedded::walk) struct State {
     objects: FxHashMap<NonZeroU32, Captured>,
     aliases: FxHashMap<NonZeroU32, Captured>,
     reads: RefCell<FxHashSet<u32>>,
+    mutated: FxHashSet<NonZeroU32>,
 }
 
 fn owner(visitor: &ScopeVisitor<'_>) -> Option<u32> {
@@ -35,7 +36,8 @@ impl Captured {
     }
 
     fn valid(&self, visitor: &ScopeVisitor<'_>) -> bool {
-        self.owner == owner(visitor)
+        !visitor.transaction_options.mutated.contains(&self.identity)
+            && self.owner == owner(visitor)
             && visitor.scopes.iter().any(|scope| {
                 scope
                     .get(&self.name)
@@ -118,6 +120,13 @@ pub(super) fn option(
 }
 
 impl ScopeVisitor<'_> {
+    pub(in crate::codebase::postgres::embedded::walk) fn mutate_transaction_receiver(
+        &mut self,
+        expression: &Expression<'_>,
+    ) {
+        boundary::mutate(self, expression);
+    }
+
     pub(in crate::codebase::postgres::embedded::walk) fn note_transaction_options(
         &mut self,
         declaration: &VariableDeclarator<'_>,
