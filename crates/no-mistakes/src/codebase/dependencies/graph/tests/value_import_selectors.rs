@@ -134,9 +134,10 @@ fn value_import_selectors_follow_exact_specifiers_aliases_stars_and_namespaces()
     assert!(graph
         .imported_value(&root.join("opaque.ts"), "namespace.literal.key")
         .is_none());
-    assert!(graph
-        .imported_value(&root.join("quoted-consumer.ts"), "dotted")
-        .is_none());
+    assert_eq!(
+        graph.imported_value(&root.join("quoted-consumer.ts"), "dotted"),
+        Some((root.join("quoted.ts"), "literal".into()))
+    );
 }
 
 #[test]

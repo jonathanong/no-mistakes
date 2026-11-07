@@ -48,6 +48,10 @@ fn namespace_import_selectors_retain_bare_aliases_and_exact_exports() {
     assert!(!graph.namespace_exports_value(&source, &root.join("other.ts"), "TABLES"));
     let quoted = graph.imported_namespace(&consumer, "quoted").unwrap();
     assert!(graph.namespace_exports_value(&quoted, &source, "statement"));
+    assert_eq!(
+        graph.imported_value(&consumer, "quotedStatement"),
+        Some((source, "statement".into()))
+    );
 }
 
 #[test]

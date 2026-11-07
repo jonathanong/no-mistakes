@@ -67,9 +67,6 @@ fn value_imports_in_file(
         let Some(Some(import)) = imports.get(read.name.as_str()) else {
             continue;
         };
-        if import.imported.contains('.') {
-            continue;
-        }
         if decisions
             .get(import.local.as_str())
             .is_some_and(|found| matches!(found, ImportedSelector::Value) || read.path.is_empty())
