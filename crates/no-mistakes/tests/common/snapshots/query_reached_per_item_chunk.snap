@@ -1,0 +1,174 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "enabled": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "coverage.mts",
+          "import": "read",
+          "line": 12,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlChunkEndIndex → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = 0; i < ids.length; i += 2) await read(ids.slice(i, i));",
+          "target": "postgres: controlChunkEndIndex → read"
+        },
+        {
+          "file": "coverage.mts",
+          "import": "read",
+          "line": 15,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlChunkComputed → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = 0; i < ids.length; i += 2) await read(ids['slice'](i, i + 2));",
+          "target": "postgres: controlChunkComputed → read"
+        },
+        {
+          "file": "coverage.mts",
+          "import": "read",
+          "line": 18,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlChunkLengthComparison → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = 0; i < ids.size; i += 2) await read(ids.slice(i, i + 2));",
+          "target": "postgres: controlChunkLengthComparison → read"
+        },
+        {
+          "file": "coverage.mts",
+          "import": "read",
+          "line": 21,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlChunkReceiver → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = 0; i < ids.values.length; i += 2) await read(ids.values.slice(i, i + 2));",
+          "target": "postgres: controlChunkReceiver → read"
+        },
+        {
+          "file": "coverage.mts",
+          "import": "read",
+          "line": 24,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlChunkUpdateTarget → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = 0; i < ids.length; state.i += 2) await read(ids.slice(i, i + 2));",
+          "target": "postgres: controlChunkUpdateTarget → read"
+        },
+        {
+          "file": "coverage.mts",
+          "import": "read",
+          "line": 27,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlChunkNestedCallback/<anonymous:1> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = 0; i < ids.length; i += 2) ids.map(id => read(ids.slice(i, i + 2)));",
+          "target": "postgres: controlChunkNestedCallback/<anonymous:1> → read"
+        },
+        {
+          "file": "coverage.mts",
+          "import": "read",
+          "line": 31,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlChunkArrowStep → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = 0; i < ids.length; i += STEP()) await read(ids.slice(i, i + 2));",
+          "target": "postgres: controlChunkArrowStep → read"
+        },
+        {
+          "file": "coverage.mts",
+          "import": "read",
+          "line": 6,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlChunkUnary → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = 0; i < ids.length; i += 2) await read(ids.slice(i, i + -(-2)));",
+          "target": "postgres: controlChunkUnary → read"
+        },
+        {
+          "file": "coverage.mts",
+          "import": "read",
+          "line": 9,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlChunkMissingEnd → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = 0; i < ids.length; i += 2) await read(ids.slice(i));",
+          "target": "postgres: controlChunkMissingEnd → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 13,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlSparse → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = 0; i < ids.length; i += CHUNK) await read(ids[i]);",
+          "target": "postgres: controlSparse → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 16,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlDynamic → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = 0; i < ids.length; i += size) await read(ids.slice(i, i + size));",
+          "target": "postgres: controlDynamic → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 19,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlMismatch → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = 0; i < ids.length; i += CHUNK) await read(ids.slice(i, i + 1));",
+          "target": "postgres: controlMismatch → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 24,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlMixed → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await read(ids[i]);",
+          "target": "postgres: controlMixed → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 29,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlOuter → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = 0; i < ids.length; i += CHUNK) await read(ids.slice(i, i + CHUNK));",
+          "target": "postgres: controlOuter → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 35,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlChunkShadow → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await read(ids.slice(i, i + CHUNK));",
+          "target": "postgres: controlChunkShadow → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 7,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via control → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = 0; i < ids.length; i++) await read(ids[i]);",
+          "target": "postgres: control → read"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

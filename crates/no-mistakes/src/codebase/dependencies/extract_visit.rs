@@ -27,6 +27,7 @@ impl<'a> Visit<'a> for ImportCollector {
         visit_conditional_with_execution(self, expression);
     }
     fn visit_assignment_pattern(&mut self, pattern: &oxc_ast::ast::AssignmentPattern<'a>) {
+        self.invalidate_bounded_expression(&pattern.right);
         visit_binding_default_with_execution(self, pattern);
     }
     fn visit_assignment_target(&mut self, target: &AssignmentTarget<'a>) {
@@ -34,7 +35,10 @@ impl<'a> Visit<'a> for ImportCollector {
         walk::walk_assignment_target(self, target);
         self.metadata_rows.writing = previous;
     }
-    fn visit_simple_assignment_target(&mut self, target: &oxc_ast::ast::SimpleAssignmentTarget<'a>) {
+    fn visit_simple_assignment_target(
+        &mut self,
+        target: &oxc_ast::ast::SimpleAssignmentTarget<'a>,
+    ) {
         let previous = std::mem::replace(&mut self.metadata_rows.writing, true);
         walk::walk_simple_assignment_target(self, target);
         self.metadata_rows.writing = previous;
@@ -100,6 +104,7 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_assignment_expression(&mut self, assignment: &AssignmentExpression<'a>) {
+        self.invalidate_bounded_expression(&assignment.right);
         visit_assignment_expression_with_calls(self, assignment);
     }
 
@@ -129,7 +134,9 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_while_statement(&mut self, statement: &oxc_ast::ast::WhileStatement<'a>) {
-        if self.collect_call_eligibility && literal_truthiness(&statement.test) == Some(false) { record_dead_call_span(self, statement.body.span()); }
+        if self.collect_call_eligibility && literal_truthiness(&statement.test) == Some(false) {
+            record_dead_call_span(self, statement.body.span());
+        }
         with_repeat_execution(self, statement, visit_while_statement_per_item);
     }
     fn visit_do_while_statement(&mut self, statement: &oxc_ast::ast::DoWhileStatement<'a>) {

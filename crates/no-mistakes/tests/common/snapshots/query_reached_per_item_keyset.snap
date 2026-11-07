@@ -1,0 +1,435 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "enabled": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 10,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via control → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const id of ids) await read(id);",
+          "target": "postgres: control → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 15,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlNoLimit → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id', [cursor]);",
+          "target": "postgres: controlNoLimit → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 22,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlWrongKey → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlWrongKey → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 31,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlMixed → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await read('extra');",
+          "target": "postgres: controlMixed → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 37,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlOne → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 1', [cursor]);",
+          "target": "postgres: controlOne → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 51,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlProjection → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT name AS id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlProjection → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 58,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlOffset → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100 OFFSET 1', [cursor]);",
+          "target": "postgres: controlOffset → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 65,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlParameter → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [other]);",
+          "target": "postgres: controlParameter → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 72,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlFirst → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlFirst → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 79,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlEscape → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlEscape → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 89,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlOuter → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlOuter → read"
+        },
+        {
+          "file": "row-access.mts",
+          "import": "read",
+          "line": 10,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlOptionalRowCall → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlOptionalRowCall → read"
+        },
+        {
+          "file": "row-access.mts",
+          "import": "read",
+          "line": 16,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlComputedRow → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlComputedRow → read"
+        },
+        {
+          "file": "row-access.mts",
+          "import": "read",
+          "line": 22,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlResultProperty → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlResultProperty → read"
+        },
+        {
+          "file": "row-access.mts",
+          "import": "read",
+          "line": 28,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlComputedAt → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlComputedAt → read"
+        },
+        {
+          "file": "row-access.mts",
+          "import": "read",
+          "line": 34,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlOtherMethod → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlOtherMethod → read"
+        },
+        {
+          "file": "row-access.mts",
+          "import": "read",
+          "line": 40,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlPositiveIndex → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlPositiveIndex → read"
+        },
+        {
+          "file": "row-access.mts",
+          "import": "read",
+          "line": 46,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlMissingParameters → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100');",
+          "target": "postgres: controlMissingParameters → read"
+        },
+        {
+          "file": "row-access.mts",
+          "import": "read",
+          "line": 52,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlNonarrayParameters → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', cursor);",
+          "target": "postgres: controlNonarrayParameters → read"
+        },
+        {
+          "file": "row-access.mts",
+          "import": "read",
+          "line": 58,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlDynamicSql → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read(sql, [cursor]);",
+          "target": "postgres: controlDynamicSql → read"
+        },
+        {
+          "file": "row-access.mts",
+          "import": "read",
+          "line": 64,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlResultAssignmentEscape → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlResultAssignmentEscape → read"
+        },
+        {
+          "file": "sql-shapes.mts",
+          "import": "read",
+          "line": 100,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlNumericExplicitAlias → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read(\"SELECT id AS 7 FROM items WHERE id > $1 ORDER BY id LIMIT 100\", [cursor]);",
+          "target": "postgres: controlNumericExplicitAlias → read"
+        },
+        {
+          "file": "sql-shapes.mts",
+          "import": "read",
+          "line": 106,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlExpressionProjection → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read(\"SELECT id + 1 FROM items WHERE id > $1 ORDER BY id LIMIT 100\", [cursor]);",
+          "target": "postgres: controlExpressionProjection → read"
+        },
+        {
+          "file": "sql-shapes.mts",
+          "import": "read",
+          "line": 34,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlBrokenLiteral → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read(\"SELECT 'unterminated\", [cursor]);",
+          "target": "postgres: controlBrokenLiteral → read"
+        },
+        {
+          "file": "sql-shapes.mts",
+          "import": "read",
+          "line": 40,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlMissingWhere → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read(\"SELECT id FROM items LIMIT 100\", [cursor]);",
+          "target": "postgres: controlMissingWhere → read"
+        },
+        {
+          "file": "sql-shapes.mts",
+          "import": "read",
+          "line": 46,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlNonselect → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read(\"DELETE FROM items WHERE id > $1 ORDER BY id LIMIT 100\", [cursor]);",
+          "target": "postgres: controlNonselect → read"
+        },
+        {
+          "file": "sql-shapes.mts",
+          "import": "read",
+          "line": 52,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlMissingFrom → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read(\"SELECT id WHERE id > $1 ORDER BY id LIMIT 100\", [cursor]);",
+          "target": "postgres: controlMissingFrom → read"
+        },
+        {
+          "file": "sql-shapes.mts",
+          "import": "read",
+          "line": 58,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlMissingTable → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read(\"SELECT id FROM WHERE id > $1 ORDER BY id LIMIT 100\", [cursor]);",
+          "target": "postgres: controlMissingTable → read"
+        },
+        {
+          "file": "sql-shapes.mts",
+          "import": "read",
+          "line": 64,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlDeepTable → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read(\"SELECT id FROM db.public.items WHERE id > $1 ORDER BY id LIMIT 100\", [cursor]);",
+          "target": "postgres: controlDeepTable → read"
+        },
+        {
+          "file": "sql-shapes.mts",
+          "import": "read",
+          "line": 70,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlInvalidTableAlias → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read(\"SELECT id FROM items 7 WHERE id > $1 ORDER BY id LIMIT 100\", [cursor]);",
+          "target": "postgres: controlInvalidTableAlias → read"
+        },
+        {
+          "file": "sql-shapes.mts",
+          "import": "read",
+          "line": 76,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlUnsupportedJoin → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read(\"SELECT id FROM items JOIN more WHERE id > $1 ORDER BY id LIMIT 100\", [cursor]);",
+          "target": "postgres: controlUnsupportedJoin → read"
+        },
+        {
+          "file": "sql-shapes.mts",
+          "import": "read",
+          "line": 82,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlMissingProjection → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read(\"SELECT FROM items WHERE id > $1 ORDER BY id LIMIT 100\", [cursor]);",
+          "target": "postgres: controlMissingProjection → read"
+        },
+        {
+          "file": "sql-shapes.mts",
+          "import": "read",
+          "line": 88,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlWrongQualifier → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read(\"SELECT other.id FROM items p WHERE id > $1 ORDER BY id LIMIT 100\", [cursor]);",
+          "target": "postgres: controlWrongQualifier → read"
+        },
+        {
+          "file": "sql-shapes.mts",
+          "import": "read",
+          "line": 94,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlNumericImplicitAlias → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read(\"SELECT id 7 FROM items WHERE id > $1 ORDER BY id LIMIT 100\", [cursor]);",
+          "target": "postgres: controlNumericImplicitAlias → read"
+        },
+        {
+          "file": "topology.mts",
+          "import": "read",
+          "line": 14,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlDestructuredRows → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const [rows] = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlDestructuredRows → read"
+        },
+        {
+          "file": "topology.mts",
+          "import": "read",
+          "line": 2,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlUnbound → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export async function controlUnbound() { while (missingCursor) { await read('unbound'); } }",
+          "target": "postgres: controlUnbound → read"
+        },
+        {
+          "file": "topology.mts",
+          "import": "read",
+          "line": 20,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlRewrittenRows → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlRewrittenRows → read"
+        },
+        {
+          "file": "topology.mts",
+          "import": "read",
+          "line": 27,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlUnawaitedRows → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlUnawaitedRows → read"
+        },
+        {
+          "file": "topology.mts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlImmutable → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export async function controlImmutable() { const cursor = 'start'; while (cursor) { await read('immutable'); } }",
+          "target": "postgres: controlImmutable → read"
+        },
+        {
+          "file": "topology.mts",
+          "import": "read",
+          "line": 35,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlAwaitedValue → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await read('awaited-value');",
+          "target": "postgres: controlAwaitedValue → read"
+        },
+        {
+          "file": "topology.mts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlSingle → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export async function controlSingle(cursor: string) { while (cursor) await read('single'); }",
+          "target": "postgres: controlSingle → read"
+        },
+        {
+          "file": "topology.mts",
+          "import": "read",
+          "line": 40,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlConditionalAdvance → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlConditionalAdvance → read"
+        },
+        {
+          "file": "topology.mts",
+          "import": "read",
+          "line": 46,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlSeparatedAdvance → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlSeparatedAdvance → read"
+        },
+        {
+          "file": "topology.mts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlOpaque → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export async function controlOpaque(cursor: string) { while (cursor) { eval('cursor = cursor'); await read('opaque'); } }",
+          "target": "postgres: controlOpaque → read"
+        },
+        {
+          "file": "topology.mts",
+          "import": "read",
+          "line": 8,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via controlMutableRows → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlMutableRows → read"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

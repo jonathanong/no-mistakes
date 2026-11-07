@@ -96,6 +96,7 @@ pub(super) fn predeclare_hoisted_var_bindings<'a>(
     for statement in statements {
         // Type declarations shadow imports throughout this lexical body.
         record_statement_type_binding(collector, statement);
+        collector.predeclare_bounded_statement(statement);
         visitor.visit_statement(statement);
     }
     for name in names {
@@ -146,6 +147,7 @@ pub(super) fn predeclare_function_declarations<'a>(
 ) {
     for statement in statements {
         record_statement_type_binding(collector, statement);
+        collector.predeclare_bounded_statement(statement);
         let Statement::FunctionDeclaration(function) = statement else {
             continue;
         };

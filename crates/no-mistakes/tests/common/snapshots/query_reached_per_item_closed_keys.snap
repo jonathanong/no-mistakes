@@ -1,0 +1,201 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "enabled": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "dynamic.mts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlDynamicRecord/<anonymous:1> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map(([kind, ids]) => read(kind, ids)));",
+          "target": "postgres: controlDynamicRecord/<anonymous:1> → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 29,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlDynamic/<anonymous:6> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map(([kind, ids]) => read(kind, ids)));",
+          "target": "postgres: controlDynamic/<anonymous:6> → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 33,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlTypeShadow/<anonymous:7> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map(([kind, ids]) => read(kind, ids)));",
+          "target": "postgres: controlTypeShadow/<anonymous:7> → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 38,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlRecordShadow/<anonymous:8> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map(([kind, ids]) => read(kind, ids)));",
+          "target": "postgres: controlRecordShadow/<anonymous:8> → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 42,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlObjectShadow/<anonymous:9> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map(([kind, ids]) => read(kind, ids)));",
+          "target": "postgres: controlObjectShadow/<anonymous:9> → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 48,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlSourceArray/<anonymous:10> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "return read('post');",
+          "target": "postgres: controlSourceArray/<anonymous:10> → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 55,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlOpenTupleKey/<anonymous:11> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map(([kind, ids]) => read(kind, ids)));",
+          "target": "postgres: controlOpenTupleKey/<anonymous:11> → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 60,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlLateRecord/execute/<anonymous:12> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map(([kind, ids]) => read(kind, ids)));",
+          "target": "postgres: controlLateRecord/execute/<anonymous:12> → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 9,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via control/<anonymous:2> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map(([kind, ids]) => read(kind, ids)));",
+          "target": "postgres: control/<anonymous:2> → read"
+        },
+        {
+          "file": "guards.mts",
+          "import": "read",
+          "line": 17,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlThirdParameter/<anonymous:3> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map(([kind, ids], index, source) => read(kind, ids)));",
+          "target": "postgres: controlThirdParameter/<anonymous:3> → read"
+        },
+        {
+          "file": "guards.mts",
+          "import": "read",
+          "line": 21,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlRestParameter/<anonymous:4> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map((...entries) => read(entries[0])));",
+          "target": "postgres: controlRestParameter/<anonymous:4> → read"
+        },
+        {
+          "file": "guards.mts",
+          "import": "read",
+          "line": 29,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlQualifiedType/<anonymous:5> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map(([kind, ids]) => read(kind, ids)));",
+          "target": "postgres: controlQualifiedType/<anonymous:5> → read"
+        },
+        {
+          "file": "guards.mts",
+          "import": "read",
+          "line": 33,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlIndexedArrayType/<anonymous:6> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map(([kind, ids]) => read(kind, ids)));",
+          "target": "postgres: controlIndexedArrayType/<anonymous:6> → read"
+        },
+        {
+          "file": "guards.mts",
+          "import": "read",
+          "line": 37,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlQualifiedTypeQuery/<anonymous:7> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map(([kind, ids]) => read(kind, ids)));",
+          "target": "postgres: controlQualifiedTypeQuery/<anonymous:7> → read"
+        },
+        {
+          "file": "guards.mts",
+          "import": "read",
+          "line": 42,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlFunctionThirdParameter/<anonymous:8> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "return read(kind, ids);",
+          "target": "postgres: controlFunctionThirdParameter/<anonymous:8> → read"
+        },
+        {
+          "file": "guards.mts",
+          "import": "read",
+          "line": 48,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlFunctionRestParameter/<anonymous:9> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "return read(entries[0]);",
+          "target": "postgres: controlFunctionRestParameter/<anonymous:9> → read"
+        },
+        {
+          "file": "imported-object.mts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlImportedObject/<anonymous:1> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map(([kind, ids]) => read(kind, ids)));",
+          "target": "postgres: controlImportedObject/<anonymous:1> → read"
+        },
+        {
+          "file": "imported-record.mts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlImportedRecord/<anonymous:1> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map(([kind, ids]) => read(kind, ids)));",
+          "target": "postgres: controlImportedRecord/<anonymous:1> → read"
+        },
+        {
+          "file": "keys.mts",
+          "import": "read",
+          "line": 12,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-in `read` reaches `postgres` via controlOpenKeys → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await read(kind, batch);",
+          "target": "postgres: controlOpenKeys → read"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

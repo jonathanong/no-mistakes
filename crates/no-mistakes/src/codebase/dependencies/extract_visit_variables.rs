@@ -136,6 +136,14 @@ fn visit_variable_declaration_with_values<'a>(
     declaration: &VariableDeclaration<'a>,
 ) {
     visit_variable_declaration_with_bindings(collector, declaration);
+    if collector.collect_per_item_calls {
+        for declarator in &declaration.declarations {
+            if let Some(init) = &declarator.init {
+                collector.invalidate_bounded_expression(init);
+            }
+        }
+        collector.record_bounded_declaration(declaration);
+    }
     collector.record_mutable_cursor_bindings(declaration);
     collector.record_callable_declaration_bindings(declaration);
     collector.record_const_callable_aliases(declaration);

@@ -372,3 +372,5 @@ pub(crate) mod sink_paths;
 mod sink_trace_parity;
 
 mod capped_cursor;
+
+mod bounded_shapes;

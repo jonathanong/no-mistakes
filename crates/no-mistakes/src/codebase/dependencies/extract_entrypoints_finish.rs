@@ -6,6 +6,7 @@ fn finish_import_facts(mut collector: ImportCollector, program: &Program<'_>) ->
     collector.finish_forward_receiver_writes();
     collector.finish_foreign_receiver_writes();
     collector.finish_bounded_value_flow();
+    collector.finish_bounded_per_item_calls();
 
     let reassigned_callable_ids = collector
         .reassigned_callable_binding_ids

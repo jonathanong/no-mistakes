@@ -1,0 +1,246 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "enabled": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "coverage.mts",
+          "import": "lookup",
+          "line": 10,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via controlAliasInBody → controlAliasInBody/lookup → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of kinds) { const alias = kinds; await read(kind); ids.map(lookup); }",
+          "target": "postgres: controlAliasInBody → controlAliasInBody/lookup → read"
+        },
+        {
+          "file": "coverage.mts",
+          "import": "lookup",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via controlGuardedTuple → controlGuardedTuple/lookup → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of kinds) { await read(kind); ids.map(lookup); }",
+          "target": "postgres: controlGuardedTuple → controlGuardedTuple/lookup → read"
+        },
+        {
+          "file": "coverage.mts",
+          "import": "read",
+          "line": 10,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlAliasInBody → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of kinds) { const alias = kinds; await read(kind); ids.map(lookup); }",
+          "target": "postgres: controlAliasInBody → read"
+        },
+        {
+          "file": "dynamic.mts",
+          "import": "read",
+          "line": 6,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlDynamicTuple → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await read(kind);",
+          "target": "postgres: controlDynamicTuple → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 16,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlArray → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of kinds) await read(kind);",
+          "target": "postgres: controlArray → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 19,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlShadow → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of KINDS) await read(kind);",
+          "target": "postgres: controlShadow → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 24,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlMutation → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of kinds) await read(kind);",
+          "target": "postgres: controlMutation → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 29,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlAlias → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of kinds) await read(kind);",
+          "target": "postgres: controlAlias → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 33,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlBodyMutation → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of kinds) { kinds.push('post'); await read(kind); }",
+          "target": "postgres: controlBodyMutation → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 41,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlSpread → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of values) await read(kind);",
+          "target": "postgres: controlSpread → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 47,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlReturnedAlias → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of kinds) await read(kind);",
+          "target": "postgres: controlReturnedAlias → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 53,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlParameterAlias → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of kinds) await read(kind);",
+          "target": "postgres: controlParameterAlias → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 57,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlLateTuple/execute → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "async function execute() { for (const kind of kinds) await read(kind); }",
+          "target": "postgres: controlLateTuple/execute → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 63,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlLateEnum/execute → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "async function execute() { for (const kind of Object.values(LocalKind)) await read(kind); }",
+          "target": "postgres: controlLateEnum/execute → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 9,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via control → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of kinds) await read(kind);",
+          "target": "postgres: control → read"
+        },
+        {
+          "file": "forward.mts",
+          "import": "read",
+          "line": 16,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlForwardEnumMutation/execute → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "async function execute() { for (const kind of Object.values(LocalKind)) await read(kind); }",
+          "target": "postgres: controlForwardEnumMutation/execute → read"
+        },
+        {
+          "file": "forward.mts",
+          "import": "read",
+          "line": 9,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlForwardMutation/execute → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "async function execute() { for (const kind of kinds) await read(kind); }",
+          "target": "postgres: controlForwardMutation/execute → read"
+        },
+        {
+          "file": "guards.mts",
+          "import": "read",
+          "line": 12,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlArrayAssertion → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of kinds) await read(kind);",
+          "target": "postgres: controlArrayAssertion → read"
+        },
+        {
+          "file": "guards.mts",
+          "import": "read",
+          "line": 16,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlReadonlyAssertion → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of kinds) await read(kind);",
+          "target": "postgres: controlReadonlyAssertion → read"
+        },
+        {
+          "file": "guards.mts",
+          "import": "read",
+          "line": 20,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlScalarAssertion → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const letter of kind) await read(letter);",
+          "target": "postgres: controlScalarAssertion → read"
+        },
+        {
+          "file": "guards.mts",
+          "import": "read",
+          "line": 24,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlComputedMethod/<anonymous:1> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(kinds['map'](kind => read(kind)));",
+          "target": "postgres: controlComputedMethod/<anonymous:1> → read"
+        },
+        {
+          "file": "guards.mts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlNestedFactory → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of factory()()) await read(kind);",
+          "target": "postgres: controlNestedFactory → read"
+        },
+        {
+          "file": "guards.mts",
+          "import": "read",
+          "line": 8,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlObjectCall → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of Object.values(openGroups())) await read(kind);",
+          "target": "postgres: controlObjectCall → read"
+        },
+        {
+          "file": "keys.mts",
+          "import": "read",
+          "line": 7,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-in `read` reaches `postgres` via controlEnumKeys → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind in Kind) await read(kind);",
+          "target": "postgres: controlEnumKeys → read"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

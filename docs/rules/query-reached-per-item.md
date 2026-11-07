@@ -15,7 +15,7 @@ when the caller uses `Promise.all`.
 
 ## What it catches/requires
 
-Calls inside `for`, `for...of`, `for...in`, `while`, and `do` bodies are per-item.
+Calls inside open-ended `for`, `for...of`, `for...in`, `while`, and `do` bodies are per-item.
 Callbacks to `map`, `flatMap`, `forEach`, `filter`, `some`, `every`, `reduce`, and
 `find` are also per-item. Promise combiners (`all`, `allSettled`, `any`, `race`)
 do not make an ordinary fixed array per-item: iteration must supply its calls.
@@ -123,11 +123,84 @@ Use exact `{file, callee, line}` entries as a reviewed rollout baseline. Omit
 `line` to allow that callee throughout one file; omit `callee` to allow the file.
 Remove baseline entries as helpers gain batch equivalents.
 
+### Finite groups, batches, and keyset pages
+
+The rule excludes monotone `for` loops with one `let` counter
+when the initializer and bound are safe integer literals or visible `const`
+numbers and the body cannot change the counter, bound, or constant step.
+Increasing `<` / `<=` loops use `++` or `+= STEP`; decreasing `>` / `>=`
+loops use `--` or `-= STEP`, with a positive safe integer step.
+Nested open-ended loops still report their own calls; direct `eval` prevents
+the counter proof. Literal `as const`
+tuples and `Object.values()` over a visible enum are finite groups. An ordinary
+array remains per-item, including an array initialized with literals.
+`for...in` also recognizes finite enum, tuple, and closed Record keys.
+
+`Object.entries()`, `Object.keys()`, and `Object.values()` iteration over a
+`const` binding annotated as `Record<Key, Value>` is finite when `Key` is a
+literal union, a visible enum, or `typeof KEYS[number]` for a literal `as const`
+tuple. `Record<string, Value>` and unresolved or shadowed key types remain
+per-item. Container mutation, aliasing, unknown helper escapes, and callback
+parameters that expose the source array prevent the exemption.
+
+A fixed chunk loop must start at zero, compare against the input array's
+`length`, and advance by a positive constant integer greater than one. Only
+calls receiving the matching `ids.slice(i, i + CHUNK)` batch are exempt;
+a call receiving `ids[i]` still reports. The slice may appear inside an SQL
+parameter array. An enclosing open-ended per-item loop still reports the batch
+call once per outer item.
+
+A `while (cursor)` keyset loop exempts only a direct awaited page call followed
+immediately by `cursor = rows.at(-1)?.id`. The cursor must be an outer `let` / `var` binding or parameter
+with one unconditional advancement. The call must receive a literal
+PostgreSQL `SELECT` and `[cursor]`, with `WHERE id > $1 ORDER BY id [ASC] LIMIT N`
+for a positive integer `N > 1`, and project the cursor key. Simple column
+projections, table aliases, and schema-qualified tables are supported. More
+complex SQL, additional cursor writes or escapes, and surrounding per-item
+loops keep the call reported. Other calls in the same page loop still report.
+
+With a configured `read` sink, these shapes are valid:
+
+```ts
+const MAX_PAGES = 3;
+for (let page = 0; page < MAX_PAGES; page++) await read(page);
+
+const CHUNK = 100;
+for (let i = 0; i < ids.length; i += CHUNK) {
+  await read('SELECT * FROM items WHERE id = ANY($1)', [ids.slice(i, i + CHUNK)]);
+}
+
+type Kind = 'post' | 'comment';
+const grouped: Record<Kind, string[]> = groupByKind(items);
+await Promise.all(Object.entries(grouped).map(([kind, batch]) => read(kind, batch)));
+
+let cursor = initial;
+while (cursor) {
+  const rows = await read('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);
+  cursor = rows.at(-1)?.id;
+}
+```
+
+These counterexamples still report:
+
+```ts
+for (const id of ids) await read(id);
+for (let i = 0; i < ids.length; i += CHUNK) await read(ids[i]);
+const open: Record<string, string[]> = groupByKind(items);
+await Promise.all(Object.entries(open).map(([kind, batch]) => read(kind, batch)));
+```
+
+Fix an individual-item query by passing the complete slice or key-group batch.
+Keep key spaces explicitly closed when the domain is finite. A straight-line
+dependent await chain and `Promise.all([a(), b(), c()])` with distinct callees
+already require no exemption; neither construct introduces iteration.
+
 ### Capped sequential page reads
 
 Set `options.exemptCappedCursorPageReads: true` when each page read needs the
 previous page's continuation value. The default is `false`; omitting the option
-or explicitly setting it to `false` preserves existing findings.
+or explicitly setting it to `false` retains findings for runtime-bounded page loops.
+Statically finite counters are excluded independently of this option.
 
 ```yaml
 rules:

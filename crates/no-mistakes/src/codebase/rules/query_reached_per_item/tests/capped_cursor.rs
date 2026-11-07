@@ -26,7 +26,6 @@ fn cursor_option_removes_only_proven_page_reads_and_defaults_to_false() {
         [
             "src/conditional_spread.ts",
             "src/helper_loop.ts",
-            "src/numeric_cap.ts",
             "src/proven.ts",
         ]
     );

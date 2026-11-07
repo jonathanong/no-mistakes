@@ -96,6 +96,7 @@ fn visit_ts_enum_declaration_with_scope<'a>(
     collector: &mut ImportCollector,
     declaration: &TSEnumDeclaration<'a>,
 ) {
+    collector.record_bounded_enum(declaration);
     if collector.function_stack.is_empty()
         && collector.is_exported_top_level_name(declaration.id.name.as_str())
     {
