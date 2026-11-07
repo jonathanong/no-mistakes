@@ -2,7 +2,37 @@ use super::*;
 use crate::fx::{FxHashMap, FxHashSet};
 use std::path::PathBuf;
 
-pub(crate) type IdentifierReturns = FxHashMap<PathBuf, FxHashSet<(u32, u32)>>;
+#[derive(Default)]
+pub(crate) struct IdentifierReturns {
+    calls: FxHashMap<PathBuf, FxHashMap<(u32, u32), Vec<usize>>>,
+    used_sources: std::cell::RefCell<FxHashSet<usize>>,
+}
+
+#[cfg(test)]
+#[path = "validated_usage_tests.rs"]
+mod tests;
+
+impl IdentifierReturns {
+    pub(crate) fn insert(&mut self, file: PathBuf, span: (u32, u32), sources: Vec<usize>) {
+        self.calls.entry(file).or_default().insert(span, sources);
+    }
+
+    pub(crate) fn source_used(&self, index: usize) -> bool {
+        self.used_sources.borrow().contains(&index)
+    }
+
+    fn proves(&self, file: &Path, span: (u32, u32)) -> bool {
+        let Some(sources) = self.calls.get(file).and_then(|calls| calls.get(&span)) else {
+            return false;
+        };
+        if !sources.is_empty() {
+            self.used_sources
+                .borrow_mut()
+                .extend(sources.iter().copied());
+        }
+        true
+    }
+}
 
 impl<'a> Bindings<'a> {
     pub(crate) fn imported_collection_safe(
@@ -26,8 +56,7 @@ impl<'a> Bindings<'a> {
 
     pub(crate) fn identifier_return(&self, file: &Path, call: &ValueCall) -> bool {
         self.identifier_returns
-            .and_then(|returns| returns.get(file))
-            .is_some_and(|returns| returns.contains(&(call.offset, call.end)))
+            .is_some_and(|returns| returns.proves(file, (call.offset, call.end)))
     }
 
     pub(crate) fn identifier_value(
@@ -48,8 +77,7 @@ impl<'a> Bindings<'a> {
         match value {
             ValueExpression::Call(start, end) => self
                 .identifier_returns
-                .and_then(|returns| returns.get(file))
-                .is_some_and(|returns| returns.contains(&(*start, *end))),
+                .is_some_and(|returns| returns.proves(file, (*start, *end))),
             ValueExpression::Awaited(inner) => self.return_value(file, inner, seen),
             ValueExpression::Named {
                 name,

@@ -418,6 +418,13 @@ for parameterized fragments; `trustedSqlTags` adds custom tags. See
 [closed domains](../rules/postgres-no-unbounded-sql-identifier.md#closed-domains)
 and [composed fragments](../rules/postgres-no-unbounded-sql-identifier.md#composed-parameterized-fragments).
 
+On a complete max-effort scan, every `identifierSources` entry must supply a
+scalar identifier proof in a selected SQL call. Workspace exports and `export *` barrels retain
+the producer's canonical identity, including wrappers around typed catalogs
+populated at module load. A matching call whose return is unused by SQL does
+not use the entry. An unused module/name selector produces `unused-allow-entry`
+at that config item, under the shared `reportUnusedAllowEntries` policy.
+
 [`postgres-no-mutable-sql-registry`](../rules/postgres-no-mutable-sql-registry.md#effort)
 also supports `effort: low`. Literal SQL and templates without relation-name
 interpolation are decidable; imported registry relations and helper SQL use

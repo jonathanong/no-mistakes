@@ -176,7 +176,12 @@ initializer call. Its trusted contract may enforce an allow-list or identifier
 grammar plus length limit. `identifierSources` declares trusted bounded scalar
 returns for producers such as catalog lookup wrappers. Both options match either
 the call-site module selector or canonical resolved origin through named or
-`export *` barrels and npm re-exports; helper bodies are not inspected. Property
+`export *` barrels and npm re-exports, including workspace packages; helper bodies
+are not inspected. Typed catalogs populated at module load can supply an
+explicit trusted source. Complete max-effort scans report unused source entries
+as `unused-allow-entry` at the configuration item. A catalog-element type alone
+does not validate an incoming identifier; runtime guards also cover immutable
+scalar aliases captured after validation. Property
 guards validate only their exact member path. Static metadata-array lookups followed by a throwing or returning
 presence guard prove their literal string fields. Private module-local helpers
 may return rows when every call result stays immutable and only reads known

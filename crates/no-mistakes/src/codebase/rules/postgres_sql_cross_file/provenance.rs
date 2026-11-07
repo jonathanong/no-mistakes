@@ -90,7 +90,7 @@ fn classify(
         }
         ValueExpression::Call(start, end) => {
             if let Some(value_call) = value_call_at(facts, file, *start, *end) {
-                classify_call(graph, facts, file, value_call, out, bindings);
+                classify_call(graph, facts, file, value_call, out, bindings, true);
             }
         }
         ValueExpression::Awaited(inner) => classify(graph, facts, file, inner, out, bindings),
@@ -117,6 +117,10 @@ fn classify(
                 out.insert(named_provenance(
                     facts, file, name, *scope, *offset, &members,
                 ));
+            } else if let ValueExpression::Call(start, end) = current {
+                if let Some(value_call) = value_call_at(facts, file, *start, *end) {
+                    classify_call(graph, facts, file, value_call, out, bindings, false);
+                }
             } else {
                 classify(graph, facts, file, current, out, bindings);
             }
@@ -151,9 +155,10 @@ fn classify_call(
     value_call: &ValueCall,
     out: &mut BTreeSet<Provenance>,
     bindings: &Bindings<'_>,
+    scalar: bool,
 ) {
     if binding_tag::is_bind_tag(bindings, file, value_call)
-        || bindings.identifier_return(file, value_call)
+        || (scalar && bindings.identifier_return(file, value_call))
         || is_finite_validator(graph, facts, &bindings.routes, file, &value_call.callee)
         || closed_map_lookup(facts, file, value_call)
     {

@@ -20,6 +20,7 @@ pub(crate) fn check_with_graph(
     config: &NoMistakesConfig,
     graph: Option<&DepGraph>,
     facts: &CheckFactMap,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let normalized = crate::codebase::ts_resolver::normalize_path(root);
     let root = normalized.as_path();
@@ -38,14 +39,13 @@ pub(crate) fn check_with_graph(
                 RULE_ID,
             )?);
         } else {
-            findings.extend(super::postgres_sql_cross_file::check_application(
+            findings.extend(application::check(
                 root,
                 config,
                 application,
                 graph.expect("postgres-no-unbounded-sql-identifier requires canonical graph"),
                 facts,
-                RULE_ID,
-                |root, opts, graph, facts| Ok(scan(root, opts, graph, facts)),
+                sources,
             )?);
         }
     }
@@ -58,19 +58,24 @@ fn scan(
     opts: &super::postgres_sql_cross_file::CompiledOptions,
     graph: &DepGraph,
     facts: &CheckFactMap,
+    calls: &[SqlCall<'_>],
+    returns: &super::postgres_sql_cross_file::IdentifierReturns,
+    filter: &super::path_filter::RulePathFilter,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     let mut candidates = 0;
     let mut sinks = 0;
-    let calls = sql_calls(root, opts, facts);
-    let returns = closed::configured::prepare(opts, graph, facts);
-    let bindings = Bindings::with_calls(facts, &calls)
+    let bindings = Bindings::with_calls(facts, calls)
         .with_graph(graph)
         .with_trusted_tags(&opts.embedded.trusted_sql_tags)
-        .with_identifier_returns(&returns);
+        .with_numeric_parameter_bounds()
+        .with_identifier_returns(returns);
     let mut fragment_proofs = fragments::Proofs::new(graph, opts, facts, &bindings);
     let catalog_proof = catalogs::CatalogProof::new(graph, facts, &bindings);
-    for call in &calls {
+    for call in calls {
+        if !filter.is_match(&call.file) {
+            continue;
+        }
         candidates += 1;
         if !scans_identifier(call.call) {
             continue;
@@ -119,6 +124,7 @@ fn scan(
     findings
 }
 
+mod application;
 mod findings;
 #[cfg(test)]
 mod tests;
