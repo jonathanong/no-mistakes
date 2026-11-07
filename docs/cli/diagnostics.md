@@ -24,6 +24,94 @@ diagnostics perform no memory sampling. See the
 [hosted measurement protocol](../development/hosted-check.md) for external
 whole-command wall, CPU, and memory comparisons.
 
+Verbose diagnostics also sample process resources around sequential top-level
+phases on Unix. Each available sample reports user and system CPU milliseconds,
+CPU utilization as `(user CPU + system CPU) / phase wall time` in multiples of
+one CPU, the process-lifetime peak RSS at phase end in KiB, and the increase in
+that high-water mark during the phase. Utilization can exceed `1x` when Rayon
+workers use several CPUs. A zero RSS increase means the previous peak was not
+exceeded; it does not mean the phase allocated no memory. Peak RSS includes
+startup and earlier phases and is not live heap size or retained bytes.
+
+For example, a ten-millisecond phase using thirty milliseconds of CPU can emit:
+
+```text
+[cpu] parse: user=20.000ms sys=10.000ms util=3.000x
+[memory] parse: peak_rss_kib=600 delta_kib=200
+```
+
+`delta_kib` subtracts the process high-water mark sampled at phase start from
+the mark sampled at phase end. The invocation dispatch envelope is transparent
+for resource attribution: it emits no CPU/RSS metrics, allowing its sequential
+child phases to report them. `check.analysis` provides one serial envelope around
+the concurrent domain checks, so its process-wide measurements cover the whole
+domain pass.
+
+`facts.prepare` is the inclusive preparation envelope; it also emits no CPU/RSS
+metrics. Within it, `parse` covers syntax parsing and file-fact extraction.
+PostgreSQL module evaluation runs afterward under `postgres.annotation.project`,
+so its CPU and RSS are attributed separately. The historical `parse_extract`
+check-result duration remains the inclusive preparation duration.
+Basic `--timings` retains its existing phase catalog and inclusive `parse`
+duration. The split syntax/preparation spans are detailed diagnostics, enabled
+by `--verbose-timings` or progress.
+
+Repeated resource labels produce one CPU row and one memory row, in order of
+first appearance. Only spans eligible for resource attribution contribute:
+wall, user CPU, and system CPU durations are summed; utilization divides the
+summed CPU time by summed wall time. Peak RSS is the maximum sampled phase-end
+high-water mark, and RSS delta sums each span's nonnegative increase rather
+than subtracting across gaps occupied by other phases. Structured Node
+`phases` records use the same aggregation.
+
+Nested or parallel spans retain their elapsed timings but omit process CPU and
+RSS attribution, since process-wide counters cannot separate overlapping work.
+Unsupported platforms and failed resource samples omit values rather than
+reporting zero. These samples are exclusive to `--verbose-timings`; basic
+`--timings`, progress alone, and disabled diagnostics do not collect them.
+
+Verbose diagnostics also retain at most ten expensive file records for each of
+four passes (at most forty records total): `parse`, `value_flow.extract`,
+`value_flow.finalize`, and `postgres.annotation`.
+
+```text
+[hot] value_flow.extract: src/app.ts 12.411ms units=4096 (parallel; non-additive)
+```
+
+Each record identifies the pass, file path, elapsed milliseconds and work units.
+For parsing and value flow, units are source bytes. For PostgreSQL annotation,
+units are one root evaluation. Repeated paths retain their most expensive
+operation rather than a sum across profiles or parse modes. Records can overlap:
+these elapsed durations are non-additive. Basic timings and progress alone do
+not collect hot-file records.
+
+`[hot] parse` brackets each file's parsing and requested fact extraction, including
+semantic preparation, recovery, and AST cleanup. It excludes source reads and
+project-wide PostgreSQL evaluation. `value_flow.extract` includes collector
+setup, binding declarations and the AST visit; `value_flow.finalize` includes
+alias/write completion, normalization, sorting and construction of returned
+facts. These passes use the same elapsed-millisecond clock as annotation roots.
+Value-flow records are nested within file parsing and must not be added to it.
+A declaration file's byte count is its input size, not milliseconds.
+
+The sum of file durations within a parallel pass is bounded by the pass's wall
+time multiplied by its worker count. Phase CPU is process-wide user plus system
+time; per-file elapsed time also includes scheduling waits. On a small isolated
+workload where all files fit the top ten, file totals should account for a
+substantial share of phase CPU. The retained top ten on a larger repository are
+only a subset, so their sum cannot account for the entire phase. Repeated file
+operations retain the largest record rather than accumulating cache reuse.
+
+Each pass ranks elapsed time from slowest to fastest, breaking ties by ascending
+path and then descending units. Timings and thus membership can vary between
+runs, especially with parallel execution. Reduction and tie ordering are stable
+for the same measured records; this does not make elapsed-time rankings
+reproducible. These summaries do not change analysis order, findings, or normal
+stdout.
+
+Use the [heap-profiling recipe](../development/heap-profiling.md) when phase RSS
+or an expensive file points to a memory problem that needs allocation stacks.
+
 For a command that may be killed before it returns, add `--progress`:
 
 ```sh
@@ -256,6 +344,13 @@ Instrumentation is invocation-scoped and disabled by default. A disabled run
 does not construct an observer, start clocks, or retain work ledgers. Enabled
 runs memoize successful and failed discovery/read/parse operations in memory
 for the duration of that invocation only.
+
+The async Node API provides the same verbose observation through
+`collectDiagnostics(operation, ...args)`, returning `{ result, diagnostics }`
+without stderr. The ordinary result retains its existing shape; the caller owns
+the completed report. Errors may carry `.diagnostics` if observation began
+before rejection. No completed-request registry is retained. See the
+[Node API](../node-api.md) for supported selectors and exported report types.
 
 The async Node API remains stderr-free. `impactedChecks({ timings: true })`
 retains its structured `{ phase, duration_ms }[]` response. `check({ timings: true })`

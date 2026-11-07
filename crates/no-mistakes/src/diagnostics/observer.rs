@@ -39,7 +39,9 @@ pub struct DiagnosticsSnapshot {
 }
 
 pub struct InvocationObserver {
+    pub(super) resources: Option<Mutex<super::resources::ResourceState>>,
     verbose: bool,
+    pub(super) hot_files: Option<Mutex<super::hot_files::HotFiles>>,
     started: Instant,
     timings: Mutex<Vec<TimingDiagnostic>>,
     work: Option<Box<WorkCounters>>,
@@ -54,7 +56,9 @@ impl InvocationObserver {
 
     pub fn with_progress(verbose: bool, progress: bool) -> Arc<Self> {
         Arc::new(Self {
+            resources: verbose.then(|| Mutex::new(super::resources::ResourceState::default())),
             verbose,
+            hot_files: verbose.then(|| Mutex::new(super::hot_files::HotFiles::default())),
             started: Instant::now(),
             timings: Mutex::new(Vec::new()),
             work: verbose.then(|| Box::new(WorkCounters::new())),
@@ -158,24 +162,7 @@ impl InvocationObserver {
         }
     }
 
-    /// Ordinary `--verbose-timings` bytes for a fixed total and RSS sample.
-    /// Live elapsed time and `getrusage` stay outside this helper so tests can
-    /// lock the historical block exactly.
-    pub(in crate::diagnostics) fn verbose_timings_block(
-        &self,
-        total: Duration,
-        peak_rss_kib: Option<u64>,
-    ) -> String {
-        let mut snapshot = self.snapshot();
-        snapshot.timings.push(TimingDiagnostic {
-            label: "total".to_string(),
-            duration: total,
-            kind: TimingKind::Serial,
-        });
-        render::format_block(&snapshot, self.verbose, peak_rss_kib)
-    }
-
-    fn verbose_peak_rss(&self) -> Option<u64> {
+    pub(super) fn verbose_peak_rss(&self) -> Option<u64> {
         self.verbose.then(super::memory::peak_rss_kib).flatten()
     }
 }

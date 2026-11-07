@@ -160,9 +160,14 @@ pub(super) fn measure_optional<T>(
         return (operation(), Duration::ZERO);
     };
     let started = now();
+    let resources = super::resources::ResourceGuard::start(observer, label, kind);
     let _span = ActiveSpanGuard::start(observer, label, kind, started);
     let result = with_timing_kind(kind, operation);
+    let end = resources.as_ref().and_then(|resources| resources.finish());
     let duration = now().duration_since(started);
+    if let Some(resources) = &resources {
+        resources.record(label, duration, end);
+    }
     observer.record_duration(label, duration, kind);
     (result, duration)
 }

@@ -2,6 +2,7 @@ const EXACT_TIMING_ORDER: &[(&str, u16)] = &[
     ("check.prepare", 5),
     ("discovery", 10),
     ("read", 20),
+    ("facts.prepare", 25),
     ("parse", 30),
     ("manifest", 40),
     ("resolve", 50),

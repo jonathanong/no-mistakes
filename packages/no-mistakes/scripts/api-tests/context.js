@@ -37,6 +37,7 @@ const RAW_NATIVE_EXPORTS = {
   version: "version",
 };
 const PURE_JAVASCRIPT_EXPORTS = new Set([
+  "collectDiagnostics",
   "createWorkflowTopologyIndex",
   "writePlanningImpactArtifacts",
 ]);
@@ -62,12 +63,15 @@ function declarationExportNames() {
     "index.d.ts",
     "index-ci-infra.d.ts",
     "invocation-types.d.ts",
+    "diagnostics-collector.d.ts",
     "executed-postgres-sql-types.d.ts",
   ]
     .map((file) => readFileSync(join(packageRoot, file), "utf8"))
     .join("\n");
   return [
-    ...new Set([...declarations.matchAll(/export function (\w+)\(/g)].map((match) => match[1])),
+    ...new Set(
+      [...declarations.matchAll(/export function (\w+)(?:<[^;{]*?>)?\(/g)].map((match) => match[1]),
+    ),
   ].sort();
 }
 

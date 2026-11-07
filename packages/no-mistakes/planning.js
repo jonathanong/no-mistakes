@@ -15,10 +15,7 @@ const {
 } = require("./planning-artifact-inputs");
 const PLAN_INPUT_REPORTS = new Set(["testsComment", "testsGraph", "testsGraphMermaid"]);
 
-async function callJson(fn, options) {
-  const input = Buffer.from(JSON.stringify(options || {}));
-  return JSON.parse(await fn(input));
-}
+const { callJson } = require("./diagnostics");
 
 function createJsonApis(descriptors) {
   return Object.fromEntries(

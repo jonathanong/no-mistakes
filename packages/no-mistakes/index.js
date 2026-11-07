@@ -4,20 +4,11 @@ const { resolveNativePackage } = require("./scripts/native-package");
 const addonPath = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || resolveNativePackage().addonPath;
 const native = require(addonPath);
 const planning = require("./planning");
-const { decorateInvocationError } = require("./invocation-errors");
+const { callJson, collectDiagnostics } = require("./diagnostics");
 const { writePlanningImpactArtifacts: writeArtifacts } = require("./planning-impact-artifacts");
 const { createPlanningArtifactLock } = require("./planning-impact-artifacts-lock");
 const { createWorkflowTopologyIndex } = require("./workflow-topology-index");
 const path = require("node:path");
-
-async function callJson(fn, options) {
-  const input = Buffer.from(JSON.stringify(options || {}));
-  try {
-    return JSON.parse(await fn(input));
-  } catch (error) {
-    throw decorateInvocationError(error);
-  }
-}
 
 function createJsonApis(descriptors) {
   return Object.fromEntries(
@@ -189,3 +180,6 @@ module.exports.testsWhy = planning.testsWhy;
 
 module.exports.generatePostgresCatalog = jsonApis.generatePostgresCatalog;
 module.exports.parsePostgresSql = jsonApis.parsePostgresSql;
+
+module.exports.collectDiagnostics = (operation, ...args) =>
+  collectDiagnostics(module.exports, operation, ...args);

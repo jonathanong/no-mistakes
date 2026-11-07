@@ -1,0 +1,6 @@
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [work.mts]
+      forbiddenModules: [never-imported]
