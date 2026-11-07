@@ -392,7 +392,8 @@ supported generated identifier shape, or an explicit trusted helper contract:
   `(typeof ALLOWED_LIST)[number]` type alias. The guard ends at the next assignment to that
   same binding (`=`, `+=`, `for (name of ...)`, or a destructuring
   assignment). An immutable scalar alias captured after the guard retains the
-  validated value; an alias captured before validation does not. A guard inside
+  validated value, including when an executor or transaction callback reads
+  that alias. An alias captured before validation does not. A guard inside
   a branch does not cover a query after that branch. A regex test is not a finite
   domain. An inner `const` that shadows
   the guarded name stays unbounded.
@@ -510,9 +511,21 @@ At max effort, the `.text` member of a configured `trustedSqlTags` template
 is SQL text with bind placeholders. The default and `SQL` imports from
 `sql-template-strings` are built in: no tag option is needed for that package.
 This includes immutable local or module-const fragments, `.append()` chains
-of proven fragments, statement-level appends, and resolved helper returns.
-The proof preserves the matching `.values` bind array.
+of proven fragments, statement-level appends, and resolved synchronous helper
+returns. The proof preserves the matching `.values` bind array.
 Executor calls inside bind expressions are checked independently.
+
+An exported `sql-template-strings` statement or fragment may be imported through
+named or namespace imports and static re-exports. Its constructor and append
+arguments must remain proven. Reassignment, member writes, unsupported member
+access, and unsafe aliases or escapes in the producer or consumers end the
+proof. An escaping namespace invalidates only the statements it actually
+exports; importing a module does not expose all of that module's private
+imports. Copy an imported fragment into a fresh empty `sql` tagged template with
+`.append(fragment)`. A synchronous factory may return its own local
+statement after safe appends. Every return must be proven; a
+`SQLStatement` annotation alone does not establish this proof.
+
 The default `sql-template-strings` tag binds every interpolated value. A configured
 tag establishes this `.text` proof for literal slots and ordinary parameter or
 member values, including untyped or destructured parameters, nominal type aliases,
@@ -531,7 +544,7 @@ import sql from "sql-template-strings";
 import { read } from "@example/db";
 
 const SELECT_COLUMNS = sql`a.id, a.status`;
-function buildRead(ids: string[]) {
+export function buildRead(ids: string[]) {
   return sql`id, url FROM items WHERE id = ANY(${ids}::uuid[])`;
 }
 export function getOne(id: string, flag: "x" | "y" | null) {
@@ -543,6 +556,21 @@ export function getOne(id: string, flag: "x" | "y" | null) {
 export function getMany(ids: string[]) {
   const statement = buildRead(ids);
   return read(`SELECT ${statement.text}`, statement.values);
+}
+```
+
+The same proof applies when a callback parameter is an executor selected by
+`executorTypeNames: ["QueryExecutor"]`. If the module above is `statements.ts`,
+the callback can import `buildRead`:
+
+```ts
+import { type QueryExecutor } from "@example/db";
+import { buildRead } from "./statements";
+
+export function select(ids: string[]) {
+  const statement = buildRead(ids);
+  return (execute: QueryExecutor) =>
+    execute(`/* select */ SELECT ${statement.text}`, statement.values);
 }
 ```
 

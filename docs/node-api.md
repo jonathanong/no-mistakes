@@ -479,9 +479,12 @@ their config items as `unused-allow-entry`, honoring `reportUnusedAllowEntries`.
 These async APIs share the CLI proofs for imported literal-array guards,
 literal properties selected from closed records, closed catalog map/join SQL,
 built-in `sql-template-strings` `.text` fragments with append chains and helper
-returns, and generated UUID names whose prefix parameter is bound by a literal
-call argument and whose async result is awaited. No tag option is required for
-the default or `SQL` import from `sql-template-strings`. Unsupported syntax uses
+returns, including imported statements and synchronous factories used through
+configured executor callback types. Readonly import proofs reject producer or
+consumer member writes and namespace escapes that expose the statement.
+Generated UUID helper prefixes must receive literal call arguments, and async
+forwarding must be awaited. No tag option is required for the default or `SQL`
+import from `sql-template-strings`. Unsupported syntax uses
 the same report/advisory/ignore policy in CLI and async Node reports. See
 [closed domains](rules/postgres-no-unbounded-sql-identifier.md#closed-domains).
 

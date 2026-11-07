@@ -879,5 +879,7 @@ runtime value selectors from prepared value-flow reads. A `symbol-import` can
 select an immutable producer binding or the file owning an ESM namespace.
 Namespaces retain exact exported-value `symbol-reexport` links so an escaped
 namespace invalidates its exposed builders without treating unrelated module
-imports as value exposure. This projection has separate export-resolution caches
-from callable analysis and preserves ordinary call-site classification.
+imports as value exposure. These links connect namespace files to producer
+symbols or to other exported namespace files. This projection has separate
+export-resolution caches from callable analysis and preserves ordinary call-site
+classification.
