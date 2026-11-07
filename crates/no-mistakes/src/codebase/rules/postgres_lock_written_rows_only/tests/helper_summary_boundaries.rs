@@ -31,5 +31,5 @@ fn helper_summaries_preserve_forwarding_and_reject_opaque_or_unbounded_effects()
         }
         checked += 1;
     }
-    assert_eq!(checked, 11);
+    assert_eq!(checked, 15);
 }

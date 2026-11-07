@@ -344,3 +344,38 @@ export async function caller_double9(key: string) {
   await tx.query('SELECT 1 FROM claims WHERE key = $1 FOR UPDATE', [key]); // expect-unresolved
   await double9(tx.query, key);
 }
+async function safeBindings(tx: unknown, key: string) {
+  await tx.query('UPDATE claims SET value = $2 WHERE key = $1', [key, -1, 'text', true, null, `opaque`]);
+}
+async function bindingCommit(tx: unknown, key: string) {
+  await tx.query('SELECT 1', [tx.commit()]);
+}
+async function bindingAssignment(tx: unknown, key: string) {
+  await tx.query('SELECT 1', [tx.query = replacement]);
+}
+async function bindingGetter(tx: unknown, key: string) {
+  await tx.query('SELECT 1', [external.value]);
+}
+export async function caller_safeBindings(key: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT 1 FROM claims WHERE key = $1 FOR UPDATE', [key]); // expect-clean
+  await safeBindings(tx, key);
+}
+export async function caller_bindingCommit(key: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT 1 FROM claims WHERE key = $1 FOR UPDATE', [key]); // expect-unresolved
+  await bindingCommit(tx, key);
+  await tx.query('DELETE FROM claims WHERE key = $1', [key]);
+}
+export async function caller_bindingAssignment(key: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT 1 FROM claims WHERE key = $1 FOR UPDATE', [key]); // expect-unresolved
+  await bindingAssignment(tx, key);
+  await tx.query('DELETE FROM claims WHERE key = $1', [key]);
+}
+export async function caller_bindingGetter(key: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT 1 FROM claims WHERE key = $1 FOR UPDATE', [key]); // expect-unresolved
+  await bindingGetter(tx, key);
+  await tx.query('DELETE FROM claims WHERE key = $1', [key]);
+}

@@ -43,12 +43,7 @@ pub(super) fn summarize(call: &CallExpression<'_>, params: &[&str], source: &str
             array
                 .elements
                 .iter()
-                .map(|element| {
-                    Some(super::parameters::parameter(
-                        element.as_expression()?,
-                        params,
-                    ))
-                })
+                .map(|element| super::parameters::binding(element.as_expression()?, params))
                 .collect::<Option<Vec<_>>>()?
         }
     };

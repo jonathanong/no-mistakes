@@ -11,6 +11,18 @@ pub(super) fn parameter(expression: &Expression<'_>, params: &[&str]) -> Paramet
         .map(Parameter::Literal)
         .unwrap_or(Parameter::Unknown)
 }
+pub(super) fn binding(expression: &Expression<'_>, params: &[&str]) -> Option<Parameter> {
+    let expression = unwrap_ts_wrappers(expression);
+    let safe = match expression {
+        Expression::Identifier(_) => true,
+        Expression::TemplateLiteral(template) => template.expressions.is_empty(),
+        Expression::UnaryExpression(unary) => {
+            super::super::transaction::literal_identity(&unary.argument).is_some()
+        }
+        _ => super::super::transaction::literal_identity(expression).is_some(),
+    };
+    safe.then(|| parameter(expression, params))
+}
 pub(super) fn compose(
     helper: &Helper,
     call: &CallExpression<'_>,
