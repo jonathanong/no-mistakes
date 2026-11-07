@@ -107,12 +107,16 @@ fn named_argument(
                     && memoized(
                         state,
                         ProofKey::Parameter(scope, name.into(), members.to_vec()),
-                        |state| parameter_defaults(bindings, file, parameter, members, tags, state),
+                        |state| {
+                            super::callers::parameter_bound(
+                                bindings, file, parameter, index, members, tags, state,
+                            )
+                        },
                     )
             })
 }
 
-fn parameter_defaults(
+pub(super) fn parameter_defaults(
     bindings: &Bindings<'_>,
     file: &Path,
     parameter: &ValueParameter,

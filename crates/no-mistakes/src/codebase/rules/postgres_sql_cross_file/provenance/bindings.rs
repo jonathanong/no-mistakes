@@ -12,7 +12,7 @@ pub(crate) struct Bindings<'a> {
     pub(super) trusted_tags: &'a [crate::codebase::postgres::TrustedSqlTag],
     pub(crate) routes: super::super::graph::RegistryRoutes<'a>,
     pub(super) facts: &'a CheckFactMap,
-    graph: Option<&'a DepGraph>,
+    pub(super) graph: Option<&'a DepGraph>,
     values: FxHashMap<(&'a Path, usize, &'a str), Vec<&'a ValueBinding>>,
     calls: FxHashMap<&'a Path, FxHashSet<(u32, u32)>>,
     overwrites: FxHashMap<RowMemberKey<'a>, FxHashSet<(u32, u32)>>,

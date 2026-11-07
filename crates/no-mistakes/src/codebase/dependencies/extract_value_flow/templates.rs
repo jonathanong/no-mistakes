@@ -41,19 +41,16 @@ impl ImportCollector {
         }
     }
 
-    fn visible_opaque_parameter_defaults(&self) -> Vec<usize> {
+    pub(super) fn finalize_text_parameter_defaults(&mut self) {
         let mut indices: Vec<_> = self
             .opaque_text_parameter_defaults
             .iter()
-            .filter_map(|index| {
-                let parameter = self.value_flow.parameters.get(*index)?;
-                self.lexical_scope_ids
-                    .contains(&parameter.scope)
-                    .then_some(*index)
-            })
+            .copied()
             .collect();
         indices.sort_unstable();
-        indices
+        for info in self.value_flow.tagged_templates.values_mut() {
+            info.opaque_parameter_defaults.clone_from(&indices);
+        }
     }
 
     pub(in super::super) fn visit_value_tagged<'a>(
@@ -74,7 +71,7 @@ impl ImportCollector {
         self.value_flow.tagged_templates.insert(
             (tag_offset(tagged), tagged.span.end),
             TaggedTemplateInfo {
-                opaque_parameter_defaults: self.visible_opaque_parameter_defaults(),
+                opaque_parameter_defaults: Vec::new(),
                 literal_arguments: tagged
                     .quasi
                     .expressions

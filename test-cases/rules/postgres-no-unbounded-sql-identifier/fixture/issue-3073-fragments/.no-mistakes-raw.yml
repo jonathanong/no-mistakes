@@ -2,7 +2,7 @@ version: 2
 rules:
   - rule: postgres-no-unbounded-sql-identifier
     scope: repository
-    include: [src/text-raw.ts]
+    include: [src/text-raw.ts, src/text-callers.ts]
     options:
       effort: max
       importSpecifier: "@example/db"

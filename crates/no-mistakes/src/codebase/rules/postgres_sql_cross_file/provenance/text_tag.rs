@@ -9,6 +9,8 @@ use std::path::Path;
 
 #[path = "text_tag_arguments.rs"]
 mod arguments;
+#[path = "text_tag_callers.rs"]
+mod callers;
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 enum ProofKey {
@@ -22,6 +24,7 @@ struct ProofState {
     active: FxHashSet<ProofKey>,
     done: FxHashMap<ProofKey, bool>,
     opaque_parameter_defaults: FxHashSet<usize>,
+    callers: callers::State,
     #[cfg(test)]
     work: usize,
 }
@@ -108,6 +111,9 @@ fn text_tag(
     })
 }
 
+#[cfg(test)]
+#[path = "text_tag_callers_tests.rs"]
+mod caller_tests;
 #[cfg(test)]
 #[path = "text_tag_tests.rs"]
 mod tests;
