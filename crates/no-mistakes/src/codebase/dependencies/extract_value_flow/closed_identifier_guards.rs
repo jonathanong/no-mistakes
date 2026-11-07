@@ -143,8 +143,8 @@ impl ImportCollector {
             write.scope == scope
                 && write.name == name
                 && reference::write_overlaps(&write.members, &members)
-                && write.at < from
-                && (write.at >= call.span.start || write.context != self.current_function_id())
+                && (write.context != self.current_function_id()
+                    || write.at >= call.span.start && write.at < from)
         }) {
             return;
         }

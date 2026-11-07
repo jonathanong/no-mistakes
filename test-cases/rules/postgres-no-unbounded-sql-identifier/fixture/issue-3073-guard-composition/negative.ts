@@ -73,3 +73,12 @@ export async function compoundCallbackMutation(provider: Provider, replacement: 
   await query(`/* first */ SELECT 1 FROM ${table}`)
   return query(`/* second */ SELECT 1 FROM ${table}`)
 }
+export async function hoistedCallbackMutation(provider: Provider) {
+  if (!providers.includes(provider)) throw new Error("unknown provider")
+  reset()
+  const table = `${provider}_accounts`
+  function reset() { provider = process.env.PROVIDER as Provider }
+  const query = await beginTransaction()
+  await query(`/* first */ SELECT 1 FROM ${table}`)
+  return query(`/* second */ SELECT 1 FROM ${table}`)
+}
