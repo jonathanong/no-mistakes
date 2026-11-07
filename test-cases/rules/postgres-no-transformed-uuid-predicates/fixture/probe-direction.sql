@@ -36,3 +36,5 @@ SELECT 1 FROM orders c LEFT JOIN accounts root ON root.id = COALESCE(c.account_i
 SELECT 1 FROM orders c RIGHT JOIN accounts root ON root.id = COALESCE(c.account_id, c.id);
 SELECT 1 FROM orders c FULL JOIN accounts root ON root.id = COALESCE(c.account_id, c.id);
 SELECT 1 FROM orders c INNER JOIN accounts root ON root.id = COALESCE(c.account_id, c.id);
+SELECT 1 FROM orders c JOIN public.accounts root ON root.id = COALESCE(c.account_id, c.id);
+SELECT 1 FROM orders c JOIN audit.accounts root ON root.id = COALESCE(c.account_id, c.id);

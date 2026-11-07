@@ -13,6 +13,8 @@ fn postgres_no_transformed_uuid_predicates_check_json_snapshot() {
     // in the unit test. Advise keeps `rules` empty. Ignore is empty rules and
     // empty advisories.
     let rows = [
+        ("probe_schema_identity_low", "probe-schema-identity-low.yml"),
+        ("probe_schema_identity_max", "probe-schema-identity-max.yml"),
         ("probe_direction_low", "probe-direction-low.yml"),
         ("probe_direction_max", "probe-direction-max.yml"),
         // Nine findings. Lines 1 WHERE, 4 JOIN ON, 5 HAVING, 6 WHERE, and 7 WHERE

@@ -32,7 +32,9 @@ impl<'a> Columns<'a> {
         let (table, uuid) = self.resolve_owner(use_)?;
         let drives_uuid_probe = use_.driving_probe.as_ref().is_some_and(|probe| {
             self.column(&probe.table, &probe.column)
-                .is_some_and(|(_, uuid)| uuid)
+                .is_some_and(|(table, uuid)| {
+                    uuid && self.catalog.same_relation(&probe.table, table)
+                })
         });
         Ok((table, uuid && !drives_uuid_probe))
     }

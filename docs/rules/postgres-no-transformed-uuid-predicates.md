@@ -72,6 +72,9 @@ non-UUID probe columns, unknown owners, unqualified keys,
 non-equality comparisons, negated or disjunctive equalities, and transforms
 on both sides retain findings. `RIGHT JOIN`, `FULL JOIN`, and other unsupported
 join directions also retain findings because their probe direction is not proven.
+A qualified probe must also match the resolved catalog relation's schema identity.
+A schema-less catalog's bare table key cannot prove a qualified probe; an exact
+qualified key or the catalog's explicit matching schema can establish that identity.
 
 A transformed residual predicate remains reported even after an indexed or
 primary-key equality on the same table, including queries with `LIMIT 1`.
