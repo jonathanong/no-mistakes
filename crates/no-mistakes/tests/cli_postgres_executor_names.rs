@@ -56,13 +56,27 @@ fn executor_names_override_warns_and_extension_restores_all_default_sites() {
 
 #[test]
 fn executor_names_warnings_do_not_fail_checks_and_follow_project_inheritance() {
-    for config in ["warning-only", "project-override", "offset"] {
+    for config in [
+        "warning-only",
+        "project-override",
+        "offset",
+        "namespace",
+        "wrapped",
+        "sequence",
+    ] {
         let (output, report) = report(config);
         assert!(output.status.success(), "{config}: {report}");
         let warnings = report["warnings"].to_string();
         assert!(warnings.contains("executorNames"), "{config}: {report}");
         assert!(warnings.contains("read"), "{config}: {report}");
-        assert!(warnings.contains("annotated.ts:2"), "{config}: {report}");
+        let file = match config {
+            "namespace" | "wrapped" | "sequence" => config,
+            _ => "annotated",
+        };
+        assert!(
+            warnings.contains(&format!("{file}.ts:2")),
+            "{config}: {report}"
+        );
     }
 }
 
@@ -124,6 +138,9 @@ fn postgres_executor_names_check_json_snapshot() {
         "project-override",
         "project-extension",
         "offset",
+        "namespace",
+        "wrapped",
+        "sequence",
     ]
     .map(|name| (name, root.clone(), root.join(format!("{name}.yml"))));
     crate::check_json_snapshot::assert_saved_fixture("postgres_executor_names", &cases);
