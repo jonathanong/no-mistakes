@@ -1,13 +1,5 @@
 # `postgres-finite-text-columns`
 
-`executorNames` replaces the default `[query, read, write]` list; it does not
-extend it. Use `extraExecutorNames: [readPool, writePool]` to keep the defaults
-and add names. Setting both options is a configuration error. When a replacement
-omits a default name imported from `importSpecifier` and called in scoped files,
-`check` emits a configuration warning naming the rule or project, the omitted
-name, an example call site, and the fix. See
-[executor selection](../configuration/rules.md#postgresql-executor-selection).
-
 A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `extraExecutorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
 
 Flags a text column whose `CHECK` constraint pins it to string literals, and
