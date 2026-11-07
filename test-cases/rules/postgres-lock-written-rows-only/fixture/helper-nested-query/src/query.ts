@@ -61,3 +61,14 @@ export async function sideEffectControl(key: string) {
   await tx.query(`SELECT 1 FROM claims WHERE key = $1 FOR UPDATE`, [key]);
   await sideEffectCaller(tx.query);
 }
+export async function reverseWrapper(query: TransactionQuery, key: string) {
+  await reverseLeaf(query, key);
+  await query(`DELETE FROM claims WHERE key = $1`, [key]);
+}
+export async function reverseLeaf(query: TransactionQuery, key: string) {
+  await query(`SELECT 1 FROM claims WHERE key = $1 FOR UPDATE`, [key]);
+}
+export async function reverseDeclarationOrder(key: string) {
+  const tx = await beginTransaction();
+  await reverseWrapper(tx.query, key);
+}

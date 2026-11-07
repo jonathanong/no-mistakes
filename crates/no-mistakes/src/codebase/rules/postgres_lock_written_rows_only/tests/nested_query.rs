@@ -5,7 +5,7 @@ fn nested_query_helpers_project_parameters_at_known_transaction_calls() {
     assert!(
         findings
             .iter()
-            .all(|finding| ![22, 23].contains(&finding.line)),
+            .all(|finding| ![22, 23, 73].contains(&finding.line)),
         "{findings:?}"
     );
     assert!(

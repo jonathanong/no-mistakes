@@ -6,6 +6,7 @@ use oxc_ast::ast::{CallExpression, Expression};
 mod collect;
 mod invocation;
 mod parameters;
+mod query;
 mod summary;
 pub(super) use collect::collect;
 pub(crate) use summary::{ExecutorAccess, Invocation, Parameter, Summary};
