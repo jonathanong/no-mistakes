@@ -24,6 +24,45 @@ diagnostics perform no memory sampling. See the
 [hosted measurement protocol](../development/hosted-check.md) for external
 whole-command wall, CPU, and memory comparisons.
 
+Verbose diagnostics also sample process resources around sequential top-level
+phases on Unix. Each available sample reports user and system CPU milliseconds,
+CPU utilization as `(user CPU + system CPU) / phase wall time` in multiples of
+one CPU, the process-lifetime peak RSS at phase end in KiB, and the increase in
+that high-water mark during the phase. Utilization can exceed `1x` when Rayon
+workers use several CPUs. A zero RSS increase means the previous peak was not
+exceeded; it does not mean the phase allocated no memory. Peak RSS includes
+startup and earlier phases and is not live heap size or retained bytes.
+
+Nested or parallel spans retain their elapsed timings but omit process CPU and
+RSS attribution, since process-wide counters cannot separate overlapping work.
+Unsupported platforms and failed resource samples omit values rather than
+reporting zero. These samples are exclusive to `--verbose-timings`; basic
+`--timings`, progress alone, and disabled diagnostics do not collect them.
+
+Verbose diagnostics also retain at most ten expensive file records for each of
+four passes (at most forty records total): `parse`, `value_flow.extract`,
+`value_flow.finalize`, and `postgres.annotation`.
+
+```text
+[hot-file] value_flow.extract src/app.ts: 12.411ms units=4096 (parallel; non-additive)
+```
+
+Each record identifies the pass, file path, elapsed milliseconds and work units.
+For parsing and value flow, units are source bytes. For PostgreSQL annotation,
+units are one evaluation activity (a root or module). Records can overlap:
+these elapsed durations are non-additive. Basic timings and progress alone do
+not collect hot-file records.
+
+Each pass ranks elapsed time from slowest to fastest, breaking ties by ascending
+path and then descending units. Timings and thus membership can vary between
+runs, especially with parallel execution. Reduction and tie ordering are stable
+for the same measured records; this does not make elapsed-time rankings
+reproducible. These summaries do not change analysis order, findings, or normal
+stdout.
+
+Use the [heap-profiling recipe](../development/heap-profiling.md) when phase RSS
+or an expensive file points to a memory problem that needs allocation stacks.
+
 For a command that may be killed before it returns, add `--progress`:
 
 ```sh
