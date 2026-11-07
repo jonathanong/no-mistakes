@@ -29,6 +29,14 @@ pub(super) fn is_limited_at(
     query: &Query,
     positions: super::value::PlaceholderPositions<'_>,
 ) -> bool {
+    is_limited_with_columns(query, positions, &|_| false)
+}
+
+pub(super) fn is_limited_with_columns(
+    query: &Query,
+    positions: super::value::PlaceholderPositions<'_>,
+    column: &impl Fn(&Expr) -> bool,
+) -> bool {
     if let Some(fetch) = &query.fetch {
         // `FETCH FIRST ROW ONLY` writes no count: it takes one row.
         return !fetch.with_ties
@@ -36,13 +44,15 @@ pub(super) fn is_limited_at(
             && fetch
                 .quantity
                 .as_ref()
-                .is_none_or(|expr| is_fixed_at(expr, positions));
+                .is_none_or(|expr| fixed_count::is_fixed_with_columns(expr, positions, column));
     }
     match &query.limit_clause {
         Some(LimitClause::LimitOffset {
             limit: Some(limit), ..
         })
-        | Some(LimitClause::OffsetCommaLimit { limit, .. }) => is_fixed_at(limit, positions),
+        | Some(LimitClause::OffsetCommaLimit { limit, .. }) => {
+            fixed_count::is_fixed_with_columns(limit, positions, column)
+        }
         _ => false,
     }
 }

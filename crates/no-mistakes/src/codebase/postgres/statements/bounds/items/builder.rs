@@ -14,6 +14,7 @@ pub(in crate::codebase::postgres::statements::bounds) struct Builder<'a> {
     usings: Vec<Using<'a>>,
     /// The next FROM item is the relation an `UPDATE` or `DELETE` changes.
     target_next: bool,
+    limit_columns: super::super::limit_columns::Relations,
 }
 
 impl<'a> Builder<'a> {
@@ -28,6 +29,7 @@ impl<'a> Builder<'a> {
             conditions: Vec::new(),
             usings: Vec::new(),
             target_next: false,
+            limit_columns: scope.limit_columns.clone(),
         }
     }
 
@@ -51,6 +53,12 @@ impl<'a> Builder<'a> {
             for join in &table.joins {
                 let right = self.items.len();
                 self.factor(&join.relation);
+                if !matches!(
+                    join.join_operator,
+                    JoinOperator::Join(_) | JoinOperator::Inner(_) | JoinOperator::CrossJoin(_)
+                ) {
+                    self.limit_columns = Default::default();
+                }
                 let end = self.items.len();
                 // ON restricts only the non-preserved side of an outer join.
                 let restricted = match &join.join_operator {

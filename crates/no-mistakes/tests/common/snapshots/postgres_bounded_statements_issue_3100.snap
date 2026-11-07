@@ -1,0 +1,82 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "issue_3100": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/frontier.mts",
+          "line": 122,
+          "message": "src/frontier.mts:122: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts child",
+          "target": "table:posts"
+        },
+        {
+          "file": "src/frontier.mts",
+          "line": 141,
+          "message": "src/frontier.mts:141: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts child",
+          "target": "table:posts"
+        },
+        {
+          "file": "src/frontier.mts",
+          "line": 162,
+          "message": "src/frontier.mts:162: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts child",
+          "target": "table:posts"
+        },
+        {
+          "file": "src/frontier.mts",
+          "line": 178,
+          "message": "src/frontier.mts:178: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts frontier",
+          "target": "table:posts"
+        },
+        {
+          "file": "src/frontier.mts",
+          "line": 210,
+          "message": "src/frontier.mts:210: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts child",
+          "target": "table:posts"
+        },
+        {
+          "file": "src/frontier.mts",
+          "line": 59,
+          "message": "src/frontier.mts:59: SELECT can return every row of limits; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM limits frontier",
+          "target": "table:limits"
+        },
+        {
+          "file": "src/frontier.mts",
+          "line": 62,
+          "message": "src/frontier.mts:62: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts child",
+          "target": "table:posts"
+        },
+        {
+          "file": "src/frontier.mts",
+          "line": 84,
+          "message": "src/frontier.mts:84: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts child",
+          "target": "table:posts"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

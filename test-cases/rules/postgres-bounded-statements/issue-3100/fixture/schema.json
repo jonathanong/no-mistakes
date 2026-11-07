@@ -1,0 +1,47 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "posts": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "parent_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 2 },
+        "row_limit": { "dataType": "int4", "nullable": false, "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] }
+    },
+    "limits": {
+      "relationKind": "table",
+      "columns": {
+        "row_limit": { "dataType": "int4", "nullable": false, "ordinalPosition": 1 }
+      }
+    },
+    "frontiers": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "parent_ids": { "dataType": "uuid[]", "nullable": false, "ordinalPosition": 2 },
+        "row_limits": { "dataType": "int4[]", "nullable": false, "ordinalPosition": 3 },
+        "row_limit": { "dataType": "int4", "nullable": false, "ordinalPosition": 4 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "frontiers_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX frontiers_pkey",
+          "keys": [{ "column": "id", "expression": "id" }]
+        }
+      }
+    }
+  }
+}
