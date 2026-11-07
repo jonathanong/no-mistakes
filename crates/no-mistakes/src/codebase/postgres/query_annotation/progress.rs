@@ -76,6 +76,9 @@ fn located<T>(
     };
     let _timing = start(Some(observer.clone()), label, Instant::now);
     observer.increment(label, 1);
+    if label == "postgres.annotation.module" {
+        observer.increment("postgres.annotation.module_initializations", 1);
+    }
     let result = if observer.progress_enabled() {
         let location = match location {
             Some(offset) => format!("{label} {}:{offset}", path.display()),

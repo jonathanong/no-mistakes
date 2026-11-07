@@ -121,8 +121,6 @@ const NAMES: &[&str] = &[
     "ts_facts.collections",
     "ts_facts.files",
     "workspace.builds",
-    "postgres.annotation.module_cache_hits",
-    "postgres.annotation.module_cache_misses",
     "postgres.annotation.module_initializations",
 ];
 

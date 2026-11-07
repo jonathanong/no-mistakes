@@ -31,7 +31,6 @@ fn annotation_scope_counters_are_verbose_only_and_preserve_json() {
         "excluded_roots_pruned: 1",
         "excluded_roots_retained: 0",
         "module_initializations: 1",
-        "module_cache_misses: 1",
         "shared_init.disabled: 1",
         "shared_init.cache_hits: 0",
         "shared_init.cache_misses: 0",

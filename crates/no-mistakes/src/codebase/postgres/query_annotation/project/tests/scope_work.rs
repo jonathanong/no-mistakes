@@ -29,11 +29,6 @@ fn excluded_callers_of_large_helpers_remain_roots_without_shared_cache_work() {
             0
         );
     }
-    assert!(work["postgres.annotation.module_cache_hits"] > 0);
-    assert_eq!(
-        work["postgres.annotation.module_cache_misses"],
-        work["postgres.annotation.module_initializations"]
-    );
     assert_eq!(
         work["postgres.annotation.module_initializations"],
         work["postgres.annotation.module"]

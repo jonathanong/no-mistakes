@@ -41,15 +41,12 @@ pub(super) fn profiles<'a>(
     profiles.sort();
     profiles.dedup();
     let observer = crate::diagnostics::current();
-    let module_ids = Arc::new(
-        super::super::module_ids::ModuleIds::new(
-            files
-                .into_iter()
-                .filter(|(_, file)| file.parse_error.is_none() && !file.query_annotation.is_empty())
-                .map(|(path, _)| normalize_path(path)),
-        )
-        .with_observer(observer.clone()),
-    );
+    let module_ids = Arc::new(super::super::module_ids::ModuleIds::new(
+        files
+            .into_iter()
+            .filter(|(_, file)| file.parse_error.is_none() && !file.query_annotation.is_empty())
+            .map(|(path, _)| normalize_path(path)),
+    ));
     if let Some(observer) = &observer {
         observer.increment("postgres.annotation.profiles", profiles.len() as u64);
     }

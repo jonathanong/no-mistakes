@@ -270,8 +270,6 @@ Annotation scope and initialization diagnostics also include:
 | `postgres.annotation.excluded_roots_retained` | Selected roots outside the annotation include/exclude scope; these can supply SQL arguments to scoped helpers. |
 | `postgres.annotation.excluded_roots_pruned`   | Former roots removed by scoped seeds.                                                                          |
 | `postgres.annotation.module_initializations`  | Actual initialization starts, including repeated initialization across roots and speculative restores.         |
-| `postgres.annotation.module_cache_hits`       | Lookups satisfied by the current root's initialized module frames.                                             |
-| `postgres.annotation.module_cache_misses`     | Lookups requiring initialization; equals initialization starts.                                                |
 
 The before-scoping count uses a second reachability projection over the same
 prepared catalog only with `--verbose-timings`. Its duration is

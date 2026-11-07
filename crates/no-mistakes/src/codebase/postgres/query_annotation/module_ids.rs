@@ -7,19 +7,11 @@ use std::sync::Arc;
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub(super) struct ModuleId(usize);
 
-#[derive(Default)]
+#[derive(Default, Eq, PartialEq)]
 pub(super) struct ModuleIds {
     paths: Vec<Arc<Path>>,
     indices: FxHashMap<Arc<Path>, ModuleId>,
-    observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
 }
-
-impl PartialEq for ModuleIds {
-    fn eq(&self, other: &Self) -> bool {
-        self.paths == other.paths && self.indices == other.indices
-    }
-}
-impl Eq for ModuleIds {}
 
 impl ModuleIds {
     pub fn new(paths: impl IntoIterator<Item = PathBuf>) -> Self {
@@ -32,36 +24,7 @@ impl ModuleIds {
             .enumerate()
             .map(|(index, path)| (Arc::clone(path), ModuleId(index)))
             .collect();
-        Self {
-            paths,
-            indices,
-            observer: None,
-        }
-    }
-
-    pub fn with_observer(
-        mut self,
-        observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
-    ) -> Self {
-        self.observer = observer.filter(|observer| observer.verbose());
-        self
-    }
-
-    pub fn record_lookup(&self, hit: bool) {
-        let Some(observer) = &self.observer else {
-            return;
-        };
-        observer.increment(
-            if hit {
-                "postgres.annotation.module_cache_hits"
-            } else {
-                "postgres.annotation.module_cache_misses"
-            },
-            1,
-        );
-        if !hit {
-            observer.increment("postgres.annotation.module_initializations", 1);
-        }
+        Self { paths, indices }
     }
 
     pub fn id(&self, path: &Path) -> ModuleId {
