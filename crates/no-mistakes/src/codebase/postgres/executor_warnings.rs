@@ -133,3 +133,6 @@ pub fn executor_config_warnings(root: &Path, facts: &CheckFactMap) -> Vec<String
     warnings.dedup();
     warnings
 }
+
+#[cfg(test)]
+mod tests;
