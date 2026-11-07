@@ -304,3 +304,11 @@ fn postgres_lock_written_rows_resources_check_json_snapshot() {
         &[("resources", "resource-transactions", "checks-fail.yml")],
     );
 }
+
+#[test]
+fn postgres_lock_written_rows_const_options_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_const_options",
+        &[("const_options", "const-options", "resource-options.yml")],
+    );
+}

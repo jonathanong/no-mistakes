@@ -2,7 +2,7 @@ use super::ScopeVisitor;
 use crate::codebase::postgres::embedded::{bindings::member_query_receiver, EmbeddedSqlCall};
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use oxc_ast::ast::{ArrayExpressionElement, CallExpression, Expression};
-mod options;
+pub(super) mod options;
 
 pub(super) fn annotate(
     visitor: &ScopeVisitor<'_>,
@@ -19,21 +19,14 @@ pub(super) fn annotate(
     fact.execution_unconditional = visitor.control_depth == 0
         && visitor.loop_depth == 0
         && !visitor.exited_functions.contains(&owner);
-    let properties = &visitor.executor_options.executor_option_properties;
-    let override_receiver = if properties.is_empty() {
-        None
-    } else {
-        options::receiver(call, properties)
-    };
-    let receiver = match override_receiver {
-        Some(Some(receiver)) => receiver,
-        Some(None) => {
-            fact.executor_transaction_known = false;
-            return;
+    match options::annotate(visitor, call, fact) {
+        Some(false) => return,
+        Some(true) => {}
+        None => {
+            let receiver = member_query_receiver(call).unwrap_or(&call.callee);
+            annotate_receiver(visitor, receiver, call.span.start, fact);
         }
-        None => member_query_receiver(call).unwrap_or(&call.callee),
-    };
-    annotate_receiver(visitor, receiver, call.span.start, fact);
+    }
     fact.bound_parameters =
         call.arguments
             .get(1)
@@ -69,6 +62,9 @@ pub(super) fn annotate_receiver(
     position: u32,
     fact: &mut EmbeddedSqlCall,
 ) {
+    if options::annotate_alias(visitor, receiver, fact) {
+        return;
+    }
     if let Expression::Identifier(id) = unwrap_ts_wrappers(receiver) {
         let name = id.name.as_str();
         let binding = visitor.lookup(name);

@@ -16,6 +16,7 @@ impl<'a> ScopeVisitor<'a> {
     pub(super) fn walk_executor_identifier(&mut self, id: &ast::IdentifierReference<'a>) {
         self.note_executor_identifier(id);
         self.poison_literal_reference(id);
+        self.poison_transaction_options(id);
         self.escape_builder_reference(id);
     }
     pub(super) fn walk_executor_expression(&mut self, expression: &ast::Expression<'a>) {

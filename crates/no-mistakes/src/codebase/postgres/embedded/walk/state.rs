@@ -96,6 +96,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) functions: resolve::LocalFunctions,
     pub(crate) sql_statement_types: HashSet<String>,
     pub(crate) unproven_member_query_spans: Vec<(u32, u32)>,
+    pub(super) transaction_options: super::transaction::options::State,
     pub(super) literal_objects: super::const_literals::LiteralObjects,
     pub(super) vitest_it_imports: crate::fx::FxHashSet<String>,
     pub(super) finite_cases: Vec<super::finite_identifiers::FiniteCase>,

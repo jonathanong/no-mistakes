@@ -163,3 +163,37 @@ fn resource_transactions_preserve_legacy_extraction_without_lock_profile() {
         .all(|call| call.transaction_id.is_some() && call.executor_transaction_known));
     assert_ne!(resources[0].transaction_id, resources[1].transaction_id);
 }
+
+#[test]
+fn const_options_preserve_transaction_membership_without_certifying_controls() {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/rules/postgres-lock-written-rows-only/fixture/const-options/src/query.ts",
+    );
+    let source = std::fs::read_to_string(&path).unwrap();
+    let mut options = EmbeddedSqlOptions::configured("@example/db", &["query".into()])
+        .with_scoped_executors(&["beginTransaction".into()], &[])
+        .with_executor_option_properties(&["query".into()]);
+    options.track_transaction_helpers = true;
+    let facts = extract_embedded_sql_from_source(&path, &source, &options);
+    for (lock_line, write_line) in [(4, 6), (10, 13), (17, 20), (24, 26)] {
+        let lock = facts
+            .calls
+            .iter()
+            .find(|call| call.line == lock_line)
+            .unwrap();
+        let write = facts
+            .calls
+            .iter()
+            .find(|call| call.line == write_line)
+            .unwrap();
+        assert!(lock.transaction_id.is_some(), "{lock:?}");
+        assert_eq!(lock.transaction_id, write.transaction_id, "{write:?}");
+        assert!(write.executor_transaction_known, "{write:?}");
+        assert_eq!(lock.bound_parameters, write.bound_parameters);
+    }
+    for line in [33, 40, 46, 53] {
+        let call = facts.calls.iter().find(|call| call.line == line).unwrap();
+        assert!(call.transaction_id.is_none(), "{call:?}");
+        assert!(!call.executor_transaction_known, "{call:?}");
+    }
+}

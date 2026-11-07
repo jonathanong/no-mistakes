@@ -99,6 +99,7 @@ pub(crate) fn collect_calls<'a>(
         },
         sql_statement_types: sql_statement_type_bindings(program),
         unproven_member_query_spans: Vec::new(),
+        transaction_options: Default::default(),
         literal_objects: super::super::const_literals::LiteralObjects::default(),
         vitest_it_imports,
         finite_cases: Vec::new(),

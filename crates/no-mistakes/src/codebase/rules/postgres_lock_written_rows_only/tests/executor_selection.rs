@@ -74,3 +74,27 @@ fn resource_scopes_and_executor_options_route_locks_without_certifying_unknowns(
     assert_eq!(findings[3].line, 13);
     assert!(findings.iter().all(|finding| finding.line != 12));
 }
+
+#[test]
+fn const_executor_options_route_writes_and_reject_mutated_or_unwritten_controls() {
+    let root = fixture("const-options");
+    let path = root
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("configs/resource-options.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&path)).unwrap();
+    let findings = check(&root, &config).unwrap();
+    let mut unwritten = findings
+        .iter()
+        .filter(|finding| finding.target.as_deref() == Some(CHECKS[0]))
+        .map(|finding| finding.line)
+        .collect::<Vec<_>>();
+    unwritten.sort();
+    assert_eq!(unwritten, [24, 30, 37, 44, 50], "{findings:?}");
+    assert!(
+        findings.iter().all(|finding| finding.line > 21),
+        "{findings:?}"
+    );
+}
