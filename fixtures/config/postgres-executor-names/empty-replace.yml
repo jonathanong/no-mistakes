@@ -1,4 +1,5 @@
 rules:
   - rule: postgres-require-query-annotation
+    scope: repository
     options:
       executorNames: []
