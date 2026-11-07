@@ -17,9 +17,9 @@ fn malformed_loop_rows_and_comment_interpolations_keep_names_unknown() {
 }
 
 #[test]
-fn closed_literal_names_prove_a_ternary_an_inline_arm_and_a_string_list() {
+fn closed_literal_names_prove_consts_ternaries_and_string_lists() {
     let (source, _, heads) = fixture_with_effects_from("finite-closed-names", "closed.mts");
-    assert_eq!(assert_markers(&source, &heads), 8);
+    assert_eq!(assert_markers(&source, &heads), 17);
 }
 
 #[test]

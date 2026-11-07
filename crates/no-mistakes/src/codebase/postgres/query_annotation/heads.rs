@@ -19,6 +19,7 @@ mod helper_records;
 mod import_gate;
 mod import_projection;
 mod literal_helpers;
+mod literal_tables;
 mod lookup;
 mod loop_carried;
 mod loop_word;

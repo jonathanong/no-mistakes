@@ -2957,7 +2957,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "finite_closed_names_advise": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [
         {
@@ -2993,6 +2993,54 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "leading-annotation"
         },
         {
+          "file": "closed.mts",
+          "line": 47,
+          "message": "closed.mts:47: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(`/* ${emptyName} */ SELECT 1`) // low: false",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "closed.mts",
+          "line": 50,
+          "message": "closed.mts:50: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(`/* ${terminatedName} */ SELECT 1`) // low: false",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "closed.mts",
+          "line": 53,
+          "message": "closed.mts:53: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(`/* ${mutableName} */ SELECT 1`) // low: false",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "closed.mts",
+          "line": 56,
+          "message": "closed.mts:56: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(`/* ${fixedName} */ SELECT 1`) // low: false",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "closed.mts",
+          "line": 60,
+          "message": "closed.mts:60: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(`/* ${aliasName} */ SELECT 1`) // low: false",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "closed.mts",
+          "line": 63,
+          "message": "closed.mts:63: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(`/* ${exportedName} */ SELECT 1`) // low: false",
+          "target": "leading-annotation"
+        },
+        {
           "file": "unresolved.mts",
           "line": 10,
           "message": "unresolved.mts:10: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
@@ -3021,7 +3069,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": "closed.mts",
+          "line": 44,
+          "message": "closed.mts:44: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read('SELECT 1') // low: false",
+          "target": "annotation"
+        }
+      ],
       "warnings": []
     }
   },

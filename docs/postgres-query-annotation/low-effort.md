@@ -182,6 +182,23 @@ including when the ternary is the template interpolation. A synchronous
 `for (const name of ['one', 'two'])` does too. An unresolved import anywhere
 in that file leaves those calls under `unanalyzable`.
 
+### Literal const comment names
+
+A same-file `const` initialized directly with a string literal can supply the
+first ordinary template interpolation inside the leading comment:
+
+```ts
+const operation = 'accounts/list';
+query(`/* ${operation} */ SELECT id FROM accounts WHERE id = ${id}`);
+```
+
+The exact binding must remain read-only and unexported, and substitution must
+close a nonempty named comment before any other interpolation. A mutable name,
+shadowed parameter, alias, imported name, or dynamically computed initializer
+remains unresolved. This proof checks the comment only; it does not infer the
+SQL body or treat tagged interpolation as a literal name. Existing unresolved
+import and dynamic lexical access restrictions still apply.
+
 These are deliberately narrow low-effort syntax proofs. Low does not run the
 helper/value evaluator, so other helper-produced heads can remain unresolved
 when `effort: max` can recover them. A direct template tagged with an exact
@@ -451,3 +468,26 @@ Only continuation-safe leading heads qualify: appending can change `BEGIN` to
 unknown continuations retain the configured advisory/report/ignore policy. The
 proof inspects the existing AST/facts and never composes full SQL variants. Max
 effort keeps its existing evaluation behavior.
+
+## Closed literal tables
+
+A module-level `const` object asserted `as const` may supply a static member
+path directly to an executor:
+
+```ts
+const STAGES = {
+  load: { sql: '/* stages/load */ SELECT 1' },
+  missing: { sql: 'SELECT 2' },
+} as const;
+read(STAGES.load.sql);
+read(STAGES.missing.sql); // Missing annotation: reported.
+```
+
+Every leaf must be a string literal or interpolation-free template. Only plain
+static object properties qualify, with at most eight property levels and 256
+leaves. Every runtime reference to the table must be a direct static member
+argument to a confirmed executor. Writes anywhere in its lifetime, aliases,
+escapes, exports, computed reads, getters, spreads, duplicate keys, and dynamic
+leaves remain subject to the configured `unanalyzable` policy. This proof reads
+literal syntax; it never evaluates helpers or treats `as const` as runtime
+immutability.

@@ -372,6 +372,11 @@ unanalyzable.
 A direct imported immutable string constant has the same fixed-head proof when
 its source file is prepared and the import/export identity is exact. Re-exports,
 mutable values, and missing source files remain unresolved.
+A same-file literal string `const` may supply the name inside the first ordinary
+comment. A closed module-level `as const` table of string literals may supply a
+static member path directly to an executor; every runtime table reference must
+be such a read. Writes, exports, aliases, dynamic keys, and helper-produced
+leaves remain unanalyzable.
 See [low-effort examples, rewrites, and suppressions](../postgres-query-annotation/low-effort.md).
 See [append composition and bounded alternatives](../postgres-query-annotation/append-composition.md)
 for the SQL text model, truncation, and invalid-SQL advisories.

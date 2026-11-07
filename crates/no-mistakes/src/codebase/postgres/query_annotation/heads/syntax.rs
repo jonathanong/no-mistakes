@@ -24,6 +24,8 @@ pub(super) struct Call {
 }
 #[derive(Default)]
 pub(super) struct Syntax {
+    pub collect_literal_tables: bool,
+    pub literal_tables: super::literal_tables::Tables,
     pub collect_helper_heads: bool,
     pub async_returns: FxHashMap<Span, super::async_returns::Candidate>,
     pub async_callers: Vec<super::async_returns::Caller>,

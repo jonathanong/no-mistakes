@@ -235,3 +235,9 @@ mod cli_gha_snapshot_local_action_checkout;
 
 #[path = "cli_snapshot_vitest_project_policy.rs"]
 mod cli_snapshot_vitest_project_policy;
+
+#[path = "cli_postgres_snapshot_literal_tables.rs"]
+mod cli_postgres_snapshot_literal_tables;
+
+#[path = "cli_postgres_snapshot_literal_comment_names.rs"]
+mod cli_postgres_snapshot_literal_comment_names;

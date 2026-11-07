@@ -32,3 +32,32 @@ read(`/* ${nested} */ SELECT 1`) // low: false
 for (const table of ['*/', 'accounts']) {
   read(`/* ${table} */ SELECT 1`) // low: false
 }
+
+const fixedName = 'accounts/list'
+read(`/* ${fixedName} */ SELECT ${enabled}`) // low: true
+
+function localLiteralName() {
+  const operation = 'sessions/list'
+  read(`/* ${operation} */ SELECT 1`) // low: true
+}
+
+read('SELECT 1') // low: false
+
+const emptyName = ''
+read(`/* ${emptyName} */ SELECT 1`) // low: false
+
+const terminatedName = '*/'
+read(`/* ${terminatedName} */ SELECT 1`) // low: false
+
+let mutableName = 'accounts/list'
+read(`/* ${mutableName} */ SELECT 1`) // low: false
+
+function shadowedName(fixedName: string) {
+  read(`/* ${fixedName} */ SELECT 1`) // low: false
+}
+
+const aliasName = fixedName
+read(`/* ${aliasName} */ SELECT 1`) // low: false
+
+export const exportedName = 'accounts/list'
+read(`/* ${exportedName} */ SELECT 1`) // low: false
