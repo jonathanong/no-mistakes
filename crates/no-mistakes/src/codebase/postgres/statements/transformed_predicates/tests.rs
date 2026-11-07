@@ -98,9 +98,9 @@ fn null_tests_ignore_scalar_transforms_but_retain_nested_predicates() {
 
 #[test]
 fn distinct_bare_operands_retain_catalog_probe_candidates_in_both_directions() {
-    let facts = facts("probe-followup-distinct-pass.sql");
-    assert_eq!(facts.transformed_column_uses.len(), 8);
-    for fact in facts.transformed_column_uses {
+    let pass = facts("probe-followup-distinct-pass.sql");
+    assert_eq!(pass.transformed_column_uses.len(), 8);
+    for fact in pass.transformed_column_uses {
         let probe = fact.driving_probe.expect("bare opposite operand");
         assert_eq!(probe.column, "id");
         assert_eq!(probe.candidate_tables, Some(vec!["accounts".into()]));
