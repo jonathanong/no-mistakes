@@ -2,14 +2,19 @@ use super::*;
 
 mod binding_control_flow;
 mod executor_selection;
+mod flow_coverage;
+mod four_joined_aliases;
 mod helper_completion;
 mod helper_projection;
 mod helper_shapes;
 mod helper_sql_proof;
+mod helper_summary_boundaries;
 mod helpers;
+mod nested_query;
 mod phase_two_sql;
 mod placeholder_provenance;
 mod proof;
+mod returning_commit;
 mod sql_forms;
 
 fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {

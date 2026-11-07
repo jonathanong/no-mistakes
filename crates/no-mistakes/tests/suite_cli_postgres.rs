@@ -272,3 +272,6 @@ mod cli_postgres_snapshot_low_executor_shapes;
 
 #[path = "cli_postgres_snapshot_identifier_compositions.rs"]
 mod cli_postgres_snapshot_identifier_compositions;
+
+#[path = "cli_postgres_snapshot_four_joined_lock_aliases.rs"]
+mod cli_postgres_snapshot_four_joined_lock_aliases;

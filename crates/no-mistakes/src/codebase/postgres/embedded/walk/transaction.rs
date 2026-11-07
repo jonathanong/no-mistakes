@@ -2,7 +2,7 @@ use super::ScopeVisitor;
 use crate::codebase::postgres::embedded::{bindings::member_query_receiver, EmbeddedSqlCall};
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use oxc_ast::ast::{ArrayExpressionElement, CallExpression, Expression};
-mod options;
+pub(super) mod options;
 
 pub(super) fn annotate(
     visitor: &ScopeVisitor<'_>,
@@ -19,21 +19,14 @@ pub(super) fn annotate(
     fact.execution_unconditional = visitor.control_depth == 0
         && visitor.loop_depth == 0
         && !visitor.exited_functions.contains(&owner);
-    let properties = &visitor.executor_options.executor_option_properties;
-    let override_receiver = if properties.is_empty() {
-        None
-    } else {
-        options::receiver(call, properties)
-    };
-    let receiver = match override_receiver {
-        Some(Some(receiver)) => receiver,
-        Some(None) => {
-            fact.executor_transaction_known = false;
-            return;
+    match options::annotate(visitor, call, fact) {
+        Some(false) => return,
+        Some(true) => {}
+        None => {
+            let receiver = member_query_receiver(call).unwrap_or(&call.callee);
+            annotate_receiver(visitor, receiver, call.span.start, fact);
         }
-        None => member_query_receiver(call).unwrap_or(&call.callee),
-    };
-    annotate_receiver(visitor, receiver, call.span.start, fact);
+    }
     fact.bound_parameters =
         call.arguments
             .get(1)
@@ -69,6 +62,11 @@ pub(super) fn annotate_receiver(
     position: u32,
     fact: &mut EmbeddedSqlCall,
 ) {
+    if visitor.executor_options.track_transaction_helpers
+        && options::annotate_alias(visitor, receiver, fact)
+    {
+        return;
+    }
     if let Expression::Identifier(id) = unwrap_ts_wrappers(receiver) {
         let name = id.name.as_str();
         let binding = visitor.lookup(name);
@@ -89,7 +87,11 @@ pub(super) fn annotate_receiver(
         if let Some(span) = transaction {
             fact.transaction_id = Some(span.start);
             fact.transaction_line = Some(byte_offset_to_line(visitor.source, span.start as usize));
-            fact.executor_transaction_known = !visitor.append_crosses_function(name);
+            fact.executor_transaction_known = !visitor.append_crosses_function(name)
+                && (!visitor.executor_options.track_transaction_helpers
+                    || source_identity(span.start).is_some_and(|identity| {
+                        !visitor.transaction_options.mutated.contains(&identity)
+                    }));
         } else {
             fact.executor_transaction_known = binding.is_none()
                 && (visitor.bindings.contains(name)
@@ -131,13 +133,30 @@ pub(super) fn end_boundary(
     call: &CallExpression<'_>,
     before: usize,
 ) {
-    let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
+    if visitor.executor_options.track_transaction_helpers {
+        let owner = visitor
+            .member_query_proof
+            .function_ids
+            .last()
+            .copied()
+            .unwrap_or(0);
+        if visitor.exited_functions.contains(&owner) {
+            return;
+        }
+    }
+    let (receiver, method_end) = match unwrap_ts_wrappers(&call.callee) {
+        Expression::StaticMemberExpression(member) => (
+            &member.object,
+            matches!(member.property.name.as_str(), "commit" | "rollback"),
+        ),
+        Expression::Identifier(_) if visitor.executor_options.track_transaction_helpers => {
+            (&call.callee, false)
+        }
+        _ => return,
+    };
+    let Expression::Identifier(id) = unwrap_ts_wrappers(receiver) else {
         return;
     };
-    let Expression::Identifier(id) = unwrap_ts_wrappers(&member.object) else {
-        return;
-    };
-    let method_end = matches!(member.property.name.as_str(), "commit" | "rollback");
     let sql_end = visitor.calls[before..].iter().any(|fact| {
         fact.sql_text.as_deref().is_some_and(|sql| {
             matches!(
@@ -150,13 +169,21 @@ pub(super) fn end_boundary(
             )
         })
     });
+    super::transaction_flow::note_boundary(visitor, call, method_end || sql_end);
+    if (method_end || sql_end)
+        && visitor.executor_options.track_transaction_helpers
+        && options::end_alias(visitor, id, call)
+    {
+        return;
+    }
     if (method_end || sql_end) && visitor.scoped.transactions.contains_key(id.name.as_str()) {
-        for scope in visitor.scopes.iter_mut().rev() {
-            if let Some(binding) = scope.get_mut(id.name.as_str()) {
-                binding.value_identity = None;
-                break;
-            }
-        }
+        let identity = visitor
+            .scopes
+            .iter_mut()
+            .rev()
+            .find_map(|scope| scope.get_mut(id.name.as_str()))
+            .and_then(|binding| binding.value_identity.take());
+        super::transaction_flow::complete_boundary(visitor, call, identity);
     }
 }
 

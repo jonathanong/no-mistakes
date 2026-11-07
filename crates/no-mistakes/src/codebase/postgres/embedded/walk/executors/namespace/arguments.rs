@@ -53,6 +53,9 @@ impl ScopeVisitor<'_> {
         index: usize,
         expression: &Expression<'_>,
     ) {
+        if self.executor_options.track_transaction_helpers {
+            self.mutate_transaction_receiver(expression);
+        }
         if self.namespace_argument_mutates(callee, index) {
             self.revoke_query_receiver(expression);
         } else {

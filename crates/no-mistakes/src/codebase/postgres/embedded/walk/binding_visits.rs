@@ -96,6 +96,18 @@ impl<'a> ScopeVisitor<'a> {
             {
                 self.revoke_mutated_query_member(&value.object);
             }
+            ast::MemberExpression::StaticMemberExpression(value)
+                if self.executor_options.track_transaction_helpers
+                    && matches!(value.property.name.as_str(), "commit" | "rollback") =>
+            {
+                self.mutate_transaction_receiver(&value.object);
+            }
+            ast::MemberExpression::ComputedMemberExpression(value)
+                if self.executor_options.track_transaction_helpers
+                    && query_key::may_write_boundary(&value.expression) =>
+            {
+                self.mutate_transaction_receiver(&value.object);
+            }
             _ => {}
         }
         // The ordinary .text read projection must not exempt a write/delete
@@ -145,6 +157,9 @@ impl<'a> ScopeVisitor<'a> {
         self.initialize_executor_alias(declaration, executor, namespace);
         resolve::bind_query_property(declaration, self.declaring_const, self);
         self.initialize_detached_query(declaration, self.declaring_const);
+        if self.executor_options.track_transaction_helpers {
+            self.note_transaction_options(declaration);
+        }
         if let ast::BindingPattern::BindingIdentifier(name) = &declaration.id {
             self.bind_undeclared_declaration(
                 name.name.as_str(),

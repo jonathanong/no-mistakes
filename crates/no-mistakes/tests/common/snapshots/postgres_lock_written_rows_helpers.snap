@@ -541,6 +541,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "file": "src/helper.ts",
+          "line": 9,
+          "message": "src/helper.ts:9: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [String(id)]);",
+          "target": "unanalyzable"
+        },
+        {
           "file": "src/query.ts",
           "line": 10,
           "message": "src/query.ts:10: row-lock-unwritten-relation: locked row in users is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock; helper acquireUser locks at line 3",
@@ -551,7 +559,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 20,
-          "message": "src/query.ts:20: unanalyzable: row key identity is unresolved; use the same immutable binding and equality column for the lock and write; helper lockUnknown locks at line 9",
+          "message": "src/query.ts:20: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await lockUnknown(tx.query, id);",
           "target": "unanalyzable"
