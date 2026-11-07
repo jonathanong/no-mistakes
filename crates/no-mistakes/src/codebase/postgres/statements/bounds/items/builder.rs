@@ -14,7 +14,7 @@ pub(in crate::codebase::postgres::statements::bounds) struct Builder<'a> {
     usings: Vec<Using<'a>>,
     /// The next FROM item is the relation an `UPDATE` or `DELETE` changes.
     target_next: bool,
-    limit_columns: super::super::limit_columns::Relations,
+    limit_columns: super::super::limit_columns::RelationContext<'a>,
 }
 
 impl<'a> Builder<'a> {
@@ -29,7 +29,7 @@ impl<'a> Builder<'a> {
             conditions: Vec::new(),
             usings: Vec::new(),
             target_next: false,
-            limit_columns: scope.limit_columns.clone(),
+            limit_columns: super::super::limit_columns::RelationContext::new(&scope.limit_columns),
         }
     }
 
@@ -57,7 +57,7 @@ impl<'a> Builder<'a> {
                     join.join_operator,
                     JoinOperator::Join(_) | JoinOperator::Inner(_) | JoinOperator::CrossJoin(_)
                 ) {
-                    self.limit_columns = Default::default();
+                    self.limit_columns.reset();
                 }
                 let end = self.items.len();
                 // ON restricts only the non-preserved side of an outer join.
