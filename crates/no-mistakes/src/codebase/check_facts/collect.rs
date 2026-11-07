@@ -59,38 +59,45 @@ fn collect_check_facts_inner(
         integration_runner_configs: plan.integration_runner_configs.clone(),
         ..CheckFactPlan::default()
     };
-    let ((collected, mut integration_runner_configs), helper_facts) =
-        super::collect_prepared_runner_facts(
-            session,
-            root,
-            (&files, &graph_only_files),
-            (&plan, &graph_plan),
-            playwright,
-            Arc::clone(&sources),
-            &ts,
-        );
-    ts.extend(collected);
-    let helper_paths = helper_facts.keys().cloned().collect::<HashSet<_>>();
-    super::collect_helpers::extend_missing_helper_facts(&mut ts, helper_facts);
-    let remaining_files = uncollected_files(&files, &ts, &helper_paths);
-    let remaining_graph_files = uncollected_files(&graph_only_files, &ts, &helper_paths);
-    ts.extend(collect_fact_map_with_sources(
-        session,
-        root,
-        &remaining_files,
-        &plan,
-        playwright,
-        &sources,
-    ));
-    ts.extend(collect_fact_map_with_sources(
-        session,
-        root,
-        &remaining_graph_files,
-        &graph_plan,
-        playwright,
-        &sources,
-    ));
-    integration_runner_configs.extend(super::runner_config_facts(&ts));
+    let ((mut ts, integration_runner_configs), _) = crate::diagnostics::measure_if_enabled(
+        "parse",
+        crate::diagnostics::TimingKind::Serial,
+        || {
+            let ((collected, mut integration_runner_configs), helper_facts) =
+                super::collect_prepared_runner_facts(
+                    session,
+                    root,
+                    (&files, &graph_only_files),
+                    (&plan, &graph_plan),
+                    playwright,
+                    Arc::clone(&sources),
+                    &ts,
+                );
+            ts.extend(collected);
+            let helper_paths = helper_facts.keys().cloned().collect::<HashSet<_>>();
+            super::collect_helpers::extend_missing_helper_facts(&mut ts, helper_facts);
+            let remaining_files = uncollected_files(&files, &ts, &helper_paths);
+            let remaining_graph_files = uncollected_files(&graph_only_files, &ts, &helper_paths);
+            ts.extend(collect_fact_map_with_sources(
+                session,
+                root,
+                &remaining_files,
+                &plan,
+                playwright,
+                &sources,
+            ));
+            ts.extend(collect_fact_map_with_sources(
+                session,
+                root,
+                &remaining_graph_files,
+                &graph_plan,
+                playwright,
+                &sources,
+            ));
+            integration_runner_configs.extend(super::runner_config_facts(&ts));
+            (ts, integration_runner_configs)
+        },
+    );
     let files_parsed = ts.values().filter(|facts| facts.parsed).count();
     let parse_errors = ts
         .values()

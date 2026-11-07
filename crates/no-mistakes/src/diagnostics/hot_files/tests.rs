@@ -243,3 +243,83 @@ fn disabled_file_cost_skips_the_observer_clock() {
     );
     assert!(observer.hot_file_block().is_empty());
 }
+
+#[test]
+fn file_cost_brackets_work_and_converts_seconds_to_milliseconds() {
+    use std::cell::Cell;
+    let observer = InvocationObserver::new(true);
+    let calls = Cell::new(0);
+    let completed = Cell::new(false);
+    let start = observer.snapshot_clock().0;
+    observer.trace_file_with_clock(
+        FilePass::Parse,
+        Path::new("types.d.ts"),
+        182_820,
+        || {
+            let call = calls.get();
+            calls.set(call + 1);
+            assert_eq!(completed.get(), call == 1);
+            start + Duration::from_millis(call * 1234)
+        },
+        || completed.set(true),
+    );
+    assert_eq!(calls.get(), 2);
+    let rows = observer.hot_file_snapshot();
+    assert_eq!(rows[0].duration_ms, 1234.0);
+    assert_eq!(rows[0].units, 182_820);
+    assert!(observer
+        .hot_file_block()
+        .contains("1234.000ms units=182820"));
+}
+
+#[test]
+fn real_parser_file_times_fit_the_parallel_phase_wall_budget() {
+    use rayon::prelude::*;
+    let saved =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/diagnostics/physical-parse");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    let inputs = ["types.d.ts", "value.ts", "view.tsx"].map(|name| {
+        let path = fixture.path().join(name);
+        let source = std::fs::read_to_string(&path).unwrap();
+        (path, source)
+    });
+    for jobs in [1, 4] {
+        let observer = InvocationObserver::new(true);
+        crate::ast::begin_parse_count(fixture.path());
+        let (_, wall) = observer.measure("parse", super::super::TimingKind::Serial, || {
+            rayon::ThreadPoolBuilder::new()
+                .num_threads(jobs)
+                .build()
+                .unwrap()
+                .install(|| {
+                    inputs.par_iter().for_each(|(path, source)| {
+                        crate::diagnostics::with_observer(Some(observer.clone()), || {
+                            let allocator = oxc_allocator::Allocator::default();
+                            let parsed = crate::ast::parse(
+                                path,
+                                &allocator,
+                                source,
+                                oxc_span::SourceType::from_path(path).unwrap(),
+                            );
+                            assert!(parsed.diagnostics.is_empty());
+                            assert!(!parsed.program.body.is_empty());
+                        });
+                    });
+                });
+        });
+        let counts = crate::ast::finish_parse_count(fixture.path());
+        let rows = observer.hot_file_snapshot();
+        assert_eq!(rows.len(), inputs.len());
+        for (path, source) in &inputs {
+            assert_eq!(counts.get(path), Some(&1));
+            let row = rows
+                .iter()
+                .find(|row| row.path == path.to_string_lossy())
+                .unwrap();
+            assert_eq!(row.units, source.len() as u64);
+            assert!(row.duration_ms > 0.0);
+        }
+        let sum_ms = rows.iter().map(|row| row.duration_ms).sum::<f64>();
+        assert!(sum_ms <= wall.as_secs_f64() * 1000.0 * jobs as f64);
+    }
+}

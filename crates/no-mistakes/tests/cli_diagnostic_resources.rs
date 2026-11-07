@@ -53,6 +53,43 @@ fn verbose_attribution_is_opt_in_and_preserves_reports_across_jobs() {
         assert_eq!(verbose.status.code(), plain.status.code());
         assert_eq!(verbose.stdout, plain.stdout);
         let lines = attribution(&verbose, &root);
+        let stderr = String::from_utf8_lossy(&verbose.stderr);
+        for phase in ["discovery", "discovery.classify"] {
+            for prefix in ["[timing]", "[cpu]", "[memory]"] {
+                let label = format!("{prefix} {phase}:");
+                let count = stderr
+                    .lines()
+                    .filter(|line| line.starts_with(&label))
+                    .count();
+                assert!(count <= 1, "duplicate {label}: {stderr}");
+            }
+        }
+        let parse_ms = stderr
+            .lines()
+            .find_map(|line| line.strip_prefix("[timing] parse: "))
+            .unwrap()
+            .trim_end_matches("ms")
+            .parse::<f64>()
+            .unwrap();
+        let file_ms = stderr
+            .lines()
+            .filter(|line| line.starts_with("[hot] parse: "))
+            .map(|line| {
+                line.split(" units=")
+                    .next()
+                    .unwrap()
+                    .rsplit(' ')
+                    .next()
+                    .unwrap()
+                    .trim_end_matches("ms")
+                    .parse::<f64>()
+                    .unwrap()
+            })
+            .sum::<f64>();
+        assert!(
+            file_ms <= parse_ms * jobs.parse::<f64>().unwrap() + 0.01,
+            "{stderr}"
+        );
         for pass in ["parse", "value_flow.extract", "value_flow.finalize"] {
             assert!(
                 lines
@@ -96,6 +133,14 @@ fn annotation_hot_files_cover_the_prepared_root_evaluation() {
     assert_eq!(first.status.code(), second.status.code());
     assert_eq!(first.stdout, second.stdout);
     let lines = attribution(&first, &root);
+    #[cfg(unix)]
+    {
+        assert!(lines.iter().any(|line| line == "[cpu] parse"));
+        assert!(lines
+            .iter()
+            .any(|line| line == "[cpu] postgres.annotation.project"));
+        assert!(!lines.iter().any(|line| line == "[cpu] facts.prepare"));
+    }
     assert!(
         lines
             .iter()
