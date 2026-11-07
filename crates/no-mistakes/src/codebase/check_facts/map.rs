@@ -44,6 +44,8 @@ type RouteReachableFilesCache = Arc<
 
 #[derive(Default)]
 pub struct CheckFactMap {
+    pub(crate) postgres_executor_warning_scans:
+        Arc<Vec<crate::codebase::postgres::ExecutorWarningScan>>,
     pub(crate) sql_application: Option<crate::codebase::postgres::SqlRuleApplication>,
     pub(crate) sql_verdicts:
         Option<Arc<Mutex<Vec<crate::codebase::postgres::SqlObligationVerdict>>>>,
