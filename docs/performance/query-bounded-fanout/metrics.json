@@ -1,0 +1,469 @@
+{
+  "cpuAffinity": 0,
+  "baselineRevision": "759777752f2399d9b83f17e27b0ac8af6a9fe6d7",
+  "candidateRevision": "3823eb5b8f1cb694c427245fc05b8441e7ed7946",
+  "profile": "release, default features, default effort, --jobs 1",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "binaries": {
+    "baseline": "c5cc6668f278952192d82740ea40fbaf606e3580fd5a8420e1433bf5637d8c5f",
+    "candidate": "795fa0067b96d49ff77246f926901b3ecbc13435e6dd36e91d47582764c80802"
+  },
+  "fixtures": {
+    "postgres-lock": {
+      "root": "test-cases/rules/postgres-lock-written-rows-only/fixture",
+      "config": "test-cases/rules/postgres-lock-written-rows-only/configs/rule-off.yml",
+      "samples": {
+        "baseline": [
+          {
+            "instructions": 206178996.0,
+            "cpuMs": 23.38,
+            "wallSeconds": 0.14484224503394216,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 206727263.0,
+            "cpuMs": 20.89,
+            "wallSeconds": 0.04516103904461488,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 206157823.0,
+            "cpuMs": 20.86,
+            "wallSeconds": 0.0454678229871206,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 206162217.0,
+            "cpuMs": 20.91,
+            "wallSeconds": 0.04516506101936102,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 206726611.0,
+            "cpuMs": 20.95,
+            "wallSeconds": 0.04491720302030444,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 206144038.0,
+            "cpuMs": 20.86,
+            "wallSeconds": 0.04602300899568945,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 206163776.0,
+            "cpuMs": 21.62,
+            "wallSeconds": 0.046076621976681054,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 206726370.0,
+            "cpuMs": 21.22,
+            "wallSeconds": 0.046471898967865855,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 206169163.0,
+            "cpuMs": 20.6,
+            "wallSeconds": 0.04494258400518447,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 206720325.0,
+            "cpuMs": 21.03,
+            "wallSeconds": 0.04612164100399241,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          }
+        ],
+        "candidate": [
+          {
+            "instructions": 206469045.0,
+            "cpuMs": 20.92,
+            "wallSeconds": 0.04513089603278786,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 206478139.0,
+            "cpuMs": 20.99,
+            "wallSeconds": 0.04531441500876099,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 206463293.0,
+            "cpuMs": 20.65,
+            "wallSeconds": 0.044690696988254786,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 206477956.0,
+            "cpuMs": 20.9,
+            "wallSeconds": 0.04612876503961161,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 206462818.0,
+            "cpuMs": 20.92,
+            "wallSeconds": 0.045904868049547076,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 206469775.0,
+            "cpuMs": 21.15,
+            "wallSeconds": 0.04465970798628405,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 207243237.0,
+            "cpuMs": 21.35,
+            "wallSeconds": 0.04552802600665018,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 206473921.0,
+            "cpuMs": 20.63,
+            "wallSeconds": 0.04550631099846214,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 206472851.0,
+            "cpuMs": 20.8,
+            "wallSeconds": 0.0461749029927887,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          },
+          {
+            "instructions": 206482153.0,
+            "cpuMs": 20.93,
+            "wallSeconds": 0.04600857000332326,
+            "peakRssKiB": 126232,
+            "outputSha256": "11150d550093810ed9eae25bdb7e270ecfda0936544a6f7e7bc2a0d47f4065b2",
+            "stderrSha256": "4185ef10e047bd56944ef17578be50370b959c73cf987b6fdbb175fc74c4f5b0",
+            "exitCode": 1
+          }
+        ]
+      },
+      "summary": {
+        "baseline": {
+          "samples": 10,
+          "medianInstructions": 206174079.5,
+          "medianCpuMs": 20.93,
+          "medianWallSeconds": 0.045745415991405025,
+          "maxRssKiB": 126232
+        },
+        "candidate": {
+          "samples": 10,
+          "medianInstructions": 206473386.0,
+          "medianCpuMs": 20.92,
+          "medianWallSeconds": 0.04551716850255616,
+          "maxRssKiB": 126232
+        }
+      },
+      "fixtureStats": {
+        "sourceFiles": 55,
+        "sourceBytes": 46365,
+        "sourceLines": 972,
+        "jsxFiles": 0,
+        "configBytes": 166,
+        "jsonPayloadBytes": 0
+      }
+    },
+    "postgres-json": {
+      "root": "test-cases/rules/postgres-json-relation-ids/fixture",
+      "config": "test-cases/rules/postgres-json-relation-ids/configs/defaults.yml",
+      "samples": {
+        "baseline": [
+          {
+            "instructions": 161161627.0,
+            "cpuMs": 20.6,
+            "wallSeconds": 0.05228713800897822,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 160963213.0,
+            "cpuMs": 19.22,
+            "wallSeconds": 0.044361333013512194,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 161007838.0,
+            "cpuMs": 19.38,
+            "wallSeconds": 0.04419404501095414,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 161018664.0,
+            "cpuMs": 19.45,
+            "wallSeconds": 0.04379493900341913,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 161059974.0,
+            "cpuMs": 19.48,
+            "wallSeconds": 0.04456279595615342,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 161013425.0,
+            "cpuMs": 19.24,
+            "wallSeconds": 0.0433406179654412,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 160994466.0,
+            "cpuMs": 19.32,
+            "wallSeconds": 0.043669160979334265,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 160967005.0,
+            "cpuMs": 19.59,
+            "wallSeconds": 0.04346174100646749,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 160922348.0,
+            "cpuMs": 19.42,
+            "wallSeconds": 0.04386010899906978,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 160985448.0,
+            "cpuMs": 19.76,
+            "wallSeconds": 0.04432604199973866,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          }
+        ],
+        "candidate": [
+          {
+            "instructions": 160967136.0,
+            "cpuMs": 19.57,
+            "wallSeconds": 0.04351434303680435,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 161046427.0,
+            "cpuMs": 19.19,
+            "wallSeconds": 0.061686775006819516,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 161127708.0,
+            "cpuMs": 19.49,
+            "wallSeconds": 0.04362801497336477,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 160966338.0,
+            "cpuMs": 19.34,
+            "wallSeconds": 0.04381487501086667,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 160957632.0,
+            "cpuMs": 19.22,
+            "wallSeconds": 0.04419495997717604,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 161106321.0,
+            "cpuMs": 19.25,
+            "wallSeconds": 0.04484658903675154,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 160897215.0,
+            "cpuMs": 19.38,
+            "wallSeconds": 0.04403592098969966,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 161112736.0,
+            "cpuMs": 19.72,
+            "wallSeconds": 0.045233219047077,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 160972450.0,
+            "cpuMs": 19.42,
+            "wallSeconds": 0.044908284035045654,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          },
+          {
+            "instructions": 160912484.0,
+            "cpuMs": 19.08,
+            "wallSeconds": 0.04357594402972609,
+            "peakRssKiB": 126232,
+            "outputSha256": "b2b216b4b7dfd8110db92410a063d509cf21af9ef5c56734f305f812545546fe",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "exitCode": 0
+          }
+        ]
+      },
+      "summary": {
+        "baseline": {
+          "samples": 10,
+          "medianInstructions": 161001152.0,
+          "medianCpuMs": 19.435000000000002,
+          "medianWallSeconds": 0.04402707700501196,
+          "maxRssKiB": 126232
+        },
+        "candidate": {
+          "samples": 10,
+          "medianInstructions": 160969793.0,
+          "medianCpuMs": 19.36,
+          "medianWallSeconds": 0.04411544048343785,
+          "maxRssKiB": 126232
+        }
+      },
+      "fixtureStats": {
+        "sourceFiles": 17,
+        "sourceBytes": 3503,
+        "sourceLines": 61,
+        "jsxFiles": 0,
+        "configBytes": 246,
+        "jsonPayloadBytes": 5974
+      }
+    }
+  },
+  "events": [
+    "instructions:u",
+    "task-clock"
+  ],
+  "order": [
+    "baseline",
+    "candidate",
+    "candidate",
+    "baseline",
+    "baseline",
+    "candidate",
+    "candidate",
+    "baseline",
+    "baseline",
+    "candidate",
+    "candidate",
+    "baseline",
+    "baseline",
+    "candidate",
+    "candidate",
+    "baseline",
+    "baseline",
+    "candidate",
+    "candidate",
+    "baseline"
+  ],
+  "measurementNotes": "Fresh invocation per sample; same physical fixtures, CPU, compiler, features, dependencies and release profile. OS file cache is not reset. Wall time and maximum RSS include the perf privilege wrapper. No effort flag: default effort. No runtime improvement claimed.",
+  "cpuModel": "Intel(R) Core(TM) Ultra 7 270K Plus"
+}
