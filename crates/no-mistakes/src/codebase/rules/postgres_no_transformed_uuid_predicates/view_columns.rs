@@ -123,9 +123,7 @@ pub(super) fn mapped(
         }
         if let Some(uuid) = columns.get(column) {
             let output = output.unwrap_or_else(|| column.clone());
-            if mapped.insert(output, *uuid).is_some() {
-                return None;
-            }
+            mapped.insert(output, *uuid);
         }
     }
     Some(mapped)

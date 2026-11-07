@@ -115,3 +115,34 @@ fn distinct_bare_operands_retain_catalog_probe_candidates_in_both_directions() {
             .as_ref()
             .is_none_or(|probe| probe.column == "email")));
 }
+
+#[test]
+fn recovered_transform_binds_preserve_real_columns_and_quoted_marker_names() {
+    let source = std::fs::read_to_string(
+        crate::test_support::rule_fixture_root("postgres-no-transformed-uuid-predicates")
+            .join("recovered-transform-bind.sql"),
+    )
+    .unwrap();
+    let column = source.find("sql_placeholder_1").unwrap() as u32 + 1;
+    let facts = super::super::extract_sql_statement_facts_with_recovered_placeholders(
+        &source,
+        true,
+        &[(1, column)],
+    );
+    assert!(!facts.parse_failed);
+    let columns: Vec<_> = facts
+        .transformed_column_uses
+        .iter()
+        .map(|use_| (use_.line, use_.column.as_str()))
+        .collect();
+    assert_eq!(
+        columns,
+        [(1, "token"), (2, "sql_placeholder_1"), (2, "token")]
+    );
+    assert_eq!(
+        super::super::extract_sql_statement_facts(&source)
+            .transformed_column_uses
+            .len(),
+        4
+    );
+}
