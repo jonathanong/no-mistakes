@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub(crate) enum FilePass {
+pub enum FilePass {
     Parse,
     ValueFlowExtract,
     ValueFlowFinalize,
@@ -19,6 +19,11 @@ impl FilePass {
             Self::ValueFlowFinalize => "value_flow.finalize",
             Self::PostgresAnnotation => "postgres.annotation",
         }
+    }
+}
+impl serde::Serialize for FilePass {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.label())
     }
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -86,6 +91,22 @@ impl InvocationObserver {
             .expect("hot file diagnostics mutex must not be poisoned")
             .record(entry);
         result
+    }
+    pub(super) fn hot_file_snapshot(&self) -> Vec<super::report::HotFileDiagnostic> {
+        let Some(files) = &self.hot_files else {
+            return Vec::new();
+        };
+        let entries = files.lock().unwrap().entries.clone();
+        entries
+            .into_iter()
+            .flatten()
+            .map(|entry| super::report::HotFileDiagnostic {
+                pass: entry.pass,
+                path: entry.path.to_string_lossy().into_owned(),
+                duration_ms: entry.duration.as_secs_f64() * 1000.0,
+                units: entry.units,
+            })
+            .collect()
     }
     pub(in crate::diagnostics) fn hot_file_block(&self) -> String {
         let mut output = String::new();
