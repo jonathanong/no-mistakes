@@ -23,6 +23,24 @@ fn literal_catalog_callback_grammar_retains_paths_and_rejects_effects() {
         true,
     )
     .value_flow;
+    let summaries: FxHashMap<_, _> = parsed
+        .program
+        .body
+        .iter()
+        .filter_map(|statement| {
+            let oxc_ast::ast::Statement::VariableDeclaration(declaration) = statement else {
+                return None;
+            };
+            let binding = declaration.declarations.first()?;
+            let BindingPattern::BindingIdentifier(name) = &binding.id else {
+                return None;
+            };
+            let Expression::ArrowFunctionExpression(arrow) = binding.init.as_ref()? else {
+                return None;
+            };
+            Some((name.name.as_str(), callbacks::callback(arrow)))
+        })
+        .collect();
     for (name, output, paths) in [
         ("unary", false, vec![vec!["relation"]]),
         (
@@ -48,10 +66,14 @@ fn literal_catalog_callback_grammar_retains_paths_and_rejects_effects() {
             .iter()
             .find(|binding| binding.name == name)
             .unwrap();
-        let ValueExpression::Callable(owner) = binding.value else {
+        let ValueExpression::Callable(_) = binding.value else {
             panic!("{name}")
         };
-        let callback = flow.catalogs.callbacks.get(&owner).unwrap();
+        let callback = summaries
+            .get(name)
+            .unwrap()
+            .as_ref()
+            .unwrap_or_else(|| panic!("{name}"));
         let paths: Vec<Vec<String>> = paths
             .into_iter()
             .map(|path| path.into_iter().map(String::from).collect())
@@ -73,10 +95,10 @@ fn literal_catalog_callback_grammar_retains_paths_and_rejects_effects() {
             .iter()
             .find(|binding| binding.name == name)
             .unwrap();
-        let ValueExpression::Callable(owner) = binding.value else {
+        let ValueExpression::Callable(_) = binding.value else {
             panic!("{name}")
         };
-        assert!(!flow.catalogs.callbacks.contains_key(&owner), "{name}");
+        assert!(summaries.get(name).unwrap().is_none(), "{name}");
     }
     assert_eq!(flow.catalogs.sources.len(), 1);
     assert_eq!(flow.catalogs.sources[0].name, "CATALOG");

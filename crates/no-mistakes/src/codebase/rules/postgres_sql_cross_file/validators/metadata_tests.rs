@@ -175,8 +175,9 @@ fn metadata_proof_boundaries_reject_writes_between_guard_and_return() {
         .iter()
         .find(|guard| guard.context == Some(owner) && guard.name == "selected")
         .unwrap();
-    let GuardSubject::Binding { scope, .. } = guard.subject.unwrap() else {
-        panic!("binding guard")
+    let scope = match guard.subject.as_ref().unwrap() {
+        GuardSubject::Binding { scope, .. } => *scope,
+        _ => panic!("binding guard"),
     };
     let offset = baseline
         .value_flow
