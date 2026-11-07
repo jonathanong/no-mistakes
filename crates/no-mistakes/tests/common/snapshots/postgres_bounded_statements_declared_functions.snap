@@ -26,26 +26,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-conflict.sql",
           "line": 4,
-          "message": "sql/declared-cte-conflict.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-conflict.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants"
-        },
-        {
-          "file": "sql/declared-cte-conflict.sql",
-          "line": 4,
-          "message": "sql/declared-cte-conflict.sql:4: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:states"
-        },
-        {
-          "file": "sql/declared-cte-conflict.sql",
-          "line": 4,
-          "message": "sql/declared-cte-conflict.sql:4: SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:subs"
+          "target": "table:grants, table:states, table:subs"
         }
       ],
       "warnings": []
@@ -63,26 +47,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-explicit-set.sql",
           "line": 4,
-          "message": "sql/declared-cte-explicit-set.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-explicit-set.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants"
-        },
-        {
-          "file": "sql/declared-cte-explicit-set.sql",
-          "line": 4,
-          "message": "sql/declared-cte-explicit-set.sql:4: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:states"
-        },
-        {
-          "file": "sql/declared-cte-explicit-set.sql",
-          "line": 4,
-          "message": "sql/declared-cte-explicit-set.sql:4: SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:subs"
+          "target": "table:grants, table:states, table:subs"
         }
       ],
       "warnings": []
@@ -100,26 +68,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-foreign.sql",
           "line": 4,
-          "message": "sql/declared-cte-foreign.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-foreign.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants"
-        },
-        {
-          "file": "sql/declared-cte-foreign.sql",
-          "line": 4,
-          "message": "sql/declared-cte-foreign.sql:4: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:states"
-        },
-        {
-          "file": "sql/declared-cte-foreign.sql",
-          "line": 4,
-          "message": "sql/declared-cte-foreign.sql:4: SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:subs"
+          "target": "table:grants, table:states, table:subs"
         }
       ],
       "warnings": []
@@ -137,26 +89,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-malformed.sql",
           "line": 4,
-          "message": "sql/declared-cte-malformed.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-malformed.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants"
-        },
-        {
-          "file": "sql/declared-cte-malformed.sql",
-          "line": 4,
-          "message": "sql/declared-cte-malformed.sql:4: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:states"
-        },
-        {
-          "file": "sql/declared-cte-malformed.sql",
-          "line": 4,
-          "message": "sql/declared-cte-malformed.sql:4: SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:subs"
+          "target": "table:grants, table:states, table:subs"
         }
       ],
       "warnings": []
@@ -174,26 +110,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-mixed.sql",
           "line": 4,
-          "message": "sql/declared-cte-mixed.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-mixed.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants"
-        },
-        {
-          "file": "sql/declared-cte-mixed.sql",
-          "line": 4,
-          "message": "sql/declared-cte-mixed.sql:4: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:states"
-        },
-        {
-          "file": "sql/declared-cte-mixed.sql",
-          "line": 4,
-          "message": "sql/declared-cte-mixed.sql:4: SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:subs"
+          "target": "table:grants, table:states, table:subs"
         }
       ],
       "warnings": []
@@ -235,26 +155,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-set.sql",
           "line": 4,
-          "message": "sql/declared-cte-set.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-set.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants"
-        },
-        {
-          "file": "sql/declared-cte-set.sql",
-          "line": 4,
-          "message": "sql/declared-cte-set.sql:4: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:states"
-        },
-        {
-          "file": "sql/declared-cte-set.sql",
-          "line": 4,
-          "message": "sql/declared-cte-set.sql:4: SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:subs"
+          "target": "table:grants, table:states, table:subs"
         }
       ],
       "warnings": []
@@ -272,26 +176,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-table.sql",
           "line": 4,
-          "message": "sql/declared-cte-table.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-table.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants"
-        },
-        {
-          "file": "sql/declared-cte-table.sql",
-          "line": 4,
-          "message": "sql/declared-cte-table.sql:4: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:states"
-        },
-        {
-          "file": "sql/declared-cte-table.sql",
-          "line": 4,
-          "message": "sql/declared-cte-table.sql:4: SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:subs"
+          "target": "table:grants, table:states, table:subs"
         }
       ],
       "warnings": []
@@ -309,26 +197,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-unknown.sql",
           "line": 4,
-          "message": "sql/declared-cte-unknown.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-unknown.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants"
-        },
-        {
-          "file": "sql/declared-cte-unknown.sql",
-          "line": 4,
-          "message": "sql/declared-cte-unknown.sql:4: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:states"
-        },
-        {
-          "file": "sql/declared-cte-unknown.sql",
-          "line": 4,
-          "message": "sql/declared-cte-unknown.sql:4: SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:subs"
+          "target": "table:grants, table:states, table:subs"
         }
       ],
       "warnings": []
@@ -346,26 +218,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-unknown-overload.sql",
           "line": 4,
-          "message": "sql/declared-cte-unknown-overload.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-unknown-overload.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants"
-        },
-        {
-          "file": "sql/declared-cte-unknown-overload.sql",
-          "line": 4,
-          "message": "sql/declared-cte-unknown-overload.sql:4: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:states"
-        },
-        {
-          "file": "sql/declared-cte-unknown-overload.sql",
-          "line": 4,
-          "message": "sql/declared-cte-unknown-overload.sql:4: SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:subs"
+          "target": "table:grants, table:states, table:subs"
         }
       ],
       "warnings": []
@@ -383,26 +239,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-wrong-name.sql",
           "line": 4,
-          "message": "sql/declared-cte-wrong-name.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-wrong-name.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants"
-        },
-        {
-          "file": "sql/declared-cte-wrong-name.sql",
-          "line": 4,
-          "message": "sql/declared-cte-wrong-name.sql:4: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:states"
-        },
-        {
-          "file": "sql/declared-cte-wrong-name.sql",
-          "line": 4,
-          "message": "sql/declared-cte-wrong-name.sql:4: SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:subs"
+          "target": "table:grants, table:states, table:subs"
         }
       ],
       "warnings": []
@@ -420,26 +260,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/declared-cte-wrong-schema.sql",
           "line": 4,
-          "message": "sql/declared-cte-wrong-schema.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/declared-cte-wrong-schema.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants"
-        },
-        {
-          "file": "sql/declared-cte-wrong-schema.sql",
-          "line": 4,
-          "message": "sql/declared-cte-wrong-schema.sql:4: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:states"
-        },
-        {
-          "file": "sql/declared-cte-wrong-schema.sql",
-          "line": 4,
-          "message": "sql/declared-cte-wrong-schema.sql:4: SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:subs"
+          "target": "table:grants, table:states, table:subs"
         }
       ],
       "warnings": []

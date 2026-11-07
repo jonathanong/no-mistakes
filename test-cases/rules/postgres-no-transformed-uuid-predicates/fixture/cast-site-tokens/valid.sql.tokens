@@ -1,0 +1,10 @@
+TRY_CAST(id AS text)
+SAFE_CAST(id AS text)
+CAST(a.id AS pg_catalog.text[])
+a.id::pg_catalog.text[]
+((id))::text
+fn(CAST(id AS text))
+CAST(id AS varchar(20))
+CAST(CASE WHEN id = $1 THEN token ELSE token END AS text)
+CAST("a"."id" AS "pg_catalog"."text"[])
+CAST(id AS text) + 1

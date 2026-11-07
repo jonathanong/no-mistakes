@@ -1,4 +1,6 @@
 mod append;
+mod report;
+mod site;
 
 use super::super::RULE_ID;
 use crate::codebase::postgres::statements::SqlBoundFact;
@@ -9,10 +11,19 @@ use crate::codebase::ts_source::{matching_disable_directive, SourceStore};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-type StatementKey = (PathBuf, Option<usize>, (usize, usize));
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum Execution {
+    Call(usize),
+    Projection(usize),
+}
+
+type StatementKey = (PathBuf, Option<Execution>, site::Position);
 
 #[derive(Default)]
-pub(super) struct Groups(BTreeMap<StatementKey, Group>);
+pub(super) struct Groups {
+    statements: BTreeMap<StatementKey, Group>,
+    positions: site::Positions,
+}
 
 #[derive(Default)]
 struct Group {
@@ -20,6 +31,7 @@ struct Group {
     executor: PathBuf,
     call_line: Option<usize>,
     spans: Vec<append::Span>,
+    at: (usize, usize),
 }
 
 impl Groups {
@@ -30,13 +42,24 @@ impl Groups {
         file: &SqlStatementFileFacts,
         bound_index: usize,
         bound: &SqlBoundFact,
+        embedded_projection: Option<usize>,
     ) {
         let call = file
             .variant_locations
             .as_ref()
-            .map(|locations| locations.call_index);
-        let at = bound.statement_start.unwrap_or((bound.line, bound.column));
-        let group = self.0.entry((file.path.clone(), call, at)).or_default();
+            .map(|locations| Execution::Call(locations.call_index))
+            .or_else(|| embedded_projection.map(Execution::Projection));
+        let (position, at) = self
+            .positions
+            .identify(file, bound_index, bound, embedded_projection);
+        let group = self
+            .statements
+            .entry((file.path.clone(), call, position))
+            .or_insert_with(|| Group {
+                at,
+                ..Default::default()
+            });
+        group.at = group.at.min(at);
         group.executor.clone_from(&file.path);
         group.call_line = file
             .variant_locations
@@ -55,10 +78,11 @@ impl Groups {
         sources: &SourceStore,
         allow: &AllowList,
     ) {
-        for (_, group) in self.0 {
+        let mut sites = Vec::new();
+        for ((_, call, _), group) in self.statements {
             let executor = crate::codebase::ts_source::relative_slash_path(root, &group.executor);
             let mut findings = group.findings;
-            merge(
+            let grouped = merge(
                 &mut findings,
                 (&executor, group.call_line),
                 &group.spans,
@@ -67,7 +91,12 @@ impl Groups {
                 allow,
             );
             output.extend(findings);
+            if let Some(grouped) = grouped {
+                sites.push((output.len(), call, group.at));
+                output.0.push(grouped);
+            }
         }
+        report::disambiguate(output, &sites);
     }
 }
 
@@ -78,9 +107,9 @@ fn merge(
     root: &Path,
     sources: &SourceStore,
     allow: &AllowList,
-) {
+) -> Option<LocatedRuleFinding> {
     if output.0.is_empty() {
-        return;
+        return None;
     }
     let mut group = Vec::new();
     let candidates = std::mem::take(&mut output.0);
@@ -143,5 +172,5 @@ fn merge(
         }
         roots.entry(target).or_insert(located);
     }
-    output.0.extend(roots.into_values());
+    report::combine(roots)
 }

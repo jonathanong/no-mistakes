@@ -75,3 +75,37 @@ pub(super) fn mark_input_unknown(
     *uncertain = true;
     reasons.push("SQL is unanalyzable at effort low; pass a literal string or template directly to the imported executor, or through one local const; use effort max for inferred SQL".into());
 }
+
+pub(super) fn recovered_site(
+    root: &Path,
+    caller: &Path,
+    sql: &crate::codebase::postgres::RecoveredSql,
+    use_: &crate::codebase::postgres::statements::SqlTransformedColumnUseFact,
+) -> super::super::groups::Site {
+    let at = use_.expression_site;
+    let (origin, _) =
+        crate::codebase::postgres::sql_identifier_syntax::helper_recovery::Recovered::position(
+            sql, at.0, at.1, caller,
+        );
+    let mut position = (1, 1);
+    let offset = sql
+        .sql
+        .char_indices()
+        .find_map(|(index, character)| {
+            let found = (position == at).then_some(index);
+            position = if character == '\n' {
+                (position.0 + 1, 1)
+            } else {
+                (position.0, position.1 + 1)
+            };
+            found
+        })
+        .and_then(|index| sql.origins.get(index))
+        .map(|offset| *offset as usize);
+    (
+        crate::codebase::ts_source::relative_slash_path(root, origin),
+        offset,
+        at,
+        None,
+    )
+}

@@ -266,3 +266,6 @@ mod cli_postgres_snapshot_low_executor_shapes;
 
 #[path = "cli_postgres_snapshot_lock_written_rows.rs"]
 mod cli_postgres_snapshot_lock_written_rows;
+
+#[path = "cli_postgres_transformed_sites.rs"]
+mod cli_postgres_transformed_sites;

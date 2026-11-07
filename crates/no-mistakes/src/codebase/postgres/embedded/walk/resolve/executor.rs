@@ -63,8 +63,13 @@ fn legacy_executor_call(
         }
         _ => {
             let (sql, kind) = classify_init(argument, true, visitor);
+            let mut sql_source_offsets = Vec::new();
             let mut sql_source_positions = super::compose::helper_provenance(argument, visitor)
-                .map(|provenance| provenance.positions)
+                .map(|provenance| {
+                    sql_source_offsets =
+                        super::rewrite_origins(&provenance.sql, &provenance.origins, 0, true);
+                    provenance.positions
+                })
                 .or_else(|| super::compose::parameter_source_positions(argument, visitor))
                 .unwrap_or_else(|| {
                     super::super::super::source_positions::for_expression(
@@ -108,6 +113,7 @@ fn legacy_executor_call(
                 },
                 declaration_line: None,
                 sql_source_positions,
+                sql_source_offsets,
                 recovered_placeholder_positions,
                 ..Default::default()
             }

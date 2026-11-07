@@ -65,9 +65,15 @@ impl EmbeddedSqlCall {
 
     pub(crate) fn source_offset_at_sql_offset(&self, offset: usize) -> Option<usize> {
         self.variants
-            .first()?
-            .sql_source_offsets
-            .get(offset)
+            .first()
+            .map_or_else(
+                || {
+                    self.sql_source_offsets
+                        .get(offset)
+                        .filter(|offset| **offset != 0)
+                },
+                |variant| variant.sql_source_offsets.get(offset),
+            )
             .map(|offset| *offset as usize)
     }
     pub(crate) fn source_offset_at_sql_position(
@@ -118,6 +124,7 @@ impl EmbeddedSqlCall {
                             },
                             declaration_line: Some(variant.line),
                             sql_source_positions: variant.sql_source_positions.clone(),
+                            sql_source_offsets: Vec::new(),
                             recovered_placeholder_positions: variant
                                 .recovered_placeholder_positions
                                 .clone(),

@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    include:
+      - multi-argument-variants.ts
+      - schema.json
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: db
+      executorNames: [query]
+effort: low

@@ -14,50 +14,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/first.ts",
           "line": 5,
-          "message": "src/first.ts:5: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "src/first.ts:5: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/fragment.ts:4)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "const statement = sql`SELECT a.id FROM accounts a`.append(sharedFragmentSql());",
-          "target": "table:accounts"
-        },
-        {
-          "file": "src/first.ts",
-          "line": 6,
-          "message": "src/first.ts:6: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/fragment.ts:4)",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "return query(statement);",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "src/full-from.ts",
           "line": 15,
-          "message": "src/full-from.ts:15: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:4)",
+          "message": "src/full-from.ts:15: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:4); SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:5)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(",
-          "target": "table:accounts"
-        },
-        {
-          "file": "src/full-from.ts",
-          "line": 15,
-          "message": "src/full-from.ts:15: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:5)",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "return query(",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "src/full-from.ts",
           "line": 21,
-          "message": "src/full-from.ts:21: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:30)",
+          "message": "src/full-from.ts:21: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:30); SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:29)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(",
-          "target": "table:invoices"
-        },
-        {
-          "file": "src/full-from.ts",
-          "line": 21,
-          "message": "src/full-from.ts:21: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:29)",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "return query(",
-          "target": "table:orders"
+          "target": "table:invoices, table:orders"
         },
         {
           "file": "src/full-from.ts",
@@ -134,18 +110,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/full-from.ts",
           "line": 9,
-          "message": "src/full-from.ts:9: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:4)",
+          "message": "src/full-from.ts:9: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:4); SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:5)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(",
-          "target": "table:accounts"
-        },
-        {
-          "file": "src/full-from.ts",
-          "line": 9,
-          "message": "src/full-from.ts:9: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/full-from.ts:5)",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "return query(",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "src/full-from.ts",
@@ -174,34 +142,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/second.ts",
           "line": 5,
-          "message": "src/second.ts:5: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "src/second.ts:5: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/fragment.ts:4)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "const statement = sql`SELECT a.id FROM accounts a`;",
-          "target": "table:accounts"
-        },
-        {
-          "file": "src/second.ts",
-          "line": 7,
-          "message": "src/second.ts:7: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/fragment.ts:4)",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "return query(statement);",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "src/third.ts",
           "line": 7,
-          "message": "src/third.ts:7: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/pair.ts:4)",
+          "message": "src/third.ts:7: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/pair.ts:4); SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/pair.ts:4)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(statement);",
-          "target": "table:invoices"
-        },
-        {
-          "file": "src/third.ts",
-          "line": 7,
-          "message": "src/third.ts:7: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/pair.ts:4)",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "return query(statement);",
-          "target": "table:orders"
+          "target": "table:invoices, table:orders"
         }
       ],
       "warnings": []

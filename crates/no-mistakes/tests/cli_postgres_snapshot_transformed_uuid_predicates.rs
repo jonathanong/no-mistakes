@@ -13,6 +13,38 @@ fn postgres_no_transformed_uuid_predicates_check_json_snapshot() {
     // in the unit test. Advise keeps `rules` empty. Ignore is empty rules and
     // empty advisories.
     let rows = [
+        (
+            "multi_argument_shared_casts",
+            "multi-argument-shared-casts.yml",
+        ),
+        (
+            "multi_argument_shared_casts_low",
+            "multi-argument-shared-casts-low.yml",
+        ),
+        (
+            "multi_argument_shared_helper",
+            "multi-argument-shared-helper.yml",
+        ),
+        (
+            "multi_argument_shared_helper_low",
+            "multi-argument-shared-helper-low.yml",
+        ),
+        (
+            "multi_argument_shared_column",
+            "multi-argument-shared-column.yml",
+        ),
+        (
+            "multi_argument_shared_column_low",
+            "multi-argument-shared-column-low.yml",
+        ),
+        ("multi_argument_variants", "multi-argument-variants.yml"),
+        (
+            "multi_argument_variants_low",
+            "multi-argument-variants-low.yml",
+        ),
+        ("multi_argument_sites", "multi-argument-sites.yml"),
+        ("multi_argument_sites_low", "multi-argument-sites-low.yml"),
+        ("multi_argument_sites_off", "multi-argument-sites-off.yml"),
         ("joined_view_pass_low", "joined-view-pass-low.yml"),
         ("joined_view_pass_max", "joined-view-pass-max.yml"),
         ("joined_view_positive_low", "joined-view-positive-low.yml"),

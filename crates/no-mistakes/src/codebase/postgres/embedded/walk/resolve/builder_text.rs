@@ -27,12 +27,17 @@ pub(super) fn executor_call(
     if let [single] = versions.as_slice() {
         if single.choices.is_empty() {
             let declaration_line = Some(single.line);
-            let variant = single.clone().publish();
+            let mut variant = single.clone().publish();
             return Some(EmbeddedSqlCall {
                 sql_text: Some(variant.sql_text.clone()),
                 kind: EmbeddedSqlKind::Composed,
                 declaration_line,
                 sql_source_positions: variant.sql_source_positions.clone(),
+                sql_source_offsets: if variant.append_sites.is_empty() {
+                    std::mem::take(&mut variant.sql_source_offsets)
+                } else {
+                    Vec::new()
+                },
                 recovered_placeholder_positions: variant.recovered_placeholder_positions.clone(),
                 variants: (!variant.append_sites.is_empty())
                     .then_some(variant)

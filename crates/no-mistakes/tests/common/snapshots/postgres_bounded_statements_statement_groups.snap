@@ -1,0 +1,311 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advisory_relations": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/groups.sql",
+          "line": 17,
+          "message": "sql/groups.sql:17: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT i.id FROM items i CROSS JOIN feeds f WHERE i.feed_id = $1;",
+          "target": "table:feeds, table:items"
+        },
+        {
+          "file": "sql/groups.sql",
+          "line": 18,
+          "message": "sql/groups.sql:18: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT i.id FROM items i CROSS JOIN topics t WHERE i.feed_id = $1;",
+          "target": "table:items, table:topics"
+        },
+        {
+          "file": "sql/groups.sql",
+          "line": 19,
+          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 19, column 1)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM items; SELECT id FROM items;",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/groups.sql",
+          "line": 19,
+          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 19, column 23)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM items; SELECT id FROM items;",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/groups.sql",
+          "line": 2,
+          "message": "sql/groups.sql:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM items i",
+          "target": "table:accounts, table:feeds, table:items, table:topics, table:users"
+        },
+        {
+          "file": "sql/groups.sql",
+          "line": 20,
+          "message": "sql/groups.sql:20: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; Select can read unbounded rows from view activity; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT i.id FROM items i CROSS JOIN activity a;",
+          "target": "table:items, view:activity"
+        },
+        {
+          "file": "sql/groups.sql",
+          "line": 9,
+          "message": "sql/groups.sql:9: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM items i",
+          "target": "table:items, table:topics"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "all_relations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/groups.sql",
+          "line": 17,
+          "message": "sql/groups.sql:17: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT i.id FROM items i CROSS JOIN feeds f WHERE i.feed_id = $1;",
+          "target": "table:feeds, table:items"
+        },
+        {
+          "file": "sql/groups.sql",
+          "line": 18,
+          "message": "sql/groups.sql:18: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT i.id FROM items i CROSS JOIN topics t WHERE i.feed_id = $1;",
+          "target": "table:items, table:topics"
+        },
+        {
+          "file": "sql/groups.sql",
+          "line": 19,
+          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 19, column 1)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM items; SELECT id FROM items;",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/groups.sql",
+          "line": 19,
+          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 19, column 23)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM items; SELECT id FROM items;",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/groups.sql",
+          "line": 2,
+          "message": "sql/groups.sql:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM items i",
+          "target": "table:accounts, table:feeds, table:items, table:topics, table:users"
+        },
+        {
+          "file": "sql/groups.sql",
+          "line": 20,
+          "message": "sql/groups.sql:20: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; Select can read unbounded rows from view activity; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT i.id FROM items i CROSS JOIN activity a;",
+          "target": "table:items, view:activity"
+        },
+        {
+          "file": "sql/groups.sql",
+          "line": 9,
+          "message": "sql/groups.sql:9: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM items i",
+          "target": "table:items, table:topics"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded_sites": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query.ts",
+          "line": 2,
+          "message": "query.ts:2: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 1, column 1; executor projection 0)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(\"SELECT id FROM items\"); query(\"SELECT id FROM items\");",
+          "target": "table:items"
+        },
+        {
+          "file": "query.ts",
+          "line": 2,
+          "message": "query.ts:2: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 1, column 1; executor projection 1)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(\"SELECT id FROM items\"); query(\"SELECT id FROM items\");",
+          "target": "table:items"
+        },
+        {
+          "file": "query.ts",
+          "line": 3,
+          "message": "query.ts:3: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 1, column 1; executor call 2)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(\"SELECT id FROM items;\\nSELECT id FROM items\");",
+          "target": "table:items"
+        },
+        {
+          "file": "query.ts",
+          "line": 3,
+          "message": "query.ts:3: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 2, column 1; executor call 2)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(\"SELECT id FROM items;\\nSELECT id FROM items\");",
+          "target": "table:items"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "relation_controls": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/groups.sql",
+          "line": 17,
+          "message": "sql/groups.sql:17: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT i.id FROM items i CROSS JOIN feeds f WHERE i.feed_id = $1;",
+          "target": "table:feeds"
+        },
+        {
+          "file": "sql/groups.sql",
+          "line": 19,
+          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 19, column 1)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM items; SELECT id FROM items;",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/groups.sql",
+          "line": 19,
+          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 19, column 23)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM items; SELECT id FROM items;",
+          "target": "table:items"
+        },
+        {
+          "file": "sql/groups.sql",
+          "line": 2,
+          "message": "sql/groups.sql:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM items i",
+          "target": "table:accounts, table:feeds, table:items, table:users"
+        },
+        {
+          "file": "sql/groups.sql",
+          "line": 20,
+          "message": "sql/groups.sql:20: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; Select can read unbounded rows from view activity; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT i.id FROM items i CROSS JOIN activity a;",
+          "target": "table:items, view:activity"
+        },
+        {
+          "file": "sql/groups.sql",
+          "line": 9,
+          "message": "sql/groups.sql:9: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM items i",
+          "target": "table:items"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repeated_helper_occurrences": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repeated-helper.ts",
+          "line": 8,
+          "message": "repeated-helper.ts:8: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from repeated-helper.ts:13); SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from repeated-helper.ts:4)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "table:feeds, table:items"
+        },
+        {
+          "file": "repeated-helper.ts",
+          "line": 8,
+          "message": "repeated-helper.ts:8: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from repeated-helper.ts:4)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "table:items"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "rule_off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "variant_prefix_union": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "variant-prefix.ts",
+          "line": 4,
+          "message": "variant-prefix.ts:4: SELECT can return every row of feeds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of topics; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return sql`SELECT i.id FROM items i CROSS JOIN `;",
+          "target": "table:feeds, table:items, table:topics"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
