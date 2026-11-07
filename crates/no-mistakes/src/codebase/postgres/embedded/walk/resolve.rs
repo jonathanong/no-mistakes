@@ -111,6 +111,7 @@ fn record_function_declaration(function: &Function<'_>, visitor: &mut ScopeVisit
         scope.insert(
             id.name.to_string(),
             BindingState {
+                value_identity: None,
                 executor_alias: None,
                 builder_identity: None,
                 builder_effect_revision: 0,

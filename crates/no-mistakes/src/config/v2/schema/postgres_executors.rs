@@ -15,6 +15,7 @@ pub(crate) const RULE_IDS: &[&str] = &[
     "postgres-no-mutable-sql-registry",
     "postgres-no-unbounded-sql-identifier",
     "postgres-conflict-ordering",
+    "postgres-lock-written-rows-only",
     "postgres-lock-ordering",
     "postgres-idempotent-insert",
     "postgres-require-query-annotation",

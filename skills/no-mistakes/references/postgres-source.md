@@ -188,3 +188,12 @@ replacement or defaults plus extras and suppresses omitted-default warnings.
 Remove exclusions flagged as unused: they either are not default names or are
 never imported from the selected module and called in scoped files. See
 [executor selection](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/rules.md#postgresql-executor-selection).
+
+Use opt-in `postgres-lock-written-rows-only` to audit configured transaction
+executors. Start with its default advisory checks, then set individual check
+ids to `fail` after reviewing row, table, constant advisory, and autocommit
+locks. Configure transaction factories through `executorFactoryNames`; keep
+`allow` reasons and `writeSets` assertions narrow. Unknown SQL or transaction
+membership follows the unanalyzable policy and never proves a safe lock. See
+[the rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-lock-written-rows-only.md) for phase 1
+limits and rewrites.

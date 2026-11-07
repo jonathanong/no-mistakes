@@ -196,3 +196,5 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         variants::control::logical(self, expr);
     }
 }
+
+mod transaction;

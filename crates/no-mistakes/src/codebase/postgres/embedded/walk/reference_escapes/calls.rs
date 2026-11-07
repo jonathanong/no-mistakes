@@ -7,7 +7,7 @@ impl ScopeVisitor<'_> {
     pub(in crate::codebase::postgres::embedded::walk) fn begin_safe_builder_arguments(
         &mut self,
         call: &CallExpression<'_>,
-        escaped: &[(String, Option<u32>)],
+        escaped: &[(String, Option<std::num::NonZeroU32>)],
         modeled_builder: Option<&str>,
     ) -> usize {
         let start = self.builder_reference_exemptions.len();

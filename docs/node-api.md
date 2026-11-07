@@ -654,3 +654,12 @@ warnings identify omitted default executors imported and called in scoped
 files. Excluded defaults suppress those warnings; exclusions that are not
 default names or are never imported from the configured module and called in
 scoped files produce unused-entry warnings. See [executor selection](configuration/rules.md#postgresql-executor-selection).
+
+The opt-in [`postgres-lock-written-rows-only`](rules/postgres-lock-written-rows-only.md)
+rule runs through the existing asynchronous `check()` API and the same rule
+configuration as `no-mistakes check`; it adds no runtime export. Its public
+contracts are `PostgresLockWrittenRowsOnlyOptions`,
+`PostgresLockWrittenRowsCheck`, `PostgresLockWrittenRowsSeverity`,
+`PostgresLockWrittenRowsAllow`, and `PostgresLockWrittenRowsWriteSet`.
+Per-check severity defaults to `advise`. Unresolved SQL or transaction
+membership follows the configured unanalyzable policy.

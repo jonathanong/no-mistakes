@@ -8,7 +8,7 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::FxHashMap;
 use oxc_ast::ast::{AssignmentExpression, AssignmentOperator, AssignmentTarget, Expression};
 
-pub(super) type Targets = Vec<(String, Option<u32>)>;
+pub(super) type Targets = Vec<(String, Option<std::num::NonZeroU32>)>;
 
 /// Only the final interpolation uses this transient projection. It follows
 /// assignments in evaluation order without changing the extractor's bindings.
@@ -82,7 +82,11 @@ impl EffectIdentities {
         false
     }
 
-    pub(super) fn target(&self, name: String, identity: Option<u32>) -> Option<Targets> {
+    pub(super) fn target(
+        &self,
+        name: String,
+        identity: Option<std::num::NonZeroU32>,
+    ) -> Option<Targets> {
         self.assigned
             .get(&name)
             .cloned()

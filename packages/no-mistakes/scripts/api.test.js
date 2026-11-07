@@ -277,3 +277,5 @@ test("PostgreSQL executor options expose additive selection and final exclusions
     assert.match(declarations, /excludeExecutorNames\?: string\[\];/);
   }
 });
+
+require("./api-tests/declarations-lock-written-rows");

@@ -29,6 +29,7 @@ pub(crate) fn collect_calls<'a>(
         super::super::finite_identifiers::vitest_it_imports(program)
     };
     let mut visitor = ScopeVisitor {
+        scalar_literals: Default::default(),
         head_calls_only,
         source,
         configured_module: options.import_specifier.clone(),

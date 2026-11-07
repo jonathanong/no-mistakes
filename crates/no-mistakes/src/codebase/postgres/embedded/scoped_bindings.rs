@@ -53,6 +53,7 @@ pub(super) type UndeclaredReceiverTypes = HashMap<String, super::UndeclaredExecu
 #[derive(Debug, Default)]
 pub(super) struct ScopedExecutors {
     spans: HashMap<String, Vec<Span>>,
+    pub(super) transactions: HashMap<String, Vec<Span>>,
     pub(super) delayed: std::collections::HashSet<u32>,
     pub(super) undeclared: HashMap<u32, HashMap<String, UndeclaredReceiverTypes>>,
     pub(super) undeclared_this: Vec<(Span, UndeclaredReceiverTypes)>,

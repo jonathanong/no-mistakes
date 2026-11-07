@@ -101,6 +101,11 @@ fn rule_docs_use_supported_option_examples() {
     let root = repo_root();
     let cases = [
         (
+            "postgres-lock-written-rows-only.md",
+            ["checks:", "allow:", "writeSets:", "transactionLine:"].as_slice(),
+            [].as_slice(),
+        ),
+        (
             "require-files-in-subdirs.md",
             ["packages:", "requiredFiles:", "requireAnyOf:"].as_slice(),
             ["roots:", "files:"].as_slice(),

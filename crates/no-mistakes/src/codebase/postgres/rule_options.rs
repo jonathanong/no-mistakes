@@ -27,6 +27,12 @@ pub fn fail_unanalyzable_sql(rule: &str, value: &str) -> Result<bool> {
 /// The request needs a report-local proof sink when any effective SQL rule
 /// application asks for non-failing residual diagnostics.
 pub fn has_sql_advice(config: &crate::config::v2::NoMistakesConfig) -> bool {
+    if !config
+        .rule_applications("postgres-lock-written-rows-only")
+        .is_empty()
+    {
+        return true;
+    }
     if [
         "postgres-no-unbounded-sql-identifier",
         "postgres-no-mutable-sql-registry",

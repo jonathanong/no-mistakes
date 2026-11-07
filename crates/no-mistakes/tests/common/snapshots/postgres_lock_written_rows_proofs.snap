@@ -1,0 +1,197 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "changed_search_path": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 10,
+          "message": "src/query.ts:10: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "committed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "cte_relation": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: unanalyzable: locked relation is unresolved; lock a single explicit base relation",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`WITH items AS (SELECT id FROM parents) SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "opaque_write": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql, [id]);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "prepared_write": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: row-lock-unwritten-relation: locked row in items is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "temporary_shadow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "uncalled_write": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unknown_write_predicate": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: unanalyzable: row key identity is unresolved; use the same immutable binding and equality column for the lock and write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 9,
+          "message": "src/query.ts:9: unanalyzable: row key identity is unresolved; use the same immutable binding and equality column for the lock and write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

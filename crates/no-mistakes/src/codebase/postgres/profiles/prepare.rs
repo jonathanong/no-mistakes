@@ -73,6 +73,7 @@ pub(crate) fn prepare_rule_sql_facts(
                             | "postgres-sql-shape-policy"
                             | "postgres-require-query-annotation"
                             | "postgres-lock-ordering"
+                            | "postgres-lock-written-rows-only"
                             | "postgres-conflict-ordering"
                     )
                 }),
@@ -83,9 +84,15 @@ pub(crate) fn prepare_rule_sql_facts(
                             .any(|id| !matches!(*id, "postgres-require-query-annotation"))),
                 postgres_variants: evaluated_annotation
                     || dml_ids.iter().any(|id| {
-                        matches!(*id, "postgres-lock-ordering" | "postgres-conflict-ordering")
+                        matches!(
+                            *id,
+                            "postgres-lock-ordering"
+                                | "postgres-conflict-ordering"
+                                | "postgres-lock-written-rows-only"
+                        )
                     }),
-                postgres_exact_locations: rule_ids.contains(&"postgres-lock-ordering"),
+                postgres_exact_locations: rule_ids.contains(&"postgres-lock-ordering")
+                    || rule_ids.contains(&"postgres-lock-written-rows-only"),
                 postgres_conflict_locations: rule_ids.contains(&"postgres-conflict-ordering"),
                 postgres_general_locations: rule_ids.iter().any(|id| {
                     *id != "postgres-conflict-ordering"

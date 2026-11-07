@@ -228,3 +228,40 @@ fn low_display_locations_require_the_exact_rule_local_application() {
         "display projection must never rewrite verdict identity"
     );
 }
+
+#[test]
+fn lock_policy_severity_advice_does_not_claim_sql_is_unresolved() {
+    let mut violation = row();
+    violation.rule = no_mistakes::codebase::rules::postgres_lock_written_rows_only::RULE_ID.into();
+    violation.status = SqlVerdictStatus::Violation;
+    violation.subcheck = "table-lock".into();
+    violation.residual_reasons = vec!["lock only the written row".into()];
+    let sources = SourceStore::new(std::sync::Arc::new(
+        no_mistakes::codebase::ts_source::FileInventory::from_paths(&[]),
+    ));
+    let mut advice = Vec::new();
+    merge_sql(
+        &mut advice,
+        Path::new("/missing"),
+        &sources,
+        &CheckFactMap::default(),
+        &[violation.clone()],
+    );
+    assert_eq!(advice.len(), 1);
+    assert!(advice[0]
+        .message
+        .contains("reports an advisory violation for table-lock"));
+    assert!(!advice[0].message.contains("unresolved"));
+    let mut unknown = violation.clone();
+    unknown.status = SqlVerdictStatus::Abstain;
+    unknown.subcheck = "unanalyzable".into();
+    advice.clear();
+    merge_sql(
+        &mut advice,
+        Path::new("/missing"),
+        &sources,
+        &CheckFactMap::default(),
+        &[violation, unknown],
+    );
+    assert!(advice[0].message.contains("remaining SQL is unresolved"));
+}

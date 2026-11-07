@@ -11,6 +11,7 @@ use std::sync::Arc;
 pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
     "postgres-idempotent-insert",
     "postgres-conflict-ordering",
+    "postgres-lock-written-rows-only",
     "postgres-lock-ordering",
     "postgres-required-predicates",
     "postgres-generated-column-predicates",

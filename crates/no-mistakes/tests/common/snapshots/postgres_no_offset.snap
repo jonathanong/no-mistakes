@@ -1255,7 +1255,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "offset"
         }
       ],
-      "unprovenMemberQuerySql": 148,
+      "unprovenMemberQuerySql": 163,
       "warnings": []
     }
   },

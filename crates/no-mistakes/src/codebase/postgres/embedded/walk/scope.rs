@@ -67,6 +67,7 @@ impl ScopeVisitor<'_> {
                 scope.insert(
                     name.clone(),
                     BindingState {
+                        value_identity: super::transaction::source_identity(pattern.span().start),
                         executor_alias: executor
                             .then_some(true)
                             .or(relative_executor_proof.map(|_| false)),
@@ -104,6 +105,7 @@ impl ScopeVisitor<'_> {
             scope.insert(
                 name.to_string(),
                 BindingState {
+                    value_identity: None,
                     executor_alias: None,
                     builder_identity: None,
                     builder_effect_revision: 0,
@@ -126,6 +128,7 @@ impl ScopeVisitor<'_> {
         self.forget_receiver_alias(name);
         for scope in self.scopes.iter_mut().rev() {
             if let Some(binding) = scope.get_mut(name) {
+                binding.value_identity = None;
                 binding.executor_alias = None;
                 binding.initialized = true;
                 binding.kind = EmbeddedSqlKind::Dynamic;

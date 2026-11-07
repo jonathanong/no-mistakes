@@ -109,7 +109,14 @@ fn finding(
                 |name| format!(" application {name:?} (#{})", app.index),
             )
         });
-    let outcome = if rows
+    let complete_lock_advice = verdict.rule
+        == no_mistakes::codebase::rules::postgres_lock_written_rows_only::RULE_ID
+        && rows
+            .iter()
+            .all(|row| row.status == SqlVerdictStatus::Violation);
+    let outcome = if complete_lock_advice {
+        "reports an advisory violation for"
+    } else if rows
         .iter()
         .any(|row| row.status == SqlVerdictStatus::Violation)
     {

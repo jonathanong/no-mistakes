@@ -170,6 +170,7 @@ fn postgres_embedded_sql_configured(config: &no_mistakes::config::v2::NoMistakes
     [
         no_mistakes::codebase::rules::POSTGRES_CONFLICT_ORDERING,
         no_mistakes::codebase::rules::POSTGRES_LOCK_ORDERING,
+        no_mistakes::codebase::rules::POSTGRES_LOCK_WRITTEN_ROWS_ONLY,
         no_mistakes::codebase::rules::POSTGRES_REQUIRED_PREDICATES,
         no_mistakes::codebase::rules::POSTGRES_EXPLICIT_COLUMNS,
     ]

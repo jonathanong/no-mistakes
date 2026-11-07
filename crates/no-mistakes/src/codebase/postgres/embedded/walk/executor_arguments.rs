@@ -8,7 +8,7 @@ mod effects;
 pub(super) struct ArgumentEffect {
     owner: usize,
     name: String,
-    identity: Option<u32>,
+    identity: Option<std::num::NonZeroU32>,
     position: u32,
     state: Option<BindingState>,
 }
@@ -122,7 +122,14 @@ impl ScopeVisitor<'_> {
             || self.pending_calls[snapshot.pending.unwrap()].call.clone(),
             |index| self.calls[index].clone(),
         );
-        let replacement = if opaque {
+        let metadata = (
+            original.transaction_id,
+            original.transaction_line,
+            original.executor_transaction_known,
+            original.execution_unconditional,
+            original.bound_parameters.clone(),
+        );
+        let mut replacement = if opaque {
             let mut dynamic = original;
             dynamic.kind = EmbeddedSqlKind::Dynamic;
             dynamic.sql_text = None;
@@ -135,6 +142,11 @@ impl ScopeVisitor<'_> {
         } else {
             original
         };
+        replacement.transaction_id = metadata.0;
+        replacement.transaction_line = metadata.1;
+        replacement.executor_transaction_known = metadata.2;
+        replacement.execution_unconditional = metadata.3;
+        replacement.bound_parameters = metadata.4;
         if let Some(index) = snapshot.confirmed {
             self.calls[index] = replacement;
         } else {

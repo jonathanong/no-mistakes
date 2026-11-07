@@ -81,6 +81,14 @@ pub(super) fn record_declarator(
                 .flatten()
         });
     let condition_key = is_const.then(|| visitor.declaration_choice_key(init, ident.span.start));
+    let value_identity = is_const
+        .then(|| super::super::transaction::source_identity(ident.span.start))
+        .flatten();
+    if let Some(identity) = value_identity {
+        if let Some(literal) = super::super::transaction::literal_identity(init) {
+            visitor.scalar_literals.insert(identity, literal);
+        }
+    }
     let scope_index = if is_var {
         var_scope(visitor, ident.name.as_str())
     } else {
@@ -100,6 +108,7 @@ pub(super) fn record_declarator(
         scope.insert(
             ident.name.to_string(),
             BindingState {
+                value_identity,
                 executor_alias: if visitor
                     .scoped
                     .contains_declaration(ident.name.as_str(), declarator.id.span().start)
@@ -169,6 +178,7 @@ fn var_scope(visitor: &ScopeVisitor<'_>, name: &str) -> usize {
 }
 
 fn clear_binding(binding: &mut BindingState) {
+    binding.value_identity = None;
     binding.executor_alias = None;
     binding.initialized = true;
     binding.sql = None;

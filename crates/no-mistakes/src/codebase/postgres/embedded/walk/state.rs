@@ -12,7 +12,8 @@ mod fragment;
 pub(crate) use collect::collect_calls;
 #[derive(Clone)]
 pub(crate) struct BindingState {
-    pub(super) builder_identity: Option<u32>,
+    pub(super) value_identity: Option<std::num::NonZeroU32>,
+    pub(super) builder_identity: Option<std::num::NonZeroU32>,
     pub(super) builder_effect_revision: u64,
     pub(super) condition_key: Option<(u64, u32)>,
     pub(super) variants: Option<Vec<super::variants::Recovered>>,
@@ -27,6 +28,7 @@ pub(crate) struct BindingState {
 }
 
 pub(crate) struct ScopeVisitor<'a> {
+    pub(super) scalar_literals: crate::fx::FxHashMap<std::num::NonZeroU32, String>,
     pub(crate) head_calls_only: bool,
     pub(crate) source: &'a str,
     pub(crate) configured_module: String,

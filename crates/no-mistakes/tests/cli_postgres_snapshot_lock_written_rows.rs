@@ -1,0 +1,126 @@
+use super::check_json_snapshot::{assert_saved_fixture, rules_path};
+
+const RULE: &str = "postgres-lock-written-rows-only";
+
+fn snapshot(name: &str, cases: &[(&str, &str, &str)]) {
+    let rows = cases
+        .iter()
+        .map(|(label, fixture, config)| {
+            (
+                *label,
+                rules_path(RULE, "fixture", fixture),
+                rules_path(RULE, "configs", config),
+            )
+        })
+        .collect::<Vec<_>>();
+    assert_saved_fixture(name, &rows);
+}
+
+#[test]
+fn postgres_lock_written_rows_relation_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_relation",
+        &[
+            ("unwritten", "row-unwritten", "fail.yml"),
+            ("written", "row-written", "fail.yml"),
+            ("different_key", "row-key-mismatch", "fail.yml"),
+            ("separate_transactions", "isolated-transactions", "fail.yml"),
+            ("all_strengths", "lock-strengths", "fail.yml"),
+        ],
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_table_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_table",
+        &[("table_lock", "table-lock", "fail.yml")],
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_advisory_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_advisory",
+        &[
+            ("constant", "constant-advisory", "fail.yml"),
+            ("keyed", "keyed-advisory", "fail.yml"),
+        ],
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_transaction_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_transaction",
+        &[
+            ("autocommit", "outside-transaction", "fail.yml"),
+            ("transaction", "row-written", "fail.yml"),
+            ("unresolved_fail", "unresolved", "fail.yml"),
+            ("unresolved_advise", "unresolved", "advise.yml"),
+            ("unresolved_ignore", "unresolved", "ignore.yml"),
+            ("line_suppressions", "suppressed", "fail.yml"),
+            ("file_suppression", "suppressed-file", "fail.yml"),
+            ("line_suppressions_fail", "suppressed", "checks-fail.yml"),
+            (
+                "file_suppression_fail",
+                "suppressed-file",
+                "checks-fail.yml",
+            ),
+        ],
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_options_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_options",
+        &[
+            ("checks_fail", "row-unwritten", "checks-fail.yml"),
+            ("checks_ignore", "row-unwritten", "checks-ignore.yml"),
+            ("relation_allow", "row-unwritten", "allow.yml"),
+            ("site_allow", "row-unwritten", "allow-call.yml"),
+            ("key_allow", "constant-advisory", "allow-key.yml"),
+            ("row_key_allow", "row-key-mismatch", "allow-row-key.yml"),
+            ("write_sets", "row-unwritten", "write-sets.yml"),
+            ("ignored_rows", "typed-membership", "ignore-row-checks.yml"),
+            (
+                "ignored_written",
+                "unknown-write-predicate",
+                "ignore-written-check.yml",
+            ),
+            (
+                "ignored_outside",
+                "outside-transaction",
+                "ignore-outside-check.yml",
+            ),
+            ("all_ignored_dynamic", "unresolved", "checks-ignore.yml"),
+            (
+                "ignored_allow_is_stale",
+                "row-unwritten",
+                "ignored-allow.yml",
+            ),
+        ],
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_proofs_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_proofs",
+        &[
+            ("uncalled_write", "nested-write", "checks-fail.yml"),
+            ("prepared_write", "prepared-write", "checks-fail.yml"),
+            ("opaque_write", "unknown-write", "checks-fail.yml"),
+            (
+                "unknown_write_predicate",
+                "unknown-write-predicate",
+                "checks-fail.yml",
+            ),
+            ("cte_relation", "cte-relation", "checks-fail.yml"),
+            ("committed", "committed", "checks-fail.yml"),
+            ("changed_search_path", "search-path", "checks-fail.yml"),
+            ("temporary_shadow", "temp-shadow", "checks-fail.yml"),
+        ],
+    );
+}
