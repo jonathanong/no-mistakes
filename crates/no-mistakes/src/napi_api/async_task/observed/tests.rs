@@ -39,11 +39,6 @@ fn verbose_transport_preserves_array_results_and_authoritative_errors() {
     assert_eq!(message, "original error");
     let diagnostics: Value = serde_json::from_str(diagnostics).unwrap();
     assert_eq!(diagnostics["work"]["output.errors"], 1);
-    assert!(finish(Ok("invalid JSON".into()), Some(&request))
-        .err()
-        .unwrap()
-        .reason
-        .contains(DIAGNOSTICS_JSON_MARKER));
 }
 
 #[test]
@@ -100,4 +95,21 @@ fn both_native_transports_reuse_saved_analysis_and_return_diagnostics() {
             .any(|timing| timing["label"] == "invocation.dispatch"));
         assert!(crate::diagnostics::current().is_none());
     }
+}
+
+#[test]
+fn deep_native_json_remains_opaque_during_diagnostics_collection() {
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/napi/collect-diagnostics");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let input = std::fs::read_to_string(fixture.path().join("deep-result.json")).unwrap();
+    let input = input.trim();
+    assert!(serde_json::from_str::<Value>(input).is_err());
+    let request =
+        DiagnosticRequestGuard::extract(&mut serde_json::json!({"__collectDiagnostics":true}))
+            .unwrap()
+            .unwrap();
+    let output = finish(Ok(input.to_owned()), Some(&request)).unwrap();
+    let json = std::str::from_utf8(output.as_ref()).unwrap();
+    assert!(json.starts_with(&format!("{{\"result\":{input},\"diagnostics\":")));
 }

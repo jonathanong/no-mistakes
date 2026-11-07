@@ -66,16 +66,15 @@ fn finish(
     let Some(diagnostics) = request.and_then(|request| request.report(output.is_ok())) else {
         return output.map(|output| Buffer::from(output.into_bytes()));
     };
-    let diagnostics = serde_json::json!(diagnostics);
-    match output.and_then(|output| serde_json::from_str::<Value>(&output).map_err(to_napi_error)) {
+    let diagnostics = serde_json::json!(diagnostics).to_string();
+    match output {
+        // Native JSON stays opaque so source ASTs retain their full nesting depth.
         Ok(result) => Ok(Buffer::from(
-            serde_json::json!({ "result": result, "diagnostics": diagnostics })
-                .to_string()
-                .into_bytes(),
+            format!("{{\"result\":{result},\"diagnostics\":{diagnostics}}}").into_bytes(),
         )),
         Err(mut error) => {
             error.reason.push_str(DIAGNOSTICS_JSON_MARKER);
-            error.reason.push_str(&diagnostics.to_string());
+            error.reason.push_str(&diagnostics);
             Err(error)
         }
     }
