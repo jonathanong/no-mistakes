@@ -35,7 +35,7 @@ pub(super) fn complete(
             let mut call = invocation.call.clone();
             call.sql_text = Some(query.sql.clone());
             call.kind = EmbeddedSqlKind::Inline;
-            call.lock_helper = Some((invocation.name.clone(), query.line));
+            call.lock_helper = Some(Box::new((invocation.name.clone(), query.line)));
             call.bound_parameters = query
                 .parameters
                 .iter()

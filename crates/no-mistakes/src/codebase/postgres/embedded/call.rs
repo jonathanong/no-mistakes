@@ -10,7 +10,7 @@ pub struct EmbeddedSqlCall {
     pub variants: Vec<EmbeddedSqlVariant>,
     pub lock_scope_analysis: bool,
     pub helper_definition: bool,
-    pub lock_helper: Option<(String, u32)>,
+    pub lock_helper: Option<Box<(String, u32)>>,
     pub transaction_id: Option<u32>,
     pub transaction_line: Option<u32>,
     pub executor_transaction_known: bool,

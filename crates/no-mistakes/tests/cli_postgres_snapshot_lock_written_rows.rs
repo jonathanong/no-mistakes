@@ -251,6 +251,12 @@ fn postgres_lock_written_rows_helpers_check_json_snapshot() {
         "postgres_lock_written_rows_helpers",
         &[
             ("unwritten", "helper-unwritten", "checks-fail.yml"),
+            ("reexports", "helper-reexport", "checks-fail.yml"),
+            (
+                "unsupported",
+                "helper-unsupported-shapes",
+                "checks-fail.yml",
+            ),
             ("different_key", "helper-key-mismatch", "checks-fail.yml"),
             ("written", "helper-written", "checks-fail.yml"),
             ("dead_write", "helper-dead-write", "checks-fail.yml"),
