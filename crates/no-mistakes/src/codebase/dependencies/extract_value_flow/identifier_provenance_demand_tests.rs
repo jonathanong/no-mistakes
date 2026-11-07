@@ -88,7 +88,7 @@ fn prepared_call_facts_collect_scalar_provenance_only_on_demand() {
         .value_flow
         .identifier_writes
         .iter()
-        .all(|write| write.assigned.is_none()));
+        .all(|write| write.assigned.is_none() && write.context.is_none()));
     let assigned = selected
         .value_flow
         .identifier_writes
