@@ -41,6 +41,13 @@ fn builder_proof_boundaries_require_call_facts_and_a_canonical_helper_site() {
     let mut proof = Proof::new(&graph, &opts, &facts, &bindings);
     assert!(!proof.expression(&file, &ValueExpression::Call(u32::MAX - 1, u32::MAX), false));
     assert!(!proof.expression(&file, &ValueExpression::Unknown, false));
+    assert!(!proof.namespace(&file.with_file_name("missing.ts"), "sql", "statement"));
+    let (owner, returned) = flow
+        .returns
+        .iter()
+        .find(|(_, value)| matches!(value, ValueExpression::Named { name, .. } if name == "mutableResult"))
+        .unwrap();
+    assert!(!proof.returned(&file, *owner, returned));
     let helper = flow
         .bindings
         .iter()
