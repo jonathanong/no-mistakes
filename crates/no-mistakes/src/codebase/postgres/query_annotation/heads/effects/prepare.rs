@@ -2,6 +2,7 @@ use super::{CallShape, CallSyntax, Signature, Span};
 use crate::codebase::postgres::query_annotation::heads::{
     bindings::Bindings,
     syntax::{Head, Syntax},
+    HeadProof,
 };
 use crate::codebase::ts_source::module_facts::{ModuleBinding, TypeScriptModuleFacts};
 use crate::fx::{FxHashMap, FxHashSet};
@@ -27,7 +28,7 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn prepare(
     syntax: &Syntax,
     bindings: &Bindings<'_>,
     module: &TypeScriptModuleFacts,
-    trusted_roots: &FxHashSet<Span>,
+    low: bool,
 ) -> Prepared {
     let mut declarations: FxHashMap<Span, Option<&ModuleBinding>> = FxHashMap::default();
     for binding in &module.bindings {
@@ -40,15 +41,7 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn prepare(
     let imports = imports(module);
     let mut result = Prepared::default();
     for call in &syntax.effect_calls {
-        classify_call(
-            call,
-            syntax,
-            bindings,
-            trusted_roots,
-            &proven,
-            &imports,
-            &mut result,
-        );
+        classify_call(call, syntax, bindings, low, &proven, &imports, &mut result);
     }
     result.exported = exported(module, &proven);
     result.pending.sort_unstable_by_key(|value| value.span);
@@ -59,7 +52,7 @@ fn classify_call(
     call: &CallSyntax,
     syntax: &Syntax,
     bindings: &Bindings<'_>,
-    trusted_roots: &FxHashSet<Span>,
+    low: bool,
     proven: &FxHashMap<(usize, u8), Signature>,
     imports: &FxHashMap<usize, Option<(&str, &str)>>,
     out: &mut Prepared,
@@ -68,11 +61,16 @@ fn classify_call(
         return;
     };
     let declaration = (builder.span.start, builder.span.end);
-    if !trusted_roots.contains(&declaration)
-        || !matches!(
-            syntax.constants.get(&declaration),
-            Some(Head::Tag | Head::AppendTag | Head::AppendPrefixTag)
-        )
+    let stable_missing = low
+        && matches!(syntax.constants.get(&declaration), Some(Head::Text(value))
+            if value.tagged && value.current == HeadProof::Missing
+                && value.continued == HeadProof::Missing);
+    if !bindings.trusted_root(declaration)
+        || !(stable_missing
+            || matches!(
+                syntax.constants.get(&declaration),
+                Some(Head::Tag | Head::AppendTag | Head::AppendPrefixTag)
+            ))
     {
         return;
     }
@@ -80,7 +78,7 @@ fn classify_call(
         return;
     };
     if callee.imported {
-        if call.position != 0 {
+        if stable_missing || call.position != 0 {
             return;
         }
         let Some((specifier, imported)) = imports.get(&callee.id).copied().flatten() else {
