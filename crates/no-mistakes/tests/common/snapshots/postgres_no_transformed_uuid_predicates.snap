@@ -398,6 +398,47 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "append_view_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "append_view_positive": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "append-view-append-positive.ts",
+          "line": 6,
+          "message": "append-view-append-positive.ts:6: JOIN ON applies COALESCE to UUID column view_posts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "statement.append(sql` JOIN view_posts v ON COALESCE(v.root_id, v.id) = t.id`);",
+          "target": "view_posts.id"
+        },
+        {
+          "file": "append-view-append-positive.ts",
+          "line": 6,
+          "message": "append-view-append-positive.ts:6: JOIN ON applies COALESCE to UUID column view_posts.root_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "statement.append(sql` JOIN view_posts v ON COALESCE(v.root_id, v.id) = t.id`);",
+          "target": "view_posts.root_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "bare_columns": {
     "exitCode": 0,
     "report": {
@@ -810,6 +851,47 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT 1 FROM accounts WHERE token::text = $1;",
           "target": "accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "literal_view_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "literal_view_positive": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "append-view-literal-positive.ts",
+          "line": 5,
+          "message": "append-view-literal-positive.ts:5: JOIN ON applies COALESCE to UUID column view_posts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "return read(`SELECT t.id FROM threads t JOIN view_posts v ON COALESCE(v.root_id, v.id) = t.id WHERE t.id = $1`, [id]);",
+          "target": "view_posts.id"
+        },
+        {
+          "file": "append-view-literal-positive.ts",
+          "line": 5,
+          "message": "append-view-literal-positive.ts:5: JOIN ON applies COALESCE to UUID column view_posts.root_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "return read(`SELECT t.id FROM threads t JOIN view_posts v ON COALESCE(v.root_id, v.id) = t.id WHERE t.id = $1`, [id]);",
+          "target": "view_posts.root_id"
         }
       ],
       "warnings": []

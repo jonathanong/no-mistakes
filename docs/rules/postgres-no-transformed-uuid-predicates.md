@@ -185,7 +185,11 @@ unanalyzable. Dynamic relation names, including temp tables, column lists, and
 `plan.table`, stay unanalyzable.
 JavaScript escapes and other construction follow the
 unanalyzable policy. At `effort: max`, it also analyzes supported prepared SQL
-builders and helper-returned statements. Unanalyzable or dynamic query text
+builders and helper-returned statements. A `sql-template-strings` statement
+assembled with `.append` can be passed as `read(statement.text, statement.values)`.
+The recovered query retains its view relation for probe classification; transforming
+the probed view column still reports. The two arguments must belong to the same
+tracked builder. Unanalyzable or dynamic query text
 follows the configured `unanalyzableSql` policy.
 
 The rule does not inspect expression indexes or model PostgreSQL's plan
