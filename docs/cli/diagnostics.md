@@ -47,6 +47,12 @@ child phases to report them. `check.analysis` provides one serial envelope aroun
 the concurrent domain checks, so its process-wide measurements cover the whole
 domain pass.
 
+`facts.prepare` is the inclusive preparation envelope; it also emits no CPU/RSS
+metrics. Within it, `parse` covers syntax parsing and file-fact extraction.
+PostgreSQL module evaluation runs afterward under `postgres.annotation.project`,
+so its CPU and RSS are attributed separately. The historical `parse_extract`
+check-result duration remains the inclusive preparation duration.
+
 Repeated resource labels produce one CPU row and one memory row, in order of
 first appearance. Only spans eligible for resource attribution contribute:
 wall, user CPU, and system CPU durations are summed; utilization divides the
@@ -75,6 +81,14 @@ units are one root evaluation. Repeated paths retain their most expensive
 operation rather than a sum across profiles or parse modes. Records can overlap:
 these elapsed durations are non-additive. Basic timings and progress alone do
 not collect hot-file records.
+
+`[hot] parse` brackets the physical OXC parser call only. It excludes file-fact
+extraction and PostgreSQL evaluation, so its elapsed time can be much smaller
+than the inclusive `parse` phase. A declaration file's byte count is its input
+size, not milliseconds or a count of evaluation operations. Within one parallel
+parse/extraction pass, the sum of physical parser durations is bounded by the
+pass's wall time multiplied by its worker count. The retained top ten are only
+a subset, not an accounting of the entire phase.
 
 Each pass ranks elapsed time from slowest to fastest, breaking ties by ascending
 path and then descending units. Timings and thus membership can vary between

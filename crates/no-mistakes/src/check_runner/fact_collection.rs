@@ -33,7 +33,7 @@ pub(crate) fn collect(
         sources,
     } = input;
     let result = no_mistakes::diagnostics::measure_if_enabled(
-        "parse",
+        "facts.prepare",
         no_mistakes::diagnostics::TimingKind::Serial,
         || {
             if needs_shared_facts {

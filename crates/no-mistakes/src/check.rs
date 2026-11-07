@@ -141,7 +141,10 @@ fn record_missing_check_timings(results: &check_runner::CheckResults) {
 fn timing_metadata(label: &str) -> Option<(&'static str, no_mistakes::diagnostics::TimingKind)> {
     Some(match label {
         "discover" => ("discovery", no_mistakes::diagnostics::TimingKind::Serial),
-        "parse_extract" => ("parse", no_mistakes::diagnostics::TimingKind::Serial),
+        "parse_extract" => (
+            "facts.prepare",
+            no_mistakes::diagnostics::TimingKind::Serial,
+        ),
         "react" => (
             "analysis.react",
             no_mistakes::diagnostics::TimingKind::Parallel,

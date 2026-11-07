@@ -71,7 +71,7 @@ impl InvocationObserver {
         pass: FilePass,
         path: &Path,
         units: u64,
-        now: impl FnOnce() -> Instant,
+        now: impl Fn() -> Instant,
         operation: impl FnOnce() -> T,
     ) -> T {
         let Some(files) = &self.hot_files else {
@@ -79,7 +79,7 @@ impl InvocationObserver {
         };
         let started = now();
         let result = operation();
-        let duration = started.elapsed();
+        let duration = now().duration_since(started);
         let entry = FileDiagnostic {
             pass,
             path: path.to_path_buf(),
