@@ -8,21 +8,15 @@ use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
+mod declared;
 mod evaluate;
+mod options;
+use options::Options;
 #[cfg(test)]
 mod tests;
 
 pub const RULE_ID: &str = "vitest-project-policy";
 
-#[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
-pub(crate) struct Options {
-    pub(crate) config: String,
-    pub(crate) helpers: Vec<String>,
-    pub(crate) required: BTreeMap<String, serde_json::Value>,
-    pub(crate) forbidden: Vec<String>,
-    pub(crate) parity: Vec<Parity>,
-}
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct Parity {
@@ -40,7 +34,7 @@ pub struct Diagnostics {
 pub fn diagnostics_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
-    _files: &[PathBuf],
+    files: &[PathBuf],
     sources: &SourceStore,
     defer_suppression: bool,
 ) -> Result<Diagnostics> {
@@ -49,7 +43,7 @@ pub fn diagnostics_with_files_and_sources(
     let mut output = Diagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
         let options: Options = rule.try_rule_options()?;
-        validate(&options)?;
+        options.validate()?;
         let path = crate::codebase::ts_resolver::normalize_path(&root.join(&options.config));
         let (selected, _) =
             super::selected_rule_files_with_roots(root, config, rule, std::slice::from_ref(&path))?;
@@ -57,17 +51,15 @@ pub fn diagnostics_with_files_and_sources(
         if !selected.contains(&path) {
             continue;
         }
-        let allowed = std::iter::once(path.clone())
-            .chain(
-                options
-                    .helpers
-                    .iter()
-                    .map(|helper| crate::codebase::ts_resolver::normalize_path(&root.join(helper))),
-            )
-            .collect::<BTreeSet<_>>();
-        let mut reader = Reader::new(sources, allowed);
-        let value = reader.read(&path);
-        let mut application = evaluate::check(root, &options, value);
+        let allowed = options.source_paths(root, &path, files)?;
+        let mut application = Diagnostics::default();
+        if options.check_effective() {
+            let mut reader = Reader::new(sources, allowed.clone());
+            application = evaluate::check(root, &options, reader.read(&path));
+        }
+        application
+            .findings
+            .extend(declared::check(root, &options.declared, &allowed, sources));
         application.incomplete.retain(|failure| {
             !failure.file.as_ref().is_some_and(|file| {
                 sources.read_path(&root.join(file)).is_ok_and(|source| {
@@ -107,35 +99,6 @@ pub(crate) fn check_with_files(
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
     super::check_with_borrowed_source_store(root, config, files, check_with_files_and_sources)
-}
-
-fn validate(options: &Options) -> Result<()> {
-    anyhow::ensure!(
-        !options.config.is_empty(),
-        "{RULE_ID} requires options.config naming an explicit config file"
-    );
-    anyhow::ensure!(
-        options
-            .required
-            .values()
-            .all(|value| !value.is_array() && !value.is_object()),
-        "{RULE_ID} required values must be scalar JSON literals"
-    );
-    anyhow::ensure!(
-        options
-            .required
-            .keys()
-            .chain(options.forbidden.iter())
-            .chain(
-                options
-                    .parity
-                    .iter()
-                    .flat_map(|pair| pair.properties.iter())
-            )
-            .all(|key| !key.is_empty() && !key.contains('.')),
-        "{RULE_ID} property names must be nonempty direct test property names"
-    );
-    Ok(())
 }
 
 fn finding(root: &Path, value: &Value, project: &str, message: String) -> RuleFinding {
