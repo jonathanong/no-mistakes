@@ -94,6 +94,18 @@ pub(crate) fn collect_prepared(
             }
         }
     }
+    if include_all_calls {
+        for (span, proof) in super::literal_tables::proofs(
+            &syntax,
+            &bindings,
+            ts.module_bindings.as_deref(),
+            &executor_calls,
+        ) {
+            if matches!(calls.get(&span), Some(HeadProof::Unproven)) {
+                calls.insert(span, proof);
+            }
+        }
+    }
     let conditional_effects = if include_all_calls {
         effects::collect_conditionals(&syntax, &bindings, &executor_calls, &calls)
     } else {

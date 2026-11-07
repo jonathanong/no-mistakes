@@ -30,6 +30,9 @@ impl<'a> Visit<'a> for Syntax {
     }
     fn visit_call_expression(&mut self, value: &CallExpression<'a>) {
         self.finite_call(value);
+        if self.collect_literal_tables {
+            self.literal_tables.call(value);
+        }
         if value.optional {
             self.optional_calls.insert(span(value.span));
         }

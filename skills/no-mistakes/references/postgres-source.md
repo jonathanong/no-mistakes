@@ -13,6 +13,9 @@ literal heads at the executor call or in one local const, trusted
 and fixed-return helpers (including total finite returns and one safe returned tagged local) in the same
 file or through one direct source import. See the
 [bounded syntax shapes](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-query-annotation/low-effort.md).
+Low also accepts a literal string `const` name inside the first comment and a
+closed `as const` literal table member passed directly to an executor. Table
+writes, aliases, exports, and dynamic reads keep the unanalyzable policy.
 An exact top-level namespace destructure can follow a unique explicit source
 barrel export to that helper; dynamic keys and ambiguous exports abstain.
 A helper may return one trusted local builder even when captured closures only

@@ -139,3 +139,6 @@ mod string_prefix_tests;
 
 #[path = "source_prerequisite_tests.rs"]
 mod source_prerequisite_tests;
+
+#[path = "literal_tables_tests.rs"]
+mod literal_tables_tests;

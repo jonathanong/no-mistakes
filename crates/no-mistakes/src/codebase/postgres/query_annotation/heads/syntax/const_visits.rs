@@ -7,6 +7,9 @@ impl Syntax {
     pub(super) fn const_declaration(&mut self, value: &VariableDeclaration<'_>) {
         for declaration in &value.declarations {
             self.finite_const(declaration);
+            if self.collect_literal_tables && self.current_function.is_none() {
+                self.literal_tables.declaration(declaration);
+            }
             self.namespace_declaration(declaration);
             if self.collect_helper_heads {
                 self.record_destructure(declaration);

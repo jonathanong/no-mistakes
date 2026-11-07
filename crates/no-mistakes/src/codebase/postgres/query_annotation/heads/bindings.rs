@@ -57,6 +57,7 @@ impl<'a> Bindings<'a> {
                 || !syntax.finite_returns.is_empty()
                 || !syntax.effect_functions.is_empty()
                 || !syntax.string_constants.is_empty()
+                || !syntax.literal_tables.is_empty()
         }) else {
             return index;
         };
@@ -82,7 +83,6 @@ impl<'a> Bindings<'a> {
         index.gaps = Some(Gaps::new(module));
         index.module = Some(module);
         index.trusted_imports = super::trusted_append::import_ids(module);
-        // Index owners first so trusted roots use the same ambiguity and gap proof.
         for binding in &module.bindings {
             for usage in binding.references.iter().filter(|usage| usage.runtime) {
                 let span = (usage.span.start, usage.span.end);

@@ -58,13 +58,16 @@ impl Syntax {
             return;
         }
         let pending = std::mem::take(&mut self.pending_name_templates);
+        let mut domains = crate::fx::FxHashMap::<&str, Vec<&Domain>>::default();
+        for domain in &self.name_domains {
+            domains
+                .entry(domain.name.as_str())
+                .or_default()
+                .push(domain);
+        }
         let mut matched = Vec::new();
         for item in &pending {
-            for domain in self
-                .name_domains
-                .iter()
-                .filter(|domain| domain.name == item.name)
-            {
+            for &domain in domains.get(item.name.as_str()).into_iter().flatten() {
                 matched.push(TemplateUse {
                     call: item.call,
                     reference: item.reference,

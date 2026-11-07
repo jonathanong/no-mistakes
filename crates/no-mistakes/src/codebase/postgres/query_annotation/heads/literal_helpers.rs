@@ -65,7 +65,9 @@ pub(super) fn candidate(outer: &CallExpression<'_>) -> Option<Candidate> {
 }
 
 // Share the exact literal grammar for SQL arguments and computed export keys.
-fn literal_text<'a>(expression: &'a Expression<'a>) -> Option<std::borrow::Cow<'a, str>> {
+pub(super) fn literal_text<'a>(
+    expression: &'a Expression<'a>,
+) -> Option<std::borrow::Cow<'a, str>> {
     match unwrap_ts_wrappers(expression) {
         Expression::StringLiteral(literal) => Some(crate::ast::js_literal(literal)),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => template
