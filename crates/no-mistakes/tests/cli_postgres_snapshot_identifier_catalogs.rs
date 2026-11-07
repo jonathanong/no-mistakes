@@ -44,6 +44,7 @@ fn postgres_workspace_identifier_sources_check_json_snapshot() {
         "name",
         "unused-ignore",
         "guarded",
+        "assignment-closed",
     ] {
         assert_saved_fixture_clean(
             &format!("postgres_workspace_identifier_sources_{shape}"),
@@ -64,6 +65,7 @@ fn postgres_workspace_identifier_sources_check_json_snapshot() {
         "value-only",
         "unused-advise",
         "unchecked",
+        "assignment-open",
     ] {
         assert_saved_fixture(
             &format!("postgres_workspace_identifier_sources_{shape}"),

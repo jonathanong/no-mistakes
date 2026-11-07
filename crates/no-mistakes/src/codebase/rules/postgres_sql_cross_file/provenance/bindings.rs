@@ -128,3 +128,7 @@ impl<'a> Bindings<'a> {
 #[cfg(test)]
 #[path = "bindings/reassigned_identifier_tests.rs"]
 mod reassigned_identifier_tests;
+
+#[cfg(test)]
+#[path = "bindings/assignment_scalar_tests.rs"]
+mod assignment_scalar_tests;
