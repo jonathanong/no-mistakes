@@ -3,7 +3,7 @@ use super::check_json_snapshot::{assert_saved_fixture, rules_path};
 #[test]
 fn postgres_generated_identifiers_check_json_snapshot() {
     let rule = "postgres-no-unbounded-sql-identifier";
-    let config = rules_path(rule, "configs", "registry.yml");
+    let config = rules_path(rule, "configs", "generated-identifiers.yml");
     assert_saved_fixture(
         "postgres_generated_identifiers",
         &[
