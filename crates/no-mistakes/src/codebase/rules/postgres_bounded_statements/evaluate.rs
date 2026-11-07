@@ -36,6 +36,7 @@ struct Evaluation {
     bounded: bool,
     /// Per FROM item: whether that item is bounded.
     items: Vec<bool>,
+    finite_outputs: Option<Vec<bool>>,
     offenders: Vec<Offender>,
 }
 
@@ -86,6 +87,7 @@ fn evaluate(
         return Evaluation {
             bounded: true,
             items: vec![true; query.items.len()],
+            finite_outputs: None,
             offenders: Vec::new(),
         };
     }
@@ -140,6 +142,7 @@ fn evaluate(
             SqlBoundItemKind::Opaque => false,
         })
         .collect();
+    let domains = keys::finite_domains(query, &nested);
     let keys: Vec<_> = query
         .items
         .iter()
@@ -154,6 +157,7 @@ fn evaluate(
                 item,
                 index,
                 &owners,
+                &domains,
                 &pin_subqueries[index],
                 &pin_arrays[index],
                 catalog,
@@ -175,6 +179,7 @@ fn evaluate(
         query,
         Evaluation {
             bounded: query.capped || bounded.iter().all(|state| *state),
+            finite_outputs: keys::output_domains(query, &nested),
             items: bounded,
             offenders,
         },

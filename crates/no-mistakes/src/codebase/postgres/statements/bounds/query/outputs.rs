@@ -24,6 +24,7 @@ pub(super) fn select(
                 source_column: resolver.column(expr),
                 array_aggregate_column: array_element(expr, select, &resolver),
                 constant_null: constant_null(expr),
+                recursive_domain: false,
             }),
             SelectItem::UnnamedExpr(expr) => Some(SqlBoundOutput {
                 name: projected_name(expr),
@@ -32,6 +33,7 @@ pub(super) fn select(
                 source_column: resolver.column(expr),
                 array_aggregate_column: array_element(expr, select, &resolver),
                 constant_null: constant_null(expr),
+                recursive_domain: false,
             }),
             // Wildcards have catalog-dependent width, so later ordinal aliases cannot be mapped.
             _ => None,
@@ -97,6 +99,7 @@ pub(super) fn common(left: &[SqlBoundOutput], right: &[SqlBoundOutput]) -> Vec<S
             source_column: None,
             array_aggregate_column: None,
             constant_null: left.constant_null && right.constant_null,
+            recursive_domain: false,
         })
         .collect()
 }

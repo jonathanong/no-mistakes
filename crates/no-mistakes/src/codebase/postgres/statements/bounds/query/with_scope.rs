@@ -68,6 +68,9 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope_visiting_wri
         } else {
             bound_query(&cte.query, &scope, positions)
         };
+        if with.recursive {
+            super::recursive_domain::project(cte, &scope, &mut bound);
+        }
         // SELECT and RETURNING CTEs can both duplicate prior bound trees. Keep the same
         // conservative expansion cap before either kind enters the shared scope.
         if size(&bound) > MAX_BOUND_ITEMS {

@@ -127,6 +127,7 @@ pub(super) fn compact(bound: &SqlBoundQuery, at: (usize, usize)) -> SqlBoundQuer
             .map(|mut output| {
                 // Compaction changes FROM ordinals; syntactic scalar values survive, column lineage does not.
                 output.source_column = None;
+                output.recursive_domain = false;
                 output.array_aggregate_column = None;
                 output
             })

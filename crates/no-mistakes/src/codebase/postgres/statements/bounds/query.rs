@@ -15,6 +15,7 @@ pub(super) fn caller_value(
     outputs::caller_value(expr, positions)
 }
 mod recursive_depth;
+mod recursive_domain;
 mod recursive_order;
 mod set;
 mod with_scope;

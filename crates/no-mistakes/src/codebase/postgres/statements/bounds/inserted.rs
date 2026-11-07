@@ -38,6 +38,7 @@ pub(super) fn name(
             source_column: None,
             array_aggregate_column: None,
             constant_null: false,
+            recursive_domain: false,
         })
         .collect();
 }

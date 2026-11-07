@@ -46,6 +46,8 @@ pub struct SqlBoundOutput {
     pub array_aggregate_column: Option<(usize, String)>,
     /// `NULL` or `NULL::type`. An equality on this output matches no row.
     pub constant_null: bool,
+    /// Both recursive UNION arms project the same nonrecursive CTE column by ordinal.
+    pub recursive_domain: bool,
 }
 
 /// One FROM item and the columns or index expressions the statement pins on it.
