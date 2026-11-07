@@ -107,7 +107,12 @@ fn closed_domain_facts_reject_open_shapes() {
             "goodName",
         ]
     );
-    assert_eq!(flow.finite_identifier_guards.len(), 8);
+    assert_eq!(flow.finite_identifier_guards.len(), 10);
+    for callee in ["KEEP_MAP.get", "TABLES.get"] {
+        assert_eq!(flow.finite_identifier_guards.iter().filter(|guard| {
+            matches!(&guard.kind, GuardKind::Assertion { callee: actual, .. } if actual == callee)
+        }).count(), 1, "{callee}");
+    }
     let reassigned = flow
         .finite_identifier_guards
         .iter()
