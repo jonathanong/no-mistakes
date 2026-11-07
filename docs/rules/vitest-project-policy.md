@@ -35,7 +35,19 @@ rules:
 Paths are relative to the repository root. `config` is required. `helpers`
 defaults to an empty list and accepts paths or globs such as
 `helpers/vitest-config/*.mts`. Globs expand against the request's prepared
-visible-file inventory; they never trigger a filesystem walk.
+visible-file inventory; they never trigger a filesystem walk. CLI, asynchronous
+Node checks, and standalone filesystem dispatch use the same inventory, including
+visible helpers under `filesystem.skipDirectories`. These helpers can supply
+effective imported values and declaration findings. The configured `config`
+must still pass project scope, skip-directory, and include/exclude selection;
+helpers cannot reopen an excluded config.
+
+An existing literal helper path takes precedence over glob syntax. For example,
+`helpers/[shared]/projects.ts` and `helpers/projects[.ts` select those exact files,
+even though their names contain matched or unmatched brackets. This applies to
+characters in both filenames and directory components. Remaining entries are
+expanded as globs; invalid glob syntax still reports a configuration error.
+
 `required`, `forbidden`, and `parity` default to empty policies. Property names are direct keys of each project's `test` object.
 `required` maps names to exact scalar literals: strings, numbers, booleans, or
 null. `forbidden` requires a property to be absent, regardless of its value.

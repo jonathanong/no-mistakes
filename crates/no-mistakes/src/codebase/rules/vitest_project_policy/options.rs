@@ -40,17 +40,22 @@ impl Options {
         config: &Path,
         files: &[PathBuf],
     ) -> Result<BTreeSet<PathBuf>> {
-        let mut paths =
-            super::super::file_matching::matching_files(root, &self.helpers, files, &[])?
-                .into_iter()
-                .collect::<BTreeSet<_>>();
-        paths.insert(config.to_path_buf());
-        paths.extend(
-            self.helpers
-                .iter()
-                .filter(|helper| !helper.contains(['*', '?', '[', '{']))
-                .map(|helper| crate::codebase::ts_resolver::normalize_path(&root.join(helper))),
-        );
+        let mut paths = BTreeSet::from([config.to_path_buf()]);
+        let mut patterns = Vec::new();
+        for helper in &self.helpers {
+            let path = crate::codebase::ts_resolver::normalize_path(&root.join(helper));
+            if path.exists() || !helper.contains(['*', '?', '[', '{']) {
+                paths.insert(path);
+            } else {
+                patterns.push(helper.clone());
+            }
+        }
+        paths.extend(super::super::file_matching::matching_files(
+            root,
+            &patterns,
+            files,
+            &[],
+        )?);
         Ok(paths)
     }
 

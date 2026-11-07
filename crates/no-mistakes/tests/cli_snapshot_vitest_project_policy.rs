@@ -6,6 +6,11 @@ fn vitest_project_policy_json_matches_snapshot() {
         "pass",
         "declared",
         "declared-filter",
+        "helper-glob-skip",
+        "helper-literal-file-brackets",
+        "helper-literal-file-open-bracket",
+        "helper-literal-dir-brackets",
+        "helper-literal-dir-open-bracket",
         "declared-source-errors",
         "declared-line",
         "declared-next-line",
@@ -136,5 +141,16 @@ fn vitest_project_policy_json_matches_snapshot() {
         let root = rules_path("vitest-project-policy", "fixture", "policy-boundaries");
         cases.push((name, root.clone(), root.join(format!("{name}.yml"))));
     }
+    let root = rules_path("vitest-project-policy", "fixture", "helper-glob-skip");
+    cases.push((
+        "helper-glob-config-excluded",
+        root.clone(),
+        root.join("config-excluded.yml"),
+    ));
+    cases.push((
+        "helper-glob-config-skipped",
+        root.clone(),
+        root.join("config-skipped.yml"),
+    ));
     assert_saved_fixture("vitest_project_policy", &cases);
 }

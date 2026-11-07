@@ -1,0 +1,14 @@
+version: 2
+filesystem:
+  skipDirectories: [skipped]
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: helpers/skipped/vitest.config.ts
+      helpers: ["helpers/**/*.ts"]
+      required:
+        retries: 0
+      declared:
+        forbiddenValues:
+          retries: [2]
