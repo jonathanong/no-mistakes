@@ -144,6 +144,9 @@ pub fn configure_prepared_postgres_plan(
     plan.postgres_bounds |= !config
         .rule_applications("postgres-bounded-statements")
         .is_empty();
+    plan.postgres_index_probes |= !config
+        .rule_applications("postgres-required-predicates")
+        .is_empty();
     plan.postgres_json_writes |= config
         .rule_applications("postgres-json-relation-ids")
         .iter()

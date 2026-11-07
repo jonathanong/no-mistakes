@@ -81,6 +81,7 @@ fn set_arms(
             let line = source.at.0.max(1);
             let relation = source.name;
             out.push(SqlSelectFact {
+                sql_position: (0, 0),
                 line,
                 tables: vec![relation.clone()],
                 predicate_sql: String::new(),

@@ -104,6 +104,7 @@ pub(crate) fn prepare_rule_sql_facts(
                         .rule_applications("postgres-json-relation-ids")
                         .iter()
                         .any(|rule| rule.options.get("idKeyPattern").is_some()),
+                postgres_index_probes: rule_ids.contains(&"postgres-required-predicates"),
                 postgres_fragments: rule_ids.contains(&"postgres-sql-shape-policy"),
                 postgres_sql_include: patterns,
                 postgres_write_sql_include: if rule_ids

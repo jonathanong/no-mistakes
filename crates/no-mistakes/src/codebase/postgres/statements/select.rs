@@ -22,6 +22,7 @@ pub(super) fn collect_predicate_shapes(expr: &sqlparser::ast::Expr, out: &mut Ve
         return;
     }
     out.push(SqlSelectFact {
+        sql_position: (0, 0),
         line: 1,
         tables: Vec::new(),
         predicate_sql: String::new(),

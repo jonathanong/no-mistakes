@@ -65,6 +65,9 @@ pub struct CatalogUnique {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CatalogIndexInfo {
+    pub valid: bool,
+    pub ready: bool,
+    pub live: bool,
     pub name: String,
     pub unique: bool,
     pub primary: bool,

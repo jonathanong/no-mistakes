@@ -1,0 +1,34 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "off": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "constant.sql",
+          "line": 1,
+          "message": "constant.sql:1: LIMIT 5 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 5 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = $1 ORDER BY id LIMIT 5;",
+          "target": "literal-limit"
+        },
+        {
+          "file": "constant.sql",
+          "line": 2,
+          "message": "constant.sql:2: LIMIT 5 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 5 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM topic_posts WHERE id = $1 LIMIT 5;",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

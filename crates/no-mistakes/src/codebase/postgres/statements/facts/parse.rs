@@ -18,6 +18,7 @@ pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
         SqlLocationDemand::None,
         StatementProjection::Complete,
         true,
+        false,
     )
 }
 
@@ -32,6 +33,7 @@ pub(crate) fn extract_sql_statement_facts_with_bounds(
         None,
         SqlLocationDemand::None,
         StatementProjection::Complete,
+        false,
         false,
     )
 }
@@ -49,6 +51,7 @@ pub(crate) fn extract_sql_statement_facts_with_recovered_placeholders(
         SqlLocationDemand::None,
         StatementProjection::Complete,
         false,
+        false,
     )
 }
 
@@ -63,6 +66,7 @@ pub(crate) fn extract_sql_variant_statement_facts(
         Some(positions),
         SqlLocationDemand::Full,
         StatementProjection::Complete,
+        false,
         false,
     )
 }
@@ -80,6 +84,7 @@ pub(crate) fn extract_sql_statement_facts_with_location_demand(
         demand,
         StatementProjection::Complete,
         false,
+        false,
     )
 }
 
@@ -89,6 +94,7 @@ pub(crate) fn extract_sql_statement_facts_with_json_writes(
     positions: PlaceholderPositions<'_>,
     demand: SqlLocationDemand,
     collect_json_writes: bool,
+    collect_index_probes: bool,
 ) -> SqlStatementFileFacts {
     extract_sql_statement_facts_with_placeholder_positions(
         sql,
@@ -97,6 +103,7 @@ pub(crate) fn extract_sql_statement_facts_with_json_writes(
         demand,
         StatementProjection::Complete,
         collect_json_writes,
+        collect_index_probes,
     )
 }
 
@@ -106,6 +113,7 @@ pub(crate) fn extract_sql_lock_scope_facts(
     positions: &[(u32, u32)],
     demand: SqlLocationDemand,
     collect_json_writes: bool,
+    collect_index_probes: bool,
 ) -> SqlStatementFileFacts {
     extract_sql_statement_facts_with_placeholder_positions(
         sql,
@@ -114,6 +122,7 @@ pub(crate) fn extract_sql_lock_scope_facts(
         demand,
         StatementProjection::LockScope,
         collect_json_writes,
+        collect_index_probes,
     )
 }
 
@@ -128,6 +137,7 @@ pub(crate) fn extract_sql_conflict_policy_facts(
         Some(positions),
         SqlLocationDemand::Conflicts,
         StatementProjection::ConflictPolicy,
+        false,
         false,
     )
 }
@@ -169,3 +179,6 @@ mod policy_projection_tests;
 
 #[cfg(test)]
 mod json_write_demand_tests;
+
+#[cfg(test)]
+mod index_probe_demand_tests;

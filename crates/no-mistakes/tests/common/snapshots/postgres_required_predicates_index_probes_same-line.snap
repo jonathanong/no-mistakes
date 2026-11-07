@@ -1,0 +1,44 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "same-line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "same-line.sql",
+          "import": "topic_posts.account_id",
+          "line": 1,
+          "message": "same-line.sql:1: SELECT on topic_posts does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE id = $1 AND EXISTS (SELECT 1 FROM topic_posts WHERE topic_id = $1 LIMIT 5) LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "same-line.sql",
+          "import": "topic_posts.account_id",
+          "line": 1,
+          "message": "same-line.sql:1: SELECT reads partitioned table topic_posts without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE id = $1 AND EXISTS (SELECT 1 FROM topic_posts WHERE topic_id = $1 LIMIT 5) LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "same-line.sql",
+          "line": 1,
+          "message": "same-line.sql:1: queries against topic_posts must include `account_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE id = $1 AND EXISTS (SELECT 1 FROM topic_posts WHERE topic_id = $1 LIMIT 5) LIMIT 5;",
+          "target": "topic_posts"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

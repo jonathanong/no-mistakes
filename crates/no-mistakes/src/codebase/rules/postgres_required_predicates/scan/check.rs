@@ -17,6 +17,9 @@ pub(super) fn statement_findings(
 ) -> Vec<(SqlFactSite, RuleFinding)> {
     let mut findings = Vec::new();
     for (select_index, select) in facts.selects.iter().enumerate() {
+        if super::probes::bounded(select, facts, catalog) {
+            continue;
+        }
         findings.extend(
             textual_require(file, select, opts)
                 .into_iter()

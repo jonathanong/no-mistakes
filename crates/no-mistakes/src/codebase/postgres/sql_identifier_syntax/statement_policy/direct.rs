@@ -58,8 +58,8 @@ pub(crate) fn literals<'a>(
                         observer.increment("postgres.low.policy_literal_parses", 1);
                     }
                     Some(Literal {
-                        facts: Arc::new(crate::codebase::postgres::statements::extract_sql_statement_facts_with_location_demand(
-                            text, false, &[], crate::codebase::postgres::statement_facts::SqlLocationDemand::Full)),
+                        facts: Arc::new(crate::codebase::postgres::statements::extract_sql_statement_facts_with_json_writes(
+                            text, false, Some(&[]), crate::codebase::postgres::statement_facts::SqlLocationDemand::Full, false, probe_demand(file))),
                         mapped: false,
                     })
                 });
@@ -67,4 +67,11 @@ pub(crate) fn literals<'a>(
         }
         out
     })
+}
+
+pub(crate) fn probe_demand(file: &CheckFileFacts) -> bool {
+    file.sql_identifier_syntax
+        .low_applications
+        .iter()
+        .any(|(_, rule, _)| rule == "postgres-required-predicates")
 }

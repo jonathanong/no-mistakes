@@ -226,3 +226,35 @@ fn case<'a>(
         rules_path(RULE, "configs", config),
     )
 }
+
+#[test]
+fn postgres_required_predicates_index_probes_check_json_snapshot() {
+    for shape in [
+        "constant",
+        "literal",
+        "cast",
+        "parameter",
+        "nested",
+        "unordered",
+        "same-line",
+        "cte",
+        "embedded",
+        "low-embedded",
+        "controls",
+        "boolean",
+        "no-catalog",
+        "no-index",
+        "partial-index",
+        "expression-index",
+        "index-not-valid",
+        "index-not-ready",
+        "index-not-live",
+        "off",
+    ] {
+        let root = rules_path(RULE, "fixture", "index-probes");
+        assert_saved_fixture(
+            &format!("postgres_required_predicates_index_probes_{shape}"),
+            &[(shape, root.clone(), root.join(format!("{shape}.yml")))],
+        );
+    }
+}

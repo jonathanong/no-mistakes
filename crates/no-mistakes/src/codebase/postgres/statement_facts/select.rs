@@ -1,6 +1,8 @@
 /// One `SELECT` that names relations in FROM/JOIN.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlSelectFact {
+    #[doc(hidden)]
+    pub sql_position: (usize, usize),
     pub line: usize,
     /// Physical relations, excluding visible CTE aliases (all siblings for recursive WITH).
     pub tables: Vec<String>,

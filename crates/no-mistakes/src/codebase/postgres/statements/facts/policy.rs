@@ -51,3 +51,21 @@ pub(super) fn collect(
 pub(super) fn table_keyword(token: &sqlparser::tokenizer::TokenWithSpan) -> bool {
     matches!(&token.token, sqlparser::tokenizer::Token::Word(word) if word.keyword == sqlparser::keywords::Keyword::TABLE)
 }
+
+pub(super) fn arbiters(
+    prepared: &PreparedSql<'_>,
+) -> crate::fx::FxHashMap<
+    sqlparser::tokenizer::Location,
+    crate::codebase::postgres::SqlConflictArbiter,
+> {
+    prepared
+        .policy_arbiters()
+        .iter()
+        .map(|arbiter| {
+            (
+                arbiter.insert_start,
+                super::super::conflict::expression_arbiter(arbiter),
+            )
+        })
+        .collect()
+}

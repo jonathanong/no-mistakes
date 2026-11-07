@@ -12,6 +12,7 @@ pub(super) fn embedded_call_facts_with_json_writes(
     variants_only: bool,
     demand: SqlLocationDemand,
     collect_json_writes: bool,
+    collect_index_probes: bool,
 ) -> Vec<SqlStatementFileFacts> {
     let exact_locations = demand != SqlLocationDemand::None;
     file.calls
@@ -59,14 +60,16 @@ pub(super) fn embedded_call_facts_with_json_writes(
                     &call.recovered_placeholder_positions,
                     projection,
                     collect_json_writes,
+                    collect_index_probes,
                 )
-            } else if collect_json_writes {
+            } else if collect_json_writes || collect_index_probes {
                 extract_sql_statement_facts_with_json_writes(
                     sql,
                     collect_bounds,
                     Some(&call.recovered_placeholder_positions),
                     projection,
-                    true,
+                    collect_json_writes,
+                    collect_index_probes,
                 )
             } else {
                 extract_sql_statement_facts_with_location_demand(

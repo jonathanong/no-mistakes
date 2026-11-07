@@ -2,6 +2,7 @@ use crate::codebase::check_facts::SqlFactContext;
 mod catalog;
 mod check;
 mod columns;
+mod probes;
 mod verdicts;
 
 use super::{CompiledOptions, RULE_ID};

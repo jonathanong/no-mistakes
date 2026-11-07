@@ -216,6 +216,11 @@ unanalyzable policy, source locations, suppression, and SQL verdict controls as
 the CLI. Configured SQL-template interpolations are bind values; unsupported
 shapes follow the shared policy, and raw SQL files retain their existing
 analysis. See the [bounded helper contract](postgres-facts/low-helper-recovery.md).
+The `postgres-required-predicates` bounded-index-probe exemption also applies to
+programmatic checks: it requires configured catalog index facts, a leading-column
+equality, and the SELECT's own constant or parameter LIMIT. See the
+[rule's examples and controls](rules/postgres-required-predicates.md#bounded-index-probes).
+
 `postgres-explicit-columns` and `postgres-required-predicates` also support
 `low` through `check()` and `analyzeProject()` with the same bounded SQL helper
 subset and `unanalyzable` policy as the CLI. See the
