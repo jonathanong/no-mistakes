@@ -24,6 +24,7 @@ fn prepared_fragment_proofs_distinguish_tags_and_mutations() {
             vec![
                 ("fragment", false),
                 ("altered", false),
+                ("plainCall", false),
                 ("nestedPush", false),
                 ("nestedSplice", false),
                 ("nestedWrite", false),

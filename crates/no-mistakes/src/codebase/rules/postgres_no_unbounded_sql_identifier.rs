@@ -63,7 +63,9 @@ fn scan(
     let mut candidates = 0;
     let mut sinks = 0;
     let calls = sql_calls(root, opts, facts);
-    let bindings = Bindings::with_calls(facts, &calls).with_graph(graph);
+    let bindings = Bindings::with_calls(facts, &calls)
+        .with_graph(graph)
+        .with_trusted_tags(&opts.embedded.trusted_sql_tags);
     for call in &calls {
         candidates += 1;
         if !scans_identifier(call.call) {

@@ -9,6 +9,7 @@ use crate::fx::{fx_map, FxHashMap, FxHashSet};
 type RowMemberKey<'a> = (&'a Path, usize, &'a str, &'a str);
 /// Borrowed syntactic indexes; neither value resolution nor another graph.
 pub(crate) struct Bindings<'a> {
+    pub(super) trusted_tags: &'a [crate::codebase::postgres::TrustedSqlTag],
     pub(crate) routes: super::super::graph::RegistryRoutes<'a>,
     pub(super) facts: &'a CheckFactMap,
     graph: Option<&'a DepGraph>,
@@ -18,9 +19,17 @@ pub(crate) struct Bindings<'a> {
     iterations: FxHashMap<(&'a Path, usize, &'a str), Vec<&'a ValueBinding>>,
 }
 impl<'a> Bindings<'a> {
+    pub(crate) fn with_trusted_tags(
+        mut self,
+        tags: &'a [crate::codebase::postgres::TrustedSqlTag],
+    ) -> Self {
+        self.trusted_tags = tags;
+        self
+    }
     pub(crate) fn new(facts: &'a CheckFactMap) -> Self {
         let mut result = Self {
             facts,
+            trusted_tags: &[],
             graph: None,
             routes: super::super::graph::RegistryRoutes::new(facts),
             calls: fx_map(),

@@ -3,6 +3,7 @@ import { sql } from "@example/sql";
 import legacy from "sql-template-strings";
 
 export function fragments(value: string, n: number) {
+  query(`SELECT id FROM ${sql`records WHERE value = ${value}`.text}`);
   const fragment = sql`id FROM records WHERE value = ${value}`;
   query(`SELECT ${fragment.text}`, fragment.values);
   const relation = sql`records WHERE value = ${value}`;

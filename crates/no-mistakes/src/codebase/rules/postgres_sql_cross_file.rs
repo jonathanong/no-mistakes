@@ -14,8 +14,8 @@ pub(crate) use graph::{
 };
 pub(crate) use options::{compile, CompiledOptions, Options};
 pub(crate) use provenance::{
-    identifier_sources, interpolations, is_process_env, is_process_specifier, literal_array,
-    scans_identifier, Bindings, Provenance,
+    identifier_sources, interpolations, is_parameterized_tag, is_process_env, is_process_specifier,
+    literal_array, scans_identifier, Bindings, Provenance,
 };
 pub(crate) use sql::{identifier_placeholder, sql_calls, SqlCall};
 

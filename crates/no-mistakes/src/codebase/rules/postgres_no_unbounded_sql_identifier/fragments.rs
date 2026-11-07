@@ -1,5 +1,4 @@
 use super::*;
-use crate::codebase::dependencies::extract::ImportedBindingKind;
 use crate::codebase::rules::postgres_sql_cross_file::CompiledOptions;
 
 pub(super) fn proven(
@@ -54,37 +53,10 @@ pub(super) fn proven(
     else {
         return false;
     };
-    let ValueExpression::Named {
-        name: local,
-        scope: tag_scope,
-        offset,
-        ..
-    } = &tag.callee
-    else {
-        return false;
-    };
-    if tag_scope.is_some_and(|scope| scope != 0)
-        || bindings
-            .value(&call.file, tag_scope.unwrap_or(0), local, *offset)
-            .is_some()
-    {
-        return false;
-    }
-    ts.imported_bindings.iter().any(|import| {
-        !import.is_type_only
-            && import.local == *local
-            && ((import.specifier == "sql-template-strings"
-                && (import.kind == ImportedBindingKind::Default
-                    || matches!(import.imported.as_str(), "default" | "SQL")))
-                || opts.embedded.trusted_sql_tags.iter().any(|trusted| {
-                    !trusted.module.is_empty()
-                        && !trusted.name.is_empty()
-                        && import.kind == ImportedBindingKind::Named
-                        && import.imported == trusted.name
-                        && (import.specifier == trusted.module
-                            || import
-                                .specifier
-                                .starts_with(&format!("{}/", trusted.module)))
-                }))
-    })
+    super::super::postgres_sql_cross_file::is_parameterized_tag(
+        bindings,
+        &call.file,
+        tag,
+        &opts.embedded.trusted_sql_tags,
+    )
 }

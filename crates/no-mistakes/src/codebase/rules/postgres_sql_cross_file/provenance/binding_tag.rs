@@ -1,4 +1,4 @@
-//! A `sql-template-strings` tag binds every interpolation; none is raw SQL text.
+//! Parameterized tags bind every interpolation; none is raw SQL text.
 use super::bindings::Bindings;
 use crate::codebase::dependencies::extract::{ImportedBindingKind, ValueCall, ValueExpression};
 use crate::codebase::dependencies::graph::TsFactLookup;
@@ -12,6 +12,15 @@ const MODULE: &str = "sql-template-strings";
 /// tagged calls and stay candidates. A parameter or local with the tag's name
 /// shadows the import, so it is not the library tag.
 pub(super) fn is_bind_tag(bindings: &Bindings<'_>, file: &Path, value_call: &ValueCall) -> bool {
+    is_parameterized_tag(bindings, file, value_call, bindings.trusted_tags)
+}
+
+pub(crate) fn is_parameterized_tag(
+    bindings: &Bindings<'_>,
+    file: &Path,
+    value_call: &ValueCall,
+    tags: &[crate::codebase::postgres::TrustedSqlTag],
+) -> bool {
     if !matches!(value_call.arguments.first(), Some(ValueExpression::Unknown)) {
         return false;
     }
@@ -21,16 +30,28 @@ pub(super) fn is_bind_tag(bindings: &Bindings<'_>, file: &Path, value_call: &Val
     }
     bindings.facts.get_ts_facts(file).is_some_and(|ts| {
         ts.imported_bindings.iter().any(|import| {
-            import.specifier == MODULE
-                && !import.is_type_only
+            !import.is_type_only
                 && import.local == name
-                && match import.kind {
-                    ImportedBindingKind::Default => true,
-                    ImportedBindingKind::Named => {
-                        matches!(import.imported.as_str(), "default" | "SQL")
-                    }
-                    ImportedBindingKind::Namespace => false,
-                }
+                && ((import.specifier == MODULE
+                    && match import.kind {
+                        ImportedBindingKind::Default => true,
+                        ImportedBindingKind::Named => {
+                            matches!(import.imported.as_str(), "default" | "SQL")
+                        }
+                        ImportedBindingKind::Namespace => false,
+                    })
+                    || ts
+                        .value_flow
+                        .tagged_templates
+                        .contains(&(value_call.offset, value_call.end))
+                        && import.kind == ImportedBindingKind::Named
+                        && tags.iter().any(|tag| {
+                            !tag.module.is_empty()
+                                && !tag.name.is_empty()
+                                && import.imported == tag.name
+                                && (import.specifier == tag.module
+                                    || import.specifier.starts_with(&format!("{}/", tag.module)))
+                        }))
         })
     })
 }

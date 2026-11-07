@@ -61,8 +61,8 @@ impl Context<'_, '_> {
         };
         match method.as_str() {
             "join" => {
-                value_call.arguments.len() == 1
-                    && value_call.last_argument_literal
+                (value_call.arguments.is_empty()
+                    || value_call.arguments.len() == 1 && value_call.last_argument_literal)
                     && self.closed_list(base)
             }
             "map" => self.closed_list(base) && closed_callback(flow, value_call),

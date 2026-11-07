@@ -3,6 +3,8 @@ import { sql } from "@example/sql";
 import { sql as untrusted } from "@example/other";
 
 export function open(value: string, n: number) {
+  const plainCall = sql("records");
+  query(`SELECT id FROM ${plainCall.text}`);
   const fragment = untrusted`id FROM ${value}`;
   query(`SELECT id FROM ${fragment.text}`);
   const statements = [`id = $${value}`];

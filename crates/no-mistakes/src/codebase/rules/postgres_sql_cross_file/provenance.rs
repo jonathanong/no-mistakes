@@ -9,6 +9,7 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 mod binding_tag;
+pub(crate) use binding_tag::is_parameterized_tag;
 mod bindings;
 mod env;
 mod identifier_holes;
