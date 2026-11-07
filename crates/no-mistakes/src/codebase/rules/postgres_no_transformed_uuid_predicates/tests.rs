@@ -34,3 +34,38 @@ fn options_require_a_complete_schema_catalog() {
         .to_string()
         .contains("unanalyzableSql"));
 }
+
+#[test]
+fn followup_probes_require_proven_uuid_columns_at_the_catalog_boundary() {
+    let root = fixture();
+    let files = vec![root.join("probe-followup-schema.json")];
+    let sources = super::super::source_store_for_files(&files);
+    let catalog = crate::codebase::postgres::SchemaCatalog::load(
+        &root,
+        "probe-followup-schema.json",
+        &sources,
+    )
+    .unwrap();
+    let columns = super::evaluate::Columns::new(&catalog);
+    for kind in ["view", "distinct", "null"] {
+        for status in ["pass", "positive"] {
+            let name = format!("probe-followup-{kind}-{status}.sql");
+            let source = std::fs::read_to_string(root.join(&name)).unwrap();
+            let facts = crate::codebase::postgres::extract_sql_statement_facts(&source);
+            assert!(!facts.parse_failed, "{name}");
+            let mut reported = std::collections::BTreeSet::new();
+            for fact in &facts.transformed_column_uses {
+                if !matches!(columns.resolve(fact), Ok((_, false))) {
+                    reported.insert(fact.line);
+                }
+            }
+            if status == "pass" {
+                assert!(reported.is_empty(), "{name}: {reported:?}");
+            } else {
+                let expected: std::collections::BTreeSet<_> =
+                    (1..=source.lines().count()).collect();
+                assert_eq!(reported, expected, "{name}");
+            }
+        }
+    }
+}

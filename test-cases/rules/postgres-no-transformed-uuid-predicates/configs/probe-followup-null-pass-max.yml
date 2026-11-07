@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    include:
+      - probe-followup-null-pass.sql
+      - probe-followup-schema.json
+    options:
+      schemaCatalogPath: probe-followup-schema.json
+      sqlInclude: ["*.sql"]
+      executorNames: []
+effort: max

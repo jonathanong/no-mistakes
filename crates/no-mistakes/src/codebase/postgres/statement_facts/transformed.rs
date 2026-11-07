@@ -25,4 +25,5 @@ pub struct SqlTransformedColumnUseFact {
 pub struct SqlTransformedColumnProbeFact {
     pub table: String,
     pub column: String,
+    pub candidate_tables: Option<Vec<String>>,
 }

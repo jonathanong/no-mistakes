@@ -1,0 +1,126 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "accounts": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "email": {
+          "dataType": "text"
+        },
+        "token": {
+          "dataType": "pg_catalog.uuid"
+        },
+        "custom": {
+          "dataType": "\"UUID\""
+        },
+        "array": {
+          "dataType": "uuid[]"
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    },
+    "orders": {
+      "columns": {
+        "id": {
+          "dataType": "UUID"
+        },
+        "account_id": {
+          "dataType": "\"pg_catalog\".\"uuid\""
+        },
+        "value": {
+          "dataType": "integer"
+        }
+      }
+    },
+    "other": {
+      "columns": {
+        "label": {
+          "dataType": "text"
+        }
+      }
+    },
+    "text_ids": {
+      "columns": {
+        "id": {
+          "dataType": "text"
+        }
+      }
+    },
+    "public.dupes": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "audit.dupes": {
+      "columns": {
+        "id": {
+          "dataType": "text"
+        }
+      }
+    },
+    "\"Case\"": {
+      "columns": {
+        "ID": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "case": {
+      "columns": {
+        "id": {
+          "dataType": "text"
+        }
+      }
+    },
+    "\"dot.table\"": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "\"odd.schema\".\"Mixed\"": {
+      "columns": {
+        "ID": {
+          "dataType": "uuid"
+        }
+      }
+    }
+  },
+  "views": {
+    "account_view": {
+      "definition": "SELECT a.id, a.token FROM accounts a"
+    },
+    "renamed_account_view": {
+      "definition": "SELECT a.id AS account_key FROM accounts a"
+    },
+    "computed_account_view": {
+      "definition": "SELECT COALESCE(a.id, a.token) AS id FROM accounts a"
+    },
+    "unknown_account_view": {
+      "definition": "SELECT a.missing AS id FROM accounts a"
+    },
+    "recursive_account_view": {
+      "definition": "SELECT v.id FROM recursive_account_view v"
+    },
+    "quoted_account_view": {
+      "definition": "SELECT \"Case\".\"ID\" AS id FROM \"Case\""
+    },
+    "quoted_alias_view": {
+      "definition": "SELECT \"A.B\".* FROM accounts AS \"A.B\""
+    },
+    "partial_account_view": {
+      "definition": "SELECT token, COALESCE(id, token) AS id FROM accounts"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    include:
+      - probe-followup-distinct-positive.sql
+      - probe-followup-schema.json
+    options:
+      schemaCatalogPath: probe-followup-schema.json
+      sqlInclude: ["*.sql"]
+      executorNames: []
+effort: low
