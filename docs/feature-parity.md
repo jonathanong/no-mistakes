@@ -172,7 +172,9 @@ or return guards until the guarded binding is written, configured
 `identifierValidators` (through re-exports), and compatible
 `finiteDomainAssertions` are bounded. Property guards validate only their exact
 member path. Static metadata-array lookups followed by a throwing or returning
-presence guard prove their literal string fields. CLI `check`, Node `check()`,
+presence guard prove their literal string fields. Literal prefixes with generated
+hex suffixes, configured SQL tag `.text` fragments, and literal-plus-numeric-placeholder
+arrays joined with literal separators are also bounded. CLI `check`, Node `check()`,
 and batched `analyzeProject()` share findings. Immutable array-destructured
 query rows retain source provenance; comma expressions retain their final
 operand's value provenance. A direct adjacent scalar overwrite can prove one
