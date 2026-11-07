@@ -1,6 +1,6 @@
 use super::{configure_executor_warnings, executor_config_warnings};
 use crate::codebase::check_facts::{
-    CheckFactPlan, PlaywrightFactPlan, collect_check_facts, collect_check_facts_with_playwright,
+    collect_check_facts, collect_check_facts_with_playwright, CheckFactPlan, PlaywrightFactPlan,
 };
 use crate::codebase::ts_resolver::normalize_path;
 use crate::config::v2::schema::postgres_executors::ALL_RULE_IDS;
