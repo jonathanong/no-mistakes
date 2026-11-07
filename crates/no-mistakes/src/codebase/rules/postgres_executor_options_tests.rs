@@ -33,8 +33,9 @@ fn every_executor_rule_decodes_extensions_with_its_actual_option_type() {
     check!(postgres_require_query_annotation);
     check!(postgres_sql_statement_policy);
     check!(postgres_json_relation_ids);
-    check!(postgres_unmatched_executors);
-    check!(postgres_undeclared_executors);
+    rule.rule = "postgres-require-query-annotation".into();
+    decode::<super::postgres_unmatched_executors::Options>(&rule);
+    decode::<super::postgres_undeclared_executors::Options>(&rule);
     for id in [
         "postgres-no-mutable-sql-registry",
         "postgres-no-unbounded-sql-identifier",

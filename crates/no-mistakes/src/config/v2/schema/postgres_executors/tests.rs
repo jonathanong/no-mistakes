@@ -64,3 +64,17 @@ fn replacement_and_extension_conflict_even_when_empty_for_every_executor_rule() 
         assert!(error.contains("cannot both be set"), "{error}");
     }
 }
+
+#[test]
+fn executor_validation_covers_every_prepared_public_rule() {
+    let ids = |values: &[&str]| {
+        values
+            .iter()
+            .map(|value| (*value).to_owned())
+            .collect::<std::collections::BTreeSet<_>>()
+    };
+    assert_eq!(
+        ids(ALL_RULE_IDS),
+        ids(crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS)
+    );
+}
