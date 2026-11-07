@@ -58,6 +58,7 @@ impl ImportCollector {
         let domains = &self.bounded_domains;
         let ranges = &self.per_item_ranges;
         let batch_calls = &self.bounded_batch_calls;
+        let keyset_calls = &self.keyset_page_calls;
         self.per_item_calls.retain_mut(|call| {
             if call.is_callback {
                 return true;
@@ -68,6 +69,9 @@ impl ImportCollector {
             {
                 return false;
             }
+            call.keyset_page_read = keyset_calls
+                .get(&call.offset)
+                .is_some_and(|guard| domains.guard_valid(guard));
             let active = ranges
                 .get(&call.caller_id)
                 .into_iter()

@@ -9,6 +9,7 @@ pub struct PerItemCall {
     pub construct: String,
     pub is_callback: bool,
     pub capped_cursor_page_read: bool,
+    pub keyset_page_read: bool,
 }
 
 struct PerItemRange {
@@ -59,6 +60,7 @@ impl ImportCollector {
                     caller_id: call.caller_id,
                     construct: range.construct.clone(),
                     is_callback: false,
+                    keyset_page_read: false,
                     capped_cursor_page_read: self.capped_cursor_calls.contains(&call.offset),
                 });
             }
@@ -123,6 +125,7 @@ impl ImportCollector {
                             caller_id: self.current_function_id(),
                             construct,
                             is_callback: true,
+                            keyset_page_read: false,
                             capped_cursor_page_read: false,
                         });
                     }

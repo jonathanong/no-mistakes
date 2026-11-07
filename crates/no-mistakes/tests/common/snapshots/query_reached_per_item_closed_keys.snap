@@ -105,6 +105,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "postgres: control/<anonymous:2> → read"
         },
         {
+          "file": "escapes.mts",
+          "import": "read",
+          "line": 12,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlTaggedEscape/<anonymous:2> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map(([kind, ids]) => read(kind, ids)));",
+          "target": "postgres: controlTaggedEscape/<anonymous:2> → read"
+        },
+        {
+          "file": "escapes.mts",
+          "import": "read",
+          "line": 7,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlConstructorEscape/<anonymous:1> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map(([kind, ids]) => read(kind, ids)));",
+          "target": "postgres: controlConstructorEscape/<anonymous:1> → read"
+        },
+        {
           "file": "guards.mts",
           "import": "read",
           "line": 17,
@@ -193,6 +211,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "query-reached-per-item",
           "sourceLine": "await read(kind, batch);",
           "target": "postgres: controlOpenKeys → read"
+        },
+        {
+          "file": "tagged-receiver.mts",
+          "import": "read",
+          "line": 7,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via controlTaggedRecordReceiver/<anonymous:1> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(Object.entries(grouped).map(([kind, ids]) => read(kind, ids)));",
+          "target": "postgres: controlTaggedRecordReceiver/<anonymous:1> → read"
         }
       ],
       "warnings": []

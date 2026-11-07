@@ -3,6 +3,7 @@ use crate::codebase::dependencies::extract::PerItemCall;
 use crate::config::v2::schema::EffectKindConfig;
 
 pub(super) struct CandidatePolicy<'a> {
+    pub sinks: &'a Sinks<'a>,
     pub options: &'a Options,
     pub effect: &'a EffectKindConfig,
     pub filter: &'a super::super::path_filter::RulePathFilter,
@@ -12,6 +13,7 @@ pub(super) struct CandidatePolicy<'a> {
 impl CandidatePolicy<'_> {
     pub(super) fn includes(&self, site: &ResolvedCallSite, position: &PerItemCall) -> bool {
         if (self.options.exempt_capped_cursor_page_reads && position.capped_cursor_page_read)
+            || (position.keyset_page_read && self.sinks.match_site(site).is_some())
             || !self.filter.is_match(&site.file)
             || exempt(self.effect, &site.source_callee)
             || self.excluded.binary_search(&source_node(site)).is_ok()

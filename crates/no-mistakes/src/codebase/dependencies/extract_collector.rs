@@ -81,6 +81,7 @@ struct ImportCollector {
     collect_per_item_calls: bool,
     per_item_calls: Vec<PerItemCall>,
     bounded_domains: BoundedDomains,
+    keyset_page_calls: FxHashMap<u32, BoundedGuard>,
     bounded_batch_calls: FxHashMap<u32, Vec<(usize, String)>>,
     capped_cursor_calls: FxHashSet<u32>,
     mutable_cursor_bindings: FxHashMap<usize, FxHashSet<String>>,

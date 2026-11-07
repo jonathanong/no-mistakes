@@ -5,10 +5,10 @@ fn finite_groups_and_batch_reads_preserve_open_ended_controls() {
     let fixtures = root().parent().unwrap().join("bounded-shapes");
     for (shape, count) in [
         ("counter", 20),
-        ("tuple-enum", 24),
+        ("tuple-enum", 29),
         ("chunk", 16),
-        ("keyset", 45),
-        ("closed-keys", 19),
+        ("keyset", 46),
+        ("closed-keys", 22),
         ("distinct-calls", 1),
         ("dependent-chain", 1),
     ] {

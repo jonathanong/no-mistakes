@@ -75,7 +75,8 @@ impl ImportCollector {
                     result,
                 )
             {
-                self.record_bounded_batch_call(call.span.start);
+                let guard = self.inherited_bounded_dependencies(call.span.start);
+                self.keyset_page_calls.insert(call.span.start, guard);
             }
         }
     }

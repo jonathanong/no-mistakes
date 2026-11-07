@@ -75,22 +75,40 @@ impl ImportCollector {
                     "map" | "flatMap" | "forEach" | "filter" | "some" | "every" | "reduce" | "find"
                 )
             });
-        if !iteration {
-            let receiver = match &call.callee {
-                Expression::StaticMemberExpression(member) => Some(&member.object),
-                Expression::ComputedMemberExpression(member) => Some(&member.object),
-                _ => None,
-            };
-            if let Some(receiver) = receiver {
-                if let Some(name) = simple_callee_name(receiver) {
-                    self.invalidate_bounded_name(&name, true);
-                }
-            }
+        let hidden_source = iteration
+            && call
+                .arguments
+                .first()
+                .and_then(Argument::as_expression)
+                .is_some_and(bounded_callback_hides_source);
+        if !iteration || !hidden_source {
+            self.invalidate_bounded_callee(&call.callee);
         }
         if object_read {
             return;
         }
-        for argument in &call.arguments {
+        self.invalidate_bounded_arguments(&call.arguments);
+    }
+
+    fn invalidate_bounded_callee(&mut self, callee: &Expression<'_>) {
+        if !self.collect_per_item_calls {
+            return;
+        }
+        let receiver = match callee {
+            Expression::StaticMemberExpression(member) => Some(&member.object),
+            Expression::ComputedMemberExpression(member) => Some(&member.object),
+            _ => None,
+        };
+        if let Some(name) = receiver.and_then(simple_callee_name) {
+            self.invalidate_bounded_name(&name, true);
+        }
+    }
+
+    fn invalidate_bounded_arguments(&mut self, arguments: &[Argument<'_>]) {
+        if !self.collect_per_item_calls {
+            return;
+        }
+        for argument in arguments {
             match argument {
                 Argument::SpreadElement(spread) => {
                     self.invalidate_bounded_expression(&spread.argument)

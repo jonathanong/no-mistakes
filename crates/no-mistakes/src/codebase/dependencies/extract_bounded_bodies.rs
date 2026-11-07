@@ -35,23 +35,19 @@ impl ImportCollector {
             return None;
         };
         let guard = self.closed_iteration(&member.object)?;
-        if cursor_plain_references(callback, true).contains("arguments") {
+        if !bounded_callback_hides_source(callback) {
             return None;
         }
         let mut writes = CursorGuards::default();
         match callback {
-            Expression::ArrowFunctionExpression(function)
-                if function.params.items.len() <= 2 && function.params.rest.is_none() =>
-            {
+            Expression::ArrowFunctionExpression(function) => {
                 if let Some(body) = crate::ast::arrow_function_body(&function.body) {
                     writes.visit_function_body(body);
                 } else if let Some(expression) = function.body.as_expression() {
                     writes.visit_expression(expression);
                 }
             }
-            Expression::FunctionExpression(function)
-                if function.params.items.len() <= 2 && function.params.rest.is_none() =>
-            {
+            Expression::FunctionExpression(function) => {
                 writes.visit_function_body(function.body.as_ref()?);
             }
             _ => return None,
@@ -81,4 +77,15 @@ fn bounded_body_preserves(guard: &BoundedGuard, writes: &CursorGuards) -> bool {
                 && !writes.escaped.contains(root)
                 && !writes.bindings.contains(root)
         })
+}
+
+fn bounded_callback_hides_source(callback: &Expression<'_>) -> bool {
+    let params = match callback {
+        Expression::ArrowFunctionExpression(function) => &function.params,
+        Expression::FunctionExpression(function) => &function.params,
+        _ => return false,
+    };
+    params.items.len() <= 2
+        && params.rest.is_none()
+        && !cursor_plain_references(callback, true).contains("arguments")
 }

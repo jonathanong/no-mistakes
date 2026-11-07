@@ -123,6 +123,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "postgres: controlOuter → read"
         },
         {
+          "file": "helper-dummy-sql.mts",
+          "import": "oneRow",
+          "line": 8,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `oneRow` reaches `postgres` via controlTransitiveSql → oneRow → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const rows = await oneRow('SELECT id FROM items WHERE id > $1 ORDER BY id LIMIT 100', [cursor]);",
+          "target": "postgres: controlTransitiveSql → oneRow → read"
+        },
+        {
           "file": "row-access.mts",
           "import": "read",
           "line": 10,

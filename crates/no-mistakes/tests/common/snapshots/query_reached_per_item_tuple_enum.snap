@@ -24,6 +24,42 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "file": "callback-source.mts",
+          "import": "read",
+          "line": 11,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlNamedSourceMutation → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of kinds) await read(kind);",
+          "target": "postgres: controlNamedSourceMutation → read"
+        },
+        {
+          "file": "callback-source.mts",
+          "import": "read",
+          "line": 16,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlArgumentsSourceMutation → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of kinds) await read(kind);",
+          "target": "postgres: controlArgumentsSourceMutation → read"
+        },
+        {
+          "file": "callback-source.mts",
+          "import": "read",
+          "line": 21,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlRestSourceMutation → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of kinds) await read(kind);",
+          "target": "postgres: controlRestSourceMutation → read"
+        },
+        {
+          "file": "callback-source.mts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlCallbackSourceMutation → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of kinds) await read(kind);",
+          "target": "postgres: controlCallbackSourceMutation → read"
+        },
+        {
           "file": "coverage.mts",
           "import": "lookup",
           "line": 10,
@@ -238,6 +274,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "query-reached-per-item",
           "sourceLine": "for (const kind in Kind) await read(kind);",
           "target": "postgres: controlEnumKeys → read"
+        },
+        {
+          "file": "tagged-receiver.mts",
+          "import": "read",
+          "line": 10,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlTaggedTupleReceiver → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const kind of kinds) await read(kind);",
+          "target": "postgres: controlTaggedTupleReceiver → read"
         }
       ],
       "warnings": []

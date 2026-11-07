@@ -140,8 +140,9 @@ array remains per-item, including an array initialized with literals.
 `const` binding annotated as `Record<Key, Value>` is finite when `Key` is a
 literal union, a visible enum, or `typeof KEYS[number]` for a literal `as const`
 tuple. `Record<string, Value>` and unresolved or shadowed key types remain
-per-item. Container mutation, aliasing, unknown helper escapes, and callback
-parameters that expose the source array prevent the exemption.
+per-item. Container mutation, aliasing, unknown helper, constructor, or
+tagged-template escapes, and callback parameters that expose the source array
+prevent the exemption.
 
 A fixed chunk loop must start at zero, compare against the input array's
 `length`, and advance by a positive constant integer greater than one. Only
@@ -151,13 +152,16 @@ parameter array. An enclosing open-ended per-item loop still reports the batch
 call once per outer item.
 
 A `while (cursor)` keyset loop exempts only a direct awaited page call followed
-immediately by `cursor = rows.at(-1)?.id`. The cursor must be an outer `let` / `var` binding or parameter
-with one unconditional advancement. The call must receive a literal
+immediately by `cursor = rows.at(-1)?.id`. The cursor must be an outer `let` /
+`var` binding or parameter with one unconditional advancement. The call must
+directly match a configured effect sink and receive a literal
 PostgreSQL `SELECT` and `[cursor]`, with `WHERE id > $1 ORDER BY id [ASC] LIMIT N`
 for a positive integer `N > 1`, and project the cursor key. Simple column
 projections, table aliases, and schema-qualified tables are supported. More
 complex SQL, additional cursor writes or escapes, and surrounding per-item
-loops keep the call reported. Other calls in the same page loop still report.
+loops keep the call reported. Transitive helpers remain per-item because their
+actual SQL may differ from the arguments supplied here. Other calls in the same
+page loop still report.
 
 With a configured `read` sink, these shapes are valid:
 
