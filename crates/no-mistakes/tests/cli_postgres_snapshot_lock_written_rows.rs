@@ -216,3 +216,19 @@ fn lock_written_rows_executor_replacement_and_extension_cannot_both_be_configure
         assert!(diagnostic.contains(expected), "{diagnostic}");
     }
 }
+
+#[test]
+fn postgres_lock_written_rows_hashed_keys_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_hashed_keys",
+        &[("hashes", "hashed-advisory", "checks-fail.yml")],
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_atomic_cte_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_atomic_cte",
+        &[("atomic", "atomic-cte", "checks-fail.yml")],
+    );
+}

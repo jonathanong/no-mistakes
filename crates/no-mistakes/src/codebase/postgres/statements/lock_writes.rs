@@ -1,12 +1,14 @@
-use crate::codebase::postgres::idents::{object_name_identity, unwrap_expr};
+use crate::codebase::postgres::idents::object_name_identity;
+mod advisory;
 mod helpers;
+mod scope;
 use super::value::PlaceholderPositions;
-use helpers::{access, constant, generated_name, qualifier};
+pub(crate) use advisory::AdvisoryKey;
+use helpers::{access, generated_name, qualifier};
 use sqlparser::ast::{
-    BinaryOperator, Expr, FunctionArg, FunctionArgExpr, FunctionArguments, Query, SetExpr,
-    Statement, TableFactor, Visit, Visitor,
+    BinaryOperator, Expr, Query, SetExpr, Statement, TableFactor, Visit, Visitor,
 };
-use std::ops::ControlFlow;
+use std::{collections::BTreeSet, ops::ControlFlow};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct LockWriteFacts {
@@ -15,7 +17,8 @@ pub(crate) struct LockWriteFacts {
     pub table_locks: Vec<Option<String>>,
     pub transaction_boundary: bool,
     pub relation_identity_changed: bool,
-    pub advisory_keys: Vec<Vec<String>>,
+    pub advisory_keys: Vec<Vec<AdvisoryKey>>,
+    pub self_contained_locks: BTreeSet<usize>,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct RowAccess {
@@ -36,39 +39,39 @@ pub(super) fn collect(
         let mut executed = Vec::new();
         super::wrappers::walk_executed(statement, &mut executed);
         for statement in executed {
+            let first_lock = out.locks.len();
+            let first_write = out.writes.len();
             let _ = statement.visit(&mut Collector {
                 out: &mut out,
-                cte_depth: 0,
-                with_stack: Vec::new(),
+                scopes: Vec::new(),
                 positions,
             });
+            scope::mark_self_contained(&mut out, first_lock, first_write);
         }
     }
     out
 }
 struct Collector<'a, 'p> {
     out: &'a mut LockWriteFacts,
-    cte_depth: usize,
-    with_stack: Vec<bool>,
+    scopes: Vec<BTreeSet<String>>,
     positions: PlaceholderPositions<'p>,
 }
 impl Visitor for Collector<'_, '_> {
     type Break = ();
     fn pre_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
-        self.with_stack.push(query.with.is_some());
-        self.cte_depth += usize::from(query.with.is_some());
+        self.scopes.push(scope::cte_names(query));
         if !query.locks.is_empty() {
             let access = match query.body.as_ref() {
                 SetExpr::Select(select)
-                    if self.cte_depth == 0
-                        && select.from.len() == 1
-                        && select.from[0].joins.is_empty() =>
+                    if select.from.len() == 1 && select.from[0].joins.is_empty() =>
                 {
-                    access(
+                    let mut row = access(
                         &select.from[0].relation,
                         select.selection.as_ref(),
                         self.positions,
-                    )
+                    );
+                    scope::hide_cte(&mut row, &self.scopes);
+                    row
                 }
                 _ => RowAccess {
                     relation: None,
@@ -103,7 +106,7 @@ impl Visitor for Collector<'_, '_> {
         ControlFlow::Continue(())
     }
     fn post_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
-        self.cte_depth -= usize::from(self.with_stack.pop().expect("balanced SQL query"));
+        self.scopes.pop().expect("balanced SQL query");
         ControlFlow::Continue(())
     }
     fn pre_visit_statement(&mut self, statement: &Statement) -> ControlFlow<()> {
@@ -149,30 +152,8 @@ impl Visitor for Collector<'_, '_> {
         ControlFlow::Continue(())
     }
     fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
-        if let Expr::Function(function) = expr {
-            let name = object_name_identity(&function.name);
-            let name = name.strip_prefix("pg_catalog.").unwrap_or(&name);
-            if matches!(
-                name,
-                "pg_advisory_lock"
-                    | "pg_advisory_xact_lock"
-                    | "pg_try_advisory_lock"
-                    | "pg_try_advisory_xact_lock"
-                    | "pg_advisory_lock_shared"
-                    | "pg_advisory_xact_lock_shared"
-                    | "pg_try_advisory_lock_shared"
-                    | "pg_try_advisory_xact_lock_shared"
-            ) {
-                if let FunctionArguments::List(args) = &function.args {
-                    let keys: Option<Vec<_>> = args.args.iter().map(|arg| match arg {
-                        FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) if constant(expr) || matches!(unwrap_expr(expr), Expr::Value(value) if matches!(value.value, sqlparser::ast::Value::Placeholder(_))) => Some(expr.to_string()),
-                        _ => None,
-                    }).collect();
-                    if let Some(keys) = keys.filter(|keys| matches!(keys.len(), 1 | 2)) {
-                        self.out.advisory_keys.push(keys);
-                    }
-                }
-            }
+        if let Some(keys) = advisory::keys(expr) {
+            self.out.advisory_keys.push(keys);
         }
         ControlFlow::Continue(())
     }
