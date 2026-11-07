@@ -1,6 +1,7 @@
 use super::*;
-use crate::codebase::dependencies::extract::{ValueBinding, ValueFlowFacts};
+use crate::codebase::dependencies::extract::{IdentifierAssignment, ValueBinding, ValueFlowFacts};
 
+mod assignments;
 mod closed_types;
 mod flow;
 mod rows;
@@ -8,15 +9,18 @@ pub(crate) use closed_types::literal_array;
 
 use crate::fx::{fx_map, FxHashMap, FxHashSet};
 type RowMemberKey<'a> = (&'a Path, usize, &'a str, &'a str);
+type AssignmentIndex<'a> = FxHashMap<(&'a Path, usize, &'a str), Vec<&'a IdentifierAssignment>>;
 /// Borrowed syntactic indexes; neither value resolution nor another graph.
 pub(crate) struct Bindings<'a> {
     pub(super) identifier_returns: Option<&'a super::IdentifierReturns>,
+    pub(super) numeric_parameter_bounds_only: bool,
     pub(super) collection_safety: std::cell::RefCell<FxHashMap<(std::path::PathBuf, String), bool>>,
     pub(super) trusted_tags: &'a [crate::codebase::postgres::TrustedSqlTag],
     pub(crate) routes: super::super::graph::RegistryRoutes<'a>,
     pub(super) facts: &'a CheckFactMap,
     pub(super) graph: Option<&'a DepGraph>,
     values: FxHashMap<(&'a Path, usize, &'a str), Vec<&'a ValueBinding>>,
+    assignments: std::sync::OnceLock<AssignmentIndex<'a>>,
     calls: FxHashMap<&'a Path, FxHashSet<(u32, u32)>>,
     overwrites: FxHashMap<RowMemberKey<'a>, FxHashSet<(u32, u32)>>,
     iterations: FxHashMap<(&'a Path, usize, &'a str), Vec<&'a ValueBinding>>,
@@ -33,12 +37,14 @@ impl<'a> Bindings<'a> {
         let mut result = Self {
             facts,
             identifier_returns: None,
+            numeric_parameter_bounds_only: false,
             collection_safety: Default::default(),
             trusted_tags: &[],
             graph: None,
             routes: super::super::graph::RegistryRoutes::new(facts),
             calls: fx_map(),
             values: fx_map(),
+            assignments: Default::default(),
             iterations: fx_map(),
             overwrites: fx_map(),
         };
@@ -118,3 +124,15 @@ impl<'a> Bindings<'a> {
         self.search_env(file, value, members, &mut super::search::Search::default())
     }
 }
+
+#[cfg(test)]
+#[path = "bindings/reassigned_identifier_tests.rs"]
+mod reassigned_identifier_tests;
+
+#[cfg(test)]
+#[path = "bindings/assignment_scalar_tests.rs"]
+mod assignment_scalar_tests;
+
+#[cfg(test)]
+#[path = "bindings/assignment_initializers_tests.rs"]
+mod assignment_initializers_tests;

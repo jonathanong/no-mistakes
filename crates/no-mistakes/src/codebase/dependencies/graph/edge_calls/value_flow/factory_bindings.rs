@@ -1,6 +1,11 @@
 use super::*;
 
 impl FlowFileIndex {
+    pub(in super::super) fn immutable_binding(&self, scope: usize, name: &str) -> bool {
+        scoped_name(&self.bindings, scope, name)
+            .is_some_and(|binding| binding.immutable && binding.invalidated_at.is_none())
+    }
+
     pub(in super::super) fn factory_binding(&self, scope: usize, name: &str) -> bool {
         self.factory_value(
             &ValueExpression::Named {

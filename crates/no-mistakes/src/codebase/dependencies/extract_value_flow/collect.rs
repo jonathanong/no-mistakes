@@ -27,6 +27,9 @@ impl ImportCollector {
             self.note_stable_array_binding(&declarator.id);
         }
         self.note_instance_class(declarator);
+        if !immutable {
+            self.note_identifier_initializer(declarator);
+        }
         if let Some(init) = &declarator.init {
             self.record_callable_initializer(declarator, immutable, init);
             let value = if self

@@ -96,6 +96,7 @@ pub(super) fn collect(
                     config,
                     dependency_graph,
                     shared,
+                    request.sources,
                 )
             },
         )?);

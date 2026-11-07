@@ -2,7 +2,37 @@ use super::*;
 use crate::fx::{FxHashMap, FxHashSet};
 use std::path::PathBuf;
 
-pub(crate) type IdentifierReturns = FxHashMap<PathBuf, FxHashSet<(u32, u32)>>;
+#[derive(Default)]
+pub(crate) struct IdentifierReturns {
+    calls: FxHashMap<PathBuf, FxHashMap<(u32, u32), Vec<usize>>>,
+    used_sources: std::cell::RefCell<FxHashSet<usize>>,
+}
+
+#[cfg(test)]
+#[path = "validated_usage_tests.rs"]
+mod tests;
+
+impl IdentifierReturns {
+    pub(crate) fn insert(&mut self, file: PathBuf, span: (u32, u32), sources: Vec<usize>) {
+        self.calls.entry(file).or_default().insert(span, sources);
+    }
+
+    pub(crate) fn source_used(&self, index: usize) -> bool {
+        self.used_sources.borrow().contains(&index)
+    }
+
+    fn proves(&self, file: &Path, span: (u32, u32), record_usage: bool) -> bool {
+        let Some(sources) = self.calls.get(file).and_then(|calls| calls.get(&span)) else {
+            return false;
+        };
+        if record_usage && !sources.is_empty() {
+            self.used_sources
+                .borrow_mut()
+                .extend(sources.iter().copied());
+        }
+        true
+    }
+}
 
 impl<'a> Bindings<'a> {
     pub(crate) fn imported_collection_safe(
@@ -24,10 +54,14 @@ impl<'a> Bindings<'a> {
         self
     }
 
-    pub(crate) fn identifier_return(&self, file: &Path, call: &ValueCall) -> bool {
+    pub(crate) fn identifier_return(
+        &self,
+        file: &Path,
+        call: &ValueCall,
+        record_usage: bool,
+    ) -> bool {
         self.identifier_returns
-            .and_then(|returns| returns.get(file))
-            .is_some_and(|returns| returns.contains(&(call.offset, call.end)))
+            .is_some_and(|returns| returns.proves(file, (call.offset, call.end), record_usage))
     }
 
     pub(crate) fn identifier_value(
@@ -36,7 +70,17 @@ impl<'a> Bindings<'a> {
         value: &ValueExpression,
         members: &[String],
     ) -> bool {
-        members.is_empty() && self.return_value(file, value, &mut FxHashSet::default())
+        members.is_empty() && self.return_value(file, value, &mut FxHashSet::default(), true)
+    }
+
+    pub(crate) fn identifier_value_without_usage(
+        &self,
+        file: &Path,
+        value: &ValueExpression,
+    ) -> bool {
+        self.identifier_returns
+            .is_some_and(|returns| !returns.calls.is_empty())
+            && self.return_value(file, value, &mut FxHashSet::default(), false)
     }
 
     fn return_value(
@@ -44,13 +88,13 @@ impl<'a> Bindings<'a> {
         file: &Path,
         value: &ValueExpression,
         seen: &mut FxHashSet<(usize, String, u32)>,
+        record_usage: bool,
     ) -> bool {
         match value {
             ValueExpression::Call(start, end) => self
                 .identifier_returns
-                .and_then(|returns| returns.get(file))
-                .is_some_and(|returns| returns.contains(&(*start, *end))),
-            ValueExpression::Awaited(inner) => self.return_value(file, inner, seen),
+                .is_some_and(|returns| returns.proves(file, (*start, *end), record_usage)),
+            ValueExpression::Awaited(inner) => self.return_value(file, inner, seen, record_usage),
             ValueExpression::Named {
                 name,
                 scope,
@@ -62,7 +106,7 @@ impl<'a> Bindings<'a> {
                     .is_some_and(|binding| {
                         binding.immutable
                             && seen.insert((scope, name.clone(), binding.declared_at))
-                            && self.return_value(file, &binding.value, seen)
+                            && self.return_value(file, &binding.value, seen, record_usage)
                     })
             }
             _ => false,

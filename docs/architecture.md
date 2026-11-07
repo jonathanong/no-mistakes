@@ -147,6 +147,16 @@ checks and runs those checks through `rayon::join`.
 The effective file fact plan is the contract for source parsing. It merges the
 `TsFactPlan` and check/report demands before any source file is parsed.
 
+`identifier_provenance` is independent of ordinary call/value-flow demand.
+Configured max-effort SQL identifier checks request scalar assignment summaries;
+default call graphs and mixed checks with low-effort identifier analysis leave
+their initializer index and assignment RHS summaries uninitialized. Direct
+value-flow extraction helpers retain their complete-provenance compatibility.
+Identifier demand also retains scalar literal origins for bindings and first
+arguments that compose values. It drops object/array fields and later arguments;
+inline conditional SQL fragments therefore need no second AST pass or broad
+argument-origin retention.
+
 Required direction:
 
 1. Add fields to `TsFactPlan` for every fact family needed by graph edges or

@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "identifier_text_origins.rs"]
+mod identifier_origins;
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct TextOrigin {
     pub(crate) literal: bool,

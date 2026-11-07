@@ -1,0 +1,37 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "wrong": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".no-mistakes-wrong.yml",
+          "import": "postgres-no-unbounded-sql-identifier",
+          "line": 10,
+          "message": "stale postgres-no-unbounded-sql-identifier identifierSources entry `@example/catalog#getRelationTableNameOrThrow` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {module: \"@example/catalog\", name: getRelationTableNameOrThrow}",
+          "target": "@example/catalog#getRelationTableNameOrThrow"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "apps/worker/negative.ts",
+          "import": "table",
+          "line": 6,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT object_id FROM ${table}`);",
+          "target": "table"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

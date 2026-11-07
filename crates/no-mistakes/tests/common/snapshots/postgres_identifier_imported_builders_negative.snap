@@ -1,0 +1,54 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/dirty.ts",
+          "import": "cycleStatement",
+          "line": 38,
+          "message": "Unbounded identifier source `cycleStatement` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "const select = (execute: QueryExecutor) => execute(`/* cycle */ SELECT ${cycleStatement.text}`, cycleStatement.values)",
+          "target": "cycleStatement"
+        },
+        {
+          "file": "src/dirty.ts",
+          "import": "escaped",
+          "line": 19,
+          "message": "Unbounded identifier source `escaped` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "const select = (execute: QueryExecutor) => execute(`/* escaped factory */ SELECT ${escaped.text}`, escaped.values)",
+          "target": "escaped"
+        },
+        {
+          "file": "src/dirty.ts",
+          "import": "raw",
+          "line": 14,
+          "message": "Unbounded identifier source `raw` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "const select = (execute: QueryExecutor) => execute(`/* raw factory */ SELECT ${raw.text}`, raw.values)",
+          "target": "raw"
+        },
+        {
+          "file": "src/dirty.ts",
+          "import": "raw",
+          "line": 9,
+          "message": "Unbounded identifier source `raw` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "const select = (execute: QueryExecutor) => execute(`/* raw callback */ SELECT ${raw.text}`, raw.values)",
+          "target": "raw"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

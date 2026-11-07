@@ -292,9 +292,9 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
         &config,
         &[
             "pass-exported-catalog",
-            "pass-catalog-numeric-suffix",
+            "mixed-catalog-numeric-suffix",
             "pass-numeric-parameter",
-            "pass-catalog-local-alias",
+            "mixed-catalog-local-alias",
             "pass-catalog-map-join",
             "pass-user-named-placeholder-table",
             "fail-open-string-parameter",

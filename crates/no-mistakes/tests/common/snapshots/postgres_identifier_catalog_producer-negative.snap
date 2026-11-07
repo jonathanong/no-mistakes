@@ -5,7 +5,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "producer-negative": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": ".no-mistakes-producer-negative.yml",
+          "import": "postgres-no-unbounded-sql-identifier",
+          "line": 11,
+          "message": "stale postgres-no-unbounded-sql-identifier identifierSources entry `./catalog.ts#getRelationTableNameOrThrow` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {module: ./catalog.ts, name: getRelationTableNameOrThrow}",
+          "target": "./catalog.ts#getRelationTableNameOrThrow"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],

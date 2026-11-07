@@ -1,5 +1,4 @@
-//! Parameters whose annotation closes the domain: `number`, or an element of a
-//! literal array catalog (`(typeof CATALOG)[number]`, directly or by alias).
+//! Numeric parameter bounds, with optional literal-catalog annotation bounds.
 use super::Bindings;
 use crate::codebase::dependencies::extract::{
     ValueExpression, ValueFlowFacts, ValueParameter, ValueType,
@@ -11,9 +10,15 @@ use crate::codebase::rules::postgres_sql_cross_file::{
 use std::path::Path;
 
 impl Bindings<'_> {
+    pub(crate) fn with_numeric_parameter_bounds(mut self) -> Self {
+        self.numeric_parameter_bounds_only = true;
+        self
+    }
+
     pub(super) fn closed_type(&self, file: &Path, parameter: &ValueParameter) -> bool {
         match &parameter.type_reference {
             Some(ValueType::Number) => true,
+            _ if self.numeric_parameter_bounds_only => false,
             Some(shape) => self.catalog_type(file, shape),
             None => false,
         }
@@ -85,3 +90,7 @@ fn reads_env(expr: &ValueExpression) -> bool {
     walk_expression(expr, &mut |value| found |= is_process_env(value));
     found
 }
+
+#[cfg(test)]
+#[path = "closed_types_tests.rs"]
+mod tests;

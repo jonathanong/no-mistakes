@@ -94,7 +94,8 @@ fn resolve_imported_call_target(
             }
         }
         ExportedCallableResolution::Value(_, _) => direct_target(),
-        ExportedCallableResolution::Absent | ExportedCallableResolution::Unknown => {
+        ExportedCallableResolution::Absent | ExportedCallableResolution::Unknown
+        | ExportedCallableResolution::Namespace(_) => {
             ResolvedCallTarget::Unknown
         }
     })
