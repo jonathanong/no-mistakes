@@ -240,7 +240,7 @@ client.query(copyTo("/* copy/out */ COPY items TO STDOUT"));
 
 The wrapper must be a direct non-optional call with exactly one literal string
 or interpolation-free ordinary template argument. Unannotated literals report
-a missing annotation; dynamic arguments, unconfigured wrappers, and optional
+a missing annotation; dynamic arguments, wrappers outside the configured list, and optional
 calls remain unresolved. Matching uses import identity, not the local name.
 
 A conditional callee such as `(flag ? write : read)(sql)` qualifies when both
