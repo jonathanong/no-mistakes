@@ -178,7 +178,7 @@ jobs:
 
       - name: Check Rust validation parity
         timeout-minutes: 2
-        run: node --test .github/scripts/rust-validation.test.cjs .github/scripts/rust-coverage-floors.test.cjs .github/scripts/preserve-rust-profiles.test.cjs
+        run: node --test .github/scripts/rust-validation.test.cjs .github/scripts/rust-coverage-floors.test.cjs .github/scripts/preserve-rust-profiles.test.cjs .github/scripts/publish-npm.test.cjs
 
       - name: Check formatting
         timeout-minutes: 5

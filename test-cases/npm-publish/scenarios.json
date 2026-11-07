@@ -1,0 +1,384 @@
+[
+  {
+    "name": "new version publishes latest",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": ""
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "tags": [
+      "latest"
+    ]
+  },
+  {
+    "name": "older version publishes backfill",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.9\"",
+        "stderr": ""
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "tags": [
+      "backfill"
+    ]
+  },
+  {
+    "name": "already published version is skipped",
+    "results": [
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": ""
+      }
+    ],
+    "tags": []
+  },
+  {
+    "name": "npm array response is supported",
+    "results": [
+      {
+        "status": 0,
+        "stdout": "[\"0.109.8\"]",
+        "stderr": ""
+      }
+    ],
+    "tags": []
+  },
+  {
+    "name": "Sigstore 409 retries after checking version",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": ""
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "TLOG_CREATE_ENTRY_ERROR: (409) an equivalent entry already exists"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": ""
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "tags": [
+      "latest",
+      "latest"
+    ],
+    "delays": [
+      10000
+    ]
+  },
+  {
+    "name": "accepted write with failed response is skipped",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": ""
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "ECONNRESET"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": ""
+      }
+    ],
+    "tags": [
+      "latest"
+    ]
+  },
+  {
+    "name": "version appearing before retry is skipped",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": ""
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "TLOG_CREATE_ENTRY_ERROR"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": ""
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "delays": [
+      10000
+    ]
+  },
+  {
+    "name": "latest is rechecked before retry",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": ""
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "E503"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.110.0\"",
+        "stderr": ""
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "tags": [
+      "latest",
+      "backfill"
+    ],
+    "delays": [
+      10000
+    ]
+  },
+  {
+    "name": "permanent permission error fails",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": ""
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "E403"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "error": "E403"
+  },
+  {
+    "name": "retry budget is exhausted",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": ""
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "TLOG_CREATE_ENTRY_ERROR"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": ""
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "TLOG_CREATE_ENTRY_ERROR"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": ""
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "TLOG_CREATE_ENTRY_ERROR"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      }
+    ],
+    "tags": [
+      "latest",
+      "latest",
+      "latest"
+    ],
+    "delays": [
+      10000,
+      20000
+    ],
+    "error": "TLOG_CREATE_ENTRY_ERROR"
+  },
+  {
+    "name": "metadata outage fails closed",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "E503"
+      }
+    ],
+    "tags": [],
+    "error": "npm view"
+  },
+  {
+    "name": "latest lookup outage cannot update latest",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "E503"
+      }
+    ],
+    "tags": [],
+    "error": "npm view"
+  },
+  {
+    "name": "first publication uses latest",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "tags": [
+      "latest"
+    ]
+  }
+]
