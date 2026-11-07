@@ -59,5 +59,6 @@ fn only_definite_transaction_closes_discharge_an_early_exit() {
         .map(|line| (line, "unanalyzable".to_owned()))
         .to_vec();
     expected.extend([140, 152, 163, 185, 192, 200].map(|line| (line, CHECKS[0].to_owned())));
+    expected.extend([214, 224, 234, 238].map(|line| (line, "unanalyzable".to_owned())));
     assert_eq!(findings, expected);
 }

@@ -209,3 +209,34 @@ async function objectAliasMemberOptions(id: string) {
   const options = { query: execute };
   await query('UPDATE items SET active = true WHERE id = $1', [id], options);
 }
+async function sqlCommitReturn(skip: boolean, id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const options = { query: tx.query };
+  if (skip) {
+    await tx.query('COMMIT');
+    return;
+  }
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
+async function nestedSqlCommitReturn(skip: boolean, id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const options = { query: tx.query };
+  if (skip) {
+    await tx.query('SELECT 1', [await query('COMMIT')]);
+    return;
+  }
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
+async function overriddenSqlCommitReturn(skip: boolean, id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const execute = tx.query;
+  const options = { query: execute };
+  if (skip) {
+    await execute('COMMIT', [], { query });
+    return;
+  }
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}

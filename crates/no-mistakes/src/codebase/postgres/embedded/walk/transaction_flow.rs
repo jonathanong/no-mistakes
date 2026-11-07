@@ -1,5 +1,6 @@
 use super::ScopeVisitor;
-use oxc_ast::ast::Statement;
+use crate::codebase::ts_source::unwrap_ts_wrappers;
+use oxc_ast::ast::{Expression, Statement};
 use std::num::NonZeroU32;
 
 pub(super) type Completed = crate::fx::FxHashSet<(u32, NonZeroU32)>;
@@ -148,6 +149,8 @@ pub(super) fn complete_boundary(
     identity: Option<NonZeroU32>,
 ) {
     if visitor.executor_options.track_transaction_helpers
+        && matches!(unwrap_ts_wrappers(&call.callee), Expression::StaticMemberExpression(member)
+            if matches!(member.property.name.as_str(), "commit" | "rollback"))
         && visitor.loop_depth == 0
         && visitor.transaction_options.suspended == 0
         && visitor.control_depth == visitor.transaction_options.if_depth
