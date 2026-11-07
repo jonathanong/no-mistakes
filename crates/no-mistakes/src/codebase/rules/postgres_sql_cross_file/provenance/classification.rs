@@ -85,6 +85,11 @@ pub(super) fn classify_in(
     }
     match expr {
         ValueExpression::Derived(parts) => {
+            let usage = if matches!(usage, IdentifierUse::Member(_)) {
+                IdentifierUse::Value
+            } else {
+                usage
+            };
             for part in parts.iter() {
                 classify_in(graph, facts, file, part, out, bindings, usage);
             }
@@ -130,13 +135,16 @@ pub(super) fn classify_in(
             classify_in(graph, facts, file, right, out, bindings, usage);
         }
         ValueExpression::Object(fields, _) | ValueExpression::Array(fields) => {
-            let usage = if usage.members().is_empty() {
-                IdentifierUse::Value
-            } else {
-                usage
-            };
             for value in fields.values() {
-                classify_in(graph, facts, file, value, out, bindings, usage);
+                classify_in(
+                    graph,
+                    facts,
+                    file,
+                    value,
+                    out,
+                    bindings,
+                    IdentifierUse::Value,
+                );
             }
         }
         ValueExpression::Named {
