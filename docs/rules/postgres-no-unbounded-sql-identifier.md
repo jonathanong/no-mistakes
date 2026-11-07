@@ -425,39 +425,13 @@ identifierValidators:
     argument: 0
 ```
 
-## Fix
-
-Map accepted runtime values to literal schemas with a switch whose default
-throws, then interpolate that helper. Keep values in tagged binds.
-
-## Options and defaults
-
-`importSpecifier` defaults to empty and must be set (or set `executorNames`) to
-select executor calls when the rule does not inherit a project postgres block.
-`executorNames` defaults to `query`, `read`, and `write` when a specifier is
-set. `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, and
-`finiteDomainAssertions` and `identifierValidators` default to empty. `include` and `exclude` default to
-empty (all indexable files). See [Closed domains](#closed-domains).
-
-## Suppression
-
-Use `no-mistakes-disable-next-line postgres-no-unbounded-sql-identifier` or
-`no-mistakes-disable-line` at the executor call, or
-`no-mistakes-disable-file` for a justified file exception.
-
-## Related rules
-
-[`postgres-no-mutable-sql-registry`](postgres-no-mutable-sql-registry.md) covers
-cross-file registry member writes.
-[`postgres-no-offset`](postgres-no-offset.md) covers pagination clauses.
-[`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) covers statement shapes.
-
-### Composed parameterized fragments
+## Composed parameterized fragments
 
 At max effort, the `.text` member of an immutable local produced by a configured
 `trustedSqlTags` tag (or `sql-template-strings`) is SQL text with bind placeholders.
 The proof does not depend on the interpolated bind values. Calls on the fragment,
-member writes, and escaping the fragment end this proof.
+member writes, reads of internal members such as `.strings`, and escaping the
+fragment end this proof.
 
 A static array of literal strings and literal text plus numeric placeholders can
 be joined with a literal separator. For example:
@@ -473,3 +447,30 @@ function list(n: number) {
 The array must remain immutable. A string input used after `$`, a dynamic
 separator, or an escaped or mutated array does not establish this proof. A
 union-typed string parameter without runtime validation remains unbounded.
+
+## Fix
+
+Map accepted runtime values to literal schemas with a switch whose default
+throws, then interpolate that helper. Keep values in tagged binds.
+
+## Options and defaults
+
+`importSpecifier` defaults to empty and must be set (or set `executorNames`) to
+select executor calls when the rule does not inherit a project postgres block.
+`executorNames` defaults to `query`, `read`, and `write` when a specifier is
+set. `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`,
+`finiteDomainAssertions`, and `identifierValidators` default to empty.
+`include` and `exclude` default to empty (all indexable files). See [Closed domains](#closed-domains).
+
+## Suppression
+
+Use `no-mistakes-disable-next-line postgres-no-unbounded-sql-identifier` or
+`no-mistakes-disable-line` at the executor call, or
+`no-mistakes-disable-file` for a justified file exception.
+
+## Related rules
+
+[`postgres-no-mutable-sql-registry`](postgres-no-mutable-sql-registry.md) covers
+cross-file registry member writes.
+[`postgres-no-offset`](postgres-no-offset.md) covers pagination clauses.
+[`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) covers statement shapes.

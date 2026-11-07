@@ -10,7 +10,14 @@ fn prepared_fragment_proofs_distinguish_tags_and_mutations() {
     let root = crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
         .join("issue-3073-fragments");
     for (file_name, expected) in [
-        ("text.ts", vec![("fragment", true), ("oldFragment", true)]),
+        (
+            "text.ts",
+            vec![
+                ("fragment", true),
+                ("oldFragment", true),
+                ("relation", true),
+            ],
+        ),
         ("joins.ts", vec![]),
         (
             "negative.ts",
@@ -62,6 +69,10 @@ fn prepared_fragment_proofs_distinguish_tags_and_mutations() {
         };
         let flow = &facts.get_ts_facts(&file).unwrap().value_flow;
         for (name, expected) in expected {
+            assert!(
+                flow.bindings.iter().any(|binding| binding.name == name),
+                "{file_name}: missing {name}"
+            );
             for binding in flow.bindings.iter().filter(|binding| binding.name == name) {
                 let reference = Provenance::Reference {
                     name: name.into(),

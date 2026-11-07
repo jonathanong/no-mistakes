@@ -4,7 +4,7 @@ import { sql as untrusted } from "@example/other";
 
 export function open(value: string, n: number) {
   const fragment = untrusted`id FROM ${value}`;
-  query(`SELECT ${fragment.text}`);
+  query(`SELECT id FROM ${fragment.text}`);
   const statements = [`id = $${value}`];
   const where = statements.join(" AND ");
   query(`SELECT id FROM records WHERE ${where}`);
@@ -22,7 +22,7 @@ export function open(value: string, n: number) {
 
 export function shadow(sql: (value: TemplateStringsArray) => unknown, value: string) {
   const fragment = sql`id FROM ${value}`;
-  query(`SELECT ${fragment.text}`);
+  query(`SELECT id FROM ${fragment.text}`);
 }
 
 export function nestedMutation(value: string) {
