@@ -91,14 +91,19 @@ impl Snapshot {
             return;
         }
         self.restore(visitor);
+        let mut divergent = false;
         for (scope, identities) in visitor.scopes.iter_mut().zip(&other.identities) {
             for (name, identity) in identities {
                 if let Some(binding) = scope.get_mut(name) {
                     if binding.value_identity != *identity {
+                        divergent = true;
                         binding.value_identity = None;
                     }
                 }
             }
+        }
+        if divergent {
+            visitor.incomplete_transaction_owners.insert(owner(visitor));
         }
         visitor
             .incomplete_transaction_owners
@@ -139,4 +144,21 @@ fn owner(visitor: &ScopeVisitor<'_>) -> u32 {
         .last()
         .copied()
         .unwrap_or(0)
+}
+
+pub(super) fn note_identity_loss(visitor: &mut ScopeVisitor<'_>, name: &str) {
+    let Some(spans) = visitor.scoped.transactions.get(name) else {
+        return;
+    };
+    if visitor
+        .lookup(name)
+        .and_then(|binding| binding.value_identity)
+        .is_some_and(|identity| {
+            spans
+                .iter()
+                .any(|span| super::transaction::source_identity(span.start) == Some(identity))
+        })
+    {
+        visitor.incomplete_transaction_owners.insert(owner(visitor));
+    }
 }

@@ -128,6 +128,9 @@ impl ScopeVisitor<'_> {
         self.invalidate_query_capture(name);
         self.clear_undeclared_binding(name);
         self.forget_receiver_alias(name);
+        if self.executor_options.track_transaction_helpers {
+            super::transaction_flow::note_identity_loss(self, name);
+        }
         for scope in self.scopes.iter_mut().rev() {
             if let Some(binding) = scope.get_mut(name) {
                 binding.value_identity = None;
