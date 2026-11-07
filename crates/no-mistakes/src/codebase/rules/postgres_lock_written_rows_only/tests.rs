@@ -2,6 +2,7 @@ use super::*;
 
 mod binding_control_flow;
 mod executor_selection;
+mod four_joined_aliases;
 mod helper_completion;
 mod helper_projection;
 mod helper_shapes;
