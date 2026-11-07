@@ -222,9 +222,11 @@ non-failing advisory, and `ignore` omits the diagnostic. The legacy
 `report`. These policies never certify an unknown transaction as safe.
 Dynamic relation names, key columns, aliases, and `FOR UPDATE OF` targets also
 follow this policy; recovered SQL placeholders cannot establish their identity.
-A possible earlier return or throw also prevents a later write from proving
-that a locked row is written. Keep the matching write on every path that takes
-the lock, or remove the lock.
+A possible earlier return or throw prevents a later write from proving that a
+locked row is written while the transaction remains open. A branch that commits
+and returns ends that transaction path; a matching write on the remaining
+fall-through path can still satisfy the lock. Keep matching writes on every
+continuing transaction path, or remove the lock.
 
 The rule does not establish advisory-key provenance from unwritten relations,
 unbounded recursive read sets, duplication of unique-index guarantees, or
@@ -266,6 +268,16 @@ await query('UPDATE items SET active = true WHERE id = $1', [id], { query: tx })
 ```
 
 A configured property may hold the transaction binding or its `.query` member.
-Unknown values, computed properties, spreads, and conflicting executor overrides
-follow the unanalyzable policy; they never establish autocommit membership. Use an
-inline static object and the configured transaction binding to make routing clear.
+The options object can also be a local `const` object literal passed later,
+including a shorthand property referring to an immutable transaction-query alias:
+
+```ts
+const query = tx.query;
+const options = { query };
+await write('UPDATE items SET active = true WHERE id = $1', [id], options);
+```
+
+Unknown values, computed properties, spreads, mutations, and conflicting executor
+overrides follow the unanalyzable policy; they never establish autocommit
+membership. Use a static object and the configured transaction binding to make
+routing clear.
