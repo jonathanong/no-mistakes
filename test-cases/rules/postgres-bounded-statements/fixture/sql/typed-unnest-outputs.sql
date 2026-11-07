@@ -16,5 +16,5 @@ SELECT unnest($1::uuid[] ORDER BY 1) AS id;
 SELECT unnest(input => $1::uuid[]) AS id;
 SELECT other($1::uuid[]) AS id;
 SELECT unnest($1::numeric[]) AS id;
-SELECT unnest(SELECT id FROM accounts) AS id;
+SELECT unnest((SELECT ids FROM array_inputs LIMIT 1)) AS id;
 SELECT database.pg_catalog.unnest($1::uuid[]) AS id;

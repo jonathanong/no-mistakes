@@ -108,9 +108,16 @@ fn unused_modifying_cte_without_returning_stays_opaque() {
 fn repeated_returning_ctes_keep_the_shared_expansion_cap() {
     use crate::codebase::postgres::statements::SqlBoundQuery;
     fn contains_opaque(query: &SqlBoundQuery) -> bool {
+        if query
+            .items
+            .iter()
+            .any(|item| matches!(item.kind, SqlBoundItemKind::Opaque))
+        {
+            assert_eq!(query.input_mode, SqlBoundInputMode::Streaming);
+            return true;
+        }
         query.items.iter().any(|item| {
-            matches!(item.kind, SqlBoundItemKind::Opaque)
-                || matches!(&item.kind, SqlBoundItemKind::Query(inner) if contains_opaque(inner))
+            matches!(&item.kind, SqlBoundItemKind::Query(inner) if contains_opaque(inner))
                 || item.pins.iter().any(|pin| {
                     matches!(&pin.source, SqlPinSource::Query(inner) | SqlPinSource::ReadQuery(inner) | SqlPinSource::ArrayQuery(inner)
                         if contains_opaque(inner))

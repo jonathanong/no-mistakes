@@ -1,4 +1,4 @@
-use super::facts;
+use crate::codebase::postgres::extract_sql_statement_facts;
 
 #[test]
 fn typed_builtin_unnest_outputs_keep_scalar_element_evidence() {
@@ -7,16 +7,22 @@ fn typed_builtin_unnest_outputs_keep_scalar_element_evidence() {
             .join("sql/typed-unnest-outputs.sql"),
     )
     .unwrap();
-    let found = facts(&sql);
-    let scalars: Vec<_> = found
-        .iter()
-        .map(|fact| fact.query.outputs[0].scalar)
-        .collect();
-    assert_eq!(
-        scalars,
-        [
-            true, true, true, false, false, false, false, false, false, false, false, true, false,
-            false, false, false, false, true, false, false
-        ],
-    );
+    let scalar_lines = [1, 2, 3, 12, 18];
+    assert_eq!(sql.lines().count(), 20);
+    for (index, statement) in sql.lines().enumerate() {
+        let line = index + 1;
+        let found = extract_sql_statement_facts(statement);
+        assert!(!found.parse_failed, "line {line}: {statement}: {found:?}");
+        let outer = found
+            .bounds
+            .iter()
+            .find(|fact| fact.line == 1 && fact.column == 1)
+            .unwrap_or_else(|| panic!("line {line}: missing outer SELECT: {statement}"));
+        assert_eq!(outer.query.outputs.len(), 1, "line {line}: {statement}");
+        assert_eq!(
+            outer.query.outputs[0].scalar,
+            scalar_lines.contains(&line),
+            "line {line}: {statement}",
+        );
+    }
 }
