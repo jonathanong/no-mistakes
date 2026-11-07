@@ -29,6 +29,9 @@ export function nestedMutation(value: string) {
   const nestedPush = sql`id FROM records`;
   nestedPush.strings.push(value);
   query(`SELECT ${nestedPush.text}`);
+  const nestedSplice = sql`id FROM records`;
+  nestedSplice.strings.splice(0, 1, value);
+  query(`SELECT ${nestedSplice.text}`);
   const nestedWrite = sql`id FROM records`;
   nestedWrite.strings[0] = value;
   query(`SELECT ${nestedWrite.text}`);

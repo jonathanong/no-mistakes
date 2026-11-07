@@ -15,6 +15,11 @@ use std::sync::Arc;
 #[test]
 fn missing_facts_and_unmatched_calls_stay_unproven() {
     let opts = compile("postgres-no-unbounded-sql-identifier", &Options::default()).unwrap();
+    let graph = crate::codebase::dependencies::graph::test_support::from_raw_maps(
+        PathBuf::from("/repo"),
+        Default::default(),
+        Default::default(),
+    );
     let file = PathBuf::from("src/query.ts");
     let embedded = EmbeddedSqlCall::default();
     let call = SqlCall {
@@ -31,21 +36,14 @@ fn missing_facts_and_unmatched_calls_stay_unproven() {
     let facts = CheckFactMap::default();
     let bindings = Bindings::new(&facts);
     assert!(!proven(
-        &DepGraph::default(),
+        &graph,
         &opts,
         &facts,
         &bindings,
         &call,
         &Provenance::ProcessEnv("SCHEMA".into()),
     ));
-    assert!(!proven(
-        &DepGraph::default(),
-        &opts,
-        &facts,
-        &bindings,
-        &call,
-        &reference
-    ));
+    assert!(!proven(&graph, &opts, &facts, &bindings, &call, &reference));
 
     let mut facts = CheckFactMap::default();
     facts.ts.insert(
@@ -57,14 +55,7 @@ fn missing_facts_and_unmatched_calls_stay_unproven() {
         .into(),
     );
     let bindings = Bindings::new(&facts);
-    assert!(!proven(
-        &DepGraph::default(),
-        &opts,
-        &facts,
-        &bindings,
-        &call,
-        &reference
-    ));
+    assert!(!proven(&graph, &opts, &facts, &bindings, &call, &reference));
 }
 
 #[test]

@@ -18,6 +18,7 @@ fn prepared_fragment_proofs_distinguish_tags_and_mutations() {
                 ("fragment", false),
                 ("altered", false),
                 ("nestedPush", false),
+                ("nestedSplice", false),
                 ("nestedWrite", false),
                 ("nestedAlias", false),
                 ("nestedComputed", false),
