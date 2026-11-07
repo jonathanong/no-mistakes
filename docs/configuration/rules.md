@@ -461,7 +461,8 @@ Use `extraExecutorNames` to extend the defaults instead:
 
 ```yaml
 rules:
-  postgres-require-query-annotation:
+  - rule: postgres-require-query-annotation
+    scope: repository
     options:
       importSpecifier: "@example/db"
       extraExecutorNames: [readPool, writePool]
@@ -470,7 +471,9 @@ rules:
 This selects `query`, `read`, `write`, `readPool`, and `writePool` from the
 configured module. Setting both `executorNames` and `extraExecutorNames`,
 including empty lists, is a configuration error. Existing explicit
-`executorNames: []` without a module still selects no executor calls.
+`executorNames: []` without a module still selects no executor calls. With a
+nonempty `importSpecifier`, an omitted or empty `executorNames` retains the
+existing default list.
 `extraExecutorNames: []` retains the defaults even without `importSpecifier`;
 without a module, those names match named imports from any module.
 
