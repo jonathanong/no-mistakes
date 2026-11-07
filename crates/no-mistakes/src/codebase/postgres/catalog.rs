@@ -35,6 +35,7 @@ mod table_scope;
 #[cfg(test)]
 mod tests;
 mod trigger;
+mod view_definition;
 mod view_relation;
 
 use arbiter::ArbiterTable;
@@ -73,6 +74,7 @@ pub struct SchemaCatalog {
     enums: BTreeMap<String, CatalogEnum>,
     views: BTreeMap<String, CatalogView>,
     view_fallback: std::sync::OnceLock<fallback::RelationFallback>,
+    view_projections: std::sync::OnceLock<std::sync::Arc<view_definition::ViewProjections>>,
     column_lines: BTreeMap<(String, String), usize>,
 }
 
