@@ -511,6 +511,14 @@ identifierSources:
     name: getRelationTableNameOrThrow
 ```
 
+A finite SQL fragment does not hide another interpolation in the same call.
+For example, `const accountFilter = accountId ? "AND id = $2::uuid" : ""`
+may appear after `WHERE expires_at < $1` beside a guarded derived table name.
+At max effort the identifier proof checks each hole independently, including
+immutable aliases of literal alternatives, even with `unanalyzableSql: ignore`.
+The guarded table stays clean; an unchecked string table in the same statement
+is reported. Type-only string unions do not validate runtime input.
+
 ## Composed parameterized fragments
 
 At max effort, the `.text` member of a configured `trustedSqlTags` template

@@ -27,6 +27,26 @@ pub(super) fn proven(
     .reference(reference, context, &mut FxHashSet::default())
 }
 
+pub(in super::super) fn hole_proven(
+    graph: &DepGraph,
+    opts: &CompiledOptions,
+    facts: &CheckFactMap,
+    bindings: &Bindings<'_>,
+    call: &SqlCall<'_>,
+    flow: &ValueFlowFacts,
+    value: (&ValueExpression, Option<&TextOrigin>),
+) -> bool {
+    Proof {
+        graph,
+        opts,
+        facts,
+        bindings,
+        call,
+        flow,
+    }
+    .expression(value.0, value.1, &mut FxHashSet::default())
+}
+
 struct Proof<'a, 'b> {
     graph: &'a DepGraph,
     opts: &'a CompiledOptions,

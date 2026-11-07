@@ -152,6 +152,10 @@ Configured max-effort SQL identifier checks request scalar assignment summaries;
 default call graphs and mixed checks with low-effort identifier analysis leave
 their initializer index and assignment RHS summaries uninitialized. Direct
 value-flow extraction helpers retain their complete-provenance compatibility.
+Identifier demand also retains scalar literal origins for bindings and first
+arguments that compose values. It drops object/array fields and later arguments;
+inline conditional SQL fragments therefore need no second AST pass or broad
+argument-origin retention.
 
 Required direction:
 

@@ -9,6 +9,7 @@ fn postgres_guarded_identifier_compositions_check_json_snapshot() {
         "issue-3073-guard-composition",
     );
     for name in [
+        "conditional-fragment",
         "local-template",
         "alias-template",
         "early-return",
@@ -44,6 +45,23 @@ fn postgres_open_identifier_compositions_check_json_snapshot() {
             "negative",
             root.clone(),
             root.join(".no-mistakes-negative.yml"),
+        )],
+    );
+}
+
+#[test]
+fn postgres_open_conditional_fragments_check_json_snapshot() {
+    let root = rules_path(
+        "postgres-no-unbounded-sql-identifier",
+        "fixture",
+        "issue-3073-guard-composition",
+    );
+    assert_saved_fixture(
+        "postgres_open_conditional_fragments",
+        &[(
+            "open-conditional-fragment",
+            root.clone(),
+            root.join(".no-mistakes-open-conditional-fragment.yml"),
         )],
     );
 }

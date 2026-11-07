@@ -7,12 +7,23 @@ use std::ops::ControlFlow;
 mod walk;
 
 pub(crate) fn scans_identifier(call: &EmbeddedSqlCall) -> bool {
+    identifier_status(call) == Some(true)
+}
+
+pub(crate) fn identifier_status(call: &EmbeddedSqlCall) -> Option<bool> {
     if super::super::sql::identifier_placeholder(call) == Some(true) {
-        return true;
+        return Some(true);
     }
-    texts(call).iter().any(|sql| {
-        parse_postgres_sql(sql).is_ok_and(|statements| !indexes(&statements).columns.is_empty())
-    })
+    let texts = texts(call);
+    let mut complete = !texts.is_empty() && !call.variants_truncated();
+    for sql in texts {
+        match parse_postgres_sql(&sql) {
+            Ok(statements) if !indexes(&statements).columns.is_empty() => return Some(true),
+            Ok(_) => {}
+            Err(_) => complete = false,
+        }
+    }
+    complete.then_some(false)
 }
 
 /// Identifier-position placeholder indexes and the highest placeholder index
@@ -54,7 +65,7 @@ fn texts(call: &EmbeddedSqlCall) -> Vec<String> {
 /// Markers are numbered 1, 2, ... in text order, so a digit run that extends
 /// the expected ordinal is the next literal digit (`${schema}2` reads
 /// `sql_placeholder_12`): split it with an underscore.
-fn delimit_markers(sql: &str) -> String {
+pub(crate) fn delimit_markers(sql: &str) -> String {
     let marker = "sql_placeholder_";
     let mut out = String::with_capacity(sql.len());
     let mut rest = sql;

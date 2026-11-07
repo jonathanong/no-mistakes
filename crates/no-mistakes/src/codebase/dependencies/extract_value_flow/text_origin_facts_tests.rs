@@ -97,3 +97,52 @@ fn assignment_pattern_parameter_defaults_retain_the_opaque_initializer() {
     collector.note_text_parameter_default(0, &later[0], &ValueExpression::Unknown);
     assert!(collector.opaque_text_parameter_defaults.contains(&0));
 }
+
+#[test]
+fn identifier_projection_keeps_only_scalar_bindings_and_first_composed_arguments() {
+    let literal = TextOrigin {
+        literal: true,
+        ..Default::default()
+    };
+    let object = TextOrigin {
+        fields: [("field".into(), literal.clone())].into_iter().collect(),
+        ..Default::default()
+    };
+    let composed = TextOrigin {
+        parts: vec![None, Some(literal.clone()), Some(object.clone())],
+        ..Default::default()
+    };
+    let origins = TextOrigins {
+        arguments: [
+            ((1, 2), vec![Some(composed), Some(literal.clone())]),
+            ((3, 4), vec![Some(literal.clone())]),
+            ((5, 6), vec![Some(object.clone())]),
+            ((7, 8), vec![None]),
+            ((9, 10), vec![]),
+        ]
+        .into_iter()
+        .collect(),
+        bindings: [(
+            0,
+            [
+                ("literal".into(), [(0, literal)].into_iter().collect()),
+                ("object".into(), [(0, object)].into_iter().collect()),
+            ]
+            .into_iter()
+            .collect(),
+        )]
+        .into_iter()
+        .collect(),
+    };
+    let selected = origins.identifier_scalars().unwrap();
+    assert_eq!(selected.arguments.len(), 1);
+    assert_eq!(selected.arguments[&(1, 2)].len(), 1);
+    let first = selected.argument((1, 2), 0).unwrap();
+    assert_eq!(first.parts.len(), 3);
+    assert!(first.parts[0].is_none());
+    assert!(first.parts[1].as_ref().unwrap().literal);
+    assert!(first.parts[2].is_none());
+    assert!(selected.binding(0, "literal", 0).unwrap().literal);
+    assert!(selected.binding(0, "object", 0).is_none());
+    assert!(TextOrigins::default().identifier_scalars().is_none());
+}

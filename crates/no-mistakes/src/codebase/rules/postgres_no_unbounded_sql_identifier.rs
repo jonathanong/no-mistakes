@@ -77,10 +77,7 @@ fn scan(
             continue;
         }
         candidates += 1;
-        if !scans_identifier(call.call) {
-            continue;
-        }
-        for provenance in identifier_sources(graph, facts, call, &bindings) {
+        for provenance in partial::sources(graph, opts, facts, call, &bindings) {
             if closed::proven(graph, opts, facts, &bindings, call, &provenance)
                 || catalog_proof.proven(call, &provenance)
                 || closed_calls::proven(graph, facts, &bindings, call, &provenance)
@@ -141,3 +138,5 @@ use local_sources::{
 mod fragments;
 #[cfg(test)]
 mod fragments_tests;
+
+mod partial;

@@ -11,6 +11,8 @@ fn guarded_compositions_preserve_capture_context_for_every_query() {
             .join("issue-3073-guard-composition"),
     );
     for (name, count, expected) in [
+        ("conditional-fragment", 10, true),
+        ("open-conditional-fragment", 10, false),
         ("local-template", 5, true),
         ("alias-template", 2, true),
         ("early-return", 2, true),
@@ -70,12 +72,27 @@ fn guarded_compositions_preserve_capture_context_for_every_query() {
             .with_graph(&graph)
             .with_numeric_parameter_bounds();
         for call in &calls {
-            let sources = identifier_sources(&graph, &facts, call, &bindings);
-            assert_eq!(sources.len(), 1, "{name}: {:?}", call.span);
+            let sources =
+                crate::codebase::rules::postgres_no_unbounded_sql_identifier::partial::sources(
+                    &graph, &options, &facts, call, &bindings,
+                );
+            assert!(
+                !sources.is_empty(),
+                "every query is checked: {name}: {:?} {:?}",
+                call.span,
+                call.call
+            );
+            if !name.ends_with("conditional-fragment") {
+                assert_eq!(sources.len(), 1, "{name}: {:?}", call.span);
+            } else {
+                assert!(sources.iter().any(|source| matches!(source,
+                    Provenance::Reference { name, .. } if name == "accountTable")));
+            }
             for source in sources {
                 assert_eq!(
                     super::super::proven(&graph, &options, &facts, &bindings, call, &source),
-                    expected,
+                    expected
+                        || matches!(&source, Provenance::Reference { name, .. } if ["accountFilter", "filter", "order", "unionFilter", "firstColumn", "secondColumn"].contains(&name.as_str())),
                     "{name}: {:?} {source:?}",
                     call.span
                 );

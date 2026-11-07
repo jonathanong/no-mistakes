@@ -1,7 +1,7 @@
 use super::*;
 
 impl TextOrigins {
-    pub(crate) fn identifier_bindings(&self) -> Option<Self> {
+    pub(crate) fn identifier_scalars(&self) -> Option<Self> {
         let mut bindings: BindingOrigins = FxHashMap::default();
         for (scope, names) in &self.bindings {
             for (name, declarations) in names {
@@ -17,8 +17,19 @@ impl TextOrigins {
                 }
             }
         }
-        (!bindings.is_empty()).then_some(Self {
-            arguments: FxHashMap::default(),
+        let arguments: FxHashMap<_, _> = self
+            .arguments
+            .iter()
+            .filter_map(|(span, args)| {
+                let origin = args.first()?.as_ref()?;
+                if origin.parts.is_empty() {
+                    return None;
+                }
+                Some((*span, vec![Some(scalar(origin)?)]))
+            })
+            .collect();
+        (!bindings.is_empty() || !arguments.is_empty()).then_some(Self {
+            arguments,
             bindings,
         })
     }

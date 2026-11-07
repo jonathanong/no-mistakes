@@ -27,7 +27,9 @@ mod search;
 pub(crate) use bindings::{literal_array, Bindings};
 pub(crate) use env::is_process_specifier;
 use env::{env_from_chain, env_key, process_env_key};
-pub(crate) use identifier_positions::scans_identifier;
+pub(crate) use identifier_positions::{
+    delimit_markers as delimit_identifier_markers, identifier_status, scans_identifier,
+};
 pub(crate) use interpolations::interpolations;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -49,7 +51,7 @@ pub(crate) enum Provenance {
 pub(crate) fn identifier_sources<'a>(
     graph: &DepGraph,
     facts: &'a CheckFactMap,
-    call: &SqlCall<'a>,
+    call: &SqlCall<'_>,
     bindings: &Bindings<'a>,
 ) -> BTreeSet<Provenance> {
     if let Some((holes, outside_holes)) = identifier_holes::split(facts, call, bindings) {

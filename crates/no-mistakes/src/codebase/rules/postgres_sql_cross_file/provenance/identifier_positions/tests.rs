@@ -207,3 +207,25 @@ fn literal_digits_after_a_marker_are_delimited_by_ordinal() {
     assert_eq!(identifiers.into_iter().collect::<Vec<_>>(), vec![1]);
     assert_eq!(max, 1);
 }
+
+#[test]
+fn identifier_status_distinguishes_valid_bind_only_sql_from_partial_fragments() {
+    for (sql, expected) in [
+        (
+            "SELECT id FROM items WHERE id = sql_placeholder_1",
+            Some(false),
+        ),
+        ("SELECT id FROM sql_placeholder_1 WHERE id = $1", Some(true)),
+        (
+            "SELECT id FROM sql_placeholder_1 WHERE id = $1 sql_placeholder_2 FOR UPDATE",
+            None,
+        ),
+    ] {
+        let call = EmbeddedSqlCall {
+            sql_text: Some(sql.into()),
+            ..Default::default()
+        };
+        assert_eq!(identifier_status(&call), expected, "{sql}");
+    }
+    assert_eq!(identifier_status(&EmbeddedSqlCall::default()), None);
+}

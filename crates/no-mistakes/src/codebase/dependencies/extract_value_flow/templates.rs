@@ -55,7 +55,7 @@ impl ImportCollector {
         if self.collect_identifier_provenance {
             self.value_flow.identifier_text_origins = self
                 .text_origins
-                .identifier_bindings()
+                .identifier_scalars()
                 .map(std::sync::Arc::new);
         }
         let origins = std::sync::Arc::new(std::mem::take(&mut self.text_origins));

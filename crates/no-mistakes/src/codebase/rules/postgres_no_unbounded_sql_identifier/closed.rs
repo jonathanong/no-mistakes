@@ -9,6 +9,7 @@ mod collection_imports;
 mod collections;
 mod generated;
 mod guard_aliases;
+pub(super) use guard_aliases::hole_proven;
 mod metadata;
 mod subjects;
 mod validators;
