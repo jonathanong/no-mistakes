@@ -10,6 +10,14 @@ phases=['A'] if mode=='baseline' else (['B','A','A','B'] if mode=='reverse' else
 root=repo/'test-cases/rules/postgres-bounded-statements/issue-3114-exact/fixture'
 cases=['off','off-sql'] if mode=='reverse' else ['r1','r2','r3','r4','off','off-sql']
 samples=[]
+for phase in ['A','B']:
+ for shape in cases:
+  cmd=[binaries[phase],'check','--root',str(root),'--config',str(root/(shape+'.yml')),'--format','json']
+  p=subprocess.run(cmd,capture_output=True,env={**os.environ,'XDG_RUNTIME_DIR':'/tmp/nm-3114-exact-runtime'})
+  report=json.loads(p.stdout)
+  assert p.returncode==int(expected[phase][shape]>0) and not p.stderr
+  assert len(report['rules'])==expected[phase][shape]
+  assert not report['warnings'] and not report['advisories']
 for phase_index,phase in enumerate(phases):
  for iteration in range(50 if mode=="reverse" else 25):
   for shape in cases[iteration%len(cases):]+cases[:iteration%len(cases)]:
@@ -18,10 +26,11 @@ for phase_index,phase in enumerate(phases):
    p=subprocess.run(cmd,capture_output=True,env={**os.environ,'XDG_RUNTIME_DIR':'/tmp/nm-3114-exact-runtime'})
    wall=time.perf_counter()-start; after=resource.getrusage(resource.RUSAGE_CHILDREN)
    report=json.loads(p.stdout)
+   assert p.returncode==int(expected[phase][shape]>0) and not p.stderr
    assert len(report['rules'])==expected[phase][shape], (phase,shape,report)
    assert not report['warnings'] and not report['advisories']
    samples.append({'binary':phase,'phase':phase_index,'sample':iteration,'case':shape,'userSeconds':after.ru_utime-before.ru_utime,'systemSeconds':after.ru_stime-before.ru_stime,'wallSeconds':wall,'status':p.returncode,'stdoutSha256':hashlib.sha256(p.stdout).hexdigest(),'findings':len(report['rules']),'advisories':len(report['advisories'])})
-out={'binarySha256':binary_hashes,'mode':mode,'order':phases,'effort':'default','jobs':'default','samplesPerPhasePerCase':50 if mode=='reverse' else 25,'samples':samples}
+out={'warmupPerBinaryPerCase':1,'binarySha256':binary_hashes,'mode':mode,'order':phases,'effort':'default','jobs':'default','samplesPerPhasePerCase':50 if mode=='reverse' else 25,'samples':samples}
 pathlib.Path('/tmp/nm-3114-exact-cpu-'+label+'.json').write_text(json.dumps(out,indent=2)+'\n')
 for binary in sorted(set(x['binary'] for x in samples)):
  for shape in cases:

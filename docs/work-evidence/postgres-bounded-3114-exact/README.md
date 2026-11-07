@@ -1,11 +1,12 @@
 # Exact bounded key proofs: R1–R4
 
-<!-- cspell:ignore rustc nonrecursive getrusage RUSAGE INSTA doctest doctests codegen -->
+<!-- cspell:ignore rustc nonrecursive getrusage RUSAGE INSTA doctest doctests codegen Clippy -->
 
 Baseline: fresh `origin/main`,
 `759777752f2399d9b83f17e27b0ac8af6a9fe6d7`.
 Toolchain: `rustc 1.99.1 (58cf8f9c3 2026-10-13)`.
-Both CLI builds use locked dependencies, default features and the dev profile.
+The initial CLI pair uses locked dependencies, default features and the dev
+profile; the final optimized pair uses the unchanged release profile.
 Heavy Cargo commands use `flock --close /tmp/nm-heavy.lock`,
 `CARGO_BUILD_JOBS=6` and a task-owned target under `/tmp`.
 
@@ -55,7 +56,7 @@ and `executorNames: []`; R4 additionally configures column and view bounds.
 These are small SQL regression workloads, not a representative mixed-language
 application benchmark.
 
-A 25-sample baseline preflight established the workload. The final comparison
+A 25-sample baseline preflight established the workload. The dev comparison
 uses balanced baseline/candidate/candidate/baseline order, 25 fresh samples
 per configuration per phase (50 samples per binary per configuration).
 The shared heavy lock is held during measurement to exclude competing
@@ -90,8 +91,8 @@ fields and original/projected fact equality remain checked.
 
 ## Default-profile observations
 
-The candidate production revision is
-`2c2022f91df09c17b7510feb4804b3ef83528b0b` (later fixture, test and documentation changes do not alter it).
+The pre-lint dev candidate production revision is
+`2c2022f91df09c17b7510feb4804b3ef83528b0b` (before the final private key-input signature grouping).
 Its CLI SHA256 is
 `588d7863aae1991b8bd061e3082ba58ca3c7ef4ebd06799fffb65631d365511d`.
 [A is baseline and B is candidate](balanced.csv); times below are milliseconds.
@@ -174,7 +175,9 @@ optimized candidate is forcibly recompiled before the retained comparison.
   sources stay within 500. Formatting, spelling and duplicate detection pass
   (zero clones). No inline test fixture writes were added.
 
-Focused coverage uses `cargo llvm-cov --lib -- postgres` with no filename
+Focused coverage at `039eebeb90b1daeb22cc8a80d0d92fa3ff019db5`, before
+the private argument grouping (which adds no branches), uses
+`cargo llvm-cov --lib -- postgres` with no filename
 exclusions: 3,256 tests pass and two existing tests remain ignored.
 
 | Changed helper | Executed / instrumented lines |
@@ -198,52 +201,67 @@ invalid internal facts solely for coverage.
 Both optimized builds use the repository's unchanged release profile
 (`lto = true`, `codegen-units = 1`), locked dependencies and default features.
 The baseline remains `759777752f2399d9b83f17e27b0ac8af6a9fe6d7`;
-the measured candidate checkout is
-`039eebeb90b1daeb22cc8a80d0d92fa3ff019db5`.
-All production source and dependency versions match the earlier candidate
-production revision; intervening changes contain fixtures, tests and docs.
-The final evidence-only commit carries these measurements forward.
+the measured final runtime source is `6129d1d3d84dcc7f6bc514e8374034d5bf27bc6b`.
+The candidate includes the final private ownership/domain input grouping needed
+by strict Clippy. Independent review confirms that it preserves the same
+references and target gating. Strict Clippy and the complete locked all-feature
+workspace suite pass after that refactor. Dependencies are unchanged.
+The later evidence-only commit carries these measurements forward. The dev
+samples above remain historical observations from their stated pre-lint revision.
 
 Frozen optimized CLI SHA256:
 
 - Baseline: `c5cc6668f278952192d82740ea40fbaf606e3580fd5a8420e1433bf5637d8c5f`
-- Candidate: `1e2824bbc08e3558b238f3068ef5a1c98d734d2f4d84a8f7e66a7d4a9b51b60a`
+- Candidate: `d0de149367bb0d099f3427597ffcfc83b82c81faf67b1d2adc881a28398c57af`
 
 Every sample passes the expected finding-count gate. The
 [optimized A/B/B/A samples](release-balanced.csv) use 50 invocations per
 binary/configuration; the [B/A/A/B control recheck](release-reverse.csv) uses
 100. Effort, jobs, directory contents, config payloads and toolchain match.
-Times are milliseconds.
+One unmeasured fresh invocation per binary/configuration explicitly warms file
+caches before each final comparison. Earlier dev samples used their baseline
+preflight instead. Times are milliseconds.
 
 | Configuration | User CPU mean A → B | User CPU median A → B | Wall mean A → B |
 | --- | ---: | ---: | ---: |
-| R1 | 8.714 → 8.575 | 8.111 → 8.461 | 12.787 → 12.986 |
-| R2 | 9.528 → 8.205 | 9.523 → 7.938 | 12.943 → 13.230 |
-| R3 | 9.412 → 9.658 | 9.525 → 9.332 | 14.303 → 14.543 |
-| R4 | 8.845 → 8.416 | 8.743 → 8.567 | 13.216 → 13.515 |
-| No configured rules | 4.686 → 4.830 | 4.610 → 4.484 | 10.190 → 10.558 |
-| SQL rule only, bounded rule off | 10.978 → 10.865 | 11.241 → 11.254 | 12.625 → 13.126 |
+| R1 | 8.577 → 8.953 | 8.590 → 8.856 | 13.060 → 13.029 |
+| R2 | 8.982 → 8.637 | 8.956 → 9.264 | 12.990 → 13.300 |
+| R3 | 10.691 → 10.209 | 10.630 → 10.136 | 14.398 → 14.976 |
+| R4 | 9.432 → 9.657 | 9.605 → 9.889 | 13.771 → 13.750 |
+| No configured rules | 4.747 → 4.667 | 4.678 → 4.595 | 10.288 → 10.421 |
+| SQL rule only, bounded rule off | 11.131 → 10.413 | 11.221 → 9.925 | 13.080 → 13.123 |
 
 Reverse controls:
 
-| Control | User CPU mean A → B | User CPU median A → B | Wall mean A → B |
+| Configuration | User CPU mean A → B | User CPU median A → B | Wall mean A → B |
 | --- | ---: | ---: | ---: |
-| No configured rules | 4.761 → 4.998 | 4.681 → 5.000 | 10.307 → 10.477 |
-| SQL rule only, bounded rule off | 11.028 → 10.691 | 11.076 → 10.635 | 12.861 → 13.029 |
+| No configured rules | 5.015 → 5.055 | 4.743 → 4.932 | 10.241 → 10.483 |
+| SQL rule only, bounded rule off | 11.226 → 10.872 | 11.447 → 11.088 | 12.798 → 13.037 |
 
-The empty-rule mean increases 0.144 ms then 0.237 ms, while its median changes
-direction. The SQL control mean decreases 0.112 ms then 0.337 ms. These are
-observations, not demonstrated throughput improvements or proof of equivalent
-performance. Descriptive normal 95% intervals for the mean CPU differences
-are respectively [-0.624, 0.912], [-0.394, 0.869], [-1.174, 0.950] and
-[-1.081, 0.407] ms; all include zero. These within-run intervals assume
-independent samples and do not account for every source of host/phase noise.
-The dev-profile SQL control increase remains disclosed above.
+Control mean CPU differences (candidate minus baseline), with descriptive
+normal 95% intervals for independent-sample means:
 
-[Peak RSS samples](rss.csv), optimized runs: R4 medians 49,948 → 32,466 KiB
-(maxima 51,040 → 32,736); SQL rule-off medians 49,644 → 32,026 KiB
-(maxima 51,172 → 32,328). RSS includes executable mappings and host paging;
-these observations are not attributed to a heap-memory improvement.
+| Order | Control | Difference (ms) | Interval (ms) |
+| --- | --- | ---: | ---: |
+| A/B/B/A | No configured rules | -0.080 | [-0.919, 0.759] |
+| A/B/B/A | SQL rule only, bounded rule off | -0.718 | [-1.969, 0.532] |
+| B/A/A/B | No configured rules | 0.041 | [-0.600, 0.682] |
+| B/A/A/B | SQL rule only, bounded rule off | -0.354 | [-1.171, 0.463] |
+
+These are observations, not demonstrated throughput improvements or proof of
+equivalent performance. Within-run intervals assume independent samples and do
+not account for every source of host/phase noise. The dev-profile SQL control
+increase remains disclosed above. No workload speedup is claimed.
+
+[Peak RSS samples](rss.csv), optimized runs:
+
+| Configuration | Median KiB A → B | Maximum KiB A → B |
+| --- | ---: | ---: |
+| R4 | 42,616 → 32,440 | 43,888 → 33,052 |
+| SQL rule only, bounded rule off | 42,152 → 31,874 | 43,600 → 33,000 |
+
+RSS includes executable mappings and host paging; these observations are not
+attributed to a heap-memory improvement.
 
 To repeat the optimized comparison, set `NM_BASELINE_BINARY` and
 `NM_CANDIDATE_BINARY` to separately verified frozen executables and
