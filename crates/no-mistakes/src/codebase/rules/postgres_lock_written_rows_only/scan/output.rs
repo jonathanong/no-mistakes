@@ -87,7 +87,7 @@ impl<'a> Output<'a> {
         if allowed {
             return;
         }
-        let message = site.call.lock_helper.as_ref().map_or_else(
+        let message = site.call.lock_helper.as_deref().map_or_else(
             || message.to_owned(),
             |(name, line)| format!("{message}; helper {name} locks at line {line}"),
         );

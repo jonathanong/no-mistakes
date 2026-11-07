@@ -67,10 +67,10 @@ impl<'a> ScopeVisitor<'a> {
             fact.line = byte_offset_to_line(self.source, call.span.start as usize);
             fact.callee = name.name.to_string();
             fact.execution_unconditional = self.helper_execution_unconditional();
-            fact.lock_helper = Some((
+            fact.lock_helper = Some(Box::new((
                 name.name.to_string(),
                 byte_offset_to_line(self.source, query.span.start as usize),
-            ));
+            )));
             if let Some(Expression::ArrayExpression(array)) = query
                 .arguments
                 .get(1)
