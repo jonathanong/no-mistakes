@@ -2,6 +2,7 @@ fn visit_static_member_expression_with_getters<'a>(
     collector: &mut ImportCollector,
     member: &StaticMemberExpression<'a>,
 ) {
+    collector.note_sql_fragment_member(&member.object, Some(member.property.name.as_str()));
     collector.mark_member_object_registry(&member.object);
     collector.note_selected_member(&member.object, member.property.name.as_str());
     if let Some(name) = simple_static_member_name(member) {
@@ -16,6 +17,14 @@ fn visit_computed_member_expression_with_getters<'a>(
     collector: &mut ImportCollector,
     member: &ComputedMemberExpression<'a>,
 ) {
+    let property = if let Expression::StringLiteral(property) =
+        crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression)
+    {
+        Some(crate::ast::js_literal(property))
+    } else {
+        None
+    };
+    collector.note_sql_fragment_member(&member.object, property.as_deref());
     collector.mark_computed_member_registry(member);
     if let Expression::StringLiteral(property) =
         crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression)

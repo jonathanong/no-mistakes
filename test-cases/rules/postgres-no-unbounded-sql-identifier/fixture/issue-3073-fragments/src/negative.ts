@@ -24,3 +24,19 @@ export function shadow(sql: (value: TemplateStringsArray) => unknown, value: str
   const fragment = sql`id FROM ${value}`;
   query(`SELECT ${fragment.text}`);
 }
+
+export function nestedMutation(value: string) {
+  const nestedPush = sql`id FROM records`;
+  nestedPush.strings.push(value);
+  query(`SELECT ${nestedPush.text}`);
+  const nestedWrite = sql`id FROM records`;
+  nestedWrite.strings[0] = value;
+  query(`SELECT ${nestedWrite.text}`);
+  const nestedAlias = sql`id FROM records`;
+  const strings = nestedAlias.strings;
+  strings[0] = value;
+  query(`SELECT ${nestedAlias.text}`);
+  const nestedComputed = sql`id FROM records`;
+  nestedComputed["strings"].push(value);
+  query(`SELECT ${nestedComputed.text}`);
+}

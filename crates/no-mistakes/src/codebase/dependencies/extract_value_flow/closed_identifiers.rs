@@ -155,6 +155,8 @@ impl ImportCollector {
     }
 }
 
+#[path = "sql_fragment_members.rs"]
+mod fragment_members;
 #[path = "closed_identifier_hex.rs"]
 mod hex;
 #[path = "closed_identifier_names.rs"]

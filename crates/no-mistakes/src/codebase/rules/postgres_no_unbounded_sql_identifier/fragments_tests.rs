@@ -12,7 +12,17 @@ fn prepared_fragment_proofs_distinguish_tags_and_mutations() {
     for (file_name, expected) in [
         ("text.ts", vec![("fragment", true), ("oldFragment", true)]),
         ("joins.ts", vec![]),
-        ("negative.ts", vec![("fragment", false), ("altered", false)]),
+        (
+            "negative.ts",
+            vec![
+                ("fragment", false),
+                ("altered", false),
+                ("nestedPush", false),
+                ("nestedWrite", false),
+                ("nestedAlias", false),
+                ("nestedComputed", false),
+            ],
+        ),
     ] {
         let file = root.join("src").join(file_name);
         let collected = collect_ts_facts(
