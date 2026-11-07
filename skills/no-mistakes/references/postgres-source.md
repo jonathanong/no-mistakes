@@ -203,8 +203,14 @@ Use opt-in `postgres-lock-written-rows-only` to audit configured transaction
 executors. Start with its default advisory checks, then set individual check
 ids to `fail` after reviewing row, table, constant advisory, and autocommit
 locks. The executor replacement, additive, and exclusion options above also
-apply to this rule. Configure transaction factories through `executorFactoryNames`; keep
-`allow` reasons and `writeSets` assertions narrow. Unknown SQL or transaction
-membership follows the unanalyzable policy and never proves a safe lock. See
-[the rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-lock-written-rows-only.md) for phase 1
-limits and rewrites.
+apply to this rule. Configure transaction factories through `executorFactoryNames`
+for `const`, `using`, and `await using` bindings. Configure
+`executorOptionProperties` when a wrapper routes its transaction through an
+inline options object. Directly await static lock helpers and pass matching
+executor parameters; imported helpers and re-exports reuse prepared summaries.
+Hashed global advisory keys are checked, while atomic lock/write CTEs on the
+same relation are accepted. Keep `allow` reasons and `writeSets` assertions
+narrow. Unknown SQL, helper execution, or transaction membership follows the
+unanalyzable policy and never proves a safe lock. See
+[the rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-lock-written-rows-only.md)
+for limits and rewrites.

@@ -72,8 +72,8 @@ accepts `tx`. A mismatch makes the entire helper call unanalyzable.
 
 Unsupported local and imported helpers receiving a configured transaction
 executor retain the unanalyzable policy, including dynamic SQL, optional calls,
-shadowed or mutated helpers, and bodies with other control flow. Named imported helpers and re-exports use the same summaries through the prepared
-module resolver. Unresolved imports retain the unanalyzable policy.
+shadowed or mutated helpers, and bodies with other control flow. Named imported
+helpers and re-exports use the same summaries through the prepared module resolver. Unresolved imports retain the unanalyzable policy.
 
 An advisory key derived from the written row's id also passes the constant-key
 check.
@@ -179,7 +179,8 @@ project scope, configure `importSpecifier` or explicit `executorNames`.
 `executorFactoryNames`, `executorTypeNames`, and `trustedSqlTags` default to
 empty; factories identify transaction executor bindings declared with `const`,
 `using`, or `await using`. Callback transaction membership is unresolved and
-follows the unanalyzable policy. With an import specifier, executor names default to `query`, `read`, and `write`.
+follows the unanalyzable policy. With an import specifier, executor names default
+to `query`, `read`, and `write`.
 `executorNames` replaces that list; use `extraExecutorNames` to extend it instead.
 The two options are mutually exclusive, including when either list is empty.
 `extraExecutorNames` defaults to absent and `excludeExecutorNames` defaults to
@@ -210,8 +211,9 @@ used only when it covers an otherwise-unwritten row lock.
 ### Analysis and unresolved SQL
 
 `effort: max` is the default; `low` uses syntax proofs without the cross-file
-max-effort evaluator. The rule checks configured TS/JS executor calls and transaction-local write
-sets. Standalone SQL files are outside this rule’s scope. SQL or transaction membership that cannot be resolved follows the shared
+max-effort evaluator. The rule checks configured TS/JS executor calls and
+transaction-local write sets. Standalone SQL files are outside this rule’s scope.
+SQL or transaction membership that cannot be resolved follows the shared
 unanalyzable policy: `unanalyzable: report` (default) fails, `advise` adds a
 non-failing advisory, and `ignore` omits the diagnostic. The legacy
 `unanalyzableSql` option accepts `fail`, `advise`, and `ignore`; `fail` means

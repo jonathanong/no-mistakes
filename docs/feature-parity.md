@@ -1134,5 +1134,8 @@ Opt-in [`postgres-lock-written-rows-only`](rules/postgres-lock-written-rows-only
 checks configured TypeScript/JavaScript PostgreSQL executors for unwritten-row,
 table, constant advisory, and autocommit row locks. CLI `check` and async Node
 `check()` share the same configuration, findings, advisories, and suppressions.
-Phase 1 uses transaction-local SQL proofs and explicit helper write sets;
-cross-transaction order and schema-dependent advisory checks remain outside scope.
+The rule recognizes resource-scoped transactions, hashed constant advisory keys,
+static helper calls and re-exports, atomic same-statement lock/write CTEs, and
+configured executor-option properties. Helper effects require directly awaited
+calls with matching executor parameters. Cross-transaction order and
+schema-dependent advisory checks remain outside scope.
