@@ -26,7 +26,7 @@ pub(super) fn prepare(
     item: &SqlBoundItem,
     item_index: usize,
     owners: &BTreeMap<String, usize>,
-    domains: &Domains,
+    domains: Option<&Domains>,
     subqueries: &[Option<Evaluation>],
     arrays: &[bool],
     catalog: &SchemaCatalog,
@@ -81,7 +81,11 @@ pub(super) fn prepare(
             }
             match &pin.source {
                 SqlPinSource::Value => Some(Vec::new()),
-                SqlPinSource::Items(_) if domains::supplies(pin, domains) => Some(Vec::new()),
+                SqlPinSource::Items(_)
+                    if domains.is_some_and(|domains| domains::supplies(pin, domains)) =>
+                {
+                    Some(Vec::new())
+                }
                 SqlPinSource::Items(items) | SqlPinSource::Array { items, .. } => {
                     Some(items.clone())
                 }

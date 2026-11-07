@@ -70,7 +70,7 @@ fn offenders_with_columns(
     precise_columns: bool,
 ) -> Vec<Offender> {
     let query = possible_temporary::project(&fact.query, catalog);
-    let evaluation = evaluate(&query, catalog, views, precise_columns);
+    let evaluation = evaluate(&query, catalog, views, precise_columns, fact.target);
     let Some(target) = fact.target else {
         return evaluation.offenders;
     };
@@ -82,6 +82,7 @@ fn evaluate(
     catalog: &SchemaCatalog,
     views: &ViewBounds,
     precise_columns: bool,
+    write_target: Option<usize>,
 ) -> Evaluation {
     if query.input_mode == SqlBoundInputMode::Skipped {
         return Evaluation {
@@ -110,7 +111,7 @@ fn evaluate(
                     SqlPinSource::Query(inner)
                     | SqlPinSource::ReadQuery(inner)
                     | SqlPinSource::ArrayQuery(inner) => {
-                        Some(evaluate(inner, catalog, views, precise_columns))
+                        Some(evaluate(inner, catalog, views, precise_columns, None))
                     }
                     _ => None,
                 })
@@ -142,7 +143,13 @@ fn evaluate(
             SqlBoundItemKind::Opaque => false,
         })
         .collect();
-    let domains = keys::finite_domains(query, &nested);
+    let write_target =
+        write_target.or((query.input_mode == SqlBoundInputMode::Returning).then_some(0));
+    let domains = if write_target.is_some() {
+        keys::finite_domains(query, &nested)
+    } else {
+        Default::default()
+    };
     let keys: Vec<_> = query
         .items
         .iter()
@@ -157,7 +164,7 @@ fn evaluate(
                 item,
                 index,
                 &owners,
-                &domains,
+                (write_target == Some(index)).then_some(&domains),
                 &pin_subqueries[index],
                 &pin_arrays[index],
                 catalog,

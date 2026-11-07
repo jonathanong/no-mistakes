@@ -21,7 +21,13 @@ pub(super) fn nested(
     } else {
         Cow::Borrowed(inner)
     };
-    Some(super::evaluate(&projected, catalog, views, precise_columns))
+    Some(super::evaluate(
+        &projected,
+        catalog,
+        views,
+        precise_columns,
+        None,
+    ))
 }
 
 fn project<'a>(

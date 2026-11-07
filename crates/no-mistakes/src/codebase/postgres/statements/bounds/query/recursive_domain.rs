@@ -1,12 +1,27 @@
-use super::super::Scope;
 use crate::codebase::postgres::idents::{ident_key, object_name_key, unwrap_expr};
 use crate::codebase::postgres::statements::SqlBoundQuery;
 use sqlparser::ast::{
-    Cte, Expr, Select, SelectItem, SetExpr, SetOperator, SetQuantifier, TableFactor,
+    Cte, CteAsMaterialized, Expr, Select, SelectItem, SetExpr, SetOperator, SetQuantifier,
+    TableFactor,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
-pub(super) fn project(cte: &Cte, scope: &Scope, bound: &mut SqlBoundQuery) {
+pub(super) fn stable_donors(ctes: &[Cte]) -> BTreeSet<String> {
+    let mut names = BTreeMap::new();
+    for cte in ctes {
+        let stable = cte.materialized != Some(CteAsMaterialized::NotMaterialized);
+        names
+            .entry(ident_key(&cte.alias.name))
+            .and_modify(|stable| *stable = false)
+            .or_insert(stable);
+    }
+    names
+        .into_iter()
+        .filter_map(|(name, stable)| stable.then_some(name))
+        .collect()
+}
+
+pub(super) fn project(cte: &Cte, donors: &BTreeSet<String>, bound: &mut SqlBoundQuery) {
     if cte.query.with.is_some() || bound.items.len() != 2 {
         return;
     }
@@ -24,7 +39,7 @@ pub(super) fn project(cte: &Cte, scope: &Scope, bound: &mut SqlBoundQuery) {
     };
     let name = ident_key(&cte.alias.name);
     let (Some(anchor_sources), Some(step_sources)) =
-        (sources(anchor, &name, scope), sources(step, &name, scope))
+        (sources(anchor, &name, donors), sources(step, &name, donors))
     else {
         return;
     };
@@ -58,7 +73,7 @@ struct Sources {
     recursive: usize,
 }
 
-fn sources(select: &Select, recursive: &str, scope: &Scope) -> Option<Sources> {
+fn sources(select: &Select, recursive: &str, donors: &BTreeSet<String>) -> Option<Sources> {
     let mut found = Sources {
         aliases: BTreeMap::new(),
         ctes: BTreeSet::new(),
@@ -81,7 +96,7 @@ fn sources(select: &Select, recursive: &str, scope: &Scope) -> Option<Sources> {
                 if name == recursive {
                     found.recursive += 1;
                     (alias, None)
-                } else if scope.get(&name).is_some() {
+                } else if donors.contains(&name) {
                     found.ctes.insert(name.clone());
                     (alias, Some(name))
                 } else {
