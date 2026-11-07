@@ -1,12 +1,10 @@
 use super::{unwrap_ts_wrappers, Expression, ScopeVisitor};
+use oxc_ast::ast::IdentifierReference;
 
 pub(in crate::codebase::postgres::embedded::walk::transaction) fn end_alias(
     visitor: &mut ScopeVisitor<'_>,
-    expression: &Expression<'_>,
+    id: &IdentifierReference<'_>,
 ) -> bool {
-    let Expression::Identifier(id) = unwrap_ts_wrappers(expression) else {
-        return false;
-    };
     let Some(identity) = visitor
         .lookup(id.name.as_str())
         .and_then(|binding| binding.value_identity)

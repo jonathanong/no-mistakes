@@ -75,10 +75,7 @@ fn receiver<'a>(
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             return Some(None);
         };
-        if property.computed {
-            return Some(None);
-        }
-        let Some(name) = property.key.static_name() else {
+        let Some(name) = property.key.static_name().filter(|_| !property.computed) else {
             return Some(None);
         };
         if !properties
