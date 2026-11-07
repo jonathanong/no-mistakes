@@ -85,3 +85,31 @@ fn resource_bindings_and_explicit_option_receivers_preserve_transaction_identity
     assert!(calls[12].executor_transaction_known);
     assert!(calls[12].transaction_id.is_none());
 }
+
+#[test]
+fn sql_phase_two_projection_is_opt_in() {
+    let path = super::tests::fixture("transaction-lock-profile.ts");
+    let source = super::tests::read_fixture("transaction-lock-profile.ts");
+    let mut options = EmbeddedSqlOptions::configured("@example/db", &[])
+        .with_scoped_executors(&["beginTransaction".into()], &[]);
+    let file = extract_embedded_sql_from_source(&path, &source, &options);
+    assert!(file.calls.iter().all(|call| !call.lock_scope_analysis));
+    assert!(file.calls.iter().all(|call| call.lock_helper.is_none()));
+    assert!(file.lock_helper_summaries.is_empty());
+    assert!(file.imported_lock_helpers.is_empty());
+    let statements = super::super::collect::dml::embedded_call_facts(&file, false, false);
+    assert!(statements
+        .iter()
+        .all(|statement| statement.lock_writes.advisory_keys.is_empty()));
+    options.track_transaction_helpers = true;
+    let enabled = extract_embedded_sql_from_source(&path, &source, &options);
+    assert!(enabled.calls.iter().all(|call| call.lock_scope_analysis));
+    let statements = super::super::collect::dml::embedded_call_facts(&enabled, false, false);
+    assert_eq!(
+        statements
+            .iter()
+            .map(|statement| statement.lock_writes.advisory_keys.len())
+            .sum::<usize>(),
+        1
+    );
+}

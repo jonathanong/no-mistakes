@@ -1,6 +1,6 @@
 # `postgres-lock-written-rows-only`
 
-<!-- cspell:ignore xact -->
+<!-- cspell:ignore xact hashtext hashtextextended -->
 
 Opt-in PostgreSQL transaction lock checks. Findings point at the lock statement;
 static helper locks are reported at their caller, with the helper lock line.
@@ -169,9 +169,8 @@ The rule inherits the selected project's `postgres` executor scope. Without
 project scope, configure `importSpecifier` or explicit `executorNames`.
 `include` and `exclude` default to empty and narrow the selected file scope.
 `executorFactoryNames`, `executorTypeNames`, and `trustedSqlTags` default to
-empty; factories identify transaction executor bindings declared with `const tx =
-await beginTransaction()`. Callback transaction membership is unresolved in
-phase 1 and follows the unanalyzable policy. With an import
+empty; factories identify transaction executor bindings declared with `const`,
+`using`, or `await using`. Callback transaction membership is unresolved and follows the unanalyzable policy. With an import
 specifier, executor names default to `query`, `read`, and `write`.
 `executorNames` replaces that list; use `extraExecutorNames` to extend it instead.
 The two options are mutually exclusive, including when either list is empty.
@@ -203,8 +202,8 @@ used only when it covers an otherwise-unwritten row lock.
 ### Analysis and unresolved SQL
 
 `effort: max` is the default; `low` uses syntax proofs without the cross-file
-max-effort evaluator. Phase 1 checks configured TS/JS executor calls and transaction-local write
-sets. Standalone SQL files are outside this rule’s phase 1 scope. SQL or transaction membership that cannot be resolved follows the shared
+max-effort evaluator. The rule checks configured TS/JS executor calls and transaction-local write
+sets. Standalone SQL files are outside this rule’s scope. SQL or transaction membership that cannot be resolved follows the shared
 unanalyzable policy: `unanalyzable: report` (default) fails, `advise` adds a
 non-failing advisory, and `ignore` omits the diagnostic. The legacy
 `unanalyzableSql` option accepts `fail`, `advise`, and `ignore`; `fail` means
@@ -215,7 +214,7 @@ A possible earlier return or throw also prevents a later write from proving
 that a locked row is written. Keep the matching write on every path that takes
 the lock, or remove the lock.
 
-Phase 1 does not establish advisory-key provenance from unwritten relations,
+The rule does not establish advisory-key provenance from unwritten relations,
 unbounded recursive read sets, duplication of unique-index guarantees, or
 lock ordering across transactions. Key equality is checked only when provable;
 unresolved inputs follow the selected policy rather than guessed equivalence.
