@@ -43,27 +43,31 @@ fn reassigned_identifier_locals_lose_bounded_parameter_and_literal_initializers(
         (&guarded, "counter", false),
     ] {
         let ts = collected.get(file).unwrap();
-        let binding = ts
+        let write = ts
             .value_flow
-            .bindings
+            .identifier_writes
             .iter()
-            .find(|binding| binding.name == name && !binding.immutable)
+            .find(|write| write.name == name && write.assigned.is_some())
             .unwrap();
+        let assignment = write.assigned.as_deref().unwrap();
         let call = ts
             .value_flow
             .calls
             .iter()
-            .find(|call| call.context == binding.owner && call.source_callee == "read")
+            .find(|call| {
+                call.context == assignment.owner
+                    && call.source_callee == "read"
+                    && call.offset >= assignment.completed_at
+            })
             .unwrap();
-        assert!(binding.invalidated_at.is_some());
-        assert!(shared.value(file, binding.scope, name, call.end).is_none());
+        assert!(shared.value(file, write.scope, name, call.end).is_none());
         assert!(identifier
-            .value(file, binding.scope, name, call.end)
+            .value(file, write.scope, name, call.end)
             .is_none());
-        assert!(!shared.flows_unbounded(file, binding.scope, name, call.end));
+        assert!(!shared.flows_unbounded(file, write.scope, name, call.end));
         assert!(shared.assignments.get().is_none());
         assert_eq!(
-            identifier.flows_unbounded(file, binding.scope, name, call.end),
+            identifier.flows_unbounded(file, write.scope, name, call.end),
             unbounded,
             "{name}"
         );
@@ -73,7 +77,7 @@ fn reassigned_identifier_locals_lose_bounded_parameter_and_literal_initializers(
         }
         cached_index = Some(index);
         if name == "literal" {
-            assert!(!identifier.flows_unbounded(file, binding.scope, name, binding.declared_at));
+            assert!(!identifier.flows_unbounded(file, write.scope, name, write.at - 1));
         }
     }
 }

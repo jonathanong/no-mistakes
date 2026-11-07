@@ -61,24 +61,24 @@ fn scalar_assignment_forms_preserve_open_sources_and_finite_replacements() {
             "sequenceValue",
             "conditionalWrite",
         ] {
-            let binding = flow
-                .bindings
+            let target = flow
+                .identifier_writes
                 .iter()
-                .find(|binding| binding.name == name)
+                .find(|write| write.name == name && write.assigned.is_some())
                 .unwrap();
             let write = assigned(flow, name);
             let call = flow
                 .calls
                 .iter()
                 .filter(|call| {
-                    call.context == binding.owner
+                    call.context == write.owner
                         && call.source_callee == "read"
                         && call.offset >= write.completed_at
                 })
                 .min_by_key(|call| call.offset)
                 .unwrap();
             assert_eq!(
-                bindings.flows_unbounded(file, binding.scope, name, call.end),
+                bindings.flows_unbounded(file, target.scope, name, call.end),
                 index == 0,
                 "{file:?} {name}"
             );
