@@ -10,7 +10,7 @@ pub(super) fn check(
     application: &RuleDef,
     graph: &DepGraph,
     facts: &CheckFactMap,
-    sources: &SourceStore,
+    sources: Option<&SourceStore>,
 ) -> Result<Vec<RuleFinding>> {
     let opts: Options = application.try_rule_options()?;
     let opts = compile(RULE_ID, &opts)?;
@@ -21,6 +21,9 @@ pub(super) fn check(
     if opts.identifier_sources.is_empty() {
         return Ok(findings);
     }
+    let Some(sources) = sources else {
+        return Ok(findings);
+    };
     let complete = sources
         .inventory()
         .paths()

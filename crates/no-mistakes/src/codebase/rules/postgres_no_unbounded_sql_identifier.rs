@@ -20,7 +20,7 @@ pub(crate) fn check_with_graph(
     config: &NoMistakesConfig,
     graph: Option<&DepGraph>,
     facts: &CheckFactMap,
-    sources: &crate::codebase::ts_source::SourceStore,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<Vec<RuleFinding>> {
     let normalized = crate::codebase::ts_resolver::normalize_path(root);
     let root = normalized.as_path();

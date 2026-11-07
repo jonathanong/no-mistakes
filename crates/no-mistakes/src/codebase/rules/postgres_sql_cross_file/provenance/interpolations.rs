@@ -51,7 +51,9 @@ pub(crate) fn interpolations(
             }
             continue;
         }
-        classify_call(graph, facts, &call.file, value_call, &mut out, bindings);
+        classify_call(
+            graph, facts, &call.file, value_call, &mut out, bindings, true,
+        );
     }
     out
 }
