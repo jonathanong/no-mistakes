@@ -87,7 +87,7 @@ comparison value opposite a catalog-backed bare UUID column, including
 `WHERE id IS DISTINCT FROM COALESCE(token, id)`. A transformed UUID operand
 compared against a parameter or another transformed operand remains reported.
 
-`IS NULL` and `IS NOT NULL` test nullness rather than probing a UUID value.
+`IS NULL` and `IS NOT NULL` test whether a value is null rather than probing a UUID value.
 Scalar transformations used only to compute that null-tested value are allowed.
 Nested comparison predicates remain checked, including CASE conditions and
 `COALESCE(id::text = $1, false) IS NOT NULL`.
