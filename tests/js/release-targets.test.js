@@ -80,7 +80,9 @@ test("release native builds emit CLI and N-API from one rustc without waiting fo
 test("release syncs optional native package versions and publishes only through npm OIDC", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
   assert.match(workflow, /sync-native-package-versions\.js "\$version"/);
-  assert.match(workflow, /npm publish "\.\/packages\/\$pkg" --provenance --access public/);
+  assert.match(workflow, /publish-npm\.cjs" "\$pkg" "\$version"/);
+  const helper = readFileSync(join(repoRoot, ".github/scripts/publish-npm.cjs"), "utf8");
+  assert.match(helper, /"--provenance", "--access", "public", "--tag"/);
   assert.doesNotMatch(workflow, /NPM_TOKEN|pnpm[^\n]* publish/);
   const publish = workflow.match(/^ {2}publish:[\s\S]*?(?=^ {2}verify-npm-platform:)/m);
   const publishJs = workflow.match(/^ {2}publish-js:[\s\S]*?(?=^ {2}verify-npm-root:)/m);
@@ -98,7 +100,7 @@ test("release syncs optional native package versions and publishes only through 
   assert.match(publishJs[0], /^ {12}no-mistakes$/m);
   // Publish every package before waiting so one slow registry tarball cannot starve the rest.
   for (const job of [publish[0], publishJs[0]]) {
-    const publishAt = job.indexOf('npm publish "./packages/$pkg"');
+    const publishAt = job.indexOf('publish-npm.cjs" "$pkg" "$version"');
     const waitAt = job.indexOf('--version "$version" --timeout-ms 1800000');
     assert.ok(publishAt >= 0 && waitAt > publishAt, "publish all packages, then wait for each");
   }
@@ -131,7 +133,7 @@ test("Cargo publication overlaps the native and npm path after validation", () =
   assert.match(npm, /^ {4}needs:\n {6}- prepare\n {6}- validate\n {6}- build-native$/m);
 });
 
-test("ESLint publication overlaps native builds without gating root verification", () => {
+test("ESLint publication overlaps native builds and gates root publication", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
   const eslint = workflow.match(/^ {2}publish-eslint:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
   const root = workflow.match(/^ {2}publish-js:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
@@ -147,7 +149,8 @@ test("ESLint publication overlaps native builds without gating root verification
   assert.doesNotMatch(eslint, /RELEASE_TOKEN|NPM_TOKEN/);
   assert.match(eslint, /^ {12}eslint-plugin-no-mistakes$/m);
   assert.doesNotMatch(eslint, /^ {12}no-mistakes$/m);
-  assert.match(eslint, /npm publish "\.\/packages\/\$pkg" --provenance --access public/);
+  assert.match(eslint, /publish-npm\.cjs" "\$pkg" "\$version"/);
+  assert.match(root, /^ {6}- publish-eslint$/m);
   assert.match(eslint, /--timeout-ms 1800000/);
   assert.doesNotMatch(root, /eslint-plugin-no-mistakes/);
   assert.doesNotMatch(verifyRoot, /publish-eslint/);
@@ -157,7 +160,7 @@ test("release does not publish no-mistakes until every platform tarball installs
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
   assert.match(workflow, /wait-npm-tarball\.js/);
   assert.match(workflow, /smoke-published-native\.js/);
-  assert.match(workflow, /metadata exists without a fetchable tarball; waiting/);
+  assert.match(workflow, /publish-npm\.cjs" "\$pkg" "\$version"/);
   assert.match(workflow, /--timeout-ms 0/);
   const verifyPlatform = workflow.match(/^ {2}verify-npm-platform:[\s\S]*?(?=^ {2}publish-js:)/m);
   const verifyRoot = workflow.match(/^ {2}verify-npm-root:[\s\S]*$/m);

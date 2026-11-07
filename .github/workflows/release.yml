@@ -737,6 +737,19 @@ jobs:
           ref: ${{ needs.prepare.outputs.release-sha }}
           token: ${{ secrets.RELEASE_TOKEN }}
 
+      - name: Checkout publish tooling
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: publish-tools
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Isolate publish tooling
+        timeout-minutes: 1
+        run: mv -- publish-tools "$RUNNER_TEMP/publish-tools"
+
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
@@ -832,10 +845,8 @@ jobs:
           for pkg in "${packages[@]}"; do
             if node "$wait_script" --package "$pkg" --version "$version" --timeout-ms 0 >/dev/null 2>&1; then
               echo "$pkg $version tarball is already fetchable; skipping publish"
-            elif pnpm view "$pkg@$version" version >/dev/null 2>&1; then
-              echo "$pkg $version metadata exists without a fetchable tarball; waiting"
             else
-              npm publish "./packages/$pkg" --provenance --access public
+              node "$RUNNER_TEMP/publish-tools/.github/scripts/publish-npm.cjs" "$pkg" "$version"
             fi
           done
           for pkg in "${packages[@]}"; do
@@ -943,6 +954,7 @@ jobs:
     needs:
       - prepare
       - verify-npm-platform
+      - publish-eslint
     runs-on: ubuntu-latest
     timeout-minutes: 50
     permissions:
@@ -957,6 +969,19 @@ jobs:
           persist-credentials: false
           ref: ${{ needs.prepare.outputs.release-sha }}
           token: ${{ secrets.RELEASE_TOKEN }}
+
+      - name: Checkout publish tooling
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: publish-tools
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Isolate publish tooling
+        timeout-minutes: 1
+        run: mv -- publish-tools "$RUNNER_TEMP/publish-tools"
 
       - name: Install Node.js
         timeout-minutes: 5
@@ -993,10 +1018,8 @@ jobs:
           for pkg in "${packages[@]}"; do
             if node "$wait_script" --package "$pkg" --version "$version" --timeout-ms 0 >/dev/null 2>&1; then
               echo "$pkg $version tarball is already fetchable; skipping publish"
-            elif pnpm view "$pkg@$version" version >/dev/null 2>&1; then
-              echo "$pkg $version metadata exists without a fetchable tarball; waiting"
             else
-              npm publish "./packages/$pkg" --provenance --access public
+              node "$RUNNER_TEMP/publish-tools/.github/scripts/publish-npm.cjs" "$pkg" "$version"
             fi
           done
           for pkg in "${packages[@]}"; do
@@ -1021,6 +1044,19 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
           ref: ${{ needs.prepare.outputs.release-sha }}
+
+      - name: Checkout publish tooling
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: publish-tools
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Isolate publish tooling
+        timeout-minutes: 1
+        run: mv -- publish-tools "$RUNNER_TEMP/publish-tools"
 
       - name: Install Node.js
         timeout-minutes: 5
@@ -1049,10 +1085,8 @@ jobs:
           for pkg in "${packages[@]}"; do
             if node "$wait_script" --package "$pkg" --version "$version" --timeout-ms 0 >/dev/null 2>&1; then
               echo "$pkg $version tarball is already fetchable; skipping publish"
-            elif pnpm view "$pkg@$version" version >/dev/null 2>&1; then
-              echo "$pkg $version metadata exists without a fetchable tarball; waiting"
             else
-              npm publish "./packages/$pkg" --provenance --access public
+              node "$RUNNER_TEMP/publish-tools/.github/scripts/publish-npm.cjs" "$pkg" "$version"
             fi
           done
           for pkg in "${packages[@]}"; do

@@ -1,3 +1,5 @@
+<!-- cspell:ignore Sigstore TLOG -->
+
 # Release stages
 
 The manual `Release` workflow prepares one versioned commit and source archive.
@@ -9,12 +11,37 @@ It therefore runs independently of the native builds and npm publication. It
 retains Cargo's package verification and the existing version-resume checks.
 The native npm path waits for validation and every native build. The root npm
 package still waits for installation and addon-loading verification of all four
-platform packages. The release workflow succeeds only when every job succeeds.
+platform packages and successful ESLint plugin publication. The release workflow
+succeeds only when every job succeeds.
 The source-only ESLint package also publishes after validation, independently
-of native builds and the root package. Its registry wait does not delay root
-installation verification. Each channel still checks tarball availability and
-retains its resume checks. A failed channel can leave another channel published;
+of native builds. The root publish waits for the plugin job, including its
+tarball verification, so a failed plugin publish blocks the root package. Each
+channel still checks tarball availability and retains its resume checks. A failed
+channel can leave another channel published;
 resume the same tagged version to complete the release instead of bumping again.
+
+## npm retry and backfill safety
+
+Every npm channel uses publish tooling from the running workflow commit, even
+when `resume_version` selects an older tag. Before each publish attempt, the
+helper checks `npm view <package>@<version> version --json`; an existing version
+is skipped. Failed publishes are checked again in case the registry accepted the
+write before the response failed. Sigstore `TLOG_CREATE_ENTRY_ERROR`, rate limits,
+server errors, process timeouts, and transient connection errors get at most
+three publish attempts
+with 10 and 20 second delays. Other failures stop the job. Registry lookup errors
+other than a missing version fail closed. Each npm command has a two minute
+process deadline and a one minute fetch timeout with npm fetch retries disabled.
+Existing tarball checks still verify availability after publication.
+
+The helper reads each package's current `dist-tags.latest` before publishing.
+An older version uses `--tag backfill`; a stable version at least as new as the
+current stable `latest` uses `--tag latest`. Prereleases, build metadata, or an
+unrecognized latest version conservatively use `backfill`. Existing versions
+never update dist-tags. The workflow's release concurrency group serializes its
+publishes; an external publisher must coordinate separately to avoid racing the
+registry read and write. Resume the original tag to repair a partial release;
+this does not promote a backfill to latest.
 
 ## Timing evidence
 
@@ -43,9 +70,9 @@ The root npm tarball became fetchable at 01:43:30 UTC, but the same job waited
 until 01:46:54 UTC for the unrelated ESLint tarball before starting root
 installation checks. Independent ESLint publication moves that upload and
 registry wait earlier, after validation. In the previous `0.87.3` run the gap
-was only ten seconds. This change removes the dependency; its elapsed-time gain
-varies with registry propagation. These observations do not establish the
-end-to-end duration of a future release.
+was only ten seconds. The plugin upload still starts early, but root publication
+now waits for its success to keep package versions aligned. These observations
+do not establish the end-to-end duration of a future release.
 
 ## Parallel validation
 
