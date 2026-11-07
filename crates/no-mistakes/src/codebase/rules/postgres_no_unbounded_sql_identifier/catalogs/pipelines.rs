@@ -59,14 +59,14 @@ impl CatalogProof<'_, '_> {
                 if !matches!(method.as_str(), "filter" | "map") {
                     return None;
                 }
-                let (source, strings) = self.list(file, base, seen)?;
-                if strings {
-                    return None;
-                }
                 let ValueExpression::Callable(owner) = &call.arguments[0] else {
                     return None;
                 };
                 let callback = self.index.flows.get(file)?.catalogs.callbacks.get(owner)?;
+                let (source, strings) = self.list(file, base, seen)?;
+                if strings {
+                    return None;
+                }
                 let valid = callback.reads.iter().all(|read| {
                     if method == "filter" {
                         source.fields.iter().any(|field| field.starts_with(read))
@@ -81,6 +81,10 @@ impl CatalogProof<'_, '_> {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "pipeline_coverage_tests.rs"]
+mod coverage_tests;
 
 pub(super) fn collection_safe(
     index: &index::Index<'_>,

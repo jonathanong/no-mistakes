@@ -6,17 +6,18 @@ pub(super) fn catalog(expression: &Expression<'_>) -> Option<(bool, Paths, Paths
     match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
         Expression::ObjectExpression(object) => {
             let paths = object_paths(object)?;
-            let rows = object.properties.iter().map(|property| {
-                let ObjectPropertyKind::ObjectProperty(property) = property else {
-                    return None;
-                };
-                let Expression::ObjectExpression(row) =
-                    crate::codebase::ts_source::unwrap_ts_wrappers(&property.value)
-                else {
-                    return None;
-                };
-                object_paths(row)
-            });
+            let rows = object
+                .properties
+                .iter()
+                .filter_map(ObjectPropertyKind::as_property)
+                .map(|property| {
+                    let Expression::ObjectExpression(row) =
+                        crate::codebase::ts_source::unwrap_ts_wrappers(&property.value)
+                    else {
+                        return None;
+                    };
+                    object_paths(row)
+                });
             Some((true, paths, intersect(rows)?))
         }
         Expression::ArrayExpression(array) => {

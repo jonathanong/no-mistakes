@@ -131,4 +131,8 @@ impl<'a, 'b> CatalogProof<'a, 'b> {
 }
 
 #[cfg(test)]
+mod coverage_tests;
+#[cfg(test)]
+mod test_support;
+#[cfg(test)]
 mod tests;

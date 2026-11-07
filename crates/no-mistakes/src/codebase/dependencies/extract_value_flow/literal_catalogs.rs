@@ -101,10 +101,9 @@ impl ImportCollector {
         else {
             return;
         };
-        let Expression::ComputedMemberExpression(member) =
-            crate::codebase::ts_source::unwrap_ts_wrappers(argument)
-        else {
-            return;
+        let member = match crate::codebase::ts_source::unwrap_ts_wrappers(argument) {
+            Expression::ComputedMemberExpression(member) if !member.optional => member,
+            _ => return,
         };
         let (Expression::Identifier(source), Expression::Identifier(key)) = (
             crate::codebase::ts_source::unwrap_ts_wrappers(&member.object),
@@ -112,9 +111,6 @@ impl ImportCollector {
         ) else {
             return;
         };
-        if member.optional {
-            return;
-        }
         let Some(scope) = self.callee_binding_scope(source.name.as_str()) else {
             return;
         };
@@ -154,3 +150,7 @@ impl ImportCollector {
             });
     }
 }
+
+#[cfg(test)]
+#[path = "literal_catalogs_tests.rs"]
+mod tests;
