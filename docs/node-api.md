@@ -630,6 +630,14 @@ export, option type, or report field is needed.
 The configured [`vitest-project-policy`](rules/vitest-project-policy.md) rule
 runs through `check()` and `analyzeProject()` check queries using the existing
 async `checkJson` binding and JS facade. Exported `VitestProjectPolicyOptions`,
-`VitestPropertyParity`, and `VitestPropertyLiteral` describe its explicit config
-and helper source inputs, required/forbidden properties, and parity pairs.
-Unresolved values are returned as `CheckReport.incomplete` (`CheckFailure[]`).
+`VitestDeclaredProjectPolicy`, `VitestPropertyLiteralKind`, `VitestPropertyParity`,
+and `VitestPropertyLiteral` describe its explicit config and helper path/glob
+inputs, effective required/forbidden properties, parity pairs, and `declared`
+literal restrictions. Helper globs select the prepared visible-file inventory.
+`declared.forbiddenValues` and `declared.forbidLiteralKinds` inspect every object
+literal in config and helpers, including unimported helpers; computed expressions
+remain allowed without constant propagation. Declared-only policies do not
+report dynamic projects as incomplete. Selected config/helper sources that cannot
+be read or parsed, and unresolved effective-policy values, are returned as
+`CheckReport.incomplete` (`CheckFailure[]`). Application include/exclude filters
+and source suppressions apply to declaration diagnostics.

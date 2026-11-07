@@ -4,6 +4,12 @@ use super::*;
 fn vitest_project_policy_async_check_matches_cli() {
     for name in [
         "pass",
+        "declared",
+        "declared-filter",
+        "declared-source-errors",
+        "declared-line",
+        "declared-next-line",
+        "declared-file",
         "missing",
         "mismatch",
         "nonliteral",
@@ -53,7 +59,14 @@ fn vitest_project_policy_async_check_matches_cli() {
 
 #[test]
 fn vitest_policy_suppression_survives_prepared_check_reuse() {
-    for case in ["suppression", "line-suppression", "next-line-suppression"] {
+    for case in [
+        "suppression",
+        "line-suppression",
+        "next-line-suppression",
+        "declared-line",
+        "declared-next-line",
+        "declared-file",
+    ] {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/vitest-project-policy/fixture")
             .join(case)
@@ -86,6 +99,42 @@ fn vitest_policy_suppression_survives_prepared_check_reuse() {
             } else {
                 assert!(report.get("suppressed").is_none(), "{case}: {report}");
             }
+        }
+    }
+}
+
+#[test]
+fn declared_helper_filters_survive_deferred_suppression() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/vitest-project-policy/fixture/declared-filter")
+        .canonicalize()
+        .unwrap();
+    for include_suppressed in [false, true] {
+        let options = json!({"root": root, "includeSuppressed": include_suppressed});
+        let report: serde_json::Value = serde_json::from_str(
+            &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string())).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(report["rules"].as_array().unwrap().len(), 1, "{report}");
+        assert_eq!(report["rules"][0]["file"], "helpers/included.mts");
+        assert!(report.get("incomplete").is_none(), "{report}");
+        if include_suppressed {
+            let files = report["suppressed"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|finding| finding["file"].as_str().unwrap())
+                .collect::<Vec<_>>();
+            assert_eq!(
+                files,
+                vec![
+                    "helpers/suppressed-file.mts",
+                    "helpers/suppressed-line.mts",
+                    "helpers/suppressed-next.mts"
+                ]
+            );
+        } else {
+            assert!(report.get("suppressed").is_none());
         }
     }
 }

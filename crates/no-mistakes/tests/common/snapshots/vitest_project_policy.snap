@@ -60,6 +60,84 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "array-value": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppressed.ts",
+          "line": 1,
+          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
+          "target": "vitest-project-policy"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "message": "vitest-project-policy declared.forbiddenValues must contain scalar JSON literals"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "combined": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppressed.ts",
+          "line": 1,
+          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
+          "target": "vitest-project-policy"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.projects"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "helpers/new-helper.mts",
+          "line": 3,
+          "message": "Vitest declaration fileParallelism: literal false is forbidden by declared.forbiddenValues; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "'fileParallelism': false,"
+        },
+        {
+          "file": "helpers/projects.mts",
+          "line": 4,
+          "message": "Vitest declaration fileParallelism: literal false is forbidden by declared.forbiddenValues; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "fileParallelism: false,"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 4,
+          "message": "Vitest declaration fileParallelism: literal false is forbidden by declared.forbiddenValues; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "fileParallelism: false,"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "computed-property": {
     "exitCode": 1,
     "report": {
@@ -106,6 +184,230 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "declared": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "helpers/new-helper.mts",
+          "line": 3,
+          "message": "Vitest declaration fileParallelism: literal false is forbidden by declared.forbiddenValues; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "'fileParallelism': false,"
+        },
+        {
+          "file": "helpers/new-helper.mts",
+          "line": 4,
+          "message": "Vitest declaration maxWorkers: literal 5 is forbidden by declared.forbidLiteralKinds; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "maxWorkers: 5,"
+        },
+        {
+          "file": "helpers/new-helper.mts",
+          "line": 5,
+          "message": "Vitest declaration maxWorkers: literal inf is forbidden by declared.forbidLiteralKinds; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "maxWorkers: 1e999,"
+        },
+        {
+          "file": "helpers/new-helper.mts",
+          "line": 6,
+          "message": "Vitest declaration maxWorkers: literal -inf is forbidden by declared.forbidLiteralKinds; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "maxWorkers: -1e999,"
+        },
+        {
+          "file": "helpers/projects.mts",
+          "line": 4,
+          "message": "Vitest declaration fileParallelism: literal false is forbidden by declared.forbiddenValues; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "fileParallelism: false,"
+        },
+        {
+          "file": "helpers/projects.mts",
+          "line": 5,
+          "message": "Vitest declaration maxWorkers: literal 2 is forbidden by declared.forbidLiteralKinds; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "'maxWorkers': 2,"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 19,
+          "message": "Vitest declaration label: literal \"literal\" is forbidden by declared.forbidLiteralKinds; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "label: 'literal',"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 20,
+          "message": "Vitest declaration enabled: literal true is forbidden by declared.forbidLiteralKinds; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "enabled: true,"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 21,
+          "message": "Vitest declaration retries: literal 2 is forbidden by declared.forbiddenValues; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "retries: 2,"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 22,
+          "message": "Vitest declaration mode: literal \"legacy\" is forbidden by declared.forbiddenValues; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "mode: 'legacy',"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 23,
+          "message": "Vitest declaration nullable: literal null is forbidden by declared.forbiddenValues; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "nullable: null,"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 4,
+          "message": "Vitest declaration fileParallelism: literal false is forbidden by declared.forbiddenValues; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "fileParallelism: false,"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 5,
+          "message": "Vitest declaration maxWorkers: literal -1 is forbidden by declared.forbidLiteralKinds; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "maxWorkers: -1,"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 6,
+          "message": "Vitest declaration maxWorkers: literal 1000 is forbidden by declared.forbidLiteralKinds; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "maxWorkers: 1_000,"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 7,
+          "message": "Vitest declaration maxWorkers: literal 2 is forbidden by declared.forbidLiteralKinds; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "maxWorkers: +2,"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 8,
+          "message": "Vitest declaration maxWorkers: literal 3 is forbidden by declared.forbidLiteralKinds; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "maxWorkers: (3 as number),"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "declared-filter": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "helpers/included.mts",
+          "line": 1,
+          "message": "Vitest declaration maxWorkers: literal 2 is forbidden by declared.forbidLiteralKinds; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export const included = { maxWorkers: 2 };"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "declared-next-line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "declared-source-errors": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "helpers/suppressed.mts",
+          "line": 1,
+          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
+          "target": "vitest-project-policy"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "helpers/broken.mts",
+          "message": "Vitest declaration policy is incomplete: cannot parse configured source; make this file readable and valid TypeScript/JavaScript so its property declarations can be checked",
+          "property": "declared"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "missing.ts",
+          "message": "Vitest declaration policy is incomplete: cannot read configured source; make this file readable and valid TypeScript/JavaScript so its property declarations can be checked",
+          "property": "declared"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "helpers/good.mts",
+          "line": 1,
+          "message": "Vitest declaration maxWorkers: literal 2 is forbidden by declared.forbidLiteralKinds; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export const policy = { maxWorkers: 2 };"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "delete-mutation": {
     "exitCode": 1,
     "report": {
@@ -117,6 +419,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "delete-mutation.ts",
           "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
           "property": "test.projects"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dotted-key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppressed.ts",
+          "line": 1,
+          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
+          "target": "vitest-project-policy"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "message": "vitest-project-policy property names must be nonempty direct test property names"
         }
       ],
       "integration": [],
@@ -161,6 +490,62 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "vitest.config.ts",
           "message": "Vitest project #1 is incomplete: test is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
           "property": "test"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "effective": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppressed.ts",
+          "line": 1,
+          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
+          "target": "vitest-project-policy"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "vitest.config.ts",
+          "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.projects"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty-key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppressed.ts",
+          "line": 1,
+          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
+          "target": "vitest-project-policy"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "message": "vitest-project-policy property names must be nonempty direct test property names"
         }
       ],
       "integration": [],
@@ -276,6 +661,60 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "invalid-glob": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppressed.ts",
+          "line": 1,
+          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
+          "target": "vitest-project-policy"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "message": "error parsing glob 'helpers/[': unclosed character class; missing ']'"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid-kind": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppressed.ts",
+          "line": 1,
+          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
+          "target": "vitest-project-policy"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "message": "invalid options for rule `vitest-project-policy` at options.declared.forbidLiteralKinds.maxWorkers[0]: invalid type: unit value, expected a Value::Tagged enum"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "known-namespace-member": {
     "exitCode": 0,
     "report": {
@@ -323,6 +762,35 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "local-cycle.ts",
           "message": "Vitest project #1 is incomplete: isolate is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
           "property": "isolate"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "malformed-declared-sources": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppressed.ts",
+          "line": 1,
+          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
+          "target": "vitest-project-policy"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "malformed.ts",
+          "message": "Vitest declaration policy is incomplete: cannot parse configured source; make this file readable and valid TypeScript/JavaScript so its property declarations can be checked",
+          "property": "declared"
         }
       ],
       "integration": [],
@@ -448,6 +916,41 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "sourceLine": "{ test: { name: 'missing-workers', fileParallelism: false } },"
         }
       ],
+      "warnings": []
+    }
+  },
+  "missing-declared-sources": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppressed.ts",
+          "line": 1,
+          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
+          "target": "vitest-project-policy"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "missing-config.ts",
+          "message": "Vitest declaration policy is incomplete: cannot read configured source; make this file readable and valid TypeScript/JavaScript so its property declarations can be checked",
+          "property": "declared"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "missing.ts",
+          "message": "Vitest declaration policy is incomplete: cannot read configured source; make this file readable and valid TypeScript/JavaScript so its property declarations can be checked",
+          "property": "declared"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
       "warnings": []
     }
   },
@@ -969,6 +1472,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "object-value": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppressed.ts",
+          "line": 1,
+          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
+          "target": "vitest-project-policy"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "message": "vitest-project-policy declared.forbiddenValues must contain scalar JSON literals"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "only-type-reexports": {
     "exitCode": 0,
     "report": {
@@ -1152,6 +1682,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "helper.ts",
           "message": "Vitest project #1 is incomplete: test is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
           "property": "test"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "removed-required": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppressed.ts",
+          "line": 1,
+          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
+          "target": "vitest-project-policy"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "message": "invalid options for rule `vitest-project-policy` at options.declared.required: unknown field `required`, expected `forbiddenValues` or `forbidLiteralKinds`"
         }
       ],
       "integration": [],
@@ -1615,7 +2172,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "incomplete": [
         {
           "consumer": "vitest-project-policy",
-          "message": "invalid options for rule `vitest-project-policy` at options.surprise: unknown field `surprise`, expected one of `config`, `helpers`, `required`, `forbidden`, `parity`"
+          "message": "invalid options for rule `vitest-project-policy` at options.surprise: unknown field `surprise`, expected one of `config`, `helpers`, `required`, `forbidden`, `parity`, `declared`"
         }
       ],
       "integration": [],
