@@ -211,7 +211,6 @@ transaction command and an unfinished opening comment do not establish a
 continuation-safe head. This
 annotation-only proof does not recover complete SQL and never runs the evaluator.
 
-
 Maximum effort also recognizes a direct loop-carried literal reassignment in
 `for...of`, `for...in`, `while`, `do...while`, and simple `for` loops: an
 unconditional executor call followed by a missing-annotation literal assignment
@@ -446,6 +445,15 @@ SQL recovered from an imported helper is reported in the helper's module at the 
 Detailed mutation and invocation behavior is described in
 [advanced helper semantics](../postgres-query-annotation/advanced-helper-semantics.md).
 
+At max effort, only files selected by an evaluated annotation application's
+`include` and `exclude` can start annotation evaluation. Other rules sharing
+executor settings do not widen these roots. Excluded files remain available
+when imported by selected roots, without speculative calls to their exported
+entrypoints. Dependency-free excluded modules with portable scalar values and
+module-local closures share their initialized state across roots within one
+run; each root receives its own mutable scope. Imports, cycles and values with
+heap identities retain contextual evaluation. No state persists between runs.
+
 ## Related rules
 
 [`postgres-no-offset`](postgres-no-offset.md) discourages unstable pagination;
@@ -457,8 +465,8 @@ Set `sqlLiteralHelpers: ['pg-copy-streams#from']` to recognize a direct runtime
 import of that exact module and export at both `effort: low` and `effort: max`:
 
 ```ts
-import { from as copyFrom } from 'pg-copy-streams';
-client.query(copyFrom('/* import users */ COPY users FROM STDIN'));
+import { from as copyFrom } from "pg-copy-streams";
+client.query(copyFrom("/* import users */ COPY users FROM STDIN"));
 ```
 
 Named imports, renamed imports, and direct namespace calls such as

@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      effort: max
+      importSpecifier: "@app/db"
+      include: ["first.mts", "second.mts"]

@@ -36,6 +36,8 @@ pub(super) fn evaluate(
                     untrusted_array_intrinsics,
                     failed_sources,
                 } = profile;
+                let initials =
+                    super::super::evaluate::module_cache::initials::SharedInitials::new();
                 let mut per_file = root_tasks(roots)
                     .map(|path| {
                         let events = crate::diagnostics::with_observer(observer.clone(), || {
@@ -43,6 +45,9 @@ pub(super) fn evaluate(
                                 evaluator::new(&files, resolve, untrusted_array_intrinsics);
                             evaluator.modules.sources =
                                 SourceDependencies::new(std::sync::Arc::clone(&failed_sources));
+                            evaluator
+                                .modules
+                                .share_initials(std::sync::Arc::clone(&initials));
                             super::super::progress::trace(
                                 "postgres.annotation.root",
                                 &path,
