@@ -24,14 +24,17 @@ impl ImportCollector {
                 })
         };
         let owner = self.current_function_id();
-        self.identifier_initializers.insert(
-            (scope, name.to_string()),
-            IdentifierInitializer {
-                declared_at: declarator.span.start,
-                owner,
-                value,
-            },
-        );
+        self.identifier_initializers
+            .entry(scope)
+            .or_default()
+            .insert(
+                name.to_string(),
+                IdentifierInitializer {
+                    declared_at: declarator.span.start,
+                    owner,
+                    value,
+                },
+            );
     }
 
     pub(crate) fn identifier_assignment(
@@ -135,7 +138,8 @@ impl ImportCollector {
         {
             value.initial = self
                 .identifier_initializers
-                .remove(&(write.scope, write.name.clone()))
+                .get_mut(&write.scope)
+                .and_then(|names| names.remove(write.name.as_str()))
                 .map(Box::new);
             write.assigned = Some(value);
         }

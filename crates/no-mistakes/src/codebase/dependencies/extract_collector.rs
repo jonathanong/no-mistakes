@@ -56,8 +56,10 @@ struct ImportCollector {
     /// Saved and restored around body traversal; absent for ordinary bodies.
     unreachable_value_binding_after: Option<u32>,
     value_binding_indexes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
-    identifier_initializers:
-        FxHashMap<(usize, String), extract_value_flow::closed_identifiers::IdentifierInitializer>,
+    identifier_initializers: FxHashMap<
+        usize,
+        FxHashMap<String, extract_value_flow::closed_identifiers::IdentifierInitializer>,
+    >,
     parameter_call_origins:
         Option<std::sync::Arc<extract_value_flow::parameter_call_origins::ParameterCallOrigins>>,
     receiver_escapes: extract_value_flow::receiver_escapes::Side,
