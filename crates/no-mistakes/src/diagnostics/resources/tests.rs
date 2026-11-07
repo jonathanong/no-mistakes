@@ -115,3 +115,24 @@ fn resource_history_formatting_does_not_hold_worker_locks() {
         0
     );
 }
+
+#[test]
+#[cfg(unix)]
+fn phase_wall_interval_includes_both_resource_samples() {
+    let observer = InvocationObserver::new(true);
+    let before = usage::tests::sample_count();
+    let samples_at_clock = std::cell::RefCell::new(Vec::new());
+    super::super::context::measure_optional(
+        Some(&observer),
+        "phase",
+        TimingKind::Serial,
+        || {
+            samples_at_clock
+                .borrow_mut()
+                .push(usage::tests::sample_count());
+            std::time::Instant::now()
+        },
+        || (),
+    );
+    assert_eq!(*samples_at_clock.borrow(), [before, before + 2]);
+}

@@ -45,8 +45,12 @@ impl<'a> ResourceGuard<'a> {
         Some(Self { observer, start })
     }
 
-    pub(super) fn record(&self, label: &str, wall: Duration) {
-        let Some((start, end)) = self.start.zip(self.start.and_then(|_| sample())) else {
+    pub(super) fn finish(&self) -> Option<Usage> {
+        self.start.and_then(|_| sample())
+    }
+
+    pub(super) fn record(&self, label: &str, wall: Duration, end: Option<Usage>) {
+        let Some((start, end)) = self.start.zip(end) else {
             return;
         };
         let completed = PhaseResources {
