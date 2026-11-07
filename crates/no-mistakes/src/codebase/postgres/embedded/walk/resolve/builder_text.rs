@@ -14,7 +14,10 @@ pub(super) fn executor_call(
     callee: &str,
 ) -> Option<EmbeddedSqlCall> {
     let versions = visitor.recover_builder_text(call)?;
-    if versions.is_empty() || versions.iter().any(|value| value.value != ValueKind::Sql) {
+    if versions.is_empty()
+        || versions.iter().any(|value| value.value != ValueKind::Sql)
+        || (call.arguments.len() == 1 && versions.iter().all(|value| value.append_sites.is_empty()))
+    {
         return None;
     }
     let line = byte_offset_to_line(visitor.source, call.span.start as usize);

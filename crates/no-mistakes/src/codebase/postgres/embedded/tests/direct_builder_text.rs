@@ -14,7 +14,9 @@ fn extract_view(name: &str) -> EmbeddedSqlFileFacts {
 
 #[test]
 fn direct_builder_text_preserves_the_view_probe_and_appended_bind() {
-    let file = extract_view("append-view-append-pass.ts");
+    let file = extract_view("append-view-object-pass.ts");
+    let paired = extract_view("append-view-append-pass.ts");
+    assert_eq!(file.calls, paired.calls);
     let [call] = file.calls.as_slice() else {
         panic!("expected one executor call: {file:#?}");
     };
@@ -38,7 +40,9 @@ fn direct_builder_text_preserves_the_view_probe_and_appended_bind() {
 
 #[test]
 fn direct_builder_text_keeps_transforms_on_the_probed_view_column() {
-    let file = extract_view("append-view-append-positive.ts");
+    let file = extract_view("append-view-object-positive.ts");
+    let paired = extract_view("append-view-append-positive.ts");
+    assert_eq!(file.calls, paired.calls);
     let [call] = file.calls.as_slice() else {
         panic!("expected one executor call: {file:#?}");
     };

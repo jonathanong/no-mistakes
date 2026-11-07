@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn appended_view_probe_matches_literal_through_public_check_and_project() {
     let root = crate::test_support::rule_fixture_root("postgres-no-transformed-uuid-predicates");
-    for shape in ["append", "literal"] {
+    for shape in ["append", "object", "literal"] {
         for status in ["pass", "positive"] {
             let name = format!("append-view-{shape}-{status}");
             let config = root
@@ -33,7 +33,7 @@ fn appended_view_probe_matches_literal_through_public_check_and_project() {
                 assert_eq!(finding["file"], format!("{name}.ts"));
                 assert!([json!("view_posts.id"), json!("view_posts.root_id")]
                     .contains(&finding["target"]));
-                assert_eq!(finding["line"], if shape == "append" { 6 } else { 5 });
+                assert_eq!(finding["line"], if shape == "literal" { 5 } else { 6 });
             }
             let project: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
                 serde_json::from_str(

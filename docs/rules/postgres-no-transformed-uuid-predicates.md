@@ -186,7 +186,9 @@ unanalyzable. Dynamic relation names, including temp tables, column lists, and
 JavaScript escapes and other construction follow the
 unanalyzable policy. At `effort: max`, it also analyzes supported prepared SQL
 builders and helper-returned statements. A `sql-template-strings` statement
-assembled with `.append` can be passed as `read(statement.text, statement.values)`.
+assembled with `.append` can be passed as `read(statement)` or
+`read(statement.text, statement.values)`, using any configured executor name.
+Both call shapes produce the same findings.
 The recovered query retains its view relation for probe classification; transforming
 the probed view column still reports. The two arguments must belong to the same
 tracked builder. Unanalyzable or dynamic query text

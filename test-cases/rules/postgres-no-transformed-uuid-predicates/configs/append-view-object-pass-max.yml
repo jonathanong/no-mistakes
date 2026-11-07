@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    include:
+      - append-view-object-pass.ts
+      - append-view-schema.json
+    options:
+      schemaCatalogPath: append-view-schema.json
+      importSpecifier: db
+      executorNames: [read]
+effort: max

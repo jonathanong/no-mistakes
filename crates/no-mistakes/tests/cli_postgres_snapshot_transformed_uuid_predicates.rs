@@ -13,6 +13,11 @@ fn postgres_no_transformed_uuid_predicates_check_json_snapshot() {
     // in the unit test. Advise keeps `rules` empty. Ignore is empty rules and
     // empty advisories.
     let rows = [
+        ("object_view_pass", "append-view-object-pass-max.yml"),
+        (
+            "object_view_positive",
+            "append-view-object-positive-max.yml",
+        ),
         ("append_view_pass", "append-view-append-pass-max.yml"),
         (
             "append_view_positive",
