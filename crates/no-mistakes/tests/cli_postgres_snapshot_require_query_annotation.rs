@@ -279,6 +279,7 @@ fn postgres_annotation_scope_check_json_snapshot() {
     let cases = [
         "helper-tracing-excluded-roots",
         "helper-tracing-shared-initials",
+        "helper-tracing-scope-root-counters",
     ]
     .map(|name| {
         let root = rules_path(RULE, "fixture", name);

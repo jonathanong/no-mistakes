@@ -1,4 +1,5 @@
 {
+  "status": "Historical cached implementation; superseded after downstream CPU regression. See the adjacent native validation guide and PR #3088 for current evidence.",
   "build": "release profile, no default features, full LTO, codegen-units=1; no-default-features excludes unrelated Mermaid support",
   "command": "no-mistakes check --root <fixture> --effort max --format json --timeout 0 [--jobs 1|4]",
   "fixture_metrics": [

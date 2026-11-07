@@ -25,16 +25,21 @@ pub(super) fn roots(
         "postgres.annotation.roots_after_scoping",
         after.len() as u64,
     );
+    let retained = after
+        .iter()
+        .filter(|path| files[**path].facts.in_scope == Some(false))
+        .count();
+    let excluded = before
+        .iter()
+        .filter(|path| files[**path].facts.in_scope == Some(false))
+        .count();
     observer.increment(
         "postgres.annotation.excluded_roots_retained",
-        after
-            .iter()
-            .filter(|path| files[**path].facts.in_scope == Some(false))
-            .count() as u64,
+        retained as u64,
     );
     observer.increment(
         "postgres.annotation.excluded_roots_pruned",
-        before.len().saturating_sub(after.len()) as u64,
+        excluded.saturating_sub(retained) as u64,
     );
     observer.increment("postgres.annotation.shared_init.disabled", 1);
     observer.increment("postgres.annotation.shared_init.cache_hits", 0);

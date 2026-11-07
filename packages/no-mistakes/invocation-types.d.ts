@@ -28,6 +28,8 @@ export interface InvocationOptions {
   profile?: "ci";
   /** Register live, stderr-free phase progress under a unique ID. Use diagnosticsSnapshot({ id }) while the request runs; completion or failure removes the ID. */
   diagnosticsId?: string;
+  /** Include final work counters and completed timings on object results. Does not require diagnosticsId. */
+  diagnosticsVerbose?: boolean;
 }
 
 export type WithInvocationOptions<T> = T & InvocationOptions;
@@ -35,6 +37,7 @@ export type WithInvocationOptions<T> = T & InvocationOptions;
 /** Metadata emitted only on analysis JSON objects, never arrays or scalar results. */
 export interface InvocationResultMetadata {
   jobsPoolWarning?: JobsPoolWarning;
+  invocationDiagnostics?: InvocationDiagnostics;
 }
 
 export type WithInvocationResult<T> = T extends readonly unknown[]
@@ -51,6 +54,12 @@ export interface JobsPoolWarning {
   requestedJobs: number;
   /** Worker count recorded for the process pool. */
   effectiveJobs: number;
+}
+
+/** Final request-owned verbose diagnostics; nested and parallel durations overlap. */
+export interface InvocationDiagnostics {
+  work: Record<string, number>;
+  timings: CompletedTimingSpan[];
 }
 
 /** One live span; siblings may overlap and labels form the enclosing phase path. */

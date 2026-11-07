@@ -268,7 +268,7 @@ Annotation scope and initialization diagnostics also include:
 | `postgres.annotation.roots_before_scoping`    | Roots retained by the former all-executor seed policy.                                                         |
 | `postgres.annotation.roots_after_scoping`     | Roots actually selected by scoped executor seeds.                                                              |
 | `postgres.annotation.excluded_roots_retained` | Selected roots outside the annotation include/exclude scope; these can supply SQL arguments to scoped helpers. |
-| `postgres.annotation.excluded_roots_pruned`   | Former roots removed by scoped seeds.                                                                          |
+| `postgres.annotation.excluded_roots_pruned`   | Former excluded roots removed by scoped seeds; pruned included importers are not counted here.                 |
 | `postgres.annotation.module_initializations`  | Actual initialization starts, including repeated initialization across roots and speculative restores.         |
 
 The before-scoping count uses a second reachability projection over the same

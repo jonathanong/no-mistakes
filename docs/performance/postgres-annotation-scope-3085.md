@@ -1,73 +1,101 @@
-# PostgreSQL annotation scope performance
+# PostgreSQL annotation scope: regression and native validation
 
-## Result
+PR [#3088](https://github.com/jonathanong/no-mistakes/pull/3088) removes the shared
+scalar module-initialization cache after downstream validation reported higher
+CPU cost. Scoped executor seeds still prune irrelevant roots. Excluded callers
+that can supply SQL arguments to selected helpers retain contextual evaluation.
+There is no cross-root initialization sharing or once-per-run promise.
 
-On `fixtures/performance/annotation-excluded-shared-initials` (34 source files, 4,567 bytes, 146 lines), observed mean wall time was 0.03407→0.01880 s at default jobs; mean CPU was 0.29211→0.03294 s; maximum RSS was 177,820→30,628 KiB. Jobs 1 wall time was 0.11032→0.02193 s; jobs 4 was 0.03827→0.01775 s. This is a strong result for the targeted fixture. The control fixtures include both improvements and regressions; the small mixed deltas do not establish broad speedups or regressions.
+The reported consumer comparison used 0.109.6 versus 0.109.6 plus this PR's changes,
+an unchanged configuration, maximum effort, three interleaved runs per variant,
+and the CI darwin release profile: thin LTO with 16 code generation units.
+The report described about 9% higher user CPU and 7% higher wall time, user CPU
+ranges of 695–720 versus 767–806 seconds, and peak RSS of 8.3 versus 8.5 GB.
+All 169 annotation findings were byte-identical. These are supplied downstream
+observations, not measurements reproduced by the public fixture.
 
-The saved work-count regression first failed on the baseline: an unimported excluded test contributed a second annotation root. The corrected scope fixture has one root and one module initialization. The larger shared-helper fixture falls from 33 roots and 65 module initializations to 32 roots and 33 initializations, including one shared helper initialization. These diagnostic counts were collected separately from the observer-off measurements.
+## Why the cache was removed
 
-The shared-helper fixture has 32 selected entry modules, one imported excluded helper that doubles scalar text sixteen times, and one unimported excluded test. Both balanced blocks show lower candidate wall time at every job setting. At default jobs the baseline wall range is 0.03085–0.03763 s and the candidate range is 0.01833–0.02005 s. This fixture intentionally stresses repeated scalar initialization; it does not establish a gain for contextual or heap-bearing helpers.
+The cache rejected in-scope modules and excluded modules with imports. Thus an
+excluded test importing a large in-scope helper could retain exactly the same
+initialization work while paying for negative cache entries and shared-handle
+cloning in evaluator snapshots. A focused scalar-helper win did not establish a
+benefit for this graph shape. The cache, its frozen-frame installation, and its
+snapshot bookkeeping are removed rather than enabled by another configuration
+option. Initialization counts remain actual counts; retained callers are not
+reclassified to hide their work.
 
-## Measurements
+The [earlier cached implementation measurements](https://github.com/jonathanong/no-mistakes/blob/c0f7a4a0ed3ae7d9a1a72e3fd209a2cc0406a1c2/docs/performance/postgres-annotation-scope-3085.md)
+and the historical JSON beside this page are superseded. They used different
+sources and release settings and are not acceptance evidence for this revision.
 
-Each variant has four samples per fixture/job group, run in two balanced baseline/candidate/candidate/baseline blocks. Wall time is monotonic elapsed time. CPU is mean user plus system time. RSS is the maximum across four runs. Each check used observer OFF in a fresh CLI process.
+## Saved reproductions
 
-Heavy builds and the complete measurement suite were serialized with `flock /tmp/nm-heavy.lock`; builds used `CARGO_BUILD_JOBS=6`. Earlier runs that reused an output directory were discarded. Only the final, separately stored suite and a subsequent disjoint original-reproduction suite contribute to this report. The timed wrapper adds a small fixed process-launch cost, which was not subtracted.
+- [`annotation-excluded-callers-large`](../../fixtures/performance/annotation-excluded-callers-large):
+  64 excluded test modules, each with 16 entrypoints, import a helper defining
+  160 functions. The fixture has 66 TypeScript modules, 437,023 source bytes and
+  9,389 lines. No included module imports a test. All 65 contextual roots remain;
+  narrowing finding scope does not remove those callers.
+- [`annotation-excluded-callers-unrelated`](../../fixtures/performance/annotation-excluded-callers-unrelated):
+  64 excluded test modules call the configured executor without importing the
+  selected helper. Its 66 modules contain 306,751 source bytes and 7,245 lines.
+  Scoped seeds reduce 65 roots to one.
+- [`annotation-excluded-shared-initials`](../../fixtures/performance/annotation-excluded-shared-initials):
+  the former scalar-cache winning case remains a control. It now uses ordinary
+  per-root initialization.
 
-| Fixture (repo-relative)                                                                     | Include/exclude payload                                          | Source bytes | Lines | Source files | JSX files* |    Jobs |        Wall s B→C |         CPU s B→C | Peak RSS KiB B→C |
-| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | -----------: | ----: | -----------: | ---------: | ------: | ----------------: | ----------------: | ---------------: |
-| `test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-excluded-roots`  | include `src/**/*.mts, tests/**/*.mts`; exclude `tests/**/*.mts` |          293 |    11 |            2 |  0 (0.00%) |       1 | 0.01212 → 0.01165 | 0.01188 → 0.01158 |  25,124 → 25,728 |
-| `test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-excluded-roots`  | include `src/**/*.mts, tests/**/*.mts`; exclude `tests/**/*.mts` |          293 |    11 |            2 |  0 (0.00%) |       4 | 0.01159 → 0.01171 | 0.01237 → 0.01242 |  25,192 → 25,080 |
-| `test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-excluded-roots`  | include `src/**/*.mts, tests/**/*.mts`; exclude `tests/**/*.mts` |          293 |    11 |            2 |  0 (0.00%) | default | 0.01330 → 0.01398 | 0.01860 → 0.01937 |  25,084 → 24,980 |
-| `test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-reachability`    | include `src/helper.mts, src/idle.mts`; exclude `—`              |          584 |    19 |            7 |  0 (0.00%) |       1 | 0.01201 → 0.01197 | 0.01190 → 0.01197 |  26,048 → 25,960 |
-| `test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-reachability`    | include `src/helper.mts, src/idle.mts`; exclude `—`              |          584 |    19 |            7 |  0 (0.00%) |       4 | 0.01180 → 0.01299 | 0.01298 → 0.01427 |  25,216 → 25,540 |
-| `test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-reachability`    | include `src/helper.mts, src/idle.mts`; exclude `—`              |          584 |    19 |            7 |  0 (0.00%) | default | 0.01331 → 0.01265 | 0.02131 → 0.02081 |  25,220 → 25,404 |
-| `test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-shared-initials` | include `first.mts, second.mts`; exclude `—`                     |         1203 |    45 |            9 |  0 (0.00%) |       1 | 0.01160 → 0.01187 | 0.01158 → 0.01178 |  25,360 → 25,440 |
-| `test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-shared-initials` | include `first.mts, second.mts`; exclude `—`                     |         1203 |    45 |            9 |  0 (0.00%) |       4 | 0.01139 → 0.01184 | 0.01306 → 0.01312 |  24,956 → 25,536 |
-| `test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-shared-initials` | include `first.mts, second.mts`; exclude `—`                     |         1203 |    45 |            9 |  0 (0.00%) | default | 0.01177 → 0.01212 | 0.01964 → 0.02019 |  25,352 → 25,748 |
-| `fixtures/performance/annotation-excluded-shared-initials`                                  | include `entry-*.mts`; exclude `—`                               |         4567 |   146 |           34 |  0 (0.00%) |       1 | 0.11032 → 0.02193 | 0.10941 → 0.02078 |  33,440 → 31,084 |
-| `fixtures/performance/annotation-excluded-shared-initials`                                  | include `entry-*.mts`; exclude `—`                               |         4567 |   146 |           34 |  0 (0.00%) |       4 | 0.03827 → 0.01775 | 0.10766 → 0.02000 |  60,856 → 30,760 |
-| `fixtures/performance/annotation-excluded-shared-initials`                                  | include `entry-*.mts`; exclude `—`                               |         4567 |   146 |           34 |  0 (0.00%) | default | 0.03407 → 0.01880 | 0.29211 → 0.03294 | 177,820 → 30,628 |
-| `fixtures/performance/annotation-shared-record-dag/excluded-test-root-included-control`     | include `**/*.mts`; exclude `—`                                  |          288 |     7 |            2 |  0 (0.00%) |       1 | 0.01120 → 0.01155 | 0.01121 → 0.01138 |  24,904 → 25,008 |
-| `fixtures/performance/annotation-shared-record-dag/excluded-test-root-included-control`     | include `**/*.mts`; exclude `—`                                  |          288 |     7 |            2 |  0 (0.00%) |       4 | 0.01143 → 0.01154 | 0.01215 → 0.01213 |  24,476 → 24,568 |
-| `fixtures/performance/annotation-shared-record-dag/excluded-test-root-included-control`     | include `**/*.mts`; exclude `—`                                  |          288 |     7 |            2 |  0 (0.00%) | default | 0.01225 → 0.01265 | 0.01646 → 0.01603 |  25,012 → 24,720 |
-| `fixtures/performance/annotation-shared-record-dag/excluded-test-root-without-dag`          | include `**/*.mts`; exclude `**/*.test.mts`                      |          288 |     7 |            2 |  0 (0.00%) |       1 | 0.01110 → 0.01240 | 0.01111 → 0.01219 |  25,024 → 25,356 |
-| `fixtures/performance/annotation-shared-record-dag/excluded-test-root-without-dag`          | include `**/*.mts`; exclude `**/*.test.mts`                      |          288 |     7 |            2 |  0 (0.00%) |       4 | 0.01146 → 0.01144 | 0.01211 → 0.01206 |  24,744 → 24,544 |
-| `fixtures/performance/annotation-shared-record-dag/excluded-test-root-without-dag`          | include `**/*.mts`; exclude `**/*.test.mts`                      |          288 |     7 |            2 |  0 (0.00%) | default | 0.01247 → 0.01222 | 0.01708 → 0.01638 |  24,748 → 24,436 |
-| `fixtures/performance/annotation-shared-record-dag/excluded-test-root-without-test`         | include `**/*.mts`; exclude `**/*.test.mts`                      |          114 |     3 |            1 |  0 (0.00%) |       1 | 0.01125 → 0.01144 | 0.01115 → 0.01136 |  24,900 → 25,412 |
-| `fixtures/performance/annotation-shared-record-dag/excluded-test-root-without-test`         | include `**/*.mts`; exclude `**/*.test.mts`                      |          114 |     3 |            1 |  0 (0.00%) |       4 | 0.01135 → 0.01148 | 0.01176 → 0.01195 |  24,788 → 24,608 |
-| `fixtures/performance/annotation-shared-record-dag/excluded-test-root-without-test`         | include `**/*.mts`; exclude `**/*.test.mts`                      |          114 |     3 |            1 |  0 (0.00%) | default | 0.01183 → 0.01199 | 0.01508 → 0.01525 |  24,756 → 24,576 |
-| `fixtures/performance/annotation-timings`                                                   | include `—`; exclude `—`                                         |          570 |    16 |            1 |  0 (0.00%) |       1 | 0.01139 → 0.01123 | 0.01134 → 0.01123 |  25,268 → 25,304 |
-| `fixtures/performance/annotation-timings`                                                   | include `—`; exclude `—`                                         |          570 |    16 |            1 |  0 (0.00%) |       4 | 0.01233 → 0.01193 | 0.01239 → 0.01200 |  25,108 → 25,704 |
-| `fixtures/performance/annotation-timings`                                                   | include `—`; exclude `—`                                         |          570 |    16 |            1 |  0 (0.00%) | default | 0.01219 → 0.01212 | 0.01621 → 0.01567 |  25,112 → 25,180 |
-| `fixtures/performance/postgres-annotations`                                                 | include `src/entry-*.mts`; exclude `—`                           |         8989 |   228 |           15 |  1 (6.67%) |       1 | 0.01795 → 0.01674 | 0.01614 → 0.01629 |  26,204 → 25,964 |
-| `fixtures/performance/postgres-annotations`                                                 | include `src/entry-*.mts`; exclude `—`                           |         8989 |   228 |           15 |  1 (6.67%) |       4 | 0.01365 → 0.01456 | 0.01797 → 0.01899 |  26,040 → 26,212 |
-| `fixtures/performance/postgres-annotations`                                                 | include `src/entry-*.mts`; exclude `—`                           |         8989 |   228 |           15 |  1 (6.67%) | default | 0.01364 → 0.01343 | 0.02850 → 0.02814 |  26,740 → 27,012 |
-| `fixtures/performance/postgres-branch-copies`                                               | include `src/entry-*.mts`; exclude `—`                           |        56065 |   969 |           14 |  1 (7.14%) |       1 | 0.01786 → 0.01813 | 0.01774 → 0.01805 |  25,976 → 26,232 |
-| `fixtures/performance/postgres-branch-copies`                                               | include `src/entry-*.mts`; exclude `—`                           |        56065 |   969 |           14 |  1 (7.14%) |       4 | 0.01429 → 0.01535 | 0.01968 → 0.02060 |  26,144 → 26,064 |
-| `fixtures/performance/postgres-branch-copies`                                               | include `src/entry-*.mts`; exclude `—`                           |        56065 |   969 |           14 |  1 (7.14%) | default | 0.01450 → 0.01402 | 0.03150 → 0.03145 |  27,232 → 26,972 |
+The first two fixtures use `.mts` files, with no JSX. Their configurations
+explicitly include source and test locations, then exclude the tests. Their
+saved snapshots preserve the missing-annotation and unresolved-prefix findings
+at the helper's actual source line. These reductions do not model the full
+consumer's size, memory pressure, JSX density or callback distribution.
 
-| `fixtures/performance/annotation-shared-record-dag/excluded-test-root` | include `**/*.mts`; exclude `**/*.test.mts` | 1287 | 40 | 2 | 0 (0.00%) | 1 | 0.01325 → 0.01268 | 0.01126 → 0.01223 | 39,204 → 39,508 |
-| `fixtures/performance/annotation-shared-record-dag/excluded-test-root` | include `**/*.mts`; exclude `**/*.test.mts` | 1287 | 40 | 2 | 0 (0.00%) | 4 | 0.01071 → 0.01098 | 0.01141 → 0.01162 | 39,764 → 39,120 |
-| `fixtures/performance/annotation-shared-record-dag/excluded-test-root` | include `**/*.mts`; exclude `**/*.test.mts` | 1287 | 40 | 2 | 0 (0.00%) | default | 0.01167 → 0.01321 | 0.01593 → 0.01776 | 39,424 → 39,548 |
+## Native macOS comparison
 
-## Parity and provenance
+The [workflow](../../.github/workflows/annotation-scope-performance.yml) builds
+the merge base and exact PR head independently on `macos-15`. Both use stable
+Rust, default features, release mode, thin LTO, 16 code generation units and
+`CARGO_BUILD_JOBS=6`. Heavy Cargo commands use `flock /tmp/nm-heavy.lock`.
+Each source worktree and isolated target is created in the OS temporary
+directory. Executables are frozen before the owned targets are removed.
 
-Normalized JSON reports, raw stdout SHA-256 hashes, and exit statuses matched for all 33 fixture/job groups (264 total invocations). Existing findings returned status 1 on the annotation fixtures; this status was identical across binaries.
+A fresh macOS measurement job validates source SHAs, compiler, runner image,
+architecture, profile, executable version and distinct binary digests. Both
+executables then analyze the same physical fixture worktree at maximum effort,
+with observation disabled and configurations unchanged. Jobs 1, 4 and default
+use four balanced base/candidate/candidate/base blocks: eight samples per
+executable and 144 acceptance invocations overall. No timed sample is discarded.
 
-- Baseline source revision `7d2e661595a3d53aba5afe301d00e1c6b1580a7d`; binary SHA-256 `d0928a5ee9f2c94eeb9a33777bab09a175d5e5b29b6628354382c6b8baffe75b`.
-- Candidate runtime revision `ecc1bb3ff35deeee0f317a22db659006d584cd7a`; binary SHA-256 `f8019cdcbffc72137d64c28f9a3ddb36a58e4ebf2e5a53a0a86714d938450a65`.
-- Both artifacts used the full release profile, LTO, one code generation unit, and no default features; the latter excludes unrelated Mermaid support. The runtime code was unchanged by the subsequent test-only commit `5b016cf99`. Both binaries used the same physical fixture tree.
-- Host: Linux x86_64, 24 logical CPUs; Rust 1.99.1 (58cf8f9c3 2026-10-13). Jobs were 1, 4, and the CLI default. GNU time captured peak RSS; wait4 captured CPU usage for the timed process and its waited child.
-- Every invocation used `check --effort max --format json --timeout 0`; no observer, timings, or progress flags were enabled.
-- Include/exclude payloads are listed per fixture. The source scanner reports files containing JSX-like markup as a density proxy; the 6.67%/7.14% values come from HTML-like strings in source and are not actual TSX/JSX syntax density.
+Monotonic elapsed time and native `wait4` collect wall time, user/system CPU and
+peak RSS. A separate CPU/memory probe verifies completed-descendant accounting
+and Darwin RSS units before sampling. Each sample has an external deadline.
+One verbose run per executable and fixture follows the acceptance samples;
+its counters, timings, CPU and RSS are retained separately.
 
-## Scope and limits
+The `annotation-macos-comparison` artifact contains `summary.md`, `summary.json`,
+`samples.json`, `diagnostics.json` and provenance. Summary rows use mean user and
+total CPU, mean wall time and maximum RSS. Exact JSON bytes, stderr and exit
+status must match across both executables and every job setting. Expected
+finding exits are retained. Provenance, resource-accounting or parity failures
+fail the workflow. Numerical differences stay visible; the harness does not
+turn a chosen regression tolerance into a passing performance claim.
 
-The original `annotation-shared-record-dag/excluded-test-root` reproduction is included with its full 30-level shared DAG. Both matched revisions complete, and its short runtime is inconclusive: default wall time is 0.01167→0.01321 s, CPU 0.01593→0.01776 s and peak RSS 39,424→39,548 KiB. The matched baseline already contains the shared-record prefix-walk optimization; the historical timeout described in that fixture README is not this baseline. This PR claims no end-to-end gain for that reproduction.
+The PR description pins the measured run, source revisions and before/after
+numbers. See the [harness guide](../../.github/scripts/annotation-scope-performance/README.md)
+for artifact consumption. Linux results with the same optimization flags are
+supplemental and cannot establish the macOS tradeoff. Hosted fixture results
+also do not replace another run of the large consumer.
 
-The fast path is limited to statically eligible scalar-only, dependency-free portable helper bodies and leaf closures. Reference-bearing helpers and helpers whose meaning depends on excluded or otherwise contextual callers remain on contextual evaluation; general contextual caching is still open. The excluded-root and shared-helper fixtures, reachability case, and included-root controls retained identical report bytes and exit statuses.
+## Work diagnostics
 
-These are one-machine end-to-end CLI observations, not a statistical benchmark or a guarantee for other repositories. Several control means regress, as shown in the complete table; the mixed small deltas are inconclusive, not evidence of flat performance. The sizeable improvement is specific to the excluded shared-initial workload and its matching job settings.
+`--verbose-timings` reports roots before/after scope selection, excluded roots
+retained/pruned, and actual module initialization starts. The removed shared
+cache has `shared_init.disabled: 1`, zero hits, misses and builds, and zero build
+duration. The before-scope comparison performs extra resolver work only with
+verbose observation. Default execution and coarse timings skip it.
 
-Normalized sample data: [`postgres-annotation-scope-3085.json`](./postgres-annotation-scope-3085.json).
+Async `check()` and `analyzeProject()` expose the same final work and timing
+information through opt-in `diagnosticsVerbose: true`, without retaining a
+completed observer or changing default reports. See
+[CLI diagnostics](../cli/diagnostics.md) and
+[Node diagnostics](../node-api/progress.md#final-verbose-diagnostics).

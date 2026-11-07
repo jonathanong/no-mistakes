@@ -43,6 +43,11 @@ test(
 test("active progress exposes named public snapshot contracts and a live-only polling API", () => {
   const declarations = readFileSync(join(packageRoot, "invocation-types.d.ts"), "utf8");
   assert.match(declarations, /diagnosticsId\?: string/);
+  assert.match(declarations, /diagnosticsVerbose\?: boolean/);
+  assert.match(declarations, /export interface InvocationDiagnostics/);
+  assert.match(declarations, /invocationDiagnostics\?: InvocationDiagnostics/);
+  assert.match(declarations, /work: Record<string, number>/);
+  assert.match(declarations, /timings: CompletedTimingSpan\[\]/);
   for (const name of ["ActiveTimingSpan", "CompletedTimingSpan", "DiagnosticsProgressSnapshot"]) {
     assert.match(declarations, new RegExp(`export interface ${name}`));
   }
