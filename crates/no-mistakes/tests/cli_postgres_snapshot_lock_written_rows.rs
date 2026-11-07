@@ -251,6 +251,12 @@ fn postgres_lock_written_rows_helpers_check_json_snapshot() {
         "postgres_lock_written_rows_helpers",
         &[
             ("unwritten", "helper-unwritten", "checks-fail.yml"),
+            ("completion", "helper-completion", "checks-fail.yml"),
+            (
+                "imported_completion",
+                "helper-imported-completion",
+                "checks-fail.yml",
+            ),
             ("reexports", "helper-reexport", "checks-fail.yml"),
             (
                 "unsupported",
