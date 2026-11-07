@@ -63,30 +63,22 @@ fn include_misses_and_other_rule_scopes_do_not_widen_annotation_seeds() {
 }
 
 #[test]
-fn configured_excluded_dependency_initializes_once_across_roots() {
+fn configured_excluded_dependency_preserves_each_root_context() {
     let root = fixture("helper-tracing-shared-initials");
     let (report, diagnostics) = observed_check(&root);
     assert_eq!(report["rules"], serde_json::json!([]), "{report}");
     assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
     assert_eq!(diagnostics.work["postgres.annotation.roots"], 2);
-    assert_eq!(diagnostics.work["postgres.annotation.module"], 3);
-    assert_eq!(
-        diagnostics.work["postgres.annotation.shared_module_initializations"],
-        1
-    );
+    assert_eq!(diagnostics.work["postgres.annotation.module"], 4);
 }
 
 #[test]
-fn expensive_excluded_scalar_preparation_is_shared_across_many_roots() {
+fn excluded_scalar_preparation_preserves_many_root_contexts() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/performance/annotation-excluded-shared-initials");
     let (report, diagnostics) = observed_check(&root);
     assert_eq!(report["rules"], serde_json::json!([]), "{report}");
     assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
     assert_eq!(diagnostics.work["postgres.annotation.roots"], 32);
-    assert_eq!(diagnostics.work["postgres.annotation.module"], 33);
-    assert_eq!(
-        diagnostics.work["postgres.annotation.shared_module_initializations"],
-        1
-    );
+    assert_eq!(diagnostics.work["postgres.annotation.module"], 64);
 }

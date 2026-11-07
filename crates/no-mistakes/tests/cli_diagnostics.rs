@@ -5,6 +5,54 @@ fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
 }
 
+#[test]
+fn annotation_scope_counters_are_verbose_only_and_preserve_json() {
+    let root =
+        fixture("rules", "postgres-require-query-annotation").join("helper-tracing-excluded-roots");
+    let args = [
+        "check",
+        "--root",
+        root.to_str().unwrap(),
+        "--format",
+        "json",
+    ];
+    let plain = run(&args);
+    let mut observed_args = args.to_vec();
+    observed_args.push("--verbose-timings");
+    let observed = run(&observed_args);
+    assert_eq!(plain.status.code(), Some(1));
+    assert_eq!(plain.status.code(), observed.status.code());
+    assert_eq!(plain.stdout, observed.stdout);
+    assert!(plain.stderr.is_empty());
+    let err = stderr(&observed);
+    for counter in [
+        "roots_before_scoping: 2",
+        "roots_after_scoping: 1",
+        "excluded_roots_pruned: 1",
+        "excluded_roots_retained: 0",
+        "module_initializations: 1",
+        "module_cache_misses: 1",
+        "shared_init.disabled: 1",
+        "shared_init.cache_hits: 0",
+        "shared_init.cache_misses: 0",
+        "shared_init.builds: 0",
+    ] {
+        assert!(
+            err.contains(&format!("[work] postgres.annotation.{counter}")),
+            "{err}"
+        );
+    }
+    assert!(
+        err.contains("[timing] postgres.annotation.shared_init.build: 0.000ms"),
+        "{err}"
+    );
+    let mut timing_args = args.to_vec();
+    timing_args.push("--timings");
+    let coarse = run(&timing_args);
+    assert_eq!(plain.stdout, coarse.stdout);
+    assert!(!stderr(&coarse).contains("roots_before_scoping"));
+}
+
 fn fixture(category: &str, name: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

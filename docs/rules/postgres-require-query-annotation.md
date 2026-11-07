@@ -452,10 +452,12 @@ executor are never evaluated as roots. Reverse-reachable callers remain roots
 when needed to preserve SQL arguments flowing into scoped helpers, including
 through cyclic re-exports. Binding-only slicing of those callers is not yet implemented.
 
-Eligible dependency-free excluded modules with scalar preparation and
-module-local leaf closures share initialized state across roots within each
-executor profile and run; each root receives its own mutable scope. Imports, cycles and values with
-heap identities retain contextual evaluation. No state persists between runs.
+Each root retains its own contextual module initialization. A shared scalar
+initialization cache was removed after downstream validation found higher CPU
+cost when excluded callers repeatedly imported large in-scope helpers. Scope
+pruning does not imply that excluded dependencies initialize only once per run.
+No state persists between runs. Use the [annotation diagnostics](../cli/diagnostics.md)
+to compare roots before/after scoping and actual module-cache work.
 
 ## Related rules
 

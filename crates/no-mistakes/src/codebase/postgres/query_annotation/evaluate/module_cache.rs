@@ -5,8 +5,6 @@ use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
-pub(in crate::codebase::postgres::query_annotation) mod initials;
-
 /// Snapshots copy compact keys and share the request's immutable identity table.
 #[derive(Clone, Default)]
 pub(in crate::codebase::postgres::query_annotation) struct ModuleCache {
@@ -14,8 +12,6 @@ pub(in crate::codebase::postgres::query_annotation) struct ModuleCache {
     values: FxHashMap<ModuleId, Environment>,
     pub(in crate::codebase::postgres::query_annotation) sources:
         source_dependencies::SourceDependencies,
-    pub(super) shared_initials: Option<Arc<initials::SharedInitials>>,
-    pub(super) invalidates_external_builders: bool,
 }
 
 pub(in crate::codebase::postgres::query_annotation) mod source_dependencies;
@@ -33,16 +29,7 @@ impl ModuleCache {
             ids: OnceLock::from(ids),
             values: FxHashMap::default(),
             sources: Default::default(),
-            shared_initials: None,
-            invalidates_external_builders: false,
         }
-    }
-
-    pub(in crate::codebase::postgres::query_annotation) fn share_initials(
-        &mut self,
-        initials: Arc<initials::SharedInitials>,
-    ) {
-        self.shared_initials = Some(initials);
     }
 }
 

@@ -21,7 +21,6 @@ use std::path::PathBuf;
 
 impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn invalidate_live_builders(&mut self) {
-        self.modules.invalidates_external_builders = true;
         // Opaque hooks may patch intrinsics even without live builders.
         self.untrusted_array_intrinsics = true;
         let ids = self.collect_live_builder_ids(std::mem::drop);

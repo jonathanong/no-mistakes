@@ -100,6 +100,8 @@ mod profile_lifetimes;
 #[cfg(feature = "test-instrumentation")]
 #[path = "tests/project_scope.rs"]
 mod project_scope;
+#[path = "tests/scope_work.rs"]
+mod scope_work;
 #[cfg(feature = "test-instrumentation")]
 #[path = "tests/stall_progress.rs"]
 mod stall_progress;
@@ -128,5 +130,3 @@ mod source_prerequisites;
 
 #[path = "tests/event_prerequisites.rs"]
 mod event_prerequisites;
-#[path = "tests/shared_initials.rs"]
-mod shared_initials;

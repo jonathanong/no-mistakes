@@ -13,6 +13,7 @@ mod merge;
 mod output;
 mod parallel;
 mod prepare;
+mod work;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct ProjectedSql {

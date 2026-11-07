@@ -1,0 +1,11 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      effort: max
+      importSpecifier: "@bench/db"
+      include:
+        - "src/**/*.mts"
+        - "tests/**/*.test.mts"
+      exclude:
+        - "tests/**/*.test.mts"

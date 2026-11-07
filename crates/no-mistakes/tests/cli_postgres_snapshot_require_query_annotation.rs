@@ -286,3 +286,18 @@ fn postgres_annotation_scope_check_json_snapshot() {
     });
     assert_saved_fixture("postgres_annotation_scope", &cases);
 }
+
+#[test]
+fn postgres_annotation_excluded_callers_check_json_snapshot() {
+    let cases = [
+        "annotation-excluded-callers-large",
+        "annotation-excluded-callers-unrelated",
+    ]
+    .map(|name| {
+        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/performance")
+            .join(name);
+        (name, root.clone(), root.join(".no-mistakes.yml"))
+    });
+    assert_saved_fixture("postgres_annotation_excluded_callers", &cases);
+}

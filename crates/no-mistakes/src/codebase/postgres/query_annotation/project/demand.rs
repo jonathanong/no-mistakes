@@ -28,11 +28,11 @@ struct Frame<'a> {
 /// New non-import file reach must be mirrored here before pruning stays sound.
 /// Iterative Tarjan traversal needs no competing forward/reverse adjacency and
 /// keeps long import chains off the native stack. Completed SCCs are bottom-up.
-pub(super) fn roots<'a>(
+fn roots_for_scope<'a, const SCOPED: bool>(
     files: &'a FxHashMap<PathBuf, File<'_>>,
     resolve: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> Vec<&'a Path> {
-    if !files.values().any(is_seed) {
+    if !files.values().any(is_seed::<SCOPED>) {
         return Vec::new();
     }
     let mut visits: FxHashMap<&Path, Visit> = fx_map();
@@ -42,7 +42,7 @@ pub(super) fn roots<'a>(
         if visits.contains_key(path.as_path()) {
             continue;
         }
-        enter(path, files, &mut visits, &mut component, &mut frames);
+        enter::<SCOPED>(path, files, &mut visits, &mut component, &mut frames);
         while let Some(frame) = frames.last_mut() {
             let path = frame.path;
             let module = &files[path].module;
@@ -84,7 +84,7 @@ pub(super) fn roots<'a>(
                     }
                     parent.demanded |= demanded;
                 } else {
-                    enter(target, files, &mut visits, &mut component, &mut frames);
+                    enter::<SCOPED>(target, files, &mut visits, &mut component, &mut frames);
                 }
                 continue;
             }
@@ -118,7 +118,7 @@ pub(super) fn roots<'a>(
         .collect()
 }
 
-fn enter<'a>(
+fn enter<'a, const SCOPED: bool>(
     path: &'a Path,
     files: &FxHashMap<PathBuf, File<'_>>,
     visits: &mut FxHashMap<&'a Path, Visit>,
@@ -132,7 +132,7 @@ fn enter<'a>(
             index,
             low: index,
             active: true,
-            demanded: is_seed(&files[path]),
+            demanded: is_seed::<SCOPED>(&files[path]),
         },
     );
     component.push(path);
@@ -142,6 +142,20 @@ fn enter<'a>(
     });
 }
 
-fn is_seed(file: &File<'_>) -> bool {
-    file.facts.in_scope != Some(false) && !file.executors.is_empty()
+fn is_seed<const SCOPED: bool>(file: &File<'_>) -> bool {
+    (!SCOPED || file.facts.in_scope != Some(false)) && !file.executors.is_empty()
+}
+
+pub(super) fn roots<'a>(
+    files: &'a FxHashMap<PathBuf, File<'_>>,
+    resolve: &impl Fn(&str, &Path) -> Option<PathBuf>,
+) -> Vec<&'a Path> {
+    roots_for_scope::<true>(files, resolve)
+}
+
+pub(super) fn roots_before_scoping<'a>(
+    files: &'a FxHashMap<PathBuf, File<'_>>,
+    resolve: &impl Fn(&str, &Path) -> Option<PathBuf>,
+) -> Vec<&'a Path> {
+    roots_for_scope::<false>(files, resolve)
 }

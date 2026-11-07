@@ -76,3 +76,25 @@ fn missing_saved_module_reports_the_identity_table_invariant() {
     // Keep the file real while deliberately omitting it from this request table.
     ModuleIds::new(paths).id(&missing);
 }
+
+#[test]
+fn lookup_diagnostics_do_not_change_module_identity_or_instrument_plain_tables() {
+    let paths = saved_paths();
+    let plain = ModuleIds::new(paths.clone());
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let observed = ModuleIds::new(paths.clone()).with_observer(Some(Arc::clone(&observer)));
+    assert!(plain == observed);
+    plain.record_lookup(false);
+    observed.record_lookup(true);
+    observed.record_lookup(true);
+    observed.record_lookup(false);
+    let work = observer.snapshot().work;
+    assert_eq!(work["postgres.annotation.module_cache_hits"], 2);
+    assert_eq!(work["postgres.annotation.module_cache_misses"], 1);
+    assert_eq!(work["postgres.annotation.module_initializations"], 1);
+    let coarse = crate::diagnostics::InvocationObserver::new(false);
+    let ids = ModuleIds::new(paths).with_observer(Some(Arc::clone(&coarse)));
+    assert!(ids.observer.is_none());
+    ids.record_lookup(false);
+    assert!(coarse.snapshot().work.is_empty());
+}

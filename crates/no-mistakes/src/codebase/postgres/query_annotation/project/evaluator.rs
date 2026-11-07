@@ -2,7 +2,7 @@ use super::super::evaluate::{Evaluator, File};
 use crate::fx::FxHashMap;
 use std::path::PathBuf;
 
-pub(in crate::codebase::postgres::query_annotation) fn new<'a, F>(
+pub(super) fn new<'a, F>(
     files: &'a FxHashMap<PathBuf, File<'a>>,
     resolve: F,
     untrusted_array_intrinsics: bool,

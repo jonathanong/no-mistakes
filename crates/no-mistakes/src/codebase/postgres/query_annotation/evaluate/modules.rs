@@ -12,19 +12,16 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     // demand::roots mirrors file reach through runtime import/re-export edges.
     // Any new non-import route into another file must also be represented there
     // before executor-free roots can safely be pruned.
-    pub(in crate::codebase::postgres::query_annotation) fn module_environment(
-        &mut self,
-        path: &Path,
-    ) -> Environment {
+    pub(super) fn module_environment(&mut self, path: &Path) -> Environment {
         self.modules.sources.consult(path);
-        let module_id = self.module_ids().id(path);
+        let ids = self.module_ids();
+        let module_id = ids.id(path);
         if let Some(env) = self.modules.get(&module_id) {
+            ids.record_lookup(true);
             self.modules.sources.replay(path);
             return *env;
         }
-        if let Some(env) = self.shared_module_initial(path) {
-            return env;
-        }
+        ids.record_lookup(false);
         self.modules.sources.begin(path);
         self.modules.sources.consult(path);
         let env = super::super::progress::trace("postgres.annotation.module", path, None, || {
