@@ -83,9 +83,13 @@ fn configured_text_slots_reject_known_raw_callers_and_preserve_ordinary_data() {
         ("mutableCallerSlot", false),
         ("writtenParameterSlot", false),
         ("recursiveCallerSlot", false),
+        ("directSpreadSlot", false),
+        ("forwardedSpreadSlot", false),
+        ("laterSpreadSlot", false),
         ("ordinaryCallerSlot", true),
         ("ordinaryMemberSlot", true),
         ("ordinaryDiamondSlot", true),
+        ("fixedPrefixSlot", true),
     ] {
         assert_eq!(
             is_text_tag(&bindings, &file, tagged(name), &tags),

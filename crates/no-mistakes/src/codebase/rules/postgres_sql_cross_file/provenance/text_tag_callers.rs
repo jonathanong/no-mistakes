@@ -62,7 +62,7 @@ pub(super) fn parameter_bound(
                 .spread_at
                 .is_some_and(|spread| spread <= parameter.index)
             {
-                return true;
+                return false;
             }
             call.arguments
                 .get(parameter.index)

@@ -96,3 +96,31 @@ function recursiveSink(value) {
 }
 function recursiveForward(value) { recursiveSink(value); recursiveForward(value); }
 recursiveForward(sql.raw(process.env.RECURSIVE_CALLER_TABLE));
+
+function directSpreadSink(value) {
+  const directSpreadSlot = sql`${value}`;
+  query(`SELECT * FROM ${directSpreadSlot.text}`);
+}
+directSpreadSink(...[sql.raw(process.env.SPREAD_CALLER_TABLE)]);
+
+function forwardedSpreadSink(value) {
+  const forwardedSpreadSlot = sql`${value}`;
+  query(`SELECT * FROM ${forwardedSpreadSlot.text}`);
+}
+export function unknownSpreadForward(values: unknown[]) {
+  forwardedSpreadSink(...values);
+}
+
+function laterSpreadSink(prefix, value) {
+  const laterSpreadSlot = sql`${value}`;
+  query(`SELECT * FROM ${laterSpreadSlot.text}`);
+}
+laterSpreadSink("ordinary", ...[sql.raw(process.env.LATER_SPREAD_TABLE)]);
+
+function fixedPrefixSink(value, ignored) {
+  const fixedPrefixSlot = sql`records WHERE value = ${value}`;
+  query(`SELECT * FROM ${fixedPrefixSlot.text}`);
+}
+export function fixedPrefixForward(values: unknown[]) {
+  fixedPrefixSink("ordinary", ...values);
+}
