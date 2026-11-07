@@ -1,4 +1,4 @@
-use super::{Helper, LockHelpers};
+use super::{ExecutorAccess, Helper, LockHelpers};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
     BindingPattern, Declaration, Expression, FormalParameters, FunctionBody, Program, Statement,
@@ -68,7 +68,8 @@ fn summarize<'a>(
         };
         let expression = match unwrap_ts_wrappers(expression) {
             Expression::AwaitExpression(awaited) => unwrap_ts_wrappers(&awaited.argument),
-            expression => expression,
+            expression if matches!(statement, Statement::ReturnStatement(_)) => expression,
+            _ => return None,
         };
         let Expression::CallExpression(call) = expression else {
             return None;
@@ -76,6 +77,14 @@ fn summarize<'a>(
         if call.optional || call.arguments.len() > 2 {
             return None;
         }
+        let access = if matches!(
+            unwrap_ts_wrappers(&call.callee),
+            Expression::StaticMemberExpression(_)
+        ) {
+            ExecutorAccess::Object
+        } else {
+            ExecutorAccess::Callable
+        };
         let receiver = match unwrap_ts_wrappers(&call.callee) {
             Expression::StaticMemberExpression(member)
                 if member.property.name == "query" && !member.optional =>
@@ -102,7 +111,7 @@ fn summarize<'a>(
                 return None;
             }
         }
-        calls.push((executor, call.as_ref()));
+        calls.push((executor, access, call.as_ref()));
         if matches!(statement, Statement::ReturnStatement(_)) {
             break;
         }

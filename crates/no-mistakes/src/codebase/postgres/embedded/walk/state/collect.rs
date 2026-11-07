@@ -29,6 +29,7 @@ pub(crate) fn collect_calls<'a>(
         super::super::finite_identifiers::vitest_it_imports(program)
     };
     let mut visitor = ScopeVisitor {
+        awaited_lock_helper_calls: Default::default(),
         imported_lock_helpers: Vec::new(),
         lock_helpers: super::super::lock_helpers::collect(
             program,
