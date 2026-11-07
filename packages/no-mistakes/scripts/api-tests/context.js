@@ -69,7 +69,9 @@ function declarationExportNames() {
     .map((file) => readFileSync(join(packageRoot, file), "utf8"))
     .join("\n");
   return [
-    ...new Set([...declarations.matchAll(/export function (\w+)(?:<[^;{]*?>)?\(/g)].map((match) => match[1])),
+    ...new Set(
+      [...declarations.matchAll(/export function (\w+)(?:<[^;{]*?>)?\(/g)].map((match) => match[1]),
+    ),
   ].sort();
 }
 
