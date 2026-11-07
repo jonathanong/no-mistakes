@@ -1,7 +1,6 @@
 use super::*;
 
-#[test]
-fn value_import_selectors_abstain_when_a_reexport_source_is_incomplete() {
+fn incomplete_reexport() -> (PathBuf, Vec<PathBuf>, CheckFactMap) {
     let (root, files, mut facts) = prepared();
     let path = root.join("alias.ts");
     let original = facts.ts.remove(&path).unwrap();
@@ -15,13 +14,64 @@ fn value_import_selectors_abstain_when_a_reexport_source_is_incomplete() {
         }
         .into(),
     );
-    let graph = build(&root, files, &facts, true);
-    assert!(graph
-        .imported_value(&root.join("consumer.ts"), "alias")
-        .is_none());
-    assert!(graph
-        .imported_value(&root.join("consumer.ts"), "selected")
-        .is_some());
+    (root, files, facts)
+}
+
+#[test]
+fn value_import_selectors_abstain_when_a_reexport_source_is_incomplete() {
+    let (root, files, facts) = incomplete_reexport();
+    let tsconfig = load_tsconfig(&root.join("tsconfig.json")).unwrap();
+    let graph_files = GraphFiles::from_files(files);
+    let mut inputs = call_resolution_inputs(&root, &tsconfig, &graph_files);
+    inputs.plan = GraphBuildPlan {
+        calls: true,
+        imports: true,
+        value_import_selectors: true,
+        ..Default::default()
+    };
+    let resolver = ImportResolver::new(&tsconfig);
+    let indexes = CallableResolutionIndexes::default();
+    let names =
+        populate_callable_export_resolutions(&inputs, &facts, &resolver, &indexes, &mut fx_map())
+            .unwrap();
+    let edges = project_value_import_selectors(&inputs, &facts, &resolver, &indexes, &names);
+    let consumer = root.join("consumer.ts");
+    assert!(!edges
+        .iter()
+        .any(|(from, _, _)| from == &NodeId::symbol(&consumer, "alias")));
+    assert!(edges.contains(&(
+        NodeId::symbol(&consumer, "selected"),
+        NodeId::symbol(root.join("source.ts"), "TABLES"),
+        EdgeKind::SymbolImport,
+    )));
+}
+
+#[test]
+fn value_import_selector_demand_preserves_incomplete_prepared_graph_failure() {
+    let (root, files, facts) = incomplete_reexport();
+    let tsconfig = load_tsconfig(&root.join("tsconfig.json")).unwrap();
+    let errors: Vec<_> = [false, true]
+        .into_iter()
+        .map(|value_import_selectors| {
+            DepGraph::build_with_plan_file_list_and_check_facts(
+                &root,
+                &tsconfig,
+                GraphBuildPlan {
+                    calls: true,
+                    imports: true,
+                    value_import_selectors,
+                    ..Default::default()
+                },
+                files.clone(),
+                &facts,
+            )
+            .err()
+            .expect("incomplete prepared facts must fail before graph projection")
+            .to_string()
+        })
+        .collect();
+    assert_eq!(errors[0], errors[1]);
+    assert!(errors[0].contains("alias.ts: incomplete value facts"));
 }
 
 #[test]

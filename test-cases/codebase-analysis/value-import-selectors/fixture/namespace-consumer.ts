@@ -4,6 +4,7 @@ import { imported as explicitValue } from './namespace-ambiguous.ts'
 import { grouped as unknown } from './namespace-unknown.ts'
 import { grouped as collided } from './namespace-collision.ts'
 import * as quoted from './namespace-quoted-star.ts'
+import { 'statement.query' as quotedStatement } from './namespace-quoted-star.ts'
 import * as direct from './source.ts'
 import * as nested from './namespace-star.ts'
 import * as unrelated from './namespace-unrelated.ts'
@@ -18,6 +19,7 @@ void explicitValue
 escape(unknown)
 escape(collided)
 escape(quoted)
+quotedStatement.text = 'open'
 escape(direct)
 escape(nested)
 escape(unrelated)
