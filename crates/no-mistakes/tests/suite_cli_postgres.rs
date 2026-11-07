@@ -269,3 +269,6 @@ mod cli_postgres_snapshot_imported_builders;
 mod cli_postgres_snapshot_lock_written_rows;
 #[path = "cli_postgres_snapshot_low_executor_shapes.rs"]
 mod cli_postgres_snapshot_low_executor_shapes;
+
+#[path = "cli_postgres_snapshot_identifier_compositions.rs"]
+mod cli_postgres_snapshot_identifier_compositions;

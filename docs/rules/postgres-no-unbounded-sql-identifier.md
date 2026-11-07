@@ -393,7 +393,11 @@ supported generated identifier shape, or an explicit trusted helper contract:
   same binding (`=`, `+=`, `for (name of ...)`, or a destructuring
   assignment). An immutable scalar alias captured after the guard retains the
   validated value, including when an executor or transaction callback reads
-  that alias. An alias captured before validation does not. A guard inside
+  that alias. Templates and string additions are bounded when every hole or
+  operand is a literal or a bounded scalar at its capture point, including
+  through const alias chains. Each use is checked independently: first and
+  later queries, plain or await-using transactions, and captured executor
+  helpers share the same proof. An alias captured before validation does not. A guard inside
   a branch does not cover a query after that branch. A regex test is not a finite
   domain. An inner `const` that shadows
   the guarded name stays unbounded.
