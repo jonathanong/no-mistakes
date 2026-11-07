@@ -471,6 +471,8 @@ This selects `query`, `read`, `write`, `readPool`, and `writePool` from the
 configured module. Setting both `executorNames` and `extraExecutorNames`,
 including empty lists, is a configuration error. Existing explicit
 `executorNames: []` without a module still selects no executor calls.
+`extraExecutorNames: []` retains the defaults even without `importSpecifier`;
+without a module, those names match named imports from any module.
 
 If an explicit replacement omits a default executor imported from
 `importSpecifier` and called in the files that scope selects, `check` emits a

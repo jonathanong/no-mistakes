@@ -645,7 +645,8 @@ and source suppressions apply to declaration diagnostics.
 PostgreSQL executor options accept `extraExecutorNames` in the asynchronous
 Node APIs, including `extractExecutedPostgresSql`.
 `executorNames` replaces `[query, read, write]`; `extraExecutorNames` extends
-those defaults. Passing both is an error. This also applies to the PostgreSQL
+those defaults, including an empty extension with no `importSpecifier`.
+Passing both is an error. This also applies to the PostgreSQL
 rule option interfaces and config passed to `check()`; its configuration
 warnings identify omitted default executors imported and called in scoped
 files. See [executor selection](configuration/rules.md#postgresql-executor-selection).

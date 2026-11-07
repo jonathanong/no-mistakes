@@ -27,7 +27,7 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
                 options.import_specifier.as_deref().unwrap_or_default(),
                 &options.executor_names,
             )
-            .with_extra_executor_names(&options.extra_executor_names)
+            .with_extra_executor_names(options.extra_executor_names.as_deref())
             .with_scoped_executors(
                 &options.executor_factory_names,
                 &options.executor_type_names,

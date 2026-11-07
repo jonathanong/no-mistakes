@@ -73,8 +73,8 @@ impl EmbeddedSqlOptions {
     }
 
     /// Extend the standard executor imports while retaining all defaults.
-    pub fn with_extra_executor_names(mut self, extras: &[String]) -> Self {
-        if !extras.is_empty() {
+    pub fn with_extra_executor_names(mut self, extras: Option<&[String]>) -> Self {
+        if let Some(extras) = extras {
             self.executor_names
                 .extend(DEFAULT_EXECUTOR_NAMES.iter().map(|name| (*name).into()));
             self.executor_names.extend_from_slice(extras);

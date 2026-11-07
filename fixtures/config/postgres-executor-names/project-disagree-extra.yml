@@ -1,0 +1,16 @@
+projects:
+  a:
+    include: ["a/**"]
+    postgres:
+      executors:
+        importSpecifier: "@example/db"
+        extraExecutorNames: [first]
+  b:
+    include: ["b/**"]
+    postgres:
+      executors:
+        importSpecifier: "@example/db"
+        extraExecutorNames: [second]
+rules:
+  - rule: postgres-require-query-annotation
+    projects: [a, b]

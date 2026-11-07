@@ -28,3 +28,23 @@ fn native_request_rejects_both_options_even_when_empty() {
     .unwrap_err();
     assert!(error.to_string().contains("cannot both be set"));
 }
+
+#[test]
+fn empty_extension_without_module_selects_defaults_but_absent_extension_does_not() {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/config/postgres-executor-names/source.ts"
+    ));
+    for (extras, count) in [(false, 0), (true, 3)] {
+        let mut request = serde_json::json!({
+            "sources": [{"fileName": "source.ts", "source": source}], "importSpecifier": "",
+        });
+        if extras {
+            request["extraExecutorNames"] = serde_json::json!([]);
+        }
+        let report: serde_json::Value =
+            serde_json::from_str(&extract_executed_postgres_sql_json_impl(request).unwrap())
+                .unwrap();
+        assert_eq!(report.as_array().unwrap().len(), count);
+    }
+}

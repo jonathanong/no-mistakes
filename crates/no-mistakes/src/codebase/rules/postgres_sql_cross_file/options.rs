@@ -10,7 +10,7 @@ pub(crate) struct Options {
     pub(crate) exclude: Vec<String>,
     pub(crate) import_specifier: String,
     pub(crate) executor_names: Vec<String>,
-    pub(crate) extra_executor_names: Vec<String>,
+    pub(crate) extra_executor_names: Option<Vec<String>>,
     pub(crate) executor_factory_names: Vec<String>,
     pub(crate) executor_type_names: Vec<String>,
     pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
@@ -45,7 +45,7 @@ pub(crate) fn compile(rule_id: &str, opts: &Options) -> Result<CompiledOptions> 
         include: GlobMatcher::new(&opts.include, &format!("{rule_id} include"))?,
         exclude: GlobMatcher::new(&opts.exclude, &format!("{rule_id} exclude"))?,
         embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
-            .with_extra_executor_names(&opts.extra_executor_names)
+            .with_extra_executor_names(opts.extra_executor_names.as_deref())
             .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
             .with_trusted_sql_tags(&opts.trusted_sql_tags),
         finite_domain_assertions: opts.finite_domain_assertions.clone(),
