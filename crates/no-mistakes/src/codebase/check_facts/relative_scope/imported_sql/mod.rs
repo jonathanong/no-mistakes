@@ -37,13 +37,21 @@ pub(super) fn has_candidates(files: &FileIdMap<CheckFileFacts>) -> bool {
 
 /// A completed call and where it goes: file, profile index, original span.
 type Completed = (PathBuf, usize, (u32, u32), EmbeddedSqlCall, Vec<u32>);
+type LockCompleted = (PathBuf, usize, (u32, u32), Vec<EmbeddedSqlCall>);
 
 pub(super) fn project(
     files: &mut FileIdMap<CheckFileFacts>,
-    mut resolve: impl FnMut(&str, &Path) -> Option<PathBuf>,
+    resolve: impl FnMut(&str, &Path) -> Option<PathBuf>,
 ) {
-    lock_helpers::project(files, &mut resolve);
-    let (completed, prerequisites) = complete(files, resolve);
+    let (completed, prerequisites, locks) = complete(files, resolve);
+    for (path, profile, span, calls) in locks {
+        let embedded = &mut files.get_mut(&path).unwrap().embedded_sql[profile].1;
+        for call in calls {
+            embedded.calls.push(call);
+            embedded.call_spans.push(span);
+        }
+        embedded.imported_lock_helpers.clear();
+    }
     for (path, prerequisite) in prerequisites {
         if let Some(file) = files.get_mut(&path) {
             file.sql_source_prerequisites.merge(prerequisite);
@@ -61,13 +69,22 @@ pub(super) fn project(
 fn complete(
     files: &FileIdMap<CheckFileFacts>,
     resolve: impl FnMut(&str, &Path) -> Option<PathBuf>,
-) -> (Vec<Completed>, Vec<(PathBuf, SqlSourcePrerequisites)>) {
+) -> (
+    Vec<Completed>,
+    Vec<(PathBuf, SqlSourcePrerequisites)>,
+    Vec<LockCompleted>,
+) {
     let mut shared = Shared::new(files, Locator::new(files, resolve));
     let mut completed = Vec::new();
     let mut prerequisites = Vec::new();
+    let mut locks = Vec::new();
     for (path, file) in files {
         let mut provenance = SqlSourcePrerequisites::default();
         for (profile, (options, embedded)) in file.embedded_sql.iter().enumerate() {
+            for invocation in &embedded.imported_lock_helpers {
+                let calls = lock_helpers::complete(&mut shared, path, options, invocation);
+                locks.push((path.clone(), profile, invocation.span, calls));
+            }
             for pending in &embedded.pending_imported {
                 shared.failures.clear();
                 let call = complete_call(&mut shared, path, profile, options, pending);
@@ -86,7 +103,7 @@ fn complete(
             prerequisites.push((path.clone(), provenance));
         }
     }
-    (completed, prerequisites)
+    (completed, prerequisites, locks)
 }
 
 fn complete_call(
