@@ -130,7 +130,10 @@ fn visit_assignment_expression_with_calls<'a>(
     collector.record_replacement_assignment(assignment);
     collector.note_closed_registry_write(&assignment.left, assignment.span.start);
     if collector.collect_value_flow {
+        let value = collector.identifier_assignment(assignment);
+        let start = collector.value_flow.identifier_writes.len();
         visit_assignment_expression_with_receiver_effects(collector, assignment);
+        collector.note_identifier_assignment(assignment, start, value);
         return;
     }
     // Ordinary writes/getters/imports retain their original traversal order.

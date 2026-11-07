@@ -11,6 +11,16 @@ pub(in crate::codebase::postgres::embedded::walk) fn statement<'a>(
     visitor: &mut ScopeVisitor<'a>,
     statement: &SwitchStatement<'a>,
 ) {
+    if visitor.executor_options.track_transaction_helpers {
+        visitor.transaction_options.suspended += 1;
+        visit_switch(visitor, statement);
+        visitor.transaction_options.suspended -= 1;
+    } else {
+        visit_switch(visitor, statement);
+    }
+}
+
+fn visit_switch<'a>(visitor: &mut ScopeVisitor<'a>, statement: &SwitchStatement<'a>) {
     let effectful = visitor.expression_mutates_builder(&statement.discriminant)
         || statement.cases.iter().any(|case| {
             case.test.as_ref().is_some_and(|test| {

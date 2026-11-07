@@ -391,8 +391,17 @@ supported generated identifier shape, or an explicit trusted helper contract:
   export, including an `as const` array used by a local
   `(typeof ALLOWED_LIST)[number]` type alias. The guard ends at the next assignment to that
   same binding (`=`, `+=`, `for (name of ...)`, or a destructuring
-  assignment). A guard inside a branch does not cover a query after that
-  branch. A regex test is not a finite domain. An inner `const` that shadows
+  assignment). An immutable scalar alias captured after the guard retains the
+  validated value, including when an executor or transaction callback reads
+  that alias. Templates and string additions are bounded when every hole or
+  operand is a literal or a bounded scalar at its capture point, including
+  through const alias chains. Each use is checked independently: first and
+  later queries, plain or await-using transactions, and captured executor
+  helpers share the same proof. An alias captured before validation does not. A guard inside
+  a branch does not cover a query after that branch. A regex test is not a finite
+  domain. Membership operands cast to the array element type remain outside
+  this proof; an unchecked union type alone also remains unbounded.
+  An inner `const` that shadows
   the guarded name stays unbounded.
 - A completed call, before interpolation, to a helper listed in
   `identifierValidators`. `name` and the zero-based validated `argument` are
@@ -421,6 +430,18 @@ supported generated identifier shape, or an explicit trusted helper contract:
   imported through a barrel. The producer body is not inspected, and this
   option does not validate its arguments or arbitrary properties of a returned
   object. Configure only helpers whose scalar return is a bounded identifier.
+  The source may wrap an exported typed catalog populated by module-load loops
+  and literal joins; it does not need an `as const` array. This is trusted
+  producer configuration, not automatic proof of arbitrary catalog mutation.
+  Workspace package exports and `export *` barrels use the same canonical
+  module identity. On a complete max-effort scan, every configured source entry
+  must supply a scalar SQL identifier proof in the selected scope. Importing the
+  helper, calling it without using its return in SQL, or reading a property from that return does
+  not count. Unused entries produce `unused-allow-entry` on the configuration
+  item; remove the entry or correct its module/name selector. The shared
+  `reportUnusedAllowEntries` policy controls reporting (`report`, the default;
+  `advise`; or `ignore`). This audit prevents stale trusted selectors from
+  silently missing their intended producers.
 - A known property returned by a resolved helper that selects a row from a
   closed literal record, including an exported `getIdentifiers(provider)`
   helper used from another module. Each selected property must have a literal
@@ -456,14 +477,11 @@ supported generated identifier shape, or an explicit trusted helper contract:
   (`events_${n}`) or beside a catalog name (`${table}__p_${yyyy}_${mm}`). A
   `string` parameter, or a string glued to a numeric suffix, stays unbounded
   (`fail-open-string-parameter`).
-- A parameter annotated `(typeof CATALOG)[number]`, directly or through a type
-  alias imported from the catalog's module, where `CATALOG` is an array literal
-  without a `process.env` value. The proof is the array the type points at, not
-  the annotation: a `string` alias or a catalog holding `process.env` stays
-  unbounded. A local `const t = table` alias of such a parameter, and a loop
-  variable over an exported `as const` catalog, are bounded too
-  (`pass-exported-catalog`, `pass-catalog-numeric-suffix`,
-  `pass-catalog-local-alias`).
+- A value checked by a dominating closed-set guard may be annotated
+  `(typeof CATALOG)[number]`, directly or through an imported type alias.
+  The annotation alone does not validate an incoming SQL identifier. Keep the
+  runtime membership guard over the local or imported literal catalog; a
+  parameter with that type and no guard is reported.
 - A local built by `.join(...)`, or by `.map(...)`, `.filter(...)`, and
   `.slice(...)` chains ending in `.join(...)`, over a closed array (local, or
   an exported array literal). A `.map` callback may return only its own
@@ -493,15 +511,37 @@ identifierSources:
     name: getRelationTableNameOrThrow
 ```
 
+A finite SQL fragment does not hide another interpolation in the same call.
+For example, `const accountFilter = accountId ? "AND id = $2::uuid" : ""`
+may appear after `WHERE expires_at < $1` beside a guarded derived table name.
+At max effort the identifier proof checks each hole independently, including
+immutable aliases of literal alternatives, even with `unanalyzableSql: ignore`.
+The guarded table stays clean; an unchecked string table in the same statement
+is reported. Type-only string unions do not validate runtime input.
+
 ## Composed parameterized fragments
 
 At max effort, the `.text` member of a configured `trustedSqlTags` template
 is SQL text with bind placeholders. The default and `SQL` imports from
 `sql-template-strings` are built in: no tag option is needed for that package.
 This includes immutable local or module-const fragments, `.append()` chains
-of proven fragments, statement-level appends, and resolved helper returns.
-The proof preserves the matching `.values` bind array.
+of proven fragments, statement-level appends, and resolved synchronous helper
+returns. The proof preserves the matching `.values` bind array.
 Executor calls inside bind expressions are checked independently.
+
+An exported `sql-template-strings` statement or fragment may be imported through
+named or namespace imports and static re-exports. Its constructor and append
+arguments must remain proven. Reassignment, member writes, unsupported member
+access, and unsafe aliases or escapes in the producer or consumers end the
+proof. Dynamic imports, including conditional loaders, and CommonJS consumers
+also end an exported statement's proof because their reads are not checked.
+An escaping namespace invalidates only the statements it actually
+exports; importing a module does not expose all of that module's private
+imports. Copy an imported fragment into a fresh empty `sql` tagged template with
+`.append(fragment)`. A synchronous factory may return its own local
+statement after safe appends. Every return must be proven; a
+`SQLStatement` annotation alone does not establish this proof.
+
 The default `sql-template-strings` tag binds every interpolated value. A configured
 tag establishes this `.text` proof for literal slots and ordinary parameter or
 member values, including untyped or destructured parameters, nominal type aliases,
@@ -520,7 +560,7 @@ import sql from "sql-template-strings";
 import { read } from "@example/db";
 
 const SELECT_COLUMNS = sql`a.id, a.status`;
-function buildRead(ids: string[]) {
+export function buildRead(ids: string[]) {
   return sql`id, url FROM items WHERE id = ANY(${ids}::uuid[])`;
 }
 export function getOne(id: string, flag: "x" | "y" | null) {
@@ -532,6 +572,21 @@ export function getOne(id: string, flag: "x" | "y" | null) {
 export function getMany(ids: string[]) {
   const statement = buildRead(ids);
   return read(`SELECT ${statement.text}`, statement.values);
+}
+```
+
+The same proof applies when a callback parameter is an executor selected by
+`executorTypeNames: ["QueryExecutor"]`. If the module above is `statements.ts`,
+the callback can import `buildRead`:
+
+```ts
+import { type QueryExecutor } from "@example/db";
+import { buildRead } from "./statements";
+
+export function select(ids: string[]) {
+  const statement = buildRead(ids);
+  return (execute: QueryExecutor) =>
+    execute(`/* select */ SELECT ${statement.text}`, statement.values);
 }
 ```
 

@@ -2214,6 +2214,50 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "mixed_catalog_local_alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "t",
+          "line": 6,
+          "message": "Unbounded identifier source `t` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${t}`);",
+          "target": "t"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed_catalog_numeric_suffix": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 5,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table}__p_${yyyy}_${mm}`);",
+          "target": "table"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "pass_alias_cycle": {
     "exitCode": 0,
     "report": {
@@ -2298,31 +2342,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
-  "pass_catalog_local_alias": {
-    "exitCode": 0,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
-  },
   "pass_catalog_map_join": {
-    "exitCode": 0,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
-  },
-  "pass_catalog_numeric_suffix": {
     "exitCode": 0,
     "report": {
       "advisories": [],

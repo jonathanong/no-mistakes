@@ -1,0 +1,35 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "four_alias_write_sets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 20,
+          "message": "src/query.ts:20: postgres-lock-written-rows-only application #0 reports an advisory violation for row-lock-unwritten-relation: locked row in decisions is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock, locked row in reviews is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 33,
+          "message": "src/query.ts:33: unanalyzable: locked relation is unresolved; lock a single explicit base relation",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

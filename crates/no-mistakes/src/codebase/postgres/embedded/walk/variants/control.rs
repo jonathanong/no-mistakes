@@ -1,15 +1,18 @@
 use super::super::ScopeVisitor;
 use super::Recovered;
 use crate::fx::FxHashMap;
-use oxc_ast::ast::{ConditionalExpression, IfStatement, LogicalExpression};
+use oxc_ast::ast::{ConditionalExpression, LogicalExpression};
 use oxc_ast_visit::Visit;
 mod abrupt;
+mod if_statement;
+pub(in crate::codebase::postgres::embedded::walk) use if_statement::if_statement;
 mod join;
 mod paths;
+mod selection;
 pub(super) use join::joined;
+use selection::select;
 mod truthiness;
 pub(in crate::codebase::postgres::embedded::walk) use paths::branch_paths;
-
 pub(super) type Snapshot = Vec<FxHashMap<String, Option<Vec<Recovered>>>>;
 impl ScopeVisitor<'_> {
     pub(in crate::codebase::postgres::embedded::walk) fn variant_snapshot(&self) -> Snapshot {
@@ -62,45 +65,6 @@ impl ScopeVisitor<'_> {
         }
     }
 }
-
-pub(in crate::codebase::postgres::embedded::walk) fn if_statement<'a>(
-    visitor: &mut ScopeVisitor<'a>,
-    statement: &IfStatement<'a>,
-) {
-    let (id, truth_arm) =
-        super::conditions::choice_id(visitor, &statement.test, statement.span.start);
-    let taken = super::conditions::truth_at(visitor, &statement.test);
-    visitor.visit_variant_guard(&statement.test);
-    let original = visitor.variant_snapshot();
-    let paths = visitor.variant_paths.clone();
-    let (yes, no) = truthiness::branches(visitor, &statement.test, &paths, id, truth_arm);
-    let taken = paths::taken(&yes, &no).or(taken);
-    visitor.restore_variants(&paths::restrict(&original, &yes));
-    visitor.variant_paths = yes;
-    visitor.with_control_flow(|visitor| visitor.visit_statement(&statement.consequent));
-    let left = visitor.variant_snapshot();
-    visitor.restore_variants(&paths::restrict(&original, &no));
-    visitor.variant_paths = no;
-    if let Some(alternate) = &statement.alternate {
-        visitor.with_control_flow(|visitor| visitor.visit_statement(alternate));
-    }
-    let right = visitor.variant_snapshot();
-    visitor.variant_paths = paths;
-    match taken {
-        Some(true) => select(visitor, &left, &right),
-        Some(false) => select(visitor, &right, &left),
-        None if abrupt::throws(&statement.consequent) => select(visitor, &right, &left),
-        None if statement
-            .alternate
-            .as_ref()
-            .is_some_and(|arm| abrupt::throws(arm)) =>
-        {
-            select(visitor, &left, &right)
-        }
-        None => visitor.join_variants(&left, &right, id, (truth_arm, 1 - truth_arm)),
-    }
-}
-
 pub(in crate::codebase::postgres::embedded::walk) fn conditional<'a>(
     visitor: &mut ScopeVisitor<'a>,
     expression: &ConditionalExpression<'a>,
@@ -128,7 +92,6 @@ pub(in crate::codebase::postgres::embedded::walk) fn conditional<'a>(
         None => visitor.join_variants(&left, &right, id, (truth_arm, 1 - truth_arm)),
     }
 }
-
 pub(in crate::codebase::postgres::embedded::walk) fn logical<'a>(
     visitor: &mut ScopeVisitor<'a>,
     expression: &LogicalExpression<'a>,
@@ -166,27 +129,9 @@ pub(in crate::codebase::postgres::embedded::walk) fn logical<'a>(
     let right = visitor.variant_snapshot();
     let original = paths::restrict(&original, &omitted_paths);
     visitor.variant_paths = paths;
-
     match take_right {
         Some(true) => select(visitor, &right, &original),
         Some(false) => select(visitor, &original, &right),
         None => visitor.join_variants(&original, &right, id, (1 - right_arm, right_arm)),
-    }
-}
-
-fn select(visitor: &mut ScopeVisitor<'_>, selected: &Snapshot, other: &Snapshot) {
-    visitor.restore_variants(selected);
-    for (index, scope) in visitor.scopes.iter_mut().enumerate() {
-        for (name, state) in scope {
-            let selected = selected.get(index).and_then(|scope| scope.get(name));
-            let other = other.get(index).and_then(|scope| scope.get(name));
-            if selected != other {
-                if let Some(values) = &mut state.variants {
-                    for value in values {
-                        value.enumerated = true;
-                    }
-                }
-            }
-        }
     }
 }

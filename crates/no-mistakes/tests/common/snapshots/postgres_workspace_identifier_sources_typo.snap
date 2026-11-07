@@ -1,0 +1,46 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "typo": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".no-mistakes-typo.yml",
+          "import": "postgres-no-unbounded-sql-identifier",
+          "line": 10,
+          "message": "stale postgres-no-unbounded-sql-identifier identifierSources entry `@example/catalog#missingProducer` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {module: \"@example/catalog\", name: missingProducer}",
+          "target": "@example/catalog#missingProducer"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "apps/worker/hierarchy.ts",
+          "import": "PARENT_TABLE",
+          "line": 8,
+          "message": "Unbounded identifier source `PARENT_TABLE` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "export const listParents = (id: string) => read(",
+          "target": "PARENT_TABLE"
+        },
+        {
+          "file": "apps/worker/hierarchy.ts",
+          "import": "table",
+          "line": 13,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`/* localParents */ SELECT object_id FROM ${table} WHERE subject_id = $1`, [id]);",
+          "target": "table"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

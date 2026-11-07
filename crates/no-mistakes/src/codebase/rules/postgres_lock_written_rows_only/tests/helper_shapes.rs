@@ -48,7 +48,7 @@ fn reexports_preserve_keys_and_caller_and_helper_locations() {
     let root = fixture("helper-reexport");
     let files = ["query.ts", "helper.ts", "barrel.ts"].map(|file| root.join("src").join(file));
     let findings = check_with_files(&root, &config(), &files).unwrap();
-    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert_eq!(findings.len(), 3, "{findings:?}");
     let mismatch = findings.iter().find(|finding| finding.line == 10).unwrap();
     assert_eq!(mismatch.file, "src/query.ts");
     assert_eq!(mismatch.target.as_deref(), Some(CHECKS[0]));
@@ -57,7 +57,8 @@ fn reexports_preserve_keys_and_caller_and_helper_locations() {
         .contains("helper acquireUser locks at line 3"));
     let unknown = findings.iter().find(|finding| finding.line == 20).unwrap();
     assert_eq!(unknown.target.as_deref(), Some("unanalyzable"));
-    assert!(unknown
-        .message
-        .contains("helper lockUnknown locks at line 9"));
+    assert!(unknown.message.contains("executed SQL cannot be recovered"));
+    let definition = findings.iter().find(|finding| finding.line == 9).unwrap();
+    assert_eq!(definition.file, "src/helper.ts");
+    assert_eq!(definition.target.as_deref(), Some("unanalyzable"));
 }

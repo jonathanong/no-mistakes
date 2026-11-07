@@ -44,55 +44,11 @@ pub(super) fn access(expression: &Expression<'_>) -> Option<ExecutorAccess> {
         _ => None,
     }
 }
-pub(super) fn summaries(helpers: &LockHelpers<'_>, source: &str) -> FxHashMap<String, Summary> {
+pub(super) fn summaries(helpers: &LockHelpers, _source: &str) -> FxHashMap<String, Summary> {
     helpers
         .iter()
         .map(|(name, helper)| {
-            let calls = helper
-                .calls
-                .iter()
-                .map(|(executor, access, query)| {
-                    let parameters = match query
-                        .arguments
-                        .get(1)
-                        .and_then(|arg| arg.as_expression())
-                        .map(unwrap_ts_wrappers)
-                    {
-                        Some(Expression::ArrayExpression(array)) => array
-                            .elements
-                            .iter()
-                            .map(|item| {
-                                let Some(expression) = item.as_expression() else {
-                                    return Parameter::Unknown;
-                                };
-                                if let Expression::Identifier(id) = unwrap_ts_wrappers(expression) {
-                                    return helper
-                                        .params
-                                        .iter()
-                                        .position(|param| *param == id.name.as_str())
-                                        .map(Parameter::Argument)
-                                        .unwrap_or(Parameter::Unknown);
-                                }
-                                super::super::transaction::literal_identity(expression)
-                                    .map(Parameter::Literal)
-                                    .unwrap_or(Parameter::Unknown)
-                            })
-                            .collect(),
-                        _ => Vec::new(),
-                    };
-                    Query {
-                        span: (query.span.start, query.span.end),
-                        access: *access,
-                        executor: *executor,
-                        sql: crate::codebase::postgres::embedded::sql_text(
-                            query.arguments[0].as_expression().unwrap(),
-                        )
-                        .unwrap(),
-                        line: byte_offset_to_line(source, query.span.start as usize),
-                        parameters,
-                    }
-                })
-                .collect();
+            let calls = helper.calls.clone();
             (name.clone(), Summary { calls })
         })
         .collect()

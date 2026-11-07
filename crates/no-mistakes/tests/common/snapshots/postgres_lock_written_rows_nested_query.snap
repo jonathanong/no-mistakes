@@ -1,0 +1,82 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "helper_write_sets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 27,
+          "message": "src/query.ts:27: row-lock-unwritten-relation: locked row in claims is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock; helper callerMismatch locks at line 3",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await callerMismatch(tx.query, key);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 30,
+          "message": "src/query.ts:30: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM claims WHERE key = $1 FOR UPDATE`, [key]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 40,
+          "message": "src/query.ts:40: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM claims WHERE key = $1 FOR UPDATE`, [key]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 41,
+          "message": "src/query.ts:41: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await cycleOne(tx.query, key);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 46,
+          "message": "src/query.ts:46: row-lock-unwritten-relation: locked row in claims is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock; helper lock locks at line 3",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await lock(first.query, key);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 50,
+          "message": "src/query.ts:50: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM claims FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 61,
+          "message": "src/query.ts:61: unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM claims WHERE key = $1 FOR UPDATE`, [key]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 62,
+          "message": "src/query.ts:62: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await sideEffectCaller(tx.query);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

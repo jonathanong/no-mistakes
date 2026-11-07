@@ -139,10 +139,11 @@ include!("edge_calls/traversal_filter.rs");
 
 #[derive(Clone, Default)]
 struct CallableResolutionIndexes {
-    files: dashmap::DashMap<std::path::PathBuf, std::sync::Arc<CallableFileIndex>>,
+    files: std::sync::Arc<dashmap::DashMap<std::path::PathBuf, std::sync::Arc<CallableFileIndex>>>,
     exports: dashmap::DashMap<(std::path::PathBuf, String), ExportedCallableResolution>,
     export_prerequisites: dashmap::DashMap<(std::path::PathBuf, String), std::sync::Arc<std::collections::BTreeSet<std::path::PathBuf>>>,
-    namespace_roots: dashmap::DashMap<(std::path::PathBuf, String), RootLookup>,
+    namespace_roots: std::sync::Arc<dashmap::DashMap<(std::path::PathBuf, String), RootLookup>>,
+    value_imports: bool,
 }
 
 /// An `export *` branch can prove that a name is exported without proving it
@@ -158,23 +159,11 @@ enum ExportedCallableResolution {
     ),
     ExternalModuleExport(String, String),
     Value(std::path::PathBuf, String),
+    Namespace(std::path::PathBuf),
     Unknown,
 }
 
-impl CallableResolutionIndexes {
-    fn file(
-        &self,
-        facts: &dyn TsFactLookup,
-        path: &std::path::Path,
-    ) -> Option<std::sync::Arc<CallableFileIndex>> {
-        if let Some(index) = self.files.get(path) {
-            return Some(index.clone());
-        }
-        let index = std::sync::Arc::new(CallableFileIndex::from_facts(facts.get_ts_facts(path)?));
-        self.files.insert(path.to_path_buf(), index.clone());
-        Some(index)
-    }
-}
+include!("edge_calls/resolution_indexes.rs");
 
 include!("edge_calls/call_site_resolution.rs");
 include!("edge_calls/collection.rs");

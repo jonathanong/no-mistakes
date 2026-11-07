@@ -1,13 +1,12 @@
 use crate::codebase::postgres::idents::{object_name_identity, unwrap_expr};
 mod advisory;
 mod helpers;
+mod row_locks;
 mod scope;
 use super::value::PlaceholderPositions;
 pub(crate) use advisory::AdvisoryKey;
-use helpers::{access, generated_name, qualifier};
-use sqlparser::ast::{
-    BinaryOperator, Expr, Query, SetExpr, Statement, TableFactor, Visit, Visitor,
-};
+use helpers::{access, generated_name};
+use sqlparser::ast::{BinaryOperator, Expr, Query, Statement, TableFactor, Visit, Visitor};
 use std::{collections::BTreeSet, ops::ControlFlow};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -75,51 +74,19 @@ impl<const ADVANCED: bool> Visitor for Collector<'_, '_, ADVANCED> {
             self.cte_depth += usize::from(query.with.is_some());
         }
         if !query.locks.is_empty() {
-            let access = match query.body.as_ref() {
-                SetExpr::Select(select)
-                    if (ADVANCED || self.cte_depth == 0)
-                        && select.from.len() == 1
-                        && select.from[0].joins.is_empty() =>
-                {
-                    let mut row = access(
-                        &select.from[0].relation,
-                        select.selection.as_ref(),
-                        self.positions,
-                    );
-                    if ADVANCED {
-                        scope::hide_cte(&mut row, &self.scopes);
-                    }
-                    row
+            if ADVANCED {
+                let mut locks = row_locks::collect_advanced(query, self.positions);
+                for lock in &mut locks {
+                    scope::hide_cte(lock, &self.scopes);
                 }
-                _ => RowAccess {
-                    relation: None,
-                    key: None,
-                    has_predicate: false,
-                },
-            };
-            let valid_of = query.locks.iter().all(|lock| {
-                lock.of.as_ref().is_none_or(|of| {
-                    if generated_name(of, self.positions) {
-                        return false;
-                    }
-                    if let SetExpr::Select(select) = query.body.as_ref() {
-                        if let Some(from) = select.from.first() {
-                            return qualifier(&from.relation)
-                                .is_some_and(|name| name == object_name_identity(of));
-                        }
-                    }
-                    false
-                })
-            });
-            self.out.locks.push(if valid_of {
-                access
+                self.out.locks.extend(locks);
             } else {
-                RowAccess {
-                    relation: None,
-                    key: None,
-                    has_predicate: false,
-                }
-            });
+                self.out.locks.push(row_locks::collect_legacy(
+                    query,
+                    self.positions,
+                    self.cte_depth == 0,
+                ));
+            }
         }
         ControlFlow::Continue(())
     }

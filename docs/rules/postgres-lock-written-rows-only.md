@@ -63,19 +63,36 @@ its immutable argument bindings before comparing the helper's locked relations
 and keys with the caller's writes. For example, `lockUser(tx.query, userId)`
 requires an update or delete of that same user in `tx`; an update of a membership
 does not satisfy the lock. Diagnostics name the helper and its lock line.
-Helper effects require a direct `await helper(...)` (including `return await`).
+Straight-line helpers can call other supported local helpers. Their parameterized
+locks and writes are composed at each invocation through a known transaction,
+including a caller that passes its `TransactionQuery` parameter onward. A type
+annotation alone does not prove a transaction; unrelated transaction instances
+and different keys remain distinct. Recursive helper cycles remain unresolved.
+
+At the known transaction caller, helper effects require a direct
+`await helper(...)` (including `return await`).
 A plain `return helper(...)` or discarded promise is unanalyzable because an
 `await using` transaction can be disposed before the helper finishes. Within a
 summarized helper, each executor call must itself be awaited or returned. Helper
 SQL must be a string literal or an interpolation-free untagged template. Tagged
 templates and JavaScript interpolations remain unanalyzable in helper summaries.
+SQL binding arrays must use identifiers or static primitive values. Compute
+dynamic values at the caller and pass plain helper parameters; calls, assignments,
+and property reads inside bindings could hide transaction side effects.
 Executor shapes must match: `q(sql)` accepts `tx.query`, while `q.query(sql)`
 accepts `tx`. A mismatch makes the entire helper call unanalyzable.
+Use captured query functions directly in executor options; `.query` extraction
+requires a transaction object alias.
 
 Unsupported local and imported helpers receiving a configured transaction
 executor retain the unanalyzable policy, including dynamic SQL, optional calls,
 shadowed or mutated helpers, and bodies with other control flow. Named imported
 helpers and re-exports use the same summaries through the prepared module resolver. Unresolved imports retain the unanalyzable policy.
+
+`FOR UPDATE OF n, t, r, d` resolves every explicit alias to its base relation.
+Each relation must have a matching update or delete in the same transaction;
+writing only two of four locked relations leaves findings for the other two.
+An unknown alias follows the unanalyzable policy.
 
 An advisory key derived from the written row's id also passes the constant-key
 check.
@@ -222,9 +239,21 @@ non-failing advisory, and `ignore` omits the diagnostic. The legacy
 `report`. These policies never certify an unknown transaction as safe.
 Dynamic relation names, key columns, aliases, and `FOR UPDATE OF` targets also
 follow this policy; recovered SQL placeholders cannot establish their identity.
-A possible earlier return or throw also prevents a later write from proving
-that a locked row is written. Keep the matching write on every path that takes
-the lock, or remove the lock.
+A possible earlier return or throw prevents a later write from proving that a
+locked row is written while the transaction remains open. A branch that awaits a commit or rollback
+and returns ends that transaction path; a matching write on the remaining
+fall-through path can still satisfy the lock. An uncommitted return, a boundary that is not awaited, a commit on a continuing
+path, or an explicit SQL transaction boundary remains unresolved.
+Early exits require a non-optional awaited close proved in the same function for the original
+transaction binding. Every path through the returning arm must close it, including
+both arms of a nested `if`.
+Closes inside loops, logical or conditional expressions, switch cases, or
+`try`/`catch`/`finally` remain unresolved. Rewrite them as explicit awaited closes
+in ordinary blocks or fully covered `if` branches. Reassignment and overwritten
+boundary methods do not establish closure.
+Recovery is conservative when another live transaction remains open on the
+returning path: later writes retain the unresolved policy. Keep matching writes
+on every continuing transaction path, or remove the lock.
 
 The rule does not establish advisory-key provenance from unwritten relations,
 unbounded recursive read sets, duplication of unique-index guarantees, or
@@ -266,6 +295,16 @@ await query('UPDATE items SET active = true WHERE id = $1', [id], { query: tx })
 ```
 
 A configured property may hold the transaction binding or its `.query` member.
-Unknown values, computed properties, spreads, and conflicting executor overrides
-follow the unanalyzable policy; they never establish autocommit membership. Use an
-inline static object and the configured transaction binding to make routing clear.
+The options object can also be a local `const` object literal passed later,
+including a shorthand property referring to an immutable transaction-query alias:
+
+```ts
+const query = tx.query;
+const options = { query };
+await write('UPDATE items SET active = true WHERE id = $1', [id], options);
+```
+
+Unknown values, getters, computed properties, spreads, mutations, and conflicting executor
+overrides follow the unanalyzable policy; they never establish autocommit
+membership. Use a static object and the configured transaction binding to make
+routing clear.

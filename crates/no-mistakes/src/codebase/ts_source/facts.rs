@@ -54,6 +54,9 @@ pub struct TsFactPlan {
     pub function_calls: bool,
     /// Value provenance needed by canonical call and effect consumers.
     pub value_flow: bool,
+    /// Opt-in scalar provenance consumed by SQL identifier proofs.
+    #[doc(hidden)]
+    pub identifier_provenance: bool,
     /// Per-item invocation positions, collected with canonical call facts.
     pub per_item_calls: bool,
     pub call_sites: bool,

@@ -42,3 +42,7 @@ pub(super) fn proven(
             super::collection_imports::safe(graph, facts, bindings, &export)
         })
 }
+
+#[cfg(test)]
+#[path = "aliased_guards_tests.rs"]
+mod aliased_guards_tests;

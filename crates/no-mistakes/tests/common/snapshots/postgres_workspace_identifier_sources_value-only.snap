@@ -1,0 +1,27 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "value-only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".no-mistakes-value-only.yml",
+          "import": "postgres-no-unbounded-sql-identifier",
+          "line": 10,
+          "message": "stale postgres-no-unbounded-sql-identifier identifierSources entry `@example/catalog#getRelationTableNameOrThrow` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {module: \"@example/catalog\", name: getRelationTableNameOrThrow}",
+          "target": "@example/catalog#getRelationTableNameOrThrow"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

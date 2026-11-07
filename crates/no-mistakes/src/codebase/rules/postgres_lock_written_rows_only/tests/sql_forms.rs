@@ -37,13 +37,23 @@ fn alias_derived_join_and_qualified_relation_proofs_keep_their_boundaries() {
         .filter(|(_, target)| target == "unanalyzable")
         .map(|(line, _)| *line)
         .collect();
-    assert_eq!(unresolved, [9, 14, 18, 33]);
+    assert_eq!(unresolved, [9, 14, 33]);
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|(line, target)| *line == 18 && target == CHECKS[0])
+            .count(),
+        1,
+        "a resolved joined OF alias with no matching write is an unwritten relation"
+    );
     assert!(
         !findings.iter().any(|(line, _)| matches!(line, 4 | 38)),
         "matching OF aliases and exact qualified relations must remain compliant: {findings:?}"
     );
     assert!(
-        findings.iter().all(|(_, target)| target != CHECKS[0]),
+        findings
+            .iter()
+            .all(|(line, target)| { target != CHECKS[0] || *line == 18 }),
         "unsupported relation proofs must not become unwritten-row violations: {findings:?}"
     );
 }
@@ -51,12 +61,9 @@ fn alias_derived_join_and_qualified_relation_proofs_keep_their_boundaries() {
 #[test]
 fn cast_unary_arithmetic_and_qualified_advisory_constants_are_global_locks() {
     let findings = findings("ignore");
-    assert_eq!(
-        findings,
-        [22, 23, 24, 25, 26, 27]
-            .map(|line| (line, CHECKS[2].to_owned()))
-            .to_vec()
-    );
+    let mut expected = vec![(18, CHECKS[0].to_owned())];
+    expected.extend([22, 23, 24, 25, 26, 27].map(|line| (line, CHECKS[2].to_owned())));
+    assert_eq!(findings, expected);
     assert!(
         !findings.iter().any(|(line, _)| *line == 28),
         "a hash derived from a row key remains compliant"

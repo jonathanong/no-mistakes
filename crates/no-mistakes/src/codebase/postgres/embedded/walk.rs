@@ -105,7 +105,6 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         self.visit_finite_call(call);
     }
-
     fn visit_simple_assignment_target(&mut self, target: &ast::SimpleAssignmentTarget<'a>) {
         self.walk_assignment_target_reference(target);
     }
@@ -198,3 +197,4 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
 }
 
 mod transaction;
+mod transaction_flow;

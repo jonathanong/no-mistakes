@@ -1,0 +1,11 @@
+version: 2
+effort: max
+reportUnusedAllowEntries: ignore
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      include: [apps/worker/unused.ts]
+      importSpecifier: db
+      identifierSources:
+        - {module: "@example/catalog", name: getRelationTableNameOrThrow}

@@ -1,0 +1,108 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "assignment-open": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "apps/worker/assignment-open.tsx",
+          "import": "additionValue",
+          "line": 9,
+          "message": "Unbounded identifier source `additionValue` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await read(`SELECT * FROM ${additionValue}`);",
+          "target": "additionValue"
+        },
+        {
+          "file": "apps/worker/assignment-open.tsx",
+          "import": "awaitedValue",
+          "line": 18,
+          "message": "Unbounded identifier source `awaitedValue` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await read(`SELECT * FROM ${awaitedValue}`);",
+          "target": "awaitedValue"
+        },
+        {
+          "file": "apps/worker/assignment-open.tsx",
+          "import": "computedValue",
+          "line": 24,
+          "message": "Unbounded identifier source `computedValue` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await read(`SELECT * FROM ${computedValue}`);",
+          "target": "computedValue"
+        },
+        {
+          "file": "apps/worker/assignment-open.tsx",
+          "import": "conditionalValue",
+          "line": 12,
+          "message": "Unbounded identifier source `conditionalValue` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await read(`SELECT * FROM ${conditionalValue}`);",
+          "target": "conditionalValue"
+        },
+        {
+          "file": "apps/worker/assignment-open.tsx",
+          "import": "conditionalWrite",
+          "line": 30,
+          "message": "Unbounded identifier source `conditionalWrite` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await read(`SELECT * FROM ${conditionalWrite}`);",
+          "target": "conditionalWrite"
+        },
+        {
+          "file": "apps/worker/assignment-open.tsx",
+          "import": "logicalValue",
+          "line": 15,
+          "message": "Unbounded identifier source `logicalValue` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await read(`SELECT * FROM ${logicalValue}`);",
+          "target": "logicalValue"
+        },
+        {
+          "file": "apps/worker/assignment-open.tsx",
+          "import": "selfValue",
+          "line": 33,
+          "message": "Unbounded identifier source `selfValue` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await read(`SELECT * FROM ${selfValue}`);",
+          "target": "selfValue"
+        },
+        {
+          "file": "apps/worker/assignment-open.tsx",
+          "import": "sequenceValue",
+          "line": 27,
+          "message": "Unbounded identifier source `sequenceValue` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await read(`SELECT * FROM ${sequenceValue}`);",
+          "target": "sequenceValue"
+        },
+        {
+          "file": "apps/worker/assignment-open.tsx",
+          "import": "staticValue",
+          "line": 21,
+          "message": "Unbounded identifier source `staticValue` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await read(`SELECT * FROM ${staticValue}`);",
+          "target": "staticValue"
+        },
+        {
+          "file": "apps/worker/assignment-open.tsx",
+          "import": "templateValue",
+          "line": 6,
+          "message": "Unbounded identifier source `templateValue` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await read(`SELECT * FROM ${templateValue}`);",
+          "target": "templateValue"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
