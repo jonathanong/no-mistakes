@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      effort: max
+      importSpecifier: db
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [Query]

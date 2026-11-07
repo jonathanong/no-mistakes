@@ -47,7 +47,10 @@ pub(super) fn stripped_temp_name(
     }
 }
 
-fn stripped_uuid(expr: &Expression<'_>, trusted_uuid: &impl Fn(&Expression<'_>) -> bool) -> bool {
+pub(super) fn stripped_uuid(
+    expr: &Expression<'_>,
+    trusted_uuid: &impl Fn(&Expression<'_>) -> bool,
+) -> bool {
     strip_hyphens(expr).is_some_and(|call| zero_arg_call(call) && trusted_uuid(call))
 }
 

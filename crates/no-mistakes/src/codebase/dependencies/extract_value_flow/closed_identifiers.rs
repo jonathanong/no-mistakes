@@ -111,6 +111,9 @@ impl ImportCollector {
 mod fragment_members;
 #[path = "closed_identifier_hex.rs"]
 mod hex;
+#[path = "closed_identifier_generated.rs"]
+mod generated;
+pub(crate) use generated::GeneratedIdentifierReturn;
 #[path = "closed_identifier_metadata.rs"]
 pub(super) mod metadata;
 #[path = "closed_identifier_metadata_mutations.rs"]

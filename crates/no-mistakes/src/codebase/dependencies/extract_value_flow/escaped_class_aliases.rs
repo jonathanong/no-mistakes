@@ -56,6 +56,9 @@ impl ImportCollector {
                 self.value_expression(argument)
             });
         self.value_flow.returns.push((owner, value));
+        if let Some(argument) = &statement.argument {
+            self.note_generated_identifier_return(argument);
+        }
         self.allow_metadata_row_return(statement);
     }
 }
