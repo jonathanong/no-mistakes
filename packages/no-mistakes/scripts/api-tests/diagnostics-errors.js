@@ -36,15 +36,19 @@ test("malformed diagnostic metadata cannot hide an authoritative invocation fail
   const error = new Error(
     message + "\nno-mistakes-error-json: " + JSON.stringify(details) + MARKER + "{invalid",
   );
-  await assert.rejects(
-    callJson(async () => {
-      throw error;
-    }, {}),
-    (received) => {
-      assert.equal(received, error);
-      assert.equal(received.code, "NO_MISTAKES_DEADLINE");
-      assert.equal(received.diagnostics, undefined);
-      return true;
+  await withApi(
+    {
+      checkJson: async () => {
+        throw error;
+      },
+    },
+    async (api) => {
+      await assert.rejects(api.collectDiagnostics("check", {}), (received) => {
+        assert.equal(received, error);
+        assert.equal(received.code, "NO_MISTAKES_DEADLINE");
+        assert.equal(received.diagnostics, undefined);
+        return true;
+      });
     },
   );
 });
@@ -90,4 +94,22 @@ test("collection rejects utilities, raw bindings and unknown operations", async 
       await assert.rejects(api.collectDiagnostics(operation), /unsupported diagnostics operation/);
     }
   });
+});
+
+test("ordinary errors preserve diagnostic marker text without attaching metadata", async () => {
+  for (const suffix of [JSON.stringify(fixtures.diagnostics), "{invalid"]) {
+    const message = "ordinary failure" + MARKER + suffix;
+    const error = new Error(message);
+    await assert.rejects(
+      callJson(async () => {
+        throw error;
+      }, {}),
+      (received) => {
+        assert.equal(received, error);
+        assert.equal(received.message, message);
+        assert.equal(Object.hasOwn(received, "diagnostics"), false);
+        return true;
+      },
+    );
+  }
 });
