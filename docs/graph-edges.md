@@ -873,3 +873,11 @@ from the same module does not prove use of another export. Unknown relationships
 follow the configured `unanalyzable` policy. These rule-only edge kinds are not
 CLI or Node `Relationship` filters. Check findings and advisories retain their
 existing public report shape.
+
+At maximum effort, `postgres-no-unbounded-sql-identifier` also retains sparse
+runtime value selectors from prepared value-flow reads. A `symbol-import` can
+select an immutable producer binding or the file owning an ESM namespace.
+Namespaces retain exact exported-value `symbol-reexport` links so an escaped
+namespace invalidates its exposed builders without treating unrelated module
+imports as value exposure. This projection has separate export-resolution caches
+from callable analysis and preserves ordinary call-site classification.
