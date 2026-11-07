@@ -23,6 +23,11 @@ test("unbounded SQL identifier options expose shared analysis policy", () => {
   assert.match(types, /name: string;/);
   assert.match(types, /argument: number;/);
   assert.match(types, /identifierValidators\?: PostgresSqlIdentifierValidator\[\];/);
+  assert.match(
+    types,
+    /export interface PostgresSqlIdentifierSource \{\s*module\?: string;\s*name: string;\s*\}/,
+  );
+  assert.match(types, /identifierSources\?: PostgresSqlIdentifierSource\[\];/);
   assert.ok(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(
       'export type * from "./postgres-unbounded-identifier-types";',

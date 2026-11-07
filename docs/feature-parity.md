@@ -168,16 +168,32 @@ non-finite wrappers) through prepared import, value-flow, and embedded-SQL
 facts plus the canonical graph. At max effort, closed literal registries
 (local or imported, until a member mutation), hyphen-stripped `randomUUID`
 names imported from `node:crypto` or `crypto`, dominating closed-set throw
-or return guards until the guarded binding is written, configured
-`identifierValidators` (through re-exports), and compatible
-`finiteDomainAssertions` are bounded. Property guards validate only their exact
-member path. Static metadata-array lookups followed by a throwing or returning
+or return guards over local or imported literal arrays until the guarded binding
+is written, configured `identifierValidators`, and compatible
+`finiteDomainAssertions` are bounded. A configured validator proves its returned
+value and its argument at later uses after the call completes, including an
+initializer call. Its trusted contract may enforce an allow-list or identifier
+grammar plus length limit. `identifierSources` declares trusted bounded scalar
+returns for producers such as catalog lookup wrappers. Both options match either
+the call-site module selector or canonical resolved origin through named or
+`export *` barrels and npm re-exports; helper bodies are not inspected. Property
+guards validate only their exact member path. Static metadata-array lookups followed by a throwing or returning
 presence guard prove their literal string fields. Private module-local helpers
 may return rows when every call result stays immutable and only reads known
 fields; any escaping or mutating caller invalidates the shared metadata source.
-Literal prefixes with generated hex suffixes, configured SQL tag `.text`
-fragments, and literal-plus-numeric-placeholder arrays joined with literal
-separators are also bounded. CLI `check`, Node `check()`,
+Literal properties selected by a cross-module helper from a closed record and
+module constants built by closed catalog filter/map/join chains are bounded
+when their literal fields, callbacks, and uses remain closed. Mutations, escapes,
+accessors, and open fields invalidate those proofs. Literal prefixes with
+generated hex suffixes and UUID constructor helpers also qualify: the UUID
+helper's prefix parameter must receive a literal call argument, and async
+forwarding must be awaited. Open prefixes, fake UUID producers, mixed returns,
+and recursive return cycles retain findings.
+Configured SQL tag `.text` fragments and built-in `sql-template-strings`
+default/`SQL` tags support immutable module constants, append chains, and helper
+returns. The built-in tags need no configuration. Open raw append values and escaping
+or mutated builders do not establish that proof. Literal-plus-numeric-placeholder
+arrays joined with literal separators are also bounded. CLI `check`, Node `check()`,
 and batched `analyzeProject()` share findings. Immutable array-destructured
 query rows retain source provenance; comma expressions retain their final
 operand's value provenance. A direct adjacent scalar overwrite can prove one

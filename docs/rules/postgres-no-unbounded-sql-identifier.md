@@ -7,17 +7,18 @@ that block is set. Do not restate `importSpecifier`, `executorNames`,
 `include` and `exclude` may only narrow the project scope.
 
 Flags `process.env`, imported config, request parameters, query result rows, or
-a local alias of those values interpolated into a SQL relation without a runtime
-finite-domain validator. A TypeScript union, `satisfies`, or `as const`
+a local alias of those values interpolated into a SQL relation without a closed-domain
+proof or a configured trusted identifier helper. A TypeScript union, `satisfies`, or `as const`
 assertion around external data is not validation. Generated bind values remain
 allowed.
 
 The request prepares embedded SQL, import edges, and value-flow facts once. This
 rule borrows those facts and the canonical graph. Recovered switch/validator
-alternatives that splice literal schemas pass. A call is a validator only when
+alternatives that splice literal schemas pass. A call without a configured contract is a validator only when
 the callee is a proven finite helper (literal returns, typically a switch whose
 default throws). Identity wrappers, `String()`, and `.toLowerCase()` are not
-validators. Unknown provenance and HTTP `.query` collisions are not proven
+validators. Configured `identifierValidators` and `identifierSources` declare
+trusted contracts; their bodies are not inspected. Unknown provenance and HTTP `.query` collisions are not proven
 violations. There is no autofix.
 
 ```yaml
@@ -88,9 +89,9 @@ inside a function-call argument list in `FROM` is a value
 (`pass-raw-function-args`), while `FROM ${t} JOIN unnest(...)` still reports
 `t` (`fail-raw-relation-with-function-join`).
 The same holds for every `sql-template-strings` template in an `.append()`
-chain, including the chain head and ``.append(sql`...`)`` parts
-(`pass-sql-template-append-chain`). Only a raw `.append(expr)` argument that is
-not such a tagged template stays an identifier candidate
+chain, including the chain head, ``.append(sql`...`)`` parts, and immutable
+module-const fragments (`pass-sql-template-append-chain`). A raw `.append(expr)` argument
+without a proven parameterized-fragment origin stays an identifier candidate
 (`fail-sql-template-append-raw`). A parameter, local, `function` declaration, loop variable, or `catch`
 binding named like the tag shadows the import in its own scope and is not the
 library tag (`fail-sql-template-shadowed-tag`,
@@ -326,8 +327,8 @@ So are `${identity(process.env.SCHEMA)}`, `${process.env.SCHEMA.toLowerCase()}`,
 
 ## Closed domains
 
-At max effort, an interpolation is bounded when the value is drawn from a finite
-set the scan can see:
+At max effort, an interpolation is bounded by a visible closed domain, a
+supported generated identifier shape, or an explicit trusted helper contract:
 
 - A `const` object or array declared in this file, or imported from a literal
   export, whose values are string literals, including `as const` and
@@ -362,23 +363,38 @@ set the scan can see:
   A local `randomUUID` or `crypto`, an import of `crypto` from another
   module, an unstripped UUID, `.replace("-", "")`, or any other dynamic part
   stays unbounded.
+- An exported helper returning
+  `` `${prefix}_${randomUUID().replaceAll("-", "")}` `` with a trusted crypto
+  import, when its sole prefix argument is a literal at the call site. The
+  name can flow through a local `const`, a helper return, and an awaited async
+  result. This proves both a `CREATE TEMP TABLE` inside a preparation helper
+  and a later `DELETE ... USING` of the returned name. Open prefixes, fake
+  UUID producers, mixed bounded/open returns, reassigned prefixes, recursive
+  return cycles, and async results used without `await` do not establish this proof.
 - A value dominated by `if (!ALLOWED.has(value)) throw` or
   `if (!ALLOWED_LIST.includes(value)) throw` in the same callable. A `return`
   that exits the callable also works. `ALLOWED`
   must be one `const` built-in `Set` of string literals, and `ALLOWED_LIST` one `const`
-  array of string literals. The guard ends at the next assignment to that
+  array of string literals. The array may be imported from a unique literal
+  export, including an `as const` array used by a local
+  `(typeof ALLOWED_LIST)[number]` type alias. The guard ends at the next assignment to that
   same binding (`=`, `+=`, `for (name of ...)`, or a destructuring
   assignment). A guard inside a branch does not cover a query after that
   branch. A regex test is not a finite domain. An inner `const` that shadows
   the guarded name stays unbounded.
-- A direct call, before interpolation, to a helper listed in
+- A completed call, before interpolation, to a helper listed in
   `identifierValidators`. `name` and the zero-based validated `argument` are
-  required. With `module`, the prepared canonical call graph matches that
-  module export through aliases, namespace imports, and re-exports. A local
-  helper or an export from another module cannot satisfy that identity.
+  required. The proof covers the validated argument at later uses and the
+  returned value, including `const table = assertIdentifier(input)`; calls
+  inside an initializer also establish the argument's later proof.
+  With `module`, either the call-site import selector or the canonical resolved
+  export origin matches. This includes aliases, namespace imports, named and
+  `export *` re-exports, and a local barrel re-exporting an npm package.
+  An unrelated helper with the same name does not satisfy that module identity.
   Without `module`, the exact local callee name is matched. The helper body
-  is not inspected, so the configured helper must throw on rejection and must
-  validate a finite domain; a regex alone does not establish that contract.
+  is trusted rather than inspected: it must throw on rejection and enforce
+  either an allow-list or an identifier grammar plus a length limit. A regex
+  guard alone, outside a configured helper, still establishes no automatic proof.
   `finiteDomainAssertions` retains its existing name-and-argument behavior.
   A guard for `config.schema` covers only that property path, including a
   static bracket spelling. It does not validate `config.table`. Writes or
@@ -386,6 +402,19 @@ set the scan can see:
   after SQL interpolation cannot validate the earlier value. A local object
   with getters or another unsupported initializer cannot establish a member
   guard because a later read may produce another value.
+- A scalar returned by a helper listed in `identifierSources`, with required
+  `name` and optional `module`. Module and name matching follow the same rules
+  as `identifierValidators`. This is an explicit trusted-return contract for
+  producers such as a catalog-backed `getRelationTableNameOrThrow` wrapper
+  imported through a barrel. The producer body is not inspected, and this
+  option does not validate its arguments or arbitrary properties of a returned
+  object. Configure only helpers whose scalar return is a bounded identifier.
+- A known property returned by a resolved helper that selects a row from a
+  closed literal record, including an exported `getIdentifiers(provider)`
+  helper used from another module. Each selected property must have a literal
+  value in every possible row. A type such as `keyof typeof IDENTIFIERS` does
+  not replace the record proof. Mutating or escaping the catalog, accessors,
+  open property values, and unknown properties end this proof.
 - A local lookup from a static array of plain metadata objects whose fields
   are all string literals: `const selected = TABLES.find(entry => entry.name
   === name)`, followed by `if (!selected) throw` or `return`, proves
@@ -397,6 +426,8 @@ set the scan can see:
   `getTableOrThrow("user")` returning `selected.table`. Every return must be
   a guarded field from closed metadata. A missing presence guard, an unchecked
   fallback, or an async/generator helper is outside this proof.
+  Additional wrapper calls outside the automatic guarded-field proof need an
+  explicit `identifierSources` contract.
   A private helper in an ESM file may return the row when every call result
   stays in an immutable local `const` and reads only known literal fields, or
   directly projects such a field. This includes
@@ -429,6 +460,11 @@ set the scan can see:
   `fail-catalog-open-callback`). Cross-file writes to an exported array are
   [`postgres-no-mutable-sql-registry`](postgres-no-mutable-sql-registry.md)
   findings.
+  The same proof covers a module constant built from a closed literal metadata
+  catalog with `.filter(...).map(...).join(...)`, where the SQL parts come only
+  from catalog properties and fixed literal alternatives. Open catalog fields,
+  accessor properties, mutations, escapes, or callback values outside that
+  closed domain do not establish the proof.
 
 Parameter provenance is scoped to the reference. A parameter named `table` in
 one function does not make a loop variable or alias named `table` in another
@@ -440,13 +476,19 @@ identifierValidators:
   - module: "@example/sql-identifiers"
     name: assertWhitelistedSqlIdentifier
     argument: 0
+identifierSources:
+  - module: "@example/relations"
+    name: getRelationTableNameOrThrow
 ```
 
 ## Composed parameterized fragments
 
 At max effort, the `.text` member of a configured `trustedSqlTags` template
-(or `sql-template-strings`) is SQL text with bind placeholders, including when
-the fragment is held in an immutable local.
+is SQL text with bind placeholders. The default and `SQL` imports from
+`sql-template-strings` are built in: no tag option is needed for that package.
+This includes immutable local or module-const fragments, `.append()` chains
+of proven fragments, statement-level appends, and resolved helper returns.
+The proof preserves the matching `.values` bind array.
 Executor calls inside bind expressions are checked independently.
 The default `sql-template-strings` tag binds every interpolated value. A configured
 tag establishes this `.text` proof for literal slots and ordinary parameter or
@@ -457,9 +499,29 @@ values do not establish the proof. Direct configured-tag executor calls retain
 their identifier checks. Known opaque parameter defaults remain outside this
 proof even when the parameter has a scalar type annotation. Known raw inputs
 forwarded through same-file resolved helper calls also end this proof. An
-unresolved spread affecting that argument also ends it. Calls on the fragment,
+unresolved spread affecting that argument also ends it. Unmodeled calls on the fragment,
 member writes, reads of internal members such as `.strings`, and escaping the
 fragment end this proof.
+
+```ts
+import sql from "sql-template-strings";
+import { read } from "@example/db";
+
+const SELECT_COLUMNS = sql`a.id, a.status`;
+function buildRead(ids: string[]) {
+  return sql`id, url FROM items WHERE id = ANY(${ids}::uuid[])`;
+}
+export function getOne(id: string, flag: "x" | "y" | null) {
+  const statement = sql``.append(SELECT_COLUMNS).append(sql` FROM appeals a WHERE a.id = ${id}`);
+  if (flag) statement.append(sql` AND reason = 'ring'`);
+  statement.append(sql` ORDER BY a.id DESC LIMIT ${10}`);
+  return read(`SELECT ${statement.text}`, statement.values);
+}
+export function getMany(ids: string[]) {
+  const statement = buildRead(ids);
+  return read(`SELECT ${statement.text}`, statement.values);
+}
+```
 
 A static array of literal strings and literal text plus numeric placeholders can
 be joined with a literal separator. For example:
@@ -487,7 +549,7 @@ throws, then interpolate that helper. Keep values in tagged binds.
 select executor calls when the rule does not inherit a project postgres block.
 `executorNames` defaults to `query`, `read`, and `write` when a specifier is
 set. `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`,
-`finiteDomainAssertions`, and `identifierValidators` default to empty.
+`finiteDomainAssertions`, `identifierValidators`, and `identifierSources` default to empty.
 `include` and `exclude` default to empty (all indexable files). See [Closed domains](#closed-domains).
 
 ## Suppression

@@ -399,7 +399,24 @@ unanalyzable when executor ownership is unresolved. They follow the selected
 `unanalyzable` policy, including at low effort. Use a supported explicitly typed
 parameter to make the receiver eligible for SQL analysis.
 
-`postgres-no-unbounded-sql-identifier` also supports [low effort](../rules/postgres-no-unbounded-sql-identifier.md#effort): direct SQL literals/templates or one lexical const, with unsupported syntax routed through the shared unanalyzable policy. No partner rule is required. At max effort, `options.identifierValidators` selects throwing finite-domain helpers by optional module, name, and argument index. Module selectors follow canonical re-export identity; name-only `options.finiteDomainAssertions` remains compatible. See [closed domains](../rules/postgres-no-unbounded-sql-identifier.md#closed-domains).
+`postgres-no-unbounded-sql-identifier` also supports [low effort](../rules/postgres-no-unbounded-sql-identifier.md#effort): direct SQL literals/templates or one lexical const, with unsupported syntax routed through the shared unanalyzable policy. No partner rule is required.
+
+At max effort, `options.identifierValidators` selects trusted throwing helpers
+by optional `module`, required `name`, and zero-based `argument`. A completed
+call proves both that argument at later uses and the returned value, including
+`const table = assertIdentifier(input)`. The helper must enforce an allow-list
+or an identifier grammar with a length limit; its body is not inspected.
+`options.identifierSources` selects trusted scalar-returning producers by
+optional `module` and required `name`, for example a catalog lookup wrapper
+returning a table name. It proves the return without validating the inputs or
+arbitrary returned object properties. Both lists default to `[]`. Module
+selectors match either the call-site import or the canonical resolved origin,
+including local `export *` barrels and npm re-exports; omitting `module` matches
+the exact local callee name. Name-only `options.finiteDomainAssertions` remains
+compatible. The default and `SQL` tags from `sql-template-strings` are built in
+for parameterized fragments; `trustedSqlTags` adds custom tags. See
+[closed domains](../rules/postgres-no-unbounded-sql-identifier.md#closed-domains)
+and [composed fragments](../rules/postgres-no-unbounded-sql-identifier.md#composed-parameterized-fragments).
 
 [`postgres-no-mutable-sql-registry`](../rules/postgres-no-mutable-sql-registry.md#effort)
 also supports `effort: low`. Literal SQL and templates without relation-name
