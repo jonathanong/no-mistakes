@@ -1,6 +1,7 @@
 import { query } from "@example/db";
 import { sql } from "@example/sql";
 import { sql as untrusted } from "@example/other";
+import legacy from "sql-template-strings";
 
 export function open(value: string, n: number) {
   const plainCall = sql("records");
@@ -44,4 +45,12 @@ export function nestedMutation(value: string) {
   const nestedComputed = sql`id FROM records`;
   nestedComputed["strings"].push(value);
   query(`SELECT ${nestedComputed.text}`);
+}
+
+export function nestedExecutor(flag: boolean) {
+  return sql`${query(flag ? `SELECT id FROM ${process.env.FIRST}` : `SELECT id FROM ${process.env.SECOND}`)}`;
+}
+
+export function nestedLegacyExecutor(flag: boolean) {
+  return legacy`${query(flag ? `SELECT id FROM ${process.env.THIRD}` : `SELECT id FROM ${process.env.FOURTH}`)}`;
 }

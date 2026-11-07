@@ -17,7 +17,10 @@ pub(crate) fn interpolations(
         return out;
     };
     let calls = &ts.value_flow.calls;
-    let binds = binding_tag::bind_spans(bindings, &call.file, calls);
+    let binds: Vec<_> = binding_tag::bind_spans(bindings, &call.file, calls)
+        .into_iter()
+        .filter(|span| contains(call.span, *span))
+        .collect();
     for value_call in calls {
         let span = (value_call.offset, value_call.end);
         if !contains(call.span, span) || binds.iter().any(|bind| contains(*bind, span)) {

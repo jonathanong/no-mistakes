@@ -430,6 +430,7 @@ identifierValidators:
 At max effort, the `.text` member of a configured `trustedSqlTags` template
 (or `sql-template-strings`) is SQL text with bind placeholders, including when
 the fragment is held in an immutable local.
+Executor calls inside bind expressions are checked independently.
 The proof does not depend on the interpolated bind values. Calls on the fragment,
 member writes, reads of internal members such as `.strings`, and escaping the
 fragment end this proof.
