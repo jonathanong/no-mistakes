@@ -4,7 +4,7 @@ const path = require("node:path");
 const { test } = require("node:test");
 const { distTag, publish } = require("./publish-npm.cjs");
 const root = path.resolve(__dirname, "../..");
-const scenarios = JSON.parse(readFileSync(path.join(root, "test-cases/npm-publish/scenarios.json"), "utf8"));
+const scenarios = JSON.parse(readFileSync(path.join(root, "test-cases/npm-publish/retry-and-tags/fixture/scenarios.json"), "utf8"));
 
 for (const scenario of scenarios) {
   test(scenario.name, async () => {
