@@ -40,6 +40,7 @@ pub(super) fn collect(
                 None,
                 SqlLocationDemand::None,
                 collect_json_writes,
+                false,
             );
             file.path = path.clone();
             Ok(file)
@@ -53,6 +54,7 @@ pub(super) fn collect(
                 false,
                 SqlLocationDemand::None,
                 true,
+                false,
             )
         } else {
             embedded_call_facts(file, collect_bounds, false)
@@ -94,7 +96,7 @@ pub(crate) fn embedded_call_facts_with_demand(
     variants_only: bool,
     demand: SqlLocationDemand,
 ) -> Vec<SqlStatementFileFacts> {
-    embedded_call_facts_with_json_writes(file, collect_bounds, variants_only, demand, false)
+    embedded_call_facts_with_json_writes(file, collect_bounds, variants_only, demand, false, false)
 }
 
 pub(crate) fn embedded_call_facts_with_json_writes(
@@ -103,6 +105,7 @@ pub(crate) fn embedded_call_facts_with_json_writes(
     variants_only: bool,
     demand: SqlLocationDemand,
     collect_json_writes: bool,
+    collect_index_probes: bool,
 ) -> Vec<SqlStatementFileFacts> {
     embedded::embedded_call_facts_with_json_writes(
         file,
@@ -110,6 +113,7 @@ pub(crate) fn embedded_call_facts_with_json_writes(
         variants_only,
         demand,
         collect_json_writes,
+        collect_index_probes,
     )
 }
 

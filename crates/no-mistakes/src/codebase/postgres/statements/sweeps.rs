@@ -3,6 +3,7 @@ mod bind_identity;
 mod conjuncts;
 use bind_identity::Int4Bindings;
 mod page;
+mod probes;
 #[cfg(test)]
 mod tests;
 
@@ -20,8 +21,10 @@ pub(super) fn collect(
     statements: &[Statement],
     recovered_placeholder_positions: &[(u32, u32)],
     embedded: bool,
+    probes: Option<&mut std::collections::BTreeMap<(usize, usize), Vec<String>>>,
 ) -> (Vec<SqlLimitFact>, Vec<SqlSweepFact>) {
     let mut collector = Collector::new(tokens, recovered_placeholder_positions, embedded);
+    collector.probes = probes;
     for statement in statements {
         let mut executed = Vec::new();
         walk_executed(statement, &mut executed);
@@ -38,6 +41,7 @@ pub(super) fn collect(
 }
 
 struct Collector<'a, 'sql> {
+    probes: Option<&'a mut std::collections::BTreeMap<(usize, usize), Vec<String>>>,
     limits: Vec<SqlLimitFact>,
     sweeps: Vec<SqlSweepFact>,
     tokens: &'a Tokens<'sql>,
@@ -59,6 +63,7 @@ impl<'a, 'sql> Collector<'a, 'sql> {
         embedded: bool,
     ) -> Self {
         Self {
+            probes: None,
             limits: Vec::new(),
             sweeps: Vec::new(),
             tokens,
@@ -121,6 +126,14 @@ impl Visitor for Collector<'_, '_> {
         let positions = self
             .embedded
             .then_some(self.recovered_placeholder_positions);
+        if let Some(probes) = &mut self.probes {
+            probes::collect(
+                query,
+                self.scopes.last().map_or(&[][..], Vec::as_slice),
+                positions,
+                probes,
+            );
+        }
         if super::limit::is_limited_at(query, positions) && !empty {
             let visible = self.scopes.last().map_or(&[][..], Vec::as_slice);
             if let Some(sweep) = page::sweep(

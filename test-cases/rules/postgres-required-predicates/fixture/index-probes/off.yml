@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    enabled: false
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      executorNames: []
+      sqlInclude: ['constant.sql']
+      bannedShapes: [literal-limit]

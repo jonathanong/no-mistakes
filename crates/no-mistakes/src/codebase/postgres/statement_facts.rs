@@ -47,6 +47,7 @@ pub struct SqlStatementFileFacts {
     pub json_writes: Vec<SqlJsonWriteFact>,
     pub inserts: Vec<SqlInsertFact>,
     pub selects: Vec<SqlSelectFact>,
+    pub(crate) index_probes: std::collections::BTreeMap<(usize, usize), Vec<String>>,
     /// One entry per `UPDATE`. Each entry is that statement's relation instances.
     pub updates: Vec<Vec<SqlRelationPredicateFact>>,
     /// One entry per `DELETE`. Each entry is that statement's relation instances.

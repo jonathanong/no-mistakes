@@ -158,6 +158,10 @@ impl Collector<'_, '_, '_> {
             return;
         }
         out.push(SqlSelectFact {
+            sql_position: (
+                select.select_token.0.span.start.line as usize,
+                select.select_token.0.span.start.column as usize,
+            ),
             line,
             tables,
             predicate_sql: from::predicate_text(select),

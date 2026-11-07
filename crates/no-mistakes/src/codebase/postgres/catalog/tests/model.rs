@@ -243,6 +243,9 @@ struct IndexExpect<'a> {
 
 fn index(expect: IndexExpect<'_>) -> CatalogIndexInfo {
     CatalogIndexInfo {
+        valid: true,
+        ready: true,
+        live: true,
         name: expect.name.to_string(),
         unique: expect.unique,
         primary: expect.primary,

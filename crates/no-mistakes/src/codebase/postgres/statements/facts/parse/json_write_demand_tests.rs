@@ -14,6 +14,7 @@ fn json_key_walks_are_opt_in_and_preserve_existing_projections() {
         None,
         SqlLocationDemand::Full,
         false,
+        false,
     );
     assert_eq!(work::finish().json_key_walks, 0);
     assert!(without.json_writes.is_empty());
@@ -24,6 +25,7 @@ fn json_key_walks_are_opt_in_and_preserve_existing_projections() {
         None,
         SqlLocationDemand::Full,
         true,
+        false,
     );
     assert!(work::finish().json_key_walks > 0);
     assert!(!with.json_writes.is_empty());

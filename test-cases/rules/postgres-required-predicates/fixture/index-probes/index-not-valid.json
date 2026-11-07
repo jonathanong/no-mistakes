@@ -1,0 +1,44 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "topic_posts": {
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "ordinalPosition": 1
+        },
+        "topic_id": {
+          "dataType": "integer",
+          "ordinalPosition": 2
+        },
+        "account_id": {
+          "dataType": "integer",
+          "ordinalPosition": 3
+        }
+      },
+      "relationKind": "partitioned table",
+      "physicalPartition": {
+        "key": "RANGE (account_id)"
+      },
+      "indexes": {
+        "posts_topic_idx": {
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "topic_id",
+              "expression": "topic_id"
+            },
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ],
+          "valid": false,
+          "ready": true,
+          "live": true
+        }
+      }
+    }
+  }
+}

@@ -75,6 +75,7 @@ pub(super) fn collect_exists_facts(
         return;
     }
     selects.push(SqlSelectFact {
+        sql_position: (0, 0),
         line: 1,
         tables: Vec::new(),
         predicate_sql: String::new(),

@@ -1,0 +1,374 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "controls": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "controls.sql",
+          "import": "a.account_id",
+          "line": 11,
+          "message": "controls.sql:11: SELECT on topic_posts does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts a JOIN topic_posts b ON a.id = b.id WHERE a.topic_id = $1 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "a.account_id",
+          "line": 11,
+          "message": "controls.sql:11: SELECT reads partitioned table topic_posts without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts a JOIN topic_posts b ON a.id = b.id WHERE a.topic_id = $1 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "b.account_id",
+          "line": 11,
+          "message": "controls.sql:11: SELECT on topic_posts does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts a JOIN topic_posts b ON a.id = b.id WHERE a.topic_id = $1 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "b.account_id",
+          "line": 11,
+          "message": "controls.sql:11: SELECT reads partitioned table topic_posts without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts a JOIN topic_posts b ON a.id = b.id WHERE a.topic_id = $1 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "p.account_id",
+          "line": 12,
+          "message": "controls.sql:12: SELECT on topic_posts does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts p(renamed_id, renamed_topic_id, renamed_account_id) WHERE renamed_topic_id = $1 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "p.account_id",
+          "line": 12,
+          "message": "controls.sql:12: SELECT reads partitioned table topic_posts without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts p(renamed_id, renamed_topic_id, renamed_account_id) WHERE renamed_topic_id = $1 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 1,
+          "message": "controls.sql:1: SELECT on topic_posts does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = $1;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 1,
+          "message": "controls.sql:1: SELECT reads partitioned table topic_posts without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = $1;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 13,
+          "message": "controls.sql:13: SELECT on topic_posts does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = $1 UNION ALL SELECT * FROM topic_posts WHERE topic_id = $2 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 13,
+          "message": "controls.sql:13: SELECT reads partitioned table topic_posts without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = $1 UNION ALL SELECT * FROM topic_posts WHERE topic_id = $2 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 14,
+          "message": "controls.sql:14: SELECT on topic_posts does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "WITH topic_posts AS (SELECT * FROM topic_posts) SELECT * FROM topic_posts WHERE topic_id = $1 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 14,
+          "message": "controls.sql:14: SELECT reads partitioned table topic_posts without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "WITH topic_posts AS (SELECT * FROM topic_posts) SELECT * FROM topic_posts WHERE topic_id = $1 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 2,
+          "message": "controls.sql:2: SELECT on topic_posts does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE id = $1 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 2,
+          "message": "controls.sql:2: SELECT reads partitioned table topic_posts without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE id = $1 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 3,
+          "message": "controls.sql:3: SELECT on topic_posts does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id > $1 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 3,
+          "message": "controls.sql:3: SELECT reads partitioned table topic_posts without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id > $1 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 4,
+          "message": "controls.sql:4: SELECT on topic_posts does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = $1 LIMIT NULL;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 4,
+          "message": "controls.sql:4: SELECT reads partitioned table topic_posts without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = $1 LIMIT NULL;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 5,
+          "message": "controls.sql:5: SELECT on topic_posts does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = $1 OR id = $2 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 5,
+          "message": "controls.sql:5: SELECT reads partitioned table topic_posts without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = $1 OR id = $2 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 6,
+          "message": "controls.sql:6: SELECT on topic_posts does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = id LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 6,
+          "message": "controls.sql:6: SELECT reads partitioned table topic_posts without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = id LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 7,
+          "message": "controls.sql:7: SELECT on topic_posts does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = $1 LIMIT (SELECT count(*) FROM topic_posts);",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 7,
+          "message": "controls.sql:7: SELECT reads partitioned table topic_posts without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = $1 LIMIT (SELECT count(*) FROM topic_posts);",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 8,
+          "message": "controls.sql:8: SELECT on topic_posts does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM (SELECT * FROM topic_posts WHERE topic_id = $1) p LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 8,
+          "message": "controls.sql:8: SELECT reads partitioned table topic_posts without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM (SELECT * FROM topic_posts WHERE topic_id = $1) p LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 9,
+          "message": "controls.sql:9: SELECT on topic_posts does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "import": "topic_posts.account_id",
+          "line": 9,
+          "message": "controls.sql:9: SELECT reads partitioned table topic_posts without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "line": 1,
+          "message": "controls.sql:1: queries against topic_posts must include `account_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = $1;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "line": 11,
+          "message": "controls.sql:11: queries against topic_posts must include `account_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts a JOIN topic_posts b ON a.id = b.id WHERE a.topic_id = $1 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "line": 12,
+          "message": "controls.sql:12: queries against topic_posts must include `account_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts p(renamed_id, renamed_topic_id, renamed_account_id) WHERE renamed_topic_id = $1 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "line": 13,
+          "message": "controls.sql:13: queries against topic_posts must include `account_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = $1 UNION ALL SELECT * FROM topic_posts WHERE topic_id = $2 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "line": 14,
+          "message": "controls.sql:14: queries against topic_posts must include `account_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "WITH topic_posts AS (SELECT * FROM topic_posts) SELECT * FROM topic_posts WHERE topic_id = $1 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "line": 2,
+          "message": "controls.sql:2: queries against topic_posts must include `account_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE id = $1 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "line": 3,
+          "message": "controls.sql:3: queries against topic_posts must include `account_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id > $1 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "line": 4,
+          "message": "controls.sql:4: queries against topic_posts must include `account_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = $1 LIMIT NULL;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "line": 5,
+          "message": "controls.sql:5: queries against topic_posts must include `account_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = $1 OR id = $2 LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "line": 6,
+          "message": "controls.sql:6: queries against topic_posts must include `account_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = id LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "line": 7,
+          "message": "controls.sql:7: queries against topic_posts must include `account_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts WHERE topic_id = $1 LIMIT (SELECT count(*) FROM topic_posts);",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "line": 8,
+          "message": "controls.sql:8: queries against topic_posts must include `account_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM (SELECT * FROM topic_posts WHERE topic_id = $1) p LIMIT 5;",
+          "target": "topic_posts"
+        },
+        {
+          "file": "controls.sql",
+          "line": 9,
+          "message": "controls.sql:9: queries against topic_posts must include `account_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT * FROM topic_posts LIMIT 5;",
+          "target": "topic_posts"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

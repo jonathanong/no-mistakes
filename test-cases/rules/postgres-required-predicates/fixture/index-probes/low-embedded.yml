@@ -1,0 +1,15 @@
+version: 2
+effort: low
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      include: ['embedded.*']
+      sqlInclude: ['embedded.sql']
+      importSpecifier: '@example/db'
+      schemaCatalogPath: schema.json
+      partitionKeys: require
+      relations:
+        - table: topic_posts
+          requireColumns: [account_id]
+          require: ['account_id IS NOT NULL']

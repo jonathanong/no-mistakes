@@ -51,6 +51,9 @@ pub(super) fn indexes(table: &SnapshotTable) -> Vec<CatalogIndexInfo> {
         .indexes
         .iter()
         .map(|(name, index)| CatalogIndexInfo {
+            valid: index.valid,
+            ready: index.ready,
+            live: index.live.unwrap_or(true),
             name: name.clone(),
             unique: index.unique,
             primary: index.primary,

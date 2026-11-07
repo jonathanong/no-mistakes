@@ -1,0 +1,14 @@
+SELECT * FROM topic_posts WHERE topic_id = $1;
+SELECT * FROM topic_posts WHERE id = $1 LIMIT 5;
+SELECT * FROM topic_posts WHERE topic_id > $1 LIMIT 5;
+SELECT * FROM topic_posts WHERE topic_id = $1 LIMIT NULL;
+SELECT * FROM topic_posts WHERE topic_id = $1 OR id = $2 LIMIT 5;
+SELECT * FROM topic_posts WHERE topic_id = id LIMIT 5;
+SELECT * FROM topic_posts WHERE topic_id = $1 LIMIT (SELECT count(*) FROM topic_posts);
+SELECT * FROM (SELECT * FROM topic_posts WHERE topic_id = $1) p LIMIT 5;
+SELECT * FROM topic_posts LIMIT 5;
+SELECT 1 LIMIT 5;
+SELECT * FROM topic_posts a JOIN topic_posts b ON a.id = b.id WHERE a.topic_id = $1 LIMIT 5;
+SELECT * FROM topic_posts p(renamed_id, renamed_topic_id, renamed_account_id) WHERE renamed_topic_id = $1 LIMIT 5;
+SELECT * FROM topic_posts WHERE topic_id = $1 UNION ALL SELECT * FROM topic_posts WHERE topic_id = $2 LIMIT 5;
+WITH topic_posts AS (SELECT * FROM topic_posts) SELECT * FROM topic_posts WHERE topic_id = $1 LIMIT 5;

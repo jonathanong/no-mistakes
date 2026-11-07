@@ -1,0 +1,14 @@
+version: 2
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      include: ['same-line.*']
+      sqlInclude: ['same-line.sql']
+      importSpecifier: '@example/db'
+      schemaCatalogPath: schema.json
+      partitionKeys: require
+      relations:
+        - table: topic_posts
+          requireColumns: [account_id]
+          require: ['account_id IS NOT NULL']

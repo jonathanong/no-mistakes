@@ -1,4 +1,4 @@
-use super::SqlStatementFileFacts;
+use super::{SqlSelectFact, SqlStatementFileFacts};
 use std::fmt::{Debug, Formatter, Result};
 
 impl Debug for SqlStatementFileFacts {
@@ -41,3 +41,22 @@ impl Debug for SqlStatementFileFacts {
 
 #[cfg(test)]
 mod tests;
+
+impl Debug for SqlSelectFact {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> Result {
+        formatter
+            .debug_struct("SqlSelectFact")
+            .field("line", &self.line)
+            .field("tables", &self.tables)
+            .field("predicate_sql", &self.predicate_sql)
+            .field("exists_set_operations", &self.exists_set_operations)
+            .field("relations", &self.relations)
+            .field("in_insert_select", &self.in_insert_select)
+            .field("not_in_subqueries", &self.not_in_subqueries)
+            .field("not_in_columns", &self.not_in_columns)
+            .field("count_existence_checks", &self.count_existence_checks)
+            .field("star_projections", &self.star_projections)
+            .field("column_uses", &self.column_uses)
+            .finish()
+    }
+}

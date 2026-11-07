@@ -59,6 +59,35 @@ unpublished rows, a required tenant column, or a partition key the planner
 must see) and every SELECT, UPDATE, DELETE, and INSERT…SELECT must constrain
 those columns.
 
+## Bounded index probes
+
+A single-table SELECT with a constant or parameter `LIMIT` may omit required
+predicates when `schemaCatalogPath` proves an index whose first key is a plain
+column constrained by equality to a literal or parameter. This also applies to
+partition-key requirements. The index must be valid, ready, live, and non-partial; an expression key or
+a later index column does not establish this exemption. Each nested SELECT must
+qualify independently. The rule uses the same prepared SQL facts for standalone
+SQL and configured embedded executor calls.
+
+With an index on `(topic_id, id)`, this bounded probe passes:
+
+```sql
+SELECT * FROM topic_posts WHERE topic_id = $1 ORDER BY id LIMIT $2;
+```
+
+These still report a missing required predicate:
+
+```sql
+SELECT * FROM topic_posts WHERE topic_id = $1;          -- no LIMIT
+SELECT * FROM topic_posts WHERE id = $1 LIMIT 10;       -- not the leading key
+SELECT * FROM topic_posts WHERE topic_id > $1 LIMIT 10; -- range, not equality
+```
+
+The bounded example reports without catalog index facts. To fix a finding,
+include the required predicate, or make the query a bounded equality probe on a
+catalog-known leading index column and configure `schemaCatalogPath`. A LIMIT
+on an outer query does not exempt an unbounded inner read.
+
 ## What it catches/requires
 
 A standalone `TABLE topics` reads `topics` without a predicate and is checked

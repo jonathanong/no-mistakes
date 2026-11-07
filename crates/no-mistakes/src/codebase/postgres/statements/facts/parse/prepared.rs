@@ -17,6 +17,7 @@ pub(super) fn extract(
     locations: SqlLocationDemand,
     projection: StatementProjection,
     collect_json_writes: bool,
+    collect_index_probes: bool,
 ) -> SqlStatementFileFacts {
     super::super::locations::work::statement_extraction();
     let prepared = PreparedSql::new(sql);
@@ -32,6 +33,7 @@ pub(super) fn extract(
                 locations,
                 policy: super::super::StatementPolicySources {
                     collect_json_writes,
+                    collect_index_probes,
                     ..Default::default()
                 },
                 ..Default::default()
@@ -77,6 +79,7 @@ pub(super) fn extract(
                     recovery: Some(&recovery),
                     policy: super::super::StatementPolicySources {
                         collect_json_writes,
+                        collect_index_probes,
                         tokens: Some(&policy_sources),
                         schema: None,
                         functions: &functions,

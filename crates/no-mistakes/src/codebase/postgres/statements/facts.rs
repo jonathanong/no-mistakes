@@ -37,7 +37,6 @@ fn extract_from_parsed_and_sources(
 ) -> SqlStatementFileFacts {
     locations::work::general_fact_collection();
     let masked = fallback::mask_quoted_sql(sql);
-    let insert_keyword_count = fallback::insert_keyword_count(&masked);
     let (mut writes, mut json_writes) = (Vec::new(), Vec::new());
     let mut locations = (sources.locations != SqlLocationDemand::None).then(|| {
         locations::Locations::new(placeholder_positions.unwrap_or_default(), sources.locations)
@@ -45,8 +44,7 @@ fn extract_from_parsed_and_sources(
     let (mut inserts, mut returning_stars, mut bounds) = (Vec::new(), Vec::new(), Vec::new());
     let (mut selects, mut updates) = (Vec::new(), Vec::new());
     let (mut deletes, mut triggers) = (Vec::new(), Vec::new());
-    let mut mutation_column_uses = Vec::new();
-    let mut transformed_column_uses = Vec::new();
+    let (mut mutation_column_uses, mut transformed_column_uses) = (Vec::new(), Vec::new());
     let mut insert_n = 0usize;
     let tokens = Tokens::with_prepared(sql, prepared_sql.tokens());
     let has_table_token = tokens.all().iter().any(table_keyword);
@@ -54,11 +52,7 @@ fn extract_from_parsed_and_sources(
         (collect_bounds || has_table_token).then(|| bounds::TableTokenIndex::new(tokens.all()));
     let mut recovered_indexes = HashMap::new();
     let insert_sources = super::lines::InsertSources::with_tokens(sql, &tokens);
-    let policy_arbiters: crate::fx::FxHashMap<_, _> = prepared_sql
-        .policy_arbiters()
-        .iter()
-        .map(|arbiter| (arbiter.insert_start, conflict::expression_arbiter(arbiter)))
-        .collect();
+    let policy_arbiters = policy::arbiters(prepared_sql);
     let mut out = FactOut {
         policy_arbiters: &policy_arbiters,
         insert_sources: &insert_sources,
@@ -150,11 +144,16 @@ fn extract_from_parsed_and_sources(
         }
     }
     dedupe::exists_set_operations(&mut selects);
+    let mut index_probes = Default::default();
     let (limit_uses, sweeps) = sweeps::collect(
         &tokens,
         statements,
         placeholder_positions.unwrap_or_default(),
         placeholder_positions.is_some(),
+        sources
+            .policy
+            .collect_index_probes
+            .then_some(&mut index_probes),
     );
     let (statement_kinds, setting_uses, function_calls) =
         policy::collect(sql, prepared_sql, statements, sources.policy);
@@ -167,6 +166,7 @@ fn extract_from_parsed_and_sources(
         json_writes,
         inserts,
         selects,
+        index_probes,
         updates,
         deletes,
         triggers,
@@ -180,7 +180,7 @@ fn extract_from_parsed_and_sources(
         sweeps,
         parse_failed,
         parse_failures: sources.parse_failures.to_vec(),
-        insert_keyword_count,
+        insert_keyword_count: fallback::insert_keyword_count(&masked),
         has_top_level_not_exists: not_exists::has_top_level_conjunctive_not_exists(&masked),
         ..Default::default()
     };

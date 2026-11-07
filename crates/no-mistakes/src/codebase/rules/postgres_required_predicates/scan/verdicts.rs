@@ -79,10 +79,11 @@ fn judge(
     match obligation {
         Obligation::Text(table, required) => {
             if statement.selects.iter().any(|select| {
-                select
-                    .tables
-                    .iter()
-                    .any(|found| found.eq_ignore_ascii_case(table))
+                !super::probes::bounded(select, statement, catalog)
+                    && select
+                        .tables
+                        .iter()
+                        .any(|found| found.eq_ignore_ascii_case(table))
                     && !columns::contains_predicate(&select.predicate_sql, required)
             }) {
                 SqlBranchJudgment::violation(false)
@@ -91,7 +92,7 @@ fn judge(
             }
         }
         Obligation::Column(table, required) => {
-            let groups = relation_groups(statement);
+            let groups = relation_groups(statement, catalog);
             let mut matched = false;
             for relations in groups {
                 for (index, relation) in relations.iter().enumerate() {
@@ -127,7 +128,7 @@ fn judge(
             let Some(catalog) = catalog else {
                 return SqlBranchJudgment::abstain("missing-relation-catalog");
             };
-            for relations in relation_groups(statement) {
+            for relations in relation_groups(statement, Some(catalog)) {
                 for (index, relation) in relations.iter().enumerate() {
                     if columns::exempt(&relation.table, &opts.partition_key_exemptions) {
                         continue;
@@ -176,10 +177,14 @@ fn unknown_peer(
         .any(|(other, peer)| other != index && catalog.relation(&peer.table).is_none())
 }
 
-fn relation_groups(statement: &SqlStatementFileFacts) -> Vec<&[SqlRelationPredicateFact]> {
+fn relation_groups<'a>(
+    statement: &'a SqlStatementFileFacts,
+    catalog: Option<&SchemaCatalog>,
+) -> Vec<&'a [SqlRelationPredicateFact]> {
     statement
         .selects
         .iter()
+        .filter(|select| !super::probes::bounded(select, statement, catalog))
         .map(|select| select.relations.as_slice())
         .chain(statement.updates.iter().map(Vec::as_slice))
         .chain(statement.deletes.iter().map(Vec::as_slice))
