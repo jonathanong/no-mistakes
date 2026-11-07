@@ -29,6 +29,8 @@ pub(crate) fn collect_calls<'a>(
         super::super::finite_identifiers::vitest_it_imports(program)
     };
     let mut visitor = ScopeVisitor {
+        #[cfg(test)]
+        lock_summary_passes: 0,
         applied_lock_helper_spans: Default::default(),
         awaited_lock_helper_calls: Default::default(),
         imported_lock_helpers: Vec::new(),
@@ -139,8 +141,14 @@ pub(crate) fn collect_calls<'a>(
         .filter(|call| call.sql_looking && visitor.pending_spans.contains_key(&call.sequence))
         .map(|call| call.sequence)
         .collect();
-    let lock_helper_summaries = visitor.lock_helper_summaries();
+    let lock_helper_summaries = if options.track_transaction_helpers {
+        visitor.lock_helper_summaries()
+    } else {
+        Default::default()
+    };
     CollectedCalls {
+        #[cfg(test)]
+        lock_summary_passes: visitor.lock_summary_passes,
         lock_helper_summaries,
         imported_lock_helpers: visitor.imported_lock_helpers,
         undeclared_executor_types: visitor.undeclared_executor_types,
@@ -160,3 +168,6 @@ pub(crate) fn collect_calls<'a>(
         unproven_member_query_spans: visitor.unproven_member_query_spans,
     }
 }
+
+#[cfg(test)]
+mod summary_pass_tests;

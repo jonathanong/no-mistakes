@@ -39,8 +39,11 @@ pub(super) fn collect<const ADVANCED: bool>(
         let mut executed = Vec::new();
         super::wrappers::walk_executed(statement, &mut executed);
         for statement in executed {
-            let first_lock = out.locks.len();
-            let first_write = out.writes.len();
+            let (first_lock, first_write) = if ADVANCED {
+                (out.locks.len(), out.writes.len())
+            } else {
+                (0, 0)
+            };
             let _ = statement.visit(&mut Collector::<ADVANCED> {
                 out: &mut out,
                 scopes: Vec::new(),

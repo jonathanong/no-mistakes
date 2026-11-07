@@ -56,35 +56,28 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_class(&mut self, class: &oxc_ast::ast::Class<'a>) {
         self.walk_class_scope(class);
     }
-
     fn visit_static_block(&mut self, block: &oxc_ast::ast::StaticBlock<'a>) {
         self.walk_static_block_scope(block);
     }
-
     fn visit_variable_declaration(&mut self, declaration: &oxc_ast::ast::VariableDeclaration<'a>) {
         self.walk_variable_declaration_bindings(declaration);
     }
-
     fn visit_export_named_declaration(&mut self, declaration: &ast::ExportNamedDeclaration<'a>) {
         self.walk_runtime_export(declaration);
     }
-
     fn visit_export_declaration(&mut self, decl: &ast::ExportDeclaration<'a>) {
         walk::walk_export_declaration(self, decl);
         self.poison_exported_const_objects(decl);
     }
-
     fn visit_arrow_function_expression(
         &mut self,
         arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
     ) {
         self.walk_arrow_scope(arrow);
     }
-
     fn visit_variable_declarator(&mut self, declaration: &ast::VariableDeclarator<'a>) {
         self.walk_variable_declarator_bindings(declaration);
     }
-
     fn visit_update_expression(&mut self, expression: &oxc_ast::ast::UpdateExpression<'a>) {
         self.walk_update_binding(expression);
     }
@@ -99,7 +92,14 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_await_expression(&mut self, awaited: &ast::AwaitExpression<'a>) {
-        self.walk_lock_helper_await(awaited);
+        if self.executor_options.track_transaction_helpers {
+            if let ast::Expression::CallExpression(call) =
+                crate::codebase::ts_source::unwrap_ts_wrappers(&awaited.argument)
+            {
+                self.awaited_lock_helper_calls.insert(call.span.start);
+            }
+        }
+        walk::walk_await_expression(self, awaited);
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {

@@ -19,8 +19,12 @@ pub(super) fn annotate(
     fact.execution_unconditional = visitor.control_depth == 0
         && visitor.loop_depth == 0
         && !visitor.exited_functions.contains(&owner);
-    let override_receiver =
-        options::receiver(call, &visitor.executor_options.executor_option_properties);
+    let properties = &visitor.executor_options.executor_option_properties;
+    let override_receiver = if properties.is_empty() {
+        None
+    } else {
+        options::receiver(call, properties)
+    };
     let receiver = match override_receiver {
         Some(Some(receiver)) => receiver,
         Some(None) => {

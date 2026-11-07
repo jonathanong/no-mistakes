@@ -5,6 +5,8 @@ use crate::codebase::postgres::{
 use std::collections::BTreeMap;
 
 pub(crate) struct CollectedCalls {
+    #[cfg(test)]
+    pub(crate) lock_summary_passes: usize,
     pub(crate) lock_helper_summaries:
         crate::fx::FxHashMap<String, super::super::lock_helpers::Summary>,
     pub(crate) imported_lock_helpers: Vec<super::super::lock_helpers::Invocation>,

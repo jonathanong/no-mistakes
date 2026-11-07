@@ -1,16 +1,5 @@
 use super::*;
 impl<'a> ScopeVisitor<'a> {
-    pub(in crate::codebase::postgres::embedded::walk) fn walk_lock_helper_await(
-        &mut self,
-        awaited: &oxc_ast::ast::AwaitExpression<'a>,
-    ) {
-        if self.executor_options.track_transaction_helpers {
-            if let Expression::CallExpression(call) = unwrap_ts_wrappers(&awaited.argument) {
-                self.awaited_lock_helper_calls.insert(call.span.start);
-            }
-        }
-        oxc_ast_visit::walk::walk_await_expression(self, awaited);
-    }
     pub(super) fn record_unknown_lock_helper(&mut self, call: &CallExpression<'_>, name: &str) {
         for (executor, argument) in call.arguments.iter().enumerate() {
             let Some(expression) = argument.as_expression() else {
