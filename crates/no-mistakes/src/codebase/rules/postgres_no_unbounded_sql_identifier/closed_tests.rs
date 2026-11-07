@@ -3,7 +3,6 @@ use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::codebase::dependencies::extract::{
     FiniteIdentifierGuard, GuardKind, GuardSubject, ValueBinding, ValueExpression, ValueFlowFacts,
 };
-use crate::codebase::dependencies::graph::DepGraph;
 use crate::codebase::postgres::EmbeddedSqlCall;
 use crate::codebase::rules::postgres_sql_cross_file::SqlCall;
 use crate::codebase::rules::postgres_sql_cross_file::{compile, Bindings, Options, Provenance};
