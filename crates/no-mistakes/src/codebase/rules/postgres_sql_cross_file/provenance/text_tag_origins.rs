@@ -44,9 +44,7 @@ pub(super) fn ordinary(
         } => named(
             bindings,
             file,
-            scope.unwrap_or(0),
-            name,
-            *offset,
+            (scope.unwrap_or(0), name, *offset),
             members,
             tags,
             state,
@@ -58,13 +56,12 @@ pub(super) fn ordinary(
 fn named(
     bindings: &Bindings<'_>,
     file: &Path,
-    scope: usize,
-    name: &str,
-    offset: u32,
+    reference: (usize, &str, u32),
     members: &[String],
     tags: &[TrustedSqlTag],
     state: &mut ProofState,
 ) -> bool {
+    let (scope, name, offset) = reference;
     let Some(ts) = bindings.facts.get_ts_facts(file) else {
         return false;
     };
