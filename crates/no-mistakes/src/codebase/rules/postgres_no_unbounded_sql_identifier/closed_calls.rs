@@ -60,7 +60,11 @@ impl Context<'_, '_> {
             return false;
         };
         match method.as_str() {
-            "join" => self.closed_list(base),
+            "join" => {
+                value_call.arguments.len() == 1
+                    && value_call.last_argument_literal
+                    && self.closed_list(base)
+            }
             "map" => self.closed_list(base) && closed_callback(flow, value_call),
             "filter" | "slice" => self.closed_list(base),
             _ => false,

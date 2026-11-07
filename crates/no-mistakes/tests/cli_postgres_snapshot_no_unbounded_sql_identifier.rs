@@ -352,3 +352,16 @@ fn postgres_low_await_using_check_json_snapshot() {
         ],
     );
 }
+
+#[test]
+fn postgres_identifier_fragments_check_json_snapshot() {
+    let root = rules_path(
+        "postgres-no-unbounded-sql-identifier",
+        "fixture",
+        "issue-3073-fragments",
+    );
+    assert_saved_fixture(
+        "postgres_identifier_fragments",
+        &[("max", root.clone(), root.join(".no-mistakes.yml"))],
+    );
+}

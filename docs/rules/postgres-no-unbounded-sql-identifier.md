@@ -426,3 +426,25 @@ Use `no-mistakes-disable-next-line postgres-no-unbounded-sql-identifier` or
 cross-file registry member writes.
 [`postgres-no-offset`](postgres-no-offset.md) covers pagination clauses.
 [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) covers statement shapes.
+
+### Composed parameterized fragments
+
+At max effort, the `.text` member of an immutable local produced by a configured
+`trustedSqlTags` tag (or `sql-template-strings`) is SQL text with bind placeholders.
+The proof does not depend on the interpolated bind values. Calls on the fragment,
+member writes, and escaping the fragment end this proof.
+
+A static array of literal strings and literal text plus numeric placeholders can
+be joined with a literal separator. For example:
+
+```ts
+function list(n: number) {
+  const conditions = [`id = $${n}`, "active = $" + (n + 1)];
+  const where = conditions.join(" AND ");
+  return query(`SELECT id FROM records WHERE ${where}`);
+}
+```
+
+The array must remain immutable. A string input used after `$`, a dynamic
+separator, or an escaped or mutated array does not establish this proof. A
+union-typed string parameter without runtime validation remains unbounded.

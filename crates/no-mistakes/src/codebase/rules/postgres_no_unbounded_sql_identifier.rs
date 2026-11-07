@@ -72,6 +72,7 @@ fn scan(
         for provenance in identifier_sources(graph, facts, call, &bindings) {
             if closed::proven(opts, facts, &bindings, call, &provenance)
                 || closed_calls::proven(graph, facts, &bindings, call, &provenance)
+                || fragments::proven(opts, facts, &bindings, call, &provenance)
             {
                 continue;
             }
@@ -189,3 +190,7 @@ mod local_sources;
 use local_sources::{
     imported_unbounded, local_env_alias, parameter, query_result_binding, shadowed_process,
 };
+
+mod fragments;
+#[cfg(test)]
+mod fragments_tests;

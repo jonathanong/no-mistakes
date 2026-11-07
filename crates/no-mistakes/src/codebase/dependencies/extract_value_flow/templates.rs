@@ -23,6 +23,9 @@ impl ImportCollector {
         if !self.collect_value_flow {
             return;
         }
+        self.value_flow
+            .tagged_templates
+            .insert((tag_offset(tagged), tagged.span.end));
         let mut arguments = vec![ValueExpression::Unknown];
         arguments.extend(
             tagged
