@@ -24,6 +24,9 @@ pub(super) fn hide_cte(row: &mut RowAccess, scopes: &[BTreeSet<String>]) {
 }
 
 pub(super) fn mark_self_contained(out: &mut LockWriteFacts, lock: usize, write: usize) {
+    if lock == out.locks.len() || write == out.writes.len() {
+        return;
+    }
     let relations: BTreeSet<_> = out.writes[write..]
         .iter()
         .filter_map(|write| write.relation.as_deref())

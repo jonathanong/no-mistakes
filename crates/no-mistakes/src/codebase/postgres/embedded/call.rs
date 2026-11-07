@@ -8,6 +8,7 @@ pub use variants::{EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS};
 pub struct EmbeddedSqlCall {
     /// Concrete alternatives for a recoverable Dynamic call; empty for legacy calls.
     pub variants: Vec<EmbeddedSqlVariant>,
+    pub(crate) lock_scope_analysis: bool,
     pub helper_definition: bool,
     pub lock_helper: Option<(String, u32)>,
     pub transaction_id: Option<u32>,

@@ -14,6 +14,7 @@ pub(super) enum StatementProjection {
     #[default]
     Complete,
     ConflictPolicy,
+    LockScope,
 }
 
 #[derive(Default)]
@@ -28,6 +29,18 @@ pub(super) struct StatementSources<'a> {
 }
 
 impl<'a> StatementSources<'a> {
+    pub(super) fn lock_writes(
+        &self,
+        statements: &[sqlparser::ast::Statement],
+        positions: super::super::value::PlaceholderPositions<'_>,
+    ) -> super::super::lock_writes::LockWriteFacts {
+        if self.projection == StatementProjection::LockScope {
+            super::super::lock_writes::collect::<true>(statements, positions)
+        } else {
+            super::super::lock_writes::collect::<false>(statements, positions)
+        }
+    }
+
     pub(super) fn location_tokens(
         &self,
         index: usize,

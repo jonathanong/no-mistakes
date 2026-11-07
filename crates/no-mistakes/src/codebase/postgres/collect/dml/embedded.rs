@@ -52,6 +52,14 @@ pub(super) fn embedded_call_facts_with_json_writes(
             };
             let mut facts = if conflict_only {
                 extract_sql_conflict_policy_facts(sql, &call.recovered_placeholder_positions)
+            } else if call.lock_scope_analysis {
+                crate::codebase::postgres::statements::extract_sql_lock_scope_facts(
+                    sql,
+                    collect_bounds,
+                    &call.recovered_placeholder_positions,
+                    projection,
+                    collect_json_writes,
+                )
             } else if collect_json_writes {
                 extract_sql_statement_facts_with_json_writes(
                     sql,

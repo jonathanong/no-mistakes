@@ -36,7 +36,6 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_program(&mut self, program: &ast::Program<'a>) {
         self.walk_program_scope(program);
     }
-
     fn visit_block_statement(&mut self, block: &ast::BlockStatement<'a>) {
         self.walk_block_scope(block);
     }

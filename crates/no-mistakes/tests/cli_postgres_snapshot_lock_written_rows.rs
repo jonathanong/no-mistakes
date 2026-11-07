@@ -232,3 +232,27 @@ fn postgres_lock_written_rows_atomic_cte_check_json_snapshot() {
         &[("atomic", "atomic-cte", "checks-fail.yml")],
     );
 }
+
+#[test]
+fn postgres_lock_written_rows_resource_options_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_resource_options",
+        &[(
+            "resource_options",
+            "resource-options",
+            "resource-options.yml",
+        )],
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_helpers_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_helpers",
+        &[
+            ("unwritten", "helper-unwritten", "checks-fail.yml"),
+            ("different_key", "helper-key-mismatch", "checks-fail.yml"),
+            ("written", "helper-written", "checks-fail.yml"),
+        ],
+    );
+}
