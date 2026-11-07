@@ -1,3 +1,5 @@
+<!-- cspell:ignore CODEGEN BAAB -->
+
 # Identifier proof collection workload
 
 This saved generator exercises finite guards, catalog lookup helpers, imported
