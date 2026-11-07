@@ -22,3 +22,7 @@ pub(super) fn matches(
         })
     })
 }
+
+#[cfg(test)]
+#[path = "validators_tests.rs"]
+mod tests;
