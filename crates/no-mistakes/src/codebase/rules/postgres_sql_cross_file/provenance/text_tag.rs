@@ -25,8 +25,6 @@ struct ProofState {
     done: FxHashMap<ProofKey, bool>,
     opaque_parameter_defaults: FxHashSet<usize>,
     callers: callers::State,
-    #[cfg(test)]
-    work: usize,
 }
 
 fn memoized(
@@ -39,10 +37,6 @@ fn memoized(
     }
     if !state.active.insert(key.clone()) {
         return false;
-    }
-    #[cfg(test)]
-    {
-        state.work += 1;
     }
     let proven = evaluate(state);
     state.active.remove(&key);

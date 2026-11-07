@@ -71,3 +71,28 @@ function left(value) { diamondSink(value); }
 function right(value) { diamondSink(value); }
 export function diamondForward(value) { left(value); right(value); }
 diamondForward("ordinary");
+
+function mutableSink(value) {
+  const mutableCallerSlot = sql`${value}`;
+  query(`SELECT * FROM ${mutableCallerSlot.text}`);
+}
+let changed = "ordinary";
+changed = sql.raw(process.env.MUTABLE_CALLER_TABLE);
+mutableSink(changed);
+
+function writtenForward(value) {
+  value = sql.raw(process.env.WRITTEN_CALLER_TABLE);
+  writtenSink(value);
+}
+function writtenSink(value) {
+  const writtenParameterSlot = sql`${value}`;
+  query(`SELECT * FROM ${writtenParameterSlot.text}`);
+}
+writtenForward("ordinary");
+
+function recursiveSink(value) {
+  const recursiveCallerSlot = sql`${value}`;
+  query(`SELECT * FROM ${recursiveCallerSlot.text}`);
+}
+function recursiveForward(value) { recursiveSink(value); recursiveForward(value); }
+recursiveForward(sql.raw(process.env.RECURSIVE_CALLER_TABLE));

@@ -127,7 +127,7 @@ fn text_tag_alias_diamonds_evaluate_each_binding_once() {
         &tags,
         &mut state
     ));
-    assert_eq!(state.work, 13);
+    assert_eq!(state.done.len(), 13);
 }
 
 #[test]
@@ -136,7 +136,7 @@ fn active_text_proof_cycles_remain_unproven() {
     assert!(!memoized(&mut state, ProofKey::Call(1, 2), |state| {
         memoized(state, ProofKey::Call(1, 2), |_| true)
     }));
-    assert_eq!(state.work, 1);
+    assert_eq!(state.done.len(), 1);
 }
 
 #[test]

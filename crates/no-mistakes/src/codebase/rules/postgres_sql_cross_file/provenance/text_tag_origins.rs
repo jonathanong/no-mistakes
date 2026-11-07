@@ -78,19 +78,28 @@ fn named(
                 members.to_vec(),
             ),
             |state| {
-                (!matches!(
-                    binding.value,
-                    ValueExpression::Call(_, _)
-                        | ValueExpression::Object(_, _)
-                        | ValueExpression::Array(_)
-                ) || !ts
-                    .value_flow
-                    .registry_mutations
-                    .iter()
-                    .any(|mutation| mutation.name == name && mutation.scope == scope))
+                binding.immutable
+                    && (!matches!(
+                        binding.value,
+                        ValueExpression::Call(_, _)
+                            | ValueExpression::Object(_, _)
+                            | ValueExpression::Array(_)
+                    ) || !ts
+                        .value_flow
+                        .registry_mutations
+                        .iter()
+                        .any(|mutation| mutation.name == name && mutation.scope == scope))
                     && ordinary(bindings, file, &binding.value, members, tags, state)
             },
         );
+    }
+    if ts
+        .value_flow
+        .bindings
+        .iter()
+        .any(|binding| binding.scope == scope && binding.name == name)
+    {
+        return false;
     }
     ts.value_flow
         .parameters
@@ -98,6 +107,7 @@ fn named(
         .enumerate()
         .find(|(_, parameter)| parameter.scope == scope && parameter.name == name)
         .is_none_or(|(index, parameter)| {
-            parameter_bound(bindings, file, parameter, index, members, tags, state)
+            parameter.invalidated_at.is_none_or(|write| write > offset)
+                && parameter_bound(bindings, file, parameter, index, members, tags, state)
         })
 }

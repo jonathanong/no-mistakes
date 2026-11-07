@@ -22,7 +22,7 @@ impl ImportCollector {
     ) {
         let initializer = match &parameter.pattern {
             BindingPattern::AssignmentPattern(assignment) => Some(&assignment.right),
-            _ => parameter.initializer.as_ref(),
+            _ => parameter.initializer.as_deref(),
         };
         if let Some(initializer) = initializer {
             self.note_opaque_text_default(first, initializer, value);

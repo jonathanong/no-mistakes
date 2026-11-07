@@ -80,6 +80,9 @@ fn configured_text_slots_reject_known_raw_callers_and_preserve_ordinary_data() {
         ("objectCallerSlot", false),
         ("defaultCallerSlot", false),
         ("optionalCallerSlot", false),
+        ("mutableCallerSlot", false),
+        ("writtenParameterSlot", false),
+        ("recursiveCallerSlot", false),
         ("ordinaryCallerSlot", true),
         ("ordinaryMemberSlot", true),
         ("ordinaryDiamondSlot", true),
@@ -98,5 +101,5 @@ fn configured_text_slots_reject_known_raw_callers_and_preserve_ordinary_data() {
         &tags,
         &mut state
     ));
-    assert_eq!(state.callers.work, 4);
+    assert_eq!(state.callers.done.len(), 4);
 }

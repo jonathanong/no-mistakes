@@ -6,9 +6,7 @@ use crate::codebase::dependencies::graph::NodeId;
 pub(super) struct State {
     index: Option<FxHashMap<CallableId, Vec<usize>>>,
     active: FxHashSet<ProofKey>,
-    done: FxHashMap<ProofKey, bool>,
-    #[cfg(test)]
-    pub(super) work: usize,
+    pub(super) done: FxHashMap<ProofKey, bool>,
 }
 
 #[path = "text_tag_origins.rs"]
@@ -82,11 +80,7 @@ pub(super) fn origin_memoized(
         return *done;
     }
     if !state.callers.active.insert(key.clone()) {
-        return true;
-    }
-    #[cfg(test)]
-    {
-        state.callers.work += 1;
+        return false;
     }
     let result = evaluate(state);
     state.callers.active.remove(&key);
