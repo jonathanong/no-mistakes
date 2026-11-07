@@ -3,6 +3,7 @@ import { providers, type Provider, regions, type Region } from "@scope/pkg/confi
 
 export async function load(provider: Provider, items: string[]) {
   if (items.length === 0) return []
+  provider = provider
   if (!providers.includes(provider)) throw new Error("unknown provider")
   const table = `${provider}_accounts`
   const captured = table
