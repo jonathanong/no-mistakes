@@ -260,7 +260,6 @@ test("Vitest project property policy exports named configuration types", () => {
   );
 });
 
-
 test("PostgreSQL executor options expose additive selection beside replacement", () => {
   for (const file of [
     "postgres-test-state-mutation-types.d.ts",

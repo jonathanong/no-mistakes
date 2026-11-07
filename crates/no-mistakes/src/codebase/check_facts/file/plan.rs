@@ -27,15 +27,12 @@ pub(super) fn ts_extract_plan(
 ) -> TsFactPlan {
     let mut ts_plan = plan.collected_ts_plan();
     ts_plan.source = plan.graph.source || should_store_source(plan, path);
-    ts_plan.call_sites = plan.requires_call_sites(path)
-        || plan
-            .postgres_executor_warning_scans
-            .iter()
-            .any(|scan| scan.includes(root, path));
-    ts_plan.module_bindings |= plan
+    let executor_warning = plan
         .postgres_executor_warning_scans
         .iter()
         .any(|scan| scan.includes(root, path));
+    ts_plan.call_sites = plan.requires_call_sites(path) || executor_warning;
+    ts_plan.module_bindings |= executor_warning;
     if !ts_plan.call_arguments {
         ts_plan.call_arguments = plan
             .forbidden_call_arguments
