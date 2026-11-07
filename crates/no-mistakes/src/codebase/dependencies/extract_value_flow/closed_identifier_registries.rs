@@ -67,6 +67,9 @@ fn object_keys(object: &ObjectExpression<'_>) -> Option<Vec<String>> {
             return None;
         }
         let key = crate::codebase::ts_source::static_property_key_name(&property.key)?;
+        if key == "__proto__" {
+            return None;
+        }
         literal_string(&property.value)?;
         keys.push(key.into_owned());
     }

@@ -29,6 +29,16 @@ impl<'a> Visit<'a> for ImportCollector {
     fn visit_assignment_pattern(&mut self, pattern: &oxc_ast::ast::AssignmentPattern<'a>) {
         visit_binding_default_with_execution(self, pattern);
     }
+    fn visit_assignment_target(&mut self, target: &AssignmentTarget<'a>) {
+        let previous = std::mem::replace(&mut self.metadata_rows.writing, true);
+        walk::walk_assignment_target(self, target);
+        self.metadata_rows.writing = previous;
+    }
+    fn visit_simple_assignment_target(&mut self, target: &oxc_ast::ast::SimpleAssignmentTarget<'a>) {
+        let previous = std::mem::replace(&mut self.metadata_rows.writing, true);
+        walk::walk_simple_assignment_target(self, target);
+        self.metadata_rows.writing = previous;
+    }
     fn visit_assignment_target_with_default(
         &mut self,
         target: &oxc_ast::ast::AssignmentTargetWithDefault<'a>,

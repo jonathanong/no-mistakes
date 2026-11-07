@@ -69,6 +69,9 @@ fn classify(
     out: &mut BTreeSet<Provenance>,
     bindings: &Bindings<'_>,
 ) {
+    if super::metadata_row_projection(graph, facts, bindings, file, expr, &[]) {
+        return;
+    }
     if let Some(key) = env_key(facts, file, expr).map(str::to_owned).or_else(|| {
         matches!(expr, ValueExpression::Member(_, _))
             .then(|| bindings.env(file, expr, &[]))

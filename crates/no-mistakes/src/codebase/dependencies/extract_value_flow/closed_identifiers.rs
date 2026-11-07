@@ -76,6 +76,7 @@ impl ImportCollector {
         let scope = self
             .callee_binding_scope(&name)
             .unwrap_or_else(|| self.current_lexical_scope_id());
+        rows::note_binding(self, &name, scope, init);
         if let Some((kind, keys)) = registries::registry(init)
             .filter(|(kind, _)| self.registry_builtins_visible(init, *kind))
         {
@@ -122,6 +123,8 @@ mod registries;
 mod registry_escapes;
 #[path = "closed_identifier_mutations.rs"]
 mod registry_mutations;
+#[path = "closed_identifier_rows.rs"]
+pub(crate) mod rows;
 
 pub(super) fn plain_call<'a>(expr: &'a Expression<'a>) -> Option<&'a CallExpression<'a>> {
     let expr = crate::codebase::ts_source::unwrap_ts_wrappers(expr);

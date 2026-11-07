@@ -56,6 +56,7 @@ impl ImportCollector {
                 self.value_expression(argument)
             });
         self.value_flow.returns.push((owner, value));
+        self.allow_metadata_row_return(statement);
     }
 }
 

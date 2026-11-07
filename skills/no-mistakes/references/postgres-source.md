@@ -162,6 +162,8 @@ For `postgres-no-unbounded-sql-identifier`, low effort accepts direct literal SQ
 
 At max effort, configure `identifierValidators: [{module: "@example/sql-identifiers", name: "assertIdentifier", argument: 0}]` for a throwing finite-domain helper. Module identity follows re-exports. Validate each property before SQL interpolation; a schema assertion does not validate the table. Existing `finiteDomainAssertions` remains supported. Closed `includes`/`has` guards may throw or return; static metadata-array `.find` lookups need a dominating presence guard.
 
+A private ESM helper may return a guarded metadata row when every call result is an immutable `const` or a direct known-field projection. Keep all result uses on known literal fields. Any result mutation, alias, method call, helper export, or function-value escape invalidates every helper sharing that metadata source.
+
 `postgres-no-mutable-sql-registry` also supports `effort: low`. Use it when SQL
 relations are literal: the syntax tier skips cross-file mutation and call-graph
 analysis. Imported registry relations, helpers, and other indirect SQL produce

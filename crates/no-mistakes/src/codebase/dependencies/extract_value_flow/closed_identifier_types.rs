@@ -29,6 +29,13 @@ pub(crate) struct BoundedBinding {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct RowHelper {
+    pub(crate) owner: CallableId,
+    pub(crate) source: (String, usize),
+    pub(crate) fields: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct FiniteIdentifierGuard {
     pub(crate) context: Option<CallableId>,
     pub(crate) name: String,

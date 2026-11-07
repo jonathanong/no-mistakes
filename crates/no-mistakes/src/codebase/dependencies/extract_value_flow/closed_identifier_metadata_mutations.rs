@@ -2,10 +2,14 @@ use super::*;
 use crate::fx::FxHashSet;
 
 impl ImportCollector {
-    pub(in super::super::super) fn finalize_metadata_sources(&mut self) {
+    pub(in super::super::super) fn finalize_metadata_sources(
+        &mut self,
+        program: &oxc_ast::ast::Program<'_>,
+    ) {
         if !self.collect_value_flow || self.metadata_registry_names.is_empty() {
             return;
         }
+        let rows = rows::finalize::prepare(self, program);
         let mutated: FxHashSet<_> = self
             .value_flow
             .registry_mutations
@@ -31,5 +35,6 @@ impl ImportCollector {
                 .into_iter()
                 .map(|(name, scope)| RegistryMutation { name, scope }),
         );
+        rows::finalize::publish(self, rows);
     }
 }

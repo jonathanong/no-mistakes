@@ -152,16 +152,16 @@ fn walk_assignment_lhs_without_written_getter<'a>(
     collector: &mut ImportCollector,
     target: &AssignmentTarget<'a>,
 ) {
+    let previous = std::mem::replace(&mut collector.metadata_rows.writing, true);
     if let AssignmentTarget::StaticMemberExpression(member) = target {
         collector.visit_expression(&member.object);
-        return;
-    }
-    if let AssignmentTarget::ComputedMemberExpression(member) = target {
+    } else if let AssignmentTarget::ComputedMemberExpression(member) = target {
         collector.visit_expression(&member.object);
         collector.visit_expression(&member.expression);
-        return;
+    } else {
+        walk::walk_assignment_target(collector, target);
     }
-    walk::walk_assignment_target(collector, target);
+    collector.metadata_rows.writing = previous;
 }
 
 fn visit_update_expression_with_calls<'a>(

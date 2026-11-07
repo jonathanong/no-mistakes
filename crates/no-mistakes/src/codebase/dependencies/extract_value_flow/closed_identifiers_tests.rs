@@ -158,6 +158,8 @@ mod escape_tests;
 mod mutation_tests;
 #[path = "closed_identifier_provenance_tests.rs"]
 mod provenance_tests;
+#[path = "closed_identifier_row_tests.rs"]
+mod row_tests;
 
 fn parse_flow(
     source: &str,

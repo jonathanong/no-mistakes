@@ -111,14 +111,16 @@ pub(super) fn note_lookup(
         return;
     };
     let source = Some((collection, registry.scope));
+    let fields = registry.keys.clone();
     collector.metadata_lookup_calls.insert(call.span.start);
-    for key in &registry.keys {
+    rows::note_lookup(collector, identifier.name.as_str(), scope);
+    for key in fields {
         collector.value_flow.bounded_bindings.push(BoundedBinding {
             name: identifier.name.to_string(),
             scope,
             declared_at,
             source: source.clone(),
-            members: vec![key.clone()],
+            members: vec![key],
             requires_guard: true,
         });
     }

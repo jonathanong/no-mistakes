@@ -6,7 +6,9 @@ use crate::codebase::ts_source::facts::TsFileFacts;
 use std::path::Path;
 
 mod metadata;
+mod metadata_rows;
 pub(crate) use metadata::helper_call as metadata_helper_call;
+pub(crate) use metadata_rows::projection as metadata_row_projection;
 
 pub(crate) fn is_finite_validator(
     graph: &DepGraph,

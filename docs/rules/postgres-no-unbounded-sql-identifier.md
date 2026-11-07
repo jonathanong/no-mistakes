@@ -395,9 +395,19 @@ set the scan can see:
   entries, escaping lookups, and predicates with effects end this proof.
   A synchronous helper may return that guarded string field, for example
   `getTableOrThrow("user")` returning `selected.table`. Every return must be
-  a guarded field from closed metadata. A return of the row object, a missing
-  presence guard, an unchecked fallback, or an async/generator helper is outside
-  this proof.
+  a guarded field from closed metadata. A missing presence guard, an unchecked
+  fallback, or an async/generator helper is outside this proof.
+  A private helper in an ESM file may return the row when every call result
+  stays in an immutable local `const` and reads only known literal fields, or
+  directly projects such a field. This includes
+  `const selected = getRowOrThrow("user"); selected.table` and
+  `const table = getRowOrThrow("user").table`. Exporting, aliasing, reassigning,
+  or passing the helper as a value ends that proof. A result alias, mutation,
+  method call such as `valueOf()`, unknown field, constructor, tagged call, or
+  raw escaping result also ends it. An unsafe caller invalidates every helper
+  sharing the metadata array. Literal `__proto__` keys do not establish own
+  string fields in object or metadata literals; ordinary `Map` string keys
+  remain supported.
 
 - A parameter annotated `number` or `bigint`, interpolated directly
   (`events_${n}`) or beside a catalog name (`${table}__p_${yyyy}_${mm}`). A
