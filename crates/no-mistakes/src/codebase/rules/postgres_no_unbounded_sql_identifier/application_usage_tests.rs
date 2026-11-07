@@ -13,7 +13,15 @@ fn unused_identifier_sources_report_the_authored_config_entry() {
         Default::default(),
         Default::default(),
     );
-    let findings = check(&root, &config, &config.rules[0], &graph, &facts, &sources).unwrap();
+    let findings = check(
+        &root,
+        &config,
+        &config.rules[0],
+        &graph,
+        &facts,
+        Some(&sources),
+    )
+    .unwrap();
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].rule, "unused-allow-entry");
     assert_eq!(findings[0].file, ".no-mistakes-unused.yml");
@@ -43,7 +51,7 @@ fn an_incomplete_source_scope_does_not_claim_a_selector_is_unused() {
         &config.rules[0],
         &graph,
         &CheckFactMap::default(),
-        &sources
+        Some(&sources)
     )
     .unwrap()
     .is_empty());
@@ -64,12 +72,42 @@ fn an_incomplete_source_scope_does_not_claim_a_selector_is_unused() {
             .into(),
         );
         assert!(
-            check(&root, &config, &config.rules[0], &graph, &facts, &sources)
-                .unwrap()
-                .is_empty(),
+            check(
+                &root,
+                &config,
+                &config.rules[0],
+                &graph,
+                &facts,
+                Some(&sources)
+            )
+            .unwrap()
+            .is_empty(),
             "{failure}"
         );
     }
+}
+
+#[test]
+fn a_missing_source_inventory_does_not_claim_selectors_are_unused() {
+    let root = fixture();
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes-unused.yml")))
+            .unwrap();
+    let graph = crate::codebase::dependencies::graph::test_support::from_raw_maps(
+        root.clone(),
+        Default::default(),
+        Default::default(),
+    );
+    assert!(check(
+        &root,
+        &config,
+        &config.rules[0],
+        &graph,
+        &CheckFactMap::default(),
+        None,
+    )
+    .unwrap()
+    .is_empty());
 }
 
 fn fixture() -> std::path::PathBuf {
