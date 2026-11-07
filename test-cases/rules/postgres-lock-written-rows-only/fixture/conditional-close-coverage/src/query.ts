@@ -1,4 +1,4 @@
-import { query, beginTransaction } from '@example/db';
+import { query, beginTransaction, type TransactionQuery } from '@example/db';
 async function conditionalClose(skip: boolean, close: boolean, id: string) {
   await using tx = await beginTransaction();
   await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
@@ -246,6 +246,56 @@ async function escapedReceiverClose(skip: boolean, id: string) {
   const options = { query: tx.query };
   if (skip) {
     Object.assign(tx, { commit: async () => {} });
+    await tx.commit();
+    return;
+  }
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
+async function explicitQueryMutationBeforeHelper(id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  tx.query = query;
+  await knownWriteHelper(tx, id);
+}
+async function opaqueQueryMutationBeforeHelper(id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  Object.assign(tx, { query });
+  await knownWriteHelper(tx, id);
+}
+async function knownHelperWithUnmutatedReceiver(id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  await knownWriteHelper(tx, id);
+}
+async function knownWriteHelper(tx: TransactionQuery, id: string) {
+  await tx.query('UPDATE items SET active = true WHERE id = $1', [id]);
+}
+async function optionalMethodClose(skip: boolean, id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const options = { query: tx.query };
+  if (skip) {
+    await tx.commit?.();
+    return;
+  }
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
+async function optionalReceiverClose(skip: boolean, id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const options = { query: tx.query };
+  if (skip) {
+    await tx?.rollback();
+    return;
+  }
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
+async function directMethodClose(skip: boolean, id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const options = { query: tx.query };
+  if (skip) {
     await tx.commit();
     return;
   }

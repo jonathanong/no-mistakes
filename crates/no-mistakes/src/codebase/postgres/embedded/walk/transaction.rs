@@ -87,7 +87,11 @@ pub(super) fn annotate_receiver(
         if let Some(span) = transaction {
             fact.transaction_id = Some(span.start);
             fact.transaction_line = Some(byte_offset_to_line(visitor.source, span.start as usize));
-            fact.executor_transaction_known = !visitor.append_crosses_function(name);
+            fact.executor_transaction_known = !visitor.append_crosses_function(name)
+                && (!visitor.executor_options.track_transaction_helpers
+                    || source_identity(span.start).is_some_and(|identity| {
+                        !visitor.transaction_options.mutated.contains(&identity)
+                    }));
         } else {
             fact.executor_transaction_known = binding.is_none()
                 && (visitor.bindings.contains(name)
