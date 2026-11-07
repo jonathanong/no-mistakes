@@ -1,5 +1,5 @@
 /// One `SELECT` that names relations in FROM/JOIN.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct SqlSelectFact {
     #[doc(hidden)]
     pub sql_position: (usize, usize),
