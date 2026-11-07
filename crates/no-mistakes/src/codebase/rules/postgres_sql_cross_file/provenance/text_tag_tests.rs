@@ -87,6 +87,12 @@ fn text_tag_proofs_follow_aliases_and_reject_raw_or_opaque_slots() {
         ("aliasDefaultSlot", false),
         ("capturedDefaultSlot", false),
         ("literalDefaultSlot", true),
+        ("untypedSlot", true),
+        ("destructuredSlot", true),
+        ("nominalSlot", true),
+        ("destructuredLiteralSlot", true),
+        ("destructuredRawSlot", false),
+        ("destructuredOptionalSlot", false),
     ] {
         assert_eq!(
             is_text_tag(&bindings, &file, tag_for(&facts, &file, name), &tags),

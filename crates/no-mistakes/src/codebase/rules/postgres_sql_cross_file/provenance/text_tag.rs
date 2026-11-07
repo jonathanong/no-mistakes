@@ -1,5 +1,7 @@
 use super::{binding_tag, value_call_at, Bindings};
-use crate::codebase::dependencies::extract::{ValueCall, ValueExpression, ValueType};
+use crate::codebase::dependencies::extract::{
+    ValueCall, ValueExpression, ValueParameter, ValueProjection,
+};
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::postgres::TrustedSqlTag;
 use crate::fx::{FxHashMap, FxHashSet};

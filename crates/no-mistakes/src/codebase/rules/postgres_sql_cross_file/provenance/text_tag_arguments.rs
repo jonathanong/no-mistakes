@@ -103,34 +103,46 @@ fn named_argument(
                 parameter.scope == scope
                     && parameter.name == name
                     && !state.opaque_parameter_defaults.contains(&index)
-                    && parameter.projection.is_empty()
                     && parameter.invalidated_at.is_none_or(|write| write > offset)
-                    && parameter
-                        .type_reference
-                        .as_ref()
-                        .is_some_and(|shape| scalar_type(shape, members))
                     && memoized(
                         state,
                         ProofKey::Parameter(scope, name.into(), members.to_vec()),
-                        |state| {
-                            matches!(parameter.default, ValueExpression::Unknown)
-                                || bound_argument(
-                                    bindings,
-                                    file,
-                                    &parameter.default,
-                                    members,
-                                    tags,
-                                    state,
-                                )
-                        },
+                        |state| parameter_defaults(bindings, file, parameter, members, tags, state),
                     )
             })
 }
 
-fn scalar_type(shape: &ValueType, members: &[String]) -> bool {
-    match members.split_first() {
-        None => matches!(shape, ValueType::Unknown | ValueType::Number),
-        Some((member, rest)) => matches!(shape, ValueType::Object(fields)
-            if fields.get(member).is_some_and(|shape| scalar_type(shape, rest))),
-    }
+fn parameter_defaults(
+    bindings: &Bindings<'_>,
+    file: &Path,
+    parameter: &ValueParameter,
+    members: &[String],
+    tags: &[TrustedSqlTag],
+    state: &mut ProofState,
+) -> bool {
+    let path = |after| {
+        parameter.projection[after..]
+            .iter()
+            .filter_map(|step| match step {
+                ValueProjection::Member(member) | ValueProjection::Element(member) => {
+                    Some(member.clone())
+                }
+                ValueProjection::Default(_, _) => None,
+            })
+            .chain(members.iter().cloned())
+            .collect::<Vec<_>>()
+    };
+    (matches!(parameter.default, ValueExpression::Unknown)
+        || bound_argument(bindings, file, &parameter.default, &path(0), tags, state))
+        && parameter
+            .projection
+            .iter()
+            .enumerate()
+            .all(|(index, step)| match step {
+                ValueProjection::Default(value, _) => {
+                    matches!(value, ValueExpression::Unknown)
+                        || bound_argument(bindings, file, value, &path(index + 1), tags, state)
+                }
+                _ => true,
+            })
 }

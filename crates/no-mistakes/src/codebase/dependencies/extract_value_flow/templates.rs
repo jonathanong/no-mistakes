@@ -24,9 +24,18 @@ impl ImportCollector {
             BindingPattern::AssignmentPattern(assignment) => Some(&assignment.right),
             _ => parameter.initializer.as_ref(),
         };
-        if matches!(value, ValueExpression::Unknown)
-            && initializer.is_some_and(|value| !literal_argument(value))
-        {
+        if let Some(initializer) = initializer {
+            self.note_opaque_text_default(first, initializer, value);
+        }
+    }
+
+    pub(super) fn note_opaque_text_default(
+        &mut self,
+        first: usize,
+        initializer: &Expression<'_>,
+        value: &ValueExpression,
+    ) {
+        if matches!(value, ValueExpression::Unknown) && !literal_argument(initializer) {
             self.opaque_text_parameter_defaults
                 .extend(first..self.value_flow.parameters.len());
         }

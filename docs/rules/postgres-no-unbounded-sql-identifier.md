@@ -449,8 +449,9 @@ At max effort, the `.text` member of a configured `trustedSqlTags` template
 the fragment is held in an immutable local.
 Executor calls inside bind expressions are checked independently.
 The default `sql-template-strings` tag binds every interpolated value. A configured
-tag establishes this `.text` proof for literal slots and ordinary scalar parameter
-or member values, including local aliases. Raw builders such as `sql.raw(value)`,
+tag establishes this `.text` proof for literal slots and ordinary parameter or
+member values, including untyped or destructured parameters, nominal type aliases,
+and local aliases. Raw builders such as `sql.raw(value)`,
 opaque or optional factory calls, object or array slots, and aliases of those
 values do not establish the proof. Direct configured-tag executor calls retain
 their identifier checks. Known opaque parameter defaults remain outside this

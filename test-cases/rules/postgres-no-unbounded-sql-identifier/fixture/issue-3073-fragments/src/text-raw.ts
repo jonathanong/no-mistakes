@@ -1,6 +1,7 @@
 import { query } from "@example/db";
 import { sql } from "@example/sql";
 import legacy from "sql-template-strings";
+import type { UserId } from "@example/types";
 
 declare function makeRaw(value: string): unknown;
 
@@ -96,4 +97,34 @@ export function capturedDefault(value: any = makeRaw?.("raw")) {
 export function literalDefault(value: string = "fixed") {
   const literalDefaultSlot = sql`records WHERE value = ${value}`;
   query(`SELECT id FROM ${literalDefaultSlot.text}`);
+}
+
+export function untyped(value) {
+  const untypedSlot = sql`records WHERE value = ${value}`;
+  query(`SELECT id FROM ${untypedSlot.text}`);
+}
+
+export function destructured({ value }) {
+  const destructuredSlot = sql`records WHERE value = ${value}`;
+  query(`SELECT id FROM ${destructuredSlot.text}`);
+}
+
+export function nominal(value: UserId) {
+  const nominalSlot = sql`records WHERE value = ${value}`;
+  query(`SELECT id FROM ${nominalSlot.text}`);
+}
+
+export function destructuredLiteralDefault({ value = "fixed" }) {
+  const destructuredLiteralSlot = sql`records WHERE value = ${value}`;
+  query(`SELECT id FROM ${destructuredLiteralSlot.text}`);
+}
+
+export function destructuredRawDefault({ value = sql.raw("raw") }) {
+  const destructuredRawSlot = sql`records WHERE value = ${value}`;
+  query(`SELECT id FROM ${destructuredRawSlot.text}`);
+}
+
+export function destructuredOptionalDefault({ value = makeRaw?.("raw") }) {
+  const destructuredOptionalSlot = sql`records WHERE value = ${value}`;
+  query(`SELECT id FROM ${destructuredOptionalSlot.text}`);
 }
