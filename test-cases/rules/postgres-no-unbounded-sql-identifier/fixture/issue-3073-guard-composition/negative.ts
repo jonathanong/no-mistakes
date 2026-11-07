@@ -57,3 +57,11 @@ export async function insufficientConjunction(provider: Provider, flag: boolean)
   await query(`/* first */ SELECT 1 FROM ${table}`)
   return query(`/* second */ SELECT 1 FROM ${table}`)
 }
+export async function callbackMutation(provider: Provider, replacement: string) {
+  const reset = () => { provider = replacement as Provider; return false }
+  if (!providers.includes(provider) || reset()) throw new Error("unknown provider")
+  const table = `${provider}_accounts`
+  const query = await beginTransaction()
+  await query(`/* first */ SELECT 1 FROM ${table}`)
+  return query(`/* second */ SELECT 1 FROM ${table}`)
+}

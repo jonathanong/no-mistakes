@@ -142,8 +142,12 @@ impl ImportCollector {
         if self.value_flow.identifier_writes.iter().any(|write| {
             write.scope == scope
                 && write.name == name
-                && write.at >= call.span.start
                 && write.at < from
+                && (write.at >= call.span.start
+                    || write
+                        .assigned
+                        .as_deref()
+                        .is_none_or(|assigned| assigned.owner != self.current_function_id()))
         }) {
             return;
         }
