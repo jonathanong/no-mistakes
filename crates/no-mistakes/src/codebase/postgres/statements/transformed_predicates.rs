@@ -1,4 +1,5 @@
 //! Project predicate transformations from the request's already parsed SQL AST.
+mod boolean;
 mod cte_scope;
 mod expressions;
 mod scope;
@@ -9,7 +10,8 @@ use super::{SqlTransformedColumnClause as Clause, SqlTransformedColumnUseFact};
 use cte_scope::QueryScopes;
 use scope::base_relations;
 use sqlparser::ast::{
-    Expr, Query, Select, SetExpr, Statement, TableFactor, TableWithJoins, Visit, Visitor,
+    Expr, JoinOperator, Query, Select, SetExpr, Statement, TableFactor, TableWithJoins, Visit,
+    Visitor,
 };
 use std::ops::ControlFlow;
 
@@ -48,6 +50,7 @@ impl Collector<'_, '_> {
                 having,
                 Clause::Having,
                 &base_relations(&select.from, ctes),
+                None,
                 self.positions,
                 self.out,
             );
@@ -59,6 +62,7 @@ impl Collector<'_, '_> {
                 selection,
                 Clause::Where,
                 &base_relations(tables, ctes),
+                None,
                 self.positions,
                 self.out,
             );
@@ -70,9 +74,26 @@ impl Collector<'_, '_> {
             scope::push_factor(&table.relation, ctes, &mut visible);
             for join in &table.joins {
                 self.nested_joins(&join.relation, ctes);
+                let mut probed = Vec::new();
+                scope::push_factor(&join.relation, ctes, &mut probed);
                 scope::push_factor(&join.relation, ctes, &mut visible);
+                let probe_scope = matches!(
+                    &join.join_operator,
+                    JoinOperator::Join(_)
+                        | JoinOperator::Inner(_)
+                        | JoinOperator::Left(_)
+                        | JoinOperator::LeftOuter(_)
+                )
+                .then_some(probed.as_slice());
                 if let Some(expr) = super::select::join_expr(&join.join_operator) {
-                    expressions::collect(expr, Clause::Join, &visible, self.positions, self.out);
+                    expressions::collect(
+                        expr,
+                        Clause::Join,
+                        &visible,
+                        probe_scope,
+                        self.positions,
+                        self.out,
+                    );
                 }
             }
         }

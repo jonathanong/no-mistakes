@@ -51,3 +51,33 @@ fn aggregate_boundaries_preserve_filter_and_subquery_predicates_with_locations()
         ]
     );
 }
+
+#[test]
+fn driving_values_retain_probe_metadata_for_catalog_classification() {
+    let facts = facts("probe-direction.sql");
+    let probes: Vec<_> = facts
+        .transformed_column_uses
+        .iter()
+        .filter(|fact| matches!(fact.line, 1 | 32 | 33 | 34))
+        .map(|fact| {
+            let probe = fact
+                .driving_probe
+                .as_ref()
+                .expect("catalog proof remains required");
+            (fact.line, probe.table.as_str(), probe.column.as_str())
+        })
+        .collect();
+    assert_eq!(
+        probes,
+        [
+            (1, "accounts", "id"),
+            (1, "accounts", "id"),
+            (32, "missing", "id"),
+            (32, "missing", "id"),
+            (33, "accounts", "missing"),
+            (33, "accounts", "missing"),
+            (34, "accounts", "email"),
+            (34, "accounts", "email"),
+        ]
+    );
+}

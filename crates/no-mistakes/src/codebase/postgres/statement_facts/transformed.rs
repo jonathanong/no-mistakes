@@ -17,4 +17,12 @@ pub struct SqlTransformedColumnUseFact {
     pub line: usize,
     pub column_position: usize,
     pub transformation: String,
+    pub driving_probe: Option<SqlTransformedColumnProbeFact>,
+}
+
+/// Bare probe key whose catalog type must be proven before exempting driving transforms.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlTransformedColumnProbeFact {
+    pub table: String,
+    pub column: String,
 }

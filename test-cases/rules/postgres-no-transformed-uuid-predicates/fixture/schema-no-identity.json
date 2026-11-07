@@ -1,0 +1,30 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "accounts": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "orders": {
+      "columns": {
+        "id": {
+          "dataType": "UUID"
+        },
+        "account_id": {
+          "dataType": "\"pg_catalog\".\"uuid\""
+        }
+      }
+    },
+    "public.dupes": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    }
+  }
+}

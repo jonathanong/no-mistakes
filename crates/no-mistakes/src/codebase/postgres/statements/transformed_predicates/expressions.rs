@@ -1,16 +1,18 @@
+use super::boolean::boolean_result;
+use super::scope::{owner, qualifier};
 use super::{Clause, SqlTransformedColumnUseFact};
-use crate::codebase::postgres::idents::{
-    ident_key, relation_part_key, relation_suffix_key, visit_child_exprs, visit_function_args,
-};
+use crate::codebase::postgres::idents::{visit_child_exprs, visit_function_args};
 use crate::codebase::postgres::statements::bounds::is_aggregate;
 use crate::codebase::postgres::statements::select::uses::{columns::bare, scope::BaseRel};
 use crate::codebase::postgres::statements::value::PlaceholderPositions;
-use sqlparser::ast::{BinaryOperator as Op, Expr, FunctionArguments, Spanned, UnaryOperator};
+use crate::codebase::postgres::statements::SqlTransformedColumnProbeFact as Probe;
+use sqlparser::ast::{BinaryOperator as Op, Expr, FunctionArguments, Spanned};
 
 pub(super) fn collect(
     expression: &Expr,
     clause: Clause,
     relations: &[BaseRel],
+    probed: Option<&[BaseRel]>,
     positions: PlaceholderPositions<'_>,
     out: &mut Vec<SqlTransformedColumnUseFact>,
 ) {
@@ -18,6 +20,10 @@ pub(super) fn collect(
         clause,
         relations,
         positions,
+        probed,
+        probe_value: None,
+        probes: Vec::new(),
+        positive_conjunct: true,
         out,
     }
     .walk(expression, None);
@@ -25,11 +31,56 @@ pub(super) fn collect(
 struct Inputs<'a, 'b, 'c> {
     clause: Clause,
     relations: &'a [BaseRel],
+    probed: Option<&'a [BaseRel]>,
+    probe_value: Option<usize>,
+    probes: Vec<Probe>,
+    positive_conjunct: bool,
     positions: PlaceholderPositions<'b>,
     out: &'c mut Vec<SqlTransformedColumnUseFact>,
 }
 impl Inputs<'_, '_, '_> {
+    fn equality_operand(&mut self, operand: &Expr, other: &Expr) {
+        let previous = (self.probe_value, self.positive_conjunct);
+        self.positive_conjunct = false;
+        self.probe_value = bare(other, self.positions).and_then(|(_, column)| {
+            let qualifier = qualifier(other);
+            let (table, _) = owner(self.probed.unwrap(), qualifier.as_deref());
+            (qualifier.is_some()
+                && !table.is_empty()
+                && owner(self.relations, qualifier.as_deref()).0 == table)
+                .then(|| {
+                    self.probes.push(Probe { table, column });
+                    self.probes.len() - 1
+                })
+        });
+        self.walk(operand, None);
+        (self.probe_value, self.positive_conjunct) = previous;
+    }
+    fn walk_condition(&mut self, expr: &Expr) {
+        let previous = self.probe_value;
+        self.probe_value = None;
+        self.walk(expr, None);
+        self.probe_value = previous;
+    }
     fn walk(&mut self, expr: &Expr, transformation: Option<&str>) {
+        let previous = self.probe_value;
+        let positive_conjunct = self.positive_conjunct;
+        self.positive_conjunct &= matches!(
+            expr,
+            Expr::Nested(_)
+                | Expr::BinaryOp {
+                    op: Op::Eq | Op::And,
+                    ..
+                }
+        );
+        if boolean_result(expr) {
+            self.probe_value = None;
+        }
+        self.walk_value(expr, transformation);
+        self.probe_value = previous;
+        self.positive_conjunct = positive_conjunct;
+    }
+    fn walk_value(&mut self, expr: &Expr, transformation: Option<&str>) {
         // A surrounding transformation consumes the boolean result, not its UUID operands.
         let transformation = if boolean_result(expr) {
             None
@@ -37,6 +88,14 @@ impl Inputs<'_, '_, '_> {
             transformation
         };
         match expr {
+            Expr::BinaryOp {
+                left,
+                op: Op::Eq,
+                right,
+            } if self.probed.is_some() && self.positive_conjunct => {
+                self.equality_operand(left, right);
+                self.equality_operand(right, left);
+            }
             Expr::Case {
                 operand,
                 conditions,
@@ -44,10 +103,10 @@ impl Inputs<'_, '_, '_> {
                 ..
             } => {
                 if let Some(operand) = operand {
-                    self.walk(operand, None);
+                    self.walk_condition(operand);
                 }
                 for branch in conditions {
-                    self.walk(&branch.condition, None);
+                    self.walk_condition(&branch.condition);
                     self.walk(&branch.result, transformation);
                 }
                 if let Some(result) = else_result {
@@ -76,16 +135,17 @@ impl Inputs<'_, '_, '_> {
             Expr::Cast { expr, .. } => self.walk(expr, Some(transformation.unwrap_or("cast"))),
             Expr::Identifier(_) | Expr::CompoundIdentifier(_) if transformation.is_some() => {
                 if let Some((_, column)) = bare(expr, self.positions) {
-                    let qualifier = match expr {
-                        Expr::CompoundIdentifier(parts) => Some(
-                            parts[..parts.len() - 1]
-                                .iter()
-                                .map(|part| relation_part_key(&ident_key(part)))
-                                .collect::<Vec<_>>()
-                                .join("."),
-                        ),
-                        _ => None,
-                    };
+                    let qualifier = qualifier(expr);
+                    let driving_probe = self
+                        .probe_value
+                        .filter(|_| {
+                            qualifier.is_some()
+                                && owner(self.probed.unwrap(), qualifier.as_deref())
+                                    .0
+                                    .is_empty()
+                                && !owner(self.relations, qualifier.as_deref()).0.is_empty()
+                        })
+                        .map(|index| self.probes[index].clone());
                     let (table, candidate_tables) = owner(self.relations, qualifier.as_deref());
                     self.out.push(SqlTransformedColumnUseFact {
                         table,
@@ -95,95 +155,12 @@ impl Inputs<'_, '_, '_> {
                         line: expr.span().start.line.max(1) as usize,
                         column_position: expr.span().start.column.max(1) as usize,
                         transformation: transformation.unwrap().into(),
+                        driving_probe,
                     });
                 }
             }
             // The shared walker skips scalar subquery columns. Their predicates get their own scope.
             _ => visit_child_exprs(expr, &mut |child| self.walk(child, transformation)),
         }
-    }
-}
-fn owner(relations: &[BaseRel], qualifier: Option<&str>) -> (String, Option<Vec<String>>) {
-    let Some(qualifier) = qualifier else {
-        return (
-            String::new(),
-            (!relations.iter().any(|rel| rel.unknown))
-                .then(|| relations.iter().map(|rel| rel.table.clone()).collect()),
-        );
-    };
-    let mut matches = relations.iter().filter(|rel| {
-        rel.alias.as_deref().map_or_else(
-            || rel.table == qualifier || relation_suffix_key(&rel.table) == qualifier,
-            |alias| alias == qualifier,
-        )
-    });
-    match (matches.next(), matches.next()) {
-        (Some(relation), None) if !relation.unknown => {
-            (relation.table.clone(), Some(vec![relation.table.clone()]))
-        }
-        _ => (String::new(), None),
-    }
-}
-
-fn boolean_result(expr: &Expr) -> bool {
-    match expr {
-        Expr::BinaryOp { op, .. } => matches!(
-            op,
-            Op::Eq
-                | Op::NotEq
-                | Op::Gt
-                | Op::Lt
-                | Op::GtEq
-                | Op::LtEq
-                | Op::Spaceship
-                | Op::And
-                | Op::Or
-                | Op::Xor
-                | Op::PGOverlap
-                | Op::PGRegexMatch
-                | Op::PGRegexIMatch
-                | Op::PGRegexNotMatch
-                | Op::PGRegexNotIMatch
-                | Op::PGLikeMatch
-                | Op::PGILikeMatch
-                | Op::PGNotLikeMatch
-                | Op::PGNotILikeMatch
-                | Op::PGStartsWith
-                | Op::AtAt
-                | Op::AtArrow
-                | Op::ArrowAt
-                | Op::AtQuestion
-                | Op::Question
-                | Op::QuestionAnd
-                | Op::QuestionPipe
-                | Op::Overlaps
-        ),
-        Expr::UnaryOp { op, .. } => matches!(op, UnaryOperator::Not | UnaryOperator::BangNot),
-        _ => matches!(
-            expr,
-            Expr::IsFalse(_)
-                | Expr::IsNotFalse(_)
-                | Expr::IsTrue(_)
-                | Expr::IsNotTrue(_)
-                | Expr::IsNull(_)
-                | Expr::IsNotNull(_)
-                | Expr::IsUnknown(_)
-                | Expr::IsNotUnknown(_)
-                | Expr::IsDistinctFrom(..)
-                | Expr::IsNotDistinctFrom(..)
-                | Expr::IsJson { .. }
-                | Expr::IsNormalized { .. }
-                | Expr::InList { .. }
-                | Expr::InSubquery { .. }
-                | Expr::InUnnest { .. }
-                | Expr::Between { .. }
-                | Expr::Like { .. }
-                | Expr::ILike { .. }
-                | Expr::SimilarTo { .. }
-                | Expr::RLike { .. }
-                | Expr::AnyOp { .. }
-                | Expr::AllOp { .. }
-                | Expr::Exists { .. }
-        ),
     }
 }

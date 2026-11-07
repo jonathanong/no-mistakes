@@ -21,7 +21,9 @@ pub use select::{
     SqlRelationPredicateFact, SqlSelectFact, SqlStarProjectionFact,
 };
 use std::path::PathBuf;
-pub use transformed::{SqlTransformedColumnClause, SqlTransformedColumnUseFact};
+pub use transformed::{
+    SqlTransformedColumnClause, SqlTransformedColumnProbeFact, SqlTransformedColumnUseFact,
+};
 pub use writes::{SqlWriteColumns, SqlWriteFact};
 mod lifecycle;
 pub use lifecycle::SqlLifecycleFacts;

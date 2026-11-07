@@ -108,9 +108,16 @@ pub(super) fn finding(file: &str, table: &str, use_: &SqlTransformedColumnUseFac
         Clause::Having => "HAVING",
     };
     let line = use_.line.max(1);
+    let residual_rewrite = if use_.clause == Clause::Where
+        && use_.transformation.eq_ignore_ascii_case("coalesce")
+    {
+        "; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows"
+    } else {
+        ""
+    };
     RuleFinding {
         rule: RULE_ID.into(), file: file.into(), line,
-        message: format!("{file}:{line}: {clause} applies {} to UUID column {table}.{}; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics", use_.transformation, use_.column),
+        message: format!("{file}:{line}: {clause} applies {} to UUID column {table}.{}; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics{residual_rewrite}", use_.transformation, use_.column),
         import: None, target: Some(format!("{table}.{}", use_.column)),
     }
 }
