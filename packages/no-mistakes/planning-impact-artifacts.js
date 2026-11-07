@@ -91,7 +91,9 @@ async function writePlanningImpactArtifactsUnlocked(options, analyzeProject, ren
     return {
       outputDirectory: output.path,
       ...artifacts,
-      ...(result.invocationDiagnostics ? { invocationDiagnostics: result.invocationDiagnostics } : {}),
+      ...(result.invocationDiagnostics
+        ? { invocationDiagnostics: result.invocationDiagnostics }
+        : {}),
       ...(result.jobsPoolWarning ? { jobsPoolWarning: result.jobsPoolWarning } : {}),
     };
   } catch (error) {
