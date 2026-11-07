@@ -1,0 +1,26 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "off-sql": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "off-control.sql",
+          "line": 1,
+          "message": "off-control.sql:1: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "SELECT id FROM auth_sessions OFFSET 1;",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

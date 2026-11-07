@@ -1,0 +1,34 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "r1": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "r1.sql",
+          "line": 13,
+          "message": "r1.sql:13: UPDATE can change every row of input_rows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH updated_row AS (UPDATE input_rows SET error_message = NULL WHERE error_message = $1 RETURNING batch_id),",
+          "target": "table:input_rows"
+        },
+        {
+          "file": "r1.sql",
+          "line": 15,
+          "message": "r1.sql:15: SELECT can return every row of work_batches; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE work_batches SET completed_rows = completed_rows + 1",
+          "target": "table:work_batches"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

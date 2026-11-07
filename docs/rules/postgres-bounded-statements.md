@@ -380,6 +380,42 @@ repeat the predicate and match the indexed expression, or cap the query.
 The [saved key-proof cases](../../test-cases/rules/postgres-bounded-statements/issue-3114/)
 pair these accepted forms with still-reported controls. Each shape has a
 normalized CLI snapshot checked at one and two jobs.
+### Projected keys and catalog views
+
+A bounded data-modifying CTE can drive another keyed write inside a CTE:
+`WITH changed AS (UPDATE input_rows SET error_message = NULL WHERE id = $1
+RETURNING batch_id), updated AS (UPDATE work_batches SET completed_rows = 1
+FROM changed WHERE work_batches.id = changed.batch_id RETURNING work_batches.id)
+SELECT * FROM updated` stays bounded. The outer `SELECT` preserves the changed
+target's bound. A non-key restriction such as `WHERE error_message = $1` does
+not bound the first write; use a key lookup or select a capped batch first.
+
+`WITH selected AS (SELECT unnest($1::uuid[]) AS id)` can supply
+`WHERE id = ANY(ARRAY(SELECT id FROM selected))`. The typed built-in `unnest`
+proves scalar elements, and its parameter array supplies the row bound.
+Selecting every `id` from a table instead remains unbounded. Keep the source
+caller-sized or cap its rows; unknown element types do not gain scalar proof.
+
+A recursive CTE used by `UPDATE ... FROM` or `DELETE ... USING` can supply a
+finite key domain when both arms project keys from the same independently
+bounded CTE. The recursive arm may rejoin that CTE by primary key, including
+capped lateral lookups. This proves a bound on changed target keys, not on
+recursive output rows or termination. An anchor's `LIMIT` alone does not bound
+a recursive arm that walks an unrestricted table or CTE. Keep both arms inside
+the bounded source, or rewrite the mutation to select an explicit capped batch.
+The donor must be declared in the same `WITH` scope and use default or
+`MATERIALIZED` evaluation. Explicit `NOT MATERIALIZED` donors and donors from
+an outer scope remain unsupported for this proof; use a local materialized
+bounded source. Ordinary SELECT joins do not gain a recursive row-count bound.
+
+An unqualified key or `columnBounds` column still resolves beside a catalog
+view when the view's definition explicitly names its output columns and none
+owns that name. This column evidence is independent of view key inference or
+`viewBounds`. An ambiguous name, wildcard or unknown projection stays
+conservative; qualify the column with its intended relation alias.
+
+The [exact key-projection fixtures](../../test-cases/rules/postgres-bounded-statements/issue-3114-exact/fixture/)
+include each reported form, a passing variant and a still-reported control.
 
 A capped CTE keeps its bound for a later statement. That includes a join on a non-`id` unique key, a one-row candidate, and a derived `LIMIT 1` subquery:
 

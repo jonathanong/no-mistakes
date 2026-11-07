@@ -53,6 +53,7 @@ fn assert_each_indexable_file_parsed_once(
 include!("domain_parity_tests/check_effects.rs");
 include!("domain_parity_tests/call_sites_scope.rs");
 include!("domain_parity_tests/query_diagnostics.rs");
+include!("domain_parity_tests/postgres_exact_keys.rs");
 include!("domain_parity_tests/check_per_item.rs");
 include!("domain_parity_tests/forbidden_call_arguments.rs");
 include!("domain_parity_tests/recall_policies.rs");
