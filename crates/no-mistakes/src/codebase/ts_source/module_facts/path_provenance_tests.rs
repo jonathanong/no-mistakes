@@ -163,11 +163,13 @@ fn origins_follow_getters_owned_lets_and_parameters_but_nothing_else() {
         assert_eq!(read.origin(unowned), PathOrigin::unknown(), "{unowned}");
     }
     let param = |needle: &str| read.origin(needle).param;
-    // Only an unreassigned, plain parameter of the function holding the call.
     assert_eq!(param("readdirSync(first)"), None);
     assert_eq!(param("readdirSync(second);"), Some(1));
     assert_eq!(param("readdirSync(rest)"), None);
-    assert_eq!(param("readdirSync(second)]"), None);
+    assert_eq!(param("readdirSync(second)]"), Some(1));
+    let owner = read.source.find("function param(").unwrap() as u32;
+    assert_eq!(read.origin("readdirSync(second);").param_owner, Some(owner));
+    assert_eq!(read.origin("readdirSync(second)]").param_owner, Some(owner));
     assert_eq!(param("readdirSync(a)"), None);
     assert_eq!(param("readdirSync(b)"), None);
     assert_eq!(param("readdirSync(join(c"), Some(2));

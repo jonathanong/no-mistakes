@@ -1,6 +1,6 @@
 //! Files that some module consumes other than by named static imports.
 use super::path_provenance;
-use crate::codebase::dependencies::graph::TsFactLookup;
+use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId, TsFactLookup};
 use crate::codebase::ts_resolver::{normalize_path, ImportResolver, TsConfig, TsConfigCatalog};
 use crate::codebase::workspaces::IndexedWorkspaceMap;
 use crate::fx::{FxHashSet, PathSet};
@@ -32,6 +32,7 @@ pub(super) struct Consumed {
 
 impl Consumed {
     pub(super) fn new(
+        graph: &DepGraph,
         facts: &dyn TsFactLookup,
         graph_files: &[PathBuf],
         resolution: &Resolution<'_>,
@@ -45,9 +46,6 @@ impl Consumed {
             let Some(provenance) = facts.get_ts_facts(file).and_then(path_provenance) else {
                 continue;
             };
-            if provenance.unsafe_modules.is_empty() {
-                continue;
-            }
             let config = resolution.catalog.map_or(&empty, |c| c.config_for(file));
             let resolver = ImportResolver::new(config);
             for specifier in &provenance.unsafe_modules {
@@ -56,6 +54,36 @@ impl Consumed {
                     Some(target) => consumed.insert(target),
                     None if class.is_unresolved_external() && external(&resolver, specifier) => {}
                     None => consumed.unknown = true,
+                }
+            }
+        }
+        let mut pending: Vec<_> = consumed.files.iter().cloned().collect();
+        while let Some(file) = pending.pop() {
+            let barrel = facts
+                .get_ts_facts(&file)
+                .and_then(|facts| facts.module_bindings.as_deref())
+                .is_some_and(|module| {
+                    module
+                        .exports
+                        .iter()
+                        .any(|export| !export.type_only && export.specifier.is_some())
+                });
+            if !barrel {
+                continue;
+            }
+            for (target, kind) in graph
+                .dependencies_of_node(&NodeId::file(&file))
+                .into_iter()
+                .flatten()
+            {
+                if !matches!(kind, EdgeKind::Import | EdgeKind::WorkspaceImport) {
+                    continue;
+                }
+                if let NodeId::File(target) = target {
+                    if !consumed.contains(target) {
+                        consumed.insert(target);
+                        pending.push(target.to_path_buf());
+                    }
                 }
             }
         }
