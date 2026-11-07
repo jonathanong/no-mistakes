@@ -1,5 +1,5 @@
 use super::*;
-use crate::codebase::dependencies::extract::{CatalogRead, ImportedBindingKind, ValueBinding};
+use crate::codebase::dependencies::extract::{CatalogRead, ValueBinding};
 use crate::codebase::dependencies::graph::{EdgeKind, NodeId};
 
 #[path = "fragment_builder_reads.rs"]
@@ -59,12 +59,6 @@ fn consumer(proof: &mut Proof<'_, '_>, file: &Path, producer: &Path, name: &str)
             return false;
         }
         for (at, read) in usage {
-            if import.kind == ImportedBindingKind::Namespace
-                && read.path.is_empty()
-                && !external(proof.graph, file, &import.specifier)
-            {
-                return false;
-            }
             if !consumer_read(proof, file, *at, read, (producer, name)) {
                 return false;
             }
@@ -82,6 +76,7 @@ fn consumer_read(
 ) -> bool {
     let mut selector = read.name.clone();
     let mut remaining = read.path.as_slice();
+    let mut namespaces = Vec::new();
     loop {
         if let Some((producer, name)) = proof.graph.imported_value(file, &selector) {
             return producer != source.0
@@ -91,11 +86,20 @@ fn consumer_read(
                     && read.path.is_empty()
                     && reads::append_copy(proof, file, at, read);
         }
+        if let Some(namespace) = proof.graph.imported_namespace(file, &selector) {
+            if !namespaces.contains(&namespace) {
+                namespaces.push(namespace);
+            }
+        }
         let Some((member, rest)) = remaining
             .split_first()
             .filter(|(member, _)| !member.is_empty() && !member.contains('.'))
         else {
-            return true;
+            return !namespaces.iter().any(|namespace| {
+                proof
+                    .graph
+                    .namespace_exports_value(namespace, source.0, source.1)
+            });
         };
         selector.push('.');
         selector.push_str(member);
@@ -108,17 +112,6 @@ fn same(proof: &Proof<'_, '_>, file: &Path, selector: &str, producer: &Path, nam
         .graph
         .imported_value(file, selector)
         .is_some_and(|(path, local)| path == producer && local == name)
-}
-
-fn external(graph: &DepGraph, file: &Path, specifier: &str) -> bool {
-    graph
-        .dependencies_of_node(&NodeId::file(file))
-        .is_some_and(|edges| {
-            edges.iter().any(|(node, kind)| {
-                *kind == EdgeKind::Import
-                    && matches!(node, NodeId::Module(module) if &**module == specifier)
-            })
-        })
 }
 
 fn affected(proof: &mut Proof<'_, '_>, producer: &Path) -> Option<Vec<PathBuf>> {
