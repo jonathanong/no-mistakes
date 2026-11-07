@@ -152,7 +152,7 @@ impl Inputs<'_, '_, '_> {
                     }
                 }
                 if let Some(filter) = &function.filter {
-                    self.walk(filter, None);
+                    self.walk_condition(filter);
                 }
             }
             Expr::Cast { expr, .. } => self.walk(expr, Some(transformation.unwrap_or("cast"))),

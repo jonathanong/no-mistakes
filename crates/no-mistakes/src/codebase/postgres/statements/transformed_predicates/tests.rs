@@ -93,7 +93,7 @@ fn null_tests_ignore_scalar_transforms_but_retain_nested_predicates() {
         .iter()
         .map(|fact| fact.line)
         .collect();
-    assert_eq!(lines, [1, 1, 2, 3, 4, 5, 6]);
+    assert_eq!(lines, [1, 1, 2, 3, 4, 5, 6, 7]);
 }
 
 #[test]

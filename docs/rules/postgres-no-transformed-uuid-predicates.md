@@ -89,7 +89,8 @@ compared against a parameter or another transformed operand remains reported.
 
 `IS NULL` and `IS NOT NULL` test whether a value is null rather than probing a UUID value.
 Scalar transformations used only to compute that null-tested value are allowed.
-Nested comparison predicates remain checked, including CASE conditions and
+Nested predicates remain checked, including CASE conditions, aggregate FILTER
+conditions, and
 `COALESCE(id::text = $1, false) IS NOT NULL`.
 
 A transformed residual predicate remains reported even after an indexed or

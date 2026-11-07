@@ -8,9 +8,9 @@ use sqlparser::ast::{
 };
 use std::collections::BTreeMap;
 
-pub(super) fn mapped<'a>(
-    catalog: &'a SchemaCatalog,
-    view: &'a CatalogView,
+pub(super) fn mapped(
+    catalog: &SchemaCatalog,
+    view: &CatalogView,
     tables: &BTreeMap<&str, BTreeMap<String, bool>>,
 ) -> Option<BTreeMap<String, bool>> {
     let statements = crate::codebase::postgres::parse_postgres_sql(&view.definition).ok()?;

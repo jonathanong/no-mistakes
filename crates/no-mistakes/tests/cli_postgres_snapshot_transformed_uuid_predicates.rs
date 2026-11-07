@@ -95,7 +95,7 @@ fn postgres_no_transformed_uuid_predicates_check_json_snapshot() {
         // Seven findings, every target unanalyzable.
         ("unknown_scope", "unknown-scope.yml"),
         ("unknown_scope_ignore", "unknown-scope-ignore.yml"),
-        // Seven findings, and none are target unanalyzable.
+        // Six findings; the null test on line 4 is clean, and none are target unanalyzable.
         ("predicate_forms", "predicate-forms.yml"),
         ("exclude_sql", "exclude-sql.yml"),
         ("exclude_ts", "exclude-ts.yml"),
@@ -103,7 +103,7 @@ fn postgres_no_transformed_uuid_predicates_check_json_snapshot() {
         ("nested_joins", "nested-joins.yml"),
         ("operand_pass_low", "operand-pass-low.yml"),
         ("operand_pass_max", "operand-pass-max.yml"),
-        // Lines 2 through 13, every target accounts.id.
+        // Lines 2 through 11 and 13, every target accounts.id; the null test on 12 is clean.
         ("operand_positive_low", "operand-positive-low.yml"),
         ("operand_positive_max", "operand-positive-max.yml"),
         // Lines 8, 9, 10, and 11 must remain.

@@ -69,3 +69,32 @@ fn followup_probes_require_proven_uuid_columns_at_the_catalog_boundary() {
         }
     }
 }
+
+#[test]
+fn view_projection_controls_preserve_unknown_and_ambiguous_probe_keys() {
+    let root = fixture();
+    let sources =
+        super::super::source_store_for_files(&[root.join("view-projection-controls.json")]);
+    let catalog = crate::codebase::postgres::SchemaCatalog::load(
+        &root,
+        "view-projection-controls.json",
+        &sources,
+    )
+    .unwrap();
+    let columns = super::evaluate::Columns::new(&catalog);
+    let source = std::fs::read_to_string(root.join("view-projection-controls.sql")).unwrap();
+    let facts = crate::codebase::postgres::extract_sql_statement_facts(&source);
+    assert!(!facts.parse_failed);
+    assert_eq!(
+        facts.transformed_column_uses.len(),
+        source.lines().count() * 2
+    );
+    for use_ in &facts.transformed_column_uses {
+        assert_eq!(
+            columns.resolve(use_).unwrap().1,
+            use_.line > 8,
+            "view projection on line {}: {use_:?}",
+            use_.line,
+        );
+    }
+}
