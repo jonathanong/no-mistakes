@@ -1,0 +1,12 @@
+SELECT p.id FROM probe p JOIN limits l ON true;
+SELECT x.id FROM unnest($1::int[]) f(row_limit) CROSS JOIN LATERAL (SELECT id FROM probe LIMIT f.row_limit) x;
+SELECT y.id FROM unnest($1::int[]) f(row_limit) CROSS JOIN LATERAL (SELECT id FROM probe LIMIT f.row_limit) x CROSS JOIN LATERAL (SELECT id FROM probe LIMIT f.row_limit) y;
+SELECT x.id FROM unnest($1::int[]) f(row_limit) LEFT JOIN probe p ON true CROSS JOIN LATERAL (SELECT id FROM probe LIMIT f.row_limit) x;
+SELECT x.id FROM unnest($1::int[]) f(row_limit) CROSS JOIN probe f CROSS JOIN LATERAL (SELECT id FROM probe LIMIT f.row_limit) x;
+SELECT x.id FROM (unnest($1::int[]) f(row_limit) JOIN probe p ON true) CROSS JOIN LATERAL (SELECT id FROM probe LIMIT f.row_limit) x;
+SELECT id FROM unnest($1::int[]) f(row_limit);
+SELECT x.id FROM LATERAL (SELECT id FROM probe LIMIT f.row_limit) x;
+SELECT x.id FROM probe p, unnest($1::int[]) f(row_limit), LATERAL (SELECT id FROM probe LIMIT f.row_limit) x;
+SELECT z.id FROM unnest($1::int[]) f(row_limit) CROSS JOIN LATERAL (SELECT y.id FROM LATERAL (SELECT id FROM probe LIMIT f.row_limit) y) z;
+SELECT y.id FROM unnest($1::int[]) f(row_limit) CROSS JOIN LATERAL (SELECT id FROM probe LIMIT f.row_limit) x LEFT JOIN probe p ON true CROSS JOIN LATERAL (SELECT id FROM probe LIMIT f.row_limit) y;
+SELECT p.id FROM (SELECT id FROM probe LIMIT 2) p;

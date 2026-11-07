@@ -2,7 +2,15 @@ use super::super::value::PlaceholderPositions;
 use super::Scope;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident, object_name_key};
 use sqlparser::ast::{Expr, FunctionArg, FunctionArgExpr, Query, SetExpr, TableFactor, Value};
+use std::cell::OnceCell;
 use std::collections::{BTreeMap, BTreeSet};
+mod context;
+pub(super) use context::RelationContext;
+#[cfg(test)]
+pub(super) mod work;
+#[cfg(not(test))]
+#[path = "limit_columns/work_disabled.rs"]
+mod work;
 
 #[derive(Clone, Default)]
 pub(super) struct Relations {
@@ -91,18 +99,26 @@ pub(super) fn is_limited(
     scope: &Scope,
     positions: PlaceholderPositions<'_>,
 ) -> bool {
-    let mut visible = scope.limit_columns.clone();
-    if let SetExpr::Select(select) = &*query.body {
-        for table in &select.from {
-            shadow(&mut visible, &table.relation, positions);
-            for join in &table.joins {
-                shadow(&mut visible, &join.relation, positions);
-            }
-        }
-    } else {
-        visible = Relations::default();
-    }
-    super::super::limit::is_limited_with_columns(query, positions, &|expr| visible.contains(expr))
+    let visible = OnceCell::new();
+    super::super::limit::is_limited_with_columns(query, positions, &|expr| {
+        visible
+            .get_or_init(|| {
+                work::visible_map_build();
+                let mut visible = scope.limit_columns.clone();
+                if let SetExpr::Select(select) = &*query.body {
+                    for table in &select.from {
+                        shadow(&mut visible, &table.relation, positions);
+                        for join in &table.joins {
+                            shadow(&mut visible, &join.relation, positions);
+                        }
+                    }
+                } else {
+                    visible = Relations::default();
+                }
+                visible
+            })
+            .contains(expr)
+    })
 }
 
 fn shadow(visible: &mut Relations, factor: &TableFactor, positions: PlaceholderPositions<'_>) {

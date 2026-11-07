@@ -19,6 +19,7 @@ impl DepGraph {
             ExportedCallableResolution::Absent => None,
             ExportedCallableResolution::ExternalModuleExport(_, _)
             | ExportedCallableResolution::Value(_, _)
+            | ExportedCallableResolution::Namespace(_)
             | ExportedCallableResolution::Unknown => Some(Vec::new()),
         }
     }

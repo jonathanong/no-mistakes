@@ -1,7 +1,7 @@
 //! Holes that sit outside an identifier position.
 use super::super::SqlCall;
 use super::bindings::Bindings;
-use super::classify;
+use super::classify_value;
 use super::Provenance;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::ValueExpression;
@@ -20,7 +20,7 @@ pub(super) fn retain(
 ) {
     for hole in holes {
         let mut extra = BTreeSet::new();
-        classify(graph, facts, &call.file, hole, &mut extra, bindings);
+        classify_value(graph, facts, &call.file, hole, &mut extra, bindings);
         out.extend(
             extra
                 .into_iter()

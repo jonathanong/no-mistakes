@@ -1,0 +1,45 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "opaque": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "apps/worker/opaque.ts",
+          "import": "config",
+          "line": 12,
+          "message": "Unbounded identifier source `config` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${{ schema: config }.schema}`);",
+          "target": "config"
+        },
+        {
+          "file": "apps/worker/opaque.ts",
+          "import": "config",
+          "line": 17,
+          "message": "Unbounded identifier source `config` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${[config][0]}`);",
+          "target": "config"
+        },
+        {
+          "file": "apps/worker/opaque.ts",
+          "import": "config",
+          "line": 7,
+          "message": "Unbounded identifier source `config` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${(`${config}` as unknown as Config).schema}`);",
+          "target": "config"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -176,9 +176,15 @@ initializer call. Its trusted contract may enforce an allow-list or identifier
 grammar plus length limit. `identifierSources` declares trusted bounded scalar
 returns for producers such as catalog lookup wrappers. Both options match either
 the call-site module selector or canonical resolved origin through named or
-`export *` barrels and npm re-exports; helper bodies are not inspected. Property
-guards validate only their exact member path. Static metadata-array lookups followed by a throwing or returning
-presence guard prove their literal string fields. Private module-local helpers
+`export *` barrels and npm re-exports, including workspace packages; helper bodies
+are not inspected. Typed catalogs populated at module load can supply an
+explicit trusted source. Complete max-effort scans report unused source entries
+as `unused-allow-entry` at the configuration item. A catalog-element type alone
+does not validate an incoming identifier; runtime guards also cover immutable
+scalar aliases captured after validation, including executor and transaction
+callbacks. Property guards validate only their exact member path. Static
+metadata-array lookups followed by a throwing or returning presence guard prove
+their literal string fields. Private module-local helpers
 may return rows when every call result stays immutable and only reads known
 fields; any escaping or mutating caller invalidates the shared metadata source.
 Literal properties selected by a cross-module helper from a closed record and
@@ -190,8 +196,10 @@ helper's prefix parameter must receive a literal call argument, and async
 forwarding must be awaited. Open prefixes, fake UUID producers, mixed returns,
 and recursive return cycles retain findings.
 Configured SQL tag `.text` fragments and built-in `sql-template-strings`
-default/`SQL` tags support immutable module constants, append chains, and helper
-returns. The built-in tags need no configuration. Open raw append values and escaping
+default/`SQL` tags support immutable module constants, append chains, and
+synchronous helper returns, including imported statements and factories used
+through configured executor callback types. The built-in tags need no
+configuration. Open raw append values and escaping
 or mutated builders do not establish that proof. Literal-plus-numeric-placeholder
 arrays joined with literal separators are also bounded. CLI `check`, Node `check()`,
 and batched `analyzeProject()` share findings. Immutable array-destructured

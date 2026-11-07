@@ -125,7 +125,12 @@ fn opaque_and_projected_fact_containers_preserve_input_references() {
             "schema",
         ),
         ValueExpression::Object(Arc::new(fields.clone()), false),
-        ValueExpression::Array(Arc::new(fields)),
+        ValueExpression::Array(Arc::new(fields.clone())),
+        member(
+            ValueExpression::Object(Arc::new(fields.clone()), false),
+            "schema",
+        ),
+        member(ValueExpression::Array(Arc::new(fields)), "0"),
         ValueExpression::Either(Arc::new(named("config")), Arc::new(named("config"))),
     ] {
         let mut found = BTreeSet::new();

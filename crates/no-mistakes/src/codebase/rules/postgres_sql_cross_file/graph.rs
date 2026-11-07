@@ -12,12 +12,28 @@ pub(crate) use route_index::RegistryRoutes;
 pub(crate) use routes::registry_route;
 
 pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
-    super::needs_deep_analysis(config).then_some(GraphBuildPlan {
-        calls: true,
-        imports: true,
-        effect_selectors: needs_module_validators(config),
-        ..GraphBuildPlan::default()
+    super::needs_deep_analysis(config).then(|| {
+        let identifier_provenance = needs_identifier_provenance(config);
+        GraphBuildPlan {
+            calls: true,
+            imports: true,
+            effect_selectors: needs_module_validators(config),
+            value_import_selectors: identifier_provenance,
+            identifier_provenance,
+            ..GraphBuildPlan::default()
+        }
     })
+}
+
+fn needs_identifier_provenance(config: &NoMistakesConfig) -> bool {
+    config
+        .rule_applications("postgres-no-unbounded-sql-identifier")
+        .iter()
+        .any(|rule| {
+            config
+                .effective_rule_analysis(rule)
+                .is_ok_and(|policy| policy.effort == crate::config::v2::Effort::Max)
+        })
 }
 
 fn needs_module_validators(config: &NoMistakesConfig) -> bool {
@@ -47,3 +63,6 @@ fn needs_module_validators(config: &NoMistakesConfig) -> bool {
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+#[path = "graph/value_import_demand_tests.rs"]
+mod value_import_demand_tests;

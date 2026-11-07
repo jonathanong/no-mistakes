@@ -8,6 +8,8 @@ use crate::codebase::dependencies::extract::{
 mod collection_imports;
 mod collections;
 mod generated;
+mod guard_aliases;
+pub(super) use guard_aliases::hole_proven;
 mod metadata;
 mod subjects;
 mod validators;
@@ -38,38 +40,37 @@ pub(super) fn proven(
         return false;
     };
     let flow = &ts.value_flow;
-    if let Some(binding) = bindings.value(&call.file, *scope, name, *offset) {
-        if members.is_empty() && generated::proves(graph, facts, bindings, &call.file, binding) {
-            return true;
-        }
-        if metadata::proves(graph, facts, bindings, &call.file, flow, binding, members) {
-            return true;
-        }
-        if members.len() == 1 && registry_member(flow, binding, &members[0]) {
-            return true;
-        }
+    if bindings
+        .value(&call.file, *scope, name, *offset)
+        .is_some_and(|binding| {
+            binding_proven(graph, facts, bindings, &call.file, flow, binding, members)
+        })
+    {
+        return true;
     }
-    let Some(context) = flow.calls.iter().find_map(|value_call| {
-        ((value_call.offset, value_call.end) == call.span).then_some(value_call.context)
-    }) else {
-        return false;
-    };
-    flow.finite_identifier_guards.iter().any(|guard| {
-        guard.name == *name
-            && (if matches!(guard.kind, GuardKind::Lookup) {
-                bindings
-                    .value(&call.file, *scope, name, *offset)
-                    .is_some_and(|binding| bounded(flow, binding, members, true))
-            } else {
-                guard.members == *members
-            })
-            && guard.context == context
-            && *offset >= guard.from
-            && *offset < guard.until
-            && guard_subject_holds(flow, bindings, &call.file, name, *scope, *offset, guard)
-            && !written_since(flow, guard, *offset)
-            && guard_applies(graph, opts, facts, bindings, &call.file, guard)
-    })
+    guard_aliases::proven(
+        graph,
+        opts,
+        facts,
+        bindings,
+        call,
+        flow,
+        (name, *scope, *offset, members),
+    )
+}
+
+fn binding_proven(
+    graph: &DepGraph,
+    facts: &CheckFactMap,
+    bindings: &Bindings<'_>,
+    file: &Path,
+    flow: &ValueFlowFacts,
+    binding: &crate::codebase::dependencies::extract::ValueBinding,
+    members: &[String],
+) -> bool {
+    members.is_empty() && generated::proves(graph, facts, bindings, file, binding)
+        || metadata::proves(graph, facts, bindings, file, flow, binding, members)
+        || members.len() == 1 && registry_member(flow, binding, &members[0])
 }
 
 fn bounded(

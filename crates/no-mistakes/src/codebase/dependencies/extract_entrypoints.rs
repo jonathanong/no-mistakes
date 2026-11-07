@@ -1,78 +1,9 @@
-pub fn extract_imports_from_program<'a>(program: &Program<'a>) -> Vec<ExtractedImport> {
-    extract_import_facts_from_program(program).imports
-}
+include!("extract_entrypoints_demands.rs");
 
-pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFacts {
-    extract_import_facts_from_program_with_source(program, "")
-}
-
-pub fn extract_import_facts_from_program_with_source<'a>(
-    program: &Program<'a>,
-    source: &str,
-) -> ImportFacts {
-    extract_import_facts_from_program_with_source_and_resource_roots(program, source, true)
-}
-
-pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'a>(
-    program: &Program<'a>,
-    source: &str,
-    collect_resource_roots: bool,
-) -> ImportFacts {
-    extract_import_facts_from_program_with_source_and_demands(
-        program,
-        source,
-        collect_resource_roots,
-        false,
-        false,
-    )
-}
-
-pub(crate) fn extract_import_facts_from_program_with_source_and_demands(
+fn extract_import_facts_with_plan_and_rhs_probe(
     program: &Program<'_>,
     source: &str,
-    collect_resource_roots: bool,
-    collect_per_item_calls: bool,
-    collect_value_flow: bool,
-) -> ImportFacts {
-    extract_import_facts_with_rhs_probe(
-        program,
-        source,
-        collect_resource_roots,
-        collect_per_item_calls,
-        collect_value_flow,
-        false,
-        #[cfg(feature = "test-instrumentation")]
-        None,
-    )
-}
-
-pub(crate) fn extract_import_facts_with_eligibility(
-    program: &Program<'_>,
-    source: &str,
-    collect_resource_roots: bool,
-    collect_per_item_calls: bool,
-    collect_value_flow: bool,
-    collect_call_eligibility: bool,
-) -> ImportFacts {
-    extract_import_facts_with_rhs_probe(
-        program,
-        source,
-        collect_resource_roots,
-        collect_per_item_calls,
-        collect_value_flow,
-        collect_call_eligibility,
-        #[cfg(feature = "test-instrumentation")]
-        None,
-    )
-}
-
-fn extract_import_facts_with_rhs_probe(
-    program: &Program<'_>,
-    source: &str,
-    collect_resource_roots: bool,
-    collect_per_item_calls: bool,
-    collect_value_flow: bool,
-    collect_call_eligibility: bool,
+    plan: TsFactPlan,
     #[cfg(feature = "test-instrumentation")] probe: Option<
         std::rc::Rc<
             std::cell::RefCell<extract_value_flow::inert_receiver_rhs::tests_support::Probe>,
@@ -84,11 +15,12 @@ fn extract_import_facts_with_rhs_probe(
         source.len() as u64,
         || {
             let mut collector = ImportCollector {
-                collect_per_item_calls,
-                collect_value_flow,
-                collect_call_eligibility,
+                collect_per_item_calls: plan.per_item_calls,
+                collect_value_flow: plan.value_flow,
+                collect_identifier_provenance: plan.identifier_provenance,
+                collect_call_eligibility: plan.call_eligibility,
                 line_starts: import_line_starts(source),
-                collect_resource_roots,
+                collect_resource_roots: plan.resources,
                 sloppy_script: program.source_type.is_javascript()
                     && !program.source_type.is_strict()
                     && !program.has_use_strict_directive(),

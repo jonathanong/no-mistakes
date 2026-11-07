@@ -16,6 +16,9 @@ impl Bindings<'_> {
             bindings: FxHashSet::default(),
             calls: FxHashSet::default(),
         };
+        if let Some(unbounded) = self.assignment_unbounded(file, scope, name, at, &mut seen) {
+            return unbounded;
+        }
         let Some(binding) = self.value(file, scope, name, at) else {
             return self.parameter(file, scope, name);
         };
@@ -80,7 +83,12 @@ impl Bindings<'_> {
         })
     }
 
-    fn expr_unbounded(&self, file: &Path, value: &ValueExpression, seen: &mut Seen) -> bool {
+    pub(super) fn expr_unbounded(
+        &self,
+        file: &Path,
+        value: &ValueExpression,
+        seen: &mut Seen,
+    ) -> bool {
         if self.env(file, value, &[]).is_some() {
             return true;
         }
@@ -113,6 +121,9 @@ impl Bindings<'_> {
         at: u32,
         seen: &mut Seen,
     ) -> bool {
+        if let Some(unbounded) = self.assignment_unbounded(file, scope, name, at, seen) {
+            return unbounded;
+        }
         let Some(binding) = self.value(file, scope, name, at) else {
             return self.parameter(file, scope, name);
         };

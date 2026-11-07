@@ -1,0 +1,216 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "negative": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 14,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await query(`/* first */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 15,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`/* second */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 21,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await query(`/* first */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 22,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`/* second */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 28,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await query(`/* first */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 29,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`/* second */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 36,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await query(`/* first */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 37,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`/* second */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 43,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await query(`/* first */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 44,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`/* second */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 50,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await query(`/* first */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 51,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`/* second */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 57,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await query(`/* first */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 58,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`/* second */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 65,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await query(`/* first */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 66,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`/* second */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 7,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "const first = await query(`/* first */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 73,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await query(`/* first */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 74,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`/* second */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 8,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`/* second */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 82,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await query(`/* first */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "negative.ts",
+          "import": "table",
+          "line": 83,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`/* second */ SELECT 1 FROM ${table}`)",
+          "target": "table"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

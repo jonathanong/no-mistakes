@@ -1,0 +1,10 @@
+version: 2
+effort: max
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      include: [apps/worker/negative.ts]
+      importSpecifier: db
+      identifierSources:
+        - {module: "@example/catalog", name: getRelationTableNameOrThrow}

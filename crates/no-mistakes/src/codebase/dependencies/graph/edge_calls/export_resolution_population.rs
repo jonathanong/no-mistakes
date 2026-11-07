@@ -12,6 +12,7 @@ fn exported_names_for_file(
     path: &std::path::Path,
     edges: &FxHashMap<std::path::PathBuf, ExportNameEdges>,
     visiting: &mut FxHashSet<std::path::PathBuf>,
+    include_namespaces: bool,
 ) -> FxHashSet<String> {
     if !visiting.insert(path.to_path_buf()) {
         return fx_set();
@@ -23,14 +24,17 @@ fn exported_names_for_file(
     let mut names = file.direct.clone();
     for target in &file.stars {
         names.extend(
-            exported_names_for_file(target, edges, visiting)
+            exported_names_for_file(target, edges, visiting, include_namespaces)
                 .into_iter()
                 .filter(|name| name != "default"),
         );
     }
     for (namespace, target) in &file.namespaces {
+        if include_namespaces {
+            names.insert(namespace.clone());
+        }
         names.extend(
-            exported_names_for_file(target, edges, visiting)
+            exported_names_for_file(target, edges, visiting, include_namespaces)
                 .into_iter()
                 .map(|member| format!("{namespace}.{member}")),
         );
@@ -45,7 +49,7 @@ fn populate_callable_export_resolutions(
     resolver: &dyn ImportResolution,
     indexes: &CallableResolutionIndexes,
     output: &mut FxHashMap<(std::path::PathBuf, String), ExportedCallableResolution>,
-) {
+) -> Option<FxHashMap<std::path::PathBuf, ExportNameEdges>> {
     let mut export_edges = FxHashMap::default();
     for path in edge_inputs.graph_files.indexable() {
         let Some(file) = indexes.file(facts, path) else {
@@ -88,11 +92,7 @@ fn populate_callable_export_resolutions(
     }
     let paths = export_edges.keys().cloned().collect::<Vec<_>>();
     for path in paths {
-        let candidates = exported_names_for_file(
-            &path,
-            &export_edges,
-            &mut fx_set(),
-        );
+        let candidates = exported_names_for_file(&path, &export_edges, &mut fx_set(), false);
         for export in candidates {
             let resolution = resolve_exported_callable(
                 edge_inputs,
@@ -108,4 +108,8 @@ fn populate_callable_export_resolutions(
             }
         }
     }
+    edge_inputs
+        .plan
+        .value_import_selectors
+        .then_some(export_edges)
 }

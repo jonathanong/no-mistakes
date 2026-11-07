@@ -46,7 +46,7 @@ impl<'a> Builder<'a> {
             } => {
                 let mut scope = self.scope.clone();
                 scope.limit_columns = if *lateral {
-                    self.limit_columns.clone()
+                    self.limit_columns.visible(self.positions).clone()
                 } else {
                     Default::default()
                 };
