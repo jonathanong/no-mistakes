@@ -1,69 +1,133 @@
 # Exact bounded key proofs: R1–R4
 
-<!-- cspell:ignore rustc nonrecursive getrusage RUSAGE INSTA doctest doctests codegen Clippy -->
+<!-- cspell:ignore rustc getrusage RUSAGE INSTA Clippy -->
 
-Baseline: fresh `origin/main`,
-`759777752f2399d9b83f17e27b0ac8af6a9fe6d7`.
+Current-main baseline: `7b2b16b3f7536e2310340935174a483756b8ae19`.
+Measured candidate runtime source: `3a5ea6d32bdd0044bc98b76fae1caab204df9531`.
 Toolchain: `rustc 1.99.1 (58cf8f9c3 2026-10-13)`.
-The initial CLI pair uses locked dependencies, default features and the dev
-profile; the final optimized pair uses the unchanged release profile.
-Heavy Cargo commands use `flock --close /tmp/nm-heavy.lock`,
-`CARGO_BUILD_JOBS=6` and a task-owned target under `/tmp`.
+Both builds use locked dependencies, default features and the repository's dev
+profile. Canonical `no-mistakes` hard-link basenames in equal-length A/B directories
+keep executable-name handling matched. The baseline target is separate from
+the candidate target; both are
+under `/tmp`, and frozen executables are verified before measurement.
+Heavy Cargo uses `flock --close /tmp/nm-heavy.lock` and `CARGO_BUILD_JOBS=6`.
+Both executables were verified against cold incremental caches; rebuilding
+the candidate cold produced the same SHA256 as the earlier candidate.
+The final evidence-only commit carries these measurements forward.
 
-The frozen default-profile baseline CLI SHA256 is
-`50ed9806684201fb8a0524972e8b2f46a310e1b59fb7e99d2367eb1481d80e54`.
-The new fix branch starts from main independently of regression PR #3122.
+Main advanced during the task. The branch was rebased, all exact shapes were
+reproduced again on current main, and this matched comparison replaces the
+older-base timing experiments. Those older timings are not used for final
+performance claims. A detected shared-target artifact reuse was rejected;
+the retained measurements require distinct binaries and expected outputs.
 
-## Reproductions
+## Reproductions and compatibility
 
-Saved catalog and SQL:
-`test-cases/rules/postgres-bounded-statements/issue-3114-exact/fixture`.
+Saved inputs: `test-cases/rules/postgres-bounded-statements/issue-3114-exact/fixture`.
+All four exact classes still fail on current main. Already-passing variants
+remain regression coverage and are not claimed as newly fixed.
 
-- R1 nests a keyed `UPDATE FROM` in a modifying CTE under `SELECT`.
-  Its top-level write variant passes on main. The non-key driver stays reported.
-- R2 transports a parameter-array `unnest` through a materialized CTE and
-  `ANY(ARRAY(SELECT ...))`. Direct `ANY($1)` passes on main.
-  An unbounded table source and a typed opaque-function source stay reported.
-- R3 drives a mutation through a recursive union whose projected keys come
-  from a shared, independently bounded donor. The nonrecursive variant passes
-  on main. Physical-table walks, capped anchors over unbounded donors,
-  ordinary SELECT joins and unsupported donor materialization remain controls.
-  Finite changed-key domains do not certify finite recursive output rows.
-- R4 resolves a bare configured bounded column beside a catalog view with
-  explicit projected names. Qualified and no-view variants pass on main.
-  Ambiguous names and unknown wildcard outputs stay conservative.
-  A grouped-view case checks column names independently of key inference.
+| Configuration | Main findings | Candidate findings | Retained control |
+| --- | ---: | ---: | --- |
+| R1 nested modifying UPDATE FROM CTE | 3 | 2 | Non-key write driver |
+| R2 typed UNNEST through ARRAY subquery | 3 | 2 | Unbounded table / opaque function |
+| R3 recursive DELETE USING | 6 | 4 | Physical walk, capped anchor, SELECT, unsupported donor |
+| R4 unqualified bounded column beside view | 9 | 4 | Ambiguous name / unknown wildcard projection |
+| No configured rules | 0 | 0 | Whole report unchanged |
+| SQL rule only, bounded rule off | 1 | 1 | Offset finding unchanged |
 
-All four exact repro classes fail on the frozen main CLI. Their one-detail
-passing variants and still-reported controls are retained. Each configuration
-gets a committed `check_json_snapshot` comparison at jobs 1 and 2.
+Each exact shape has a passing one-detail variant. The candidate removes nine
+false-positive findings across six statements and preserves twelve control
+findings across nine statements. Recursive finite changed-key domains do not
+certify finite recursive rows or termination. Bare ownership uses explicit view
+output names independently of view key/cardinality inference.
 
-## CPU measurement protocol
+Both rule-off configurations preserve byte-identical stdout, stderr and status.
+Legacy valid/invalid/key fixtures also preserve exact output/status (0/3/5
+findings), including their 26 pre-existing unused-disable-directive advisories.
+The internal fact golden adds only four `recursive_domain: false` markers;
+removing them reproduces the prior bytes.
 
-Hardware counters are unavailable on this host (`perf_event_paranoid=4`).
-Use user CPU time, per the task's fallback, rather than claiming instruction
-counts.
+## Measurement protocol
 
-Each sample launches a fresh CLI invocation with default effort and worker
-count. The harness records deltas of `resource.getrusage(RUSAGE_CHILDREN)`
-user/system CPU and raw wall time around the subprocess. It validates each
-JSON report and retains status and stdout hash. Python's own CPU is excluded.
-OS file caches are warm; no analysis state persists between CLI invocations.
-The saved directory has 16 files / 25,009 bytes, including nine SQL files /
-379 physical SQL lines, one catalog and six YAML configurations. It has no
-TS/JS/JSX source. Each consuming configuration uses an explicit SQL filename
-and `executorNames: []`; R4 additionally configures column and view bounds.
-These are small SQL regression workloads, not a representative mixed-language
-application benchmark.
+Hardware counters are blocked (`perf_event_paranoid=4`), so user CPU is the
+requested fallback; no instruction counts are claimed. Every sample runs a
+fresh CLI with default effort and default worker count. The harness measures
+`resource.getrusage(RUSAGE_CHILDREN)` user/system CPU deltas and raw wall time
+around the child process; Python's CPU is excluded. No analysis state persists
+between invocations. One unmeasured fresh invocation per binary/configuration
+warms file caches before each comparison. The shared heavy lock excludes
+competing cooperating Cargo builds during samples.
 
-A 25-sample baseline preflight established the workload. The dev comparison
-uses balanced baseline/candidate/candidate/baseline order, 25 fresh samples
-per configuration per phase (50 samples per binary per configuration).
-The shared heavy lock is held during measurement to exclude competing
-cooperating Cargo builds. Reports intentionally change only where proofs fix
-the saved false positives; rule-off output must remain byte-identical.
+The directory has 16 files / 25,009 bytes: nine SQL files / 379 physical SQL
+lines, one catalog and six YAML configurations. It has no TS/JS/JSX source.
+Consuming configs name explicit SQL files with `executorNames: []`; R4 also
+configures column/view bounds. These are SQL regression workloads, not a
+representative mixed-language application throughput benchmark. Positive-case
+report counts intentionally change, so these are end-to-end observations,
+not an isolated solver benchmark.
 
-Measured commands have this shape; no effort or jobs override is supplied:
+[A/B/B/A samples](balanced.csv): 25 invocations per phase/configuration,
+50 per binary/configuration. [B/A/A/B control recheck](reverse.csv): 50 per
+phase, 100 per binary/control. A is baseline, B candidate. Times below are ms.
+
+| Configuration | User CPU mean A → B | User CPU median A → B | Wall mean A → B |
+| --- | ---: | ---: | ---: |
+| R1 | 26.527 → 25.397 | 26.266 → 26.044 | 25.792 → 28.350 |
+| R2 | 25.655 → 25.856 | 26.132 → 25.913 | 25.360 → 28.215 |
+| R3 | 35.053 → 35.544 | 35.455 → 36.302 | 35.460 → 39.043 |
+| R4 | 29.679 → 29.221 | 29.460 → 30.024 | 28.958 → 32.083 |
+| No configured rules | 11.251 → 11.155 | 11.464 → 11.050 | 15.995 → 17.558 |
+| SQL rule only, bounded rule off | 37.045 → 38.743 | 37.456 → 38.790 | 26.372 → 28.095 |
+
+Reverse controls:
+
+| Configuration | User CPU mean A → B | User CPU median A → B | Wall mean A → B |
+| --- | ---: | ---: | ---: |
+| No configured rules | 11.754 → 12.212 | 11.444 → 12.383 | 15.743 → 17.019 |
+| SQL rule only, bounded rule off | 39.698 → 40.046 | 39.582 → 40.503 | 26.319 → 28.421 |
+
+Descriptive control mean CPU differences (candidate minus baseline):
+
+| Order | Control | Difference (ms) | Normal 95% interval (ms) |
+| --- | --- | ---: | ---: |
+| A/B/B/A | No configured rules | -0.096 | [-1.326, 1.134] |
+| A/B/B/A | SQL rule only, bounded rule off | 1.698 | [0.203, 3.193] |
+| B/A/A/B | No configured rules | 0.457 | [-0.429, 1.344] |
+| B/A/A/B | SQL rule only, bounded rule off | 0.349 | [-0.955, 1.652] |
+
+The dev-profile wall-time controls increase by roughly 1–3 ms in repeated
+runs. Canonical executable names and a cold-cache candidate rebuild do not
+remove that difference. An identical-binary null control was nearly flat.
+An optimized matched comparison remains required before performance handoff.
+
+These observations do not demonstrate workload speedups or prove equivalent
+performance. The intervals assume independent samples and omit other possible
+host/phase noise. No throughput improvement is claimed.
+
+[Peak RSS samples](rss.csv), five invocations per phase (ten per binary/case):
+
+| Configuration | Median KiB A → B | Maximum KiB A → B |
+| --- | ---: | ---: |
+| R4 | 127,952 → 113,536 | 128,988 → 114,740 |
+| SQL rule only, bounded rule off | 130,504 → 115,010 | 132,348 → 115,940 |
+
+RSS includes executable mappings and host paging; no heap-memory gain is claimed.
+
+Frozen executable SHA256:
+
+- A: `190d0176e803c3391098c624817739194f08a1e8a04158be84c6614f8ba0ab5d`
+- B: `f761f3a97662263ae3a54c57838ba7f15529f5b9d7ff60e43d3136a8a3b1ed7f`
+
+Input hashes: [inputs.sha256](inputs.sha256). To reproduce, build/freeze each
+revision with `cargo build --locked -p no-mistakes --bin no-mistakes`, using
+separate targets under `/tmp`. Set `NM_BASELINE_BINARY`, `NM_CANDIDATE_BINARY`
+and a unique `NM_MEASUREMENT_LABEL`, then run [measure.py](measure.py) with
+`balanced` and `reverse` under `flock --close /tmp/nm-heavy.lock`.
+The harness rejects identical binaries, incorrect finding counts/status,
+stderr, warnings and advisories before retaining samples.
+
+The measured child command has this shape, with no effort/jobs override:
 
 ```sh
 root="$PWD/test-cases/rules/postgres-bounded-statements/issue-3114-exact/fixture"
@@ -71,204 +135,28 @@ XDG_RUNTIME_DIR=/tmp/nm-3114-exact-runtime "$binary" check \
   --root "$root" --config "$root/r1.yml" --format json
 ```
 
-Repeat for `r1`, `r2`, `r3`, `r4`, `off` and `off-sql`. Configuration order rotates
-between samples. CPU summaries and output comparisons are recorded alongside
-this file after the final candidate is built. These end-to-end measurements
-include intentional diagnostic-count changes; they are not isolated solver
-benchmarks or a production throughput claim.
+Repeat for `r1`, `r2`, `r3`, `r4`, `off` and `off-sql`.
 
-## Validation environment
+## Validation
 
-Tests use an isolated directory under `/var/tmp` because an existing
-`/tmp/.git` changes an unrelated ancestor-ignore fixture. Cargo artifacts
-remain under `/tmp`. Select installed ShellCheck 0.11.0 and CI's ast-grep
-0.44.1 through task-local PATH setup. Remove all task-owned Cargo targets and
-worker worktrees before handoff; never clean the main workspace target.
+The rebased head passes strict all-target/all-feature Clippy and the complete
+locked workspace/all-feature suite (13,324 library tests, 488 binary tests,
+638 PostgreSQL CLI tests and 107 contract tests), including the snapshot execution reference
+inventory with `INSTA_UPDATE=no`. Exact CLI snapshots compare jobs 1 and 2;
+standalone/prepared aggregate API implementation parity covers all six configs.
+Existing nested-write snapshots intentionally attribute remaining findings to
+the changed target instead of auxiliary tables.
 
-The internal fact golden adds only four `recursive_domain: false` markers.
-Removing these markers exactly reproduces the prior bytes; legacy call
-fields and original/projected fact equality remain checked.
+Independent review found no actionable proof/ownership defects. Focused LLVM
+coverage was run early with no filename exclusions and saved SQL cases cover
+reachable defensive branches. Structural PostgreSQL parser/extractor guards
+remain conservative; the private signature grouping adds no branches. CI
+validates current-head coverage floors. Changed Rust source files remain within
+200 physical lines; test files within 500, audited with `wc -l`. No inline
+fixture writes were added. Formatting, spelling and duplicate detection pass.
 
-## Default-profile observations
-
-The pre-lint dev candidate production revision is
-`2c2022f91df09c17b7510feb4804b3ef83528b0b` (before the final private key-input signature grouping).
-Its CLI SHA256 is
-`588d7863aae1991b8bd061e3082ba58ca3c7ef4ebd06799fffb65631d365511d`.
-[A is baseline and B is candidate](balanced.csv); times below are milliseconds.
-Every invocation uses default effort and jobs.
-
-| Saved configuration | User CPU mean A → B | User CPU median A → B | Wall mean A → B |
-| --- | ---: | ---: | ---: |
-| R1 | 28.389 → 27.832 | 29.129 → 28.387 | 27.624 → 29.183 |
-| R2 | 26.845 → 27.785 | 27.185 → 26.835 | 26.893 → 28.203 |
-| R3 | 36.759 → 37.689 | 37.328 → 38.291 | 38.571 → 39.978 |
-| R4 | 30.134 → 30.551 | 30.278 → 30.551 | 31.030 → 33.113 |
-| No configured rules | 11.124 → 12.343 | 11.616 → 12.174 | 16.974 → 17.401 |
-| SQL rule only, bounded rule off | 38.027 → 39.916 | 37.944 → 40.094 | 27.652 → 28.688 |
-
-The adjacent [reverse recheck](reverse.csv) uses B/A/A/B, 50 samples per
-phase (100 per binary and control):
-
-| Control | User CPU mean A → B | User CPU median A → B | Wall mean A → B |
-| --- | ---: | ---: | ---: |
-| No configured rules | 12.487 → 11.903 | 12.646 → 11.809 | 16.802 → 17.280 |
-| SQL rule only, bounded rule off | 38.794 → 39.708 | 39.020 → 40.648 | 28.005 → 28.484 |
-
-The empty-rule CPU direction changes, so it supports no speed claim.
-The SQL control's user CPU increases by 1.888 ms (4.97%) in A/B/B/A and
-0.914 ms (2.36%) in B/A/A/B. These unoptimized end-to-end observations
-must not be described as neutral. Separate opt-in timing/work-count probes
-have identical source bytes, reads, requests, inventories and fact-collection
-counts (25,009 bytes, 16 reads, 23 requests, one collection). This control
-never requests bounded-statement facts or a schema catalog; the new proof
-logic and lazy view projection cache are outside its executed path.
-
-GNU time peak RSS, B/A/A/B with five samples per phase (ten per binary):
-R4 median 113,926 → 113,454 KiB, maxima 114,512 → 114,256 KiB;
-SQL rule-off control median 115,074 → 115,248 KiB,
-maxima 116,716 → 115,808 KiB. No memory reduction is claimed.
-
-## Report compatibility
-
-| Configuration | Main findings | Candidate findings |
-| --- | ---: | ---: |
-| R1 | 3 | 2 |
-| R2 | 3 | 2 |
-| R3 | 6 | 4 |
-| R4 | 9 | 4 |
-| No configured rules | 0 | 0 |
-| SQL rule only, bounded rule off | 1 | 1 |
-
-The fixes remove nine false-positive findings across six statements while
-preserving twelve control findings across nine statements. All four exact
-repro classes fail on main; the already-passing variants remain coverage
-and are not claimed as newly fixed. Both rule-off configurations have
-byte-identical stdout, stderr and status. Existing valid, invalid and key
-fixtures also have byte-identical output/status (0, 3 and 5 findings), including
-their 26 pre-existing unused-disable-directive advisories.
-
-Input hashes are saved in [inputs.sha256](inputs.sha256). The measurement
-[harness](measure.py) expects frozen binaries under `/tmp`; run it under
-`flock --close /tmp/nm-heavy.lock` after matching locked default-feature builds.
-
-The artifact gate requires distinct binary SHA256 values and each binary's
-expected repro finding counts. Shared-target Cargo reuse was detected in the
-initial optimized build; those identical-binary samples were discarded. The
-optimized candidate is forcibly recompiled before the retained comparison.
-
-## Validation results
-
-- Full locked workspace/all-feature library, binary and integration suites pass,
-  including 13,276 library tests, 488 binary tests and all 630 PostgreSQL CLI
-  tests. Three existing library tests remain ignored. The execution-based
-  snapshot reference inventory passes with `INSTA_UPDATE=no`.
-- The 107 contract tests pass, including executable rule documentation examples.
-  The separate all-feature doctest command passes (zero Rust doctests).
-- Six exact-fixture CLI snapshots compare jobs 1 and 2. Async API implementation
-  parity compares standalone and prepared aggregate check results for all six
-  configurations, including the SQL rule-off control.
-- An independent integrated proof review found no actionable defects. Saved
-  guard cases exercise target attribution, temporary writes, recursive source
-  scope, correlation, transformations and conservative ownership.
-- Changed Rust sources stay within 200 physical lines (largest: 198); test
-  sources stay within 500. Formatting, spelling and duplicate detection pass
-  (zero clones). No inline test fixture writes were added.
-
-Focused coverage at `039eebeb90b1daeb22cc8a80d0d92fa3ff019db5`, before
-the private argument grouping (which adds no branches), uses
-`cargo llvm-cov --lib -- postgres` with no filename
-exclusions: 3,256 tests pass and two existing tests remain ignored.
-
-| Changed helper | Executed / instrumented lines |
-| --- | ---: |
-| Catalog view definition | 58 / 58 |
-| Typed UNNEST output | 36 / 40 |
-| Recursive domain extraction | 91 / 92 |
-| Bound evaluation | 130 / 130 |
-| Domain propagation | 111 / 114 |
-| Write target projection | 33 / 33 |
- Remaining uncovered new guards reject shapes that PostgreSQL's
-parser or the canonical extractor cannot construct: non-PostgreSQL array type
-AST variants, wildcard outputs removed before projection, invalid recursive
-arm metadata, and peer-column metadata on non-singleton pin sources. The
-RETURNING width mismatch is already rejected by its sole caller. Saved SQL
-cases cover the reachable conservative branches rather than fabricating
-invalid internal facts solely for coverage.
-
-## Verified optimized comparison
-
-Both optimized builds use the repository's unchanged release profile
-(`lto = true`, `codegen-units = 1`), locked dependencies and default features.
-The baseline remains `759777752f2399d9b83f17e27b0ac8af6a9fe6d7`;
-the measured final runtime source is `6129d1d3d84dcc7f6bc514e8374034d5bf27bc6b`.
-The candidate includes the final private ownership/domain input grouping needed
-by strict Clippy. Independent review confirms that it preserves the same
-references and target gating. Strict Clippy and the complete locked all-feature
-workspace suite pass after that refactor. Dependencies are unchanged.
-The later evidence-only commit carries these measurements forward. The dev
-samples above remain historical observations from their stated pre-lint revision.
-
-Frozen optimized CLI SHA256:
-
-- Baseline: `c5cc6668f278952192d82740ea40fbaf606e3580fd5a8420e1433bf5637d8c5f`
-- Candidate: `d0de149367bb0d099f3427597ffcfc83b82c81faf67b1d2adc881a28398c57af`
-
-Every sample passes the expected finding-count gate. The
-[optimized A/B/B/A samples](release-balanced.csv) use 50 invocations per
-binary/configuration; the [B/A/A/B control recheck](release-reverse.csv) uses
-100. Effort, jobs, directory contents, config payloads and toolchain match.
-One unmeasured fresh invocation per binary/configuration explicitly warms file
-caches before each final comparison. Earlier dev samples used their baseline
-preflight instead. Times are milliseconds.
-
-| Configuration | User CPU mean A → B | User CPU median A → B | Wall mean A → B |
-| --- | ---: | ---: | ---: |
-| R1 | 8.577 → 8.953 | 8.590 → 8.856 | 13.060 → 13.029 |
-| R2 | 8.982 → 8.637 | 8.956 → 9.264 | 12.990 → 13.300 |
-| R3 | 10.691 → 10.209 | 10.630 → 10.136 | 14.398 → 14.976 |
-| R4 | 9.432 → 9.657 | 9.605 → 9.889 | 13.771 → 13.750 |
-| No configured rules | 4.747 → 4.667 | 4.678 → 4.595 | 10.288 → 10.421 |
-| SQL rule only, bounded rule off | 11.131 → 10.413 | 11.221 → 9.925 | 13.080 → 13.123 |
-
-Reverse controls:
-
-| Configuration | User CPU mean A → B | User CPU median A → B | Wall mean A → B |
-| --- | ---: | ---: | ---: |
-| No configured rules | 5.015 → 5.055 | 4.743 → 4.932 | 10.241 → 10.483 |
-| SQL rule only, bounded rule off | 11.226 → 10.872 | 11.447 → 11.088 | 12.798 → 13.037 |
-
-Control mean CPU differences (candidate minus baseline), with descriptive
-normal 95% intervals for independent-sample means:
-
-| Order | Control | Difference (ms) | Interval (ms) |
-| --- | --- | ---: | ---: |
-| A/B/B/A | No configured rules | -0.080 | [-0.919, 0.759] |
-| A/B/B/A | SQL rule only, bounded rule off | -0.718 | [-1.969, 0.532] |
-| B/A/A/B | No configured rules | 0.041 | [-0.600, 0.682] |
-| B/A/A/B | SQL rule only, bounded rule off | -0.354 | [-1.171, 0.463] |
-
-These are observations, not demonstrated throughput improvements or proof of
-equivalent performance. Within-run intervals assume independent samples and do
-not account for every source of host/phase noise. The dev-profile SQL control
-increase remains disclosed above. No workload speedup is claimed.
-
-[Peak RSS samples](rss.csv), optimized runs:
-
-| Configuration | Median KiB A → B | Maximum KiB A → B |
-| --- | ---: | ---: |
-| R4 | 42,616 → 32,440 | 43,888 → 33,052 |
-| SQL rule only, bounded rule off | 42,152 → 31,874 | 43,600 → 33,000 |
-
-RSS includes executable mappings and host paging; these observations are not
-attributed to a heap-memory improvement.
-
-To repeat the optimized comparison, set `NM_BASELINE_BINARY` and
-`NM_CANDIDATE_BINARY` to separately verified frozen executables and
-`NM_MEASUREMENT_LABEL` to a unique output name, then run `measure.py balanced`
-and `measure.py reverse` under the heavy lock. The harness rejects identical
-artifacts, unexpected findings, warnings and advisories before retaining results.
-
-The verified optimized binaries also preserve byte-identical stdout, stderr and
-exit status for both rule-off configurations and the legacy valid/invalid/key
-fixtures. The report counts match the default-profile compatibility table.
+Tests use isolated `/var/tmp` temporary directories because an existing
+`/tmp/.git` changes an unrelated ancestor-ignore fixture; Cargo artifacts remain
+under `/tmp`. Task-local PATH selects ShellCheck 0.11.0 and CI's ast-grep 0.44.1.
+Task-owned targets/worktrees are removed before handoff; the main workspace
+target is never cleaned.
