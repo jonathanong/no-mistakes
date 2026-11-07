@@ -161,6 +161,8 @@ unanalyzable policy: `unanalyzable: report` (default) fails, `advise` adds a
 non-failing advisory, and `ignore` omits the diagnostic. The legacy
 `unanalyzableSql` option accepts `fail`, `advise`, and `ignore`; `fail` means
 `report`. These policies never certify an unknown transaction as safe.
+Dynamic relation names, key columns, aliases, and `FOR UPDATE OF` targets also
+follow this policy; recovered SQL placeholders cannot establish their identity.
 
 Phase 1 does not establish advisory-key provenance from unwritten relations,
 unbounded recursive read sets, duplication of unique-index guarantees, or

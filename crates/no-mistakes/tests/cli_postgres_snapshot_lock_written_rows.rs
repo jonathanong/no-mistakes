@@ -121,6 +121,33 @@ fn postgres_lock_written_rows_proofs_check_json_snapshot() {
             ("committed", "committed", "checks-fail.yml"),
             ("changed_search_path", "search-path", "checks-fail.yml"),
             ("temporary_shadow", "temp-shadow", "checks-fail.yml"),
+            (
+                "placeholder_provenance_fail",
+                "placeholder-provenance",
+                "placeholder-provenance-fail.yml",
+            ),
+            (
+                "placeholder_provenance_advise",
+                "placeholder-provenance",
+                "placeholder-provenance-advise.yml",
+            ),
+            (
+                "placeholder_provenance_ignore",
+                "placeholder-provenance",
+                "placeholder-provenance-ignore.yml",
+            ),
+            (
+                "placeholder_table_lock",
+                "placeholder-table-lock",
+                "placeholder-table-lock.yml",
+            ),
+            ("sql_lock_forms", "sql-lock-forms", "checks-fail.yml"),
+            ("key_proofs", "key-proof", "checks-fail.yml"),
+            (
+                "key_proofs_unknown_ignored",
+                "key-proof",
+                "key-proof-ignore.yml",
+            ),
         ],
     );
 }

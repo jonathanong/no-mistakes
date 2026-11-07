@@ -1,6 +1,7 @@
 use crate::codebase::postgres::idents::{object_name_identity, unwrap_expr};
 mod helpers;
-use helpers::{access, constant, qualifier};
+use super::value::PlaceholderPositions;
+use helpers::{access, constant, generated_name, qualifier};
 use sqlparser::ast::{
     BinaryOperator, Expr, FunctionArg, FunctionArgExpr, FunctionArguments, Query, SetExpr,
     Statement, TableFactor, Visit, Visitor,
@@ -11,7 +12,7 @@ use std::ops::ControlFlow;
 pub(crate) struct LockWriteFacts {
     pub locks: Vec<RowAccess>,
     pub writes: Vec<RowAccess>,
-    pub table_locks: Vec<String>,
+    pub table_locks: Vec<Option<String>>,
     pub transaction_boundary: bool,
     pub relation_identity_changed: bool,
     pub advisory_keys: Vec<Vec<String>>,
@@ -23,7 +24,10 @@ pub(crate) struct RowAccess {
     pub has_predicate: bool,
 }
 
-pub(super) fn collect(statements: &[Statement]) -> LockWriteFacts {
+pub(super) fn collect(
+    statements: &[Statement],
+    positions: PlaceholderPositions<'_>,
+) -> LockWriteFacts {
     let mut out = LockWriteFacts::default();
     for statement in statements {
         if matches!(statement, Statement::Prepare { .. }) {
@@ -36,17 +40,19 @@ pub(super) fn collect(statements: &[Statement]) -> LockWriteFacts {
                 out: &mut out,
                 cte_depth: 0,
                 with_stack: Vec::new(),
+                positions,
             });
         }
     }
     out
 }
-struct Collector<'a> {
+struct Collector<'a, 'p> {
     out: &'a mut LockWriteFacts,
     cte_depth: usize,
     with_stack: Vec<bool>,
+    positions: PlaceholderPositions<'p>,
 }
-impl Visitor for Collector<'_> {
+impl Visitor for Collector<'_, '_> {
     type Break = ();
     fn pre_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
         self.with_stack.push(query.with.is_some());
@@ -58,7 +64,11 @@ impl Visitor for Collector<'_> {
                         && select.from.len() == 1
                         && select.from[0].joins.is_empty() =>
                 {
-                    access(&select.from[0].relation, select.selection.as_ref())
+                    access(
+                        &select.from[0].relation,
+                        select.selection.as_ref(),
+                        self.positions,
+                    )
                 }
                 _ => RowAccess {
                     relation: None,
@@ -68,6 +78,9 @@ impl Visitor for Collector<'_> {
             };
             let valid_of = query.locks.iter().all(|lock| {
                 lock.of.as_ref().is_none_or(|of| {
+                    if generated_name(of, self.positions) {
+                        return false;
+                    }
                     if let SetExpr::Select(select) = query.body.as_ref() {
                         if let Some(from) = select.from.first() {
                             return qualifier(&from.relation)
@@ -102,7 +115,11 @@ impl Visitor for Collector<'_> {
                 self.out.transaction_boundary = true
             }
             Statement::Update(update) => {
-                let mut target = access(&update.table.relation, update.selection.as_ref());
+                let mut target = access(
+                    &update.table.relation,
+                    update.selection.as_ref(),
+                    self.positions,
+                );
                 if !update.table.joins.is_empty() || update.from.is_some() {
                     target.key = None;
                     target.has_predicate = true;
@@ -114,7 +131,8 @@ impl Visitor for Collector<'_> {
                 let (FromTable::WithFromKeyword(from) | FromTable::WithoutKeyword(from)) =
                     &delete.from;
                 if let [table] = from.as_slice() {
-                    let mut target = access(&table.relation, delete.selection.as_ref());
+                    let mut target =
+                        access(&table.relation, delete.selection.as_ref(), self.positions);
                     if !table.joins.is_empty() || delete.using.is_some() {
                         target.key = None;
                         target.has_predicate = true;
@@ -122,11 +140,10 @@ impl Visitor for Collector<'_> {
                     self.out.writes.push(target);
                 }
             }
-            Statement::Lock(lock) => self.out.table_locks.extend(
-                lock.tables
-                    .iter()
-                    .map(|table| object_name_identity(&table.name)),
-            ),
+            Statement::Lock(lock) => self.out.table_locks.extend(lock.tables.iter().map(|table| {
+                (!generated_name(&table.name, self.positions))
+                    .then(|| object_name_identity(&table.name))
+            })),
             _ => {}
         }
         ControlFlow::Continue(())

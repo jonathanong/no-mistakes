@@ -1,24 +1,25 @@
 use super::*;
 use crate::codebase::postgres::statements::lock_writes::RowAccess;
+pub(super) fn enabled_for(call: &EmbeddedSqlCall, written: bool, outside: bool) -> bool {
+    if call.executor_transaction_known {
+        if call.transaction_id.is_some() {
+            written
+        } else {
+            outside
+        }
+    } else {
+        written || outside
+    }
+}
 pub(super) fn check(
     output: &mut Output<'_>,
     site: &Site<'_>,
     lock: &RowAccess,
-    writes: &[(&RowAccess, &EmbeddedSqlCall)],
+    candidates: &[(&RowAccess, &EmbeddedSqlCall)],
     relation: &str,
+    mut unknown: bool,
 ) {
-    let candidates: Vec<_> = writes
-        .iter()
-        .filter(|(write, _)| write.relation.as_deref() == Some(relation))
-        .collect();
-    let mut unknown = writes.iter().any(|(write, _)| {
-        write.relation.as_deref().is_some_and(|name| {
-            name != relation
-                && crate::codebase::postgres::idents::relation_suffix_key(name)
-                    == crate::codebase::postgres::idents::relation_suffix_key(relation)
-        })
-    });
-    for (write, call) in &candidates {
+    for (write, call) in candidates {
         let Some((write_column, write_key)) = &write.key else {
             if !write.has_predicate {
                 return;
@@ -27,7 +28,7 @@ pub(super) fn check(
             continue;
         };
         let Some((lock_column, lock_key)) = &lock.key else {
-            unknown = true;
+            unknown |= lock.has_predicate;
             continue;
         };
         if write_column != lock_column {

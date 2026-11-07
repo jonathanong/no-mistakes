@@ -236,3 +236,19 @@ fn ignored_checks_do_not_consume_allow_entries() {
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_stale(&findings[0], "allow");
 }
+
+#[test]
+fn key_proofs_distinguish_unresolved_from_unwritten_rows() {
+    let violations = vec![
+        (CHECKS[0].to_owned(), 9),
+        (CHECKS[0].to_owned(), 24),
+        (CHECKS[0].to_owned(), 29),
+    ];
+    assert_eq!(
+        targets("key-proof", &config("key-proof-ignore")),
+        violations
+    );
+    let mut expected = violations;
+    expected.push(("unanalyzable".to_owned(), 35));
+    assert_eq!(targets("key-proof", &failing_config("fail")), expected);
+}

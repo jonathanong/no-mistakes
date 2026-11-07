@@ -13,6 +13,7 @@ use std::{
 };
 mod output;
 mod rows;
+mod writes;
 use output::{Output, Site};
 use rayon::prelude::*;
 
@@ -75,6 +76,11 @@ fn scan_file(
                     versions.len() != 1
                         || versions.iter().any(|version| {
                             version.parse_failed
+                                || version
+                                    .lock_writes
+                                    .writes
+                                    .iter()
+                                    .any(|write| write.relation.is_none())
                                 || version.lock_writes.transaction_boundary
                                 || version.lock_writes.relation_identity_changed
                                 || version
@@ -88,7 +94,7 @@ fn scan_file(
         })
         .filter_map(|(_, call)| call.transaction_id)
         .collect();
-    let mut writes = BTreeMap::new();
+    let mut writes = writes::Writes::default();
     for (index, call) in embedded.calls.iter().enumerate() {
         if let Some(id) = call.transaction_id {
             if let Some(versions) = grouped.get(&index) {
@@ -97,10 +103,7 @@ fn scan_file(
                     && call.executor_transaction_known
                 {
                     for write in &versions[0].lock_writes.writes {
-                        writes
-                            .entry(id)
-                            .or_insert_with(Vec::new)
-                            .push((write, call));
+                        writes.insert(id, write, call);
                     }
                 }
             }
@@ -124,7 +127,7 @@ fn scan_file(
                 output.emit(
                     &site,
                     CHECKS[1],
-                    Some(relation),
+                    relation.as_deref(),
                     None,
                     "LOCK TABLE widens contention; lock only the row being written",
                 );
@@ -135,14 +138,7 @@ fn scan_file(
                 }
             }
             for lock in &access.locks {
-                if (!check_written && !check_outside)
-                    || (call.executor_transaction_known
-                        && call.transaction_id.is_some()
-                        && !check_written)
-                    || (call.executor_transaction_known
-                        && call.transaction_id.is_none()
-                        && !check_outside)
-                {
+                if !rows::enabled_for(call, check_written, check_outside) {
                     continue;
                 }
                 if !call.executor_transaction_known {
@@ -151,8 +147,8 @@ fn scan_file(
                     if unresolved.contains(&id) {
                         output.unresolved(&site, "transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set");
                     } else if let Some(relation) = &lock.relation {
-                        let candidates = writes.get(&id).map(Vec::as_slice).unwrap_or_default();
-                        rows::check(&mut output, &site, lock, candidates, relation);
+                        let (candidates, ambiguous) = writes.for_relation(id, relation);
+                        rows::check(&mut output, &site, lock, candidates, relation, ambiguous);
                     } else {
                         output.unresolved(
                             &site,

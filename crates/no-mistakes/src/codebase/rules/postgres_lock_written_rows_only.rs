@@ -119,3 +119,9 @@ mod proof_tests;
 fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     check_with_files(root, config, &[root.join("src/query.ts")])
 }
+
+#[cfg(test)]
+mod sql_forms_tests;
+
+#[cfg(test)]
+mod placeholder_provenance_tests;

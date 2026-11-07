@@ -1,13 +1,24 @@
 use super::*;
 use crate::codebase::postgres::idents::ident_key;
-pub(super) fn access(table: &TableFactor, predicate: Option<&Expr>) -> RowAccess {
+pub(super) fn access(
+    table: &TableFactor,
+    predicate: Option<&Expr>,
+    positions: PlaceholderPositions<'_>,
+) -> RowAccess {
     match table {
         TableFactor::Table {
-            name, args: None, ..
+            name,
+            alias,
+            args: None,
+            ..
         } => RowAccess {
-            relation: Some(object_name_identity(name)),
+            relation: (!generated_name(name, positions)
+                && !alias
+                    .as_ref()
+                    .is_some_and(|alias| generated(&alias.name, positions)))
+            .then(|| object_name_identity(name)),
             has_predicate: predicate.is_some(),
-            key: predicate.and_then(|expr| equality(expr, qualifier(table).as_deref())),
+            key: predicate.and_then(|expr| equality(expr, qualifier(table).as_deref(), positions)),
         },
         _ => RowAccess {
             relation: None,
@@ -27,7 +38,11 @@ pub(super) fn qualifier(table: &TableFactor) -> Option<String> {
         _ => None,
     }
 }
-fn equality(expr: &Expr, qualifier: Option<&str>) -> Option<(String, String)> {
+fn equality(
+    expr: &Expr,
+    qualifier: Option<&str>,
+    positions: PlaceholderPositions<'_>,
+) -> Option<(String, String)> {
     let Expr::BinaryOp {
         left,
         op: BinaryOperator::Eq,
@@ -36,15 +51,21 @@ fn equality(expr: &Expr, qualifier: Option<&str>) -> Option<(String, String)> {
     else {
         return None;
     };
-    column(left, qualifier)
+    column(left, qualifier, positions)
         .zip(bound(right))
-        .or_else(|| column(right, qualifier).zip(bound(left)))
+        .or_else(|| column(right, qualifier, positions).zip(bound(left)))
 }
-fn column(expr: &Expr, qualifier: Option<&str>) -> Option<String> {
+fn column(
+    expr: &Expr,
+    qualifier: Option<&str>,
+    positions: PlaceholderPositions<'_>,
+) -> Option<String> {
     match unwrap_expr(expr) {
-        Expr::Identifier(id) => Some(ident_key(id)),
+        Expr::Identifier(id) if !generated(id, positions) => Some(ident_key(id)),
         Expr::CompoundIdentifier(ids)
-            if ids.len() == 2 && Some(ident_key(&ids[0]).as_str()) == qualifier =>
+            if ids.len() == 2
+                && !ids.iter().any(|id| generated(id, positions))
+                && Some(ident_key(&ids[0]).as_str()) == qualifier =>
         {
             Some(ident_key(&ids[1]))
         }
@@ -68,4 +89,18 @@ pub(super) fn constant(expr: &Expr) -> bool {
         Expr::BinaryOp { left, right, .. } => constant(left) && constant(right),
         _ => false,
     }
+}
+
+fn generated(ident: &sqlparser::ast::Ident, positions: PlaceholderPositions<'_>) -> bool {
+    super::super::value::is_placeholder_ident_at(ident, Some(positions.unwrap_or_default()))
+}
+
+pub(super) fn generated_name(
+    name: &sqlparser::ast::ObjectName,
+    positions: PlaceholderPositions<'_>,
+) -> bool {
+    name.0
+        .iter()
+        .filter_map(|part| part.as_ident())
+        .any(|ident| generated(ident, positions))
 }
