@@ -28,19 +28,21 @@ pub(super) struct StatementSources<'a> {
     pub(super) recovery: Option<&'a crate::codebase::postgres::conflict::ConflictChunks<'a>>,
 }
 
-impl<'a> StatementSources<'a> {
-    pub(super) fn lock_writes(
-        &self,
+impl StatementProjection {
+    pub(super) fn locks(
+        self,
         statements: &[sqlparser::ast::Statement],
         positions: super::super::value::PlaceholderPositions<'_>,
     ) -> super::super::lock_writes::LockWriteFacts {
-        if self.projection == StatementProjection::LockScope {
+        if self == StatementProjection::LockScope {
             super::super::lock_writes::collect::<true>(statements, positions)
         } else {
             super::super::lock_writes::collect::<false>(statements, positions)
         }
     }
+}
 
+impl<'a> StatementSources<'a> {
     pub(super) fn location_tokens(
         &self,
         index: usize,

@@ -159,7 +159,7 @@ fn extract_from_parsed_and_sources(
     let (statement_kinds, setting_uses, function_calls) =
         policy::collect(sql, prepared_sql, statements, sources.policy);
     let mut facts = SqlStatementFileFacts {
-        lock_writes: sources.lock_writes(statements, placeholder_positions),
+        lock_writes: sources.projection.locks(statements, placeholder_positions),
         statement_kinds,
         setting_uses,
         function_calls,
