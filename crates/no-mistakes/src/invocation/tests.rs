@@ -161,9 +161,11 @@ fn invocation_guard_installs_deadline_after_lock_acquisition() {
 #[test]
 fn cli_and_napi_entrypoints_select_distinct_parent_signal_policies() {
     let cli = include_str!("../main/invocation.rs");
-    let napi = include_str!("../napi_api/async_task.rs");
+    let tasks = include_str!("../napi_api/async_task.rs");
+    let napi = include_str!("../napi_api/async_task/observed.rs");
 
     assert!(cli.contains("ExecutionGuard::acquire_for_cli"));
+    assert_eq!(tasks.matches("observed::execute_json(").count(), 2);
     assert!(napi.contains("InvocationGuard::acquire(invocation_options)"));
     assert!(!napi.contains("InvocationGuard::acquire_for_cli"));
 }
