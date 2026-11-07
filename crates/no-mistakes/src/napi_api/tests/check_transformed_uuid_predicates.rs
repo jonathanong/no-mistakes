@@ -2,6 +2,8 @@ use super::*;
 
 #[path = "check_uuid_aggregate_operands.rs"]
 mod check_uuid_aggregate_operands;
+#[path = "check_uuid_appended_view.rs"]
+mod check_uuid_appended_view;
 
 fn root() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(

@@ -1,6 +1,5 @@
-//! `` read(`/* name */ WITH ${b.text}`, b.values) ``: an untagged template
-//! whose only interpolation is the `.text` of one tracked SQL builder, paired
-//! with that builder's own `.values` as the bind array.
+//! Recover a tracked SQL builder's `.text` paired with its own `.values`,
+//! optionally wrapped in a template with one interpolation.
 
 use super::{combine, piece, Recovered, ScopeVisitor, ValueKind};
 use crate::codebase::postgres::embedded::walk::variants::expression;
@@ -12,21 +11,23 @@ use oxc_ast::ast::{CallExpression, Expression, TemplateLiteral};
 /// argument is not recognized.
 pub(in crate::codebase::postgres::embedded::walk) fn shape<'a>(
     call: &'a CallExpression<'a>,
-) -> Option<(&'a TemplateLiteral<'a>, &'a Expression<'a>)> {
+) -> Option<(Option<&'a TemplateLiteral<'a>>, &'a Expression<'a>)> {
     if call.optional || call.arguments.len() != 2 {
         return None;
     }
-    let Expression::TemplateLiteral(template) =
-        unwrap_ts_wrappers(call.arguments[0].as_expression()?)
-    else {
-        return None;
-    };
-    let [interpolated] = template.expressions.as_slice() else {
-        return None;
+    let argument = unwrap_ts_wrappers(call.arguments[0].as_expression()?);
+    let (template, interpolated) = match argument {
+        Expression::TemplateLiteral(template) => {
+            let [interpolated] = template.expressions.as_slice() else {
+                return None;
+            };
+            (Some(&**template), interpolated)
+        }
+        _ => (None, argument),
     };
     let (text_owner, text_name) = builder_property(interpolated, "text")?;
     let (_, values_owner) = builder_property(call.arguments[1].as_expression()?, "values")?;
-    (text_name == values_owner).then_some((&**template, text_owner))
+    (text_name == values_owner).then_some((template, text_owner))
 }
 
 /// `name.property` on a plain identifier: the identifier expression and its name.
@@ -50,7 +51,7 @@ fn builder_property<'a>(
 /// where `.text` stands. The builder must be fully recovered SQL.
 pub(in crate::codebase::postgres::embedded::walk::variants) fn recover(
     visitor: &ScopeVisitor<'_>,
-    template: &TemplateLiteral<'_>,
+    template: Option<&TemplateLiteral<'_>>,
     builder: &Expression<'_>,
     depth: u8,
     constraints: &[(u64, u32)],
@@ -62,6 +63,9 @@ pub(in crate::codebase::postgres::embedded::walk::variants) fn recover(
     {
         return None;
     }
+    let Some(template) = template else {
+        return Some(builders);
+    };
     let [head, tail] = template.quasis.as_slice() else {
         return None;
     };
