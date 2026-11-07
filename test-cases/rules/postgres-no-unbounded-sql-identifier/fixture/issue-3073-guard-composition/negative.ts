@@ -43,3 +43,17 @@ export async function opaqueAddition(provider: Provider, suffix: string) {
   await query(`/* first */ SELECT 1 FROM ${table}`)
   return query(`/* second */ SELECT 1 FROM ${table}`)
 }
+export async function mutatedCondition(provider: Provider, replacement: Provider) {
+  if (!providers.includes(provider) || (provider = replacement, false)) throw new Error("unknown provider")
+  const table = `${provider}_accounts`
+  const query = await beginTransaction()
+  await query(`/* first */ SELECT 1 FROM ${table}`)
+  return query(`/* second */ SELECT 1 FROM ${table}`)
+}
+export async function insufficientConjunction(provider: Provider, flag: boolean) {
+  if (!providers.includes(provider) && flag) throw new Error("unknown provider")
+  const table = `${provider}_accounts`
+  const query = await beginTransaction()
+  await query(`/* first */ SELECT 1 FROM ${table}`)
+  return query(`/* second */ SELECT 1 FROM ${table}`)
+}

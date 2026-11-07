@@ -13,6 +13,9 @@ export function tableFor__INDEX__(table: string) {
   return metadata
 }
 export async function load__INDEX__(ids: string[]) {
+  let label = `batch_${ids.length}`
+  label = `request_${ids.length}`
+  let unused = `label_${ids.length}`
   return query('/* load__INDEX__ */ SELECT id FROM dataset WHERE id = ANY($1::uuid[])', [ids])
 }
 export function Component__INDEX__(index: number) {

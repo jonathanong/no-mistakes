@@ -32,20 +32,42 @@ pub(super) fn expression(expr: &Expression<'_>) -> Option<()> {
     }
 }
 
-pub(super) fn closed_set_guard<'a>(
+pub(super) fn closed_set_guards<'a>(
     statement: &'a Statement<'a>,
-) -> Option<&'a oxc_ast::ast::CallExpression<'a>> {
+    mut visit: impl FnMut(&'a oxc_ast::ast::CallExpression<'a>),
+) {
     let Statement::IfStatement(branch) = statement else {
-        return None;
+        return;
     };
     if branch.alternate.is_some()
         || super::super::super::completion::statement_completes(&branch.consequent)
     {
-        return None;
+        return;
     }
-    let Expression::UnaryExpression(unary) =
-        crate::codebase::ts_source::unwrap_ts_wrappers(&branch.test)
-    else {
+    negative_memberships(&branch.test, &mut visit);
+}
+
+fn negative_memberships<'a>(
+    expr: &'a Expression<'a>,
+    visit: &mut impl FnMut(&'a oxc_ast::ast::CallExpression<'a>),
+) {
+    let expr = crate::codebase::ts_source::unwrap_ts_wrappers(expr);
+    if let Expression::LogicalExpression(logical) = expr {
+        if logical.operator == oxc_syntax::operator::LogicalOperator::Or {
+            negative_memberships(&logical.left, visit);
+            negative_memberships(&logical.right, visit);
+        }
+        return;
+    }
+    if let Some(call) = negative_membership(expr) {
+        visit(call);
+    }
+}
+
+fn negative_membership<'a>(
+    expr: &'a Expression<'a>,
+) -> Option<&'a oxc_ast::ast::CallExpression<'a>> {
+    let Expression::UnaryExpression(unary) = expr else {
         return None;
     };
     if unary.operator != UnaryOperator::LogicalNot {
@@ -55,7 +77,19 @@ pub(super) fn closed_set_guard<'a>(
     if call.arguments.len() != 1 {
         return None;
     }
-    expression(call.arguments[0].as_expression()?)?;
+    let mut argument = call.arguments[0].as_expression()?;
+    while let Expression::ParenthesizedExpression(parenthesized) = argument {
+        argument = &parenthesized.expression;
+    }
+    if matches!(
+        argument,
+        Expression::TSAsExpression(_)
+            | Expression::TSTypeAssertion(_)
+            | Expression::TSSatisfiesExpression(_)
+    ) {
+        return None;
+    }
+    expression(argument)?;
     let Expression::StaticMemberExpression(member) =
         crate::codebase::ts_source::unwrap_ts_wrappers(&call.callee)
     else {

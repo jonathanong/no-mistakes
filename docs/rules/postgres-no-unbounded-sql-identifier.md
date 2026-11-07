@@ -399,7 +399,9 @@ supported generated identifier shape, or an explicit trusted helper contract:
   later queries, plain or await-using transactions, and captured executor
   helpers share the same proof. An alias captured before validation does not. A guard inside
   a branch does not cover a query after that branch. A regex test is not a finite
-  domain. An inner `const` that shadows
+  domain. Membership operands cast to the array element type remain outside
+  this proof; an unchecked union type alone also remains unbounded.
+  An inner `const` that shadows
   the guarded name stays unbounded.
 - A completed call, before interpolation, to a helper listed in
   `identifierValidators`. `name` and the zero-based validated `argument` are

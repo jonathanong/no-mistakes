@@ -4,8 +4,10 @@ import { providers, type Provider, regions, type Region } from "@scope/pkg/confi
 export async function load(provider: Provider, region: Region) {
   if (!providers.includes(provider)) throw new Error("unknown provider")
   if (!regions.includes(region)) throw new Error("unknown region")
+  const unrelated = [{ column: "id", label: "label" }] as const
+  const options = { column: "id" } as const
   const prefix = "tenant_"
-  const base = `${prefix}${provider}_${region}`
+  const base = `${prefix}${provider}_${prefix}${region}`
   const table = base + `${"_accounts"}_${2}`
   const alias = table
   const query = await beginTransaction()

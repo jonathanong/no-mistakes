@@ -19,7 +19,9 @@ fn guarded_compositions_preserve_capture_context_for_every_query() {
         ("lookup", 2, true),
         ("multi-hole", 2, true),
         ("helper", 2, true),
-        ("negative", 12, false),
+        ("property", 2, true),
+        ("captured", 2, true),
+        ("negative", 16, false),
     ] {
         let config: NoMistakesConfig = serde_yaml::from_str(
             &std::fs::read_to_string(root.join(format!(".no-mistakes-{name}.yml"))).unwrap(),
@@ -84,7 +86,16 @@ fn guarded_compositions_preserve_capture_context_for_every_query() {
             .unwrap()
             .value_flow;
         if let Some(origins) = &flow.identifier_text_origins {
-            assert!(origins.binding(0, "providers", 0).is_none());
+            for binding in flow.bindings.iter().filter(|binding| {
+                matches!(
+                    binding.value,
+                    ValueExpression::Object(_, _) | ValueExpression::Array(_)
+                )
+            }) {
+                assert!(origins
+                    .binding(binding.scope, &binding.name, binding.declared_at)
+                    .is_none());
+            }
         }
     }
 }

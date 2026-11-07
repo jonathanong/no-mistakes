@@ -477,6 +477,7 @@ async Node reports from complete max-effort scans locate unused selectors on
 their config items as `unused-allow-entry`, honoring `reportUnusedAllowEntries`.
 
 These async APIs share the CLI proofs for imported literal-array guards,
+immutable templates and additions whose parts are literal or bounded at capture,
 literal properties selected from closed records, closed catalog map/join SQL,
 built-in `sql-template-strings` `.text` fragments with append chains and helper
 returns, including imported statements and synchronous factories used through

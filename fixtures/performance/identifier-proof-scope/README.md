@@ -20,13 +20,17 @@ python3 fixtures/performance/identifier-proof-scope/generate.py --out /tmp/ident
 flock --close /tmp/nm-heavy.lock python3 fixtures/performance/identifier-proof-scope/measure.py \
   --baseline /tmp/baseline-no-mistakes --candidate /tmp/candidate-no-mistakes \
   --fixture /tmp/identifier-proof-fixture --out /tmp/identifier-proof-results \
-  --jobs 4 --observers off on
+  --jobs 4 --observers off on --cohorts default mixed-low mixed max annotation-only
 ```
 
-Defaults produce 2,051 source files, about 56 MB and 831,492 source lines.
-Each generated component contains 128 JSX rows reading three properties. The
-mixed configuration combines a low-effort annotation rule with the identifier
-rule at max; the max configuration raises both to max. Annotation-only is the
+Defaults produce 2,051 source files, about 56 MB and over 831,000 source
+lines; the generator records exact counts.
+Each generated component contains 128 JSX rows reading three properties.
+The default configuration keeps both rules at low effort. Mixed-low combines
+annotation at max with identifier at low, exercising value-flow consumers
+without identifier demand. Mutable scalar declarations and assignments ensure
+this control exercises the collector gates. The mixed configuration combines
+a low-effort annotation rule with the identifier rule at max; the max configuration raises both to max. Annotation-only is the
 non-consuming control. One unannotated sentinel query must report in every
 configuration. The driver checks report hashes, findings, warnings and exit
 status, records startup separately, and samples fresh processes in balanced

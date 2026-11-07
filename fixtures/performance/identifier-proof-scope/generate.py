@@ -23,7 +23,10 @@ for name in ['db.ts', 'catalog.ts']:
     (root / 'src' / name).write_bytes((source / name).read_bytes())
 (root / 'src' / 'sentinel.ts').write_text("import { query } from '@bench/db'\nexport function sentinel() { return query('SELECT id FROM dataset') }\n")
 (root / 'tsconfig.json').write_bytes((source / 'tsconfig.json').read_bytes())
-for cohort, annotation_effort, identifier in [('mixed', 'low', True), ('max', 'max', True), ('annotation-only', 'max', False)]:
+for cohort, annotation_effort, identifier_effort in [
+    ('default', 'low', 'low'), ('mixed-low', 'max', 'low'),
+    ('mixed', 'low', 'max'), ('max', 'max', 'max'), ('annotation-only', 'max', None),
+]:
     config = f'''version: 2
 rules:
   - rule: postgres-require-query-annotation
@@ -34,14 +37,14 @@ rules:
       include: ['src/**/*']
       effort: {annotation_effort}
 '''
-    if identifier:
-        config += '''  - rule: postgres-no-unbounded-sql-identifier
+    if identifier_effort is not None:
+        config += f'''  - rule: postgres-no-unbounded-sql-identifier
     scope: repository
     options:
       importSpecifier: '@bench/db'
       executorNames: [query]
       include: ['src/**/*']
-      effort: max
+      effort: {identifier_effort}
 '''
     (root / f'{cohort}.yml').write_text(config)
 files = sorted((root / 'src').glob('*'))

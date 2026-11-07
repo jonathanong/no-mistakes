@@ -27,7 +27,7 @@ impl ImportCollector {
     }
 
     fn record_identifier_guard(&mut self, statement: &Statement<'_>, until: u32) {
-        if let Some(call) = reference::closed_set_guard(statement) {
+        reference::closed_set_guards(statement, |call| {
             let Expression::StaticMemberExpression(member) =
                 crate::codebase::ts_source::unwrap_ts_wrappers(&call.callee)
             else {
@@ -47,7 +47,7 @@ impl ImportCollector {
                     GuardKind::ClosedSet { collection, method },
                 );
             }
-        }
+        });
         self.note_assertion_guard(statement, until);
         super::metadata::note_guard(self, statement, until);
         match statement {
@@ -139,6 +139,14 @@ impl ImportCollector {
         let Some((name, scope, members)) = reference::value(value) else {
             return;
         };
+        if self.value_flow.identifier_writes.iter().any(|write| {
+            write.scope == scope
+                && write.name == name
+                && write.at >= call.span.start
+                && write.at < from
+        }) {
+            return;
+        }
         let subject = self.guard_subject(&name, scope, from, &members);
         self.value_flow
             .finite_identifier_guards

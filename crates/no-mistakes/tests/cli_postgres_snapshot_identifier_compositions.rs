@@ -17,6 +17,8 @@ fn postgres_guarded_identifier_compositions_check_json_snapshot() {
         "lookup",
         "multi-hole",
         "helper",
+        "property",
+        "captured",
     ] {
         assert_saved_fixture_clean(
             &format!("postgres_guarded_identifier_composition_{name}"),

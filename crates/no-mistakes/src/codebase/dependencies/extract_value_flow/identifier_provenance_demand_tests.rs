@@ -80,6 +80,7 @@ fn prepared_call_facts_collect_scalar_provenance_only_on_demand() {
     let plain = &ordinary_facts[&path];
     let selected = &requested_facts[&path];
     assert!(plain.parse_error.is_none() && selected.parse_error.is_none());
+    assert!(plain.value_flow.identifier_text_origins.is_none());
     assert_eq!(plain.imports, selected.imports);
     assert_eq!(plain.function_calls, selected.function_calls);
     assert_eq!(plain.value_flow.bindings, selected.value_flow.bindings);
