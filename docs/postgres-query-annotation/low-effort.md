@@ -216,6 +216,38 @@ while its use remains in the same function and is neither captured nor passed
 to another helper. References to the builder inside a suffix expression count
 as an unsafe use.
 
+The same bounded append-only helper proof preserves a continuation-safe missing
+head on a trusted local builder, including paired `.text`/`.values` reads.
+These calls report a definite missing annotation even with `unanalyzable: ignore`.
+Partial comments, transaction keywords that a suffix can extend, unknown tags,
+and escaping builders remain unresolved.
+
+A same-file helper can return a same-function `const` initialized directly with
+a string or ordinary template. The declaration must precede the return and have
+no writes. Named heads resolve and complete missing heads report a finding.
+Captured strings, mutable locals, and parameter forwarding remain unresolved;
+low does not infer literal arguments across every caller of a helper.
+
+Configured literal pass-through wrappers preserve their caller's literal SQL
+argument. For example, `sqlLiteralHelpers: [pg-copy-streams#from,
+pg-copy-streams#to]` recognizes imports aliased as `copyFrom` and `copyTo`:
+
+```ts
+import { from as copyFrom, to as copyTo } from "pg-copy-streams";
+client.query(copyFrom("/* copy/in */ COPY items FROM STDIN"));
+client.query(copyTo("/* copy/out */ COPY items TO STDOUT"));
+```
+
+The wrapper must be a direct non-optional call with exactly one literal string
+or interpolation-free ordinary template argument. Unannotated literals report
+a missing annotation; dynamic arguments, unconfigured wrappers, and optional
+calls remain unresolved. Matching uses import identity, not the local name.
+
+A conditional callee such as `(flag ? write : read)(sql)` qualifies when both
+arms are independently proven configured executors. An immutable local alias of
+that conditional also qualifies. SQL still needs the ordinary low-effort head
+proof; an unknown or shadowed callee arm does not establish an executor.
+
 A captured local builder also keeps its fixed named head when **every** runtime
 reference to its exact binding is closed: a discarded static one-argument
 `.append(...)`, a configured executor read, or a proven local append-only

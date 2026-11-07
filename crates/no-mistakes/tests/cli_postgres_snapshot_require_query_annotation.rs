@@ -238,3 +238,14 @@ fn postgres_helper_local_text_check_json_snapshot() {
         )],
     );
 }
+
+#[test]
+fn postgres_builder_suffix_proof_check_json_snapshot() {
+    assert_saved_fixture(
+        "postgres_builder_suffix_proof",
+        &[
+            case("report", "low-heads", "builder-suffix-proof.yml"),
+            case("ignore", "low-heads", "builder-suffix-proof-ignore.yml"),
+        ],
+    );
+}
