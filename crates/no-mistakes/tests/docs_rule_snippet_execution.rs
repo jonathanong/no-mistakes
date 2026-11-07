@@ -475,3 +475,21 @@ fn heading_sections_and_fences_share_delimiter_and_title_boundaries() {
         assert!(fences[0].1.contains("## Shorter"), "{title}: {fences:?}");
     }
 }
+
+#[test]
+fn conflict_ordering_examples_keep_sql_scope_before_intentional_exclusions() {
+    let rule = "postgres-conflict-ordering";
+    let page = docs_rule_snippets::load_page(&repo_root(), rule);
+    let config = docs_rule_snippets::rule_config_yaml(&page.body, rule);
+    let config: serde_yaml::Value = serde_yaml::from_str(&config).unwrap();
+    let options = &config["rules"][0]["options"];
+    assert_eq!(
+        options["sqlInclude"][0].as_str(),
+        Some("backend/queries/**/*.sql")
+    );
+    assert_eq!(
+        options["executorNames"],
+        serde_yaml::to_value(["query", "read", "write"]).unwrap()
+    );
+    assert!(options.get("excludeExecutorNames").is_none());
+}

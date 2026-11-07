@@ -28,6 +28,23 @@ in incompatible orders.
 
 ## Options and defaults
 
+`unanalyzableSql: advise` reports residual uncertainty in non-failing advisories.
+`--include-sql-verdicts` adds [per-subcheck SQL verdicts](../postgres-sql-verdicts.md).
+
+```yaml
+rules:
+  - rule: postgres-conflict-ordering
+    scope: repository
+    options:
+      schemaCatalogPath: db/schema.json
+      include: ["backend/**/*.ts"]
+      sqlInclude: ["backend/queries/**/*.sql"]
+      importSpecifier: "@example/db"
+      executorNames: [query, read, write]
+      unanalyzableSql: fail
+      safeDirective: deadlock-safe
+```
+
 When `read` is reserved for read-only SQL, it cannot create `INSERT … ON CONFLICT`
 conflicts. Select the writer executors and acknowledge that omission:
 
@@ -50,23 +67,6 @@ accompany `executorNames`; only combining `executorNames` with
 `extraExecutorNames` is a configuration error. Remove the exclusion if scoped
 files never import and call `read`, because it would produce an unused-entry
 warning.
-
-`unanalyzableSql: advise` reports residual uncertainty in non-failing advisories.
-`--include-sql-verdicts` adds [per-subcheck SQL verdicts](../postgres-sql-verdicts.md).
-
-```yaml
-rules:
-  - rule: postgres-conflict-ordering
-    scope: repository
-    options:
-      schemaCatalogPath: db/schema.json
-      include: ["backend/**/*.ts"]
-      sqlInclude: ["backend/queries/**/*.sql"]
-      importSpecifier: "@example/db"
-      executorNames: [query, read, write]
-      unanalyzableSql: fail
-      safeDirective: deadlock-safe
-```
 
 `schemaCatalogPath` is required and must name a repository-relative catalog
 generated with [`no-mistakes postgres catalog`](../cli/postgres.md). The catalog, not a
