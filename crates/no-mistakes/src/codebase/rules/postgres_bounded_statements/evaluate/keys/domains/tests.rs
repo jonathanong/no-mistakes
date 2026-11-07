@@ -114,3 +114,23 @@ fn recursive_domains_require_a_current_with_donor_without_not_materialized() {
         .collect();
     assert_eq!(counts, [1, 0, 0, 1, 1]);
 }
+
+#[test]
+fn recursive_domain_defensive_paths_preserve_conservative_public_findings() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-bounded-statements/issue-3114-coverage/fixture");
+    let sql = std::fs::read_to_string(root.join("recursive-domain-branches.sql")).unwrap();
+    let facts = extract_sql_statement_facts(&sql);
+    assert!(!facts.parse_failed);
+    assert_eq!(facts.bounds.len(), 11);
+    let catalog = catalog();
+    let expected = [0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0];
+    for (fact, expected) in facts.bounds.iter().zip(expected) {
+        assert_eq!(
+            super::super::super::offenders(fact, &catalog).len(),
+            expected,
+            "line {}",
+            fact.line,
+        );
+    }
+}
