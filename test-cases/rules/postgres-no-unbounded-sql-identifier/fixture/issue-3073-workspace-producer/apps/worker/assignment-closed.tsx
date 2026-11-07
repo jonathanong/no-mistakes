@@ -32,4 +32,11 @@ export async function finiteWrites(flag: boolean, ignored: string) {
   let replacedValue = ignored;
   replacedValue = "alpha";
   await read(`SELECT * FROM ${replacedValue}`);
+  let restoredValue = "alpha";
+  restoredValue = process.env.TABLE!;
+  restoredValue = "beta";
+  await read(`SELECT * FROM ${restoredValue}`);
+  let selfValue = "alpha";
+  selfValue = "rel_" + selfValue;
+  await read(`SELECT * FROM ${selfValue}`);
 }

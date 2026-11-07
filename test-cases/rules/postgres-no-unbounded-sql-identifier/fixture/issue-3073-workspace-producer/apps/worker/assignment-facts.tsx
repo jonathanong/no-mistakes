@@ -39,4 +39,7 @@ export async function assignmentFacts(input: string, flag: boolean, key: string)
   ({ table: destructured } = { table: input });
   let compound = 1;
   compound += 1;
+  let opaqueInitial: unknown = { nested: [input, input] };
+  opaqueInitial = input;
+  let unwritten = input;
 }

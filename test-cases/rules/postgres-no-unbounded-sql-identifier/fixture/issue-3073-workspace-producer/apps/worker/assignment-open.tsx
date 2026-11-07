@@ -28,4 +28,7 @@ export async function scalarWrites(input: string, flag: boolean) {
   let conditionalWrite = input;
   if (flag) conditionalWrite = "alpha";
   await read(`SELECT * FROM ${conditionalWrite}`);
+  let selfValue = input;
+  selfValue = "rel_" + selfValue;
+  await read(`SELECT * FROM ${selfValue}`);
 }

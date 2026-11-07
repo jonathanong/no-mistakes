@@ -17,14 +17,26 @@ impl Bindings<'_> {
         let writes = assignments.get(&(file, scope, name))?;
         let end = writes.partition_point(|write| write.completed_at <= at);
         let values = self.values.get(&(file, scope, name));
-        let binding = values.and_then(|values| {
+        let mut binding = values.and_then(|values| {
             let index = values.partition_point(|binding| binding.declared_at <= at);
             index
                 .checked_sub(1)
                 .and_then(|index| values.get(index))
                 .copied()
         });
-        let declared_at = binding.map_or(0, |binding| binding.declared_at);
+        let initial = writes
+            .iter()
+            .filter_map(|write| write.initial.as_deref())
+            .filter(|initial| initial.declared_at <= at)
+            .max_by_key(|initial| initial.declared_at);
+        let declared_at = binding
+            .map_or(0, |binding| binding.declared_at)
+            .max(initial.map_or(0, |initial| initial.declared_at));
+        let initial = initial.filter(|initial| initial.declared_at == declared_at);
+        binding = binding.filter(|binding| binding.declared_at == declared_at);
+        let owner = initial
+            .map(|initial| initial.owner)
+            .or_else(|| binding.map(|binding| binding.owner));
         let mut found = false;
         for write in writes[..end]
             .iter()
@@ -41,16 +53,26 @@ impl Bindings<'_> {
             if unbounded {
                 return Some(true);
             }
-            if write.unconditional && binding.is_some_and(|binding| binding.owner == write.owner) {
+            if write.unconditional && owner == Some(write.owner) {
                 return Some(false);
             }
         }
-        found.then(|| {
-            binding.map_or_else(
-                || self.parameter(file, scope, name),
-                |binding| self.expr_unbounded(file, &binding.value, seen),
-            )
-        })
+        if !found && initial.is_none() {
+            return None;
+        }
+        let value = initial
+            .map(|initial| &initial.value)
+            .or_else(|| binding.map(|binding| &binding.value));
+        let Some(value) = value else {
+            return Some(self.parameter(file, scope, name));
+        };
+        let key = (scope, name.to_string(), declared_at);
+        if !seen.bindings.insert(key.clone()) {
+            return Some(false);
+        }
+        let unbounded = self.expr_unbounded(file, value, seen);
+        seen.bindings.remove(&key);
+        Some(unbounded)
     }
 }
 

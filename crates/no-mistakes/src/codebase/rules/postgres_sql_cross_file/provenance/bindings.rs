@@ -132,3 +132,7 @@ mod reassigned_identifier_tests;
 #[cfg(test)]
 #[path = "bindings/assignment_scalar_tests.rs"]
 mod assignment_scalar_tests;
+
+#[cfg(test)]
+#[path = "bindings/assignment_initializers_tests.rs"]
+mod assignment_initializers_tests;

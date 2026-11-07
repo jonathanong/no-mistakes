@@ -23,26 +23,44 @@ fn assignment_identifier_summaries_do_not_duplicate_opaque_payloads() {
     }
     for write in &flow.identifier_writes {
         if let Some(assigned) = &write.assigned {
-            walk_expression(&assigned.value, &mut |value| {
-                assert!(
-                    !matches!(
-                        value,
-                        ValueExpression::Object(_, _)
-                            | ValueExpression::Array(_)
-                            | ValueExpression::Callable(_)
-                    ),
-                    "{} retained {value:?}",
-                    write.name
-                );
-            });
+            for value in std::iter::once(&assigned.value)
+                .chain(assigned.initial.iter().map(|initial| &initial.value))
+            {
+                walk_expression(value, &mut |value| {
+                    assert!(
+                        !matches!(
+                            value,
+                            ValueExpression::Object(_, _)
+                                | ValueExpression::Array(_)
+                                | ValueExpression::Callable(_)
+                        ),
+                        "{} retained {value:?}",
+                        write.name
+                    );
+                });
+            }
         }
     }
+    assert_eq!(
+        assigned(flow, "opaqueInitial")
+            .initial
+            .as_ref()
+            .unwrap()
+            .value,
+        ValueExpression::Unknown
+    );
     for name in ["projectedObject", "projectedArray"] {
         assert!(
             matches!(&assigned(flow, name).value, ValueExpression::Member(base, _) if matches!(base.as_ref(), ValueExpression::Unknown))
         );
     }
-    for name in ["importedTable", "unboundTable", "destructured", "compound"] {
+    for name in [
+        "importedTable",
+        "unboundTable",
+        "destructured",
+        "compound",
+        "unwritten",
+    ] {
         assert!(
             !flow
                 .identifier_writes

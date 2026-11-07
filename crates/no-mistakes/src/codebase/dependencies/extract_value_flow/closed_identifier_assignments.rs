@@ -1,7 +1,39 @@
 use super::*;
-use oxc_ast::ast::{AssignmentExpression, AssignmentTarget};
+use oxc_ast::ast::{AssignmentExpression, AssignmentTarget, VariableDeclarator};
 
 impl ImportCollector {
+    pub(crate) fn note_identifier_initializer(&mut self, declarator: &VariableDeclarator<'_>) {
+        let BindingPattern::BindingIdentifier(identifier) = &declarator.id else {
+            return;
+        };
+        let name = identifier.name.as_str();
+        let scope = self
+            .callee_binding_scope(name)
+            .unwrap_or(self.current_lexical_scope_id());
+        let value = if self
+            .unreachable_value_binding_after
+            .is_some_and(|at| declarator.span.start >= at)
+        {
+            ValueExpression::Unknown
+        } else {
+            declarator
+                .init
+                .as_ref()
+                .map_or(ValueExpression::Undefined, |init| {
+                    self.identifier_assignment_expression(init)
+                })
+        };
+        let owner = self.current_function_id();
+        self.identifier_initializers.insert(
+            (scope, name.to_string()),
+            IdentifierInitializer {
+                declared_at: declarator.span.start,
+                owner,
+                value,
+            },
+        );
+    }
+
     pub(crate) fn identifier_assignment(
         &self,
         assignment: &AssignmentExpression<'_>,
@@ -23,6 +55,7 @@ impl ImportCollector {
                 && !self.receiver_write_is_conditional
                 && self.replacement_region.is_none(),
             value: self.identifier_assignment_expression(&assignment.right),
+            initial: None,
         }))
     }
 
@@ -95,11 +128,15 @@ impl ImportCollector {
         start: usize,
         value: Option<Box<IdentifierAssignment>>,
     ) {
-        let Some(value) = value else { return };
+        let Some(mut value) = value else { return };
         if let Some(write) = self.value_flow.identifier_writes[start..]
             .iter_mut()
             .find(|write| write.at == assignment.span.start && write.members.is_empty())
         {
+            value.initial = self
+                .identifier_initializers
+                .remove(&(write.scope, write.name.clone()))
+                .map(Box::new);
             write.assigned = Some(value);
         }
     }
