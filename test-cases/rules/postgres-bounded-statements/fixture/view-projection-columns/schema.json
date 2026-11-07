@@ -102,7 +102,7 @@
     },
     "invalid_view": {
       "materialized": false,
-      "definition": "SELECT + FROM"
+      "definition": "SELECT 'unterminated"
     },
     "multiple_view": {
       "materialized": false,
