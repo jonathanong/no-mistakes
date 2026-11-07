@@ -18,6 +18,10 @@ pub(super) fn caller_argument(
     })
 }
 
+#[cfg(test)]
+#[path = "text_tag_origins_tests.rs"]
+mod tests;
+
 fn ordinary(
     bindings: &Bindings<'_>,
     file: &Path,

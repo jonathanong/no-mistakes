@@ -7,6 +7,10 @@ pub(crate) struct TextOrigin {
     pub(crate) fields: FxHashMap<String, TextOrigin>,
 }
 
+#[cfg(test)]
+#[path = "text_origin_facts_tests.rs"]
+mod tests;
+
 type BindingOrigins = FxHashMap<usize, FxHashMap<String, FxHashMap<u32, TextOrigin>>>;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
