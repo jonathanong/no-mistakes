@@ -197,3 +197,4 @@ mod guarded_parameter_identity;
 mod template_value_provenance;
 
 mod symbol_import_selectors;
+mod value_import_selectors;

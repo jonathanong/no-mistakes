@@ -16,8 +16,20 @@ pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
         calls: true,
         imports: true,
         effect_selectors: needs_module_validators(config),
+        value_import_selectors: needs_value_import_selectors(config),
         ..GraphBuildPlan::default()
     })
+}
+
+fn needs_value_import_selectors(config: &NoMistakesConfig) -> bool {
+    config
+        .rule_applications("postgres-no-unbounded-sql-identifier")
+        .iter()
+        .any(|rule| {
+            config
+                .effective_rule_analysis(rule)
+                .is_ok_and(|policy| policy.effort == crate::config::v2::Effort::Max)
+        })
 }
 
 fn needs_module_validators(config: &NoMistakesConfig) -> bool {
@@ -47,3 +59,6 @@ fn needs_module_validators(config: &NoMistakesConfig) -> bool {
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+#[path = "graph/value_import_demand_tests.rs"]
+mod value_import_demand_tests;

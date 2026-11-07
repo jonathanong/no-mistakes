@@ -11,6 +11,9 @@ pub struct GraphBuildPlan {
     pub assertion_owners: bool,
     /// Retain import-selector mappings for effects consumers of call records.
     pub effect_selectors: bool,
+    /// Retain exact runtime value-import selectors during call graph builds.
+    #[doc(hidden)]
+    pub value_import_selectors: bool,
     /// Build opt-in class `extends` edges and class declaration records.
     /// Runs the call resolution pass but keeps its `Call` edges and call sites
     /// out unless `calls` is also set. Excluded from `all()`.
@@ -53,6 +56,7 @@ impl GraphBuildPlan {
             calls: false,
             mock_boundaries: false,
             effect_selectors: false,
+            value_import_selectors: false,
             extends: false,
             imports: true,
             // RouteImport is an alternate, deliberately conservative import
@@ -114,6 +118,7 @@ impl GraphBuildPlan {
             calls: allowed.contains(&EdgeKind::Call) || allowed.contains(&EdgeKind::AssertionOwner),
             mock_boundaries: false,
             effect_selectors: false,
+            value_import_selectors: false,
             extends: allowed.contains(&EdgeKind::Extends),
             // Resolved call and extends edges use the prepared import projection
             // to find direct and re-exported callable targets. Traversal still
