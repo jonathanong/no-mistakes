@@ -60,11 +60,20 @@ pub(super) fn mapped(
                 |alias| alias == owner,
             )
     };
+    project_columns(&select.projection, columns, owns, !from.joins.is_empty())
+}
+
+fn project_columns(
+    projection: &[SelectItem],
+    columns: &BTreeMap<String, bool>,
+    owns: impl Fn(&str) -> bool,
+    joined: bool,
+) -> Option<BTreeMap<String, bool>> {
     let mut mapped = BTreeMap::new();
     let mut outputs = BTreeSet::new();
-    for item in &select.projection {
+    for item in projection {
         match item {
-            SelectItem::Wildcard(options) if plain_star(options) && from.joins.is_empty() => {
+            SelectItem::Wildcard(options) if plain_star(options) && !joined => {
                 append_star(&mut mapped, &mut outputs, columns)?;
                 continue;
             }
@@ -109,7 +118,7 @@ pub(super) fn mapped(
             if !owns(&owner) {
                 continue;
             }
-        } else if !from.joins.is_empty() {
+        } else if joined {
             continue;
         }
         if let Some(uuid) = columns.get(column) {
