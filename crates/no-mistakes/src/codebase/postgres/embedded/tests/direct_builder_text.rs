@@ -65,3 +65,15 @@ fn direct_builder_text_rejects_unproven_owners_arguments_and_mutations() {
         assert!(call.sql_text.is_none(), "{call:#?}");
     }
 }
+
+#[test]
+fn direct_builder_object_keeps_alias_ownership_and_non_appended_classification() {
+    let file = extract_view("append-view-object-controls.ts");
+    let [alias, untouched] = file.calls.as_slice() else {
+        panic!("expected two executor calls: {file:#?}");
+    };
+    assert_eq!(alias.kind, EmbeddedSqlKind::Dynamic);
+    assert!(alias.variants.is_empty());
+    assert_eq!(untouched.kind, EmbeddedSqlKind::ImmutableLocal);
+    assert!(untouched.variants.is_empty());
+}

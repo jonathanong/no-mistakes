@@ -71,7 +71,7 @@ pub(super) fn publish(
 
 // A static append can set enumerated without establishing ownership of a bare
 // mutable alias. Keep the original finite/folded decision proofs independently.
-fn revoked_static_alias(
+pub(in crate::codebase::postgres::embedded::walk::resolve) fn revoked_static_alias(
     visitor: &ScopeVisitor<'_>,
     argument: &Expression<'_>,
     kind: EmbeddedSqlKind,

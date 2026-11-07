@@ -4,7 +4,8 @@ use super::super::super::{EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlVariant};
 use super::super::variants::ValueKind;
 use super::super::ScopeVisitor;
 use crate::codebase::ts_source::byte_offset_to_line;
-use oxc_ast::ast::CallExpression;
+use crate::codebase::ts_source::unwrap_ts_wrappers;
+use oxc_ast::ast::{CallExpression, Expression};
 
 /// The call recovered from the template and the builder's final state, or
 /// `None` so the caller falls back to the ordinary (fail-closed) path.
@@ -19,6 +20,16 @@ pub(super) fn executor_call(
         || (call.arguments.len() == 1 && versions.iter().all(|value| value.append_sites.is_empty()))
     {
         return None;
+    }
+    if let [argument] = call.arguments.as_slice() {
+        let argument = unwrap_ts_wrappers(argument.as_expression()?);
+        let Expression::Identifier(id) = argument else {
+            return None;
+        };
+        let kind = visitor.lookup(id.name.as_str())?.kind;
+        if super::executor::variants::revoked_static_alias(visitor, argument, kind, &versions) {
+            return None;
+        }
     }
     let line = byte_offset_to_line(visitor.source, call.span.start as usize);
     let base = EmbeddedSqlCall {
