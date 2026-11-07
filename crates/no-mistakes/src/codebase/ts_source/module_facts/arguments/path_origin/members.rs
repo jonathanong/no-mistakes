@@ -22,7 +22,7 @@ impl<'a> Projector<'a, '_> {
                     origin.param_member = Some(key.to_owned());
                     return Some(origin);
                 }
-                let init = self.const_init(id).or_else(|| self.using_init(id))?;
+                let init = self.const_init(id)?;
                 self.member_origin(init, key, depth + 1)
             }
             Expression::ObjectExpression(object) => {
@@ -68,27 +68,24 @@ impl<'a> Projector<'a, '_> {
             return None;
         }
         let semantic = self.semantic;
-        let mut node = semantic.scoping().symbol_declaration(symbol);
-        for _ in 0..4 {
-            if let AstKind::VariableDeclarator(declaration) = semantic.nodes().kind(node) {
-                let BindingPattern::ObjectPattern(pattern) = &declaration.id else {
-                    return None;
-                };
-                if pattern.rest.is_some() || id.span.start < declaration.span.end {
-                    return None;
-                }
-                for property in &pattern.properties {
-                    let BindingPattern::BindingIdentifier(binding) = &property.value else {
-                        continue;
-                    };
-                    if binding.symbol_id.get() == Some(symbol) && !property.computed {
-                        let key = crate::ast::property_key_name(&property.key)?;
-                        return self.member_origin(declaration.init.as_ref()?, &key, depth + 1);
-                    }
-                }
-                return None;
+        let node = semantic.scoping().symbol_declaration(symbol);
+        let AstKind::VariableDeclarator(declaration) = semantic.nodes().kind(node) else {
+            return None;
+        };
+        let BindingPattern::ObjectPattern(pattern) = &declaration.id else {
+            return None;
+        };
+        if pattern.rest.is_some() || id.span.start < declaration.span.end {
+            return None;
+        }
+        for property in &pattern.properties {
+            let BindingPattern::BindingIdentifier(binding) = &property.value else {
+                continue;
+            };
+            if binding.symbol_id.get() == Some(symbol) && !property.computed {
+                let key = crate::ast::property_key_name(&property.key)?;
+                return self.member_origin(declaration.init.as_ref()?, &key, depth + 1);
             }
-            node = semantic.nodes().parent_id(node);
         }
         None
     }
@@ -128,28 +125,5 @@ impl<'a> Projector<'a, '_> {
             }
         }
         true
-    }
-
-    fn using_init(&self, id: &IdentifierReference<'a>) -> Option<&'a Expression<'a>> {
-        let symbol = self.binding_symbol(id)?;
-        let semantic = self.semantic;
-        let node = semantic.scoping().symbol_declaration(symbol);
-        let AstKind::VariableDeclarator(declaration) = semantic.nodes().kind(node) else {
-            return None;
-        };
-        let AstKind::VariableDeclaration(parent) = semantic.nodes().parent_kind(node) else {
-            return None;
-        };
-        if !matches!(
-            parent.kind,
-            VariableDeclarationKind::Using | VariableDeclarationKind::AwaitUsing
-        ) || semantic
-            .scoping()
-            .get_resolved_references(symbol)
-            .any(|r| r.flags().is_write())
-        {
-            return None;
-        }
-        declaration.init.as_ref()
     }
 }

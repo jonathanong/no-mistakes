@@ -2,7 +2,7 @@ use serde_json::Value;
 use std::path::PathBuf;
 
 const RULE: &str = "test-no-live-repository-scan";
-const CASES: [&str; 34] = [
+const CASES: [&str; 35] = [
     "const-load",
     "nested-async-return",
     "owned-object-return",
@@ -22,6 +22,7 @@ const CASES: [&str; 34] = [
     "arbitrary-options",
     "arbitrary-recursion",
     "mixed-callers",
+    "mixed-live-callers",
     "arbitrary-hook-env",
     "arbitrary-rewritten-spread",
     "mutable-load",
@@ -124,6 +125,7 @@ fn bounded_arbitrary_roots_and_escaped_callers_stay_advisory() {
         "arbitrary-options",
         "arbitrary-recursion",
         "mixed-callers",
+        "mixed-live-callers",
         "arbitrary-hook-env",
         "arbitrary-rewritten-spread",
         "mutable-load",

@@ -1,8 +1,7 @@
 use super::{path_provenance, Owners};
 use crate::codebase::dependencies::graph::{NodeId, ResolvedCallSite, TsFactLookup};
-use crate::codebase::rules::forbidden_calls::site_source_node;
 use crate::codebase::rules::test_no_live_repository_scan::provenance::{classify, Verdict};
-use crate::codebase::ts_source::module_facts::arguments::PathOrigin;
+use crate::codebase::ts_source::module_facts::arguments::{PathOrigin, PathProvenance};
 use crate::fx::FxHashSet;
 
 impl Owners<'_> {
@@ -35,26 +34,12 @@ impl Owners<'_> {
                 return false;
             };
             for caller in callers {
-                let Some(paths) = facts.get_ts_facts(&caller.file).and_then(path_provenance) else {
-                    return false;
-                };
-                let argument = match &member {
-                    Some(member) => paths
-                        .arg_member_paths
-                        .get(&caller.offset)
-                        .and_then(|paths| {
-                            paths
-                                .iter()
-                                .find(|(position, key, _)| *position == index && key == member)
-                                .map(|(_, _, origin)| origin)
-                        }),
-                    None => paths.arg_paths.get(&caller.offset).and_then(|paths| {
-                        paths
-                            .iter()
-                            .find(|(position, _)| *position == index)
-                            .map(|(_, origin)| origin)
-                    }),
-                };
+                let argument = facts
+                    .get_ts_facts(&caller.file)
+                    .and_then(path_provenance)
+                    .and_then(|paths| {
+                        argument_path(paths, caller.offset, index, member.as_deref())
+                    });
                 let Some(argument) = argument else {
                     return false;
                 };
@@ -78,9 +63,29 @@ impl Owners<'_> {
     }
 
     fn parameter_source(&self, origin: &PathOrigin, site: &ResolvedCallSite) -> Option<NodeId> {
-        match origin.param_owner {
-            Some(offset) => self.nodes.get(&site.file)?.get(&offset).cloned(),
-            None => Some(site_source_node(site)),
-        }
+        let offset = origin.param_owner?;
+        self.nodes.get(&site.file)?.get(&offset).cloned()
+    }
+}
+
+fn argument_path<'a>(
+    paths: &'a PathProvenance,
+    offset: u32,
+    index: usize,
+    member: Option<&str>,
+) -> Option<&'a PathOrigin> {
+    match member {
+        Some(member) => paths
+            .arg_member_paths
+            .get(&offset)?
+            .iter()
+            .find(|(position, key, _)| *position == index && key == member)
+            .map(|(_, _, origin)| origin),
+        None => paths
+            .arg_paths
+            .get(&offset)?
+            .iter()
+            .find(|(position, _)| *position == index)
+            .map(|(_, origin)| origin),
     }
 }

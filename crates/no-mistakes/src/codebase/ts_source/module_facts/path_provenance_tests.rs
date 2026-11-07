@@ -129,6 +129,7 @@ fn stub_global_process_and_opaque_config_keys_poison() {
 }
 
 mod call_origins;
+mod member_arguments;
 
 #[test]
 fn only_exact_rest_forwarding_inside_a_mock_implementation_passes_through() {
@@ -153,3 +154,5 @@ fn only_exact_rest_forwarding_inside_a_mock_implementation_passes_through() {
     names.sort();
     assert_eq!(names, ["list", "readdirSync", "readdirSync", "readdirSync"]);
 }
+
+mod member_origins;
