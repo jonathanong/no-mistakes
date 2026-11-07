@@ -1,6 +1,7 @@
 version: 2
 rules:
   - rule: postgres-lock-written-rows-only
+    scope: repository
     options:
       include: [src/**/*.ts]
       importSpecifier: '@example/db'
