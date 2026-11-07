@@ -64,9 +64,10 @@ fn transaction_metadata_survives_statement_variant_projection() {
 fn resource_bindings_and_explicit_option_receivers_preserve_transaction_identity() {
     let path = super::tests::fixture("transaction-resource-options.ts");
     let source = super::tests::read_fixture("transaction-resource-options.ts");
-    let options = EmbeddedSqlOptions::configured("@example/db", &["query".into()])
+    let mut options = EmbeddedSqlOptions::configured("@example/db", &["query".into()])
         .with_scoped_executors(&["openTransaction".into()], &[])
         .with_executor_option_properties(&["query".into()]);
+    options.track_transaction_helpers = true;
     let calls = extract_embedded_sql_from_source(&path, &source, &options).calls;
     assert_eq!(calls.len(), 13, "{calls:?}");
     let outer = calls[0].transaction_id;
@@ -112,4 +113,53 @@ fn sql_phase_two_projection_is_opt_in() {
             .sum::<usize>(),
         1
     );
+}
+
+#[test]
+fn resource_transactions_preserve_legacy_extraction_without_lock_profile() {
+    let extract = |name: &str, options: &EmbeddedSqlOptions| {
+        extract_embedded_sql_from_source(
+            &super::tests::fixture(name),
+            &super::tests::read_fixture(name),
+            options,
+        )
+    };
+    let mut options = EmbeddedSqlOptions::configured("@example/db", &["query".into()])
+        .with_scoped_executors(&["openTransaction".into()], &[]);
+    let legacy = extract("transaction-resource-gate-legacy.ts", &options);
+    let disabled = extract("transaction-resource-gate.ts", &options);
+    let projection = |file: &super::EmbeddedSqlFileFacts| {
+        file.calls
+            .iter()
+            .map(|call| {
+                (
+                    call.line,
+                    call.sql_text.clone(),
+                    call.kind,
+                    call.executor_transaction_known,
+                    call.transaction_line,
+                    call.bound_parameters.clone(),
+                )
+            })
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(disabled.executor_bindings, legacy.executor_bindings);
+    assert_eq!(projection(&disabled), projection(&legacy));
+    assert!(disabled
+        .calls
+        .iter()
+        .filter(|call| [4, 6].contains(&call.line))
+        .all(|call| call.transaction_id.is_none() && !call.executor_transaction_known));
+    options.track_transaction_helpers = true;
+    let enabled = extract("transaction-resource-gate.ts", &options);
+    let resources: Vec<_> = enabled
+        .calls
+        .iter()
+        .filter(|call| [4, 6].contains(&call.line))
+        .collect();
+    assert_eq!(resources.len(), 2);
+    assert!(resources
+        .iter()
+        .all(|call| call.transaction_id.is_some() && call.executor_transaction_known));
+    assert_ne!(resources[0].transaction_id, resources[1].transaction_id);
 }
