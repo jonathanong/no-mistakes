@@ -1,10 +1,10 @@
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression, ObjectPropertyKind};
 
-pub(super) fn receiver<'a, 'b>(
-    call: &'b CallExpression<'a>,
+pub(super) fn receiver<'a>(
+    call: &'a CallExpression<'a>,
     properties: &[String],
-) -> Option<Option<&'b Expression<'a>>> {
+) -> Option<Option<&'a Expression<'a>>> {
     if properties.is_empty() {
         return None;
     }
