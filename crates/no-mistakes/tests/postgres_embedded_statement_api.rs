@@ -36,6 +36,9 @@ fn public_call_versions_are_readable_and_legacy_construction_is_explicit() {
     // The version field is an intentional Rust contract addition; callers can
     // construct legacy calls with an empty list or a default struct update.
     let explicit = EmbeddedSqlCall {
+        lock_scope_analysis: false,
+        helper_definition: false,
+        lock_helper: None,
         transaction_id: None,
         transaction_line: None,
         executor_transaction_known: false,
