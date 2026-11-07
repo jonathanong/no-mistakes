@@ -1,0 +1,95 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "builder-suffix-proof.mts",
+          "line": 16,
+          "message": "builder-suffix-proof.mts:16: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(statement)",
+          "target": "annotation"
+        },
+        {
+          "file": "builder-suffix-proof.mts",
+          "line": 21,
+          "message": "builder-suffix-proof.mts:21: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(statement.text, statement.values)",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "builder-suffix-proof.mts",
+          "line": 16,
+          "message": "builder-suffix-proof.mts:16: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(statement)",
+          "target": "annotation"
+        },
+        {
+          "file": "builder-suffix-proof.mts",
+          "line": 21,
+          "message": "builder-suffix-proof.mts:21: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(statement.text, statement.values)",
+          "target": "annotation"
+        },
+        {
+          "file": "builder-suffix-proof.mts",
+          "line": 26,
+          "message": "builder-suffix-proof.mts:26: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(statement)",
+          "target": "annotation"
+        },
+        {
+          "file": "builder-suffix-proof.mts",
+          "line": 31,
+          "message": "builder-suffix-proof.mts:31: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(statement)",
+          "target": "annotation"
+        },
+        {
+          "file": "builder-suffix-proof.mts",
+          "line": 37,
+          "message": "builder-suffix-proof.mts:37: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(statement)",
+          "target": "annotation"
+        },
+        {
+          "file": "builder-suffix-proof.mts",
+          "line": 42,
+          "message": "builder-suffix-proof.mts:42: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(statement)",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

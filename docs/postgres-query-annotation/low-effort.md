@@ -216,7 +216,7 @@ while its use remains in the same function and is neither captured nor passed
 to another helper. References to the builder inside a suffix expression count
 as an unsafe use.
 
-The same bounded append-only helper proof preserves a continuation-safe missing
+A proven same-file append-only helper also preserves a continuation-safe missing
 head on a trusted local builder, including paired `.text`/`.values` reads.
 These calls report a definite missing annotation even with `unanalyzable: ignore`.
 Partial comments, transaction keywords that a suffix can extend, unknown tags,
