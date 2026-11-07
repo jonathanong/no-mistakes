@@ -62,3 +62,17 @@ fn metadata_lookup_facts_keep_closed_fields_and_reject_open_or_aliased_arrays() 
         3
     );
 }
+
+#[test]
+fn getter_member_validation_never_establishes_a_guard_subject() {
+    let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-no-unbounded-sql-identifier/fixture/issue-3073-guards/src/getters.ts"));
+    let flow = parse_flow(source, true);
+    let guards: Vec<_> = flow
+        .finite_identifier_guards
+        .iter()
+        .filter(|guard| guard.name == "config")
+        .collect();
+    assert_eq!(guards.len(), 1);
+    assert_eq!(guards[0].members, ["table"]);
+    assert_eq!(guards[0].subject, None);
+}

@@ -165,12 +165,8 @@ fn mark_read(collector: &mut super::super::super::ImportCollector, expr: &Expres
         return;
     };
     if collector
-        .value_flow
-        .closed_string_registries
-        .iter()
-        .any(|registry| {
-            registry.name == identifier.name && registry.kind == super::RegistryKind::MetadataArray
-        })
+        .metadata_registry_names
+        .contains(identifier.name.as_str())
         && collector.closed_registry_call_callee != Some(identifier.span.start)
     {
         return;

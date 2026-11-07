@@ -58,6 +58,9 @@ impl ImportCollector {
             .callee_binding_scope(&name)
             .unwrap_or_else(|| self.current_lexical_scope_id());
         if let Some((kind, keys)) = registries::registry(init) {
+            if kind == RegistryKind::MetadataArray {
+                self.metadata_registry_names.insert(name.clone());
+            }
             self.value_flow
                 .closed_string_registries
                 .push(ClosedStringRegistry {

@@ -381,7 +381,9 @@ set the scan can see:
   A guard for `config.schema` covers only that property path, including a
   static bracket spelling. It does not validate `config.table`. Writes or
   escaping the object invalidate property proofs conservatively. A guard
-  after SQL interpolation cannot validate the earlier value.
+  after SQL interpolation cannot validate the earlier value. A local object
+  with getters or another unsupported initializer cannot establish a member
+  guard because a later read may produce another value.
 - A local lookup from a static array of plain metadata objects whose fields
   are all string literals: `const selected = TABLES.find(entry => entry.name
   === name)`, followed by `if (!selected) throw` or `return`, proves

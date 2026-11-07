@@ -12,13 +12,7 @@ pub(super) fn note_call(collector: &mut ImportCollector, call: &CallExpression<'
     let Some(name) = names::identifier_name(&member.object) else {
         return;
     };
-    if collector
-        .value_flow
-        .closed_string_registries
-        .iter()
-        .any(|registry| registry.name == name && registry.kind == RegistryKind::MetadataArray)
-        && lookup_collection(call).is_none()
-    {
+    if collector.metadata_registry_names.contains(&name) && lookup_collection(call).is_none() {
         collector.record_registry_mutation(&name);
     }
 }

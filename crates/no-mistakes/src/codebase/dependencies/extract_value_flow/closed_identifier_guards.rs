@@ -122,7 +122,7 @@ impl ImportCollector {
         let Some((name, scope, members)) = reference::value(value) else {
             return;
         };
-        let subject = self.guard_subject(&name, scope, from);
+        let subject = self.guard_subject(&name, scope, from, &members);
         self.value_flow
             .finite_identifier_guards
             .push(FiniteIdentifierGuard {
@@ -136,13 +136,22 @@ impl ImportCollector {
             });
     }
 
-    fn guard_subject(&self, name: &str, scope: usize, at: u32) -> Option<GuardSubject> {
+    fn guard_subject(
+        &self,
+        name: &str,
+        scope: usize,
+        at: u32,
+        members: &[String],
+    ) -> Option<GuardSubject> {
         if let Some(binding) = self.value_flow.bindings.iter().rev().find(|binding| {
             binding.scope == scope
                 && binding.name == name
                 && binding.declared_at <= at
                 && binding.invalidated_at.is_none_or(|end| at < end)
         }) {
+            if !members.is_empty() && matches!(binding.value, ValueExpression::Unknown) {
+                return None;
+            }
             return Some(GuardSubject::Binding {
                 scope,
                 declared_at: binding.declared_at,
