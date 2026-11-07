@@ -137,6 +137,17 @@ pub(crate) fn trace<T>(
     operation: impl FnOnce() -> T,
 ) -> T {
     match super::current() {
+        Some(observer)
+            if pass == FilePass::Parse
+                && observer.verbose()
+                && FILE.with(|file| {
+                    file.borrow().as_ref().is_some_and(|(owner, active)| {
+                        *owner == std::sync::Arc::as_ptr(&observer) as usize && active == path
+                    })
+                }) =>
+        {
+            operation()
+        }
         Some(observer) => observer.trace_file(pass, path, units, operation),
         None => operation(),
     }
