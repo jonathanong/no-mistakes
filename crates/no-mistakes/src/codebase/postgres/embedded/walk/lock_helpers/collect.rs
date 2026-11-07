@@ -97,7 +97,13 @@ fn summarize<'a>(
             return None;
         };
         let executor = params.iter().position(|param| *param == id.name.as_str())?;
-        crate::codebase::postgres::embedded::sql_text(call.arguments.first()?.as_expression()?)?;
+        let sql = unwrap_ts_wrappers(call.arguments.first()?.as_expression()?);
+        if !matches!(sql, Expression::StringLiteral(_))
+            && !matches!(sql, Expression::TemplateLiteral(template) if template.expressions.is_empty())
+        {
+            return None;
+        }
+        crate::codebase::postgres::embedded::sql_text(sql)?;
         if let Some(argument) = call.arguments.get(1) {
             let Expression::ArrayExpression(array) = unwrap_ts_wrappers(argument.as_expression()?)
             else {

@@ -258,6 +258,12 @@ fn postgres_lock_written_rows_helpers_check_json_snapshot() {
                 "checks-fail.yml",
             ),
             ("reexports", "helper-reexport", "checks-fail.yml"),
+            ("sql_proof", "helper-sql-proof", "checks-fail.yml"),
+            (
+                "imported_sql_proof",
+                "helper-imported-sql-proof",
+                "checks-fail.yml",
+            ),
             (
                 "unsupported",
                 "helper-unsupported-shapes",

@@ -66,7 +66,9 @@ does not satisfy the lock. Diagnostics name the helper and its lock line.
 Helper effects require a direct `await helper(...)` (including `return await`).
 A plain `return helper(...)` or discarded promise is unanalyzable because an
 `await using` transaction can be disposed before the helper finishes. Within a
-summarized helper, each executor call must itself be awaited or returned.
+summarized helper, each executor call must itself be awaited or returned. Helper
+SQL must be a string literal or an interpolation-free untagged template. Tagged
+templates and JavaScript interpolations remain unanalyzable in helper summaries.
 Executor shapes must match: `q(sql)` accepts `tx.query`, while `q.query(sql)`
 accepts `tx`. A mismatch makes the entire helper call unanalyzable.
 

@@ -5,6 +5,7 @@ mod executor_selection;
 mod helper_completion;
 mod helper_projection;
 mod helper_shapes;
+mod helper_sql_proof;
 mod helpers;
 mod phase_two_sql;
 mod placeholder_provenance;
