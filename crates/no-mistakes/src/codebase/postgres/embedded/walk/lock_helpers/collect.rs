@@ -4,7 +4,10 @@ use oxc_ast::ast::{
     BindingPattern, Declaration, Expression, FormalParameters, FunctionBody, Program, Statement,
 };
 
-pub(super) fn collect<'a>(program: &'a Program<'a>, enabled: bool) -> LockHelpers<'a> {
+pub(in crate::codebase::postgres::embedded::walk) fn collect<'a>(
+    program: &'a Program<'a>,
+    enabled: bool,
+) -> LockHelpers<'a> {
     let mut helpers = LockHelpers::default();
     if !enabled {
         return helpers;
