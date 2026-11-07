@@ -29,6 +29,7 @@ pub(crate) fn collect_calls<'a>(
         super::super::finite_identifiers::vitest_it_imports(program)
     };
     let mut visitor = ScopeVisitor {
+        imported_lock_helpers: Vec::new(),
         lock_helpers: super::super::lock_helpers::collect(
             program,
             options.track_transaction_helpers,
@@ -108,7 +109,9 @@ pub(crate) fn collect_calls<'a>(
     };
     visitor.visit_program(program);
     visitor.flush_plain_returns();
-    visitor.mark_lock_helper_definitions();
+    if options.track_transaction_helpers {
+        visitor.mark_lock_helper_definitions();
+    }
     visitor.downgrade_escaped_member_calls();
     if !head_calls_only {
         visitor.finish_const_splices();
@@ -134,7 +137,10 @@ pub(crate) fn collect_calls<'a>(
         .filter(|call| call.sql_looking && visitor.pending_spans.contains_key(&call.sequence))
         .map(|call| call.sequence)
         .collect();
+    let lock_helper_summaries = visitor.lock_helper_summaries();
     CollectedCalls {
+        lock_helper_summaries,
+        imported_lock_helpers: visitor.imported_lock_helpers,
         undeclared_executor_types: visitor.undeclared_executor_types,
         calls: visitor.calls,
         call_spans: visitor.call_spans,

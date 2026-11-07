@@ -33,6 +33,8 @@ fn embedded(
     unproven: Vec<(u32, u32)>,
 ) -> EmbeddedSqlFileFacts {
     EmbeddedSqlFileFacts {
+        lock_helper_summaries: Default::default(),
+        imported_lock_helpers: Default::default(),
         path,
         executor_bindings: Vec::new(),
         calls,

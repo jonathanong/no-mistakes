@@ -120,6 +120,8 @@ fn files_without_relative_candidates_are_left_untouched() {
             embedded_sql: vec![(
                 options(),
                 EmbeddedSqlFileFacts {
+                    lock_helper_summaries: Default::default(),
+                    imported_lock_helpers: Default::default(),
                     path: path.clone(),
                     executor_bindings: Vec::new(),
                     calls: vec![call],
@@ -269,6 +271,8 @@ fn missing_source_keeps_an_unsuppressed_relative_member() {
 
 fn embedded_facts(path: &Path, spans: Vec<(u32, u32)>) -> EmbeddedSqlFileFacts {
     EmbeddedSqlFileFacts {
+        lock_helper_summaries: Default::default(),
+        imported_lock_helpers: Default::default(),
         path: path.to_path_buf(),
         executor_bindings: Vec::new(),
         calls: Vec::new(),

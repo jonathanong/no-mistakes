@@ -86,6 +86,20 @@ fn summarize<'a>(
         };
         let executor = params.iter().position(|param| *param == id.name.as_str())?;
         crate::codebase::postgres::embedded::sql_text(call.arguments.first()?.as_expression()?)?;
+        if let Some(Expression::ArrayExpression(array)) = call
+            .arguments
+            .get(1)
+            .and_then(|argument| argument.as_expression())
+            .map(unwrap_ts_wrappers)
+        {
+            if array
+                .elements
+                .iter()
+                .any(|element| element.as_expression().is_none())
+            {
+                return None;
+            }
+        }
         calls.push((executor, call.as_ref()));
     }
     (!calls.is_empty()).then_some(Helper { params, calls })

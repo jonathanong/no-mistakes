@@ -21,6 +21,7 @@ use std::path::{Path, PathBuf};
 
 mod constants;
 mod locate;
+mod lock_helpers;
 mod program;
 
 #[cfg(test)]
@@ -28,9 +29,9 @@ mod tests;
 
 pub(super) fn has_candidates(files: &FileIdMap<CheckFileFacts>) -> bool {
     files.into_iter().any(|(_, file)| {
-        file.embedded_sql
-            .iter()
-            .any(|(_, embedded)| !embedded.pending_imported.is_empty())
+        file.embedded_sql.iter().any(|(_, embedded)| {
+            !embedded.pending_imported.is_empty() || !embedded.imported_lock_helpers.is_empty()
+        })
     })
 }
 
@@ -39,8 +40,9 @@ type Completed = (PathBuf, usize, (u32, u32), EmbeddedSqlCall, Vec<u32>);
 
 pub(super) fn project(
     files: &mut FileIdMap<CheckFileFacts>,
-    resolve: impl FnMut(&str, &Path) -> Option<PathBuf>,
+    mut resolve: impl FnMut(&str, &Path) -> Option<PathBuf>,
 ) {
+    lock_helpers::project(files, &mut resolve);
     let (completed, prerequisites) = complete(files, resolve);
     for (path, prerequisite) in prerequisites {
         if let Some(file) = files.get_mut(&path) {

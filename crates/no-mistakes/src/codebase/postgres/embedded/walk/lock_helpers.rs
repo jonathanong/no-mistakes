@@ -4,7 +4,9 @@ use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use crate::fx::FxHashMap;
 use oxc_ast::ast::{CallExpression, Expression};
 mod collect;
+mod summary;
 pub(super) use collect::collect;
+pub(crate) use summary::{Invocation, Parameter, Summary};
 
 #[derive(Clone)]
 pub(super) struct Helper<'a> {
@@ -19,6 +21,7 @@ impl<'a> ScopeVisitor<'a> {
             return;
         };
         let Some(helper) = self.lock_helpers.get(name.name.as_str()).cloned() else {
+            self.record_imported_lock_helper(call, name.name.as_str());
             return;
         };
         if self.lookup(name.name.as_str()).is_some()
@@ -114,6 +117,60 @@ impl<'a> ScopeVisitor<'a> {
             .collect();
         for (call, span) in self.calls.iter_mut().zip(&self.call_spans) {
             call.helper_definition = spans.contains(span);
+        }
+    }
+}
+
+impl ScopeVisitor<'_> {
+    pub(super) fn lock_helper_summaries(&self) -> FxHashMap<String, Summary> {
+        summary::summaries(&self.lock_helpers, self.source)
+    }
+    fn record_imported_lock_helper(&mut self, call: &CallExpression<'_>, name: &str) {
+        if !self.executor_options.track_transaction_helpers
+            || !self.imported_names.contains(name)
+            || self.lookup(name).is_some()
+            || call.optional
+            || call
+                .arguments
+                .iter()
+                .any(|argument| argument.as_expression().is_none())
+        {
+            return;
+        }
+        for (executor, argument) in call.arguments.iter().enumerate() {
+            let Some(Expression::StaticMemberExpression(member)) =
+                argument.as_expression().map(unwrap_ts_wrappers)
+            else {
+                continue;
+            };
+            if member.property.name != "query" || member.optional {
+                continue;
+            }
+            let mut fact = EmbeddedSqlCall::default();
+            super::transaction::annotate_receiver(self, &member.object, call.span.start, &mut fact);
+            if !fact.executor_transaction_known || fact.transaction_id.is_none() {
+                continue;
+            }
+            fact.line = byte_offset_to_line(self.source, call.span.start as usize);
+            fact.callee = name.to_owned();
+            fact.kind = EmbeddedSqlKind::Dynamic;
+            fact.execution_unconditional = self.control_depth == 0 && self.loop_depth == 0;
+            let arguments = call
+                .arguments
+                .iter()
+                .map(|argument| {
+                    argument
+                        .as_expression()
+                        .and_then(|expression| super::transaction::identity(self, expression))
+                })
+                .collect();
+            self.imported_lock_helpers.push(Invocation {
+                name: name.to_owned(),
+                executor,
+                arguments,
+                call: fact,
+                span: (call.span.start, call.span.end),
+            });
         }
     }
 }
