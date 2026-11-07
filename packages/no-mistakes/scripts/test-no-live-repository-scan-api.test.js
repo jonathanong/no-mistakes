@@ -134,27 +134,26 @@ test(
   },
 );
 
-test(
-  "compiled bounded provenance preserves async check and prepared analysis parity",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const cases = [
-      "const-load",
-      "nested-async-return",
-      "owned-object-return",
-      "recursive-parameter",
-      "nested-recursion",
-      "same-file-call-chain",
-      "options-root",
-      "glob-options-flow",
-      "disposable-root",
-      "rewritten-spread",
-      "hook-env-restore",
-      "barrel-route",
-    ];
-    for (const name of cases) {
+for (const name of [
+  "const-load",
+  "nested-async-return",
+  "owned-object-return",
+  "recursive-parameter",
+  "nested-recursion",
+  "same-file-call-chain",
+  "options-root",
+  "glob-options-flow",
+  "disposable-root",
+  "rewritten-spread",
+  "hook-env-restore",
+  "barrel-route",
+]) {
+  test(
+    `compiled bounded provenance ${name} preserves async check and prepared analysis parity`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
       const fixture = join(root, "../bounded-provenance", name);
       let expected;
       for (const jobs of [1, 2]) {
@@ -185,6 +184,6 @@ test(
           assert.deepEqual(targets, advisories, `${name}: unexpected provenance result`);
         }
       }
-    }
-  },
-);
+    },
+  );
+}
