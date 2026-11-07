@@ -72,15 +72,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/path-edge.test.ts",
           "import": "readdirSync",
-          "line": 16,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
-          "rule": "test-no-live-repository-scan",
-          "sourceLine": "readdirSync(picked); // destructured binding",
-          "target": "unresolved root"
-        },
-        {
-          "file": "tests/path-edge.test.ts",
-          "import": "readdirSync",
           "line": 17,
           "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
@@ -508,6 +499,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "live repository scan"
         },
         {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 16,
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(picked); // destructured binding",
+          "target": "live repository scan"
+        },
+        {
           "file": "tests/path-forms.test.ts",
           "import": "globSync",
           "line": 21,
@@ -855,15 +855,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "readdirSync((() => \"x\")()); // callee that is not a name",
-          "target": "unresolved root"
-        },
-        {
-          "file": "tests/path-edge.test.ts",
-          "import": "readdirSync",
-          "line": 16,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
-          "rule": "test-no-live-repository-scan",
-          "sourceLine": "readdirSync(picked); // destructured binding",
           "target": "unresolved root"
         },
         {
@@ -1266,6 +1257,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "live repository scan: `readdirSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "readdirSync(__dirname); // unbound CommonJS global",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 16,
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(picked); // destructured binding",
           "target": "live repository scan"
         },
         {
@@ -1738,15 +1738,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/path-edge.test.ts",
           "import": "readdirSync",
-          "line": 16,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
-          "rule": "test-no-live-repository-scan",
-          "sourceLine": "readdirSync(picked); // destructured binding",
-          "target": "unresolved root"
-        },
-        {
-          "file": "tests/path-edge.test.ts",
-          "import": "readdirSync",
           "line": 17,
           "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
@@ -2126,6 +2117,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "live repository scan: `readdirSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "readdirSync(__dirname); // unbound CommonJS global",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 16,
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(picked); // destructured binding",
           "target": "live repository scan"
         },
         {
@@ -2927,15 +2927,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/path-edge.test.ts",
           "import": "readdirSync",
-          "line": 16,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
-          "rule": "test-no-live-repository-scan",
-          "sourceLine": "readdirSync(picked); // destructured binding",
-          "target": "unresolved root"
-        },
-        {
-          "file": "tests/path-edge.test.ts",
-          "import": "readdirSync",
           "line": 17,
           "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
@@ -3342,6 +3333,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "live repository scan: `readdirSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "readdirSync(__dirname); // unbound CommonJS global",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 16,
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(picked); // destructured binding",
           "target": "live repository scan"
         },
         {
@@ -3925,10 +3925,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tests/path-edge.test.ts",
           "import": "readdirSync",
           "line": 16,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "readdirSync(picked); // destructured binding",
-          "target": "unresolved root"
+          "target": "live repository scan"
         },
         {
           "file": "tests/path-edge.test.ts",
@@ -4663,10 +4663,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tests/path-edge.test.ts",
           "import": "readdirSync",
           "line": 16,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "readdirSync(picked); // destructured binding",
-          "target": "unresolved root"
+          "target": "live repository scan"
         },
         {
           "file": "tests/path-edge.test.ts",

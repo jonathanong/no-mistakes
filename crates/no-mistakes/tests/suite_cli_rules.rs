@@ -109,6 +109,8 @@ mod cli_check_rules_repository_guards;
 mod cli_check_rules_swift;
 #[path = "cli_check_rules_test_no_live_repository_scan.rs"]
 mod cli_check_rules_test_no_live_repository_scan;
+#[path = "cli_check_rules_test_no_live_repository_scan_bounded.rs"]
+mod cli_check_rules_test_no_live_repository_scan_bounded;
 #[path = "cli_check_rules_test_no_live_repository_scan_node_loaders.rs"]
 mod cli_check_rules_test_no_live_repository_scan_node_loaders;
 #[path = "cli_check_rules_test_no_live_repository_scan_provenance.rs"]

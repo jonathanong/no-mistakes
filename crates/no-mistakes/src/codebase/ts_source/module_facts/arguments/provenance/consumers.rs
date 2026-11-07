@@ -1,4 +1,4 @@
-use super::super::PathProvenance;
+use super::super::{ArgumentValue, PathProvenance, Projector};
 use oxc_ast::ast::*;
 
 const LOADERS: [&str; 8] = [
@@ -12,7 +12,11 @@ const LOADERS: [&str; 8] = [
     "doUnmock",
 ];
 
-pub(super) fn from_call(call: &CallExpression<'_>, out: &mut PathProvenance) {
+pub(super) fn from_call(
+    projector: &mut Projector<'_, '_>,
+    call: &CallExpression<'_>,
+    out: &mut PathProvenance,
+) {
     let loads = match call.callee.get_inner_expression() {
         Expression::Identifier(callee) => callee.name == "require",
         Expression::StaticMemberExpression(callee) => {
@@ -26,21 +30,26 @@ pub(super) fn from_call(call: &CallExpression<'_>, out: &mut PathProvenance) {
             source.map(Expression::get_inner_expression),
             Some(Expression::ImportExpression(_))
         ) {
-            from_source(source, out);
+            from_source(projector, source, out);
         }
     }
 }
 
-pub(super) fn from_source(source: Option<&Expression<'_>>, out: &mut PathProvenance) {
-    match source.map(Expression::get_inner_expression) {
-        Some(Expression::StringLiteral(text)) => {
-            let text = crate::ast::js_literal(text);
+pub(super) fn from_source(
+    projector: &mut Projector<'_, '_>,
+    source: Option<&Expression<'_>>,
+    out: &mut PathProvenance,
+) -> bool {
+    match source.map(|source| projector.value(source, 0)) {
+        Some(ArgumentValue::Scalar(serde_json::Value::String(text))) => {
             super::process_refs::poison_process_loads(&text, out);
-            out.unsafe_modules.insert(text.into_owned());
+            out.unsafe_modules.insert(text);
+            true
         }
         _ => {
             out.modules_unknown = true;
             out.env_unknown_write = true;
+            false
         }
     }
 }
@@ -61,7 +70,13 @@ pub(super) fn from_facts(
     }
     for export in &facts.exports {
         if let Some(specifier) = &export.specifier {
-            out.unsafe_modules.insert(specifier.clone());
+            let named = !export.type_only
+                && [&export.local, &export.exported]
+                    .iter()
+                    .all(|name| !matches!(name.as_str(), "" | "*" | "default"));
+            if !named {
+                out.unsafe_modules.insert(specifier.clone());
+            }
         }
     }
 }

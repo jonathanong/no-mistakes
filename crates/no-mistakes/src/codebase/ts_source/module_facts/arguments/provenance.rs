@@ -5,6 +5,7 @@
 mod config_keys;
 mod consumers;
 mod env_writes;
+mod member_paths;
 mod member_refs;
 mod pass_through;
 mod process_refs;
@@ -13,7 +14,7 @@ mod stub_global;
 mod value_refs;
 mod vi_refs;
 
-use super::path_origin::{callee_root, imported_locals};
+use super::path_origin::callee_root;
 use super::{PathAnchor, PathOrigin, PathProvenance, Projector};
 use crate::fx::FxHashSet;
 use oxc_ast::{ast::*, AstKind};
@@ -27,7 +28,6 @@ pub(super) fn collect(
     facts: &super::super::TypeScriptModuleFacts,
     exported: &FxHashSet<usize>,
 ) -> PathProvenance {
-    let imported = imported_locals(facts);
     let mut immutable = super::AliasSafety::default();
     let mut result = PathProvenance::default();
     process_refs::poison_process_imports(facts, &mut result);
@@ -48,10 +48,12 @@ pub(super) fn collect(
                 {
                     result.pass_through.insert(call.span.start, spied);
                 }
-                consumers::from_call(call, &mut result);
-                if callee_root(&call.callee).is_some_and(|root| imported.contains(root))
-                    && !rebinds_callee(&call.callee)
-                {
+                consumers::from_call(&mut projector, call, &mut result);
+                if callee_root(&call.callee).is_some() && !rebinds_callee(&call.callee) {
+                    let members = member_paths::collect(&mut projector, call);
+                    if !members.is_empty() {
+                        result.arg_member_paths.insert(call.span.start, members);
+                    }
                     let paths = argument_paths(&mut projector, call);
                     if !paths.is_empty() {
                         result.arg_paths.insert(call.span.start, paths);
@@ -84,7 +86,12 @@ pub(super) fn collect(
                 value_refs::from_member(semantic.nodes(), node.id(), member, &mut result);
             }
             AstKind::ImportExpression(import) => {
-                consumers::from_source(Some(&import.source), &mut result);
+                projector.call_offset = import.span.start;
+                if consumers::from_source(&mut projector, Some(&import.source), &mut result) {
+                    result
+                        .resolved_import_spans
+                        .push((import.span.start, import.span.end));
+                }
             }
             AstKind::AssignmentExpression(assignment) => {
                 env_writes::from_assignment(&mut projector, assignment, node.id(), &mut result);
@@ -126,7 +133,8 @@ fn argument_paths<'a>(
         if matches!(
             origin.anchor,
             PathAnchor::Temp | PathAnchor::Module | PathAnchor::Cwd
-        ) {
+        ) || origin.param.is_some()
+        {
             paths.push((index, origin));
         }
     }

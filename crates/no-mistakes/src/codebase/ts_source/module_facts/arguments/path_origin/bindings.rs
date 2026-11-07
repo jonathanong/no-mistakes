@@ -6,10 +6,21 @@ fn returned<'b, 'a>(
     params: &FormalParameters<'a>,
     body: &'b FunctionBody<'a>,
 ) -> Option<&'b Expression<'a>> {
-    if !params.items.is_empty() || params.rest.is_some() || body.statements.len() != 1 {
+    if !params.items.is_empty() || params.rest.is_some() || body.statements.is_empty() {
         return None;
     }
-    match &body.statements[0] {
+    if !body.statements[..body.statements.len() - 1]
+        .iter()
+        .all(|statement| {
+            matches!(
+                statement,
+                Statement::VariableDeclaration(_) | Statement::ExpressionStatement(_)
+            )
+        })
+    {
+        return None;
+    }
+    match body.statements.last()? {
         Statement::ReturnStatement(statement) => statement.argument.as_ref(),
         _ => None,
     }
@@ -72,6 +83,14 @@ impl<'a> Projector<'a, '_> {
         call: &CallExpression<'a>,
         depth: usize,
     ) -> Option<PathOrigin> {
+        let expression = self.getter_expression(call)?;
+        Some(self.origin(expression, depth + 1))
+    }
+
+    pub(super) fn getter_expression(
+        &mut self,
+        call: &CallExpression<'a>,
+    ) -> Option<&'a Expression<'a>> {
         let semantic = self.semantic;
         let Expression::Identifier(callee) = call.callee.get_inner_expression() else {
             return None;
@@ -80,6 +99,11 @@ impl<'a> Projector<'a, '_> {
             return None;
         }
         let symbol = self.binding_symbol(callee)?;
+        for reference in semantic.scoping().get_resolved_references(symbol) {
+            if !self.take() || reference.flags().is_write() {
+                return None;
+            }
+        }
         let expression = match semantic
             .nodes()
             .kind(semantic.scoping().symbol_declaration(symbol))
@@ -106,6 +130,6 @@ impl<'a> Projector<'a, '_> {
             }
             _ => return None,
         };
-        Some(self.origin(expression, depth + 1))
+        Some(expression)
     }
 }

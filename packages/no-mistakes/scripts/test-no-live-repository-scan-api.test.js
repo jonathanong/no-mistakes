@@ -133,3 +133,58 @@ test(
     );
   },
 );
+
+test(
+  "compiled bounded provenance preserves async check and prepared analysis parity",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const cases = [
+      "const-load",
+      "nested-async-return",
+      "owned-object-return",
+      "recursive-parameter",
+      "nested-recursion",
+      "same-file-call-chain",
+      "options-root",
+      "glob-options-flow",
+      "disposable-root",
+      "rewritten-spread",
+      "hook-env-restore",
+      "barrel-route",
+    ];
+    for (const name of cases) {
+      const fixture = join(root, "../bounded-provenance", name);
+      let expected;
+      for (const jobs of [1, 2]) {
+        const options = { root: fixture, config: join(fixture, ".no-mistakes.yml"), jobs };
+        const request = { ...options, reports: [{ type: "check" }] };
+        const calls = [
+          () => cjs.check(options),
+          () => esm.check(options),
+          () => cjs.analyzeProject(request),
+          () => esm.analyzeProject(request),
+        ];
+        for (const [index, call] of calls.entries()) {
+          const pending = call();
+          assert.equal(typeof pending.then, "function", `${name}: API ${index} is not async`);
+          const result = await pending;
+          const report = withoutPoolWarning(index < 2 ? result : result.reports[0].result);
+          if (expected) assert.deepEqual(report, expected, `${name}: API ${index}, jobs ${jobs}`);
+          else expected = report;
+          const current = snapshotReport(report, fixture);
+          assert.deepEqual(current.rules, [], `${name}: unexpected live repository scan`);
+          const targets = current.advisories.map(({ target }) => target).sort();
+          const advisories =
+            {
+              "glob-options-flow": ["unresolved root"],
+              "hook-env-restore": ["unresolved root"],
+              "rewritten-spread": ["runtime asset", "unresolved root"],
+            }[name] ?? [];
+          assert.deepEqual(targets, advisories, `${name}: unexpected provenance result`);
+        }
+      }
+    }
+  },
+);
