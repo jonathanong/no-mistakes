@@ -253,6 +253,24 @@ fn postgres_lock_written_rows_helpers_check_json_snapshot() {
             ("unwritten", "helper-unwritten", "checks-fail.yml"),
             ("different_key", "helper-key-mismatch", "checks-fail.yml"),
             ("written", "helper-written", "checks-fail.yml"),
+            (
+                "imported_unwritten",
+                "helper-imported-unwritten",
+                "checks-fail.yml",
+            ),
+            (
+                "imported_written",
+                "helper-imported-written",
+                "checks-fail.yml",
+            ),
         ],
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_resources_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_resources",
+        &[("resources", "resource-transactions", "checks-fail.yml")],
     );
 }

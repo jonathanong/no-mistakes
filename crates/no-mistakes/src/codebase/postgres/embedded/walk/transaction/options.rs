@@ -34,7 +34,7 @@ pub(super) fn receiver<'a, 'b>(
             };
             if !properties
                 .iter()
-                .any(|candidate| candidate == name.as_ref())
+                .any(|candidate| Some(candidate.as_str()) == name.as_str())
             {
                 continue;
             }

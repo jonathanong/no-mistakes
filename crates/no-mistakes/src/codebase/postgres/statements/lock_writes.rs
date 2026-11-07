@@ -1,4 +1,4 @@
-use crate::codebase::postgres::idents::object_name_identity;
+use crate::codebase::postgres::idents::{object_name_identity, unwrap_expr};
 mod advisory;
 mod helpers;
 mod scope;

@@ -60,9 +60,9 @@ impl<'a> ScopeVisitor<'a> {
             else {
                 continue;
             };
-            fact.lock_scope_analysis = true;
             fact.sql_text = Some(sql);
             fact.kind = EmbeddedSqlKind::Inline;
+            fact.lock_scope_analysis = true;
             fact.line = byte_offset_to_line(self.source, call.span.start as usize);
             fact.callee = name.name.to_string();
             fact.execution_unconditional = self.control_depth == 0 && self.loop_depth == 0;
@@ -151,6 +151,7 @@ impl ScopeVisitor<'_> {
             if !fact.executor_transaction_known || fact.transaction_id.is_none() {
                 continue;
             }
+            fact.lock_scope_analysis = true;
             fact.line = byte_offset_to_line(self.source, call.span.start as usize);
             fact.callee = name.to_owned();
             fact.kind = EmbeddedSqlKind::Dynamic;
