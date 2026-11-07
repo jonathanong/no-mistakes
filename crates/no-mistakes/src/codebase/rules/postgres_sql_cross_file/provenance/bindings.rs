@@ -11,6 +11,7 @@ type RowMemberKey<'a> = (&'a Path, usize, &'a str, &'a str);
 /// Borrowed syntactic indexes; neither value resolution nor another graph.
 pub(crate) struct Bindings<'a> {
     pub(super) identifier_returns: Option<&'a super::IdentifierReturns>,
+    pub(super) numeric_parameter_bounds_only: bool,
     pub(super) collection_safety: std::cell::RefCell<FxHashMap<(std::path::PathBuf, String), bool>>,
     pub(super) trusted_tags: &'a [crate::codebase::postgres::TrustedSqlTag],
     pub(crate) routes: super::super::graph::RegistryRoutes<'a>,
@@ -33,6 +34,7 @@ impl<'a> Bindings<'a> {
         let mut result = Self {
             facts,
             identifier_returns: None,
+            numeric_parameter_bounds_only: false,
             collection_safety: Default::default(),
             trusted_tags: &[],
             graph: None,

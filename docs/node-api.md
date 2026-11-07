@@ -467,6 +467,13 @@ call-site import or canonical resolved origin through named or `export *`
 barrels and npm re-exports. Guards still cover only the exact validated property
 path before interpolation.
 
+Workspace packages and `export *` barrels also preserve configured source
+identity for typed catalog producers populated at module load. A source entry
+counts as used only when its scalar return supplies a selected SQL identifier
+proof; an unrelated call or returned-object property does not use it. CLI and
+async Node reports from complete max-effort scans locate unused selectors on
+their config items as `unused-allow-entry`, honoring `reportUnusedAllowEntries`.
+
 These async APIs share the CLI proofs for imported literal-array guards,
 literal properties selected from closed records, closed catalog map/join SQL,
 built-in `sql-template-strings` `.text` fragments with append chains and helper

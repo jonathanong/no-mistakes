@@ -1,0 +1,6 @@
+export * as bare from './namespace-bare'
+export * as alias from './namespace-alias'
+export * as quoted from './namespace-quoted'
+export * as opaque from './namespace-opaque'
+export * as unrelated from './namespace-unrelated'
+export { quotedNamedStatement as 'statement.query' } from './namespace-escape-producer'

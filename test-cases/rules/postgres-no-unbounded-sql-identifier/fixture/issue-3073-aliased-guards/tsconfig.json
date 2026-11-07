@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "db": ["db.ts"],
+      "@scope/pkg/config": ["packages/pkg/config.ts"]
+    }
+  },
+  "include": ["**/*.ts"]
+}

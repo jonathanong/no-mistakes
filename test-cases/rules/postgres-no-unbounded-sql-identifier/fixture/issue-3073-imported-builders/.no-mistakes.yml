@@ -1,0 +1,9 @@
+version: 2
+effort: max
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      include: ["src/clean.ts", "src/namespace.ts", "src/aliased.ts"]
+      importSpecifier: db
+      executorTypeNames: [QueryExecutor]

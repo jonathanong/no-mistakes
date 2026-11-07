@@ -391,8 +391,10 @@ supported generated identifier shape, or an explicit trusted helper contract:
   export, including an `as const` array used by a local
   `(typeof ALLOWED_LIST)[number]` type alias. The guard ends at the next assignment to that
   same binding (`=`, `+=`, `for (name of ...)`, or a destructuring
-  assignment). A guard inside a branch does not cover a query after that
-  branch. A regex test is not a finite domain. An inner `const` that shadows
+  assignment). An immutable scalar alias captured after the guard retains the
+  validated value; an alias captured before validation does not. A guard inside
+  a branch does not cover a query after that branch. A regex test is not a finite
+  domain. An inner `const` that shadows
   the guarded name stays unbounded.
 - A completed call, before interpolation, to a helper listed in
   `identifierValidators`. `name` and the zero-based validated `argument` are
@@ -421,6 +423,18 @@ supported generated identifier shape, or an explicit trusted helper contract:
   imported through a barrel. The producer body is not inspected, and this
   option does not validate its arguments or arbitrary properties of a returned
   object. Configure only helpers whose scalar return is a bounded identifier.
+  The source may wrap an exported typed catalog populated by module-load loops
+  and literal joins; it does not need an `as const` array. This is trusted
+  producer configuration, not automatic proof of arbitrary catalog mutation.
+  Workspace package exports and `export *` barrels use the same canonical
+  module identity. On a complete max-effort scan, every configured source entry
+  must supply a scalar SQL identifier proof in the selected scope. Importing the
+  helper, calling it without using its return in SQL, or reading a property from that return does
+  not count. Unused entries produce `unused-allow-entry` on the configuration
+  item; remove the entry or correct its module/name selector. The shared
+  `reportUnusedAllowEntries` policy controls reporting (`report`, the default;
+  `advise`; or `ignore`). This audit prevents stale trusted selectors from
+  silently missing their intended producers.
 - A known property returned by a resolved helper that selects a row from a
   closed literal record, including an exported `getIdentifiers(provider)`
   helper used from another module. Each selected property must have a literal
@@ -456,14 +470,11 @@ supported generated identifier shape, or an explicit trusted helper contract:
   (`events_${n}`) or beside a catalog name (`${table}__p_${yyyy}_${mm}`). A
   `string` parameter, or a string glued to a numeric suffix, stays unbounded
   (`fail-open-string-parameter`).
-- A parameter annotated `(typeof CATALOG)[number]`, directly or through a type
-  alias imported from the catalog's module, where `CATALOG` is an array literal
-  without a `process.env` value. The proof is the array the type points at, not
-  the annotation: a `string` alias or a catalog holding `process.env` stays
-  unbounded. A local `const t = table` alias of such a parameter, and a loop
-  variable over an exported `as const` catalog, are bounded too
-  (`pass-exported-catalog`, `pass-catalog-numeric-suffix`,
-  `pass-catalog-local-alias`).
+- A value checked by a dominating closed-set guard may be annotated
+  `(typeof CATALOG)[number]`, directly or through an imported type alias.
+  The annotation alone does not validate an incoming SQL identifier. Keep the
+  runtime membership guard over the local or imported literal catalog; a
+  parameter with that type and no guard is reported.
 - A local built by `.join(...)`, or by `.map(...)`, `.filter(...)`, and
   `.slice(...)` chains ending in `.join(...)`, over a closed array (local, or
   an exported array literal). A `.map` callback may return only its own
