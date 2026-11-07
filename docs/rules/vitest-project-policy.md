@@ -134,10 +134,23 @@ propagate constant bindings, so `maxWorkers: WORKERS` is allowed even if
 `WORKERS` is initialized with a number. A computed expression is not judged by
 its eventual runtime value.
 
-The declared checks produce findings at the property declaration and never
-produce `incomplete` evidence. With only `declared` configured, dynamic project
-lists do not produce incomplete evidence. Explicit missing helper paths retain
-the existing missing-source behavior; a helper glob only selects visible files.
+The declared checks produce findings at the property declaration. With only
+`declared` configured, a dynamic project list does not produce incomplete
+evidence: these checks inspect declarations without resolving that list.
+However, a configured config/helper source that cannot be read or parsed is
+reported in `CheckReport.incomplete`, attributed to that source and property
+`declared`. This also covers a glob-matched file that disappears after the
+prepared inventory was captured. Restore readable source or fix its syntax;
+unavailable sources never count as successfully checked. A helper glob only
+selects visible files; an unmatched glob does not invent missing source paths.
+Rust entrypoints that return only findings return a source error for these
+failures rather than discarding the incomplete evidence.
+
+Each rule application's include/exclude filters apply to declaration sources
+before scanning. Excluded helpers produce neither declaration findings nor
+source-failure evidence for that application. The complete configured helper
+set remains available for effective-value resolution, so excluding a helper's
+declarations does not break an included project's imported settings.
 The existing effective `required`, `forbidden`, and `parity` policies keep
 their resolution and uncertainty behavior.
 
@@ -172,6 +185,8 @@ project object; a present property's diagnostic points at that property.
 Suppression caveat: put directives in the source file and at the location shown
 by the report, including helper files. A comment in an importing file does not
 suppress a finding located in its helper. A file directive also suppresses incomplete evidence attributed to that source.
+A file directive in a readable but malformed helper also suppresses its
+source-failure evidence. An unreadable file cannot provide a source directive.
 Incomplete evidence has no line, so line directives apply only to findings.
 
 ## Node API

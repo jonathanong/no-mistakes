@@ -1,0 +1,23 @@
+version: 2
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    include: [vitest.config.ts, helpers/included.mts, helpers/excluded*.mts, helpers/suppressed-*.mts]
+    exclude: [helpers/excluded*.mts]
+    options:
+      config: vitest.config.ts
+      helpers: [helpers/*.mts]
+      required:
+        testTimeout: 5000
+      declared:
+        forbidLiteralKinds:
+          maxWorkers: [number]
+  - rule: vitest-project-policy
+    scope: repository
+    include: [vitest.config.ts, helpers/omitted.mts]
+    options:
+      config: vitest.config.ts
+      helpers: [helpers/*.mts]
+      declared:
+        forbidLiteralKinds:
+          maxWorkers: [string]

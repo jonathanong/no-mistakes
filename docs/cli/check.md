@@ -281,5 +281,6 @@ literal properties across declared Vitest projects. Its explicit `config` and
 inventory. Optional `declared.forbiddenValues` and `declared.forbidLiteralKinds`
 check literal assignments in every object in those sources, including unimported
 helpers. Computed expressions remain allowed. Declared-only checks do not report
-dynamic projects as incomplete; unresolved effective settings appear in the JSON
-`incomplete` list. The rule never imports or executes Vitest configuration.
+dynamic projects as incomplete; unreadable or malformed selected sources and
+unresolved effective settings appear in the JSON `incomplete` list. Declaration
+sources honor each application's include/exclude filters and source suppressions. The rule never imports or executes Vitest configuration.

@@ -321,6 +321,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "declared-filter": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "helpers/included.mts",
+          "line": 1,
+          "message": "Vitest declaration maxWorkers: literal 2 is forbidden by declared.forbidLiteralKinds; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export const included = { maxWorkers: 2 };"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "declared-line": {
     "exitCode": 0,
     "report": {
@@ -342,6 +362,49 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "declared-source-errors": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "helpers/suppressed.mts",
+          "line": 1,
+          "message": "directive for `vitest-project-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file vitest-project-policy",
+          "target": "vitest-project-policy"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "helpers/broken.mts",
+          "message": "Vitest declaration policy is incomplete: cannot parse configured source; make this file readable and valid TypeScript/JavaScript so its property declarations can be checked",
+          "property": "declared"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "missing.ts",
+          "message": "Vitest declaration policy is incomplete: cannot read configured source; make this file readable and valid TypeScript/JavaScript so its property declarations can be checked",
+          "property": "declared"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "helpers/good.mts",
+          "line": 1,
+          "message": "Vitest declaration maxWorkers: literal 2 is forbidden by declared.forbidLiteralKinds; use an allowed literal or a computed expression to keep configuration policy explicit",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export const policy = { maxWorkers: 2 };"
+        }
+      ],
       "warnings": []
     }
   },
@@ -709,7 +772,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "malformed-declared-sources": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [
         {
@@ -722,6 +785,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "malformed.ts",
+          "message": "Vitest declaration policy is incomplete: cannot parse configured source; make this file readable and valid TypeScript/JavaScript so its property declarations can be checked",
+          "property": "declared"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -849,7 +920,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "missing-declared-sources": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [
         {
@@ -862,6 +933,20 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         }
       ],
       "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "missing-config.ts",
+          "message": "Vitest declaration policy is incomplete: cannot read configured source; make this file readable and valid TypeScript/JavaScript so its property declarations can be checked",
+          "property": "declared"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "missing.ts",
+          "message": "Vitest declaration policy is incomplete: cannot read configured source; make this file readable and valid TypeScript/JavaScript so its property declarations can be checked",
+          "property": "declared"
+        }
+      ],
       "integration": [],
       "queues": [],
       "react": [],

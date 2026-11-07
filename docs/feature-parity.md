@@ -1101,5 +1101,7 @@ Vitest config parsing, and reports unresolved effective values as incomplete.
 Helper globs select the prepared visible-file inventory. Optional
 `declared.forbiddenValues` and `declared.forbidLiteralKinds` check all object
 literals in config and helpers, including unimported helpers, without constant
-propagation or incomplete reports for dynamic projects. Config is never executed
+propagation or incomplete reports for dynamic projects. Unreadable or malformed
+selected sources produce incomplete evidence. Application include/exclude filters
+and source suppressions apply to declaration diagnostics. Config is never executed
 and the rule does not discover repository files.

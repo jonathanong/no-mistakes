@@ -80,16 +80,22 @@ fn additive_declarations_preserve_effective_policy_outcomes() {
 }
 
 #[test]
-fn source_only_policies_never_add_incomplete_for_unavailable_sources() {
-    for config in [
-        "missing-declared-sources.yml",
-        "malformed-declared-sources.yml",
+fn source_only_policies_report_unavailable_sources() {
+    for (config, failures) in [
+        ("missing-declared-sources.yml", 2),
+        ("malformed-declared-sources.yml", 1),
     ] {
         let output = declarations(&["malformed.ts"], config);
         assert!(output.findings.is_empty());
-        assert!(output.incomplete.is_empty());
+        assert_eq!(output.incomplete.len(), failures);
+        assert!(output
+            .incomplete
+            .iter()
+            .all(|failure| failure.property.as_deref() == Some("declared")));
     }
 }
+
+mod review;
 
 #[test]
 fn effective_and_declaration_checks_share_one_parse_per_source() {

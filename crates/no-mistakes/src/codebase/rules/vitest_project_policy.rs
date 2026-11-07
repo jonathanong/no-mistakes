@@ -52,8 +52,8 @@ pub fn diagnostics_with_files_and_sources(
                 rule,
                 std::slice::from_ref(&path),
             )?;
-            let selected = super::path_filter::filter_rule_files(root, config, rule, &selected)?;
-            if !selected.contains(&path) {
+            let path_filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
+            if !selected.contains(&path) || !path_filter.is_match(&path) {
                 continue;
             }
             let allowed = options.source_paths(root, &path, files)?;
@@ -62,12 +62,14 @@ pub fn diagnostics_with_files_and_sources(
                 let mut reader = Reader::new(sources, allowed.clone());
                 application = evaluate::check(root, &options, reader.read(&path));
             }
-            application.findings.extend(declared::check(
-                root,
-                &options.declared,
-                &allowed,
-                sources,
-            ));
+            let declaration_paths = allowed
+                .into_iter()
+                .filter(|path| path_filter.is_match(path))
+                .collect::<Vec<_>>();
+            let declarations =
+                declared::check(root, &options.declared, &declaration_paths, sources);
+            application.findings.extend(declarations.findings);
+            application.incomplete.extend(declarations.incomplete);
             application.incomplete.retain(|failure| {
                 !failure.file.as_ref().is_some_and(|file| {
                     sources.read_path(&root.join(file)).is_ok_and(|source| {
@@ -103,8 +105,20 @@ pub fn check_with_files_and_sources(
     files: &[PathBuf],
     sources: &SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    diagnostics_with_files_and_sources(root, config, files, sources, false)
-        .map(|output| output.findings)
+    let output = diagnostics_with_files_and_sources(root, config, files, sources, false)?;
+    if let Some(failure) = output
+        .incomplete
+        .into_iter()
+        .find(|failure| failure.property.as_deref() == Some("declared"))
+    {
+        return Err(crate::codebase::check_outcome::CheckInputFailure {
+            file: failure.file,
+            property: failure.property,
+            message: failure.message,
+        }
+        .into());
+    }
+    Ok(output.findings)
 }
 pub(crate) fn check_with_files(
     root: &Path,

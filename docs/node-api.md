@@ -637,5 +637,7 @@ literal restrictions. Helper globs select the prepared visible-file inventory.
 `declared.forbiddenValues` and `declared.forbidLiteralKinds` inspect every object
 literal in config and helpers, including unimported helpers; computed expressions
 remain allowed without constant propagation. Declared-only policies do not
-report dynamic projects as incomplete. Unresolved effective-policy values are
-returned as `CheckReport.incomplete` (`CheckFailure[]`).
+report dynamic projects as incomplete. Selected config/helper sources that cannot
+be read or parsed, and unresolved effective-policy values, are returned as
+`CheckReport.incomplete` (`CheckFailure[]`). Application include/exclude filters
+and source suppressions apply to declaration diagnostics.

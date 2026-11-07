@@ -5,6 +5,8 @@ fn vitest_project_policy_json_matches_snapshot() {
     let mut cases = [
         "pass",
         "declared",
+        "declared-filter",
+        "declared-source-errors",
         "declared-line",
         "declared-next-line",
         "declared-file",

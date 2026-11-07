@@ -8,33 +8,43 @@ use rayon::prelude::*;
 pub(super) fn check(
     root: &Path,
     options: &Option<Declared>,
-    paths: &BTreeSet<PathBuf>,
+    paths: &[PathBuf],
     sources: &SourceStore,
-) -> Vec<RuleFinding> {
+) -> Diagnostics {
+    let mut output = Diagnostics::default();
     let Some(options) = options else {
-        return Vec::new();
+        return output;
     };
     let programs = crate::ast::current_request_parse_cache().unwrap_or_default();
-    let declarations = paths
-        .iter()
-        .flat_map(|path| {
-            let Ok(source) = sources.read_path(path) else {
-                return Vec::new();
-            };
-            programs
-                .with_program(path, source, |program, source| {
-                    let mut visitor = Declarations {
-                        path,
-                        source,
-                        values: Vec::new(),
-                    };
-                    visitor.visit_program(program);
-                    visitor.values
-                })
-                .unwrap_or_default()
-        })
-        .collect::<Vec<_>>();
-    declarations.into_par_iter().filter_map(|declaration| {
+    let mut declarations = Vec::new();
+    for path in paths {
+        let result = sources
+            .read_path(path)
+            .map_err(|_| "read")
+            .and_then(|source| {
+                programs
+                    .with_program(path, source, |program, source| {
+                        let mut visitor = Declarations {
+                            path,
+                            source,
+                            values: Vec::new(),
+                        };
+                        visitor.visit_program(program);
+                        visitor.values
+                    })
+                    .map_err(|_| "parse")
+            });
+        match result {
+            Ok(values) => declarations.extend(values),
+            Err(operation) => output.incomplete.push(CheckFailure {
+                consumer: RULE_ID.into(),
+                file: Some(PathBuf::from(relative_slash_path(root, path))),
+                property: Some("declared".into()),
+                message: format!("Vitest declaration policy is incomplete: cannot {operation} configured source; make this file readable and valid TypeScript/JavaScript so its property declarations can be checked"),
+            }),
+        }
+    }
+    output.findings = declarations.into_par_iter().filter_map(|declaration| {
         let (key, value) = (&declaration.key, &declaration.value);
         let forbidden = options.forbidden_values.get(key)
             .is_some_and(|values| values.iter().any(|banned| value.matches(banned)));
@@ -50,7 +60,8 @@ pub(super) fn check(
                 if forbidden { "declared.forbiddenValues" } else { "declared.forbidLiteralKinds" }),
             import: None, target: None,
         })
-    }).collect()
+    }).collect();
+    output
 }
 
 struct Declaration {
