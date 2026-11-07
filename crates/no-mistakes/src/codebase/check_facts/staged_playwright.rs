@@ -2,7 +2,6 @@ use super::{CheckFactMap, CheckFactPlan, PlaywrightFactPlan};
 use crate::codebase::ts_source::FileIdMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-
 mod entrypoints;
 mod finish;
 mod helpers;
@@ -10,7 +9,6 @@ mod module_resolution;
 mod partition_collection;
 mod partitions;
 mod precollect;
-
 pub(super) use entrypoints::collect_with_precollected_ts;
 pub(crate) use entrypoints::{collect_precollected_route_facts, PrecollectedRouteFacts};
 use finish::{finish_map, FinishMapInput};
@@ -18,7 +16,6 @@ use helpers::{graph_plan, has_indexable_graph_only, with_imports};
 use partition_collection::collect_partitions;
 use partitions::FilePartitions;
 use precollect::cached_config_file_facts;
-
 pub(super) struct PrecollectedFacts {
     ts: crate::codebase::ts_source::facts::TsFactMap,
     files: FileIdMap<super::CheckFileFacts>,
@@ -27,7 +24,6 @@ pub(super) struct PrecollectedFacts {
         Vec<crate::playwright::integration_routes::RouteOccurrence>,
     >,
 }
-
 pub(super) fn collect_with_sources_and_session(
     session: &crate::codebase::analysis_session::AnalysisSession,
     root: &Path,
@@ -70,7 +66,6 @@ pub(super) fn collect_with_sources_and_session(
         sources,
     )
 }
-
 pub(super) fn collect_with_precollected_ts_sources_and_session(
     session: &crate::codebase::analysis_session::AnalysisSession,
     root: &Path,
@@ -135,30 +130,37 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         .collect::<Vec<_>>();
     // Runner-config helpers can overlap Playwright source files. Collect import
     // facts while their cached AST is available so later demands never reparse.
-    let runner_plan = with_imports(plan.clone());
-    let graph_fact_plan = with_imports(graph_plan(&plan));
-    let ((collected, integration_runner_configs), helper_facts) =
-        super::collect_prepared_runner_facts(
-            session,
-            root,
-            (&uncollected_files, &uncollected_graph_only_files),
-            (&runner_plan, &graph_fact_plan),
-            Some(&playwright),
-            std::sync::Arc::clone(&sources),
-            &ts,
-        );
-    ts.extend(collected);
-    super::collect_helpers::extend_missing_helper_facts(&mut ts, helper_facts);
-    collect_partitions(
-        session,
-        root,
-        &partitions,
-        &mut plan,
-        &playwright,
-        &sources,
-        super::SupplementalFactInput {
-            facts: &mut ts,
-            call_sites: supplemental_call_sites,
+    let (integration_runner_configs, _) = crate::diagnostics::measure_if_enabled(
+        "parse",
+        crate::diagnostics::TimingKind::Serial,
+        || {
+            let runner_plan = with_imports(plan.clone());
+            let graph_fact_plan = with_imports(graph_plan(&plan));
+            let ((collected, integration_runner_configs), helper_facts) =
+                super::collect_prepared_runner_facts(
+                    session,
+                    root,
+                    (&uncollected_files, &uncollected_graph_only_files),
+                    (&runner_plan, &graph_fact_plan),
+                    Some(&playwright),
+                    std::sync::Arc::clone(&sources),
+                    &ts,
+                );
+            ts.extend(collected);
+            super::collect_helpers::extend_missing_helper_facts(&mut ts, helper_facts);
+            collect_partitions(
+                session,
+                root,
+                &partitions,
+                &mut plan,
+                &playwright,
+                &sources,
+                super::SupplementalFactInput {
+                    facts: &mut ts,
+                    call_sites: supplemental_call_sites,
+                },
+            );
+            integration_runner_configs
         },
     );
     let unproven_member_query_sql = super::relative_scope::project_relative_executor_scopes(
@@ -194,6 +196,5 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
     map.unproven_member_query_sql = unproven_member_query_sql;
     map
 }
-
 #[cfg(test)]
 mod tests;
