@@ -7,8 +7,12 @@ omits a default name imported from `importSpecifier` and called in scoped files,
 `check` emits a configuration warning naming the rule or project, the omitted
 name, an example call site, and the fix. See
 [executor selection](../configuration/rules.md#postgresql-executor-selection).
+`excludeExecutorNames: [query]` removes names after replacement or default-plus-extra
+selection and acknowledges intentional omitted defaults. `check` warns about
+exclusions that are not default names or are never imported from the selected
+module and called in scoped files.
 
-A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `extraExecutorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `extraExecutorNames`, `excludeExecutorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
 
 Flags executed PostgreSQL SQL that takes a `FOR UPDATE` lock with a multi-row
 predicate (`IN` or `= ANY`) but no `ORDER BY` and no `SKIP LOCKED`. Two

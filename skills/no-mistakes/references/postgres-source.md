@@ -179,5 +179,9 @@ extend it; setting both options is a configuration error. The same options
 apply to rule options and `projects.<name>.postgres.executors`. Inspect `check`
 configuration warnings for omitted default executors imported from the selected
 module and called in scoped files. Fix the list or use `extraExecutorNames`
-before interpreting a reduced finding count as resolved work. See
+before interpreting a reduced finding count as resolved work. To omit names
+intentionally, use `excludeExecutorNames: [query]`; it removes names after
+replacement or defaults plus extras and suppresses omitted-default warnings.
+Remove exclusions flagged as unused: they either are not default names or are
+never imported from the selected module and called in scoped files. See
 [executor selection](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/rules.md#postgresql-executor-selection).

@@ -13,6 +13,7 @@ const RESTATED: &[&str] = &[
     "importSpecifier",
     "executorNames",
     "extraExecutorNames",
+    "excludeExecutorNames",
     "executorFactoryNames",
     "executorTypeNames",
     "trustedSqlTags",
@@ -165,6 +166,13 @@ fn write_scope(rule: &str, options: &mut serde_yaml::Mapping, scope: &Scope, kee
     }
     if let Some(names) = &scope.extra_executor_names {
         set_strings(options, "extraExecutorNames", names);
+    }
+    if !scope.exclude_executor_names.is_empty() {
+        set_strings(
+            options,
+            "excludeExecutorNames",
+            &scope.exclude_executor_names,
+        );
     }
     if !scope.factory_names.is_empty() {
         set_strings(options, "executorFactoryNames", &scope.factory_names);

@@ -9,7 +9,6 @@ use serde::Deserialize;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
 pub(super) struct Options {
@@ -20,17 +19,18 @@ pub(super) struct Options {
     import_specifier: String,
     executor_names: Vec<String>,
     extra_executor_names: Option<Vec<String>>,
+    exclude_executor_names: Vec<String>,
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
     trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
     sql_literal_helpers: Vec<String>,
     report_unmatched_executor_names: bool,
 }
-
 impl Options {
     fn profile(&self, rule_id: &str) -> EmbeddedSqlOptions {
         EmbeddedSqlOptions::configured(&self.import_specifier, &self.executor_names)
             .with_extra_executor_names(self.extra_executor_names.as_deref())
+            .with_exclude_executor_names(&self.exclude_executor_names)
             .with_scoped_executors(&self.executor_factory_names, &self.executor_type_names)
             .with_trusted_sql_tags(&self.trusted_sql_tags)
             .with_sql_literal_helpers(if rule_id == "postgres-require-query-annotation" {

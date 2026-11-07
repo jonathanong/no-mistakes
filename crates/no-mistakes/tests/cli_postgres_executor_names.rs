@@ -123,9 +123,58 @@ fn executor_names_and_extra_executor_names_are_mutually_exclusive() {
 }
 
 #[test]
+fn excluded_executors_are_removed_after_selection_without_omission_warnings() {
+    for (config, findings) in [
+        ("exclude-override", 2),
+        ("exclude-defaults", 2),
+        ("exclude-extras", 3),
+        ("project-exclude", 0),
+    ] {
+        let (output, report) = report(config);
+        assert_eq!(output.status.success(), findings == 0, "{config}: {report}");
+        assert_eq!(
+            report["rules"].as_array().unwrap().len(),
+            findings,
+            "{report}"
+        );
+        assert_eq!(
+            report["warnings"],
+            serde_json::json!([]),
+            "{config}: {report}"
+        );
+        assert!(
+            !report["rules"].to_string().contains("SELECT 2"),
+            "{report}"
+        );
+    }
+}
+
+#[test]
+fn unused_exclusions_warn_without_failing_checks() {
+    for config in ["exclude-unused", "exclude-unimported"] {
+        let (output, report) = report(config);
+        assert!(output.status.success(), "{config}: {report}");
+        let warnings = report["warnings"].to_string();
+        assert!(warnings.contains("excludeExecutorNames"), "{report}");
+        assert!(warnings.contains("read"), "{report}");
+    }
+    let (_, report) = report("exclude-invalid");
+    let warnings = report["warnings"].to_string();
+    assert!(warnings.contains("excludeExecutorNames"), "{report}");
+    assert!(warnings.contains("readPool"), "{report}");
+}
+
+#[test]
 fn postgres_executor_names_check_json_snapshot() {
     let root = root();
     let cases = [
+        "exclude-override",
+        "exclude-defaults",
+        "exclude-extras",
+        "exclude-invalid",
+        "exclude-unused",
+        "exclude-unimported",
+        "project-exclude",
         "override",
         "extension",
         "warning-only",

@@ -22,6 +22,8 @@ export interface ExecutedPostgresSqlOptions<Diagnostics extends boolean = false>
   executorNames?: string[];
   /** Extends query/read/write; mutually exclusive with executorNames. */
   extraExecutorNames?: string[];
+  /** Removes names after replacement/defaults and extras are selected. */
+  excludeExecutorNames?: string[];
   executorFactoryNames?: string[];
   executorTypeNames?: string[];
   trustedSqlTags?: ExecutedPostgresTrustedSqlTag[];

@@ -21,6 +21,9 @@ test(
         [{ executorNames: ["run"] }, 1],
         [{ extraExecutorNames: ["run"] }, 4],
         [{ extraExecutorNames: [] }, 3],
+        [{ excludeExecutorNames: ["read"] }, 2],
+        [{ extraExecutorNames: ["run"], excludeExecutorNames: ["read"] }, 3],
+        [{ executorNames: ["run"], excludeExecutorNames: ["run"] }, 0],
       ]) {
         const pending = api.extractExecutedPostgresSql({ ...base, ...options });
         assert.equal(typeof pending.then, "function");

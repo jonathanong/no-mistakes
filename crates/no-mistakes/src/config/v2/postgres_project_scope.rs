@@ -21,6 +21,7 @@ struct Scope {
     import_specifier: String,
     executor_names: Option<Vec<String>>,
     extra_executor_names: Option<Vec<String>>,
+    exclude_executor_names: Vec<String>,
     factory_names: Vec<String>,
     type_names: Vec<String>,
     trusted_sql_tags: Vec<ProjectPostgresTrustedSqlTag>,

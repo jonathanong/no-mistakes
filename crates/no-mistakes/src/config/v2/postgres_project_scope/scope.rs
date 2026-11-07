@@ -29,6 +29,10 @@ fn disagree(rule: &RuleDef, left: &Scope, right: &Scope) -> Result<()> {
             left.extra_executor_names != right.extra_executor_names,
         ),
         (
+            "excludeExecutorNames",
+            left.exclude_executor_names != right.exclude_executor_names,
+        ),
+        (
             "factoryNames",
             sorted(&left.factory_names) != sorted(&right.factory_names),
         ),
@@ -78,6 +82,7 @@ fn scope_of(name: &str, project: &Project) -> Scope {
         extra_executor_names: executors
             .extra_executor_names
             .map(|names| sorted(&unique_preserve(names))),
+        exclude_executor_names: sorted(&unique_preserve(executors.exclude_executor_names)),
         factory_names: unique_preserve(executors.factory_names),
         type_names: unique_preserve(executors.type_names),
         trusted_sql_tags: tags,

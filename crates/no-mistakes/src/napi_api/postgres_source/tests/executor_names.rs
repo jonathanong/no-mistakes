@@ -6,12 +6,18 @@ fn extension_keeps_default_executor_calls_and_replacement_narrows() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../fixtures/config/postgres-executor-names/source.ts"
     ));
-    for (key, count) in [("executorNames", 1), ("extraExecutorNames", 4)] {
+    for (key, exclusions, count) in [
+        ("executorNames", vec![], 1),
+        ("extraExecutorNames", vec![], 4),
+        ("extraExecutorNames", vec!["read"], 3),
+        ("executorNames", vec!["run"], 0),
+    ] {
         let mut request = serde_json::json!({
             "sources": [{"fileName": "source.ts", "source": source}],
             "importSpecifier": "@example/db",
         });
         request[key] = serde_json::json!(["run"]);
+        request["excludeExecutorNames"] = serde_json::json!(exclusions);
         let report: serde_json::Value =
             serde_json::from_str(&extract_executed_postgres_sql_json_impl(request).unwrap())
                 .unwrap();

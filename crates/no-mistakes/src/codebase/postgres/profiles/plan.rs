@@ -45,6 +45,7 @@ pub fn configure_prepared_postgres_plan(
                 &options.executor_names,
             )
             .with_extra_executor_names(options.extra_executor_names.as_deref())
+            .with_exclude_executor_names(&options.exclude_executor_names)
             .with_scoped_executors(
                 &options.executor_factory_names,
                 &options.executor_type_names,

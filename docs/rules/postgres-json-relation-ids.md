@@ -9,8 +9,12 @@ omits a default name imported from `importSpecifier` and called in scoped files,
 `check` emits a configuration warning naming the rule or project, the omitted
 name, an example call site, and the fix. See
 [executor selection](../configuration/rules.md#postgresql-executor-selection).
+`excludeExecutorNames: [query]` removes names after replacement or default-plus-extra
+selection and acknowledges intentional omitted defaults. `check` warns about
+exclusions that are not default names or are never imported from the selected
+module and called in scoped files.
 
-A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `extraExecutorNames`, `executorFactoryNames`, `executorTypeNames`, or `trustedSqlTags` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `extraExecutorNames`, `excludeExecutorNames`, `executorFactoryNames`, `executorTypeNames`, or `trustedSqlTags` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
 
 This opt-in PostgreSQL check finds row identifiers stored in top-level `jsonb`
 keys without a same-row foreign key, and unique fingerprint columns that may be
@@ -51,7 +55,7 @@ rules:
 | `allow` | list of `{object, reason}` | `[]` | Allows `table:<name>` or `column:<table>.<column>` with a nonempty reason. A table exception is limited to that table. |
 | `include`, `exclude` | string arrays | rule defaults | Narrow TypeScript/JavaScript executor files. |
 | `sqlInclude` | string array | `**/*.sql` | Selects migration/schema SQL files to inspect. |
-| `importSpecifier`, `executorNames`, `extraExecutorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags` | standard PostgreSQL executor options | project defaults | Select executed embedded SQL. Configure the import and executor profile as for other PostgreSQL rules. |
+| `importSpecifier`, `executorNames`, `extraExecutorNames`, `excludeExecutorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags` | standard PostgreSQL executor options | project defaults | Select executed embedded SQL. Configure the import and executor profile as for other PostgreSQL rules. |
 
 With no options the rule reports nothing. It assumes no key naming convention.
 Generate `schemaCatalogPath` with [`no-mistakes postgres catalog`](../cli/postgres.md).

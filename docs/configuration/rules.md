@@ -469,7 +469,7 @@ rules:
 ```
 
 This selects `query`, `read`, `write`, `readPool`, and `writePool` from the
-configured module. Setting both `executorNames` and `extraExecutorNames`,
+configured module. Setting both `executorNames` and `extraExecutorNames`, `excludeExecutorNames`,
 including empty lists, is a configuration error. Existing explicit
 `executorNames: []` without a module still selects no executor calls. With a
 nonempty `importSpecifier`, an omitted or empty `executorNames` retains the
@@ -484,6 +484,15 @@ one example call site, and how to fix the selection. An unused or unimported
 omitted default does not warn. Switch to `extraExecutorNames` to preserve all
 defaults, or include the omitted default in `executorNames`. The warning makes
 otherwise silent gaps visible; it does not widen the configured scan.
+
+`excludeExecutorNames` applies last: it removes names from the replacement list
+or the defaults plus extras. For example, `extraExecutorNames: [readPool]` with
+`excludeExecutorNames: [query]` selects `read`, `write`, and `readPool`.
+Exclusions may accompany either selection option and suppress the omitted-default
+warning for intentionally excluded names. `check` emits an unused-entry warning
+for an exclusion that is not a default executor name, or whose default is never
+imported from the configured module and called in scoped files. Remove unused
+entries or correct their names; exclusions do not broaden the scan.
 
 The same options and mutual exclusion apply to
 [`projects.<name>.postgres.executors`](projects.md#postgresql-scope). Declare

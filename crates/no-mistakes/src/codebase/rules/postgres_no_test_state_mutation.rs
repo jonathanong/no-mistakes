@@ -20,6 +20,7 @@ pub(super) struct Options {
     import_specifier: String,
     executor_names: Vec<String>,
     extra_executor_names: Option<Vec<String>>,
+    exclude_executor_names: Vec<String>,
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
     trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
@@ -47,6 +48,7 @@ impl CompiledOptions {
                 &options.executor_names,
             )
             .with_extra_executor_names(options.extra_executor_names.as_deref())
+            .with_exclude_executor_names(&options.exclude_executor_names)
             .with_scoped_executors(
                 &options.executor_factory_names,
                 &options.executor_type_names,

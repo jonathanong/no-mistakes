@@ -106,15 +106,20 @@ the repository or rule-application level; it is separate from this legacy
 project setting.
 Every key is optional. An embedded-SQL rule still needs a non-empty
 `executors.importSpecifier` on the project; an empty specifier does not select
-every `.query` call. `executorNames`, `extraExecutorNames`, `factoryNames`, and `typeNames` are
+every `.query` call. `executorNames`, `extraExecutorNames`, `excludeExecutorNames`, `factoryNames`, and `typeNames` are
 copied. A receiver type imported from the configured module but missing from
 `postgres.executors.typeNames` is diagnosed by the consuming rule's shared
 `unanalyzable` policy. Add the missing imported type name to that project list;
 the diagnostic does not automatically select or evaluate its calls.
 `postgres.executors.executorNames` replaces the default `[query, read, write]`
 list. `postgres.executors.extraExecutorNames` extends that list; the example
-above selects all three defaults plus `readPool` and `writePool`. Setting both
-lists is a configuration error. With `importSpecifier` set, omitting both
+above selects all three defaults plus `readPool` and `writePool`.
+`postgres.executors.excludeExecutorNames` removes names after that selection
+and acknowledges intentionally omitted defaults. Exclusions that are not default
+names, or whose defaults are never imported from the selected module and called
+in scoped files, produce unused-entry configuration warnings. Setting both
+`executorNames` and `extraExecutorNames` is a configuration error. With
+`importSpecifier` set, omitting both selection options
 retains the defaults. If a replacement omits a default imported from that
 module and called in the scoped files, `check` warns with the project or rule,
 omitted name, example call site, and fix. See
@@ -131,16 +136,16 @@ On config load, each enabled `postgres-*` rule whose `projects` list references
 at least one project with a `postgres` block inherits that block:
 
 - Two referenced `postgres` blocks must agree on `importSpecifier`, factory
-  names, executor names and extras, type names, trusted tags, `schemaCatalogPath`, `unanalyzableSql`, and
+  names, executor names, extras, and exclusions, type names, trusted tags, `schemaCatalogPath`, `unanalyzableSql`, and
   `sqlInclude`. Disagreeing blocks are a config error. A rule cannot mix a `postgres` project
   with a project that has no `postgres` block.
 - These rule option keys are a config error even when the value matches the
-  project: `importSpecifier`, `executorNames`, `extraExecutorNames`, `executorFactoryNames`,
+  project: `importSpecifier`, `executorNames`, `extraExecutorNames`, `excludeExecutorNames`, `executorFactoryNames`,
   `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`,
   `unanalyzableSql`, and `sqlIncludeLocked`. `scope: repository` is also an
   error, because repository scope is a second, wider pass.
 - Absent keys are filled from the project: `importSpecifier`, `executorNames`,
-  `extraExecutorNames`,
+  `extraExecutorNames`, `excludeExecutorNames`,
   `executorFactoryNames` from `factoryNames`, `executorTypeNames` from
   `typeNames`, `trustedSqlTags`, `schemaCatalogPath`, `unanalyzableSql`, and
   `sqlInclude`.

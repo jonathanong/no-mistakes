@@ -84,6 +84,13 @@ impl EmbeddedSqlOptions {
         self
     }
 
+    /// Remove intentionally excluded imports after replacement or extension.
+    pub fn with_exclude_executor_names(mut self, exclusions: &[String]) -> Self {
+        self.executor_names
+            .retain(|name| !exclusions.contains(name));
+        self
+    }
+
     /// Add scoped executor sources: factory imports and executor type imports.
     pub fn with_scoped_executors(mut self, factories: &[String], types: &[String]) -> Self {
         self.executor_factory_names = sorted_unique(factories);

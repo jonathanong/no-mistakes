@@ -8,10 +8,8 @@ use anyhow::{bail, Result};
 use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
-
 mod catalog;
 mod scan;
-
 pub const RULE_ID: &str = "postgres-no-generated-column-writes";
 
 const DEFAULT_DML_EXTENSIONS: &[&str] = &["ts", "mts", "tsx", "js", "sql"];
@@ -26,6 +24,7 @@ pub(crate) struct Options {
     pub(crate) import_specifier: Option<String>,
     pub(crate) executor_names: Vec<String>,
     pub(crate) extra_executor_names: Option<Vec<String>>,
+    pub(crate) exclude_executor_names: Vec<String>,
     pub(crate) executor_factory_names: Vec<String>,
     pub(crate) executor_type_names: Vec<String>,
     pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
@@ -144,6 +143,7 @@ fn embedded_options(opts: &Options) -> EmbeddedSqlOptions {
         &opts.executor_names,
     )
     .with_extra_executor_names(opts.extra_executor_names.as_deref())
+    .with_exclude_executor_names(&opts.exclude_executor_names)
     .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
     .with_trusted_sql_tags(&opts.trusted_sql_tags)
 }

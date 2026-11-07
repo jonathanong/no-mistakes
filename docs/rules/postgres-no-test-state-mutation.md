@@ -7,6 +7,10 @@ omits a default name imported from `importSpecifier` and called in scoped files,
 `check` emits a configuration warning naming the rule or project, the omitted
 name, an example call site, and the fix. See
 [executor selection](../configuration/rules.md#postgresql-executor-selection).
+`excludeExecutorNames: [query]` removes names after replacement or default-plus-extra
+selection and acknowledges intentional omitted defaults. `check` warns about
+exclusions that are not default names or are never imported from the selected
+module and called in scoped files.
 
 ## Why and when
 

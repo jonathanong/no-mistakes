@@ -12,6 +12,8 @@ export interface PostgresRequireQueryAnnotationOptions {
   executorNames?: string[];
   /** Extends query/read/write; mutually exclusive with executorNames. */
   extraExecutorNames?: string[];
+  /** Removes names after replacement/defaults and extras are selected. */
+  excludeExecutorNames?: string[];
   executorFactoryNames?: string[];
   executorTypeNames?: string[];
   /** Exact module#export wrappers accepting one string or interpolation-free template literal. */

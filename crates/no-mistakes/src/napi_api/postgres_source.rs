@@ -45,6 +45,8 @@ struct ExecutedSqlRequest {
     #[serde(default)]
     extra_executor_names: Option<Vec<String>>,
     #[serde(default)]
+    exclude_executor_names: Vec<String>,
+    #[serde(default)]
     executor_factory_names: Vec<String>,
     #[serde(default)]
     executor_type_names: Vec<String>,
@@ -70,6 +72,7 @@ pub(crate) fn extract_executed_postgres_sql_json_impl(
     let options =
         EmbeddedSqlOptions::configured(&request.import_specifier, &request.executor_names)
             .with_extra_executor_names(request.extra_executor_names.as_deref())
+            .with_exclude_executor_names(&request.exclude_executor_names)
             .with_scoped_executors(
                 &request.executor_factory_names,
                 &request.executor_type_names,

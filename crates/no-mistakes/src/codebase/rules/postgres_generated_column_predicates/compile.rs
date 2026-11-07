@@ -20,6 +20,7 @@ pub(super) fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         },
         embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
             .with_extra_executor_names(opts.extra_executor_names.as_deref())
+            .with_exclude_executor_names(&opts.exclude_executor_names)
             .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
             .with_trusted_sql_tags(&opts.trusted_sql_tags),
         fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(

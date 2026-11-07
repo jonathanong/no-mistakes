@@ -21,6 +21,7 @@ pub struct ProjectPostgresExecutors {
     pub import_specifier: String,
     pub executor_names: Option<Vec<String>>,
     pub extra_executor_names: Option<Vec<String>>,
+    pub exclude_executor_names: Vec<String>,
     pub factory_names: Vec<String>,
     pub type_names: Vec<String>,
     pub trusted_sql_tags: Vec<ProjectPostgresTrustedSqlTag>,

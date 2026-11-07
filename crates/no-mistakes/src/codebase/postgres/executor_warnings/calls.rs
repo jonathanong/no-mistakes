@@ -16,7 +16,9 @@ pub(super) fn omitted_calls(
         .collect::<FxHashMap<_, _>>();
     let mut references = BTreeMap::new();
     for import in &module.imports {
-        if import.type_only || import.specifier != scan.import_specifier {
+        if import.type_only
+            || (!scan.import_specifier.is_empty() && import.specifier != scan.import_specifier)
+        {
             continue;
         }
         for imported in &import.bindings {

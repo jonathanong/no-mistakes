@@ -77,3 +77,45 @@ fn empty_extension_retains_defaults_without_an_import_module() {
         assert_eq!(profiles[0].executor_names, expected, "{file}");
     }
 }
+
+#[test]
+fn exclusions_follow_selection_and_project_inheritance() {
+    for (file, expected) in [
+        ("exclude-extra.yml", vec!["query", "write"]),
+        ("exclude-replace.yml", vec![]),
+        ("project-exclude-extra.yml", vec!["query", "write"]),
+        ("project-exclude-replace.yml", vec![]),
+    ] {
+        let config = parse(&saved(file)).unwrap();
+        let profiles = crate::codebase::postgres::configured_embedded_sql_options(
+            &config,
+            &["postgres-require-query-annotation"],
+        )
+        .unwrap();
+        assert_eq!(profiles[0].executor_names, expected, "{file}");
+        assert!(
+            config.rules[0]
+                .options
+                .get("excludeExecutorNames")
+                .is_some(),
+            "{file}"
+        );
+    }
+}
+
+#[test]
+fn project_exclusions_cannot_disagree_or_be_restated() {
+    for (file, text) in [
+        (
+            "project-disagree-exclude.yml",
+            "disagree on excludeExecutorNames",
+        ),
+        (
+            "project-restates-exclude.yml",
+            "options.excludeExecutorNames restates",
+        ),
+    ] {
+        let error = parse(&saved(file)).unwrap_err().to_string();
+        assert!(error.contains(text), "{file}: {error}");
+    }
+}

@@ -37,6 +37,7 @@ pub(super) struct Options {
     import_specifier: String,
     executor_names: Vec<String>,
     extra_executor_names: Option<Vec<String>>,
+    exclude_executor_names: Vec<String>,
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
     trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
