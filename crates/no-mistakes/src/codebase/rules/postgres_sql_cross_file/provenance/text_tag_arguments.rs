@@ -94,31 +94,37 @@ fn named_argument(
         .bindings
         .iter()
         .any(|binding| binding.scope == scope && binding.name == name)
-        && ts.value_flow.parameters.iter().any(|parameter| {
-            parameter.scope == scope
-                && parameter.name == name
-                && parameter.projection.is_empty()
-                && parameter.invalidated_at.is_none_or(|write| write > offset)
-                && parameter
-                    .type_reference
-                    .as_ref()
-                    .is_some_and(|shape| scalar_type(shape, members))
-                && memoized(
-                    state,
-                    ProofKey::Parameter(scope, name.into(), members.to_vec()),
-                    |state| {
-                        matches!(parameter.default, ValueExpression::Unknown)
-                            || bound_argument(
-                                bindings,
-                                file,
-                                &parameter.default,
-                                members,
-                                tags,
-                                state,
-                            )
-                    },
-                )
-        })
+        && ts
+            .value_flow
+            .parameters
+            .iter()
+            .enumerate()
+            .any(|(index, parameter)| {
+                parameter.scope == scope
+                    && parameter.name == name
+                    && !state.opaque_parameter_defaults.contains(&index)
+                    && parameter.projection.is_empty()
+                    && parameter.invalidated_at.is_none_or(|write| write > offset)
+                    && parameter
+                        .type_reference
+                        .as_ref()
+                        .is_some_and(|shape| scalar_type(shape, members))
+                    && memoized(
+                        state,
+                        ProofKey::Parameter(scope, name.into(), members.to_vec()),
+                        |state| {
+                            matches!(parameter.default, ValueExpression::Unknown)
+                                || bound_argument(
+                                    bindings,
+                                    file,
+                                    &parameter.default,
+                                    members,
+                                    tags,
+                                    state,
+                                )
+                        },
+                    )
+            })
 }
 
 fn scalar_type(shape: &ValueType, members: &[String]) -> bool {

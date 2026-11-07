@@ -453,7 +453,8 @@ tag establishes this `.text` proof for literal slots and ordinary scalar paramet
 or member values, including local aliases. Raw builders such as `sql.raw(value)`,
 opaque or optional factory calls, object or array slots, and aliases of those
 values do not establish the proof. Direct configured-tag executor calls retain
-their identifier checks. Calls on the fragment,
+their identifier checks. Known opaque parameter defaults remain outside this
+proof even when the parameter has a scalar type annotation. Calls on the fragment,
 member writes, reads of internal members such as `.strings`, and escaping the
 fragment end this proof.
 

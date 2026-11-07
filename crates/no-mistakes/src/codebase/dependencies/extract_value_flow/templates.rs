@@ -3,6 +3,7 @@ use super::*;
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct TaggedTemplateInfo {
     pub(crate) literal_arguments: Vec<usize>,
+    pub(crate) opaque_parameter_defaults: Vec<usize>,
 }
 
 pub(super) fn tag_offset(tagged: &TaggedTemplateExpression<'_>) -> u32 {
@@ -13,6 +14,39 @@ pub(super) fn tag_offset(tagged: &TaggedTemplateExpression<'_>) -> u32 {
     }
 }
 impl ImportCollector {
+    pub(super) fn note_text_parameter_default(
+        &mut self,
+        first: usize,
+        parameter: &oxc_ast::ast::FormalParameter<'_>,
+        value: &ValueExpression,
+    ) {
+        let initializer = match &parameter.pattern {
+            BindingPattern::AssignmentPattern(assignment) => Some(&assignment.right),
+            _ => parameter.initializer.as_ref(),
+        };
+        if matches!(value, ValueExpression::Unknown)
+            && initializer.is_some_and(|value| !literal_argument(value))
+        {
+            self.opaque_text_parameter_defaults
+                .extend(first..self.value_flow.parameters.len());
+        }
+    }
+
+    fn visible_opaque_parameter_defaults(&self) -> Vec<usize> {
+        let mut indices: Vec<_> = self
+            .opaque_text_parameter_defaults
+            .iter()
+            .filter_map(|index| {
+                let parameter = self.value_flow.parameters.get(*index)?;
+                self.lexical_scope_ids
+                    .contains(&parameter.scope)
+                    .then_some(*index)
+            })
+            .collect();
+        indices.sort_unstable();
+        indices
+    }
+
     pub(in super::super) fn visit_value_tagged<'a>(
         &mut self,
         tagged: &TaggedTemplateExpression<'a>,
@@ -31,6 +65,7 @@ impl ImportCollector {
         self.value_flow.tagged_templates.insert(
             (tag_offset(tagged), tagged.span.end),
             TaggedTemplateInfo {
+                opaque_parameter_defaults: self.visible_opaque_parameter_defaults(),
                 literal_arguments: tagged
                     .quasi
                     .expressions

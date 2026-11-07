@@ -67,3 +67,33 @@ export function aliasDiamond(value: string) {
   const diamond = sql`records WHERE value = ${a10}`;
   query(`SELECT id FROM ${diamond.text}`);
 }
+
+export function optionalDefault(value: string = makeRaw?.("raw") as string) {
+  const optionalDefaultSlot = sql`records WHERE value = ${value}`;
+  query(`SELECT id FROM ${optionalDefaultSlot.text}`);
+  query(`SELECT id FROM ${sql`records WHERE value = ${value}`.text}`);
+}
+
+export function rawDefault(value: any = sql.raw("raw")) {
+  const rawDefaultSlot = sql`records WHERE value = ${value}`;
+  query(`SELECT id FROM ${rawDefaultSlot.text}`);
+}
+
+export function aliasDefault(original: any = makeRaw?.("raw"), value: any = original) {
+  const alias = value;
+  const aliasDefaultSlot = sql`records WHERE value = ${alias}`;
+  query(`SELECT id FROM ${aliasDefaultSlot.text}`);
+}
+
+export function capturedDefault(value: any = makeRaw?.("raw")) {
+  const captured = value;
+  return function inner(value: string) {
+    const capturedDefaultSlot = sql`records WHERE value = ${captured}`;
+    query(`SELECT id FROM ${capturedDefaultSlot.text}`);
+  };
+}
+
+export function literalDefault(value: string = "fixed") {
+  const literalDefaultSlot = sql`records WHERE value = ${value}`;
+  query(`SELECT id FROM ${literalDefaultSlot.text}`);
+}

@@ -19,6 +19,7 @@ enum ProofKey {
 struct ProofState {
     active: FxHashSet<ProofKey>,
     done: FxHashMap<ProofKey, bool>,
+    opaque_parameter_defaults: FxHashSet<usize>,
     #[cfg(test)]
     work: usize,
 }
@@ -90,6 +91,9 @@ fn text_tag(
     if binding_tag::is_bind_tag(bindings, file, call) {
         return true;
     }
+    state
+        .opaque_parameter_defaults
+        .extend(info.opaque_parameter_defaults.iter().copied());
     memoized(state, ProofKey::Call(call.offset, call.end), |state| {
         call.arguments
             .iter()

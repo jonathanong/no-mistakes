@@ -87,6 +87,7 @@ impl ImportCollector {
                 self.value_flow.parameters.len(),
                 Vec::new(),
             );
+            self.note_text_parameter_default(first, param, &default);
             if matches!(pattern, BindingPattern::BindingIdentifier(_)) {
                 let reference = self.parameter_type_reference(param);
                 for parameter in &mut self.value_flow.parameters[first..] {

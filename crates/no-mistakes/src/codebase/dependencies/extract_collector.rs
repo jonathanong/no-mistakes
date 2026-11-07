@@ -75,6 +75,7 @@ struct ImportCollector {
     /// Present only while the normal visitor records this exact assignment leaf.
     assignment_target_start: Option<u32>,
     value_parameter_indexes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
+    opaque_text_parameter_defaults: FxHashSet<usize>,
     collect_value_flow: bool,
     collect_per_item_calls: bool,
     per_item_calls: Vec<PerItemCall>,
