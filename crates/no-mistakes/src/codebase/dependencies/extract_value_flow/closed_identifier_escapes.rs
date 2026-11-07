@@ -41,6 +41,11 @@ impl super::super::super::ImportCollector {
         }
         match expr {
             Expression::StaticMemberExpression(member) => mark_read(self, &member.object),
+            Expression::UnaryExpression(unary)
+                if unary.operator == oxc_syntax::operator::UnaryOperator::LogicalNot =>
+            {
+                mark_read(self, &unary.argument)
+            }
             Expression::CallExpression(call) => mark_spreads(self, &call.arguments),
             Expression::NewExpression(new) => mark_spreads(self, &new.arguments),
             Expression::ArrayExpression(array) => {
@@ -159,6 +164,17 @@ fn mark_read(collector: &mut super::super::super::ImportCollector, expr: &Expres
     else {
         return;
     };
+    if collector
+        .value_flow
+        .closed_string_registries
+        .iter()
+        .any(|registry| {
+            registry.name == identifier.name && registry.kind == super::RegistryKind::MetadataArray
+        })
+        && collector.closed_registry_call_callee != Some(identifier.span.start)
+    {
+        return;
+    }
     collector
         .closed_registry_reads
         .insert(identifier.span.start);

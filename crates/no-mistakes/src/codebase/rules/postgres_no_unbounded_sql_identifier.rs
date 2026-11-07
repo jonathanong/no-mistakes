@@ -70,7 +70,7 @@ fn scan(
             continue;
         }
         for provenance in identifier_sources(graph, facts, call, &bindings) {
-            if closed::proven(opts, facts, &bindings, call, &provenance)
+            if closed::proven(graph, opts, facts, &bindings, call, &provenance)
                 || closed_calls::proven(graph, facts, &bindings, call, &provenance)
                 || fragments::proven(opts, facts, &bindings, call, &provenance)
             {

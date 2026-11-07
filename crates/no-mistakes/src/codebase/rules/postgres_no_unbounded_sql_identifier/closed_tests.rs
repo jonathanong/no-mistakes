@@ -3,6 +3,7 @@ use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::codebase::dependencies::extract::{
     FiniteIdentifierGuard, GuardKind, GuardSubject, ValueBinding, ValueExpression, ValueFlowFacts,
 };
+use crate::codebase::dependencies::graph::DepGraph;
 use crate::codebase::postgres::EmbeddedSqlCall;
 use crate::codebase::rules::postgres_sql_cross_file::SqlCall;
 use crate::codebase::rules::postgres_sql_cross_file::{compile, Bindings, Options, Provenance};
@@ -30,13 +31,21 @@ fn missing_facts_and_unmatched_calls_stay_unproven() {
     let facts = CheckFactMap::default();
     let bindings = Bindings::new(&facts);
     assert!(!proven(
+        &DepGraph::default(),
         &opts,
         &facts,
         &bindings,
         &call,
         &Provenance::ProcessEnv("SCHEMA".into()),
     ));
-    assert!(!proven(&opts, &facts, &bindings, &call, &reference));
+    assert!(!proven(
+        &DepGraph::default(),
+        &opts,
+        &facts,
+        &bindings,
+        &call,
+        &reference
+    ));
 
     let mut facts = CheckFactMap::default();
     facts.ts.insert(
@@ -48,7 +57,14 @@ fn missing_facts_and_unmatched_calls_stay_unproven() {
         .into(),
     );
     let bindings = Bindings::new(&facts);
-    assert!(!proven(&opts, &facts, &bindings, &call, &reference));
+    assert!(!proven(
+        &DepGraph::default(),
+        &opts,
+        &facts,
+        &bindings,
+        &call,
+        &reference
+    ));
 }
 
 #[test]
@@ -147,11 +163,13 @@ fn identifier_guard(subject: Option<GuardSubject>) -> FiniteIdentifierGuard {
     FiniteIdentifierGuard {
         context: None,
         name: "table".to_string(),
+        members: Vec::new(),
         from: 0,
         until: 20,
         kind: GuardKind::Assertion {
             callee: "assertWhitelistedSqlIdentifier".to_string(),
             argument: 0,
+            call: 0,
         },
         subject,
     }

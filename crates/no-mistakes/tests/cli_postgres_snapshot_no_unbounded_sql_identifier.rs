@@ -2,6 +2,19 @@ use super::check_json_snapshot::{assert_saved_fixture, rules_path};
 use std::path::{Path, PathBuf};
 
 #[test]
+fn postgres_guard_provenance_check_json_snapshot() {
+    let root = rules_path(
+        "postgres-no-unbounded-sql-identifier",
+        "fixture",
+        "issue-3073-guards",
+    );
+    assert_saved_fixture(
+        "postgres_guard_provenance",
+        &[("guards", root.clone(), root.join(".no-mistakes.yml"))],
+    );
+}
+
+#[test]
 fn low_values_executors_check_json_snapshot() {
     let root = rules_path("postgres-no-offset", "fixture", "low-values-executors");
     assert_saved_fixture(

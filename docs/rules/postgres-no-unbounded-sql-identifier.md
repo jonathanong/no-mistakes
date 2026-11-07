@@ -361,19 +361,34 @@ set the scan can see:
   module, an unstripped UUID, `.replace("-", "")`, or any other dynamic part
   stays unbounded.
 - A value dominated by `if (!ALLOWED.has(value)) throw` or
-  `if (!ALLOWED_LIST.includes(value)) throw` in the same callable. `ALLOWED`
+  `if (!ALLOWED_LIST.includes(value)) throw` in the same callable. A `return`
+  that exits the callable also works. `ALLOWED`
   must be one `const` `Set` of string literals, and `ALLOWED_LIST` one `const`
   array of string literals. The guard ends at the next assignment to that
   same binding (`=`, `+=`, `for (name of ...)`, or a destructuring
   assignment). A guard inside a branch does not cover a query after that
   branch. A regex test is not a finite domain. An inner `const` that shadows
   the guarded name stays unbounded.
-- A direct call, before the query, to a helper listed in
-  `finiteDomainAssertions`. The match is the helper name and argument index;
-  the helper body is not inspected, so the helper must throw. `argument` is
-  the zero-based index of the value that helper validates. `name` and
-  `argument` are both required. A later assignment to that same binding ends
-  the proof.
+- A direct call, before interpolation, to a helper listed in
+  `identifierValidators`. `name` and the zero-based validated `argument` are
+  required. With `module`, the prepared canonical call graph matches that
+  module export through aliases, namespace imports, and re-exports. A local
+  helper or an export from another module cannot satisfy that identity.
+  Without `module`, the exact local callee name is matched. The helper body
+  is not inspected, so the configured helper must throw on rejection and must
+  validate a finite domain; a regex alone does not establish that contract.
+  `finiteDomainAssertions` retains its existing name-and-argument behavior.
+  A guard for `config.schema` covers only that property path, including a
+  static bracket spelling. It does not validate `config.table`. Writes or
+  escaping the object invalidate property proofs conservatively. A guard
+  after SQL interpolation cannot validate the earlier value.
+- A local lookup from a static array of plain metadata objects whose fields
+  are all string literals: `const selected = TABLES.find(entry => entry.name
+  === name)`, followed by `if (!selected) throw` or `return`, proves
+  `selected.table` and other fields present in every entry. The predicate must
+  be an expression arrow comparing one entry property to a name or string
+  literal with `===` or `!==`. Open metadata values, mutations, aliases to
+  entries, escaping lookups, and predicates with effects end this proof.
 
 - A parameter annotated `number` or `bigint`, interpolated directly
   (`events_${n}`) or beside a catalog name (`${table}__p_${yyyy}_${mm}`). A
@@ -402,8 +417,9 @@ function unbounded; a name that resolves to a plain local binding still matches
 a same-named parameter elsewhere in the file, so existing findings are kept.
 
 ```yaml
-finiteDomainAssertions:
-  - name: assertWhitelistedSqlIdentifier
+identifierValidators:
+  - module: "@example/sql-identifiers"
+    name: assertWhitelistedSqlIdentifier
     argument: 0
 ```
 
@@ -418,7 +434,7 @@ throws, then interpolate that helper. Keep values in tagged binds.
 select executor calls when the rule does not inherit a project postgres block.
 `executorNames` defaults to `query`, `read`, and `write` when a specifier is
 set. `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, and
-`finiteDomainAssertions` default to empty. `include` and `exclude` default to
+`finiteDomainAssertions` and `identifierValidators` default to empty. `include` and `exclude` default to
 empty (all indexable files). See [Closed domains](#closed-domains).
 
 ## Suppression

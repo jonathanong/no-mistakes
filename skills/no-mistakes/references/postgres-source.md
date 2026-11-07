@@ -160,6 +160,8 @@ Grouped residual advice, including a `target` that may list several checks, is d
 
 For `postgres-no-unbounded-sql-identifier`, low effort accepts direct literal SQL/templates or one lexical const and skips call-graph/provenance inference. Keep relations literal; bind external values. Helper/alias/factory/type shapes are unanalyzable and follow `report`, `advise`, or `ignore`. Direct global `process.env` relation inputs remain violations.
 
+At max effort, configure `identifierValidators: [{module: "@example/sql-identifiers", name: "assertIdentifier", argument: 0}]` for a throwing finite-domain helper. Module identity follows re-exports. Validate each property before SQL interpolation; a schema assertion does not validate the table. Existing `finiteDomainAssertions` remains supported. Closed `includes`/`has` guards may throw or return; static metadata-array `.find` lookups need a dominating presence guard.
+
 `postgres-no-mutable-sql-registry` also supports `effort: low`. Use it when SQL
 relations are literal: the syntax tier skips cross-file mutation and call-graph
 analysis. Imported registry relations, helpers, and other indirect SQL produce

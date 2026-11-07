@@ -55,6 +55,8 @@ impl ImportCollector {
                             scope,
                             declared_at,
                             source: Some((list.name.to_string(), list_scope)),
+                            members: Vec::new(),
+                            requires_guard: false,
                         });
                 }
             }

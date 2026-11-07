@@ -168,8 +168,11 @@ non-finite wrappers) through prepared import, value-flow, and embedded-SQL
 facts plus the canonical graph. At max effort, closed literal registries
 (local or imported, until a member mutation), hyphen-stripped `randomUUID`
 names imported from `node:crypto` or `crypto`, dominating closed-set throw
-guards until the guarded binding is written, and configured
-`finiteDomainAssertions` are bounded. CLI `check`, Node `check()`,
+or return guards until the guarded binding is written, configured
+`identifierValidators` (through re-exports), and compatible
+`finiteDomainAssertions` are bounded. Property guards validate only their exact
+member path. Static metadata-array lookups followed by a throwing or returning
+presence guard prove their literal string fields. CLI `check`, Node `check()`,
 and batched `analyzeProject()` share findings. Immutable array-destructured
 query rows retain source provenance; comma expressions retain their final
 operand's value provenance. A direct adjacent scalar overwrite can prove one

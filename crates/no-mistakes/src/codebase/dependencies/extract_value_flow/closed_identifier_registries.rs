@@ -13,12 +13,34 @@ pub(super) fn registry(expr: &Expression<'_>) -> Option<(RegistryKind, Vec<Strin
         Expression::ObjectExpression(object) => {
             object_keys(object).map(|keys| (RegistryKind::Object, keys))
         }
-        Expression::ArrayExpression(array) => {
-            string_elements(array).map(|keys| (RegistryKind::Array, keys))
-        }
+        Expression::ArrayExpression(array) => string_elements(array)
+            .map(|keys| (RegistryKind::Array, keys))
+            .or_else(|| metadata_elements(array).map(|keys| (RegistryKind::MetadataArray, keys))),
         Expression::NewExpression(new) => constructed(new),
         _ => None,
     }
+}
+
+fn metadata_elements(array: &ArrayExpression<'_>) -> Option<Vec<String>> {
+    let mut common: Option<Vec<String>> = None;
+    for element in &array.elements {
+        let Expression::ObjectExpression(object) =
+            crate::codebase::ts_source::unwrap_ts_wrappers(element.as_expression()?)
+        else {
+            return None;
+        };
+        let keys = object_keys(object)?;
+        common = Some(common.map_or_else(
+            || keys.clone(),
+            |previous| {
+                previous
+                    .into_iter()
+                    .filter(|key| keys.contains(key))
+                    .collect()
+            },
+        ));
+    }
+    common.filter(|keys| !keys.is_empty())
 }
 
 fn frozen_argument<'a>(expr: &'a Expression<'a>) -> Option<&'a Expression<'a>> {

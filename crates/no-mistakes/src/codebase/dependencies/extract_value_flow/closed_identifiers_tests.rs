@@ -107,7 +107,7 @@ fn closed_domain_facts_reject_open_shapes() {
             "goodName",
         ]
     );
-    assert_eq!(flow.finite_identifier_guards.len(), 7);
+    assert_eq!(flow.finite_identifier_guards.len(), 8);
     let reassigned = flow
         .finite_identifier_guards
         .iter()
@@ -143,7 +143,7 @@ fn closed_domain_facts_reject_open_shapes() {
     assert!(flow.finite_identifier_guards.iter().any(|guard| {
         matches!(
             &guard.kind,
-            GuardKind::Assertion { callee, argument: 0 } if callee == "assertWhitelistedSqlIdentifier"
+            GuardKind::Assertion { callee, argument: 0, .. } if callee == "assertWhitelistedSqlIdentifier"
         )
     }));
     let skipped = parse_flow(SOURCE, false);
@@ -156,6 +156,8 @@ fn closed_domain_facts_reject_open_shapes() {
 mod escape_tests;
 #[path = "closed_identifier_mutation_tests.rs"]
 mod mutation_tests;
+#[path = "closed_identifier_provenance_tests.rs"]
+mod provenance_tests;
 
 fn parse_flow(
     source: &str,
