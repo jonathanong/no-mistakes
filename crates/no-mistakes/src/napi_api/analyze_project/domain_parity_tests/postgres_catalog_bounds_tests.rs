@@ -26,6 +26,7 @@ fn prepared_postgres_catalog_bounds_match_standalone() {
         ("../statement-groups/fixture", "valid.yml", 7),
         ("../statement-groups/fixture", "controls.yml", 6),
         ("../statement-groups/fixture", "embedded.yml", 4),
+        ("../statement-groups/fixture", "embedded-with-extra.yml", 4),
         ("../statement-groups/fixture", "variant-prefix.yml", 1),
         ("../statement-groups/fixture", "repeated-helper.yml", 2),
         ("../variants/correlated-append", ".no-mistakes.yml", 1),

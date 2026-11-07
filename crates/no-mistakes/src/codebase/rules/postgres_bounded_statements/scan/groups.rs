@@ -79,7 +79,7 @@ impl Groups {
         allow: &AllowList,
     ) {
         let mut sites = Vec::new();
-        for ((_, call, _), group) in self.statements {
+        for (_, group) in self.statements {
             let executor = crate::codebase::ts_source::relative_slash_path(root, &group.executor);
             let mut findings = group.findings;
             let grouped = merge(
@@ -92,7 +92,7 @@ impl Groups {
             );
             output.extend(findings);
             if let Some(grouped) = grouped {
-                sites.push((output.len(), call, group.at));
+                sites.push((output.len(), group.at));
                 output.0.push(grouped);
             }
         }

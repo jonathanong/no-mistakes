@@ -1,7 +1,7 @@
 use crate::codebase::rules::{LocatedRuleFinding, PostgresFindings};
 use std::collections::BTreeMap;
 
-type Site = (usize, Option<super::Execution>, (usize, usize));
+type Site = (usize, (usize, usize));
 
 pub(super) fn combine(roots: BTreeMap<String, LocatedRuleFinding>) -> Option<LocatedRuleFinding> {
     if roots.len() < 2 {
@@ -40,22 +40,17 @@ pub(super) fn disambiguate(output: &mut PostgresFindings, sites: &[Site]) {
     if sites.len() < 2 {
         return;
     }
-    let mut counts = BTreeMap::new();
-    for (index, _, _) in sites {
-        *counts.entry(output.0[*index].finding.clone()).or_insert(0) += 1;
-    }
-    for (index, call, (line, column)) in sites {
-        let finding = &mut output.0[*index].finding;
-        if counts[&*finding] > 1 {
-            let call = call
-                .map(|execution| match execution {
-                    super::Execution::Call(index) => format!("; executor call {index}"),
-                    super::Execution::Projection(index) => format!("; executor projection {index}"),
-                })
-                .unwrap_or_default();
-            finding.message.push_str(&format!(
-                " (statement at SQL line {line}, column {column}{call})"
-            ));
+    let findings = &output.0;
+    let suffixes = crate::codebase::rules::postgres_findings::site_suffixes(
+        sites.iter().map(|(index, position)| {
+            let finding = &findings[*index].finding;
+            (finding, finding.file.as_str(), *position)
+        }),
+        "statement",
+    );
+    for ((index, _), suffix) in sites.iter().zip(suffixes) {
+        if let Some(suffix) = suffix {
+            output.0[*index].finding.message.push_str(&suffix);
         }
     }
 }

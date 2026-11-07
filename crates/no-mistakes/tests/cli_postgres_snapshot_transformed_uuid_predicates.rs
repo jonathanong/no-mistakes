@@ -14,6 +14,10 @@ fn postgres_no_transformed_uuid_predicates_check_json_snapshot() {
     // empty advisories.
     let rows = [
         (
+            "multi_argument_sites_ts_only",
+            "multi-argument-sites-ts-only.yml",
+        ),
+        (
             "multi_argument_shared_casts",
             "multi-argument-shared-casts.yml",
         ),

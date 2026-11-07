@@ -13,6 +13,7 @@ test(
       ["postgres-bounded-statements/statement-groups/fixture", "valid.yml", 7],
       ["postgres-bounded-statements/statement-groups/fixture", "controls.yml", 6],
       ["postgres-bounded-statements/statement-groups/fixture", "embedded.yml", 4],
+      ["postgres-bounded-statements/statement-groups/fixture", "embedded-with-extra.yml", 4],
       ["postgres-bounded-statements/statement-groups/fixture", "variant-prefix.yml", 1],
       ["postgres-bounded-statements/statement-groups/fixture", "repeated-helper.yml", 2],
       [

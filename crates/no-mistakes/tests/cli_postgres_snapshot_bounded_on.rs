@@ -11,12 +11,22 @@ fn report(config: &str, exit: i32) -> Value {
 }
 
 fn report_in(root: &std::path::Path, config: &str, exit: i32) -> Value {
+    report_with_verdicts(root, config, exit, true)
+}
+
+fn report_with_verdicts(
+    root: &std::path::Path,
+    config: &str,
+    exit: i32,
+    include_sql_verdicts: bool,
+) -> Value {
     let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
         .args(["check", "--root"])
         .arg(root)
         .arg("--config")
         .arg(root.join(config))
-        .args(["--include-sql-verdicts", "--format", "json"])
+        .args(include_sql_verdicts.then_some("--include-sql-verdicts"))
+        .args(["--format", "json"])
         .output()
         .unwrap();
     let report: Value = serde_json::from_slice(&output.stdout).unwrap();
@@ -140,6 +150,11 @@ fn postgres_bounded_statements_statement_groups_check_json_snapshot() {
                 fixture.join("embedded.yml"),
             ),
             (
+                "embedded_sites_with_extra",
+                fixture.clone(),
+                fixture.join("embedded-with-extra.yml"),
+            ),
+            (
                 "variant_prefix_union",
                 fixture.clone(),
                 fixture.join("variant-prefix.yml"),
@@ -230,4 +245,26 @@ fn postgres_bounded_statements_variants_preserve_physical_statement_occurrences(
         ["table:feeds, table:items", "table:items"],
         "{repeated}"
     );
+}
+
+#[test]
+fn postgres_bounded_statements_site_labels_ignore_unrelated_files_and_verdicts() {
+    let fixture = rules_path(
+        "postgres-bounded-statements",
+        "statement-groups/fixture",
+        "",
+    );
+    let base = report_with_verdicts(&fixture, "embedded.yml", 1, false);
+    assert_eq!(base["rules"].as_array().unwrap().len(), 4, "{base}");
+    for (config, verdicts) in [
+        ("embedded-with-extra.yml", false),
+        ("embedded.yml", true),
+        ("embedded-with-extra.yml", true),
+    ] {
+        let report = report_with_verdicts(&fixture, config, 1, verdicts);
+        assert_eq!(
+            report["rules"], base["rules"],
+            "{config} verdicts={verdicts}"
+        );
+    }
 }

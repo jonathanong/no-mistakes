@@ -1138,7 +1138,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "multi-argument-shared-casts.ts",
           "line": 2,
-          "message": "multi-argument-shared-casts.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from multi-argument-shared-casts.ts; executor call 0)",
+          "message": "multi-argument-shared-casts.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from multi-argument-shared-casts.ts)",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "function getColumn() { return 'id'; }",
           "target": "accounts.id"
@@ -1146,7 +1146,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "multi-argument-shared-casts.ts",
           "line": 2,
-          "message": "multi-argument-shared-casts.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:32 from multi-argument-shared-casts.ts; executor call 1)",
+          "message": "multi-argument-shared-casts.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:32 from multi-argument-shared-casts.ts)",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "function getColumn() { return 'id'; }",
           "target": "accounts.id"
@@ -1154,7 +1154,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "multi-argument-shared-casts.ts",
           "line": 2,
-          "message": "multi-argument-shared-casts.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:50 from multi-argument-shared-casts.ts; executor call 1)",
+          "message": "multi-argument-shared-casts.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:50 from multi-argument-shared-casts.ts)",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "function getColumn() { return 'id'; }",
           "target": "accounts.id"
@@ -1162,7 +1162,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "multi-argument-shared-casts.ts",
           "line": 2,
-          "message": "multi-argument-shared-casts.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:56 from multi-argument-shared-casts.ts; executor call 0)",
+          "message": "multi-argument-shared-casts.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:56 from multi-argument-shared-casts.ts)",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "function getColumn() { return 'id'; }",
           "target": "accounts.id"
@@ -1300,7 +1300,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "multi-argument-shared-column.ts",
           "line": 3,
-          "message": "multi-argument-shared-column.ts:3: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from multi-argument-shared-column.ts; executor call 0)",
+          "message": "multi-argument-shared-column.ts:3: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from multi-argument-shared-column.ts)",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "function getColumn() { return 'id'; }",
           "target": "accounts.id"
@@ -1308,7 +1308,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "multi-argument-shared-column.ts",
           "line": 3,
-          "message": "multi-argument-shared-column.ts:3: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:46 from multi-argument-shared-column.ts; executor call 0)",
+          "message": "multi-argument-shared-column.ts:3: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:46 from multi-argument-shared-column.ts)",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "function getColumn() { return 'id'; }",
           "target": "accounts.id"
@@ -1504,7 +1504,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "multi-argument-sites.ts",
           "line": 2,
-          "message": "multi-argument-sites.ts:2: WHERE applies fn to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from multi-argument-sites.ts; execution 1)",
+          "message": "multi-argument-sites.ts:2: WHERE applies fn to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from multi-argument-sites.ts)",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "query('SELECT 1 FROM accounts WHERE fn(id, token) = $1 AND fn(id, token) = $2');",
           "target": "accounts.id, accounts.token"
@@ -1512,7 +1512,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "multi-argument-sites.ts",
           "line": 2,
-          "message": "multi-argument-sites.ts:2: WHERE applies fn to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:53 from multi-argument-sites.ts; execution 1)",
+          "message": "multi-argument-sites.ts:2: WHERE applies fn to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:53 from multi-argument-sites.ts)",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "query('SELECT 1 FROM accounts WHERE fn(id, token) = $1 AND fn(id, token) = $2');",
           "target": "accounts.id, accounts.token"
@@ -1653,7 +1653,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "multi-argument-sites.ts",
           "line": 2,
-          "message": "multi-argument-sites.ts:2: WHERE applies fn to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from multi-argument-sites.ts; execution 34)",
+          "message": "multi-argument-sites.ts:2: WHERE applies fn to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from multi-argument-sites.ts)",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "query('SELECT 1 FROM accounts WHERE fn(id, token) = $1 AND fn(id, token) = $2');",
           "target": "accounts.id, accounts.token"
@@ -1661,7 +1661,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "multi-argument-sites.ts",
           "line": 2,
-          "message": "multi-argument-sites.ts:2: WHERE applies fn to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:53 from multi-argument-sites.ts; execution 34)",
+          "message": "multi-argument-sites.ts:2: WHERE applies fn to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:53 from multi-argument-sites.ts)",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "query('SELECT 1 FROM accounts WHERE fn(id, token) = $1 AND fn(id, token) = $2');",
           "target": "accounts.id, accounts.token"
@@ -1695,6 +1695,51 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "multi_argument_sites_ts_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "multi-argument-sites.ts",
+          "line": 2,
+          "message": "multi-argument-sites.ts:2: WHERE applies fn to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from multi-argument-sites.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query('SELECT 1 FROM accounts WHERE fn(id, token) = $1 AND fn(id, token) = $2');",
+          "target": "accounts.id, accounts.token"
+        },
+        {
+          "file": "multi-argument-sites.ts",
+          "line": 2,
+          "message": "multi-argument-sites.ts:2: WHERE applies fn to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:53 from multi-argument-sites.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query('SELECT 1 FROM accounts WHERE fn(id, token) = $1 AND fn(id, token) = $2');",
+          "target": "accounts.id, accounts.token"
+        },
+        {
+          "file": "multi-argument-sites.ts",
+          "line": 4,
+          "message": "multi-argument-sites.ts:4: WHERE applies fn to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "id,",
+          "target": "accounts.id, accounts.token"
+        },
+        {
+          "file": "multi-argument-sites.ts",
+          "line": 7,
+          "message": "multi-argument-sites.ts:7: WHERE applies COALESCE to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function makeSql() { return 'SELECT 1 FROM accounts WHERE COALESCE(id, token) = $1'; }",
+          "target": "accounts.id, accounts.token"
+        }
+      ],
       "warnings": []
     }
   },

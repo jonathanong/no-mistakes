@@ -25,7 +25,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/groups.sql",
           "line": 19,
-          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 19, column 1)",
+          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 19:1 from sql/groups.sql)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT id FROM items; SELECT id FROM items;",
           "target": "table:items"
@@ -33,7 +33,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/groups.sql",
           "line": 19,
-          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 19, column 23)",
+          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 19:23 from sql/groups.sql)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT id FROM items; SELECT id FROM items;",
           "target": "table:items"
@@ -99,7 +99,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/groups.sql",
           "line": 19,
-          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 19, column 1)",
+          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 19:1 from sql/groups.sql)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT id FROM items; SELECT id FROM items;",
           "target": "table:items"
@@ -107,7 +107,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/groups.sql",
           "line": 19,
-          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 19, column 23)",
+          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 19:23 from sql/groups.sql)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT id FROM items; SELECT id FROM items;",
           "target": "table:items"
@@ -152,7 +152,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "query.ts",
           "line": 2,
-          "message": "query.ts:2: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 1, column 1; executor projection 0)",
+          "message": "query.ts:2: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 1:1 from query.ts; site 1)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "query(\"SELECT id FROM items\"); query(\"SELECT id FROM items\");",
           "target": "table:items"
@@ -160,7 +160,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "query.ts",
           "line": 2,
-          "message": "query.ts:2: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 1, column 1; executor projection 1)",
+          "message": "query.ts:2: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 1:1 from query.ts; site 2)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "query(\"SELECT id FROM items\"); query(\"SELECT id FROM items\");",
           "target": "table:items"
@@ -168,7 +168,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "query.ts",
           "line": 3,
-          "message": "query.ts:3: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 1, column 1; executor call 2)",
+          "message": "query.ts:3: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 1:1 from query.ts)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "query(\"SELECT id FROM items;\\nSELECT id FROM items\");",
           "target": "table:items"
@@ -176,7 +176,52 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "query.ts",
           "line": 3,
-          "message": "query.ts:3: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 2, column 1; executor call 2)",
+          "message": "query.ts:3: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 2:1 from query.ts)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(\"SELECT id FROM items;\\nSELECT id FROM items\");",
+          "target": "table:items"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded_sites_with_extra": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query.ts",
+          "line": 2,
+          "message": "query.ts:2: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 1:1 from query.ts; site 1)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(\"SELECT id FROM items\"); query(\"SELECT id FROM items\");",
+          "target": "table:items"
+        },
+        {
+          "file": "query.ts",
+          "line": 2,
+          "message": "query.ts:2: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 1:1 from query.ts; site 2)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(\"SELECT id FROM items\"); query(\"SELECT id FROM items\");",
+          "target": "table:items"
+        },
+        {
+          "file": "query.ts",
+          "line": 3,
+          "message": "query.ts:3: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 1:1 from query.ts)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(\"SELECT id FROM items;\\nSELECT id FROM items\");",
+          "target": "table:items"
+        },
+        {
+          "file": "query.ts",
+          "line": 3,
+          "message": "query.ts:3: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 2:1 from query.ts)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "query(\"SELECT id FROM items;\\nSELECT id FROM items\");",
           "target": "table:items"
@@ -205,7 +250,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/groups.sql",
           "line": 19,
-          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 19, column 1)",
+          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 19:1 from sql/groups.sql)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT id FROM items; SELECT id FROM items;",
           "target": "table:items"
@@ -213,7 +258,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/groups.sql",
           "line": 19,
-          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL line 19, column 23)",
+          "message": "sql/groups.sql:19: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 19:23 from sql/groups.sql)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT id FROM items; SELECT id FROM items;",
           "target": "table:items"

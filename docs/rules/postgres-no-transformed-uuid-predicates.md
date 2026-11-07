@@ -64,6 +64,9 @@ expressions remain separate sites, including on the same line. Repeated
 references to the same column appear once in the column list. The finding
 uses the earliest remaining affected column's source location after attribution; otherwise identical findings
 on the same line include their SQL expression positions to distinguish the sites.
+When those positions and origins also match, a local `site 1`, `site 2` ordinal
+distinguishes them. These labels stay stable when unrelated SQL inputs or verdict
+reporting are enabled.
 Single-column messages and targets keep their existing shape.
 
 The rule checks which operand contains the UUID column. Casting a parameter to

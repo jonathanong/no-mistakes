@@ -417,7 +417,9 @@ message. JSON finding counts therefore count statements rather than relations.
 
 CTEs and nested reads contribute to their enclosing statement. Independent
 statements stay separate. Otherwise identical findings on one physical line include
-the statement's SQL line and column so distinct statement sites remain visible.
+the statement's SQL line, column, and origin file so distinct statement sites remain
+visible. When those coordinates also match, a local site ordinal distinguishes the
+findings. Unrelated files and optional SQL verdicts do not change those labels.
 SQL alternatives from one executor statement share the union of their unbounded relations.
 Physical statement origins keep that union intact when an earlier fragment changes
 the SQL line or column. Repeated executions of one helper's statement inside an

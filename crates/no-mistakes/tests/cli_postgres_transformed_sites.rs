@@ -3,6 +3,10 @@ use serde_json::Value;
 use std::process::Command;
 
 fn report(config: &str) -> Value {
+    report_with_verdicts(config, false)
+}
+
+fn report_with_verdicts(config: &str, verdicts: bool) -> Value {
     let root = rules_path("postgres-no-transformed-uuid-predicates", "fixture", ".");
     let config = rules_path("postgres-no-transformed-uuid-predicates", "configs", config);
     let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
@@ -11,6 +15,7 @@ fn report(config: &str) -> Value {
         .arg("--config")
         .arg(config)
         .args(["--format", "json"])
+        .args(verdicts.then_some("--include-sql-verdicts"))
         .output()
         .unwrap();
     assert_eq!(output.status.code(), Some(1));
@@ -69,5 +74,32 @@ fn uuid_variants_union_affected_columns_at_one_physical_expression() {
         let findings = report["rules"].as_array().unwrap();
         assert_eq!(findings.len(), 1, "{report}");
         assert_eq!(findings[0]["target"], "accounts.id, accounts.token");
+    }
+}
+
+#[test]
+fn uuid_site_messages_are_independent_of_native_sql_scope_and_verdict_projection() {
+    let full = report("multi-argument-sites.yml");
+    let ts_findings = |report: &Value| {
+        report["rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|finding| finding["file"] == "multi-argument-sites.ts")
+            .cloned()
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(ts_findings(&full).len(), 4);
+    for (config, verdicts) in [
+        ("multi-argument-sites.yml", true),
+        ("multi-argument-sites-ts-only.yml", false),
+        ("multi-argument-sites-ts-only.yml", true),
+    ] {
+        let scoped = report_with_verdicts(config, verdicts);
+        assert_eq!(
+            ts_findings(&full),
+            ts_findings(&scoped),
+            "{config} verdicts={verdicts}"
+        );
     }
 }

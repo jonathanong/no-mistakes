@@ -11,25 +11,21 @@ pub(super) struct Groups(BTreeMap<Site, Group>);
 
 struct Group {
     position: (usize, usize),
-    call: Option<(bool, usize)>,
     members: Vec<LocatedRuleFinding>,
 }
 
 impl Groups {
     pub(super) fn push(&mut self, mut site: Site, finding: LocatedRuleFinding) {
         let position = site.2;
-        let call = site.3;
         if site.1.is_some() {
             site.2 = (0, 0);
             site.3 = None;
         }
         let group = self.0.entry(site).or_insert_with(|| Group {
             position,
-            call,
             members: Vec::new(),
         });
         group.position = group.position.min(position);
-        group.call = group.call.min(call);
         group.members.push(finding);
     }
 
@@ -38,32 +34,22 @@ impl Groups {
         let mut grouped = Vec::new();
         for ((file, _, _, _), group) in self.0 {
             if let Some(finding) = merge(group.members, root, sources, &mut output) {
-                grouped.push((file, group.position, group.call, finding));
+                grouped.push((file, group.position, finding));
             }
         }
         if grouped.len() < 2 {
-            output.extend(grouped.into_iter().map(|(_, _, _, finding)| finding));
+            output.extend(grouped.into_iter().map(|(_, _, finding)| finding));
             return output;
         }
-        let mut counts = BTreeMap::new();
-        for (_, _, _, located) in &grouped {
-            *counts.entry(located.finding.clone()).or_insert(0usize) += 1;
-        }
-        for (file, position, call, mut located) in grouped {
-            if counts[&located.finding] > 1 {
-                let call = call
-                    .map(|(variant, index)| {
-                        if variant {
-                            format!("; executor call {index}")
-                        } else {
-                            format!("; execution {index}")
-                        }
-                    })
-                    .unwrap_or_default();
-                located.finding.message.push_str(&format!(
-                    " (expression at SQL {}:{} from {file}{call})",
-                    position.0, position.1
-                ));
+        let suffixes = crate::codebase::rules::postgres_findings::site_suffixes(
+            grouped
+                .iter()
+                .map(|(file, position, located)| (&located.finding, file.as_str(), *position)),
+            "expression",
+        );
+        for ((_, _, mut located), suffix) in grouped.into_iter().zip(suffixes) {
+            if let Some(suffix) = suffix {
+                located.finding.message.push_str(&suffix);
             }
             output.0.push(located);
         }
