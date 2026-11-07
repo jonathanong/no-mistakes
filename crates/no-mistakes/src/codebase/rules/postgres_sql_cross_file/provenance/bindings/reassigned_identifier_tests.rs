@@ -33,6 +33,9 @@ fn reassigned_identifier_locals_lose_bounded_parameter_and_literal_initializers(
     }
     let shared = Bindings::new(&facts);
     let identifier = Bindings::new(&facts).with_numeric_parameter_bounds();
+    assert!(shared.assignments.get().is_none());
+    assert!(identifier.assignments.get().is_none());
+    let mut cached_index = None;
     for (file, name, unbounded) in [
         (&unchecked, "alias", true),
         (&unchecked, "literal", true),
@@ -58,11 +61,17 @@ fn reassigned_identifier_locals_lose_bounded_parameter_and_literal_initializers(
             .value(file, binding.scope, name, call.end)
             .is_none());
         assert!(!shared.flows_unbounded(file, binding.scope, name, call.end));
+        assert!(shared.assignments.get().is_none());
         assert_eq!(
             identifier.flows_unbounded(file, binding.scope, name, call.end),
             unbounded,
             "{name}"
         );
+        let index = identifier.assignments.get().unwrap();
+        if let Some(previous) = cached_index {
+            assert!(std::ptr::eq(previous, index));
+        }
+        cached_index = Some(index);
         if name == "literal" {
             assert!(!identifier.flows_unbounded(file, binding.scope, name, binding.declared_at));
         }

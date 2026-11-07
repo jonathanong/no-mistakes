@@ -13,7 +13,8 @@ impl Bindings<'_> {
         if !self.numeric_parameter_bounds_only {
             return None;
         }
-        let writes = self.assignments.get(&(file, scope, name))?;
+        let assignments = self.assignments.get_or_init(|| prepare(self.facts));
+        let writes = assignments.get(&(file, scope, name))?;
         let end = writes.partition_point(|write| write.completed_at <= at);
         let values = self.values.get(&(file, scope, name));
         let binding = values.and_then(|values| {
@@ -51,4 +52,25 @@ impl Bindings<'_> {
             )
         })
     }
+}
+
+fn prepare(facts: &CheckFactMap) -> AssignmentIndex<'_> {
+    let mut assignments: AssignmentIndex<'_> = fx_map();
+    for file in facts.graph_file_universe() {
+        let Some(ts) = facts.get_ts_facts(file) else {
+            continue;
+        };
+        for write in &ts.value_flow.identifier_writes {
+            if let Some(assigned) = write.assigned.as_deref() {
+                assignments
+                    .entry((file, write.scope, &write.name))
+                    .or_default()
+                    .push(assigned);
+            }
+        }
+    }
+    for writes in assignments.values_mut() {
+        writes.sort_by_key(|write| write.completed_at);
+    }
+    assignments
 }
