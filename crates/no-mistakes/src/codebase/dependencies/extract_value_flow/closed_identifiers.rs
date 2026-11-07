@@ -44,6 +44,25 @@ pub(crate) fn unique_closed_collection(
 }
 
 impl ImportCollector {
+    fn registry_builtins_visible(&self, init: &Expression<'_>, kind: RegistryKind) -> bool {
+        let visible = |name: &str| {
+            self.callee_binding_scope(name).is_none()
+                && !self
+                    .call_import_bindings
+                    .iter()
+                    .any(|binding| !binding.is_type_only && binding.local == name)
+        };
+        let constructor = match kind {
+            RegistryKind::Set => visible("Set"),
+            RegistryKind::Map => visible("Map"),
+            _ => true,
+        };
+        constructor
+            && (registries::frozen_argument(crate::codebase::ts_source::unwrap_ts_wrappers(init))
+                .is_none()
+                || visible("Object"))
+    }
+
     pub(crate) fn note_closed_identifier(
         &mut self,
         pattern: &BindingPattern<'_>,
@@ -57,7 +76,9 @@ impl ImportCollector {
         let scope = self
             .callee_binding_scope(&name)
             .unwrap_or_else(|| self.current_lexical_scope_id());
-        if let Some((kind, keys)) = registries::registry(init) {
+        if let Some((kind, keys)) = registries::registry(init)
+            .filter(|(kind, _)| self.registry_builtins_visible(init, *kind))
+        {
             if kind == RegistryKind::MetadataArray {
                 self.metadata_registry_names.insert(name.clone());
             }

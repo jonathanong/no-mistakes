@@ -344,8 +344,10 @@ set the scan can see:
   a call argument, a wrapper object or array, a return, an arrow that
   returns the registry, `export { registry }`, `export default`, and
   `export const` of the registry all end the proof.
-- `.get` on a `const` `Map` built only from string-literal pairs, including a
+- `.get` on a `const` built-in `Map` built only from string-literal pairs, including a
   frozen map, until that map is mutated.
+  Shadowed `Set`, `Map`, or `Object.freeze` implementations do not establish
+  a literal registry proof.
 - A literal ASCII identifier prefix plus `randomBytes(length).toString("hex")`,
   where `length` is a non-negative integer literal and `randomBytes` is a runtime
   import from `node:crypto` or `crypto`. Named import aliases and default or
@@ -363,7 +365,7 @@ set the scan can see:
 - A value dominated by `if (!ALLOWED.has(value)) throw` or
   `if (!ALLOWED_LIST.includes(value)) throw` in the same callable. A `return`
   that exits the callable also works. `ALLOWED`
-  must be one `const` `Set` of string literals, and `ALLOWED_LIST` one `const`
+  must be one `const` built-in `Set` of string literals, and `ALLOWED_LIST` one `const`
   array of string literals. The guard ends at the next assignment to that
   same binding (`=`, `+=`, `for (name of ...)`, or a destructuring
   assignment). A guard inside a branch does not cover a query after that

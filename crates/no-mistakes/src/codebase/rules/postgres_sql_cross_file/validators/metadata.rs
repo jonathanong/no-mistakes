@@ -15,10 +15,12 @@ pub(crate) fn helper_call(
         ValueExpression::Named { offset, .. } | ValueExpression::Call(offset, _) => *offset,
         _ => return false,
     };
-    let mut sites = graph
-        .call_sites_in_file(file)
+    let sites = graph.call_sites_in_file(file);
+    let start = sites.partition_point(|site| site.offset < offset);
+    let mut sites = sites[start..]
         .iter()
-        .filter(|site| site.offset == offset && site.invocation == InvocationKind::Call);
+        .take_while(|site| site.offset == offset)
+        .filter(|site| site.invocation == InvocationKind::Call);
     let Some(site) = sites.next() else {
         return false;
     };

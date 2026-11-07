@@ -76,3 +76,18 @@ fn getter_member_validation_never_establishes_a_guard_subject() {
     assert_eq!(guards[0].members, ["table"]);
     assert_eq!(guards[0].subject, None);
 }
+
+#[test]
+fn finite_registries_require_unshadowed_builtin_constructors() {
+    let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-no-unbounded-sql-identifier/fixture/issue-3073-guards/src/unguarded.ts"));
+    let flow = parse_flow(source, true);
+    for name in ["SHADOWED_TABLES", "SHADOWED_FREEZE", "SHADOWED_MAP"] {
+        assert!(
+            !flow
+                .closed_string_registries
+                .iter()
+                .any(|registry| registry.name == name),
+            "{name}"
+        );
+    }
+}

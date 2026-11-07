@@ -43,7 +43,7 @@ fn metadata_elements(array: &ArrayExpression<'_>) -> Option<Vec<String>> {
     common.filter(|keys| !keys.is_empty())
 }
 
-fn frozen_argument<'a>(expr: &'a Expression<'a>) -> Option<&'a Expression<'a>> {
+pub(super) fn frozen_argument<'a>(expr: &'a Expression<'a>) -> Option<&'a Expression<'a>> {
     let call = plain_call(expr)?;
     if simple_callee_name(&call.callee).as_deref() != Some("Object.freeze")
         || call.arguments.len() != 1

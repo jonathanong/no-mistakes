@@ -75,3 +75,29 @@ export async function shadowedSubject(table: string) {
     await query(`SELECT * FROM ${table}`);
   }
 }
+
+export async function shadowedSet(table: string) {
+  class Set {
+    constructor(values: readonly string[]) {}
+    has(value: string) { return true; }
+  }
+  const SHADOWED_TABLES = new Set(["users", "posts"]);
+  if (!SHADOWED_TABLES.has(table)) throw new Error("Unknown table");
+  await query(`SELECT * FROM ${table}`);
+}
+
+export async function shadowedFreeze(table: string, Object: { freeze(value: readonly string[]): string[] }) {
+  const SHADOWED_FREEZE = Object.freeze(["users", "posts"]);
+  if (!SHADOWED_FREEZE.includes(table)) throw new Error("Unknown table");
+  await query(`SELECT * FROM ${table}`);
+}
+
+export async function shadowedMap() {
+  class Map {
+    constructor(entries: readonly (readonly string[])[]) {}
+    get(key: string) { return process.env.SCHEMA; }
+  }
+  const SHADOWED_MAP = new Map([["only", "users"]]);
+  const table = SHADOWED_MAP.get("only");
+  await query(`SELECT * FROM ${table}`);
+}
