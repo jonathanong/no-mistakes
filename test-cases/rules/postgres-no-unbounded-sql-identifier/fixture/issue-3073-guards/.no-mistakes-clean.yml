@@ -1,0 +1,20 @@
+version: 2
+effort: max
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      include: ["src/guarded.ts"]
+      importSpecifier: "@example/db"
+      identifierValidators:
+        - module: "./validators"
+          name: assertIdentifier
+          argument: 0
+        - module: "@example/sql-identifiers"
+          name: assertRemoteIdentifier
+          argument: 0
+        - name: assertSecond
+          argument: 1
+      finiteDomainAssertions:
+        - name: assertLegacy
+          argument: 0

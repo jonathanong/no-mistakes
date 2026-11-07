@@ -12,6 +12,10 @@ fn postgres_guard_provenance_check_json_snapshot() {
         "postgres_guard_provenance",
         &[("guards", root.clone(), root.join(".no-mistakes.yml"))],
     );
+    assert_saved_fixture(
+        "postgres_identifier_guards_clean",
+        &[("max", root.clone(), root.join(".no-mistakes-clean.yml"))],
+    );
 }
 
 #[test]
