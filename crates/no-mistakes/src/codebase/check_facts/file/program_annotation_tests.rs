@@ -27,10 +27,10 @@ fn unspecified_direct_annotation_demand_keeps_all_profile_root_compatibility() {
             ),
         )];
         let direct = collect(&root, &path, &source, program, &plan, &embedded);
-        assert_eq!(direct[0].1.root_eligible, None);
+        assert_eq!(direct[0].1.in_scope, None);
         plan.query_annotation_options = Some(vec![options.clone()]);
         let configured = collect(&root, &path, &source, program, &plan, &embedded);
-        assert_eq!(configured[0].1.root_eligible, Some(false));
+        assert_eq!(configured[0].1.in_scope, Some(false));
     })
     .unwrap();
 }

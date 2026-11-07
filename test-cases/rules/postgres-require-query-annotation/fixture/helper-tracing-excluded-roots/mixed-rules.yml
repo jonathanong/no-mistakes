@@ -9,9 +9,9 @@ rules:
     scope: repository
     options:
       effort: low
+      unanalyzableSql: ignore
       executorNames: [query]
       include: ["tests/**/*.mts"]
-      exclude: ["tests/**/*.mts"]
   - rule: postgres-no-offset
     scope: repository
     options:
