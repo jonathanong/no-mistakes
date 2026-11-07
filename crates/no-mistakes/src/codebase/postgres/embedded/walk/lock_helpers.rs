@@ -21,7 +21,7 @@ impl<'a> ScopeVisitor<'a> {
             return;
         };
         let Some(helper) = self.lock_helpers.get(name.name.as_str()).cloned() else {
-            self.record_imported_lock_helper(call, name.name.as_str());
+            self.record_unknown_lock_helper(call, name.name.as_str());
             return;
         };
         if self.lookup(name.name.as_str()).is_some()
@@ -31,6 +31,7 @@ impl<'a> ScopeVisitor<'a> {
                 .iter()
                 .any(|argument| argument.as_expression().is_none())
         {
+            self.record_unknown_lock_helper(call, name.name.as_str());
             return;
         }
         for (executor, query) in helper.calls {
@@ -125,18 +126,7 @@ impl ScopeVisitor<'_> {
     pub(super) fn lock_helper_summaries(&self) -> FxHashMap<String, Summary> {
         summary::summaries(&self.lock_helpers, self.source)
     }
-    fn record_imported_lock_helper(&mut self, call: &CallExpression<'_>, name: &str) {
-        if !self.executor_options.track_transaction_helpers
-            || !self.imported_names.contains(name)
-            || self.lookup(name).is_some()
-            || call.optional
-            || call
-                .arguments
-                .iter()
-                .any(|argument| argument.as_expression().is_none())
-        {
-            return;
-        }
+    fn record_unknown_lock_helper(&mut self, call: &CallExpression<'_>, name: &str) {
         for (executor, argument) in call.arguments.iter().enumerate() {
             let Some(Expression::StaticMemberExpression(member)) =
                 argument.as_expression().map(unwrap_ts_wrappers)
@@ -166,6 +156,13 @@ impl ScopeVisitor<'_> {
                 })
                 .collect();
             self.imported_lock_helpers.push(Invocation {
+                resolve_helper: !call.optional
+                    && self.imported_names.contains(name)
+                    && self.lookup(name).is_none()
+                    && call
+                        .arguments
+                        .iter()
+                        .all(|argument| argument.as_expression().is_some()),
                 name: name.to_owned(),
                 executor,
                 arguments,
