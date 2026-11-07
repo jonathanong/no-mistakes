@@ -13,4 +13,6 @@ export async function hashedKeys(rowId: string, seed: number) {
   await tx.query(`SELECT pg_advisory_xact_lock(hashtext(NULL))`);
   await tx.query(`SELECT pg_advisory_xact_lock(hashtext('global', 0))`);
   await tx.query(`SELECT pg_advisory_xact_lock(hashtextextended('global'))`);
+  await tx.query(`SELECT pg_advisory_xact_lock(hashtext(value => 'global'))`);
+  await tx.query(`SELECT pg_advisory_xact_lock(hashtext($1)::bigint)`, [rowId]);
 }

@@ -9,4 +9,6 @@ async function run(id: string, options: { query?: unknown }) {
   }
   await query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id], { query: options?.query });
   await query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id], options);
+  await query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id], { query: tx, timeout: 100 });
+  await query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id], ...[options]);
 }

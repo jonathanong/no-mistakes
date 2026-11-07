@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn hashed_constants_include_bound_module_values_but_not_row_keys_or_unknown_functions() {
+fn hashed_constants_include_bound_values_but_not_cast_row_keys_named_args_or_unknowns() {
     let findings = check(&fixture("hashed-advisory"), &config()).unwrap();
     assert_eq!(
         findings
@@ -10,6 +10,9 @@ fn hashed_constants_include_bound_module_values_but_not_row_keys_or_unknown_func
             .collect::<Vec<_>>(),
         [6, 7, 8, 9].map(|line| (line, CHECKS[2])).to_vec()
     );
+    assert!(findings
+        .iter()
+        .all(|finding| ![16, 17].contains(&finding.line)));
 }
 
 #[test]
