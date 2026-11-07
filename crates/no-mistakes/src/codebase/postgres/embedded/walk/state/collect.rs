@@ -39,6 +39,7 @@ pub(crate) fn collect_calls<'a>(
             options.track_transaction_helpers,
             source,
         ),
+        incomplete_transaction_owners: Default::default(),
         exited_functions: Default::default(),
         scalar_literals: Default::default(),
         head_calls_only,

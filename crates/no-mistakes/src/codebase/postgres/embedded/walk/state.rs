@@ -34,6 +34,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(super) awaited_lock_helper_calls: crate::fx::FxHashSet<u32>,
     pub(super) imported_lock_helpers: Vec<super::lock_helpers::Invocation>,
     pub(super) lock_helpers: super::lock_helpers::LockHelpers,
+    pub(super) incomplete_transaction_owners: crate::fx::FxHashSet<u32>,
     pub(super) exited_functions: crate::fx::FxHashSet<u32>,
     pub(super) scalar_literals: crate::fx::FxHashMap<std::num::NonZeroU32, String>,
     pub(crate) head_calls_only: bool,

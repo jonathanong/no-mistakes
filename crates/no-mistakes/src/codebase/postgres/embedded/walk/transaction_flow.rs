@@ -7,6 +7,7 @@ pub(super) struct Snapshot {
     enabled: bool,
     identities: Identities,
     exited: crate::fx::FxHashSet<u32>,
+    incomplete: crate::fx::FxHashSet<u32>,
 }
 impl Snapshot {
     pub(super) fn capture(visitor: &ScopeVisitor<'_>) -> Self {
@@ -17,6 +18,7 @@ impl Snapshot {
                 enabled: false,
                 identities: Vec::new(),
                 exited: Default::default(),
+                incomplete: Default::default(),
             };
         }
         Self {
@@ -33,6 +35,7 @@ impl Snapshot {
                 })
                 .collect(),
             exited: visitor.exited_functions.clone(),
+            incomplete: visitor.incomplete_transaction_owners.clone(),
         }
     }
     pub(super) fn restore(&self, visitor: &mut ScopeVisitor<'_>) {
@@ -47,6 +50,7 @@ impl Snapshot {
             }
         }
         visitor.exited_functions = self.exited.clone();
+        visitor.incomplete_transaction_owners = self.incomplete.clone();
     }
     pub(super) fn resume_after(
         &self,
@@ -76,7 +80,7 @@ impl Snapshot {
                         .is_some_and(|(_, ended)| ended != identity)
                 })
             });
-        if !live || !all_ended {
+        if !live || !all_ended || !ended.incomplete.is_empty() {
             visitor
                 .exited_functions
                 .extend(ended.exited.iter().copied());
@@ -97,6 +101,9 @@ impl Snapshot {
             }
         }
         visitor
+            .incomplete_transaction_owners
+            .extend(other.incomplete.iter().copied());
+        visitor
             .exited_functions
             .extend(other.exited.iter().copied());
     }
@@ -109,5 +116,25 @@ pub(super) fn exits(statement: &Statement<'_>) -> bool {
             exits(&statement.consequent) && statement.alternate.as_ref().is_some_and(exits)
         }
         _ => false,
+    }
+}
+
+pub(super) fn note_boundary(
+    visitor: &mut ScopeVisitor<'_>,
+    call: &oxc_ast::ast::CallExpression<'_>,
+    boundary: bool,
+) {
+    if boundary
+        && visitor.executor_options.track_transaction_helpers
+        && !visitor.awaited_lock_helper_calls.contains(&call.span.start)
+    {
+        visitor.incomplete_transaction_owners.insert(
+            visitor
+                .member_query_proof
+                .function_ids
+                .last()
+                .copied()
+                .unwrap_or(0),
+        );
     }
 }

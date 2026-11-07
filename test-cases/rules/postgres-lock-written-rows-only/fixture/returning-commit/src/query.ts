@@ -60,3 +60,27 @@ export async function unresolvedDeadCommit(key: string, flag: boolean) {
   }
   await tx.query(`DELETE FROM claims WHERE key = $1`, [key]);
 }
+export async function unresolvedUnawaitedCommit(key: string, flag: boolean) {
+  const tx = await beginTransaction();
+  await tx.query(`SELECT 1 FROM claims WHERE key = $1 FOR UPDATE`, [key]);
+  if (flag) { tx.commit(); return; }
+  await tx.query(`DELETE FROM claims WHERE key = $1`, [key]);
+}
+export async function unresolvedUnawaitedRollback(key: string, flag: boolean) {
+  const tx = await beginTransaction();
+  await tx.query(`SELECT 1 FROM claims WHERE key = $1 FOR UPDATE`, [key]);
+  if (flag) { tx.rollback(); return; }
+  await tx.query(`DELETE FROM claims WHERE key = $1`, [key]);
+}
+export async function unresolvedContinuingCommit(key: string) {
+  const tx = await beginTransaction();
+  await tx.query(`SELECT 1 FROM claims WHERE key = $1 FOR UPDATE`, [key]);
+  tx.commit();
+  await tx.query(`DELETE FROM claims WHERE key = $1`, [key]);
+}
+export async function unresolvedContinuingRollback(key: string) {
+  const tx = await beginTransaction();
+  await tx.query(`SELECT 1 FROM claims WHERE key = $1 FOR UPDATE`, [key]);
+  tx.rollback();
+  await tx.query(`DELETE FROM claims WHERE key = $1`, [key]);
+}

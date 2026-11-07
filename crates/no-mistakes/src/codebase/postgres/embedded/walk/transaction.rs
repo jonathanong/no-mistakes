@@ -165,6 +165,7 @@ pub(super) fn end_boundary(
             )
         })
     });
+    super::transaction_flow::note_boundary(visitor, call, method_end || sql_end);
     if (method_end || sql_end)
         && visitor.executor_options.track_transaction_helpers
         && options::end_alias(visitor, receiver)
