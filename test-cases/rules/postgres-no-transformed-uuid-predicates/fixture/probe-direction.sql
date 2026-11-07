@@ -32,3 +32,7 @@ SELECT 1 FROM orders root JOIN accounts root ON root.id = COALESCE(root.account_
 SELECT 1 FROM orders c JOIN missing root ON root.id = COALESCE(c.account_id, c.id);
 SELECT 1 FROM orders c JOIN accounts root ON root.missing = COALESCE(c.account_id, c.id);
 SELECT 1 FROM orders c JOIN accounts root ON root.email = COALESCE(c.account_id::text, c.id::text);
+SELECT 1 FROM orders c LEFT JOIN accounts root ON root.id = COALESCE(c.account_id, c.id);
+SELECT 1 FROM orders c RIGHT JOIN accounts root ON root.id = COALESCE(c.account_id, c.id);
+SELECT 1 FROM orders c FULL JOIN accounts root ON root.id = COALESCE(c.account_id, c.id);
+SELECT 1 FROM orders c INNER JOIN accounts root ON root.id = COALESCE(c.account_id, c.id);

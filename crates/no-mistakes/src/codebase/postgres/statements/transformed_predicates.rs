@@ -10,7 +10,8 @@ use super::{SqlTransformedColumnClause as Clause, SqlTransformedColumnUseFact};
 use cte_scope::QueryScopes;
 use scope::base_relations;
 use sqlparser::ast::{
-    Expr, Query, Select, SetExpr, Statement, TableFactor, TableWithJoins, Visit, Visitor,
+    Expr, JoinOperator, Query, Select, SetExpr, Statement, TableFactor, TableWithJoins, Visit,
+    Visitor,
 };
 use std::ops::ControlFlow;
 
@@ -76,12 +77,20 @@ impl Collector<'_, '_> {
                 let mut probed = Vec::new();
                 scope::push_factor(&join.relation, ctes, &mut probed);
                 scope::push_factor(&join.relation, ctes, &mut visible);
+                let probe_scope = matches!(
+                    &join.join_operator,
+                    JoinOperator::Join(_)
+                        | JoinOperator::Inner(_)
+                        | JoinOperator::Left(_)
+                        | JoinOperator::LeftOuter(_)
+                )
+                .then_some(probed.as_slice());
                 if let Some(expr) = super::select::join_expr(&join.join_operator) {
                     expressions::collect(
                         expr,
                         Clause::Join,
                         &visible,
-                        Some(&probed),
+                        probe_scope,
                         self.positions,
                         self.out,
                     );

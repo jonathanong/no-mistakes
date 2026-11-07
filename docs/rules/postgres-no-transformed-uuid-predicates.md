@@ -62,14 +62,16 @@ Aggregate value inputs are outside the row-lookup predicate: even
 A cast or function around a boolean comparison result leaves its UUID operands
 bare and is allowed. Transformations inside that comparison remain checked.
 
-For positive `JOIN ON` equality conjuncts, the newly joined relation is the probed side.
+For positive equality conjuncts in `JOIN`, `INNER JOIN`, and `LEFT JOIN`,
+the newly joined relation is the probed side.
 A catalog-backed bare qualified UUID key such as `root.id = COALESCE(c.account_id, c.id)`
 allows the transform on preceding driving relations. Reversing the equality
 operands is also allowed. `COALESCE(root.id, c.id) = c.account_id` still
 transforms the probed key and is reported. Missing probe tables or columns,
 non-UUID probe columns, unknown owners, unqualified keys,
 non-equality comparisons, negated or disjunctive equalities, and transforms
-on both sides retain findings.
+on both sides retain findings. `RIGHT JOIN`, `FULL JOIN`, and other unsupported
+join directions also retain findings because their probe direction is not proven.
 
 A transformed residual predicate remains reported even after an indexed or
 primary-key equality on the same table, including queries with `LIMIT 1`.

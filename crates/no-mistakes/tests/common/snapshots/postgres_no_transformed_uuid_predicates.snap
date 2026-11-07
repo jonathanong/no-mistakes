@@ -1911,6 +1911,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "probe-direction.sql",
+          "line": 36,
+          "message": "probe-direction.sql:36: JOIN ON applies COALESCE to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM orders c RIGHT JOIN accounts root ON root.id = COALESCE(c.account_id, c.id);",
+          "target": "orders.account_id"
+        },
+        {
+          "file": "probe-direction.sql",
+          "line": 36,
+          "message": "probe-direction.sql:36: JOIN ON applies COALESCE to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM orders c RIGHT JOIN accounts root ON root.id = COALESCE(c.account_id, c.id);",
+          "target": "orders.id"
+        },
+        {
+          "file": "probe-direction.sql",
+          "line": 37,
+          "message": "probe-direction.sql:37: JOIN ON applies COALESCE to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM orders c FULL JOIN accounts root ON root.id = COALESCE(c.account_id, c.id);",
+          "target": "orders.account_id"
+        },
+        {
+          "file": "probe-direction.sql",
+          "line": 37,
+          "message": "probe-direction.sql:37: JOIN ON applies COALESCE to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM orders c FULL JOIN accounts root ON root.id = COALESCE(c.account_id, c.id);",
+          "target": "orders.id"
+        },
+        {
+          "file": "probe-direction.sql",
           "line": 4,
           "message": "probe-direction.sql:4: JOIN ON applies COALESCE to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
@@ -2248,6 +2280,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "probe-direction.sql:34: JOIN ON applies COALESCE to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT 1 FROM orders c JOIN accounts root ON root.email = COALESCE(c.account_id::text, c.id::text);",
+          "target": "orders.id"
+        },
+        {
+          "file": "probe-direction.sql",
+          "line": 36,
+          "message": "probe-direction.sql:36: JOIN ON applies COALESCE to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM orders c RIGHT JOIN accounts root ON root.id = COALESCE(c.account_id, c.id);",
+          "target": "orders.account_id"
+        },
+        {
+          "file": "probe-direction.sql",
+          "line": 36,
+          "message": "probe-direction.sql:36: JOIN ON applies COALESCE to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM orders c RIGHT JOIN accounts root ON root.id = COALESCE(c.account_id, c.id);",
+          "target": "orders.id"
+        },
+        {
+          "file": "probe-direction.sql",
+          "line": 37,
+          "message": "probe-direction.sql:37: JOIN ON applies COALESCE to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM orders c FULL JOIN accounts root ON root.id = COALESCE(c.account_id, c.id);",
+          "target": "orders.account_id"
+        },
+        {
+          "file": "probe-direction.sql",
+          "line": 37,
+          "message": "probe-direction.sql:37: JOIN ON applies COALESCE to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM orders c FULL JOIN accounts root ON root.id = COALESCE(c.account_id, c.id);",
           "target": "orders.id"
         },
         {
