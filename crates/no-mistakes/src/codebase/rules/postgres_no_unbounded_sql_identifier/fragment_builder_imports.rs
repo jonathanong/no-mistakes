@@ -1,5 +1,5 @@
 use super::*;
-use crate::codebase::dependencies::extract::{ImportedBindingKind, ValueBinding};
+use crate::codebase::dependencies::extract::{CatalogRead, ImportedBindingKind, ValueBinding};
 use crate::codebase::dependencies::graph::{EdgeKind, NodeId};
 
 #[path = "fragment_builder_reads.rs"]
@@ -45,27 +45,8 @@ fn consumer(proof: &mut Proof<'_, '_>, file: &Path, producer: &Path, name: &str)
             .iter()
             .filter(|(_, read)| read.scope == 0 && read.name == import.local)
             .collect();
-        if import.kind == ImportedBindingKind::Namespace {
-            for (_, read) in usage {
-                let Some((member, path)) = read.path.split_first() else {
-                    if !external(proof.graph, file, &import.specifier) {
-                        return false;
-                    }
-                    continue;
-                };
-                if same(
-                    proof,
-                    file,
-                    &format!("{}.{member}", import.local),
-                    producer,
-                    name,
-                ) && !reads::readonly(read, path)
-                {
-                    return false;
-                }
-            }
-        } else if same(proof, file, &import.local, producer, name) {
-            if ts
+        if same(proof, file, &import.local, producer, name)
+            && (ts
                 .value_flow
                 .identifier_writes
                 .iter()
@@ -73,17 +54,53 @@ fn consumer(proof: &mut Proof<'_, '_>, file: &Path, producer: &Path, name: &str)
                 || ts
                     .exported_bindings
                     .iter()
-                    .any(|export| export.specifier.is_none() && export.local == import.local)
-                || !usage.iter().all(|(at, read)| {
-                    reads::readonly(read, &read.path)
-                        || read.path.is_empty() && reads::append_copy(proof, file, **at, read)
-                })
+                    .any(|export| export.specifier.is_none() && export.local == import.local))
+        {
+            return false;
+        }
+        for (at, read) in usage {
+            if import.kind == ImportedBindingKind::Namespace
+                && read.path.is_empty()
+                && !external(proof.graph, file, &import.specifier)
             {
+                return false;
+            }
+            if !consumer_read(proof, file, *at, read, (producer, name)) {
                 return false;
             }
         }
     }
     true
+}
+
+fn consumer_read(
+    proof: &mut Proof<'_, '_>,
+    file: &Path,
+    at: u32,
+    read: &CatalogRead,
+    source: (&Path, &str),
+) -> bool {
+    let mut selector = read.name.clone();
+    let mut remaining = read.path.as_slice();
+    loop {
+        if let Some((producer, name)) = proof.graph.imported_value(file, &selector) {
+            return producer != source.0
+                || name != source.1
+                || reads::readonly(read, remaining)
+                || remaining.is_empty()
+                    && read.path.is_empty()
+                    && reads::append_copy(proof, file, at, read);
+        }
+        let Some((member, rest)) = remaining
+            .split_first()
+            .filter(|(member, _)| !member.is_empty() && !member.contains('.'))
+        else {
+            return true;
+        };
+        selector.push('.');
+        selector.push_str(member);
+        remaining = rest;
+    }
 }
 
 fn same(proof: &Proof<'_, '_>, file: &Path, selector: &str, producer: &Path, name: &str) -> bool {

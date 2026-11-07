@@ -24,6 +24,11 @@ pub(super) fn prepared() -> (CheckFactMap, DepGraph, PathBuf) {
         "shadowed.ts",
         "cycle-a.ts",
         "cycle-b.ts",
+        "namespace-producer.ts",
+        "namespace-barrel.ts",
+        "namespace-writes.ts",
+        "namespace-reader.ts",
+        "namespace-readonly.ts",
     ]
     .iter()
     .map(|name| root.join("src").join(name))
@@ -170,3 +175,6 @@ fn imported_builders_reject_raw_returns_writes_escapes_and_shadowed_namespaces()
 
 #[path = "fragment_import_boundary_tests.rs"]
 mod boundaries;
+
+#[path = "fragment_import_prefix_tests.rs"]
+mod prefixes;
