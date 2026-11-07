@@ -124,14 +124,13 @@ fn saved_files_report_physical_parse_extraction_and_finalization() {
     };
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/parser-count/parallel-dedup");
+    let fixture = crate::test_support::materialize_saved_fixture(&root);
+    let root = fixture.path();
     let files = [root.join("valid.mts"), root.join("syntax-error.mts")];
     let observer = InvocationObserver::new(true);
     crate::diagnostics::with_observer(Some(observer.clone()), || {
-        let facts = collect_ts_facts_with_context(
-            &files,
-            TsFactPlan::imports(),
-            &TsFactContext::new(&root),
-        );
+        let facts =
+            collect_ts_facts_with_context(&files, TsFactPlan::imports(), &TsFactContext::new(root));
         assert_eq!(facts.len(), 2);
     });
     let files = observer.hot_files.as_ref().unwrap().lock().unwrap();

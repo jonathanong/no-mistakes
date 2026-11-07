@@ -39,10 +39,10 @@ fn attribution(output: &Output, root: &std::path::Path) -> Vec<String> {
 
 #[test]
 fn verbose_attribution_is_opt_in_and_preserves_reports_across_jobs() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/codebase-analysis/forbidden-dependencies-basic/fixture")
-        .canonicalize()
-        .unwrap();
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/forbidden-dependencies-basic/fixture");
+    let fixture = super::saved_fixture::materialize_path(&source);
+    let root = fixture.path().canonicalize().unwrap();
     let plain = run(&root, "1", None);
     let basic = run(&root, "1", Some("--timings"));
     assert!(attribution(&plain, &root).is_empty());
@@ -86,10 +86,11 @@ fn verbose_attribution_is_opt_in_and_preserves_reports_across_jobs() {
 
 #[test]
 fn annotation_hot_files_cover_the_prepared_root_evaluation() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/performance/annotation-shared-record-dag/observer-batching")
-        .canonicalize()
-        .unwrap();
+    let fixture = super::saved_fixture::materialize(
+        "performance",
+        "annotation-shared-record-dag/observer-batching",
+    );
+    let root = fixture.path().canonicalize().unwrap();
     let first = run(&root, "1", Some("--verbose-timings"));
     let second = run(&root, "2", Some("--verbose-timings"));
     assert_eq!(first.status.code(), second.status.code());
