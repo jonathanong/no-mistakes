@@ -129,3 +129,42 @@ fn direct_value_flow_extraction_retains_scalar_assignment_compatibility() {
         1
     );
 }
+
+#[test]
+fn captured_identifier_write_scan_requires_identifier_provenance() {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/codebase-analysis/import-facts/fixture/identifier-guard-write-demand.mts",
+    );
+    for identifier_provenance in [false, true] {
+        let facts = collect_ts_facts(
+            std::slice::from_ref(&path),
+            TsFactPlan {
+                value_flow: true,
+                identifier_provenance,
+                ..Default::default()
+            },
+        );
+        let facts = &facts[&path];
+        assert!(facts.parse_error.is_none());
+        let flow = &facts.value_flow;
+        assert_eq!(flow.identifier_writes.len(), 2);
+        assert!(flow
+            .identifier_writes
+            .iter()
+            .all(|write| write.context.is_some() == identifier_provenance));
+        let guarded_names = flow
+            .finite_identifier_guards
+            .iter()
+            .filter(|guard| matches!(&guard.kind, GuardKind::ClosedSet { collection, .. } if collection == "allowed"))
+            .map(|guard| guard.name.as_str())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            guarded_names,
+            if identifier_provenance {
+                vec!["local"]
+            } else {
+                vec!["local", "captured"]
+            },
+        );
+    }
+}

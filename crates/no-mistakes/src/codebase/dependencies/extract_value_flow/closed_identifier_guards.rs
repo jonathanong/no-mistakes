@@ -139,13 +139,15 @@ impl ImportCollector {
         let Some((name, scope, members)) = reference::value(value) else {
             return;
         };
-        if self.value_flow.identifier_writes.iter().any(|write| {
-            write.scope == scope
-                && write.name == name
-                && reference::write_overlaps(&write.members, &members)
-                && (write.context != self.current_function_id()
-                    || write.at >= call.span.start && write.at < from)
-        }) {
+        if self.collect_identifier_provenance
+            && self.value_flow.identifier_writes.iter().any(|write| {
+                write.scope == scope
+                    && write.name == name
+                    && reference::write_overlaps(&write.members, &members)
+                    && (write.context != self.current_function_id()
+                        || write.at >= call.span.start && write.at < from)
+            })
+        {
             return;
         }
         let subject = self.guard_subject(&name, scope, from, &members);
