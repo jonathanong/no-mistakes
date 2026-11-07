@@ -93,7 +93,7 @@ impl ImportCollector {
                 self.value_flow.parameters.iter().any(|parameter| {
                     Some(parameter.scope) == scope
                         && parameter.name == identifier.name.as_str()
-                        && parameter.type_reference == ValueType::Number
+                        && parameter.type_reference == Some(ValueType::Number)
                 })
             }
             Expression::BinaryExpression(binary) if binary.operator == BinaryOperator::Addition => {
