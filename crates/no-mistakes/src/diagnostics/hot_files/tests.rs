@@ -328,3 +328,24 @@ fn real_file_work_times_fit_the_parallel_phase_wall_budget() {
         assert!(sum_ms <= wall.as_secs_f64() * 1000.0 * jobs as f64);
     }
 }
+
+#[test]
+fn syntax_only_parse_is_recorded_unless_complete_file_work_owns_it() {
+    let observer = InvocationObserver::new(true);
+    crate::diagnostics::with_observer(Some(observer.clone()), || {
+        let path = Path::new("file.ts");
+        let source = "export const value = 1";
+        let parse = || {
+            let allocator = oxc_allocator::Allocator::default();
+            let parsed = crate::ast::parse(path, &allocator, source, oxc_span::SourceType::ts());
+            assert!(parsed.diagnostics.is_empty());
+        };
+        with_file(path, parse);
+        assert!(observer.hot_file_snapshot().is_empty());
+        parse();
+        let rows = observer.hot_file_snapshot();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].pass, FilePass::Parse);
+        assert_eq!(rows[0].units, source.len() as u64);
+    });
+}
