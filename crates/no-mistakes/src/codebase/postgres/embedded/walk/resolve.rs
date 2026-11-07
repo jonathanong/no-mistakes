@@ -152,12 +152,13 @@ fn record_variable_declaration(
     if declaration.kind == oxc_ast::ast::VariableDeclarationKind::Var {
         return;
     }
-    let is_const = matches!(
-        declaration.kind,
-        oxc_ast::ast::VariableDeclarationKind::Const
-            | oxc_ast::ast::VariableDeclarationKind::Using
-            | oxc_ast::ast::VariableDeclarationKind::AwaitUsing
-    );
+    let is_const = declaration.kind == oxc_ast::ast::VariableDeclarationKind::Const
+        || (visitor.executor_options.track_transaction_helpers
+            && matches!(
+                declaration.kind,
+                oxc_ast::ast::VariableDeclarationKind::Using
+                    | oxc_ast::ast::VariableDeclarationKind::AwaitUsing
+            ));
     for declarator in &declaration.declarations {
         vars::record_declarator(declarator, is_const, false, visitor);
     }
