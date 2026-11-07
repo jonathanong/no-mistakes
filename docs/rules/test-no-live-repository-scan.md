@@ -178,8 +178,13 @@ Provenance is syntactic. The rule follows `join`, `resolve`, `normalize`,
 `dirname`, `fileURLToPath`, `new URL(..., import.meta.url)`, `import.meta.dirname`,
 `__dirname`, `process.cwd()`, `tmpdir()`, `mkdtemp`, template literals, and
 immutable `const` aliases, including a `const` glob options object with a `cwd`.
-A dynamic `glob`/`globSync` pattern may use that bounded `cwd` proof; the
-pattern does not establish a root on its own.
+A relative literal glob pattern uses that bounded `cwd` proof. An unknown
+pattern remains advisory even with an owned `cwd`: absolute glob patterns can
+ignore that directory. In `patterns.flatMap(pattern => globSync(pattern,
+{ cwd: directory }))`, the callback parameter has no proven array-element
+provenance through the caller. The saved `glob-options-flow` case therefore
+remains advisory even when the visible caller supplies a relative pattern array.
+Use direct literal patterns so the analysis can prove their root.
 Parent traversal is resolved, so `fixtures/../src` is a live path, not a fixture
 path. A generic helper such as
 `listFiles(dir: string)` is an unresolved root at its enumeration unless every

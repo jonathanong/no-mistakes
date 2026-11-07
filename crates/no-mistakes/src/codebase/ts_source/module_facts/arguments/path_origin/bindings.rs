@@ -99,6 +99,11 @@ impl<'a> Projector<'a, '_> {
             return None;
         }
         let symbol = self.binding_symbol(callee)?;
+        for reference in semantic.scoping().get_resolved_references(symbol) {
+            if !self.take() || reference.flags().is_write() {
+                return None;
+            }
+        }
         let expression = match semantic
             .nodes()
             .kind(semantic.scoping().symbol_declaration(symbol))

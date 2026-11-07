@@ -132,7 +132,7 @@ fn argument_paths<'a>(
         let origin = projector.path_of(expression);
         if matches!(
             origin.anchor,
-            PathAnchor::Temp | PathAnchor::Module | PathAnchor::Cwd | PathAnchor::Relative
+            PathAnchor::Temp | PathAnchor::Module | PathAnchor::Cwd
         ) || origin.param.is_some()
         {
             paths.push((index, origin));

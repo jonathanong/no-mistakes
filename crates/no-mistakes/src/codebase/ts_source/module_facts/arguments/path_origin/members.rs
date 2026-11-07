@@ -1,5 +1,6 @@
 use super::{PathAnchor, PathOrigin, Projector};
 use oxc_ast::{ast::*, AstKind};
+use oxc_span::GetSpan;
 
 impl<'a> Projector<'a, '_> {
     pub(super) fn member_origin(
@@ -106,6 +107,15 @@ impl<'a> Projector<'a, '_> {
                 semantic.nodes().kind(member),
                 AstKind::StaticMemberExpression(_)
             ) {
+                return false;
+            }
+            let span = semantic.nodes().kind(member).span();
+            let invoked = match semantic.nodes().parent_kind(member) {
+                AstKind::CallExpression(call) => call.callee.span() == span,
+                AstKind::NewExpression(call) => call.callee.span() == span,
+                _ => false,
+            };
+            if invoked {
                 return false;
             }
             if matches!(

@@ -40,15 +40,7 @@ impl<'a> Projector<'a, '_> {
                 .or(options),
             other => other,
         };
-        let glob = match call.callee.get_inner_expression() {
-            Expression::Identifier(id) => matches!(id.name.as_str(), "glob" | "globSync"),
-            Expression::StaticMemberExpression(member) => {
-                matches!(member.property.name.as_str(), "glob" | "globSync")
-            }
-            _ => false,
-        };
-        if origin.anchor != PathAnchor::Relative && !(glob && origin.anchor == PathAnchor::Unknown)
-        {
+        if origin.anchor != PathAnchor::Relative {
             return Some(origin);
         }
         Some(match options {

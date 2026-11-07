@@ -2,7 +2,7 @@ use serde_json::Value;
 use std::path::PathBuf;
 
 const RULE: &str = "test-no-live-repository-scan";
-const CASES: [&str; 30] = [
+const CASES: [&str; 34] = [
     "const-load",
     "nested-async-return",
     "owned-object-return",
@@ -33,6 +33,10 @@ const CASES: [&str; 30] = [
     "recursive-unsafe-sibling",
     "mutated-options",
     "mutated-object",
+    "method-mutated-options",
+    "new-mutated-options",
+    "reassigned-getter",
+    "absolute-glob-pattern",
 ];
 
 fn root(name: &str) -> PathBuf {
@@ -86,7 +90,6 @@ fn bounded_supported_forms_and_controls_stay_clean() {
         "nested-recursion",
         "same-file-call-chain",
         "options-root",
-        "glob-options-flow",
         "disposable-root",
         "barrel-route",
         "control-direct",
@@ -105,6 +108,7 @@ fn bounded_supported_forms_and_controls_stay_clean() {
 #[test]
 fn bounded_forms_without_caller_proof_stay_advisory() {
     for (name, expected) in [
+        ("glob-options-flow", vec!["unresolved root"]),
         ("hook-env-restore", vec!["unresolved root"]),
         ("rewritten-spread", vec!["runtime asset", "unresolved root"]),
     ] {
@@ -131,6 +135,10 @@ fn bounded_arbitrary_roots_and_escaped_callers_stay_advisory() {
         "recursive-unsafe-sibling",
         "mutated-options",
         "mutated-object",
+        "method-mutated-options",
+        "new-mutated-options",
+        "reassigned-getter",
+        "absolute-glob-pattern",
     ] {
         let report = report(name);
         assert!(
