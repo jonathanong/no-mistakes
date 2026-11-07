@@ -25,8 +25,7 @@ pub(super) fn dependent_on(items: SourceItems) -> Keys {
 pub(super) fn prepare(
     item: &SqlBoundItem,
     item_index: usize,
-    owners: &BTreeMap<String, usize>,
-    domains: Option<&Domains>,
+    (owners, domains): (&BTreeMap<String, usize>, Option<&Domains>),
     subqueries: &[Option<Evaluation>],
     arrays: &[bool],
     catalog: &SchemaCatalog,

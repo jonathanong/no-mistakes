@@ -163,8 +163,7 @@ fn evaluate(
             keys::prepare(
                 item,
                 index,
-                &owners,
-                (write_target == Some(index)).then_some(&domains),
+                (&owners, (write_target == Some(index)).then_some(&domains)),
                 &pin_subqueries[index],
                 &pin_arrays[index],
                 catalog,
