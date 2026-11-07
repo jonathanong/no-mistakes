@@ -1,5 +1,6 @@
 use super::*;
 use oxc_ast::ast::{Expression, IdentifierReference};
+use std::borrow::Cow;
 
 impl ImportCollector {
     pub(in super::super::super::super) fn note_metadata_row_expression(
@@ -12,12 +13,12 @@ impl ImportCollector {
         let (object, field, at) = match expr {
             Expression::StaticMemberExpression(member) => (
                 &member.object,
-                Some(member.property.name.to_string()),
+                Some(Cow::Borrowed(member.property.name.as_str())),
                 member.span.start,
             ),
             Expression::ComputedMemberExpression(member) => (
                 &member.object,
-                super::super::literal_string(&member.expression),
+                super::super::literal_string(&member.expression).map(Cow::Owned),
                 member.span.start,
             ),
             Expression::UnaryExpression(unary)
