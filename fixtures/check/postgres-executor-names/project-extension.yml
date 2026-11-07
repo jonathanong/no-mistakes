@@ -1,0 +1,12 @@
+version: 2
+projects:
+  db:
+    root: .
+    include: [src/annotated.ts]
+    postgres:
+      executors:
+        importSpecifier: "@example/db"
+        extraExecutorNames: [readPool]
+rules:
+  - rule: postgres-require-query-annotation
+    projects: [db]

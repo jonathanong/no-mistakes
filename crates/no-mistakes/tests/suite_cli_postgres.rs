@@ -246,3 +246,5 @@ mod cli_postgres_snapshot_root_proofs;
 
 #[path = "cli_postgres_snapshot_fixedpoint.rs"]
 mod cli_postgres_snapshot_fixedpoint;
+#[path = "cli_postgres_executor_names.rs"]
+mod cli_postgres_executor_names;
