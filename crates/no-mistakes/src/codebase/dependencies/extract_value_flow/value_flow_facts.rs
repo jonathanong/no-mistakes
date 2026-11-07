@@ -4,6 +4,7 @@
 pub struct ValueFlowFacts {
     pub(crate) catalogs: literal_catalogs::LiteralCatalogFacts,
     pub(crate) tagged_templates: TaggedTemplates,
+    pub(crate) identifier_text_origins: Option<std::sync::Arc<TextOrigins>>,
     pub(crate) sql_placeholder_lists: Vec<(usize, String, u32)>,
     /// Failed analysis must not supply definitive value-flow or graph answers.
     pub incomplete_reason: Option<String>,
@@ -177,8 +178,7 @@ pub struct ValueFlowFacts {
     pub bindings: Vec<ValueBinding>,
     /// Static CommonJS locals projected only into the canonical call index.
     pub(crate) commonjs_imported_bindings: Vec<ImportedBinding>,
-    /// Iterable source for const loop/destructuring bindings, for provenance only. These are
-    /// not runtime element values and never enter ordinary value resolution.
+    /// Iterable provenance for const loop bindings, never ordinary runtime values.
     pub iteration_bindings: Vec<ValueBinding>,
     /// Direct call/member reads immediately preceded by a scalar overwrite.
     /// (call start, call end, lexical scope, receiver, member), provenance only.

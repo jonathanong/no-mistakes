@@ -21,6 +21,11 @@ pub(super) fn collect(
     }
     for (i, fact) in facts.transformed_column_uses.iter().enumerate() {
         out.insert(Site::TransformedColumn(i), fact.line, fact.column_position);
+        out.insert(
+            Site::TransformedExpression(i),
+            fact.expression_site.0,
+            fact.expression_site.1,
+        );
     }
     selects::collect(index, facts, &mut out);
     tokens::collect(facts, tokens, &mut out);

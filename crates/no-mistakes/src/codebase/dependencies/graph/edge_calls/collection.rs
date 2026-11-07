@@ -117,15 +117,17 @@ fn collect_call_edges_for_core(
             Some(output)
         })
         .collect::<Vec<_>>();
-    if plan.calls {
+    let export_names = if plan.calls {
         populate_callable_export_resolutions(
             edge_inputs,
             facts,
             resolver,
             &indexes,
             callable_export_resolutions,
-        );
-    }
+        )
+    } else {
+        None
+    };
     let mut pass = per_file
         .into_iter()
         .fold(CallPass::default(), |mut all, part| {
@@ -157,6 +159,11 @@ fn collect_call_edges_for_core(
                 callable_export_resolutions,
             );
         }
+        if let Some(export_names) = export_names.as_ref() {
+            pass.edges.extend(project_value_import_selectors(
+                edge_inputs, facts, resolver, &indexes, export_names,
+            ));
+        }
     }
     #[cfg(feature = "test-instrumentation")]
     value_flow_metrics::record_parameters(pass.parameter_cache.computations());
@@ -182,3 +189,4 @@ fn collect_call_edges_for_core(
 }
 
 include!("module_catalog.rs");
+include!("value_import_selectors.rs");

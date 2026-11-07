@@ -26,6 +26,9 @@ impl ScopeVisitor<'_> {
 }
 
 pub(super) fn try_statement<'a>(visitor: &mut ScopeVisitor<'a>, statement: &TryStatement<'a>) {
+    if visitor.executor_options.track_transaction_helpers {
+        visitor.transaction_options.suspended += 1;
+    }
     let mut before = visitor.scopes.clone();
     visitor.visit_block_statement(&statement.block);
     invalidate_exception_state(visitor, &before);
@@ -38,6 +41,9 @@ pub(super) fn try_statement<'a>(visitor: &mut ScopeVisitor<'a>, statement: &TryS
         before = visitor.scopes.clone();
         visitor.visit_block_statement(finalizer);
         invalidate_exception_state(visitor, &before);
+    }
+    if visitor.executor_options.track_transaction_helpers {
+        visitor.transaction_options.suspended -= 1;
     }
 }
 

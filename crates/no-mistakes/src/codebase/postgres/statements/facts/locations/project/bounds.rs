@@ -4,6 +4,9 @@ use crate::codebase::postgres::{SqlBoundItemKind, SqlBoundQuery, SqlPinSource};
 pub(super) fn collect(facts: &SqlStatementFileFacts, out: &mut SqlVariantLocations) {
     for (i, bound) in facts.bounds.iter().enumerate() {
         out.insert(Site::Bound(i), bound.line, bound.column);
+        if let Some((line, column)) = bound.statement_start {
+            out.insert(Site::BoundStatement(i), line, column);
+        }
         query(&bound.query, i, &mut 0, out);
     }
 }

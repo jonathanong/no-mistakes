@@ -3,6 +3,9 @@ use super::*;
 mod sql_builder_reads;
 use oxc_ast::ast::{BindingPattern, CallExpression, Expression};
 
+#[path = "closed_identifier_assignments.rs"]
+mod assignments;
+
 #[path = "closed_identifier_guards.rs"]
 mod guards;
 

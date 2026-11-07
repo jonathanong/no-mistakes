@@ -37,7 +37,9 @@ pub(crate) fn collect_calls<'a>(
         lock_helpers: super::super::lock_helpers::collect(
             program,
             options.track_transaction_helpers,
+            source,
         ),
+        incomplete_transaction_owners: Default::default(),
         exited_functions: Default::default(),
         scalar_literals: Default::default(),
         head_calls_only,
@@ -99,6 +101,7 @@ pub(crate) fn collect_calls<'a>(
         },
         sql_statement_types: sql_statement_type_bindings(program),
         unproven_member_query_spans: Vec::new(),
+        transaction_options: Default::default(),
         literal_objects: super::super::const_literals::LiteralObjects::default(),
         vitest_it_imports,
         finite_cases: Vec::new(),

@@ -11,6 +11,7 @@ pub(super) fn recovered(
     proof: &Recovered,
     outcome: &mut Outcome,
     findings: &mut Vec<RuleFinding>,
+    groups: &mut super::super::super::groups::Groups,
 ) {
     let EvaluationContext {
         application,
@@ -23,7 +24,14 @@ pub(super) fn recovered(
     let mut invalid = false;
     let key = (Some((*application).clone()), call.span);
     if let Some(ProjectedLiteral::Recovered { alternatives }) = literals.get(&key) {
-        project_alternatives(context, alternatives, outcome, findings, &mut invalid);
+        project_alternatives(
+            context,
+            alternatives,
+            outcome,
+            findings,
+            &mut invalid,
+            groups,
+        );
     } else {
         invalid = true;
     }
@@ -43,6 +51,7 @@ fn project_alternatives(
     outcome: &mut Outcome,
     findings: &mut Vec<RuleFinding>,
     invalid: &mut bool,
+    groups: &mut super::super::super::groups::Groups,
 ) {
     let EvaluationContext {
         root,
@@ -67,7 +76,10 @@ fn project_alternatives(
                                 finding.file = relative.to_string();
                                 finding.line = call.line as usize;
                             }
-                            findings.push(finding);
+                            groups.push(
+                                cache::recovered_site(root, caller, sql, use_),
+                                finding.into(),
+                            );
                         }
                         Err(reason) => {
                             mark_reason(outcome, reason);

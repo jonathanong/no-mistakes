@@ -8,6 +8,7 @@ impl TsFactPlan {
         self.imports |= other.imports;
         self.function_calls |= other.function_calls;
         self.value_flow |= other.value_flow;
+        self.identifier_provenance |= other.identifier_provenance;
         self.per_item_calls |= other.per_item_calls;
         self.call_sites |= other.call_sites;
         self.resources |= other.resources;
@@ -29,7 +30,7 @@ impl TsFactPlan {
     }
 
     pub(crate) fn needs_value_flow(self) -> bool {
-        self.value_flow || self.effect_calls || self.per_item_calls
+        self.value_flow || self.identifier_provenance || self.effect_calls || self.per_item_calls
     }
 
     pub(crate) fn needs_import_facts(self) -> bool {
@@ -61,6 +62,7 @@ impl TsFactPlan {
             && !self.imports
             && !self.function_calls
             && !self.value_flow
+            && !self.identifier_provenance
             && !self.per_item_calls
             && !self.call_sites
             && !self.resources
@@ -108,6 +110,7 @@ impl TsFactPlan {
             && (!required.imports || self.imports)
             && (!required.function_calls || self.function_calls)
             && (!required.value_flow || self.needs_value_flow())
+            && (!required.identifier_provenance || self.identifier_provenance)
             && (!required.per_item_calls || self.per_item_calls)
             && (!required.call_sites || self.call_sites)
             && (!required.resources || self.resources)

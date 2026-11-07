@@ -40,7 +40,13 @@ fn postgres_bounded_statements_join_roots_check_json_snapshot() {
                     .as_str()
                     .is_some_and(|actual| actual.ends_with(file))
             })
-            .map(|finding| finding["target"].as_str().unwrap().to_string())
+            .flat_map(|finding| {
+                finding["target"]
+                    .as_str()
+                    .unwrap()
+                    .split(", ")
+                    .map(str::to_string)
+            })
             .collect::<Vec<_>>();
         targets.sort();
         targets

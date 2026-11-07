@@ -71,7 +71,8 @@ impl ValueFlowResolution<'_, '_> {
                     callable_id: None,
                 })
             }
-            Some(ExportedCallableResolution::Unknown | ExportedCallableResolution::Absent)
+            Some(ExportedCallableResolution::Unknown | ExportedCallableResolution::Absent
+                | ExportedCallableResolution::Namespace(_))
                 if binding.kind
                     != crate::codebase::dependencies::extract::ImportedBindingKind::Namespace =>
             {

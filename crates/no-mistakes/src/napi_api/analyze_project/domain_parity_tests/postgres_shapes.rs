@@ -63,7 +63,7 @@ fn prepared_postgres_boolean_keys_and_returning_ctes_match_standalone() {
         ("boolean-keys.yml", 9),
         ("boolean-cte-embedded.yml", 1),
         ("cte-returning-positive.yml", 0),
-        ("cte-returning-negative.yml", 8),
+        ("cte-returning-negative.yml", 5),
         ("cte-declaration-scope.yml", 1),
     ] {
         let standalone = parse_json(
@@ -136,53 +136,7 @@ fn prepared_postgres_unique_index_shapes_match_standalone() {
     assert_eq!(aggregate["reports"][0]["result"], standalone);
 }
 
-#[test]
-fn prepared_postgres_catalog_bounds_match_standalone() {
-    let fixture = category_fixture("rules", "postgres-bounded-statements");
-    for (directory, config, expected) in [
-        ("catalog-resolution", "key-resolution.yml", 6),
-        ("catalog-resolution", "key-operators.yml", 4),
-        ("catalog-resolution", "key-booleans.yml", 1),
-        ("catalog-resolution", "view-bounds.yml", 1),
-        ("catalog-resolution", "view-allow.yml", 0),
-        ("catalog-resolution", "view-suppression.yml", 0),
-        ("catalog-resolution-identity", "view-identity.yml", 1),
-        ("schemaless-key-resolution", "qualified-bare-tables.yml", 4),
-        ("column-policy", "../../configs/column-bounds.yml", 8),
-        ("column-policy", "../../configs/column-bounds-composite-prefix.yml", 1),
-        ("column-policy", "../../configs/recursive-depth.yml", 10),
-        ("join-roots", "valid.yml", 41),
-        ("fixedpoint", "valid.yml", 57),
-        ("issue-3037", "valid.yml", 5),
-        ("issue-3037", "cte-valid.yml", 0),
-        ("root-proofs", "valid.yml", 19),
-        ("root-proofs", "invalid.yml", 22),
-        ("../variants/correlated-append", ".no-mistakes.yml", 1),
-        ("../variants/correlated-append", "undeclared.yml", 3),
-        ("../variants/correlated-append", "advise.yml", 0),
-    ] {
-        let root = fixture.join(directory);
-        let standalone = parse_json(
-            crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
-                json!({"root": root, "config": config, "includeSqlVerdicts": true}),
-            ))
-            .unwrap(),
-        );
-        let aggregate = parse_json(
-            analyze_project_json_impl(crate::napi_api::options::test_json_arg(json!({
-                "root": root, "config": config,
-                "reports": [{"type": "check", "includeSqlVerdicts": true}]
-            })))
-            .unwrap(),
-        );
-        assert_eq!(
-            standalone["rules"].as_array().unwrap().len(),
-            expected,
-            "{config}"
-        );
-        assert_eq!(aggregate["reports"][0]["result"], standalone, "{config}");
-    }
-}
+include!("postgres_catalog_bounds_tests.rs");
 
 #[test]
 fn prepared_postgres_joined_dml_and_catalog_guards_match_standalone() {

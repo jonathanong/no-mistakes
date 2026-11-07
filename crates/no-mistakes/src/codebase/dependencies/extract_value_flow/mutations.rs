@@ -24,6 +24,10 @@ impl ImportCollector {
             self.value_flow
                 .identifier_writes
                 .push(super::closed_identifiers::IdentifierWrite {
+                    context: self
+                        .collect_identifier_provenance
+                        .then(|| self.current_function_id())
+                        .flatten(),
                     scope,
                     name: base.to_string(),
                     members: receiver.map_or_else(
@@ -36,6 +40,7 @@ impl ImportCollector {
                         <[Option<String>]>::to_vec,
                     ),
                     at: offset,
+                    assigned: None,
                 });
         }
         if !member {

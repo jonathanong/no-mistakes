@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    include: [a.ts, query.ts, schema.json]
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: '@example/db'
+      executorNames: [query]
+      sqlInclude: []

@@ -14,50 +14,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/direct.ts",
           "line": 5,
-          "message": "src/direct.ts:5: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "src/direct.ts:5: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM accounts a",
-          "target": "table:accounts"
-        },
-        {
-          "file": "src/direct.ts",
-          "line": 6,
-          "message": "src/direct.ts:6: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "CROSS JOIN orders o`);",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "src/first.ts",
           "line": 6,
-          "message": "src/first.ts:6: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/shared.ts:4)",
+          "message": "src/first.ts:6: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/shared.ts:4); SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/shared.ts:4)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(statement);",
-          "target": "table:accounts"
-        },
-        {
-          "file": "src/first.ts",
-          "line": 6,
-          "message": "src/first.ts:6: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/shared.ts:4)",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "return query(statement);",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "src/second.ts",
           "line": 6,
-          "message": "src/second.ts:6: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/shared.ts:4)",
+          "message": "src/second.ts:6: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/shared.ts:4); SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/shared.ts:4)",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(statement);",
-          "target": "table:accounts"
-        },
-        {
-          "file": "src/second.ts",
-          "line": 6,
-          "message": "src/second.ts:6: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from src/shared.ts:4)",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "return query(statement);",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         }
       ],
       "warnings": []
@@ -75,18 +51,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "query.sql",
           "line": 2,
-          "message": "query.sql:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "query.sql:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM accounts a",
-          "target": "table:accounts"
-        },
-        {
-          "file": "query.sql",
-          "line": 3,
-          "message": "query.sql:3: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "CROSS JOIN orders o;",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         }
       ],
       "warnings": []

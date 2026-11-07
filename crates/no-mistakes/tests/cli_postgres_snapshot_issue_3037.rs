@@ -84,17 +84,12 @@ fn postgres_bounded_statements_issue_3037_check_json_snapshot() {
         vec![
             (
                 "sql/bounded_nonkey_key_chain.sql".into(),
-                "table:posts".into()
-            ),
-            (
-                "sql/bounded_nonkey_key_chain.sql".into(),
-                "table:sources".into()
+                "table:posts, table:sources".into()
             ),
             ("sql/unbounded_key_join.sql".into(), "table:posts".into()),
-            ("sql/unbounded_key_target.sql".into(), "table:posts".into()),
             (
                 "sql/unbounded_key_target.sql".into(),
-                "table:sources".into()
+                "table:posts, table:sources".into()
             ),
         ]
     );

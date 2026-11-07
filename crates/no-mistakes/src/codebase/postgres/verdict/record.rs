@@ -42,7 +42,7 @@ impl SqlBranchJudgment {
 enum Branch<'a> {
     MissingText,
     MissingFacts,
-    Parsed(Cow<'a, EmbeddedSqlCall>, &'a SqlStatementFileFacts),
+    Parsed(Box<Cow<'a, EmbeddedSqlCall>>, &'a SqlStatementFileFacts),
 }
 
 /// Prepared inputs shared by the owning rule's per-subcheck judgments.
@@ -78,7 +78,7 @@ pub fn record_sql_policy_verdicts(
             .map(|version| match version.sql_text.as_ref() {
                 None => Branch::MissingText,
                 Some(_) => prepared.next().map_or(Branch::MissingFacts, |statement| {
-                    Branch::Parsed(version, statement)
+                    Branch::Parsed(Box::new(version), statement)
                 }),
             })
             .collect::<Vec<_>>();

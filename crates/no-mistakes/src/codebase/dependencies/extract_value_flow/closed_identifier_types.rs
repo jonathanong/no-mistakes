@@ -1,4 +1,4 @@
-use crate::codebase::dependencies::extract::CallableId;
+use crate::codebase::dependencies::extract::{CallableId, ValueExpression};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ClosedStringRegistry {
@@ -74,10 +74,28 @@ pub(crate) struct RegistryMutation {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct IdentifierWrite {
+    pub(crate) context: Option<CallableId>,
     pub(crate) scope: usize,
     pub(crate) name: String,
     pub(crate) members: Vec<Option<String>>,
     pub(crate) at: u32,
+    pub(crate) assigned: Option<Box<IdentifierAssignment>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct IdentifierAssignment {
+    pub(crate) completed_at: u32,
+    pub(crate) owner: Option<CallableId>,
+    pub(crate) unconditional: bool,
+    pub(crate) value: ValueExpression,
+    pub(crate) initial: Option<Box<IdentifierInitializer>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct IdentifierInitializer {
+    pub(crate) declared_at: u32,
+    pub(crate) owner: Option<CallableId>,
+    pub(crate) value: ValueExpression,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

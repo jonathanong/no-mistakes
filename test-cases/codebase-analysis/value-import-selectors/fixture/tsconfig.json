@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": { "@catalog/source": ["source.ts"] }
+  },
+  "include": ["*.ts"]
+}

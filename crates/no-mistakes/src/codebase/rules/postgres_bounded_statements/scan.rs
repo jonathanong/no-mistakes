@@ -33,6 +33,7 @@ pub(super) fn scan(
     let embedded = inputs.embedded;
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
+    let mut attribution = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     if prepared.wants_sql_verdicts() {
         verdicts::record(root, opts, &embedded, catalog, &views, prepared)?;
     }
@@ -112,7 +113,7 @@ pub(super) fn scan(
                     .unwrap_or(crate::codebase::postgres::statements::SqlFactSite::Bound(
                         bound_index,
                     ));
-                dedup.push(
+                attribution.push_attributed(
                     &mut findings,
                     file,
                     site,
@@ -125,7 +126,14 @@ pub(super) fn scan(
                     ),
                 );
             }
-            groups.collect(&mut findings, group_start, file, bound_index, bound);
+            groups.collect(
+                &mut findings,
+                group_start,
+                file,
+                bound_index,
+                bound,
+                (file_index >= native_statement_count).then_some(file_index),
+            );
         }
     }
     groups.finish(&mut findings, root, sources, &opts.allow);

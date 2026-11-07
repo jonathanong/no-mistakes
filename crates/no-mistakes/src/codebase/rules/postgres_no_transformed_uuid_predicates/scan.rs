@@ -1,4 +1,5 @@
 mod raw_advice;
+mod sites;
 use super::evaluate::Columns;
 use super::{CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::check_facts::SqlFactContext;
@@ -25,6 +26,8 @@ pub(super) fn scan(
     )?;
     let columns = Columns::new(inputs.catalog);
     let mut findings = crate::codebase::rules::PostgresFindings::default();
+    let mut groups = super::groups::Groups::default();
+    let mut attribution = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     for file in inputs.embedded {
         let rel = relative_slash_path(root, &file.path);
@@ -51,7 +54,7 @@ pub(super) fn scan(
             }
         }
     }
-    for statement in inputs.statements {
+    for (execution, statement) in inputs.statements.into_iter().enumerate() {
         let rel = relative_slash_path(root, &statement.path);
         let source = crate::codebase::rules::read_source(sources, &statement.path);
         let mut residuals = std::collections::BTreeMap::new();
@@ -69,13 +72,22 @@ pub(super) fn scan(
         }
         for (index, use_) in statement.transformed_column_uses.iter().enumerate() {
             match columns.resolve(use_) {
-                Ok((table, true)) => dedup.push(
-                    &mut findings,
-                    statement,
-                    SqlFactSite::TransformedColumn(index),
-                    source.as_deref(),
-                    finding(&rel, table, use_),
-                ),
+                Ok((table, true)) => {
+                    let mut mapped = crate::codebase::rules::PostgresFindings::default();
+                    attribution.push_attributed(
+                        &mut mapped,
+                        statement,
+                        SqlFactSite::TransformedColumn(index),
+                        source.as_deref(),
+                        finding(&rel, table, use_),
+                    );
+                    for located in mapped {
+                        groups.push(
+                            sites::project(root, statement, index, execution, use_),
+                            located,
+                        );
+                    }
+                }
                 Err(reason) => {
                     residuals.entry(use_.line).or_insert(reason);
                     if opts.fail_unanalyzable {
@@ -98,6 +110,7 @@ pub(super) fn scan(
             }
         }
     }
+    findings.extend(groups.finish(root, sources));
     findings.sort();
     Ok(findings)
 }

@@ -25,6 +25,7 @@ pub(super) fn scan(
         .cloned()
         .collect::<Vec<_>>();
     let mut findings = super::scan::scan(root, opts, &sql_files, sources, &context)?;
+    let mut groups = super::groups::Groups::default();
     let columns = Columns::new(facts.postgres_schema_catalog(&opts.schema_catalog_path)?);
     for path in files
         .iter()
@@ -56,8 +57,8 @@ pub(super) fn scan(
                 RULE_ID,
             )
             .is_some();
-            let (evaluation, call_findings) =
-                evaluation::evaluate(&evaluation::EvaluationContext {
+            let (evaluation, call_findings) = evaluation::evaluate(
+                &evaluation::EvaluationContext {
                     root,
                     caller: path,
                     relative: &rel,
@@ -67,7 +68,9 @@ pub(super) fn scan(
                     columns: &columns,
                     options: opts,
                     suppressed: suppressed_call,
-                });
+                },
+                &mut groups,
+            );
             findings.extend(call_findings);
             if !context.wants_sql_verdicts() && !(evaluation.uncertain && opts.advise_unanalyzable)
             {
@@ -94,6 +97,7 @@ pub(super) fn scan(
             }
         }
     }
+    findings.extend(groups.finish(root, sources));
     findings.sort();
     Ok(findings)
 }

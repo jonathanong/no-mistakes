@@ -131,6 +131,9 @@ impl ScopeVisitor<'_> {
         &mut self,
         receiver: &Expression<'_>,
     ) {
+        if self.executor_options.track_transaction_helpers {
+            self.mutate_transaction_receiver(receiver);
+        }
         self.revoke_receiver(receiver, true);
     }
 

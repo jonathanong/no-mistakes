@@ -32,15 +32,17 @@ pub(in super::super) fn prepare(
                         &validator.name,
                     )
             });
-            let source = opts
+            let sources: Vec<_> = opts
                 .identifier_sources
                 .iter()
-                .any(|source| selected(graph, file, call, source.module.as_deref(), &source.name));
-            if validator || source {
-                returns
-                    .entry(file.to_path_buf())
-                    .or_default()
-                    .insert((call.offset, call.end));
+                .enumerate()
+                .filter_map(|(index, source)| {
+                    selected(graph, file, call, source.module.as_deref(), &source.name)
+                        .then_some(index)
+                })
+                .collect();
+            if validator || !sources.is_empty() {
+                returns.insert(file.to_path_buf(), (call.offset, call.end), sources);
             }
         }
     }

@@ -17,6 +17,7 @@ pub struct SqlTransformedColumnUseFact {
     pub line: usize,
     pub column_position: usize,
     pub transformation: String,
+    pub expression_site: (usize, usize),
     pub driving_probe: Option<SqlTransformedColumnProbeFact>,
 }
 

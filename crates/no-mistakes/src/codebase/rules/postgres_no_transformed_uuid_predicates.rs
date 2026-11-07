@@ -12,6 +12,7 @@ mod coverage_tests;
 #[cfg(test)]
 mod effort_tests;
 mod evaluate;
+mod groups;
 mod low;
 #[cfg(test)]
 mod policy_tests;

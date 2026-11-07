@@ -27,3 +27,8 @@ export function boundaries(factory: () => unknown) {
   sql``.append(...parts)
   ;(() => undefined)()
 }
+
+export function mutableBoundary() {
+  let mutableResult = sql`id FROM items`
+  return mutableResult
+}

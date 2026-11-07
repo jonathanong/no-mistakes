@@ -427,7 +427,7 @@ Declared `columnBounds` follow that push. A predicate on the derived column reac
 
 `DELETE ... WHERE id = ANY(ARRAY(SELECT id FROM expired))` is bounded when `expired` itself is capped. An unbounded `UPDATE ... FROM candidate INNER JOIN ...` finding names the `UPDATE`. A positional `LIMIT $n` inside `WITH page AS MATERIALIZED (... LIMIT $n)` caps that page. A data-modifying CTE joined to the page on the target's whole primary key, including `column = ANY(ARRAY[page.column])` for each key column, stays bounded, and the outer `SELECT` of its `RETURNING` rows keeps that proof. The same statement without the `LIMIT` still reports the target.
 
-A multi-line template reports the source line that contains each relation. That includes `head + tail`, where each const is its own template. A relation in the opening template keeps its source line, including inside a fluent append. When every relation comes from explicit builder appends, each root is reported at the executor call. Prepared SQL append boundaries distinguish opening relations from appended roots regardless of escaped newlines, empty openings, or helper declaration order. Imported fragment roots are reported at each executing caller, with the fragment location in the message.
+A multi-line template retains each relation's source location before grouping, including `head + tail`, where each const is its own template. Relations in the opening template retain their source lines, including inside a fluent append. When every relation comes from explicit builder appends, the grouped finding is reported at the executor call. Prepared SQL append boundaries distinguish opening relations from appended roots regardless of escaped newlines, empty openings, or helper declaration order. Imported fragment roots are attributed to each executing caller, with the fragment location in the grouped message.
 
 ## Analysis
 
@@ -436,32 +436,40 @@ statements produce separate findings, and a `no-mistakes-disable-next-line`
 directive immediately above one statement suppresses that failure independently.
 Successfully parsed sibling statements remain analyzable.
 
-### Cascading relation findings
+### Grouped statement findings
 
-A descendant walk can expose several unbounded relations, including repeated
-reads of the same table. The rule emits one finding per distinct unbounded
-root in each analyzed statement. Each `target` is one catalog object ref, such
-as `table:accounts`. Independent statements remain separate, even on the same
-source line. SQL alternatives from one executor statement share the union of
-their roots, with one report per root.
+A descendant walk or join can expose several unbounded relations, including
+repeated reads of the same table. The rule emits one finding per analyzed
+statement, listing every distinct unbounded catalog relation and its reason.
+For example, `SELECT i.id FROM items i CROSS JOIN feeds f` reports once with
+`target: "table:feeds, table:items"`; its message includes both `SELECT can return
+every row of feeds` and `SELECT can return every row of items`, with the fixes
+for each relation. A single-relation finding keeps its existing target and
+message. JSON finding counts therefore count statements rather than relations.
 
-With `severity: advisory`, the same granularity applies: each unbounded relation
-produces one non-failing advisory. For example, `FROM items i CROSS JOIN feeds f`
-produces separate `SELECT can return every row of items` and `SELECT can return
-every row of feeds` messages. Advisory counts can therefore increase compared
-with a single grouped `statement can scan unbounded rows` report for the same
-statement; the number of analyzed statements has not increased.
+CTEs and nested reads contribute to their enclosing statement. Independent
+statements stay separate. Otherwise identical findings on one physical line include
+the statement's SQL line, column, and origin file so distinct statement sites remain
+visible. When those coordinates also match, a local site ordinal distinguishes the
+findings. Unrelated files and optional SQL verdicts do not change those labels.
+SQL alternatives from one executor statement share the union of their unbounded relations.
+Physical statement origins keep that union intact when an earlier fragment changes
+the SQL line or column. Repeated executions of one helper's statement inside an
+executor call remain separate statement occurrences. `severity: advisory` uses the
+same grouped shape and produces one non-failing advisory per statement.
 
-Direct SQL and local executor SQL place each finding at that relation's line.
-For SQL imported or appended from another file, each root is attributed to the
-executing caller and its message names the contributing fragment line. Callers
-that append the same fragment each get their own findings. A same-file appended
-root uses the executor call when its source is outside the opening template.
+The finding uses the earliest remaining relation location after source attribution.
+For SQL imported or appended from another file, each relation is attributed to
+the executing caller and its message names the contributing fragment line. Callers
+that append the same fragment each get their own finding. A same-file appended
+relation uses the executor call when its source is outside the opening template.
 
-`allow` entries apply per root and still report stale entries. A relation-line
-suppression removes that root; a statement-start suppression covers the whole
-statement. A `no-mistakes-disable-line` or `-next-line` at one executing call
-suppresses only that caller's attributed findings.
+`allow` entries, `columnBounds`, and relation-line suppressions apply before
+relations are grouped. An allow entry still matches one catalog object ref and
+still reports when stale. A relation-line suppression removes only that relation
+from the grouped message and target; a statement-start suppression covers the
+whole statement. A `no-mistakes-disable-line` or `-next-line` at one executing call
+suppresses only that caller's attributed finding.
 
 ### Depth-capped recursive CTEs
 
@@ -531,7 +539,7 @@ everywhere, use `allow: [{object: 'table:<name>', reason}]`.
 SQL recovered from an imported helper is reported in the helper's module at the helper's line. A directive in the helper's file suppresses it, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
 
 A line directive covering the first line of a statement suppresses every relation
-finding in that statement, including when its `FROM` or target is on a later line.
+in that statement, including when its `FROM` or target is on a later line.
 Directives on a relation's own reported line also work. This applies to SQL files
 and SQL embedded in executor calls; statement-start directives use the physical
 source line of the outer SQL keyword, including `WITH` and executing

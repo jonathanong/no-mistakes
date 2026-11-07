@@ -1,0 +1,11 @@
+SELECT id FROM probe;
+SELECT id FROM probe LIMIT 2;
+SELECT id FROM probe LIMIT $1;
+SELECT id FROM probe FETCH FIRST 2 ROWS ONLY;
+SELECT id FROM probe FETCH FIRST $1 ROWS ONLY;
+SELECT id FROM probe LIMIT NULL;
+SELECT id FROM probe LIMIT row_limit;
+SELECT id FROM probe UNION ALL SELECT id FROM probe LIMIT row_limit;
+SELECT x.id FROM unnest($1::int[]) f(row_limit) CROSS JOIN LATERAL (SELECT id FROM probe LIMIT f.row_limit + f.row_limit) x;
+SELECT x.id FROM unnest($1::int[]) f(row_limit) CROSS JOIN LATERAL (SELECT id FROM probe LIMIT probe.id) x;
+SELECT x.id FROM unnest($1::int[]) f(row_limit) CROSS JOIN LATERAL (SELECT p.id FROM probe p JOIN limits f ON true LIMIT f.row_limit) x;

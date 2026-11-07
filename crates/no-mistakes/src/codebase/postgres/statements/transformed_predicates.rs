@@ -1,5 +1,6 @@
 //! Project predicate transformations from the request's already parsed SQL AST.
 mod boolean;
+mod cast_sites;
 mod cte_scope;
 mod expressions;
 mod scope;
@@ -18,11 +19,13 @@ use std::ops::ControlFlow;
 pub(super) fn collect(
     statement: &Statement,
     positions: PlaceholderPositions<'_>,
+    tokens: &[sqlparser::tokenizer::TokenWithSpan],
     out: &mut Vec<SqlTransformedColumnUseFact>,
 ) {
     let _: ControlFlow<()> = statement.visit(&mut Collector {
         ctes: QueryScopes::default(),
         positions,
+        tokens,
         out,
     });
 }
@@ -30,6 +33,7 @@ pub(super) fn collect(
 struct Collector<'a, 'b> {
     ctes: QueryScopes,
     positions: PlaceholderPositions<'a>,
+    tokens: &'a [sqlparser::tokenizer::TokenWithSpan],
     out: &'b mut Vec<SqlTransformedColumnUseFact>,
 }
 impl Collector<'_, '_> {
@@ -52,6 +56,7 @@ impl Collector<'_, '_> {
                 &base_relations(&select.from, ctes),
                 None,
                 self.positions,
+                self.tokens,
                 self.out,
             );
         }
@@ -64,6 +69,7 @@ impl Collector<'_, '_> {
                 &base_relations(tables, ctes),
                 None,
                 self.positions,
+                self.tokens,
                 self.out,
             );
         }
@@ -92,6 +98,7 @@ impl Collector<'_, '_> {
                         &visible,
                         probe_scope,
                         self.positions,
+                        self.tokens,
                         self.out,
                     );
                 }

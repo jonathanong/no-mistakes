@@ -32,13 +32,14 @@ pub(crate) fn rebase_embedded_lines(
     let mut locations = facts.variant_locations.take();
     if let Some(locations) = &mut locations {
         let sql = call.sql_text.as_deref().unwrap_or_default();
-        for position in locations.positions.values_mut() {
+        for (site, position) in &mut locations.positions {
             position.source_line = source_line(position.sql_line, position.sql_column);
-            position.source_offset = variant
-                .then(|| {
-                    call.source_offset_at_sql_position(sql, position.sql_line, position.sql_column)
-                })
-                .flatten();
+            position.source_offset = (variant
+                || matches!(site, SqlFactSite::TransformedExpression(_)))
+            .then(|| {
+                call.source_offset_at_sql_position(sql, position.sql_line, position.sql_column)
+            })
+            .flatten();
             position.source_path = call
                 .sql_source_positions
                 .partition_point(|origin| {

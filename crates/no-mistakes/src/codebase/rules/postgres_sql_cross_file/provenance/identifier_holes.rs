@@ -13,7 +13,7 @@ use super::super::SqlCall;
 /// indexes cannot be aligned, so the caller classifies every hole instead.
 pub(super) fn split<'a>(
     facts: &'a CheckFactMap,
-    call: &SqlCall<'a>,
+    call: &SqlCall<'_>,
     bindings: &Bindings<'a>,
 ) -> Option<(Vec<&'a ValueExpression>, Vec<&'a ValueExpression>)> {
     let (indexes, max_index) = aligned(call.call)?;
