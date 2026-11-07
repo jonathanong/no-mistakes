@@ -62,3 +62,5 @@ impl DepGraph {
         self.call_prerequisites.get(&site.file).and_then(|sites| sites.get(&site.offset)).into_iter().flatten()
     }
 }
+
+include!("module_matches.rs");

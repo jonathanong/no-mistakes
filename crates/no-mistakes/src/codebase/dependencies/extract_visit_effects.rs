@@ -24,7 +24,9 @@ fn visit_unary_expression_with_delete<'a>(
     collector: &mut ImportCollector,
     expression: &oxc_ast::ast::UnaryExpression<'a>,
 ) {
+    let previous = collector.metadata_rows.writing;
     if expression.operator == oxc_syntax::operator::UnaryOperator::Delete {
+        collector.metadata_rows.writing = true;
         collector.invalidate_replacement_expression();
         if collector.collect_value_flow {
             if let Some((name, path, start)) =
@@ -40,6 +42,7 @@ fn visit_unary_expression_with_delete<'a>(
         }
     }
     walk::walk_unary_expression(collector, expression);
+    collector.metadata_rows.writing = previous;
 }
 
 fn visit_new_expression_with_calls<'a>(collector: &mut ImportCollector, new: &NewExpression<'a>) {

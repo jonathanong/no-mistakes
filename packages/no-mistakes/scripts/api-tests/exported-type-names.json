@@ -229,6 +229,8 @@
   "PostgresSqlFunctionSyntax",
   "PostgresSqlGeneratedColumn",
   "PostgresSqlIdentifier",
+  "PostgresSqlIdentifierSource",
+  "PostgresSqlIdentifierValidator",
   "PostgresSqlIdentityColumn",
   "PostgresSqlIndex",
   "PostgresSqlIndexKey",

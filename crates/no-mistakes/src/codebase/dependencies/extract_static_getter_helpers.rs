@@ -2,6 +2,7 @@ fn visit_static_member_expression_with_getters<'a>(
     collector: &mut ImportCollector,
     member: &StaticMemberExpression<'a>,
 ) {
+    collector.note_sql_fragment_member(&member.object, Some(member.property.name.as_str()));
     collector.mark_member_object_registry(&member.object);
     collector.note_selected_member(&member.object, member.property.name.as_str());
     if let Some(name) = simple_static_member_name(member) {
@@ -16,6 +17,14 @@ fn visit_computed_member_expression_with_getters<'a>(
     collector: &mut ImportCollector,
     member: &ComputedMemberExpression<'a>,
 ) {
+    let property = if let Expression::StringLiteral(property) =
+        crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression)
+    {
+        Some(crate::ast::js_literal(property))
+    } else {
+        None
+    };
+    collector.note_sql_fragment_member(&member.object, property.as_deref());
     collector.mark_computed_member_registry(member);
     if let Expression::StringLiteral(property) =
         crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression)
@@ -143,16 +152,16 @@ fn walk_assignment_lhs_without_written_getter<'a>(
     collector: &mut ImportCollector,
     target: &AssignmentTarget<'a>,
 ) {
+    let previous = std::mem::replace(&mut collector.metadata_rows.writing, true);
     if let AssignmentTarget::StaticMemberExpression(member) = target {
         collector.visit_expression(&member.object);
-        return;
-    }
-    if let AssignmentTarget::ComputedMemberExpression(member) = target {
+    } else if let AssignmentTarget::ComputedMemberExpression(member) = target {
         collector.visit_expression(&member.object);
         collector.visit_expression(&member.expression);
-        return;
+    } else {
+        walk::walk_assignment_target(collector, target);
     }
-    walk::walk_assignment_target(collector, target);
+    collector.metadata_rows.writing = previous;
 }
 
 fn visit_update_expression_with_calls<'a>(

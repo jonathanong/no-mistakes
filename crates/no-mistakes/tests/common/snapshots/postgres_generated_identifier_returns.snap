@@ -1,0 +1,90 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/fake-uuid.ts",
+          "import": "table",
+          "line": 13,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await q(`/* pruneFake */ DELETE FROM items i USING ${table} r WHERE r.id = i.id`);",
+          "target": "table"
+        },
+        {
+          "file": "src/negative-returns.ts",
+          "import": "invalidated",
+          "line": 27,
+          "message": "Unbounded identifier source `invalidated` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await q(`/* invalidated */ DELETE FROM items USING ${invalidated}`);",
+          "target": "invalidated"
+        },
+        {
+          "file": "src/negative-returns.ts",
+          "import": "mixed",
+          "line": 25,
+          "message": "Unbounded identifier source `mixed` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await q(`/* mixed */ DELETE FROM items USING ${mixed}`);",
+          "target": "mixed"
+        },
+        {
+          "file": "src/negative-returns.ts",
+          "import": "recursive",
+          "line": 29,
+          "message": "Unbounded identifier source `recursive` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await q(`/* recursive */ DELETE FROM items USING ${recursive}`);",
+          "target": "recursive"
+        },
+        {
+          "file": "src/negative-returns.ts",
+          "import": "unawaited",
+          "line": 31,
+          "message": "Unbounded identifier source `unawaited` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await q(`/* unawaited */ DELETE FROM items USING ${unawaited}`);",
+          "target": "unawaited"
+        },
+        {
+          "file": "src/open-prefix.ts",
+          "import": "table",
+          "line": 12,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await q(`/* pruneOpen */ DELETE FROM items i USING ${table} r WHERE r.id = i.id`);",
+          "target": "table"
+        },
+        {
+          "file": "src/open-prefix.ts",
+          "import": "table",
+          "line": 6,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await q(`/* prepareOpen */ CREATE TEMP TABLE ${table} (id uuid) ON COMMIT DROP`);",
+          "target": "table"
+        },
+        {
+          "file": "src/raw.ts",
+          "import": "table",
+          "line": 4,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await q(`/* pruneRaw */ DELETE FROM items i USING ${table} r WHERE r.id = i.id`);",
+          "target": "table"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

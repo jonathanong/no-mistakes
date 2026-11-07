@@ -1,0 +1,81 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "reported": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "alias-guards.ts",
+          "import": "table",
+          "line": 15,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return write(`/* consumerAlias */ SELECT * FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "alias-guards.ts",
+          "import": "table",
+          "line": 19,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return write(`/* otherImporterAlias */ SELECT * FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "alias-guards.ts",
+          "import": "table",
+          "line": 23,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return write(`/* namespaceAlias */ SELECT * FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "alias-guards.ts",
+          "import": "table",
+          "line": 27,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return write(`/* namespaceObjectAlias */ SELECT * FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "alias-guards.ts",
+          "import": "table",
+          "line": 31,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return write(`/* ambiguousAlias */ SELECT * FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "alias-guards.ts",
+          "import": "table",
+          "line": 35,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return write(`/* exportedAlias */ SELECT * FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "alias-guards.ts",
+          "import": "table",
+          "line": 9,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return write(`/* producerAlias */ SELECT * FROM ${table}`)",
+          "target": "table"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

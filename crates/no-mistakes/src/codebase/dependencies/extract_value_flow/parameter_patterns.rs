@@ -64,11 +64,10 @@ impl ImportCollector {
                 }
             }
             BindingPattern::AssignmentPattern(assignment) => {
+                let first = self.value_flow.parameters.len();
+                let value = self.value_expression(&assignment.right);
                 let mut steps = projection;
-                steps.push(ValueProjection::Default(
-                    self.value_expression(&assignment.right),
-                    self.value_flow.parameters.len(),
-                ));
+                steps.push(ValueProjection::Default(value.clone(), first));
                 self.record_parameter_pattern(
                     &assignment.left,
                     slot,
@@ -76,6 +75,7 @@ impl ImportCollector {
                     default_order,
                     steps,
                 );
+                self.note_opaque_text_default(first, &assignment.right, &value);
             }
         }
         // Computed keys and rest bindings remain unresolved; they cannot manufacture provenance.

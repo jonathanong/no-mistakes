@@ -31,6 +31,15 @@ pub fn assert_saved_fixture_with_env(
     cases: &[(&str, PathBuf, PathBuf)],
     envs: &[(&str, &str)],
 ) {
+    assert_saved_fixture_checked(name, cases, envs, false);
+}
+
+pub(super) fn assert_saved_fixture_checked(
+    name: &str,
+    cases: &[(&str, PathBuf, PathBuf)],
+    envs: &[(&str, &str)],
+    clean: bool,
+) {
     let mut document = serde_json::Map::new();
     for (label, root, config) in cases {
         let jobs_one = run_normalized(root, config, 1, envs);
@@ -39,6 +48,25 @@ pub fn assert_saved_fixture_with_env(
             jobs_one, jobs_two,
             "{label} changed between --jobs 1 and --jobs 2"
         );
+        if clean {
+            assert_eq!(jobs_one["exitCode"], 0, "{label} must be clean: {jobs_one}");
+            for category in [
+                "rules",
+                "codebase",
+                "integration",
+                "queues",
+                "react",
+                "advisories",
+                "warnings",
+            ] {
+                assert!(
+                    jobs_one["report"][category]
+                        .as_array()
+                        .is_some_and(Vec::is_empty),
+                    "{label} must have no {category}: {jobs_one}"
+                );
+            }
+        }
         document.insert((*label).to_string(), jobs_one);
     }
     let mut value = Value::Object(document);

@@ -3,7 +3,9 @@ use super::plain_call;
 use super::*;
 use oxc_ast::ast::{Argument, Expression, Statement};
 use oxc_span::GetSpan;
-use oxc_syntax::operator::UnaryOperator;
+
+#[path = "closed_identifier_guard_reference.rs"]
+mod reference;
 
 impl ImportCollector {
     pub(crate) fn record_finite_identifier_guards(
@@ -25,15 +27,29 @@ impl ImportCollector {
     }
 
     fn record_identifier_guard(&mut self, statement: &Statement<'_>, until: u32) {
-        if let Some((collection, method, name)) = closed_set_guard(statement) {
-            self.push_identifier_guard(
-                name,
-                statement.span().end,
-                until,
-                GuardKind::ClosedSet { collection, method },
-            );
+        if let Some(call) = reference::closed_set_guard(statement) {
+            let Expression::StaticMemberExpression(member) =
+                crate::codebase::ts_source::unwrap_ts_wrappers(&call.callee)
+            else {
+                return;
+            };
+            if let Some(collection) = reference::identifier_name(&member.object) {
+                let method = if member.property.name == "has" {
+                    SetMethod::Has
+                } else {
+                    SetMethod::Includes
+                };
+                self.push_call_guard(
+                    call,
+                    0,
+                    statement.span().end,
+                    until,
+                    GuardKind::ClosedSet { collection, method },
+                );
+            }
         }
         self.note_assertion_guard(statement, until);
+        super::metadata::note_guard(self, statement, until);
         match statement {
             Statement::BlockStatement(block) => {
                 self.record_identifier_guards(&block.body, block.span.end);
@@ -49,12 +65,29 @@ impl ImportCollector {
     }
 
     fn note_assertion_guard(&mut self, statement: &Statement<'_>, until: u32) {
-        let Statement::ExpressionStatement(expression) = statement else {
-            return;
-        };
-        let Some(call) = plain_call(&expression.expression) else {
-            return;
-        };
+        match statement {
+            Statement::ExpressionStatement(expression) => {
+                if let Some(call) = plain_call(&expression.expression) {
+                    self.note_assertion_call(call, statement.span().end, until);
+                }
+            }
+            Statement::VariableDeclaration(declaration) => {
+                for binding in &declaration.declarations {
+                    if let Some(call) = binding.init.as_ref().and_then(|value| plain_call(value)) {
+                        self.note_assertion_call(call, binding.span.end, until);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn note_assertion_call(
+        &mut self,
+        call: &oxc_ast::ast::CallExpression<'_>,
+        from: u32,
+        until: u32,
+    ) {
         if call
             .arguments
             .iter()
@@ -62,33 +95,57 @@ impl ImportCollector {
         {
             return;
         }
-        let Some(callee) = simple_callee_name(&call.callee).filter(|name| !name.contains('.'))
-        else {
+        let Some(callee) = simple_callee_name(&call.callee) else {
             return;
         };
-        for (argument, value) in call.arguments.iter().enumerate() {
-            let Some(name) = value.as_expression().and_then(identifier_name) else {
+        for argument in 0..call.arguments.len() {
+            if call.arguments[argument]
+                .as_expression()
+                .and_then(reference::expression)
+                .is_none()
+            {
                 continue;
-            };
-            self.push_identifier_guard(
-                name,
-                statement.span().end,
+            }
+            self.push_call_guard(
+                call,
+                argument,
+                from,
                 until,
                 GuardKind::Assertion {
                     callee: callee.clone(),
                     argument,
+                    call: call.span.start,
                 },
             );
         }
     }
 
-    fn push_identifier_guard(&mut self, name: String, from: u32, until: u32, kind: GuardKind) {
-        let subject = self.guard_subject(&name, from);
+    fn push_call_guard(
+        &mut self,
+        call: &oxc_ast::ast::CallExpression<'_>,
+        argument: usize,
+        from: u32,
+        until: u32,
+        kind: GuardKind,
+    ) {
+        let Some(value) = self
+            .finite_guard_call_indexes
+            .get(&call.span.start)
+            .and_then(|index| self.value_flow.calls.get(*index))
+            .and_then(|value| value.arguments.get(argument))
+        else {
+            return;
+        };
+        let Some((name, scope, members)) = reference::value(value) else {
+            return;
+        };
+        let subject = self.guard_subject(&name, scope, from, &members);
         self.value_flow
             .finite_identifier_guards
             .push(FiniteIdentifierGuard {
                 context: self.current_function_id(),
                 name,
+                members,
                 from,
                 until,
                 kind,
@@ -96,14 +153,22 @@ impl ImportCollector {
             });
     }
 
-    fn guard_subject(&self, name: &str, at: u32) -> Option<GuardSubject> {
-        let scope = self.callee_binding_scope(name)?;
+    fn guard_subject(
+        &self,
+        name: &str,
+        scope: usize,
+        at: u32,
+        members: &[String],
+    ) -> Option<GuardSubject> {
         if let Some(binding) = self.value_flow.bindings.iter().rev().find(|binding| {
             binding.scope == scope
                 && binding.name == name
                 && binding.declared_at <= at
                 && binding.invalidated_at.is_none_or(|end| at < end)
         }) {
+            if !members.is_empty() && matches!(binding.value, ValueExpression::Unknown) {
+                return None;
+            }
             return Some(GuardSubject::Binding {
                 scope,
                 declared_at: binding.declared_at,
@@ -117,51 +182,5 @@ impl ImportCollector {
                     index: parameter.index,
                 })
         })
-    }
-}
-
-fn closed_set_guard(statement: &Statement<'_>) -> Option<(String, SetMethod, String)> {
-    let Statement::IfStatement(branch) = statement else {
-        return None;
-    };
-    if branch
-        .alternate
-        .as_ref()
-        .is_some_and(|alternate| super::super::completion::statement_completes(alternate))
-        || super::super::completion::statement_completes(&branch.consequent)
-    {
-        return None;
-    }
-    let Expression::UnaryExpression(unary) =
-        crate::codebase::ts_source::unwrap_ts_wrappers(&branch.test)
-    else {
-        return None;
-    };
-    if unary.operator != UnaryOperator::LogicalNot {
-        return None;
-    }
-    let call = plain_call(&unary.argument)?;
-    if call.arguments.len() != 1 {
-        return None;
-    }
-    let value = identifier_name(call.arguments[0].as_expression()?)?;
-    let Expression::StaticMemberExpression(member) =
-        crate::codebase::ts_source::unwrap_ts_wrappers(&call.callee)
-    else {
-        return None;
-    };
-    let collection = identifier_name(&member.object)?;
-    let method = match member.property.name.as_str() {
-        "has" => SetMethod::Has,
-        "includes" => SetMethod::Includes,
-        _ => return None,
-    };
-    Some((collection, method, value))
-}
-
-fn identifier_name(expr: &Expression<'_>) -> Option<String> {
-    match crate::codebase::ts_source::unwrap_ts_wrappers(expr) {
-        Expression::Identifier(identifier) => Some(identifier.name.to_string()),
-        _ => None,
     }
 }

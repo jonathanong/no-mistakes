@@ -447,7 +447,28 @@ See [Live phase progress](node-api/progress.md).
 
 See [Effect alternatives](node-api/effect-alternatives.md).
 
-`check()` and `analyzeProject()` also honor low effort for [`postgres-no-unbounded-sql-identifier`](rules/postgres-no-unbounded-sql-identifier.md#effort). Import the exported `PostgresNoUnboundedSqlIdentifierOptions` type for its configuration, including `finiteDomainAssertions`. Unsupported syntax uses the same report/advisory/ignore policy in CLI and async Node reports.
+`check()` and `analyzeProject()` also honor low effort for
+[`postgres-no-unbounded-sql-identifier`](rules/postgres-no-unbounded-sql-identifier.md#effort).
+Import the exported `PostgresNoUnboundedSqlIdentifierOptions`,
+`PostgresSqlIdentifierValidator`, and `PostgresSqlIdentifierSource` types for
+`identifierValidators` (`module?`, `name`, `argument`), `identifierSources`
+(`module?`, `name`), and compatible `finiteDomainAssertions`. At max effort,
+a completed configured validator call proves its argument at later uses and
+its returned value. Trusted validators may enforce an allow-list or an
+identifier grammar plus length limit; trusted sources promise a bounded scalar
+identifier return. Their bodies are not inspected. Module selectors match the
+call-site import or canonical resolved origin through named or `export *`
+barrels and npm re-exports. Guards still cover only the exact validated property
+path before interpolation.
+
+These async APIs share the CLI proofs for imported literal-array guards,
+literal properties selected from closed records, closed catalog map/join SQL,
+built-in `sql-template-strings` `.text` fragments with append chains and helper
+returns, and generated UUID names whose prefix parameter is bound by a literal
+call argument and whose async result is awaited. No tag option is required for
+the default or `SQL` import from `sql-template-strings`. Unsupported syntax uses
+the same report/advisory/ignore policy in CLI and async Node reports. See
+[closed domains](rules/postgres-no-unbounded-sql-identifier.md#closed-domains).
 
 For `postgres-require-query-annotation`, these async reports share the CLI's
 low-effort finite conditional heads, finite explicit helper returns, safe

@@ -163,6 +163,16 @@ Grouped residual advice, including a `target` that may list several checks, is d
 
 For `postgres-no-unbounded-sql-identifier`, low effort accepts direct literal SQL/templates or one lexical const and skips call-graph/provenance inference. Keep relations literal; bind external values. Helper/alias/factory/type shapes are unanalyzable and follow `report`, `advise`, or `ignore`. Direct global `process.env` relation inputs remain violations.
 
+At max effort, configure `identifierValidators: [{module: "@example/sql-identifiers", name: "assertIdentifier", argument: 0}]` for a trusted throwing helper enforcing an allow-list or identifier grammar plus length limit. A completed call proves the argument at later uses and its returned value, including `const table = assertIdentifier(input)`. The body is not inspected. Module identity matches either the call-site import or canonical resolved origin through named/`export *` barrels and npm re-exports. Validate each property before SQL interpolation; a schema assertion does not validate the table. Existing `finiteDomainAssertions` remains supported. Closed `includes`/`has` guards may throw or return, including guards over imported literal `as const` arrays with plain string parameters; a catalog-derived parameter type alone is not runtime validation. Static metadata-array `.find` lookups need a dominating presence guard.
+
+Use `identifierSources: [{module: "@example/relations", name: "getRelationTableNameOrThrow"}]` for an explicit trusted scalar identifier producer when automatic proof does not cover a catalog lookup wrapper. The body is not inspected; this option proves the return, not input arguments or arbitrary object properties. Both helper lists default to empty. Omit `module` only to match an exact local callee name.
+
+Known literal properties selected from a closed record by a cross-module helper and module constants built with closed catalog filter/map/join chains are bounded. Keep catalog fields literal and avoid mutations, escapes, or accessors. An exported UUID helper returning `` `${prefix}_${randomUUID().replaceAll("-", "")}` `` also qualifies when its sole prefix argument is literal at the caller; `await` preserves the name through an async preparation helper. Open prefixes, fake UUID producers, mixed returns, reassignment, recursive returns, and async results used without `await` retain findings.
+
+The default and `SQL` imports from `sql-template-strings` need no tag configuration. At max effort, their `.text` proof includes immutable module-const fragments, `.append()` chains, statement appends, and resolved helper returns with matching `.values`. Use `trustedSqlTags` for custom tag imports. Open raw append values, opaque builders, mutation, and escape do not establish this proof.
+
+A private ESM helper may return a guarded metadata row when every call result is an immutable `const` or a direct known-field projection. Keep all result uses on known literal fields. Any result mutation, alias, method call, helper export, or function-value escape invalidates every helper sharing that metadata source.
+
 `postgres-no-mutable-sql-registry` also supports `effort: low`. Use it when SQL
 relations are literal: the syntax tier skips cross-file mutation and call-graph
 analysis. Imported registry relations, helpers, and other indirect SQL produce

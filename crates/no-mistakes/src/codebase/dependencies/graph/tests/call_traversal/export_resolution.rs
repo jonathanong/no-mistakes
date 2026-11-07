@@ -56,3 +56,58 @@ fn call_export_resolution_keeps_missing_facts_and_nonvisible_stars_unknown() {
         ExportedCallableResolution::Unknown
     ));
 }
+
+#[test]
+fn call_export_resolution_deduplicates_external_stars_without_selecting_collisions() {
+    let (root, graph) = call_fixture_graph();
+    let consumer = root.join("src/external-star-identities-consumer.mts");
+    let sites = graph.call_sites_in_file(&consumer);
+    let same = sites
+        .iter()
+        .find(|site| site.source_callee == "sameOrigin")
+        .unwrap();
+    assert!(
+        matches!(&same.target, ResolvedCallTarget::ModuleExport {
+            specifier,
+            export_path,
+            repository_target: None,
+            callable_id: None,
+        } if specifier == "vitest" && export_path == "mock"),
+        "duplicate star paths must retain the one canonical external export: {same:#?}"
+    );
+    assert!(same.target_node.is_none(), "{same:#?}");
+    for callee in [
+        "distinctModules",
+        "distinctNames",
+        "localCollision",
+        "unresolvedStar",
+    ] {
+        let site = sites
+            .iter()
+            .find(|site| site.source_callee == callee)
+            .unwrap_or_else(|| panic!("missing {callee}: {sites:#?}"));
+        assert_eq!(
+            site.target,
+            ResolvedCallTarget::Unknown,
+            "{callee}: {site:#?}"
+        );
+        assert!(site.target_node.is_none(), "{callee}: {site:#?}");
+    }
+}
+
+#[test]
+fn module_export_selectors_require_exact_cached_targets() {
+    let (root, mut graph) = call_fixture_graph();
+    let source = root.join("src/aliases.mts");
+    let site = graph.call_sites_in_file(&source).iter()
+        .find(|site| site.source_callee == "first").unwrap().clone();
+    let provider = root.join("src/alias-target.mts");
+    let module = "configured-alias";
+    let export = "importedTarget";
+    graph.module_files.entry(module.into()).or_default().insert(provider.clone());
+    graph.callable_export_resolutions.remove(&(provider.clone(), export.into()));
+    assert!(!graph.matches_module_export(module, export, &site));
+    graph.callable_export_resolutions.insert((provider.clone(), export.into()),
+        ExportedCallableResolution::Callable(provider, "differentTarget".into(), None));
+    assert!(!graph.matches_module_export(module, export, &site));
+}

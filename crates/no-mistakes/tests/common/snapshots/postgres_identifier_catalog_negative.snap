@@ -1,0 +1,153 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "negative": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/collections-unsafe.ts",
+          "import": "FILTER_SQL",
+          "line": 14,
+          "message": "Unbounded identifier source `FILTER_SQL` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "export const filteredCounts = () => read(`/* filteredCounts */ SELECT ${FILTER_SQL}`)",
+          "target": "FILTER_SQL"
+        },
+        {
+          "file": "src/collections-unsafe.ts",
+          "import": "MUTATING_SQL",
+          "line": 8,
+          "message": "Unbounded identifier source `MUTATING_SQL` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "export const mutatingCounts = () => read(`/* mutatingCounts */ SELECT (${MUTATING_SQL})`)",
+          "target": "MUTATING_SQL"
+        },
+        {
+          "file": "src/collections-unsafe.ts",
+          "import": "OPEN_SQL",
+          "line": 18,
+          "message": "Unbounded identifier source `OPEN_SQL` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "export const openCounts = () => read(`/* openCounts */ SELECT ${OPEN_SQL}`)",
+          "target": "OPEN_SQL"
+        },
+        {
+          "file": "src/escaped.ts",
+          "import": "config",
+          "line": 16,
+          "message": "Unbounded identifier source `config` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`/* exportedProvider */ SELECT ${config.emailColumn} FROM accounts`)",
+          "target": "config"
+        },
+        {
+          "file": "src/escaped.ts",
+          "import": "config",
+          "line": 23,
+          "message": "Unbounded identifier source `config` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`/* getterProvider */ SELECT ${config.emailColumn} FROM accounts`)",
+          "target": "config"
+        },
+        {
+          "file": "src/escaped.ts",
+          "import": "config",
+          "line": 9,
+          "message": "Unbounded identifier source `config` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`/* escapedProvider */ SELECT ${config.emailColumn} FROM accounts`)",
+          "target": "config"
+        },
+        {
+          "file": "src/mutated.ts",
+          "import": "config",
+          "line": 20,
+          "message": "Unbounded identifier source `config` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`/* aliasedProvider */ SELECT ${config.emailColumn} FROM accounts`)",
+          "target": "config"
+        },
+        {
+          "file": "src/mutated.ts",
+          "import": "config",
+          "line": 28,
+          "message": "Unbounded identifier source `config` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`/* rawProvider */ SELECT ${config.emailColumn} FROM accounts`)",
+          "target": "config"
+        },
+        {
+          "file": "src/mutated.ts",
+          "import": "config",
+          "line": 7,
+          "message": "Unbounded identifier source `config` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`/* mutatedProvider */ SELECT ${config.emailColumn} FROM accounts`)",
+          "target": "config"
+        },
+        {
+          "file": "src/namespace-member-consumer.ts",
+          "import": "config",
+          "line": 8,
+          "message": "Unbounded identifier source `config` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`/* namespaceMemberEscape */ SELECT ${config.emailColumn} FROM accounts`)",
+          "target": "config"
+        },
+        {
+          "file": "src/namespace-object-consumer.ts",
+          "import": "config",
+          "line": 8,
+          "message": "Unbounded identifier source `config` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`/* namespaceObjectEscape */ SELECT ${config.emailColumn} FROM accounts`)",
+          "target": "config"
+        },
+        {
+          "file": "src/open.ts",
+          "import": "config",
+          "line": 7,
+          "message": "Unbounded identifier source `config` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`/* openProvider */ SELECT ${config.emailColumn} FROM accounts`)",
+          "target": "config"
+        },
+        {
+          "file": "src/open.ts",
+          "import": "table",
+          "line": 13,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`/* wrongModule */ SELECT * FROM ${table}`)",
+          "target": "table"
+        },
+        {
+          "file": "src/shared-unsafe-consumer.ts",
+          "import": "config",
+          "line": 12,
+          "message": "Unbounded identifier source `config` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`/* sharedSource */ SELECT ${config.emailColumn} FROM accounts`)",
+          "target": "config"
+        },
+        {
+          "file": "src/shared-unsafe-consumer.ts",
+          "import": "config",
+          "line": 8,
+          "message": "Unbounded identifier source `config` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`/* importedEscape */ SELECT ${config.emailColumn} FROM accounts`)",
+          "target": "config"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

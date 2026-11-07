@@ -20,12 +20,21 @@ impl ImportCollector {
         let (base, member) = name
             .split_once('.')
             .map_or((name, false), |(base, _)| (base, true));
-        if !member && self.collect_value_flow {
+        if self.collect_value_flow {
             self.value_flow
                 .identifier_writes
                 .push(super::closed_identifiers::IdentifierWrite {
                     scope,
                     name: base.to_string(),
+                    members: receiver.map_or_else(
+                        || {
+                            name.split('.')
+                                .skip(1)
+                                .map(|part| Some(part.to_string()))
+                                .collect()
+                        },
+                        <[Option<String>]>::to_vec,
+                    ),
                     at: offset,
                 });
         }

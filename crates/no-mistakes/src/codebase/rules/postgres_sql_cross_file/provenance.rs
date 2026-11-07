@@ -9,7 +9,11 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 mod binding_tag;
+mod text_tag;
+pub(crate) use text_tag::is_text_tag;
 mod bindings;
+mod validated;
+pub(crate) use validated::IdentifierReturns;
 mod env;
 mod identifier_holes;
 mod identifier_positions;
@@ -67,6 +71,9 @@ fn classify(
     out: &mut BTreeSet<Provenance>,
     bindings: &Bindings<'_>,
 ) {
+    if super::metadata_row_projection(graph, facts, bindings, file, expr, &[]) {
+        return;
+    }
     if let Some(key) = env_key(facts, file, expr).map(str::to_owned).or_else(|| {
         matches!(expr, ValueExpression::Member(_, _))
             .then(|| bindings.env(file, expr, &[]))
@@ -88,6 +95,9 @@ fn classify(
         }
         ValueExpression::Awaited(inner) => classify(graph, facts, file, inner, out, bindings),
         ValueExpression::Member(inner, key) => {
+            if text_tag::projection_span(bindings, file, expr).is_some() {
+                return;
+            }
             let mut members = vec![key.clone()];
             let mut current = inner.as_ref();
             while let ValueExpression::Member(next, next_key) = current {
@@ -143,6 +153,7 @@ fn classify_call(
     bindings: &Bindings<'_>,
 ) {
     if binding_tag::is_bind_tag(bindings, file, value_call)
+        || bindings.identifier_return(file, value_call)
         || is_finite_validator(graph, facts, &bindings.routes, file, &value_call.callee)
         || closed_map_lookup(facts, file, value_call)
     {

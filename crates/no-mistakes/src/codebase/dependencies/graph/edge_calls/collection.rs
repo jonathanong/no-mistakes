@@ -64,22 +64,7 @@ fn collect_call_edges_for_core(
             };
             let mut output = CallPass::default();
             if plan.calls && plan.effect_selectors {
-                for binding in &file.imported_bindings {
-                    if !binding.is_type_only {
-                        if let Some(target) =
-                            resolver
-                                .resolve(&binding.specifier, path)
-                                .and_then(|target| {
-                                    edge_inputs
-                                        .graph_files
-                                        .visible_path(&target)
-                                        .map(std::path::Path::to_path_buf)
-                                })
-                        {
-                            output.modules.push((binding.specifier.clone(), target));
-                        }
-                    }
-                }
+                output.modules = project_call_module_files(edge_inputs, resolver, path, file);
             }
             if plan.calls {
                 if let Some(replacements) = file
@@ -195,3 +180,5 @@ fn collect_call_edges_for_core(
     project_import_execution(edge_inputs, facts, &mut pass);
     pass
 }
+
+include!("module_catalog.rs");

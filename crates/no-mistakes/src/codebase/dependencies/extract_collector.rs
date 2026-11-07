@@ -47,6 +47,10 @@ struct ImportCollector {
     unreachable_call_ranges: Vec<UnreachableCallRange>,
     import_inactive_call_ranges: Vec<(u32, u32)>,
     value_flow: ValueFlowFacts,
+    finite_guard_call_indexes: FxHashMap<u32, usize>,
+    metadata_registry_names: FxHashSet<String>,
+    metadata_lookup_calls: FxHashSet<u32>,
+    metadata_rows: extract_value_flow::closed_identifiers::rows::State,
     callable_assignment_state: Option<Box<CallableAssignmentState>>,
     /// Cutoff for the current callable's body when its suffix is unreachable.
     /// Saved and restored around body traversal; absent for ordinary bodies.
@@ -71,6 +75,8 @@ struct ImportCollector {
     /// Present only while the normal visitor records this exact assignment leaf.
     assignment_target_start: Option<u32>,
     value_parameter_indexes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
+    opaque_text_parameter_defaults: FxHashSet<usize>,
+    text_origins: extract_value_flow::TextOrigins,
     collect_value_flow: bool,
     collect_per_item_calls: bool,
     per_item_calls: Vec<PerItemCall>,

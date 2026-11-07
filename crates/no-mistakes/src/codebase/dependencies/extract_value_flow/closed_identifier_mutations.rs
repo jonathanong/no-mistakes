@@ -15,10 +15,13 @@ impl super::super::super::ImportCollector {
         if let Some(name) = mutating_receiver(call).or_else(|| assign_target(call)) {
             self.record_registry_mutation(&name);
         }
+        super::metadata::note_call(self, call);
     }
 
     pub(super) fn bounded_source(&self, init: &Expression<'_>) -> Option<Option<(String, usize)>> {
-        if super::names::stripped_temp_name(init, &|call| self.trusted_uuid_call(call)) {
+        if super::names::stripped_temp_name(init, &|call| self.trusted_uuid_call(call))
+            || self.generated_hex_name(init)
+        {
             return Some(None);
         }
         if let Some(map) = super::names::map_get_receiver(init) {

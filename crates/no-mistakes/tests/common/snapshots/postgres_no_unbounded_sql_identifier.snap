@@ -1009,15 +1009,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-unbounded-sql-identifier",
           "sourceLine": "return query(`SELECT id FROM ${table}`);",
           "target": "table"
-        },
-        {
-          "file": "src/query.ts",
-          "import": "table",
-          "line": 8,
-          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT id FROM ${table}`);",
-          "target": "table"
         }
       ],
       "warnings": []
@@ -1864,15 +1855,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-unbounded-sql-identifier",
           "sourceLine": "return query(`SELECT id FROM ${u}`);",
           "target": "u"
-        },
-        {
-          "file": "src/query.ts",
-          "import": "u",
-          "line": 49,
-          "message": "Unbounded identifier source `u` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "return query(`SELECT id FROM ${u}`);",
-          "target": "u"
         }
       ],
       "warnings": []
@@ -2509,24 +2491,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "pass_finite_domain_assertion": {
-    "exitCode": 1,
+    "exitCode": 0,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [
-        {
-          "file": "src/query.ts",
-          "import": "table",
-          "line": 13,
-          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "return query(`SELECT id FROM ${table}`);",
-          "target": "table"
-        }
-      ],
+      "rules": [],
       "warnings": []
     }
   },
@@ -2556,24 +2528,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "pass_includes_throw_guard": {
-    "exitCode": 1,
+    "exitCode": 0,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [
-        {
-          "file": "src/query.ts",
-          "import": "table",
-          "line": 9,
-          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "return query(`SELECT id FROM ${table}`);",
-          "target": "table"
-        }
-      ],
+      "rules": [],
       "warnings": []
     }
   },
@@ -2638,33 +2600,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "pass_set_throw_guard": {
-    "exitCode": 1,
+    "exitCode": 0,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [
-        {
-          "file": "src/query.ts",
-          "import": "table",
-          "line": 14,
-          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "return query(`SELECT id FROM ${table}`);",
-          "target": "table"
-        },
-        {
-          "file": "src/query.ts",
-          "import": "table",
-          "line": 9,
-          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "return query(`SELECT id FROM ${table}`);",
-          "target": "table"
-        }
-      ],
+      "rules": [],
       "warnings": []
     }
   },

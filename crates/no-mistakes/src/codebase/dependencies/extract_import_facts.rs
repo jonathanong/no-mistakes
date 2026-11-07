@@ -2,13 +2,18 @@ pub(crate) use extract_value_flow::closed_identifiers::{
     unique_closed_collection, FiniteIdentifierGuard, GuardKind, GuardSubject, RegistryKind,
     SetMethod,
 };
+pub(crate) use extract_value_flow::literal_catalogs::{
+    LiteralCatalog, CatalogAccessor, CatalogRead, CatalogReadKind,
+};
 pub use extract_value_flow::{
     CallableAssignment, ValueBinding, ValueCall, ValueDefaultMutations, ValueExpression,
     ValueFlowFacts, ValueMutationHistory, ValueMutationInfo, ValueParameter, ValueProjection,
     ValueReceiverMutations, ValueRepeatCall, ValueRepeatRegion, ValueReplacementFacts,
     ValueReplacementWrite, ValueType,
 };
-pub(crate) use extract_value_flow::{ModuleAssignedMutations, ValueAssignedMutations};
+pub(crate) use extract_value_flow::{
+    ModuleAssignedMutations, TextOrigin, TextOrigins, ValueAssignedMutations,
+};
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ImportFacts {
     /// Top-level literal requires without a conditional execution guard.

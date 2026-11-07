@@ -4,6 +4,8 @@ pub(super) type PriorMemberMutations = receiver_histories::ReceiverHistories;
 pub(super) type ReceiverBindingOrigins = mutable_origins::ReceiverBindingOrigins;
 pub(super) type ForeignReceiverWrites = mutable_origins::ForeignReceiverWrites;
 pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, String)>>>;
+pub(super) type TaggedTemplates = FxHashMap<(u32, u32), templates::TaggedTemplateInfo>;
+pub(crate) use templates::origins::{TextOrigin, TextOrigins};
 
 /// Small syntactic annotation shapes; resolution uses the prepared fact catalog.
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -39,8 +39,15 @@ impl super::super::super::ImportCollector {
         if !self.collect_value_flow {
             return;
         }
+        self.note_metadata_row_expression(expr);
+        self.note_literal_catalog_expression(expr);
         match expr {
             Expression::StaticMemberExpression(member) => mark_read(self, &member.object),
+            Expression::UnaryExpression(unary)
+                if unary.operator == oxc_syntax::operator::UnaryOperator::LogicalNot =>
+            {
+                mark_read(self, &unary.argument)
+            }
             Expression::CallExpression(call) => mark_spreads(self, &call.arguments),
             Expression::NewExpression(new) => mark_spreads(self, &new.arguments),
             Expression::ArrayExpression(array) => {
@@ -111,6 +118,11 @@ impl super::super::super::ImportCollector {
         &mut self,
         identifier: &IdentifierReference<'_>,
     ) {
+        if self.namespace.type_depth > 0 {
+            return;
+        }
+        self.note_metadata_row_identifier(identifier);
+        self.note_literal_catalog_identifier(identifier);
         if !self.collect_value_flow || self.closed_registry_reads.contains(&identifier.span.start) {
             return;
         }
@@ -159,6 +171,13 @@ fn mark_read(collector: &mut super::super::super::ImportCollector, expr: &Expres
     else {
         return;
     };
+    if collector
+        .metadata_registry_names
+        .contains(identifier.name.as_str())
+        && collector.closed_registry_call_callee != Some(identifier.span.start)
+    {
+        return;
+    }
     collector
         .closed_registry_reads
         .insert(identifier.span.start);

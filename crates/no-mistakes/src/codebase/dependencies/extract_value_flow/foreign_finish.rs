@@ -140,6 +140,7 @@ impl ImportCollector {
         } else {
             self.finish_default_mutations();
             finish_callable_assignment_facts(self);
+            self.finalize_text_parameter_defaults();
         }
     }
     pub(in super::super::super) fn charge_foreign_work(&mut self, amount: usize) -> Option<()> {
