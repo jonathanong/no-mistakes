@@ -15,9 +15,9 @@ mod propagation;
 mod qualified;
 mod reads;
 mod scalar_output;
+mod target;
 mod view_key;
 use outer_reads::reads_outer;
-use reads::relation_offender;
 pub(super) use view_key::visible_key;
 
 /// A catalog relation that a statement can read or change in unbounded numbers.
@@ -73,22 +73,7 @@ fn offenders_with_columns(
     let Some(target) = fact.target else {
         return evaluation.offenders;
     };
-    // An UPDATE or DELETE changes each target row at most once, so only the target must be bounded.
-    if query.capped || evaluation.items[target] {
-        return Vec::new();
-    }
-    if let Some(roots) = driven::roots(&query, target, &evaluation.offenders, catalog) {
-        return roots;
-    }
-    let item = &query.items[target];
-    match &item.kind {
-        SqlBoundItemKind::Table(name) => {
-            relation_offender(name, item.line, item.column, catalog, views)
-                .into_iter()
-                .collect()
-        }
-        _ => Vec::new(),
-    }
+    target::offenders(&query, target, &evaluation, catalog, views)
 }
 
 fn evaluate(
@@ -186,9 +171,14 @@ fn evaluate(
         views,
         precise_columns,
     );
-    Evaluation {
-        bounded: query.capped || bounded.iter().all(|state| *state),
-        items: bounded,
-        offenders,
-    }
+    target::project(
+        query,
+        Evaluation {
+            bounded: query.capped || bounded.iter().all(|state| *state),
+            items: bounded,
+            offenders,
+        },
+        catalog,
+        views,
+    )
 }

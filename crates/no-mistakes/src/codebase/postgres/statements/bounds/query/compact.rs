@@ -116,7 +116,10 @@ pub(super) fn compact(bound: &SqlBoundQuery, at: (usize, usize)) -> SqlBoundQuer
         .collect();
     items.push(items::opaque(at));
     SqlBoundQuery {
-        input_mode: bound.input_mode,
+        input_mode: match bound.input_mode {
+            SqlBoundInputMode::Returning => SqlBoundInputMode::Streaming,
+            mode => mode,
+        },
         outputs: bound
             .outputs
             .iter()

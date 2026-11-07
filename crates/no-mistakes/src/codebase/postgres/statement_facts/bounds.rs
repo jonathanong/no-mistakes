@@ -27,7 +27,7 @@ pub struct SqlBoundFact {
 pub struct SqlBoundQuery {
     /// A `LIMIT` / `FETCH FIRST`, or a pure aggregate (no `GROUP BY`).
     pub capped: bool,
-    /// Set-input execution policy, independent of the number of returned rows.
+    /// Input execution and target-row projection policy.
     pub input_mode: SqlBoundInputMode,
     pub items: Vec<SqlBoundItem>,
     /// Output columns in ordinal order; caller-sized values stay finite despite repeated rows.

@@ -1,4 +1,6 @@
-use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundKind, SqlPinSource};
+use crate::codebase::postgres::statements::{
+    SqlBoundInputMode, SqlBoundItemKind, SqlBoundKind, SqlPinSource,
+};
 
 fn fixture(name: &str) -> String {
     let path = crate::test_support::rule_fixture_root("postgres-bounded-statements")
@@ -48,8 +50,11 @@ fn unbounded_and_recursive_returning_ctes_keep_the_outer_target_unproved() {
             let SqlBoundItemKind::Query(bound) = &source.kind else {
                 panic!("{name}: CTE must project a query bound");
             };
-            // The target-to-auxiliary pin indexed a removed FROM item and must not survive.
-            assert!(bound.items[0].pins.is_empty());
+            assert_eq!(bound.input_mode, SqlBoundInputMode::Returning);
+            assert!(bound.items[0]
+                .pins
+                .iter()
+                .any(|pin| matches!(&pin.source, SqlPinSource::Items(items) if items == &[1])));
         }
         if name == "recursive-opaque.sql" {
             assert!(matches!(&source.kind, SqlBoundItemKind::Query(_)));
@@ -130,7 +135,7 @@ fn earlier_modifying_cte_facts_keep_the_physical_relation_before_a_later_alias()
 }
 
 #[test]
-fn retained_sibling_pins_are_remapped_and_pins_on_removed_siblings_are_dropped() {
+fn returning_context_preserves_original_sibling_pin_ordinals() {
     let found = super::super::facts(&fixture("sibling-pin-removed.sql"));
     let SqlBoundItemKind::Query(cte) = &found[1].query.items[1].kind else {
         panic!("outer query must read the modifying CTE");
@@ -157,11 +162,15 @@ fn retained_sibling_pins_are_remapped_and_pins_on_removed_siblings_are_dropped()
         pin(SqlPinSource::Items(vec![3])),
     ];
     let projected = super::super::super::returning::project(query).unwrap();
-    assert_eq!(projected.items.len(), 3);
-    let sources: Vec<_> = projected.items[1]
+    assert_eq!(projected.items.len(), 4);
+    assert_eq!(projected.input_mode, SqlBoundInputMode::Returning);
+    let sources: Vec<_> = projected.items[2]
         .pins
         .iter()
         .map(|pin| &pin.source)
         .collect();
-    assert_eq!(sources, [&SqlPinSource::Items(vec![2])]);
+    assert_eq!(
+        sources,
+        [&SqlPinSource::Items(vec![1]), &SqlPinSource::Items(vec![3])]
+    );
 }

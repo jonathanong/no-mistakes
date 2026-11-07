@@ -1,4 +1,5 @@
 mod finite;
+mod unnest;
 
 use super::super::super::value::{is_placeholder_ident_at, PlaceholderPositions};
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
@@ -109,6 +110,7 @@ fn scalar(
     match expr {
         Expr::Nested(expr) => scalar(expr, items, resolver, positions),
         Expr::Value(value) => !matches!(value.value, Value::Placeholder(_)),
+        Expr::Function(function) => unnest::scalar(function),
         Expr::Cast {
             data_type:
                 DataType::Uuid

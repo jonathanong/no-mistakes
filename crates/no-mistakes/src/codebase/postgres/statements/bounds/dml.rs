@@ -68,8 +68,7 @@ fn push(
     });
 }
 
-/// RETURNING emits one row per changed target row. Keep key pins only when every
-/// sibling they name is row-bounded, and drop other auxiliary FROM/USING items.
+/// RETURNING keeps target and driver evidence for catalog-backed target-row evaluation.
 pub(super) fn returning_bound(
     query: &Query,
     statement: &Statement,
