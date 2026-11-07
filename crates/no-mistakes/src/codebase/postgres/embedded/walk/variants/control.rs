@@ -89,17 +89,19 @@ pub(in crate::codebase::postgres::embedded::walk) fn if_statement<'a>(
     }
     let right = visitor.variant_snapshot();
     let transaction_right = super::super::transaction_flow::Snapshot::capture(visitor);
-    let exits = super::super::transaction_flow::exits;
-    match taken {
-        Some(true) => transaction_left.restore(visitor),
-        Some(false) => transaction_right.restore(visitor),
-        None if exits(&statement.consequent) => {
-            transaction_before.resume_after(&transaction_left, &transaction_right, visitor)
+    if visitor.executor_options.track_transaction_helpers {
+        let exits = super::super::transaction_flow::exits;
+        match taken {
+            Some(true) => transaction_left.restore(visitor),
+            Some(false) => transaction_right.restore(visitor),
+            None if exits(&statement.consequent) => {
+                transaction_before.resume_after(&transaction_left, &transaction_right, visitor)
+            }
+            None if statement.alternate.as_ref().is_some_and(exits) => {
+                transaction_before.resume_after(&transaction_right, &transaction_left, visitor)
+            }
+            None => transaction_left.join(&transaction_right, visitor),
         }
-        None if statement.alternate.as_ref().is_some_and(exits) => {
-            transaction_before.resume_after(&transaction_right, &transaction_left, visitor)
-        }
-        None => transaction_left.join(&transaction_right, visitor),
     }
     visitor.variant_paths = paths;
     match taken {

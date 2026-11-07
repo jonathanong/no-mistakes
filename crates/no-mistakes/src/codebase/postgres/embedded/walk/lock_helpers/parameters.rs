@@ -16,6 +16,25 @@ pub(super) fn compose(
     call: &CallExpression<'_>,
     params: &[&str],
 ) -> Option<Vec<summary::Query>> {
+    for (index, argument) in call.arguments.iter().enumerate() {
+        let expression = unwrap_ts_wrappers(argument.as_expression()?);
+        if !matches!(parameter(expression, params), Parameter::Unknown) {
+            continue;
+        }
+        let Expression::StaticMemberExpression(member) = expression else {
+            return None;
+        };
+        if member.optional
+            || member.property.name != "query"
+            || !matches!(parameter(&member.object, params), Parameter::Argument(_))
+            || !helper
+                .calls
+                .iter()
+                .any(|query| query.executor == index && query.access == ExecutorAccess::Callable)
+        {
+            return None;
+        }
+    }
     helper
         .calls
         .iter()

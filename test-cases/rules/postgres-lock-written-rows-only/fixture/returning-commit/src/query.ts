@@ -32,3 +32,11 @@ export async function unresolvedSqlBoundary(key: string) {
   if (key) { await tx.query(`COMMIT`); return; }
   await tx.query(`DELETE FROM claims WHERE key = $1`, [key]);
 }
+export async function unresolvedOtherLiveTransaction(key: string) {
+  const tx = await beginTransaction();
+  const other = await beginTransaction();
+  const owned = await tx.query(`SELECT 1 FROM claims WHERE key = $1 FOR UPDATE`, [key]);
+  if (owned.rowCount !== 1) { await tx.commit(); return; }
+  await tx.query(`DELETE FROM claims WHERE key = $1`, [key]);
+  await other.commit();
+}

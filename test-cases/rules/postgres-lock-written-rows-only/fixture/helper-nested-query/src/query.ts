@@ -46,3 +46,18 @@ export async function splitTransactions(key: string) {
   await lock(first.query, key);
   await write(second.query, key);
 }
+export async function lockAll(query: TransactionQuery, ignored: unknown) {
+  await query(`SELECT 1 FROM claims FOR UPDATE`);
+}
+export async function close(query: TransactionQuery) {
+  await query(`COMMIT`);
+}
+export async function sideEffectCaller(query: TransactionQuery) {
+  await lockAll(query, close(query));
+  await query(`DELETE FROM claims`);
+}
+export async function sideEffectControl(key: string) {
+  const tx = await beginTransaction();
+  await tx.query(`SELECT 1 FROM claims WHERE key = $1 FOR UPDATE`, [key]);
+  await sideEffectCaller(tx.query);
+}
