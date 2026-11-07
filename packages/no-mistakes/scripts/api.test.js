@@ -1,3 +1,5 @@
+require("./api-tests/declarations-diagnostics");
+require("./api-tests/diagnostics");
 require("./api-tests/proxy");
 require("./api-tests/planning");
 require("./api-tests/exports");
