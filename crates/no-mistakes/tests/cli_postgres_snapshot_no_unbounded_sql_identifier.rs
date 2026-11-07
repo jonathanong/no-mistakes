@@ -360,8 +360,14 @@ fn postgres_identifier_fragments_check_json_snapshot() {
         "fixture",
         "issue-3073-fragments",
     );
-    assert_saved_fixture(
-        "postgres_identifier_fragments",
-        &[("max", root.clone(), root.join(".no-mistakes.yml"))],
-    );
+    for shape in ["text", "joins", "union", "negative"] {
+        assert_saved_fixture(
+            &format!("postgres_identifier_fragments_{shape}"),
+            &[(
+                "max",
+                root.clone(),
+                root.join(format!(".no-mistakes-{shape}.yml")),
+            )],
+        );
+    }
 }

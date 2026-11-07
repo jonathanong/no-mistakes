@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      include: ["src/negative.ts"]
+      effort: max
+      importSpecifier: "@example/db"
+      trustedSqlTags:
+        - module: "@example/sql"
+          name: sql

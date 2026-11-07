@@ -10,7 +10,8 @@ fn prepared_fragment_proofs_distinguish_tags_and_mutations() {
     let root = crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
         .join("issue-3073-fragments");
     for (file_name, expected) in [
-        ("query.ts", vec![("fragment", true), ("oldFragment", true)]),
+        ("text.ts", vec![("fragment", true), ("oldFragment", true)]),
+        ("joins.ts", vec![]),
         ("negative.ts", vec![("fragment", false), ("altered", false)]),
     ] {
         let file = root.join("src").join(file_name);
@@ -64,7 +65,7 @@ fn prepared_fragment_proofs_distinguish_tags_and_mutations() {
                 );
             }
         }
-        if file_name == "query.ts" {
+        if file_name == "joins.ts" {
             assert!(flow
                 .sql_placeholder_lists
                 .iter()
@@ -73,7 +74,7 @@ fn prepared_fragment_proofs_distinguish_tags_and_mutations() {
                 .bounded_bindings
                 .iter()
                 .any(|binding| binding.name == "where"));
-        } else {
+        } else if file_name == "negative.ts" {
             assert!(!flow
                 .sql_placeholder_lists
                 .iter()
