@@ -157,6 +157,11 @@ fn collect_call_edges_for_core(
                 callable_export_resolutions,
             );
         }
+        if plan.value_import_selectors {
+            pass.edges.extend(project_value_import_selectors(
+                edge_inputs, facts, resolver, &indexes, callable_export_resolutions,
+            ));
+        }
     }
     #[cfg(feature = "test-instrumentation")]
     value_flow_metrics::record_parameters(pass.parameter_cache.computations());
@@ -182,3 +187,4 @@ fn collect_call_edges_for_core(
 }
 
 include!("module_catalog.rs");
+include!("value_import_selectors.rs");

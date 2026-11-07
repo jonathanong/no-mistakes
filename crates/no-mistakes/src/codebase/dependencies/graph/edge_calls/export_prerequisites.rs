@@ -14,8 +14,9 @@ impl std::ops::DerefMut for ExportResolutionTrace {
 }
 
 impl ExportResolutionTrace {
-    fn record_source(&mut self, facts: &dyn TsFactLookup, path: &std::path::Path) {
-        if facts.get_ts_facts(path).is_some_and(|facts| facts.parse_error.is_some() || facts.operational_error.is_some()) {
+    fn record_source(&mut self, facts: &dyn TsFactLookup, path: &std::path::Path, values: bool) {
+        if facts.get_ts_facts(path).is_some_and(|facts| facts.parse_error.is_some() || facts.operational_error.is_some()
+            || values && facts.value_flow.incomplete_reason.is_some()) {
             self.failures.insert(path.to_path_buf());
         }
     }

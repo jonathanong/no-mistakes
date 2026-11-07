@@ -14,7 +14,9 @@ fn resolve_exported_callable(
     let cacheable = visited.is_empty();
     if cacheable {
         if let Some(result) = indexes.exports.get(&key) {
-            if let Some(failures) = indexes.export_prerequisites.get(&key) { visited.failures.extend(failures.iter().cloned()); }
+            if let Some(failures) = indexes.export_prerequisites.get(&key) {
+                visited.failures.extend(failures.iter().cloned());
+            }
             return result.clone();
         }
     }
@@ -24,7 +26,7 @@ fn resolve_exported_callable(
         // prove a unique callable provider.
         return ExportedCallableResolution::Absent;
     }
-    visited.record_source(facts, path);
+    visited.record_source(facts, path, edge_inputs.plan.value_import_selectors);
     visited.push(key.clone());
     let Some(file) = indexes.file(facts, path) else {
         if cacheable {
@@ -127,7 +129,10 @@ fn resolve_exported_callable(
                     )
                 })
                 .unwrap_or_else(|| {
-                    if file.values.factory_binding(0, &binding.local) {
+                    if file.values.factory_binding(0, &binding.local)
+                        || edge_inputs.plan.value_import_selectors
+                            && file.values.immutable_binding(0, &binding.local)
+                    {
                         ExportedCallableResolution::Value(path.to_path_buf(), binding.local.clone())
                     } else {
                         ExportedCallableResolution::Unknown
@@ -135,7 +140,14 @@ fn resolve_exported_callable(
                 })
         }
     } else {
-        resolve_star_export(edge_inputs, facts, resolver, (path, export, file.as_ref()), indexes, visited)
+        resolve_star_export(
+            edge_inputs,
+            facts,
+            resolver,
+            (path, export, file.as_ref()),
+            indexes,
+            visited,
+        )
     };
     if cacheable {
         visited.cache_failures(indexes, &key);
