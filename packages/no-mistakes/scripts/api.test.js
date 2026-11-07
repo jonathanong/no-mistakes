@@ -259,3 +259,21 @@ test("Vitest project property policy exports named configuration types", () => {
     ),
   );
 });
+
+
+test("PostgreSQL executor options expose additive selection beside replacement", () => {
+  for (const file of [
+    "postgres-test-state-mutation-types.d.ts",
+    "postgres-bounded-statements-types.d.ts",
+    "postgres-query-annotation-types.d.ts",
+    "executed-postgres-sql-types.d.ts",
+    "postgres-mutable-sql-registry-types.d.ts",
+    "postgres-json-relation-ids-types.d.ts",
+    "postgres-uuid-predicate-types.d.ts",
+    "postgres-unbounded-identifier-types.d.ts",
+  ]) {
+    const declarations = readFileSync(join(packageRoot, file), "utf8");
+    assert.match(declarations, /executorNames\?: string\[\];/);
+    assert.match(declarations, /extraExecutorNames\?: string\[\];/);
+  }
+});

@@ -7,7 +7,10 @@ export interface PostgresNoTestStateMutationOptions {
   /** Explicit helper module globs included alongside test entries. */
   helperRoots?: string[];
   importSpecifier?: string;
+  /** Replaces default executor names; mutually exclusive with extraExecutorNames. */
   executorNames?: string[];
+  /** Extends query/read/write; mutually exclusive with executorNames. */
+  extraExecutorNames?: string[];
   executorFactoryNames?: string[];
   executorTypeNames?: string[];
   trustedSqlTags?: { module: string; name: string }[];

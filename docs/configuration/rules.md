@@ -451,3 +451,35 @@ literal in these sources, including unimported helpers, and permit computed
 expressions without resolving constants. Declared-only policies never report
 dynamic projects as incomplete. Effective policies still report unresolved
 values as incomplete. Config is never executed.
+
+### PostgreSQL executor selection
+
+For every PostgreSQL rule accepting `executorNames`, that option **replaces**
+the default `[query, read, write]` list. For example,
+`executorNames: [readPool, writePool]` excludes `read`, `write`, and `query`.
+Use `extraExecutorNames` to extend the defaults instead:
+
+```yaml
+rules:
+  postgres-require-query-annotation:
+    options:
+      importSpecifier: "@example/db"
+      extraExecutorNames: [readPool, writePool]
+```
+
+This selects `query`, `read`, `write`, `readPool`, and `writePool` from the
+configured module. Setting both `executorNames` and `extraExecutorNames`,
+including empty lists, is a configuration error. Existing explicit
+`executorNames: []` without a module still selects no executor calls.
+
+If an explicit replacement omits a default executor imported from
+`importSpecifier` and called in the files that scope selects, `check` emits a
+configuration warning. It names the rule or project, the omitted executor,
+one example call site, and how to fix the selection. An unused or unimported
+omitted default does not warn. Switch to `extraExecutorNames` to preserve all
+defaults, or include the omitted default in `executorNames`. The warning makes
+otherwise silent gaps visible; it does not widen the configured scan.
+
+The same options and mutual exclusion apply to
+[`projects.<name>.postgres.executors`](projects.md#postgresql-scope). Declare
+selection there when a rule inherits a project PostgreSQL scope.

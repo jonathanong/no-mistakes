@@ -1,5 +1,13 @@
 # `postgres-no-test-state-mutation`
 
+`executorNames` replaces the default `[query, read, write]` list; it does not
+extend it. Use `extraExecutorNames: [readPool, writePool]` to keep the defaults
+and add names. Setting both options is a configuration error. When a replacement
+omits a default name imported from `importSpecifier` and called in scoped files,
+`check` emits a configuration warning naming the rule or project, the omitted
+name, an example call site, and the fix. See
+[executor selection](../configuration/rules.md#postgresql-executor-selection).
+
 ## Why and when
 
 Use this rule when PostgreSQL tests share a database or worker pool. A test that
