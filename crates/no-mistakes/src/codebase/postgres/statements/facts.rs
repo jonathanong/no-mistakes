@@ -16,8 +16,8 @@ use lifecycle::LifecycleBuilder;
 pub use parse::extract_sql_statement_facts;
 pub(crate) use parse::{
     extract_from_parsed_with_recovered_placeholders, extract_sql_conflict_policy_facts,
-    extract_sql_statement_facts_with_bounds, extract_sql_statement_facts_with_json_writes,
-    extract_sql_statement_facts_with_location_demand,
+    extract_sql_lock_scope_facts, extract_sql_statement_facts_with_bounds,
+    extract_sql_statement_facts_with_json_writes, extract_sql_statement_facts_with_location_demand,
     extract_sql_statement_facts_with_recovered_placeholders, extract_sql_variant_statement_facts,
 };
 use policy::table_keyword;
@@ -159,7 +159,7 @@ fn extract_from_parsed_and_sources(
     let (statement_kinds, setting_uses, function_calls) =
         policy::collect(sql, prepared_sql, statements, sources.policy);
     let mut facts = SqlStatementFileFacts {
-        lock_writes: super::lock_writes::collect(statements, placeholder_positions),
+        lock_writes: sources.projection.locks(statements, placeholder_positions),
         statement_kinds,
         setting_uses,
         function_calls,

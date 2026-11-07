@@ -65,6 +65,7 @@ export interface SqlExecutorProfile {
   importSpecifier: string;
   executorNames: string[];
   executorFactoryNames: string[];
+  executorOptionProperties?: string[];
   executorTypeNames: string[];
   trustedSqlTags: { module: string; name: string }[];
   sqlLiteralHelpers?: string[];

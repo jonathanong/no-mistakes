@@ -28,6 +28,7 @@ struct Options {
     exclude_executor_names: Vec<String>,
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
+    executor_option_properties: Vec<String>,
     trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
     unanalyzable_sql: String,
     checks: BTreeMap<String, Mode>,
@@ -90,19 +91,20 @@ fn compile(options: &Options) -> Result<CompiledOptions> {
             crate::codebase::postgres::UnanalyzableSqlMode::Advise => Mode::Advise,
             crate::codebase::postgres::UnanalyzableSqlMode::Ignore => Mode::Ignore,
         };
+    let mut embedded =
+        EmbeddedSqlOptions::configured(&options.import_specifier, &options.executor_names)
+            .with_extra_executor_names(options.extra_executor_names.as_deref())
+            .with_exclude_executor_names(&options.exclude_executor_names)
+            .with_scoped_executors(
+                &options.executor_factory_names,
+                &options.executor_type_names,
+            )
+            .with_executor_option_properties(&options.executor_option_properties)
+            .with_trusted_sql_tags(&options.trusted_sql_tags);
+    embedded.track_transaction_helpers = true;
     Ok(CompiledOptions {
         paths: super::RuleGlobFilter::new(RULE_ID, &options.include, &options.exclude)?,
-        embedded: EmbeddedSqlOptions::configured(
-            &options.import_specifier,
-            &options.executor_names,
-        )
-        .with_extra_executor_names(options.extra_executor_names.as_deref())
-        .with_exclude_executor_names(&options.exclude_executor_names)
-        .with_scoped_executors(
-            &options.executor_factory_names,
-            &options.executor_type_names,
-        )
-        .with_trusted_sql_tags(&options.trusted_sql_tags),
+        embedded,
         incomplete_files: dashmap::DashSet::new(),
         checked_files: dashmap::DashSet::new(),
         allow_audit: None,

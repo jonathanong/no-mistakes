@@ -59,6 +59,6 @@ fn cast_unary_arithmetic_and_qualified_advisory_constants_are_global_locks() {
     );
     assert!(
         !findings.iter().any(|(line, _)| *line == 28),
-        "a function-derived key is outside the phase-one constant proof"
+        "a hash derived from a row key remains compliant"
     );
 }

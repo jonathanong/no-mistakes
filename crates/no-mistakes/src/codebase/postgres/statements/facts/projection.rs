@@ -15,7 +15,7 @@ pub(super) fn extract(
     collect_bounds: bool,
     placeholder_positions: PlaceholderPositions<'_>,
 ) -> SqlStatementFileFacts {
-    if sources.projection == StatementProjection::Complete {
+    if sources.projection != StatementProjection::ConflictPolicy {
         return super::extract_from_parsed_and_sources(
             sql,
             prepared_sql,

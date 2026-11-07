@@ -8,7 +8,12 @@ impl<'a> ScopeVisitor<'a> {
         declaration: &oxc_ast::ast::VariableDeclaration<'a>,
     ) {
         let previous = self.declaring_const;
-        self.declaring_const = declaration.kind == ast::VariableDeclarationKind::Const;
+        self.declaring_const = declaration.kind == ast::VariableDeclarationKind::Const
+            || (self.executor_options.track_transaction_helpers
+                && matches!(
+                    declaration.kind,
+                    ast::VariableDeclarationKind::Using | ast::VariableDeclarationKind::AwaitUsing
+                ));
         for declarator in &declaration.declarations {
             if let Some(init) = &declarator.init {
                 // A mutable alias or mixed const result can expose `.query`.
@@ -27,7 +32,7 @@ impl<'a> ScopeVisitor<'a> {
                     .is_empty()
                         && self.detached_query_receiver(init);
                 if !copied_query
-                    && ((!tracked_alias && declaration.kind != ast::VariableDeclarationKind::Const)
+                    && ((!tracked_alias && !self.declaring_const)
                         || (self.stable_executor_category(init).is_none()
                             && self.relative_executor_proof(init).is_none()
                             && !tracked_alias))

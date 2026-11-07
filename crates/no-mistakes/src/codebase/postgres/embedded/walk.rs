@@ -14,6 +14,7 @@ mod guarded_sql;
 mod head_calls;
 mod iife;
 mod imported;
+pub(crate) mod lock_helpers;
 mod loop_visits;
 mod namespace_imports;
 mod observability;
@@ -35,28 +36,23 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_program(&mut self, program: &ast::Program<'a>) {
         self.walk_program_scope(program);
     }
-
     fn visit_block_statement(&mut self, block: &ast::BlockStatement<'a>) {
         self.walk_block_scope(block);
     }
     fn visit_ts_module_block(&mut self, block: &ast::TSModuleBlock<'a>) {
         self.walk_namespace_scope(block);
     }
-
     fn visit_catch_clause(&mut self, clause: &oxc_ast::ast::CatchClause<'a>) {
         self.walk_catch_clause_scope(clause);
     }
-
     fn visit_function(&mut self, function: &ast::Function<'a>, flags: ScopeFlags) {
         self.walk_function_scope(function, flags);
     }
-
     fn visit_function_body(&mut self, body: &ast::FunctionBody<'a>) {
         resolve::hoist_vars(&body.statements, self);
         resolve::record_statements(&body.statements, self);
         walk::walk_function_body(self, body);
     }
-
     fn visit_class(&mut self, class: &oxc_ast::ast::Class<'a>) {
         self.walk_class_scope(class);
     }
@@ -100,6 +96,10 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_expression_statement(&mut self, statement: &oxc_ast::ast::ExpressionStatement<'a>) {
         self.note_statement_call(statement);
         walk::walk_expression_statement(self, statement);
+    }
+
+    fn visit_await_expression(&mut self, awaited: &ast::AwaitExpression<'a>) {
+        self.walk_lock_helper_await(awaited);
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {

@@ -23,6 +23,7 @@ use std::collections::{HashMap, HashSet};
 #[derive(Default)]
 pub(super) struct ScopeCollector {
     delayed: delayed::Bindings,
+    pub(super) track_resource_transactions: bool,
     factories: HashSet<String>,
     types: HashSet<String>,
     undeclared: HashMap<String, super::super::UndeclaredExecutorType>,
@@ -36,7 +37,6 @@ pub(super) struct ScopeCollector {
     pub(super) found: ScopedExecutors,
     pub(super) spans: Vec<PendingRelativeSpan>,
 }
-
 impl ScopeCollector {
     pub(super) fn needs_walk(&self) -> bool {
         !self.undeclared.is_empty()
@@ -174,7 +174,15 @@ impl<'a> Visit<'a> for ScopeCollector {
                     let hit =
                         owners::factory_hit(&self.factories, &self.provisional_factories, init);
                     let span = Span::new(declarator.id.span().start, end);
-                    if hit.confirmed && declaration.kind == VariableDeclarationKind::Const {
+                    if hit.confirmed
+                        && (declaration.kind == VariableDeclarationKind::Const
+                            || (self.track_resource_transactions
+                                && matches!(
+                                    declaration.kind,
+                                    VariableDeclarationKind::Using
+                                        | VariableDeclarationKind::AwaitUsing
+                                )))
+                    {
                         self.found
                             .transactions
                             .entry(ident.name.to_string())
@@ -188,6 +196,5 @@ impl<'a> Visit<'a> for ScopeCollector {
         walk::walk_variable_declaration(self, declaration);
     }
 }
-
 #[cfg(test)]
 mod delayed_tests;

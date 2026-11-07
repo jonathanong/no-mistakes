@@ -2,6 +2,11 @@ use super::*;
 
 mod binding_control_flow;
 mod executor_selection;
+mod helper_completion;
+mod helper_projection;
+mod helper_shapes;
+mod helpers;
+mod phase_two_sql;
 mod placeholder_provenance;
 mod proof;
 mod sql_forms;
@@ -10,9 +15,11 @@ fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     check_with_files(root, config, &[root.join("src/query.ts")])
 }
 fn fixture(name: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/postgres-lock-written-rows-only/fixture")
-        .join(name)
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/postgres-lock-written-rows-only/fixture")
+            .join(name),
+    )
 }
 fn config() -> NoMistakesConfig {
     let mut config: NoMistakesConfig = serde_yaml::from_str(include_str!(concat!(
