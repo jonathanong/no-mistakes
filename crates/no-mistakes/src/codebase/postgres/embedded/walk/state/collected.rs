@@ -5,6 +5,9 @@ use crate::codebase::postgres::{
 use std::collections::BTreeMap;
 
 pub(crate) struct CollectedCalls {
+    pub(crate) lock_helper_summaries:
+        crate::fx::FxHashMap<String, super::super::lock_helpers::Summary>,
+    pub(crate) imported_lock_helpers: Vec<super::super::lock_helpers::Invocation>,
     pub(crate) undeclared_executor_types: Vec<UndeclaredExecutorType>,
     pub(crate) calls: Vec<EmbeddedSqlCall>,
     pub(crate) call_spans: Vec<(u32, u32)>,

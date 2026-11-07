@@ -14,7 +14,7 @@ mod guarded_sql;
 mod head_calls;
 mod iife;
 mod imported;
-mod lock_helpers;
+pub(crate) mod lock_helpers;
 mod loop_visits;
 mod namespace_imports;
 mod observability;

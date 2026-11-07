@@ -58,6 +58,8 @@ fn embedded(calls: Vec<EmbeddedSqlCall>) -> crate::codebase::postgres::EmbeddedS
     use crate::codebase::postgres::EmbeddedSqlFileFacts;
     let call_spans = vec![(1, 2); calls.len()];
     EmbeddedSqlFileFacts {
+        lock_helper_summaries: Default::default(),
+        imported_lock_helpers: Default::default(),
         path: std::path::PathBuf::from("query.ts"),
         executor_bindings: Vec::new(),
         calls,

@@ -18,6 +18,9 @@ pub struct EmbeddedSqlFragment {
 /// Embedded-SQL facts for one TypeScript/JavaScript file.
 #[derive(Clone, PartialEq, Eq)]
 pub struct EmbeddedSqlFileFacts {
+    pub(crate) lock_helper_summaries:
+        crate::fx::FxHashMap<String, super::walk::lock_helpers::Summary>,
+    pub(crate) imported_lock_helpers: Vec<super::walk::lock_helpers::Invocation>,
     pub path: PathBuf,
     pub executor_bindings: Vec<String>,
     pub calls: Vec<EmbeddedSqlCall>,

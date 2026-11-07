@@ -95,6 +95,8 @@ pub(crate) fn extract_embedded_sql_from_program_with_demand(
     let (matched_factory_names, matched_type_names) =
         scoped_bindings::matched_names(program, options);
     EmbeddedSqlFileFacts {
+        lock_helper_summaries: collected.lock_helper_summaries,
+        imported_lock_helpers: collected.imported_lock_helpers,
         matched_factory_names,
         matched_type_names,
         path: path.to_path_buf(),

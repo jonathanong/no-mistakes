@@ -6,6 +6,8 @@ use std::path::Path;
 
 pub(super) fn empty(path: &Path) -> EmbeddedSqlFileFacts {
     EmbeddedSqlFileFacts {
+        lock_helper_summaries: Default::default(),
+        imported_lock_helpers: Default::default(),
         path: path.to_path_buf(),
         executor_bindings: Vec::new(),
         calls: Vec::new(),

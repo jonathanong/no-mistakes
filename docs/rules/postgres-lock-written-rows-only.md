@@ -3,7 +3,7 @@
 <!-- cspell:ignore xact -->
 
 Opt-in PostgreSQL transaction lock checks. Findings point at the lock statement;
-static same-file helper locks are reported at their caller, with the helper lock line.
+static helper locks are reported at their caller, with the helper lock line.
 There is no autofix because changing a transaction's locking needs application
 review.
 
@@ -64,7 +64,8 @@ and keys with the caller's writes. For example, `lockUser(tx.query, userId)`
 requires an update or delete of that same user in `tx`; an update of a membership
 does not satisfy the lock. Diagnostics name the helper and its lock line.
 Nested helpers, dynamic SQL, and bodies with other control flow retain the
-unanalyzable policy. Imported executor helpers are not summarized.
+unanalyzable policy. Named imported helpers and re-exports use the same summaries through the prepared
+module resolver. Unresolved imports retain the unanalyzable policy.
 
 An advisory key derived from the written row's id also passes the constant-key
 check.
