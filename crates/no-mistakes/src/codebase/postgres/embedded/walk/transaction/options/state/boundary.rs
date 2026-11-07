@@ -15,6 +15,9 @@ pub(in crate::codebase::postgres::embedded::walk::transaction) fn end_alias(
     let Some(captured) = visitor.transaction_options.aliases.get(&identity) else {
         return false;
     };
+    if captured.callable && !matches!(unwrap_ts_wrappers(&call.callee), Expression::Identifier(_)) {
+        return false;
+    }
     let identity = visitor.scopes.iter_mut().rev().find_map(|scope| {
         let binding = scope.get_mut(&captured.name)?;
         (binding.value_identity == Some(captured.identity))

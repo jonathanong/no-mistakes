@@ -10,6 +10,7 @@ use std::{cell::RefCell, num::NonZeroU32};
 #[derive(Clone)]
 struct Captured {
     name: String,
+    callable: bool,
     identity: NonZeroU32,
     owner: Option<u32>,
     transaction_id: u32,
@@ -25,7 +26,7 @@ pub(in crate::codebase::postgres::embedded::walk) struct State {
     objects: FxHashMap<NonZeroU32, Captured>,
     aliases: FxHashMap<NonZeroU32, Captured>,
     reads: RefCell<FxHashSet<u32>>,
-    mutated: FxHashSet<NonZeroU32>,
+    pub(in crate::codebase::postgres::embedded::walk) mutated: FxHashSet<NonZeroU32>,
 }
 
 fn owner(visitor: &ScopeVisitor<'_>) -> Option<u32> {
@@ -69,6 +70,7 @@ fn captured(visitor: &ScopeVisitor<'_>, expression: &Expression<'_>) -> Option<C
     super::super::annotate_receiver(visitor, expression, id.span.start, &mut fact);
     (fact.executor_transaction_known && fact.transaction_id.is_some()).then(|| Captured {
         name: id.name.to_string(),
+        callable: false,
         identity,
         owner: owner(visitor),
         transaction_id: fact.transaction_id.unwrap(),
@@ -162,7 +164,11 @@ impl ScopeVisitor<'_> {
                 self.transaction_options.objects.insert(identity, captured);
             }
         } else if let Some(value) = value_receiver(init) {
-            if let Some(captured) = captured(self, value) {
+            if let Some(mut captured) = captured(self, value) {
+                captured.callable |= matches!(
+                    unwrap_ts_wrappers(init),
+                    Expression::StaticMemberExpression(_)
+                );
                 self.transaction_options.aliases.insert(identity, captured);
             }
         }

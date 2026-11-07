@@ -8,3 +8,8 @@ pub(super) fn may_write_query(key: &Expression<'_>, names: &[String]) -> bool {
         Expression::StringLiteral(literal) if !names.iter().any(|name| name == crate::ast::js_literal(literal).as_ref())
     )
 }
+
+pub(super) fn may_write_boundary(key: &Expression<'_>) -> bool {
+    !matches!(unwrap_ts_wrappers(key), Expression::StringLiteral(literal)
+        if !matches!(crate::ast::js_literal(literal).as_ref(), "commit" | "rollback"))
+}

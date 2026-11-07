@@ -135,3 +135,48 @@ async function switchLabelClose(skip: boolean, action: string, id: string) {
   }
   await query('UPDATE items SET active = true WHERE id = $1', [id], options);
 }
+async function callableMethodClose(skip: boolean, id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const execute = tx.query;
+  const options = { query: execute };
+  execute.commit = async () => {};
+  if (skip) {
+    await execute.commit();
+    return;
+  }
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
+async function overwrittenMethodClose(skip: boolean, id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const options = { query: tx.query };
+  tx.commit = async () => {};
+  if (skip) {
+    await tx.commit();
+    return;
+  }
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
+async function overwrittenComputedClose(skip: boolean, id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const options = { query: tx.query };
+  tx['rollback'] = async () => {};
+  if (skip) {
+    await tx.rollback();
+    return;
+  }
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
+async function unrelatedPropertyClose(skip: boolean, id: string) {
+  const tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const options = { query: tx.query };
+  tx['label'] = 'stable';
+  if (skip) {
+    await tx.commit();
+    return;
+  }
+  await query('UPDATE items SET active = true WHERE id = $1', [id], options);
+}
