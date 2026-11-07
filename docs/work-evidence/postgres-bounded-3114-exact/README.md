@@ -1,9 +1,9 @@
 # Exact bounded key proofs: R1–R4
 
-<!-- cspell:ignore rustc getrusage RUSAGE INSTA Clippy -->
+<!-- cspell:ignore rustc getrusage RUSAGE INSTA Clippy codegen -->
 
-Current-main baseline: `7b2b16b3f7536e2310340935174a483756b8ae19`.
-Measured candidate runtime source: `3a5ea6d32bdd0044bc98b76fae1caab204df9531`.
+Historical dev baseline: `7b2b16b3f7536e2310340935174a483756b8ae19`.
+Historical dev candidate runtime source: `3a5ea6d32bdd0044bc98b76fae1caab204df9531`.
 Toolchain: `rustc 1.99.1 (58cf8f9c3 2026-10-13)`.
 Both builds use locked dependencies, default features and the repository's dev
 profile. Canonical `no-mistakes` hard-link basenames in equal-length A/B directories
@@ -15,6 +15,14 @@ Both executables were verified against cold incremental caches; rebuilding
 the candidate cold produced the same SHA256 as the earlier candidate.
 The final evidence-only commit carries these measurements forward.
 
+The published fix is being validated on `cb840b42074e8df2cc3f53e9c210d550a5b90265`.
+Final optimized user-CPU results and exact artifact provenance are reported in
+the PR body. This file retains the earlier dev diagnostic and its limits.
+The optimized benchmark uses default CLI effort/workers and matched release
+builds with `CARGO_PROFILE_RELEASE_LTO=thin` and
+`CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16`, the same bounded benchmark build
+recipe used by the preceding LIMIT-index investigation.
+
 Main advanced during the task. The branch was rebased, all exact shapes were
 reproduced again on current main, and this matched comparison replaces the
 older-base timing experiments. Those older timings are not used for final
@@ -24,7 +32,7 @@ the retained measurements require distinct binaries and expected outputs.
 ## Reproductions and compatibility
 
 Saved inputs: `test-cases/rules/postgres-bounded-statements/issue-3114-exact/fixture`.
-All four exact classes still fail on current main. Already-passing variants
+All four exact classes fail on this recorded baseline; current-main reproduction is repeated before publication. Already-passing variants
 remain regression coverage and are not claimed as newly fixed.
 
 | Configuration | Main findings | Candidate findings | Retained control |
