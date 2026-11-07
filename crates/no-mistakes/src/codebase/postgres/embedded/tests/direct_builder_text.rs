@@ -3,8 +3,7 @@ use crate::codebase::postgres::embedded::{EmbeddedSqlFileFacts, EmbeddedSqlKind}
 use crate::codebase::postgres::statements::extract_sql_statement_facts_for_embedded_call;
 
 fn extract_view(name: &str) -> EmbeddedSqlFileFacts {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/postgres-no-transformed-uuid-predicates/fixture")
+    let path = crate::test_support::rule_fixture_root("postgres-no-transformed-uuid-predicates")
         .join(name);
     extract_embedded_sql_from_source(
         &path,
