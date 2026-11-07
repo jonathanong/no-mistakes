@@ -47,6 +47,14 @@ child phases to report them. `check.analysis` provides one serial envelope aroun
 the concurrent domain checks, so its process-wide measurements cover the whole
 domain pass.
 
+Repeated resource labels produce one CPU row and one memory row, in order of
+first appearance. Only spans eligible for resource attribution contribute:
+wall, user CPU, and system CPU durations are summed; utilization divides the
+summed CPU time by summed wall time. Peak RSS is the maximum sampled phase-end
+high-water mark, and RSS delta sums each span's nonnegative increase rather
+than subtracting across gaps occupied by other phases. Structured Node
+`phases` records use the same aggregation.
+
 Nested or parallel spans retain their elapsed timings but omit process CPU and
 RSS attribution, since process-wide counters cannot separate overlapping work.
 Unsupported platforms and failed resource samples omit values rather than

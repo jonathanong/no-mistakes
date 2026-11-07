@@ -3,7 +3,7 @@ use std::sync::{mpsc, Arc};
 
 #[test]
 fn resource_format_locks_cpu_util_and_high_water_delta() {
-    let text = format_resources(vec![PhaseResources {
+    let text = format_resources(aggregate(vec![PhaseResources {
         label: "parse".into(),
         wall: Duration::from_millis(10),
         start: Usage {
@@ -16,7 +16,7 @@ fn resource_format_locks_cpu_util_and_high_water_delta() {
             sys: Duration::from_millis(12),
             peak_rss_kib: 600,
         },
-    }]);
+    }]));
     assert_eq!(text, "[cpu] parse: user=20.000ms sys=10.000ms util=3.000x\n[memory] parse: peak_rss_kib=600 delta_kib=200\n");
 }
 
@@ -27,16 +27,17 @@ fn zero_wall_and_decreasing_samples_are_saturating() {
         sys: Duration::from_secs(1),
         peak_rss_kib: 100,
     };
-    let text = format_resources(vec![PhaseResources {
+    let text = format_resources(aggregate(vec![PhaseResources {
         label: "empty".into(),
         wall: Duration::ZERO,
         start,
         end: Usage {
+            user: Duration::ZERO,
+            sys: Duration::ZERO,
             peak_rss_kib: 50,
-            ..start
         },
-    }]);
-    assert!(text.contains("util=0.000x"));
+    }]));
+    assert!(text.contains("user=0.000ms sys=0.000ms util=0.000x"));
     assert!(text.contains("delta_kib=0"));
 }
 
@@ -93,17 +94,17 @@ fn unwind_removes_resource_scope() {
 }
 
 #[test]
-fn resource_history_formatting_does_not_hold_worker_locks() {
+fn resource_history_aggregation_does_not_hold_worker_locks() {
     let observer = InvocationObserver::new(true);
     let (captured, capture) = mpsc::channel();
     let (release, released) = mpsc::channel();
     std::thread::scope(|scope| {
         let worker_observer = Arc::clone(&observer);
         scope.spawn(move || {
-            worker_observer.resource_block_with(|completed| {
+            worker_observer.resource_snapshot_with(|completed| {
                 captured.send(()).unwrap();
                 released.recv().unwrap();
-                format_resources(completed)
+                aggregate(completed)
             })
         });
         capture.recv().unwrap();
@@ -154,4 +155,84 @@ fn phase_wall_interval_includes_both_resource_samples() {
         || (),
     );
     assert_eq!(*samples_at_clock.borrow(), [before, before + 2]);
+}
+
+#[test]
+fn repeated_labels_share_cli_and_structured_totals_in_first_seen_order() {
+    let observer = InvocationObserver::new(true);
+    let completed = vec![
+        resource_phase("discovery.classify", [5, 2, 3], [600, 700]),
+        resource_phase("discovery", [10, 20, 10], [400, 600]),
+        resource_phase("discovery", [30, 3, 7], [700, 750]),
+        resource_phase("discovery.classify", [15, 9, 1], [750, 690]),
+    ];
+    let state = observer.resources.as_ref().unwrap();
+    state.lock().unwrap().completed = completed;
+    let expected = vec![
+        PhaseResourceDiagnostic {
+            label: "discovery.classify".into(),
+            wall_ms: 20.0,
+            user_ms: 11.0,
+            system_ms: 4.0,
+            utilization: 0.75,
+            peak_rss_kib: 700,
+            peak_rss_delta_kib: 100,
+        },
+        PhaseResourceDiagnostic {
+            label: "discovery".into(),
+            wall_ms: 40.0,
+            user_ms: 23.0,
+            system_ms: 17.0,
+            utilization: 1.0,
+            peak_rss_kib: 750,
+            peak_rss_delta_kib: 250,
+        },
+    ];
+    assert_eq!(observer.resource_snapshot(), expected);
+    let json = serde_json::to_value(observer.verbose_snapshot().unwrap()).unwrap();
+    assert_eq!(json["phases"], serde_json::to_value(expected).unwrap());
+    assert_eq!(
+        observer.resource_block(),
+        concat!(
+            "[cpu] discovery.classify: user=11.000ms sys=4.000ms util=0.750x\n",
+            "[memory] discovery.classify: peak_rss_kib=700 delta_kib=100\n",
+            "[cpu] discovery: user=23.000ms sys=17.000ms util=1.000x\n",
+            "[memory] discovery: peak_rss_kib=750 delta_kib=250\n",
+        )
+    );
+}
+
+fn resource_phase(label: &str, [wall, user, sys]: [u64; 3], rss: [u64; 2]) -> PhaseResources {
+    PhaseResources {
+        label: label.into(),
+        wall: Duration::from_millis(wall),
+        start: Usage {
+            user: Duration::from_millis(5),
+            sys: Duration::from_millis(2),
+            peak_rss_kib: rss[0],
+        },
+        end: Usage {
+            user: Duration::from_millis(5 + user),
+            sys: Duration::from_millis(2 + sys),
+            peak_rss_kib: rss[1],
+        },
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn facts_preparation_is_transparent_to_syntax_and_projection_resources() {
+    let observer = InvocationObserver::new(true);
+    let count = usage::tests::sample_count();
+    observer.trace("facts.prepare", TimingKind::Serial, || {
+        for _ in 0..2 {
+            observer.trace("parse", TimingKind::Serial, || ());
+            observer.trace("postgres.annotation.project", TimingKind::Serial, || ());
+        }
+    });
+    assert_eq!(usage::tests::sample_count() - count, 8);
+    let phases = observer.resource_snapshot();
+    assert_eq!(phases.len(), 2);
+    assert_eq!(phases[0].label, "parse");
+    assert_eq!(phases[1].label, "postgres.annotation.project");
 }
