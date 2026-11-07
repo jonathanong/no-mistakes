@@ -166,9 +166,8 @@ fn resource_transactions_preserve_legacy_extraction_without_lock_profile() {
 
 #[test]
 fn const_options_preserve_transaction_membership_without_certifying_controls() {
-    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-        "../../test-cases/rules/postgres-lock-written-rows-only/fixture/const-options/src/query.ts",
-    );
+    let path = crate::test_support::rule_fixture_root("postgres-lock-written-rows-only")
+        .join("const-options/src/query.ts");
     let source = std::fs::read_to_string(&path).unwrap();
     let mut options =
         EmbeddedSqlOptions::configured("@example/db", &["query".into(), "write".into()])

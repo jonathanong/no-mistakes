@@ -10,7 +10,9 @@ pub(super) struct Snapshot {
 }
 impl Snapshot {
     pub(super) fn capture(visitor: &ScopeVisitor<'_>) -> Self {
-        if !visitor.executor_options.track_transaction_helpers {
+        if !visitor.executor_options.track_transaction_helpers
+            || visitor.scoped.transactions.is_empty()
+        {
             return Self {
                 enabled: false,
                 identities: Vec::new(),

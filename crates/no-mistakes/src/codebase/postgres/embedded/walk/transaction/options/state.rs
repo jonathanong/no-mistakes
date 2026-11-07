@@ -1,5 +1,5 @@
 mod boundary;
-pub(super) use boundary::end_alias;
+pub(in crate::codebase::postgres::embedded::walk::transaction) use boundary::end_alias;
 
 use super::{receiver, value_receiver, EmbeddedSqlCall, ScopeVisitor};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
