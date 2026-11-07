@@ -62,7 +62,9 @@ pub(super) fn annotate_receiver(
     position: u32,
     fact: &mut EmbeddedSqlCall,
 ) {
-    if options::annotate_alias(visitor, receiver, fact) {
+    if visitor.executor_options.track_transaction_helpers
+        && options::annotate_alias(visitor, receiver, fact)
+    {
         return;
     }
     if let Expression::Identifier(id) = unwrap_ts_wrappers(receiver) {

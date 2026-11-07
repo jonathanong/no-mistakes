@@ -97,6 +97,9 @@ pub(super) fn option(
     visitor: &ScopeVisitor<'_>,
     id: &IdentifierReference<'_>,
 ) -> Option<EmbeddedSqlCall> {
+    if !visitor.executor_options.track_transaction_helpers {
+        return None;
+    }
     let identity = visitor.lookup(id.name.as_str())?.value_identity?;
     let captured = visitor.transaction_options.objects.get(&identity)?;
     visitor
