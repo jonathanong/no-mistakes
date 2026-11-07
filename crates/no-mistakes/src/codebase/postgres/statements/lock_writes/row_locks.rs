@@ -1,6 +1,6 @@
 use super::{
-    helpers::{access, generated_name, qualifier},
     RowAccess,
+    helpers::{access, generated_name, qualifier},
 };
 use crate::codebase::postgres::idents::{ident_key, object_name_identity, relation_part_key};
 use crate::codebase::postgres::statements::value::PlaceholderPositions;
@@ -132,11 +132,7 @@ pub(super) fn collect_legacy(
                             .is_some_and(|name| name == object_name_identity(target))
                 })
             });
-            if valid {
-                row
-            } else {
-                unresolved()
-            }
+            if valid { row } else { unresolved() }
         }
         _ => unresolved(),
     }

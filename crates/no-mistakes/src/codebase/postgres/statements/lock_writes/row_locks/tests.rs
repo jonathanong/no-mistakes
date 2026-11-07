@@ -2,11 +2,14 @@ use super::*;
 use sqlparser::ast::Statement;
 
 fn explicit_locks(sql: &str) -> Vec<RowAccess> {
-    let mut statements = crate::codebase::postgres::parse::parse_postgres_sql(sql).unwrap();
-    let Statement::Query(query) = statements.remove(0) else {
-        panic!("expected query");
-    };
-    collect_explicit(&query, None)
+    crate::codebase::postgres::parse::parse_postgres_sql(sql)
+        .unwrap()
+        .into_iter()
+        .flat_map(|statement| match statement {
+            Statement::Query(query) => collect_explicit(&query, None),
+            _ => Vec::new(),
+        })
+        .collect()
 }
 
 #[test]
@@ -34,4 +37,16 @@ fn parenthesized_conjuncts_project_keys_to_each_locked_alias() {
     assert_eq!(locks.len(), 2);
     assert_eq!(locks[0].key, Some(("id".into(), "$1".into())));
     assert_eq!(locks[1].key, Some(("notice_id".into(), "$1".into())));
+}
+
+#[test]
+fn saved_projection_sql_keeps_unsupported_shapes_unresolved_and_resolves_names() {
+    let rows = explicit_locks(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-lock-written-rows-only/fixture/four-joined-aliases/lock_projection.sql"
+    )));
+    assert_eq!(rows.len(), 5);
+    assert!(rows[..3].iter().all(|row| row.relation.is_none()));
+    assert_eq!(rows[3].relation.as_deref(), Some("public.notices"));
+    assert_eq!(rows[4].relation.as_deref(), Some("notices"));
 }
