@@ -91,6 +91,8 @@ fn prepared_fixture(name: &str, names: &[&str]) -> FileIdMap<CheckFileFacts> {
 
 #[path = "tests/demand_followups.rs"]
 mod demand_followups;
+#[path = "tests/excluded_roots.rs"]
+mod excluded_roots;
 #[path = "tests/external_roots.rs"]
 mod external_roots;
 #[path = "tests/profile_lifetimes.rs"]
@@ -98,6 +100,8 @@ mod profile_lifetimes;
 #[cfg(feature = "test-instrumentation")]
 #[path = "tests/project_scope.rs"]
 mod project_scope;
+#[path = "tests/scope_work.rs"]
+mod scope_work;
 #[cfg(feature = "test-instrumentation")]
 #[path = "tests/stall_progress.rs"]
 mod stall_progress;

@@ -217,6 +217,7 @@ Detailed observation (`--verbose-timings` or `--progress`) also aggregates
 elapsed time under fixed labels, without file paths or offsets in timing history:
 
 <!-- postgres-annotation-phase-timings:start -->
+
 - `postgres.annotation.root`: one root's evaluator run, including module
   initialization and speculative replay of its entrypoints.
 - `postgres.annotation.module`: initialization on a module-cache miss, including
@@ -243,6 +244,7 @@ elapsed time under fixed labels, without file paths or offsets in timing history
   and builder identities from branch-state roots, including prefix-cache refresh
   and cached direct-edge reads. Covers ordinary, warm-edge and prefix-cached
   collection paths.
+
 <!-- postgres-annotation-phase-timings:end -->
 
 These durations are inclusive: nested modules, arms, and heap walks can appear
@@ -258,6 +260,32 @@ prefix comparisons, visited nodes and container visits. `postgres.annotation.pre
 locally per arm and published on completion or unwinding. `postgres.annotation.prefix_observer_batches`
 counts nonempty publications. Verbose-only observation publishes no shared
 counters per binding or node.
+
+Annotation scope and initialization diagnostics also include:
+
+| Work counter                                  | Meaning                                                                                                        |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `postgres.annotation.roots_before_scoping`    | Roots retained by the former all-executor seed policy.                                                         |
+| `postgres.annotation.roots_after_scoping`     | Roots actually selected by scoped executor seeds.                                                              |
+| `postgres.annotation.excluded_roots_retained` | Selected roots outside the annotation include/exclude scope; these can supply SQL arguments to scoped helpers. |
+| `postgres.annotation.excluded_roots_pruned`   | Former excluded roots removed by scoped seeds; pruned included importers are not counted here.                 |
+| `postgres.annotation.module_initializations`  | Actual initialization starts, including repeated initialization across roots and speculative restores.         |
+
+The before-scoping count uses a second reachability projection over the same
+prepared catalog only with `--verbose-timings`. Its duration is
+`postgres.annotation.prepare.roots_before_scoping`; it can consult additional
+resolver targets, so verbose resolver counters include that diagnostic work.
+Neither ordinary execution nor `--timings` alone performs this comparison.
+No files are read or parsed again. These aggregate counts sum across profiles.
+
+The cross-root scalar cache was removed after a downstream CPU regression.
+`postgres.annotation.shared_init.disabled` counts profiles with that cache
+disabled. Its `cache_hits`, `cache_misses`, and `builds` counters are explicitly
+zero, and `postgres.annotation.shared_init.build` reports zero duration because
+no shared initial state is built. The ordinary per-root module cache remains.
+An excluded test importing a scoped helper can remain a contextual root even
+when no included file imports that test. Equal before/after counts make that
+case visible; lower root counts alone do not establish lower CPU cost.
 
 With both flags, long comparisons also publish at coarse node intervals and emit
 `postgres.annotation.prefix_nodes_current_arm` and `postgres.annotation.prefix_containers_current_arm`
@@ -281,17 +309,17 @@ See the saved [shared-record reproduction](../../fixtures/performance/annotation
   identity (including ambiguous symlink spellings) cannot enter a prepared
   module and are not replaced by a workspace target. The complete module catalog
   remains available to every retained evaluator.
-`postgres.annotation.reachability_walks` counts the
-branch-state liveness traversals. This helps distinguish source extraction
-from helper and callback evaluation. `postgres.annotation.captured_reader_rebuilds`
-counts reverse capture-index reconstruction; unchanged compaction retains the
-existing index. `postgres.annotation.incoming_dense_slots_copied` counts physical slot copies
-needed by dense branch joins. Sharing an unchanged immutable argument vector
-copies zero slots; a write to shared storage copies its prior slots, followed by
-copies of differing incoming candidates. Other candidate-value cloning is not
-included. `postgres.annotation.dense_arena_slots_copied` counts physical dense
-vector copies across all evaluator operations, including those same join
-copies; these counters overlap and must not be added.
+  `postgres.annotation.reachability_walks` counts the
+  branch-state liveness traversals. This helps distinguish source extraction
+  from helper and callback evaluation. `postgres.annotation.captured_reader_rebuilds`
+  counts reverse capture-index reconstruction; unchanged compaction retains the
+  existing index. `postgres.annotation.incoming_dense_slots_copied` counts physical slot copies
+  needed by dense branch joins. Sharing an unchanged immutable argument vector
+  copies zero slots; a write to shared storage copies its prior slots, followed by
+  copies of differing incoming candidates. Other candidate-value cloning is not
+  included. `postgres.annotation.dense_arena_slots_copied` counts physical dense
+  vector copies across all evaluator operations, including those same join
+  copies; these counters overlap and must not be added.
 
 Alternative arms reuse direct references from unchanged prefix scopes and dense
 vectors. `postgres.annotation.prefix_scope_scans` and

@@ -211,7 +211,6 @@ transaction command and an unfinished opening comment do not establish a
 continuation-safe head. This
 annotation-only proof does not recover complete SQL and never runs the evaluator.
 
-
 Maximum effort also recognizes a direct loop-carried literal reassignment in
 `for...of`, `for...in`, `while`, `do...while`, and simple `for` loops: an
 unconditional executor call followed by a missing-annotation literal assignment
@@ -446,6 +445,20 @@ SQL recovered from an imported helper is reported in the helper's module at the 
 Detailed mutation and invocation behavior is described in
 [advanced helper semantics](../postgres-query-annotation/advanced-helper-semantics.md).
 
+At max effort, only executor sites selected by evaluated annotation applications'
+`include` and `exclude` seed annotation demand. Other rules sharing executor
+settings do not widen those seeds. Excluded modules that cannot reach a scoped
+executor are never evaluated as roots. Reverse-reachable callers remain roots
+when needed to preserve SQL arguments flowing into scoped helpers, including
+through cyclic re-exports. Binding-only slicing of those callers is not yet implemented.
+
+Each root retains its own contextual module initialization. A shared scalar
+initialization cache was removed after downstream validation found higher CPU
+cost when excluded callers repeatedly imported large in-scope helpers. Scope
+pruning does not imply that excluded dependencies initialize only once per run.
+No state persists between runs. Use the [annotation diagnostics](../cli/diagnostics.md)
+to compare roots before/after scoping and actual module-cache work.
+
 ## Related rules
 
 [`postgres-no-offset`](postgres-no-offset.md) discourages unstable pagination;
@@ -457,8 +470,8 @@ Set `sqlLiteralHelpers: ['pg-copy-streams#from']` to recognize a direct runtime
 import of that exact module and export at both `effort: low` and `effort: max`:
 
 ```ts
-import { from as copyFrom } from 'pg-copy-streams';
-client.query(copyFrom('/* import users */ COPY users FROM STDIN'));
+import { from as copyFrom } from "pg-copy-streams";
+client.query(copyFrom("/* import users */ COPY users FROM STDIN"));
 ```
 
 Named imports, renamed imports, and direct namespace calls such as

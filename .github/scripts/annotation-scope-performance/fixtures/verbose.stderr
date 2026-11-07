@@ -1,0 +1,7 @@
+[timing] analysis: 1.250ms
+[timing] postgres.annotation.shared_init.build: 0.000ms (parallel; non-additive)
+[work] postgres.annotation.roots_before_scoping: 65
+[work] postgres.annotation.shared_init.cache_hits: 0
+[cpu] analysis: user=0.500ms sys=0.100ms util=0.480x
+[memory] analysis: peak_rss_kib=4096 delta_kib=256
+[hot] postgres.annotation: src/helper.mts 0.250ms units=1 (parallel; non-additive)

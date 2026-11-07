@@ -1,0 +1,49 @@
+{
+  "validSha": "0123456789abcdef0123456789abcdef01234567",
+  "invalidShas": [
+    "main",
+    "--help",
+    "ABCDEF0123456789abcdef0123456789abcdef0123",
+    "0123",
+    "$(echo injected)"
+  ],
+  "rss": [
+    {
+      "system": "Darwin",
+      "raw": 1048576,
+      "kib": 1024
+    },
+    {
+      "system": "Linux",
+      "raw": 1024,
+      "kib": 1024
+    }
+  ],
+  "sameDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "otherDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "report": {
+    "exit": 1,
+    "reportSha256": "1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "differentReport": {
+    "exit": 0,
+    "reportSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+  },
+  "descendantUsage": [
+    {
+      "cpu": 0.2,
+      "rss": 81920,
+      "valid": true
+    },
+    {
+      "cpu": 0.01,
+      "rss": 81920,
+      "valid": false
+    },
+    {
+      "cpu": 0.2,
+      "rss": 1024,
+      "valid": false
+    }
+  ]
+}

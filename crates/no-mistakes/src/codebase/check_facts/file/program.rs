@@ -118,25 +118,7 @@ pub(crate) fn collect_file_facts_from_program(
         .as_ref()
         .map(|_| crate::playwright::selectors::collect_static_export_values(program));
     let playwright = collect_playwright_facts(path, program, source, playwright, &semantic);
-    let query_annotation = if plan.query_annotation {
-        let options = plan.query_annotation_options.clone().unwrap_or_else(|| {
-            embedded_sql
-                .iter()
-                .map(|(options, _)| options.clone())
-                .collect()
-        });
-        options
-            .iter()
-            .map(|options| {
-                (
-                    options.clone(),
-                    crate::codebase::postgres::query_annotation::collect(program, source, options),
-                )
-            })
-            .collect()
-    } else {
-        Vec::new()
-    };
+    let query_annotation = annotation::collect(root, path, source, program, plan, &embedded_sql);
     let query_annotation_heads = (plan.query_annotation_heads
         || !head_candidates.is_empty()
         || loop_heads.is_some())
@@ -194,3 +176,6 @@ mod embedded;
 pub(super) use embedded::prepared_embedded_sql;
 #[path = "program_heads.rs"]
 mod heads;
+
+#[path = "program_annotation.rs"]
+mod annotation;

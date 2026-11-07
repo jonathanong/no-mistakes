@@ -81,3 +81,24 @@ patterns. Unknown and conditional stores keep possible origins. These local
 projections do not infer arbitrary heap transfers through function calls.
 
 [Node/N-API guide](../node-api.md)
+
+## Annotation work counters
+
+Use the existing asynchronous `collectDiagnostics()` wrapper for annotation
+work counters and the shared phase-resource and hot-file report:
+
+```js
+const { result, diagnostics } = await collectDiagnostics("check", { root: "." });
+console.log(diagnostics.work["postgres.annotation.roots_before_scoping"]);
+console.log(diagnostics.work["postgres.annotation.roots_after_scoping"]);
+console.log(diagnostics.phases, diagnostics.hotFiles);
+```
+
+The same wrapper accepts `"analyzeProject"` and returns its normal result plus
+request-scoped diagnostics. Annotation counters include module initializations;
+the removed shared-initialization cache reports zero builds, hits, misses and
+build duration. Verbose observation performs extra diagnostic work, including
+the former root-selection comparison. Measure ordinary performance with
+observation disabled. Plain API calls preserve their existing result shape.
+See the [verbose diagnostics contract](../node-api.md) for
+`VerboseDiagnostics`, phase resources, hot files and error behavior.

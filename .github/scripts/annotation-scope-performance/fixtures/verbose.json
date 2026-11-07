@@ -1,0 +1,10 @@
+{
+  "work": {
+    "postgres.annotation.roots_before_scoping": 65,
+    "postgres.annotation.shared_init.cache_hits": 0
+  },
+  "timingsMs": {
+    "analysis": 1.25,
+    "postgres.annotation.shared_init.build": 0.0
+  }
+}

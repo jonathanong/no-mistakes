@@ -46,12 +46,12 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
             // Legacy statement policies select only SQL files until executors
             // are explicitly configured; do not request an empty TS projection.
             if *rule_id != "postgres-sql-statement-policy" || profile.selects_executors() {
-                if *rule_id == "postgres-require-query-annotation"
-                    && super::annotation_effort::evaluates(config, rule)?
-                {
+                let annotation_seed = *rule_id == "postgres-require-query-annotation"
+                    && super::annotation_effort::evaluates(config, rule)?;
+                if annotation_seed {
                     annotation_profiles.push(profile.clone());
                 }
-                scans::record(&mut grouped, profile, rule_id, &options)?;
+                scans::record(&mut grouped, profile, rule_id, &options, annotation_seed)?;
             }
         }
     }

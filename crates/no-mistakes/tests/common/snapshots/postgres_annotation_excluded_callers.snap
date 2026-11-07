@@ -1,0 +1,47 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "annotation-excluded-callers-large": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/helper.mts",
+          "line": 4,
+          "message": "src/helper.mts:4: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(statement);",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "annotation-excluded-callers-unrelated": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/helper.mts",
+          "line": 4,
+          "message": "src/helper.mts:4: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(statement);",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

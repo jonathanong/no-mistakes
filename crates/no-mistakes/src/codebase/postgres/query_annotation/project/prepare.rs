@@ -40,13 +40,14 @@ pub(super) fn profiles<'a>(
         .collect::<Vec<_>>();
     profiles.sort();
     profiles.dedup();
+    let observer = crate::diagnostics::current();
     let module_ids = Arc::new(super::super::module_ids::ModuleIds::new(
         files
             .into_iter()
             .filter(|(_, file)| file.parse_error.is_none() && !file.query_annotation.is_empty())
             .map(|(path, _)| normalize_path(path)),
     ));
-    if let Some(observer) = crate::diagnostics::current() {
+    if let Some(observer) = &observer {
         observer.increment("postgres.annotation.profiles", profiles.len() as u64);
     }
     let modules = crate::perf_trace::trace("postgres.annotation.prepare.modules", || {
@@ -109,8 +110,9 @@ pub(super) fn profiles<'a>(
             let roots = crate::perf_trace::trace("postgres.annotation.prepare.roots", || {
                 demand::roots(&collected, resolve)
             });
-            if let Some(observer) = crate::diagnostics::current() {
+            if let Some(observer) = &observer {
                 observer.increment("postgres.annotation.roots", roots.len() as u64);
+                super::work::roots(observer, &collected, &roots, resolve);
             }
 
             let roots = roots.into_iter().map(Path::to_path_buf).collect();

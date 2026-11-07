@@ -91,6 +91,7 @@ fn longest(metric: &str) -> Option<usize> {
         "resolver.classification_requests" => 25,
         "resolver.scope_cache_requests" => 30,
         "test_filter.project_filters" => 41,
+        "postgres.annotation.module_initializations" => 50,
         _ => return None,
     })
 }
