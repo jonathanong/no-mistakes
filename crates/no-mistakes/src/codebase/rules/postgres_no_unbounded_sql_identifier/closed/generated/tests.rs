@@ -4,8 +4,7 @@ use crate::codebase::dependencies::graph::GraphBuildPlan;
 use crate::codebase::ts_resolver::{load_tsconfig, normalize_path};
 use crate::codebase::ts_source::facts::{collect_ts_facts, TsFactPlan};
 
-#[test]
-fn prepared_generated_returns_preserve_prefixes_async_results_and_negative_controls() {
+fn prepared() -> (CheckFactMap, DepGraph, PathBuf) {
     let root = normalize_path(
         &crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
             .join("issue-3073-generated"),
@@ -57,6 +56,12 @@ fn prepared_generated_returns_preserve_prefixes_async_results_and_negative_contr
         &facts,
     )
     .unwrap();
+    (facts, graph, root)
+}
+
+#[test]
+fn prepared_generated_returns_preserve_prefixes_async_results_and_negative_controls() {
+    let (facts, graph, root) = prepared();
     let bindings = Bindings::new(&facts);
     for (file, names, expected, count) in [
         ("writer.ts", &["table"][..], true, 2),
@@ -89,5 +94,80 @@ fn prepared_generated_returns_preserve_prefixes_async_results_and_negative_contr
                 binding.declared_at,
             );
         }
+    }
+}
+
+#[test]
+fn generated_return_proof_memoizes_and_declines_missing_or_incomplete_facts() {
+    let (mut facts, graph, root) = prepared();
+    let writer = root.join("src/writer.ts");
+    let producer = root.join("src/temp-names.ts");
+    let call = facts
+        .get_ts_facts(&writer)
+        .unwrap()
+        .value_flow
+        .calls
+        .iter()
+        .find(|call| call.source_callee == "createTempTableName")
+        .unwrap();
+    let span = (call.offset, call.end);
+    {
+        let bindings = Bindings::new(&facts);
+        let mut proof = Proof {
+            graph: &graph,
+            facts: &facts,
+            bindings: &bindings,
+            files: FxHashMap::default(),
+            active: FxHashSet::default(),
+            done: FxHashMap::default(),
+        };
+        assert!(!proof.call(&writer, (0, 0), None, false));
+        for call in &facts.get_ts_facts(&producer).unwrap().value_flow.calls {
+            assert!(!proof.call(&producer, (call.offset, call.end), None, false));
+        }
+        assert!(proof.call(&writer, span, None, false));
+        assert!(proof.call(&writer, span, None, false));
+    }
+    let original = facts.ts.remove(&producer).unwrap();
+    {
+        let bindings = Bindings::new(&facts);
+        let mut proof = Proof {
+            graph: &graph,
+            facts: &facts,
+            bindings: &bindings,
+            files: FxHashMap::default(),
+            active: FxHashSet::default(),
+            done: FxHashMap::default(),
+        };
+        assert!(!proof.call(&writer, span, None, false));
+    }
+    for incomplete in [false, true] {
+        let mut ts = original.ts.as_ref().clone();
+        if incomplete {
+            ts.value_flow.incomplete_reason = Some("incomplete producer facts".into());
+        } else {
+            ts.value_flow.returns.clear();
+        }
+        facts.ts.insert(
+            producer.clone(),
+            CheckFileFacts {
+                ts: Arc::new(ts),
+                ..Default::default()
+            }
+            .into(),
+        );
+        let bindings = Bindings::new(&facts);
+        let mut proof = Proof {
+            graph: &graph,
+            facts: &facts,
+            bindings: &bindings,
+            files: FxHashMap::default(),
+            active: FxHashSet::default(),
+            done: FxHashMap::default(),
+        };
+        assert!(
+            !proof.call(&writer, span, None, false),
+            "incomplete={incomplete}"
+        );
     }
 }

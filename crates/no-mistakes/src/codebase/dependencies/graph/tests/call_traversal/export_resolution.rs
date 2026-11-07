@@ -94,3 +94,20 @@ fn call_export_resolution_deduplicates_external_stars_without_selecting_collisio
         assert!(site.target_node.is_none(), "{callee}: {site:#?}");
     }
 }
+
+#[test]
+fn module_export_selectors_require_exact_cached_targets() {
+    let (root, mut graph) = call_fixture_graph();
+    let source = root.join("src/aliases.mts");
+    let site = graph.call_sites_in_file(&source).iter()
+        .find(|site| site.source_callee == "first").unwrap().clone();
+    let provider = root.join("src/alias-target.mts");
+    let module = "configured-alias";
+    let export = "importedTarget";
+    graph.module_files.entry(module.into()).or_default().insert(provider.clone());
+    graph.callable_export_resolutions.remove(&(provider.clone(), export.into()));
+    assert!(!graph.matches_module_export(module, export, &site));
+    graph.callable_export_resolutions.insert((provider.clone(), export.into()),
+        ExportedCallableResolution::Callable(provider, "differentTarget".into(), None));
+    assert!(!graph.matches_module_export(module, export, &site));
+}

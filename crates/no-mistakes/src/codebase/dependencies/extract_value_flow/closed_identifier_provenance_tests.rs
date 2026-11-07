@@ -103,3 +103,24 @@ fn finite_registries_require_unshadowed_builtin_constructors() {
         );
     }
 }
+
+#[test]
+fn placeholder_lists_decline_non_integer_interpolations() {
+    let flow = parse_flow(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/codebase-analysis/closed-sql-identifier-domains/placeholder-boundary.ts")), true);
+    assert!(flow
+        .sql_placeholder_lists
+        .iter()
+        .any(|(_, name, _)| name == "valid"));
+    assert!(!flow
+        .sql_placeholder_lists
+        .iter()
+        .any(|(_, name, _)| name == "invalid"));
+    assert!(flow
+        .bounded_bindings
+        .iter()
+        .any(|binding| binding.name == "validJoined"));
+    assert!(!flow
+        .bounded_bindings
+        .iter()
+        .any(|binding| binding.name == "invalidJoined"));
+}

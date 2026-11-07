@@ -175,3 +175,7 @@ fn reaches(graph: &DepGraph, file: &Path, producer: &Path) -> bool {
     }
     false
 }
+
+#[cfg(test)]
+#[path = "collection_imports_tests.rs"]
+mod tests;
