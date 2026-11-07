@@ -103,9 +103,6 @@ pub fn with_owned_request_parse_cache<T>(collect: impl FnOnce() -> T) -> T {
     collect()
 }
 
-/// The single production entrypoint for invoking the OXC parser.
-/// Observation here covers successes and failures. Source-only APIs should pass a
-/// stable, extension-bearing relative sentinel path.
 pub(crate) fn parse<'a>(
     path: &Path,
     allocator: &'a Allocator,
@@ -114,10 +111,13 @@ pub(crate) fn parse<'a>(
 ) -> ParserReturn<'a> {
     #[cfg(any(test, feature = "test-instrumentation"))]
     parse_count::record_parse_path(path);
-    #[cfg(not(any(test, feature = "test-instrumentation")))]
-    let _ = path;
     module_names::enforce(
-        Parser::new(allocator, source, source_type).parse(),
+        crate::diagnostics::hot_files::trace(
+            crate::diagnostics::hot_files::FilePass::Parse,
+            path,
+            source.len() as u64,
+            || Parser::new(allocator, source, source_type).parse(),
+        ),
         allocator,
     )
 }

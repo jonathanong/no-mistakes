@@ -73,7 +73,8 @@ fn extract_import_facts_with_rhs_probe(
     collector
         .later_exported_type_names
         .extend(later_named_type_exports(program, &local_type_names));
-    collector.visit_program(program);
+    crate::diagnostics::hot_files::trace_current(crate::diagnostics::hot_files::FilePass::ValueFlowExtract, source.len() as u64, || collector.visit_program(program));
+    crate::diagnostics::hot_files::trace_current(crate::diagnostics::hot_files::FilePass::ValueFlowFinalize, source.len() as u64, || {
     collector.record_finite_identifier_guards(&program.body, u32::MAX);
     collector.finalize_metadata_sources(program);
     collector.materialize_aggregate_aliases();
@@ -81,6 +82,7 @@ fn extract_import_facts_with_rhs_probe(
     collector.finish_forward_receiver_writes();
     collector.finish_foreign_receiver_writes();
     collector.finish_bounded_value_flow();
+    });
 
     let reassigned_callable_ids = collector
         .reassigned_callable_binding_ids
