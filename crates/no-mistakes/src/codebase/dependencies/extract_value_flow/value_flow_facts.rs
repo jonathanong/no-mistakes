@@ -2,6 +2,7 @@
 /// prepared catalog and never reparses a factory or helper body.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ValueFlowFacts {
+    pub(crate) catalogs: literal_catalogs::LiteralCatalogFacts,
     pub(crate) tagged_templates: TaggedTemplates,
     pub(crate) sql_placeholder_lists: Vec<(usize, String, u32)>,
     /// Failed analysis must not supply definitive value-flow or graph answers.
@@ -10,8 +11,7 @@ pub struct ValueFlowFacts {
     pub module_provider_work: [usize; 3],
     /// Prepared nullish expressions can add known plain-name fallback effects.
     pub has_nullish_alternatives: bool,
-    /// Local callable values can escape through containers, returns, or stores.
-    /// Bare call callees are represented by canonical invocation facts instead.
+    /// Callable value escapes; direct calls use canonical invocation facts.
     pub callable_value_uses: Option<std::sync::Arc<FxHashMap<usize, FxHashSet<String>>>>,
     #[cfg(feature = "test-instrumentation")]
     pub replacement_statement_checks: usize,
