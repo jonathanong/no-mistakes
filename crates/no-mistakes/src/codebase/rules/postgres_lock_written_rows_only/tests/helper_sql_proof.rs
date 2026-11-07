@@ -24,6 +24,7 @@ fn helper_sql_requires_untagged_interpolation_free_literals() {
                 line.contains("await interpolatedLock(")
                     || line.contains("await taggedLock(")
                     || line.contains("await literalLock(")
+                    || line.contains("await interpolatedRelationLock(")
             } else {
                 line.contains("await tx.query(`SELECT 1 FROM users")
             };
@@ -52,6 +53,6 @@ fn helper_sql_requires_untagged_interpolation_free_literals() {
                 );
             }
         }
-        assert_eq!(checked, 9);
+        assert_eq!(checked, 10);
     }
 }

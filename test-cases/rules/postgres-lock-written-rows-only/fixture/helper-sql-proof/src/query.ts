@@ -73,3 +73,11 @@ export async function callerliteralLock() {
   await literalLock(tx.query);
   await tx.query("UPDATE users SET value = 1 WHERE id = $1", [42]);
 }
+async function interpolatedRelationLock(q: TransactionQuery, first: string, second: string, id: number) {
+  await q(`SELECT 1 FROM ${first} WHERE id = $1 FOR UPDATE`, [id]);
+  await q(`UPDATE ${second} SET value = 1 WHERE id = $1`, [id]);
+}
+export async function callerinterpolatedRelationLock(id: number) {
+  const tx = await beginTransaction();
+  await interpolatedRelationLock(tx.query, "users", "memberships", id);
+}

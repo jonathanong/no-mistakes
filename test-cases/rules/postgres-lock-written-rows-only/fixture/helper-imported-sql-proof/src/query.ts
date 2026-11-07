@@ -1,5 +1,5 @@
 import { beginTransaction } from "@example/db";
-import { interpolatedWrite, interpolatedLock, taggedWrite, taggedInterpolatedWrite, taggedLock, stringWrite, templateWrite, mixedWrite, literalLock } from "./helper";
+import { interpolatedWrite, interpolatedLock, taggedWrite, taggedInterpolatedWrite, taggedLock, stringWrite, templateWrite, mixedWrite, literalLock, interpolatedRelationLock } from "./helper";
 export async function callerinterpolatedWrite(id: number, otherId: number) {
   const tx = await beginTransaction();
   await tx.query(`SELECT 1 FROM users WHERE id = $1 FOR UPDATE`, [id]);
@@ -44,4 +44,8 @@ export async function callerliteralLock() {
   const tx = await beginTransaction();
   await literalLock(tx.query);
   await tx.query("UPDATE users SET value = 1 WHERE id = $1", [42]);
+}
+export async function callerinterpolatedRelationLock(id: number) {
+  const tx = await beginTransaction();
+  await interpolatedRelationLock(tx.query, "users", "memberships", id);
 }

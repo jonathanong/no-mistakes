@@ -28,3 +28,7 @@ export async function mixedWrite(q: TransactionQuery, id: number) {
 export async function literalLock(q: TransactionQuery) {
   await q("SELECT 1 FROM users WHERE id = $1 FOR UPDATE", [42]);
 }
+export async function interpolatedRelationLock(q: TransactionQuery, first: string, second: string, id: number) {
+  await q(`SELECT 1 FROM ${first} WHERE id = $1 FOR UPDATE`, [id]);
+  await q(`UPDATE ${second} SET value = 1 WHERE id = $1`, [id]);
+}
