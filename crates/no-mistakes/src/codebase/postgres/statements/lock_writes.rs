@@ -6,9 +6,7 @@ mod scope;
 use super::value::PlaceholderPositions;
 pub(crate) use advisory::AdvisoryKey;
 use helpers::{access, generated_name};
-use sqlparser::ast::{
-    BinaryOperator, Expr, Query, SetExpr, Statement, TableFactor, Visit, Visitor,
-};
+use sqlparser::ast::{BinaryOperator, Expr, Query, Statement, TableFactor, Visit, Visitor};
 use std::{collections::BTreeSet, ops::ControlFlow};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
