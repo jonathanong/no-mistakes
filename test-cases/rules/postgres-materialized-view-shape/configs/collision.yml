@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-materialized-view-shape
+    scope: repository
+    include: [schema.json]
+    options:
+      schemaCatalogPath: schema.json
+      allowBaseTables:
+        - { table: public.events, reason: bounded-domain }

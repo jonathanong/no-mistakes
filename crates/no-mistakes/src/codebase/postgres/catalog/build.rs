@@ -31,6 +31,7 @@ pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCata
         scalar_function_names: Default::default(),
         enums: enums(snapshot.enums),
         views: views(snapshot.views),
+        view_queries: Default::default(),
         view_fallback: Default::default(),
         column_lines: BTreeMap::new(),
     })
@@ -78,6 +79,7 @@ fn views(views: BTreeMap<String, super::snapshot::SnapshotView>) -> BTreeMap<Str
             (
                 normalize_table_name(&name),
                 CatalogView {
+                    indexes: objects::indexes(&view.indexes),
                     name,
                     materialized: view.materialized,
                     definition: view.definition,
@@ -99,7 +101,7 @@ fn model_table(path: &str, name: &str, table: &SnapshotTable) -> Result<CatalogT
         foreign_keys: objects::foreign_keys(table),
         check_constraints: objects::checks(table),
         unique_constraints: objects::uniques(table),
-        indexes: objects::indexes(table),
+        indexes: objects::indexes(&table.indexes),
         triggers: objects::triggers(path, name, table)?,
         partition_key: objects::partition_key(path, name, table)?,
     })

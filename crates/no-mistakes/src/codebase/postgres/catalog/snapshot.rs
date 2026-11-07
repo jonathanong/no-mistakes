@@ -152,6 +152,7 @@ pub(super) struct SnapshotEnum {
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub(super) struct SnapshotView {
+    pub(super) indexes: BTreeMap<String, SnapshotIndex>,
     pub(super) materialized: bool,
     pub(super) definition: String,
     pub(super) comment: Option<String>,

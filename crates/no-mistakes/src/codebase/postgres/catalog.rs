@@ -35,6 +35,7 @@ mod table_scope;
 #[cfg(test)]
 mod tests;
 mod trigger;
+mod view_query;
 mod view_relation;
 
 use arbiter::ArbiterTable;
@@ -59,6 +60,9 @@ pub(crate) use paths::normalize_catalog_path;
 pub(crate) use search_path::SearchPathResolution;
 use snapshot::Snapshot;
 
+type ViewQueryResult =
+    std::result::Result<std::sync::Arc<sqlparser::ast::Query>, super::PostgresParseError>;
+
 #[derive(Debug, Clone, Default)]
 pub struct SchemaCatalog {
     coverage: CatalogCoverage,
@@ -72,6 +76,7 @@ pub struct SchemaCatalog {
     scalar_function_names: std::sync::OnceLock<std::sync::Arc<BTreeSet<Vec<String>>>>,
     enums: BTreeMap<String, CatalogEnum>,
     views: BTreeMap<String, CatalogView>,
+    view_queries: std::sync::OnceLock<dashmap::DashMap<String, ViewQueryResult>>,
     view_fallback: std::sync::OnceLock<fallback::RelationFallback>,
     column_lines: BTreeMap<(String, String), usize>,
 }

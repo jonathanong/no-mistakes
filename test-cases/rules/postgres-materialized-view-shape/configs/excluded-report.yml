@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - rule: postgres-materialized-view-shape
+    scope: repository
+    include: [advised.json]
+    message: Review the advised view
+    options:
+      schemaCatalogPath: advised.json
+      mode: advise
+  - rule: postgres-materialized-view-shape
+    scope: repository
+    include: [missing.json]
+    options:
+      schemaCatalogPath: reported.json
+      mode: report

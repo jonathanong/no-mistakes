@@ -6,19 +6,14 @@ use crate::codebase::postgres::idents::{
 use crate::codebase::postgres::SchemaCatalog;
 use sqlparser::ast::{
     Expr, GroupByExpr, ObjectName, ObjectNamePart, Select, SelectItem,
-    SelectItemQualifiedWildcardKind, SetExpr, Statement, TableAlias, TableFactor,
-    WildcardAdditionalOptions,
+    SelectItemQualifiedWildcardKind, SetExpr, TableAlias, TableFactor, WildcardAdditionalOptions,
 };
 
 pub(in crate::codebase::rules::postgres_bounded_statements) fn visible_key(
     catalog: &SchemaCatalog,
     name: &str,
 ) -> Option<Vec<String>> {
-    let view = catalog.view_relation(name)?;
-    let statements = crate::codebase::postgres::parse_postgres_sql(&view.definition).ok()?;
-    let [Statement::Query(query)] = statements.as_slice() else {
-        return None;
-    };
+    let query = catalog.view_query(name).ok()?;
     if query.with.is_some()
         || query.limit_clause.is_some()
         || query.fetch.is_some()

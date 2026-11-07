@@ -1,0 +1,116 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "events": {
+      "columns": {
+        "id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "created_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "payload": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "score": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 4
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "primary": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "time": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        },
+        "score": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "score",
+              "expression": "score"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "views": {
+    "good_advised": {
+      "materialized": true,
+      "definition": "SELECT * FROM events WHERE id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_advised": {
+      "materialized": true,
+      "definition": "SELECT * FROM events",
+      "indexes": {}
+    }
+  }
+}

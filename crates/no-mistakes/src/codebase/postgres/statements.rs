@@ -75,3 +75,6 @@ mod line_tests;
 mod tests;
 #[cfg(test)]
 mod value_ast_tests;
+
+mod view_bounds;
+pub(crate) use view_bounds::{bounded_view_selects, BOUNDED_VIEW_MARKER};

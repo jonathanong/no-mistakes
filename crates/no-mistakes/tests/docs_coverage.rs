@@ -235,3 +235,11 @@ fn vitest_project_policy_is_in_the_public_rule_inventory() {
     assert!(rule_ids_from_source(&repo_root()).contains(rule));
     assert!(repo_root().join(format!("docs/rules/{rule}.md")).is_file());
 }
+
+#[test]
+fn postgres_materialized_view_shape_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::POSTGRES_MATERIALIZED_VIEW_SHAPE;
+    assert_eq!(rule, "postgres-materialized-view-shape");
+    assert!(rule_ids_from_source(&repo_root()).contains(rule));
+    assert!(repo_root().join(format!("docs/rules/{rule}.md")).is_file());
+}

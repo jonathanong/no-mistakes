@@ -1,22 +1,22 @@
+use super::super::predicates::Projection;
 use super::super::SqlSelectFact;
+use super::projection::Policy;
 use super::{from, nested, shapes, stars, uses};
 use sqlparser::ast::{OrderByExpr, Query, Select, SetExpr, Statement};
 
-type PlaceholderPositions<'a> = super::super::value::PlaceholderPositions<'a>;
-
-struct Collector<'sql, 'positions, 'out> {
+struct Collector<'sql, 'positions, 'out, P> {
     sql: &'sql str,
-    positions: PlaceholderPositions<'positions>,
+    policy: Policy<'positions, P>,
     out: &'out mut Vec<SqlSelectFact>,
 }
 
-pub(in crate::codebase::postgres::statements) fn collect_query_at(
+pub(in crate::codebase::postgres::statements) fn collect_query_projected(
     sql: &str,
     query: &Query,
     outer_ctes: &[String],
     in_insert_select: bool,
     in_exists: bool,
-    positions: super::super::value::PlaceholderPositions<'_>,
+    policy: Policy<'_, impl Projection>,
     out: &mut Vec<SqlSelectFact>,
 ) {
     let mut ctes = outer_ctes.to_vec();
@@ -29,15 +29,7 @@ pub(in crate::codebase::postgres::statements) fn collect_query_at(
             );
         }
         for cte in &with.cte_tables {
-            collect_query_at(
-                sql,
-                &cte.query,
-                &ctes,
-                in_insert_select,
-                false,
-                positions,
-                out,
-            );
+            collect_query_projected(sql, &cte.query, &ctes, in_insert_select, false, policy, out);
             if !with.recursive {
                 ctes.push(crate::codebase::postgres::idents::ident_key(
                     &cte.alias.name,
@@ -45,14 +37,15 @@ pub(in crate::codebase::postgres::statements) fn collect_query_at(
             }
         }
     }
-    nested::collect_query_expressions_at(sql, query, &ctes, in_insert_select, positions, out);
+    nested::collect_query_expressions_at(sql, query, &ctes, in_insert_select, policy, out);
     let order = query_order(query);
-    Collector {
-        sql,
-        positions,
-        out,
-    }
-    .collect_set(&query.body, &ctes, in_insert_select, in_exists, order);
+    Collector { sql, policy, out }.collect_set(
+        &query.body,
+        &ctes,
+        in_insert_select,
+        in_exists,
+        order,
+    );
 }
 
 fn query_order(query: &Query) -> &[sqlparser::ast::OrderByExpr] {
@@ -62,7 +55,7 @@ fn query_order(query: &Query) -> &[sqlparser::ast::OrderByExpr] {
     }
 }
 
-impl Collector<'_, '_, '_> {
+impl<P: Projection> Collector<'_, '_, '_, P> {
     fn collect_set(
         &mut self,
         expr: &SetExpr,
@@ -75,40 +68,41 @@ impl Collector<'_, '_, '_> {
             SetExpr::Select(select) => {
                 self.push_select(select, ctes, in_insert_select, in_exists, order)
             }
-            SetExpr::Query(query) => collect_query_at(
+            SetExpr::Query(query) => collect_query_projected(
                 self.sql,
                 query,
                 ctes,
                 in_insert_select,
                 in_exists,
-                self.positions,
+                self.policy,
                 self.out,
             ),
             SetExpr::SetOperation { left, right, .. } => {
                 self.collect_set(left, ctes, in_insert_select, in_exists, &[]);
                 self.collect_set(right, ctes, in_insert_select, in_exists, &[]);
             }
+            SetExpr::Table(_) => self.policy.projection.table_arm(),
             SetExpr::Values(values) => {
                 for expr in values.rows.iter().flat_map(|row| row.iter()) {
-                    nested::walk_expr_at(
+                    nested::walk_expr_projected(
                         self.sql,
                         expr,
                         ctes,
                         in_insert_select,
-                        self.positions,
+                        self.policy,
                         self.out,
                     );
                 }
             }
             SetExpr::Insert(Statement::Insert(insert)) => {
                 if let Some(source) = insert.source.as_deref() {
-                    collect_query_at(
+                    collect_query_projected(
                         self.sql,
                         source,
                         ctes,
                         true,
                         false,
-                        self.positions,
+                        self.policy,
                         self.out,
                     );
                 }
@@ -126,19 +120,25 @@ impl Collector<'_, '_, '_> {
         order: &[OrderByExpr],
     ) {
         let sql = self.sql;
-        let positions = self.positions;
+        let policy = self.policy;
         let out = &mut self.out;
         let tables = from::table_names(&select.from, ctes);
         let mut exists_set_operations = Vec::new();
         super::super::exists::collect_from_select_at(
             sql,
             select,
-            positions,
+            policy.positions,
             &mut exists_set_operations,
         );
-        from::collect_derived_queries(sql, &select.from, ctes, in_insert_select, positions, out);
-        nested::collect_at(sql, select, ctes, in_insert_select, positions, out);
-        let relations = super::super::predicates::select_relations(sql, select, ctes, positions);
+        from::collect_derived_queries(sql, &select.from, ctes, in_insert_select, policy, out);
+        nested::collect_at(sql, select, ctes, in_insert_select, policy, out);
+        let relations = super::super::predicates::select_relations_projected(
+            sql,
+            select,
+            ctes,
+            policy.positions,
+            policy.projection,
+        );
         let shapes = shapes::collect(select);
         let line = super::line::select_line(select, &tables);
         let star_projections = if in_exists {
@@ -146,7 +146,7 @@ impl Collector<'_, '_, '_> {
         } else {
             stars::collect(select, ctes, line)
         };
-        let column_uses = uses::collect(select, order, ctes, line, positions);
+        let column_uses = uses::collect(select, order, ctes, line, policy.positions);
         if tables.is_empty()
             && exists_set_operations.is_empty()
             && relations.is_empty()

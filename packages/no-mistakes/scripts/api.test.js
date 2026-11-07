@@ -308,3 +308,30 @@ test("column CHECK options export named predicates, requirements and exceptions"
     ),
   );
 });
+
+test("materialized-view shape options export their named allowance contracts", () => {
+  const types = readFileSync(
+    join(packageRoot, "postgres-materialized-view-shape-types.d.ts"),
+    "utf8",
+  );
+  assert.match(types, /export interface PostgresMaterializedViewShapeOptions/);
+  assert.match(types, /export type PostgresMaterializedViewShapeMode = "advise" \| "report";/);
+  assert.match(types, /mode\?: PostgresMaterializedViewShapeMode;/);
+  assert.match(types, /schemaCatalogPath: string;/);
+  assert.match(types, /minAdditionalIndexes\?: number;/);
+  assert.match(types, /windowFunctions\?: string\[\];/);
+  assert.match(types, /export interface PostgresMaterializedViewBaseTableAllowance/);
+  assert.match(types, /allowBaseTables\?: PostgresMaterializedViewBaseTableAllowance\[\];/);
+  assert.match(types, /export interface PostgresMaterializedViewShapeAllowEntry/);
+  assert.match(types, /allow\?: PostgresMaterializedViewShapeAllowEntry\[\];/);
+  const exports = readFileSync(join(packageRoot, "types.d.ts"), "utf8");
+  assert.ok(exports.includes('export type * from "./postgres-materialized-view-shape-types";'));
+});
+
+test("catalog views expose indexes with the same named contract as tables", () => {
+  const types = readFileSync(join(packageRoot, "postgres-catalog-types.d.ts"), "utf8");
+  assert.match(
+    types,
+    /export interface PostgresCatalogView \{[^}]*indexes: Record<string, PostgresCatalogIndex>;/,
+  );
+});

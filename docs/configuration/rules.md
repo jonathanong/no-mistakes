@@ -134,6 +134,15 @@ key array can then bound the statement without a unique constraint. This does
 not exempt other predicates or SQL-derived unbounded key sets. See
 [per-column bounds](../rules/postgres-bounded-statements.md#per-column-bounds).
 
+[`postgres-materialized-view-shape`](../rules/postgres-materialized-view-shape.md)
+is an opt-in advisory catalog rule (`mode: advise`, the default); set
+`options.mode: report` to opt into failing findings. It requires `schemaCatalogPath`, a
+concurrent-refresh unique index, and `minAdditionalIndexes` other indexes
+(default `1`). `windowFunctions` defaults to `[]`; `allowBaseTables` defaults
+to `[]` and accepts `{table, reason}` entries for bounded-size tables. Every
+other base table needs an indexed range or configured key-window predicate
+in the view definition.
+
 [`postgres-json-relation-ids`](../rules/postgres-json-relation-ids.md) is an
 opt-in advisory. It has no naming conventions enabled by default. Set
 `idKeyPattern` to inspect JSON identifier keys; set `fingerprintNamePattern`

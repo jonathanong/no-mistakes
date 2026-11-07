@@ -24,6 +24,7 @@ fn missing_facts_use_the_file_checkers() {
     for rule_id in [
         POSTGRES_COLUMN_CHECK_CONSTRAINTS,
         POSTGRES_JSON_RELATION_IDS,
+        POSTGRES_MATERIALIZED_VIEW_SHAPE,
         POSTGRES_CONSTRAINT_VALIDATE,
         POSTGRES_NO_ADD_COLUMN,
         POSTGRES_FK_INDEX,
@@ -63,6 +64,7 @@ fn prepared_facts_use_the_fact_checkers() {
     for rule_id in [
         POSTGRES_COLUMN_CHECK_CONSTRAINTS,
         POSTGRES_JSON_RELATION_IDS,
+        POSTGRES_MATERIALIZED_VIEW_SHAPE,
         POSTGRES_CONSTRAINT_VALIDATE,
         POSTGRES_NO_ADD_COLUMN,
         POSTGRES_FK_INDEX,

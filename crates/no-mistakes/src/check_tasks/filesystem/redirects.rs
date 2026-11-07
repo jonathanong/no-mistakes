@@ -149,6 +149,10 @@ pub(super) fn run(
         super::manifests::run(root, config, files, &prepared.sources, defer_suppression)?;
     diagnostics.append(manifest_diagnostics);
     let config = config.as_ref();
+    let (config, materialized_diagnostics) =
+        super::materialized_views::run(root, config, files, &prepared, facts, defer_suppression)?;
+    diagnostics.append(materialized_diagnostics);
+    let config = config.as_ref();
     let findings = if defer_suppression {
         rules::run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
             root, config, files, prepared, facts,

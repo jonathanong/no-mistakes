@@ -99,3 +99,20 @@ pub(super) fn lock_ordering(
         None => postgres_lock_ordering::check_with_files_and_sources(root, config, files, sources),
     }
 }
+
+pub(super) fn materialized_view_shape(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &Arc<SourceStore>,
+    facts: Option<&CheckFactMap>,
+) -> Result<Vec<RuleFinding>> {
+    match facts {
+        Some(facts) => postgres_materialized_view_shape::check_with_files_sources_and_facts(
+            root, config, files, sources, facts,
+        ),
+        None => postgres_materialized_view_shape::check_with_files_and_sources(
+            root, config, files, sources,
+        ),
+    }
+}

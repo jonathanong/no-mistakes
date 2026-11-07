@@ -23,20 +23,22 @@ struct Cols {
     pending: BTreeSet<String>,
 }
 
-struct Ctx<'a> {
+struct Ctx<'a, P> {
     instances: &'a [Instance<'a>],
     index: usize,
     from_items: usize,
     all_base: bool,
     positions: Option<&'a [(u32, u32)]>,
+    projection: &'a P,
 }
 
-pub(super) fn constrain(
+pub(super) fn constrain_projected(
     instances: &[Instance<'_>],
     selection: Option<&Expr>,
     from_items: usize,
     all_base: bool,
     positions: super::super::value::PlaceholderPositions<'_>,
+    projection: &impl super::Projection,
 ) -> Vec<(Vec<String>, Vec<String>)> {
     instances
         .iter()
@@ -48,6 +50,7 @@ pub(super) fn constrain(
                 from_items,
                 all_base,
                 positions,
+                projection,
             };
             let mut cols = Cols::default();
             if instance.joined {
@@ -69,8 +72,8 @@ pub(super) fn constrain(
         .collect()
 }
 
-fn columns_from_expr(expr: &Expr, ctx: &Ctx<'_>) -> Cols {
-    match unwrap_expr(expr) {
+fn columns_from_expr(predicate: &Expr, ctx: &Ctx<'_, impl super::Projection>) -> Cols {
+    match unwrap_expr(predicate) {
         Expr::BinaryOp { left, op, right } => match op {
             BinaryOperator::And => {
                 sets::union(columns_from_expr(left, ctx), columns_from_expr(right, ctx))
@@ -82,7 +85,7 @@ fn columns_from_expr(expr: &Expr, ctx: &Ctx<'_>) -> Cols {
             | BinaryOperator::Gt
             | BinaryOperator::Lt
             | BinaryOperator::GtEq
-            | BinaryOperator::LtEq => compare(left, right, ctx),
+            | BinaryOperator::LtEq => compare(predicate, left, right, ctx),
             _ => Cols::default(),
         },
         Expr::Between {
@@ -91,102 +94,43 @@ fn columns_from_expr(expr: &Expr, ctx: &Ctx<'_>) -> Cols {
             low,
             high,
         } if !refs::references(low, ctx) && !refs::references(high, ctx) => {
-            from_hit(column_hit(expr, ctx))
+            from_hit(predicate, None, column_hit(expr, ctx), ctx)
         }
         Expr::InList {
             expr,
             negated: false,
             list,
         } if !list.iter().any(|item| refs::references(item, ctx)) => {
-            from_hit(column_hit(expr, ctx))
+            from_hit(predicate, None, column_hit(expr, ctx), ctx)
         }
         Expr::InSubquery {
             expr,
             negated: false,
             ..
-        } => from_hit(column_hit(expr, ctx)),
+        } => from_hit(predicate, None, column_hit(expr, ctx), ctx),
         Expr::AnyOp {
             left,
             compare_op: BinaryOperator::Eq,
             right,
             ..
-        } if !refs::references(right, ctx) => from_hit(column_hit(left, ctx)),
+        } if !refs::references(right, ctx) => {
+            from_hit(predicate, Some(right), column_hit(left, ctx), ctx)
+        }
         _ => Cols::default(),
     }
 }
 
-fn compare(left: &Expr, right: &Expr, ctx: &Ctx<'_>) -> Cols {
+fn compare(
+    predicate: &Expr,
+    left: &Expr,
+    right: &Expr,
+    ctx: &Ctx<'_, impl super::Projection>,
+) -> Cols {
     let mut cols = Cols::default();
-    absorb(&mut cols, left, right, ctx);
-    absorb(&mut cols, right, left, ctx);
+    absorb(&mut cols, predicate, left, right, ctx);
+    absorb(&mut cols, predicate, right, left, ctx);
     cols
 }
 
-fn absorb(cols: &mut Cols, column: &Expr, other: &Expr, ctx: &Ctx<'_>) {
-    if refs::references(other, ctx) {
-        return;
-    }
-    match column_hit(column, ctx) {
-        Some(name) if name.proven => {
-            cols.pending.remove(&name.column);
-            cols.proven.insert(name.column);
-        }
-        Some(name) if !cols.proven.contains(&name.column) => {
-            cols.pending.insert(name.column);
-        }
-        _ => {}
-    }
-}
-
-struct Hit {
-    column: String,
-    proven: bool,
-}
-
-fn column_hit(expr: &Expr, ctx: &Ctx<'_>) -> Option<Hit> {
-    match unwrap_expr(expr) {
-        Expr::Identifier(ident)
-            if ctx.positions.is_some_and(|positions| {
-                super::super::value::is_placeholder_ident_at(ident, Some(positions))
-            }) =>
-        {
-            None
-        }
-        Expr::Identifier(ident) => {
-            let column = crate::codebase::postgres::idents::ident_key(ident);
-            if ctx.from_items <= 1 {
-                Some(Hit {
-                    column,
-                    proven: true,
-                })
-            } else if ctx.all_base {
-                Some(Hit {
-                    column,
-                    proven: false,
-                })
-            } else {
-                None
-            }
-        }
-        Expr::CompoundIdentifier(parts) => {
-            let (qualifier, column) = refs::qualifier_and_column(parts)?;
-            refs::qualifier_matches(&qualifier, ctx).then_some(Hit {
-                column,
-                proven: true,
-            })
-        }
-        _ => None,
-    }
-}
-
-fn from_hit(hit: Option<Hit>) -> Cols {
-    let mut cols = Cols::default();
-    if let Some(hit) = hit {
-        if hit.proven {
-            cols.proven.insert(hit.column);
-        } else {
-            cols.pending.insert(hit.column);
-        }
-    }
-    cols
-}
+mod hits;
+use hits::{absorb, column_hit, from_hit};
