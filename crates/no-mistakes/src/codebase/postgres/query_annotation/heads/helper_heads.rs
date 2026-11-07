@@ -130,7 +130,9 @@ pub(super) fn summary_proof(
         }
     }
     if let Head::Reference(reference) = summary.head {
-        return bindings.returned_local_prefix(syntax, reference);
+        return bindings
+            .returned_local_prefix(syntax, reference)
+            .or_else(|| bindings.plain_text_prefix(syntax, reference));
     }
     Some(match summary.head {
         Head::AppendPrefixTag => HeadProof::Literal,

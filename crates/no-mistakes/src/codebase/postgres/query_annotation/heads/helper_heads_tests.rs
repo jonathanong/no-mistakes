@@ -56,3 +56,14 @@ fn one_hop_const_helper_export_aliases_keep_the_same_head_as_direct_exports() {
         );
     }
 }
+
+#[test]
+fn same_function_primitive_return_locals_keep_static_heads() {
+    let (source, _, heads) = fixture("../helper-local-text/src/query.mts");
+    assert_eq!(assert_markers(&source, &heads), 7);
+    let missing = source.find("read(missing())").unwrap() as u32;
+    assert!(heads
+        .calls
+        .iter()
+        .any(|(span, proof)| span.0 == missing && *proof == super::super::HeadProof::Missing));
+}

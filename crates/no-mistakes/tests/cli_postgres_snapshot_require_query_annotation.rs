@@ -226,3 +226,15 @@ fn postgres_annotation_timings_check_json_snapshot() {
         &[("max_effort", root.clone(), root.join(".no-mistakes.yml"))],
     );
 }
+
+#[test]
+fn postgres_helper_local_text_check_json_snapshot() {
+    assert_saved_fixture(
+        "postgres_helper_local_text",
+        &[case(
+            "low_report",
+            "helper-local-text",
+            "helper-arrow-heads-report.yml",
+        )],
+    );
+}
