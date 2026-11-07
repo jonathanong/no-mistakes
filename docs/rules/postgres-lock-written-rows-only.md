@@ -81,6 +81,8 @@ dynamic values at the caller and pass plain helper parameters; calls, assignment
 and property reads inside bindings could hide transaction side effects.
 Executor shapes must match: `q(sql)` accepts `tx.query`, while `q.query(sql)`
 accepts `tx`. A mismatch makes the entire helper call unanalyzable.
+Use captured query functions directly in executor options; `.query` extraction
+requires a transaction object alias.
 
 Unsupported local and imported helpers receiving a configured transaction
 executor retain the unanalyzable policy, including dynamic SQL, optional calls,
@@ -242,6 +244,13 @@ locked row is written while the transaction remains open. A branch that awaits a
 and returns ends that transaction path; a matching write on the remaining
 fall-through path can still satisfy the lock. An uncommitted return, a boundary that is not awaited, a commit on a continuing
 path, or an explicit SQL transaction boundary remains unresolved.
+Early exits require a non-optional awaited close proved in the same function for the original
+transaction binding. Every path through the returning arm must close it, including
+both arms of a nested `if`.
+Closes inside loops, logical or conditional expressions, switch cases, or
+`try`/`catch`/`finally` remain unresolved. Rewrite them as explicit awaited closes
+in ordinary blocks or fully covered `if` branches. Reassignment and overwritten
+boundary methods do not establish closure.
 Recovery is conservative when another live transaction remains open on the
 returning path: later writes retain the unresolved policy. Keep matching writes
 on every continuing transaction path, or remove the lock.

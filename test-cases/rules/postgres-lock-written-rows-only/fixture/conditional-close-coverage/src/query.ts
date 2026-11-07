@@ -33,7 +33,7 @@ async function reassignedThenReturn(skip: boolean, id: string) {
   await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
   const options = { query: tx.query };
   if (skip) {
-    tx = null;
+    tx = null; // Unsupported rebinding must not prove closure; see docs/rules/postgres-lock-written-rows-only.md.
     return;
   }
   await query('UPDATE items SET active = true WHERE id = $1', [id], options);

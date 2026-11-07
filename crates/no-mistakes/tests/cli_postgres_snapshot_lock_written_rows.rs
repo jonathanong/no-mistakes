@@ -380,3 +380,15 @@ fn postgres_lock_written_rows_helper_summary_boundaries_check_json_snapshot() {
         )],
     );
 }
+
+#[test]
+fn postgres_lock_written_rows_conditional_close_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_conditional_close",
+        &[(
+            "definite_closure",
+            "conditional-close-coverage",
+            "conditional-close-coverage.yml",
+        )],
+    );
+}
