@@ -16,4 +16,13 @@ fn returning_commit_preserves_fallthrough_transaction_and_helper_effects() {
             .any(|finding| finding.line == 38 && finding.target.as_deref() == Some("unanalyzable")),
         "{findings:?}"
     );
+    for line in [45, 55] {
+        assert!(
+            findings
+                .iter()
+                .any(|finding| finding.line == line
+                    && finding.target.as_deref() == Some("unanalyzable")),
+            "{findings:?}"
+        );
+    }
 }

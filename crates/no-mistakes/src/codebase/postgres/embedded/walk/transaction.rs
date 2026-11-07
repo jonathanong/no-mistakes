@@ -129,6 +129,17 @@ pub(super) fn end_boundary(
     call: &CallExpression<'_>,
     before: usize,
 ) {
+    if visitor.executor_options.track_transaction_helpers {
+        let owner = visitor
+            .member_query_proof
+            .function_ids
+            .last()
+            .copied()
+            .unwrap_or(0);
+        if visitor.exited_functions.contains(&owner) {
+            return;
+        }
+    }
     let (receiver, method_end) = match unwrap_ts_wrappers(&call.callee) {
         Expression::StaticMemberExpression(member) => (
             &member.object,

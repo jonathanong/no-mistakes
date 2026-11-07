@@ -40,3 +40,23 @@ export async function unresolvedOtherLiveTransaction(key: string) {
   await tx.query(`DELETE FROM claims WHERE key = $1`, [key]);
   await other.commit();
 }
+export async function unresolvedNestedReturn(key: string, flag: boolean, other: boolean) {
+  const tx = await beginTransaction();
+  await tx.query(`SELECT 1 FROM claims WHERE key = $1 FOR UPDATE`, [key]);
+  if (flag) {
+    if (other) { return; }
+    await tx.commit();
+    return;
+  }
+  await tx.query(`DELETE FROM claims WHERE key = $1`, [key]);
+}
+export async function unresolvedDeadCommit(key: string, flag: boolean) {
+  const tx = await beginTransaction();
+  await tx.query(`SELECT 1 FROM claims WHERE key = $1 FOR UPDATE`, [key]);
+  if (flag) {
+    throw new Error('stop');
+    await tx.commit();
+    return;
+  }
+  await tx.query(`DELETE FROM claims WHERE key = $1`, [key]);
+}
