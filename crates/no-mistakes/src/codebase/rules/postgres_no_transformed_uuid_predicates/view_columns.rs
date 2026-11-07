@@ -6,7 +6,7 @@ use sqlparser::ast::{
     Expr, SelectItem, SelectItemQualifiedWildcardKind, SetExpr, Statement, TableFactor,
     WildcardAdditionalOptions,
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) fn mapped(
     catalog: &SchemaCatalog,
@@ -54,16 +54,11 @@ pub(super) fn mapped(
         .as_ref()
         .map(|alias| relation_part_key(&ident_key(&alias.name)));
     let mut mapped = BTreeMap::new();
-    let mut outputs = std::collections::BTreeSet::new();
+    let mut outputs = BTreeSet::new();
     for item in &select.projection {
         match item {
             SelectItem::Wildcard(options) if plain_star(options) => {
-                for (column, uuid) in columns {
-                    if !outputs.insert(column.clone()) {
-                        return None;
-                    }
-                    mapped.insert(column.clone(), *uuid);
-                }
+                append_star(&mut mapped, &mut outputs, columns)?;
                 continue;
             }
             SelectItem::QualifiedWildcard(
@@ -78,12 +73,7 @@ pub(super) fn mapped(
                 if !valid {
                     return None;
                 }
-                for (column, uuid) in columns {
-                    if !outputs.insert(column.clone()) {
-                        return None;
-                    }
-                    mapped.insert(column.clone(), *uuid);
-                }
+                append_star(&mut mapped, &mut outputs, columns)?;
                 continue;
             }
             _ => {}
@@ -136,4 +126,18 @@ fn plain_star(options: &WildcardAdditionalOptions) -> bool {
         && options.opt_replace.is_none()
         && options.opt_rename.is_none()
         && options.opt_alias.is_none()
+}
+
+fn append_star(
+    mapped: &mut BTreeMap<String, bool>,
+    outputs: &mut BTreeSet<String>,
+    columns: &BTreeMap<String, bool>,
+) -> Option<()> {
+    for (column, uuid) in columns {
+        if !outputs.insert(column.clone()) {
+            return None;
+        }
+        mapped.insert(column.clone(), *uuid);
+    }
+    Some(())
 }
