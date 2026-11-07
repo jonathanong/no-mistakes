@@ -1,7 +1,7 @@
 use super::super::value::PlaceholderPositions;
 use super::Scope;
 use crate::codebase::postgres::idents::{ident_key, object_name_ident, object_name_key};
-use sqlparser::ast::{Expr, FunctionArg, FunctionArgExpr, Query, SetExpr, TableFactor};
+use sqlparser::ast::{Expr, FunctionArg, FunctionArgExpr, Query, SetExpr, TableFactor, Value};
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Default)]
@@ -16,12 +16,13 @@ impl Relations {
             TableFactor::UNNEST {
                 alias, array_exprs, ..
             } => {
+                let caller_arrays = array_exprs.iter().all(|expr| caller_input(expr, positions));
                 let columns = alias.as_ref().map_or_else(BTreeSet::new, |alias| {
                     alias
                         .columns
                         .iter()
                         .zip(array_exprs)
-                        .filter(|(_, expr)| caller_input(expr, positions))
+                        .filter(|_| caller_arrays)
                         .map(|(column, _)| ident_key(&column.name))
                         .collect()
                 });
@@ -32,18 +33,20 @@ impl Relations {
             } => {
                 let builtin = name.0.len() == 1
                     && object_name_ident(name).is_some_and(|id| ident_key(id) == "unnest");
+                let caller_arrays = builtin
+                    && args.iter().all(|arg| match arg {
+                        FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => {
+                            caller_input(expr, positions)
+                        }
+                        _ => false,
+                    });
                 let columns = alias.as_ref().map_or_else(BTreeSet::new, |alias| {
                     alias
                         .columns
                         .iter()
-                        .zip(args)
-                        .filter_map(|(column, arg)| {
-                            let FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) = arg else {
-                                return None;
-                            };
-                            (builtin && caller_input(expr, positions))
-                                .then(|| ident_key(&column.name))
-                        })
+                        .take(args.len())
+                        .filter(|_| caller_arrays)
+                        .map(|column| ident_key(&column.name))
                         .collect()
                 });
                 (alias, Some(object_name_key(name)), columns)
@@ -115,8 +118,12 @@ fn shadow(visible: &mut Relations, factor: &TableFactor, positions: PlaceholderP
 }
 
 fn caller_input(expr: &Expr, positions: PlaceholderPositions<'_>) -> bool {
-    matches!(
-        super::functions::unnest_kind_at(std::slice::from_ref(expr), positions),
-        super::super::SqlBoundItemKind::Other
-    )
+    match expr {
+        Expr::Cast { expr, .. } | Expr::Nested(expr) => caller_input(expr, positions),
+        Expr::Value(value) => matches!(value.value, Value::Placeholder(_)),
+        Expr::Identifier(ident) => {
+            positions.is_some() && super::super::value::is_placeholder_ident_at(ident, positions)
+        }
+        _ => false,
+    }
 }

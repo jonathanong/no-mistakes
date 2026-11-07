@@ -11,7 +11,8 @@ fn lateral_limits_follow_caller_array_columns_and_relation_scope() {
     let statements = parse_postgres_sql(sql).unwrap();
     let expected = [
         true, false, true, true, true, true, false, false, false, false, false, false, false, true,
-        false, false, false, false, false, false, true, false, false, false, false,
+        false, false, false, false, false, false, true, false, false, false, false, false, false,
+        true, false, false,
     ];
     assert_eq!(statements.len(), expected.len());
     for (index, (statement, expected)) in statements.iter().zip(expected).enumerate() {

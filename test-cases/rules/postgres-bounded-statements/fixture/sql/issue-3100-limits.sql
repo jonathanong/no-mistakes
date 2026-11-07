@@ -23,3 +23,8 @@ SELECT x.id FROM unnest($1::int[]) f(row_limit), limits l CROSS JOIN LATERAL (SE
 SELECT x.id FROM limits f CROSS JOIN LATERAL (SELECT id FROM probe LIMIT f.row_limit) x;
 SELECT x.id FROM unnest($1::int[]) f(row_limit) CROSS JOIN LATERAL (SELECT id FROM probe LIMIT coalesce(f.row_limit, probe.id)) x;
 SELECT id FROM probe f LIMIT f.row_limit;
+SELECT x.id FROM unnest(ARRAY[NULL]::int[]) f(row_limit) CROSS JOIN LATERAL (SELECT id FROM probe LIMIT f.row_limit) x;
+SELECT x.id FROM unnest(ARRAY[1, NULL]::int[]) f(row_limit) CROSS JOIN LATERAL (SELECT id FROM probe LIMIT f.row_limit) x;
+SELECT x.id FROM unnest((($1)::int[])::int[]) f(row_limit) CROSS JOIN LATERAL (SELECT id FROM probe LIMIT f.row_limit) x;
+SELECT x.id FROM unnest(sql_placeholder_0::int[]) f(row_limit) CROSS JOIN LATERAL (SELECT id FROM probe LIMIT f.row_limit) x;
+SELECT x.id FROM limits l, unnest(l.ids, $1::int[]) f(id, row_limit) CROSS JOIN LATERAL (SELECT id FROM probe LIMIT f.row_limit) x;

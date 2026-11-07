@@ -200,3 +200,16 @@ export async function statementTextAndValues(parentIds: string[], rowLimits: num
   const { rows } = await read(`${statement.text}`, statement.values);
   return rows;
 }
+
+export async function literalNullFrontier() {
+  const { rows } = await read(sql`/* literalNullFrontier */
+    SELECT p.id
+    FROM unnest(ARRAY[NULL]::int[]) AS frontier(row_limit)
+    CROSS JOIN LATERAL (
+      SELECT child.id
+      FROM posts child
+      LIMIT frontier.row_limit
+    ) p
+  `);
+  return rows;
+}

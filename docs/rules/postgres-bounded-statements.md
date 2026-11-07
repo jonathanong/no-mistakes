@@ -259,8 +259,9 @@ CROSS JOIN LATERAL (
 ```
 
 The parameter arrays bound the outer relation, and each supplied limit bounds
-its corresponding subquery. A limit taken from a table column, including a
-table column passed to `unnest`, does not establish this bound.
+its corresponding subquery. Every `unnest` argument must be a parameter array.
+Literal arrays, mixed table/parameter inputs, and limits taken from table
+columns do not establish this bound.
 
 ## Counterexample
 
