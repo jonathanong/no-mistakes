@@ -43,7 +43,13 @@ fn shared_unknown_calls_preserve_intrinsic_trust_without_adding_builder_invalida
 
 #[test]
 fn contextual_closures_are_rejected_before_standalone_evaluation() {
-    let mut files = prepared_fixture("helper-tracing-shared-initials", &["returned-closure"]);
+    for name in ["returned-closure", "method-call", "branch"] {
+        contextual_module(name);
+    }
+}
+
+fn contextual_module(name: &str) {
+    let mut files = prepared_fixture("helper-tracing-shared-initials", &[name]);
     for (_, file) in &mut files {
         file.query_annotation.truncate(1);
         file.embedded_sql.truncate(1);
@@ -65,6 +71,53 @@ fn contextual_closures_are_rejected_before_standalone_evaluation() {
     let work = observer.snapshot().work;
     assert_eq!(work["postgres.annotation.module"], 2);
     assert!(!work.contains_key("postgres.annotation.shared_module_initializations"));
+}
+
+#[test]
+fn shared_template_and_sequence_scopes_isolate_writes_and_remap_leaf_closures() {
+    let mut files = prepared_fixture("helper-tracing-shared-initials", &["operators"]);
+    for (_, file) in &mut files {
+        file.query_annotation.truncate(1);
+        file.embedded_sql.truncate(1);
+        file.query_annotation[0].1.in_scope = Some(false);
+    }
+    let resolve = |_: &str, _: &std::path::Path| None;
+    let mut profiles = super::super::prepare::profiles(&files, &resolve);
+    let profile = profiles.pop().unwrap();
+    let path = profile.files.keys().next().unwrap();
+    let initials = SharedInitials::new();
+    let mut first = super::super::evaluator::new(&profile.files, &resolve, false);
+    first.modules.share_initials(Arc::clone(&initials));
+    let environment = first.module_environment(path);
+    assert_eq!(environment, 0);
+    assert!(
+        matches!(first.scopes[environment].get("prefix"), Some(query_annotation::evaluate::Value::Prefix(text, true, None)) if text == "/* operators */ SELECT 1")
+    );
+    first.scopes[environment].insert(
+        "prefix".into(),
+        query_annotation::evaluate::Value::Prefix("/* changed */ SELECT 2".into(), true, None),
+    );
+    assert_eq!(first.module_environment(path), environment);
+    for preexisting in [false, true] {
+        let mut next = super::super::evaluator::new(&profile.files, &resolve, false);
+        if preexisting {
+            next.environment(crate::fx::FxHashMap::from_iter([(
+                "prefix".into(),
+                query_annotation::evaluate::Value::Unknown,
+            )]));
+        }
+        next.modules.share_initials(Arc::clone(&initials));
+        let module = next.module_environment(path);
+        let Some(query_annotation::evaluate::Value::Function(_, _, captured)) =
+            next.scopes[module].get("queryText")
+        else {
+            panic!("saved arrow must retain its module closure");
+        };
+        assert_eq!(*captured, module);
+        assert!(
+            matches!(next.scopes[*captured].get("prefix"), Some(query_annotation::evaluate::Value::Prefix(text, true, None)) if text == "/* operators */ SELECT 1")
+        );
+    }
 }
 
 #[test]
