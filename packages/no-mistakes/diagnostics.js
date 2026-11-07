@@ -49,7 +49,7 @@ async function callJson(fn, options) {
     context.diagnostics = response.diagnostics;
     return response.result;
   } catch (error) {
-    throw diagnosticsError(error);
+    throw context ? diagnosticsError(error) : decorateInvocationError(error);
   }
 }
 
