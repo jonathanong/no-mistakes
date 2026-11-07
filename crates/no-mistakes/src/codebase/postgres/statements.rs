@@ -14,6 +14,7 @@ mod insert_source;
 mod json_writes;
 mod limit;
 mod lines;
+pub(crate) mod lock_writes;
 mod mutations;
 mod not_exists;
 mod predicates;

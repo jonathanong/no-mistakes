@@ -2,7 +2,7 @@ use super::super::ScopeVisitor;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression};
 
-type Effect = (String, Option<u32>, Option<usize>);
+type Effect = (String, Option<std::num::NonZeroU32>, Option<usize>);
 
 impl ScopeVisitor<'_> {
     pub(in crate::codebase::postgres::embedded::walk) fn append_alias_effect(

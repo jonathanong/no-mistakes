@@ -1129,3 +1129,10 @@ propagation or incomplete reports for dynamic projects. Unreadable or malformed
 selected sources produce incomplete evidence. Application include/exclude filters
 and source suppressions apply to declaration diagnostics. Config is never executed
 and the rule does not discover repository files.
+
+Opt-in [`postgres-lock-written-rows-only`](rules/postgres-lock-written-rows-only.md)
+checks configured TypeScript/JavaScript PostgreSQL executors for unwritten-row,
+table, constant advisory, and autocommit row locks. CLI `check` and async Node
+`check()` share the same configuration, findings, advisories, and suppressions.
+Phase 1 uses transaction-local SQL proofs and explicit helper write sets;
+cross-transaction order and schema-dependent advisory checks remain outside scope.

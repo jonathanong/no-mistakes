@@ -21,6 +21,7 @@ fn legacy_executor_call(
             declaration_line: None,
             sql_source_positions: Vec::new(),
             recovered_placeholder_positions: Vec::new(),
+            ..Default::default()
         };
     };
     match unwrap_ts_wrappers(argument) {
@@ -57,6 +58,7 @@ fn legacy_executor_call(
                     .unwrap_or_default(),
                 recovered_placeholder_positions,
                 declaration_line: binding.map(|binding| binding.line),
+                ..Default::default()
             }
         }
         _ => {
@@ -107,6 +109,7 @@ fn legacy_executor_call(
                 declaration_line: None,
                 sql_source_positions,
                 recovered_placeholder_positions,
+                ..Default::default()
             }
         }
     }
@@ -183,5 +186,6 @@ pub(in crate::codebase::postgres::embedded::walk) fn executor_call_from_binding(
         declaration_line: Some(binding.line),
         sql_source_positions: binding.sql_source_positions.clone(),
         recovered_placeholder_positions,
+        ..Default::default()
     }
 }

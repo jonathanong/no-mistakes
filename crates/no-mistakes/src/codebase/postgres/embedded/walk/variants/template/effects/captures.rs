@@ -4,7 +4,7 @@ use oxc_ast::ast::Expression;
 
 #[derive(Default)]
 pub(super) struct CapturedBuilders {
-    targets: Vec<(String, Option<u32>)>,
+    targets: Vec<(String, Option<std::num::NonZeroU32>)>,
 }
 
 impl CapturedBuilders {

@@ -89,6 +89,14 @@ fn run_schema_rules(
         POSTGRES_REDUNDANT_INDEX => {
             prepared_schema::redundant_index(root, config, files, sources, facts)
         }
+        POSTGRES_LOCK_WRITTEN_ROWS_ONLY => match facts {
+            Some(facts) => postgres_lock_written_rows_only::check_with_files_sources_and_facts(
+                root, config, files, sources, facts,
+            ),
+            None => postgres_lock_written_rows_only::check_with_files_and_sources(
+                root, config, files, sources,
+            ),
+        },
         POSTGRES_LOCK_ORDERING => lock_ordering(root, config, files, sources, facts),
         POSTGRES_IDENTIFIER_LENGTH => {
             prepared_schema::identifier_length(root, config, files, sources, facts)

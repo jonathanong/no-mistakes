@@ -4,6 +4,17 @@ use oxc_ast_visit::{walk, Visit};
 use std::collections::HashMap;
 
 impl ScopeVisitor<'_> {
+    pub(super) fn invalidate_exited_execution(&mut self) {
+        let owner = self
+            .member_query_proof
+            .function_ids
+            .last()
+            .copied()
+            .unwrap_or(0);
+        self.exited_functions.insert(owner);
+        self.invalidate_execution_variants();
+    }
+
     pub(super) fn invalidate_execution_variants(&mut self) {
         let owner = self.function_scopes.last().copied().unwrap_or(0);
         for scope in &mut self.scopes[owner..] {
@@ -80,5 +91,5 @@ pub(super) fn returned<'a>(visitor: &mut ScopeVisitor<'a>, statement: &ReturnSta
     if suppress {
         visitor.suppress_nested_builder_fragments -= 1;
     }
-    visitor.invalidate_execution_variants();
+    visitor.invalidate_exited_execution();
 }

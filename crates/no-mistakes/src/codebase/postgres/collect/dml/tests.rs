@@ -34,6 +34,7 @@ fn embedded_line_shift_covers_returning_stars_and_triggers() {
             declaration_line: None,
             sql_source_positions: Vec::new(),
             recovered_placeholder_positions: Vec::new(),
+            ..Default::default()
         },
         false,
     );
@@ -73,6 +74,7 @@ fn bound_relations_rebase_by_their_sql_column() {
         declaration_line: None,
         sql_source_positions: vec![position(1, 10), position(15, 20), position(25, 30)],
         recovered_placeholder_positions: Vec::new(),
+        ..Default::default()
     };
     rebase_embedded_lines(&mut facts, &call, false);
     let bound = &facts.bounds[0];
@@ -100,6 +102,7 @@ fn conditional_lifecycle_bounds_follow_embedded_source_lines() {
             declaration_line: None,
             sql_source_positions: Vec::new(),
             recovered_placeholder_positions: Vec::new(),
+            ..Default::default()
         },
         false,
     );

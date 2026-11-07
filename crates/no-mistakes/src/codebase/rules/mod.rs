@@ -82,6 +82,7 @@ pub mod postgres_identifier_length;
 pub mod postgres_json_relation_ids;
 pub mod postgres_key_column_types;
 pub mod postgres_lock_ordering;
+pub mod postgres_lock_written_rows_only;
 pub mod postgres_no_add_column;
 pub mod postgres_no_generated_column_writes;
 pub mod postgres_no_mutable_sql_registry;

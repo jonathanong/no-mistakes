@@ -1,0 +1,229 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "all_ignored_dynamic": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "checks_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: row-lock-unwritten-relation: locked row in parents is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT id FROM parents WHERE id = $1 FOR UPDATE`, [parentId]);",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "checks_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ignored_allow_is_stale": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "<repo>/test-cases/rules/postgres-lock-written-rows-only/configs/ignored-allow.yml",
+          "import": "postgres-lock-written-rows-only",
+          "line": 13,
+          "message": "stale postgres-lock-written-rows-only allow entry `allow[1]` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- relation: items",
+          "target": "allow[1]"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: postgres-lock-written-rows-only application #0 reports an advisory violation for row-lock-unwritten-relation: locked row in parents is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT id FROM parents WHERE id = $1 FOR UPDATE`, [parentId]);",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ignored_outside": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ignored_rows": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ignored_written": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "key_allow": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 10,
+          "message": "src/query.ts:10: postgres-lock-written-rows-only application #0 reports an advisory violation for constant-advisory-lock: constant advisory key serializes unrelated writes; use a key derived from the written row",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT pg_advisory_xact_lock($1)`, [globalKey]);",
+          "target": "constant-advisory-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: postgres-lock-written-rows-only application #0 reports an advisory violation for constant-advisory-lock: constant advisory key serializes unrelated writes; use a key derived from the written row",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT pg_advisory_lock(1, 2)`);",
+          "target": "constant-advisory-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 6,
+          "message": "src/query.ts:6: postgres-lock-written-rows-only application #0 reports an advisory violation for constant-advisory-lock: constant advisory key serializes unrelated writes; use a key derived from the written row",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT pg_try_advisory_xact_lock_shared(7)`);",
+          "target": "constant-advisory-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 7,
+          "message": "src/query.ts:7: postgres-lock-written-rows-only application #0 reports an advisory violation for constant-advisory-lock: constant advisory key serializes unrelated writes; use a key derived from the written row",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT pg_try_advisory_lock(3, 4)`);",
+          "target": "constant-advisory-lock"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "relation_allow": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "<repo>/test-cases/rules/postgres-lock-written-rows-only/configs/allow.yml",
+          "import": "postgres-lock-written-rows-only",
+          "line": 13,
+          "message": "stale postgres-lock-written-rows-only allow entry `allow[2]` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- relation: unused_relation",
+          "target": "allow[2]"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "row_key_allow": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "site_allow": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "write_sets": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "<repo>/test-cases/rules/postgres-lock-written-rows-only/configs/write-sets.yml",
+          "import": "postgres-lock-written-rows-only",
+          "line": 15,
+          "message": "stale postgres-lock-written-rows-only writeSets entry `src/query.ts:99` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- file: src/query.ts",
+          "target": "src/query.ts:99"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

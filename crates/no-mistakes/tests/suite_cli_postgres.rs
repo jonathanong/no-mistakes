@@ -260,3 +260,6 @@ mod cli_postgres_snapshot_root_proofs;
 mod cli_postgres_executor_names;
 #[path = "cli_postgres_snapshot_fixedpoint.rs"]
 mod cli_postgres_snapshot_fixedpoint;
+
+#[path = "cli_postgres_snapshot_lock_written_rows.rs"]
+mod cli_postgres_snapshot_lock_written_rows;

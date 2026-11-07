@@ -8,6 +8,11 @@ pub use variants::{EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS};
 pub struct EmbeddedSqlCall {
     /// Concrete alternatives for a recoverable Dynamic call; empty for legacy calls.
     pub variants: Vec<EmbeddedSqlVariant>,
+    pub transaction_id: Option<u32>,
+    pub transaction_line: Option<u32>,
+    pub executor_transaction_known: bool,
+    pub execution_unconditional: bool,
+    pub bound_parameters: Vec<Option<String>>,
     pub line: u32,
     pub callee: String,
     pub sql_text: Option<String>,

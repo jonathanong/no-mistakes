@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - rule: postgres-lock-written-rows-only
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [TransactionQuery]
+      unanalyzableSql: fail
+      trustedSqlTags: [{module: "@example/sql", name: sql}]
+      checks:
+        row-lock-unwritten-relation: fail
+        table-lock: fail
+        constant-advisory-lock: fail
+        row-lock-outside-transaction: fail

@@ -188,3 +188,6 @@ mod undeclared_tests;
 mod detached_tests;
 #[cfg(test)]
 mod executor_obligations_tests;
+
+#[cfg(test)]
+mod transaction_tests;

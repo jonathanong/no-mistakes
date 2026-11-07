@@ -7,7 +7,7 @@ impl ScopeVisitor<'_> {
     pub(in crate::codebase::postgres::embedded::walk) fn call_builder_effect(
         &self,
         call: &CallExpression<'_>,
-    ) -> (Vec<(String, Option<u32>)>, Option<bool>) {
+    ) -> (Vec<(String, Option<std::num::NonZeroU32>)>, Option<bool>) {
         let helper = match unwrap_ts_wrappers(&call.callee) {
             Expression::Identifier(name) if !self.shadowed_locally(name.name.as_str()) => {
                 self.functions.parameter_builder(name.name.as_str())
@@ -35,7 +35,7 @@ impl ScopeVisitor<'_> {
         &self,
         call: &CallExpression<'_>,
         parameter_index: usize,
-    ) -> Option<Vec<(String, Option<u32>)>> {
+    ) -> Option<Vec<(String, Option<std::num::NonZeroU32>)>> {
         // Even an unsupported arity can mutate a builder argument before
         // returning. Capture its identity before other arguments execute.
         let argument = call.arguments.get(parameter_index)?.as_expression()?;
@@ -52,7 +52,7 @@ impl ScopeVisitor<'_> {
 
     pub(in crate::codebase::postgres::embedded::walk) fn apply_call_builder_effect(
         &mut self,
-        effect: (Vec<(String, Option<u32>)>, Option<bool>),
+        effect: (Vec<(String, Option<std::num::NonZeroU32>)>, Option<bool>),
     ) {
         let minimum_scope = effect
             .1
@@ -72,7 +72,7 @@ impl ScopeVisitor<'_> {
     pub(in crate::codebase::postgres::embedded::walk) fn apply_builder_effect(
         &mut self,
         name: String,
-        identity: Option<u32>,
+        identity: Option<std::num::NonZeroU32>,
         preserved_scope: Option<usize>,
         include_shadowed_aliases: bool,
         forget_prefix: bool,

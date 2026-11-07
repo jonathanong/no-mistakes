@@ -98,10 +98,12 @@ fn push_pending(
     visitor
         .pending_spans
         .insert(seq, (call.span.start, call.span.end));
+    let mut recovered = executor_call(visitor, call, callee.to_string());
+    super::super::transaction::annotate(visitor, call, &mut recovered);
     visitor.pending_calls.push(PendingRelativeCall {
         seq,
         owners,
-        call: executor_call(visitor, call, callee.to_string()),
+        call: recovered,
     });
     visitor.note_executor_call(call);
 }
@@ -116,7 +118,9 @@ fn push_confirmed(
     if visitor.track_order {
         visitor.confirmed_order.push(seq);
     }
-    visitor.calls.push(executor_call(visitor, call, callee));
+    let mut recovered = executor_call(visitor, call, callee);
+    super::super::transaction::annotate(visitor, call, &mut recovered);
+    visitor.calls.push(recovered);
     visitor.call_spans.push((call.span.start, call.span.end));
     visitor.note_executor_call(call);
     seq

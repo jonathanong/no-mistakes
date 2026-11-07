@@ -100,6 +100,7 @@ impl<'a> ScopeVisitor<'a> {
         }
         let before = (self.calls.len(), self.pending_calls.len());
         resolve::record_executor_call(self, call);
+        super::transaction::end_boundary(self, call, before.0);
         let arguments = self.begin_executor_arguments(call, before);
         self.record_argument_append_effects(&append_effect, call.span.start);
         let invocation = self.begin_argument_invocation(call);

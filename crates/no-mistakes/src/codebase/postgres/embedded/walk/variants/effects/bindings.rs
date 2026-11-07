@@ -17,7 +17,7 @@ impl Effects<'_, '_> {
     pub(super) fn appended_builders(
         &self,
         call: &CallExpression<'_>,
-    ) -> Vec<(String, Option<u32>)> {
+    ) -> Vec<(String, Option<std::num::NonZeroU32>)> {
         let receiver = match unwrap_ts_wrappers(&call.callee) {
             Expression::StaticMemberExpression(member) if member.property.name == "append" => {
                 &member.object

@@ -70,11 +70,11 @@ impl ScopeVisitor<'_> {
 }
 
 pub(super) struct BuilderEffects {
-    pub(super) targets: Vec<(String, Option<u32>)>,
+    pub(super) targets: Vec<(String, Option<std::num::NonZeroU32>)>,
     pub(super) uncertain: bool,
 }
 
-type PrefixEffect = (String, Option<u32>, Option<usize>);
+type PrefixEffect = (String, Option<std::num::NonZeroU32>, Option<usize>);
 
 struct Effects<'visitor, 'source> {
     visitor: &'visitor ScopeVisitor<'source>,

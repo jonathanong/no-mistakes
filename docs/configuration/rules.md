@@ -517,3 +517,13 @@ Configured factory/type receivers still use their independent selection.
 The same options and mutual exclusion apply to
 [`projects.<name>.postgres.executors`](projects.md#postgresql-scope). Declare
 selection there when a rule inherits a project PostgreSQL scope.
+
+[`postgres-lock-written-rows-only`](../rules/postgres-lock-written-rows-only.md)
+is opt-in and inherits the selected PostgreSQL executor scope. Its `checks`
+map sets `fail`, `advise` (default), or `ignore` independently for
+`row-lock-unwritten-relation`, `table-lock`, `constant-advisory-lock`, and
+`row-lock-outside-transaction`. `allow` selects relation/key/call-site exceptions
+with required reasons. `writeSets` asserts helper-written relations for one
+file and transaction factory line. Both lists default to empty and participate
+in unused-entry accounting. Unresolved SQL and transaction membership follow
+`unanalyzable` / `unanalyzableSql`; see the rule page for the phase 1 limits.

@@ -100,6 +100,11 @@ impl EmbeddedSqlCall {
                     .filter(move |_| !mirrored)
                     .map(|variant| {
                         Cow::Owned(Self {
+                            transaction_id: self.transaction_id,
+                            transaction_line: self.transaction_line,
+                            executor_transaction_known: self.executor_transaction_known,
+                            execution_unconditional: self.execution_unconditional,
+                            bound_parameters: self.bound_parameters.clone(),
                             line: self.line,
                             callee: self.callee.clone(),
                             sql_text: Some(variant.sql_text.clone()),
