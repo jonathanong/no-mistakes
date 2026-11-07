@@ -83,6 +83,10 @@ failing an otherwise passing test run. Missing or malformed reports still fail
 on every platform. The existing Vitest timeouts and test-failure gates remain
 unchanged; no test retries are configured.
 
+Name independent fixture cases separately in real-addon parity matrices. Each case
+retains all job/API variants and assertions; the per-test timing gate and
+five-minute API-step limit continue to apply. Reports then identify the slow case.
+
 Test CI cancels superseded in-progress runs only for pull requests. An active
 main run can finish and upload Rust coverage when another merge lands. GitHub's
 default concurrency queue can still replace an older pending main run before

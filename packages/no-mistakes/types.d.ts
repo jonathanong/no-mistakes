@@ -1,3 +1,5 @@
+export * from "./diagnostics-collector";
+export * from "./diagnostics-types";
 export * from "./invocation-types";
 export * from "./traversal-types";
 export * from "./analyze-project-types";

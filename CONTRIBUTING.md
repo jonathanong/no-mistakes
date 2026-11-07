@@ -84,6 +84,27 @@ reproduce either validation scope. Release resumes use validation tooling from
 the running workflow while retaining the tagged Rust source; see the
 [CI build guide](docs/development/ci-builds.md).
 
+Before pushing Rust analysis changes, also run the AST invariant checks used by
+CI with ast-grep 0.44.1. The repository `check` command does not run these guards;
+for example, direct clock calls must go through the optional observer even when
+their caller already checks whether diagnostics are enabled.
+
+```sh
+ast-grep test --skip-snapshot-tests
+ast-grep scan --off=no-inline-test-fixture-write --off=no-inline-test-fixture-write-cfg
+analysis_base_ref=$(git merge-base HEAD origin/main)
+python3 .ast-grep/check-inline-fixture-writes.py --base "$analysis_base_ref"
+```
+
+For mixed Rust/Node changes, run `pnpm run fmt:js:check` after integrating runtime,
+declaration and test edits so the aggregate formatter covers every contributor's files.
+
+When moving Rust entrypoint logic, search for `include_str!` source guards and
+run those tests alongside the focused module tests.
+
+For shared diagnostics changes, run the full `suite_cli_queries` target to cover
+every command's basic timing catalog alongside verbose instrumentation.
+
 Rust integration tests share five explicitly registered suites: `suite_cli_queries`,
 `suite_cli_rules`, `suite_cli_postgres`, `suite_cli_test_plans`, and
 `suite_contracts`. This links the analyzer once per suite instead of once per

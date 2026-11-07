@@ -173,6 +173,8 @@ fn without_diagnostics(stderr: &[u8]) -> Vec<u8> {
         .filter(|line| {
             !line.starts_with("[progress] ")
                 && !line.starts_with("[timing] ")
+                && !line.starts_with("[cpu] ")
+                && !line.starts_with("[hot] ")
                 && !line.starts_with("[work] ")
                 && !line.starts_with("[memory] ")
                 && !line.starts_with("waiting for lock held by ")

@@ -1,0 +1,28 @@
+{
+  "diagnostics": {
+    "elapsedMs": 8,
+    "timings": [{ "label": "parse", "durationMs": 4, "parallel": false }],
+    "work": { "parse.files": 1 },
+    "phases": [
+      {
+        "label": "parse",
+        "wallMs": 4,
+        "userMs": 3,
+        "systemMs": 1,
+        "utilization": 1,
+        "peakRssKiB": 100,
+        "peakRssDeltaKiB": 10
+      }
+    ],
+    "hotFiles": [{ "pass": "parse", "path": "src/example.ts", "durationMs": 2, "units": 64 }],
+    "peakRssKiB": 100
+  },
+  "plan": { "changed_files": ["src/example.ts"], "test_files": ["test/example.test.ts"] },
+  "project": {
+    "reports": [{ "type": "testsPlan", "result": { "changed_files": ["src/example.ts"] } }]
+  },
+  "error": {
+    "message": "analysis deadline exceeded",
+    "details": { "kind": "deadline", "phase": "parse", "exitCode": 124 }
+  }
+}

@@ -327,6 +327,7 @@ remain failures. See
 | Source-only TS/JS executor SQL extraction | `extractExecutedPostgresSql({ sources, importSpecifier, includeDiagnostics: true })` |
 | Selected TS/JS modules | `analyzeTypeScriptModules({ root, files })` |
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
+| Global `--verbose-timings` | `collectDiagnostics(operation, ...args)` returns `{ result, diagnostics }` without stderr |
 | Global `--progress` | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots |
 | `check`                                    | `check(options)` (including configured `forbidden-lint-suppressions` and `vitest-project-policy`)                                                                                                                                                                                                                                                           |
 | `config resolve [--view declared]`           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
@@ -362,6 +363,7 @@ remain failures. See
 | --- | --- |
 | `createWorkflowTopologyIndex` | `createWorkflowTopologyIndex(topology)` |
 | `version` | `version()` |
+| `collectDiagnostics` | `collectDiagnostics(operation, ...args)`; exported `DiagnosticOperations` preserves operation argument and result types |
 | `diagnosticsSnapshot` | `diagnosticsSnapshot({ id })` |
 | `analyzeProject` | `analyzeProject(options)`; import `AnalyzeProjectReportType` for report `type` instead of indexing `AnalyzeProjectReportRequest['type']` |
 | `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)` |
@@ -601,6 +603,54 @@ applications accept `columnBounds` through the existing asynchronous `check()` â
 `table.column` names to a required nonempty `reason`; CLI and Node use the same
 catalog validation and caller-bounded key proof. No separate runtime export is
 needed.
+
+`collectDiagnostics(operation, ...args)` is the asynchronous equivalent of CLI
+`--verbose-timings`. Pass a public operation name and its normal arguments:
+
+```js
+const { collectDiagnostics } = require("no-mistakes");
+const { result, diagnostics } = await collectDiagnostics("check", {
+  root: process.cwd(),
+});
+```
+
+`result` is the operation's ordinary result, including existing JavaScript
+postprocessing. `diagnostics` is an exported `VerboseDiagnostics` report with
+`elapsedMs`, `timings` (`DiagnosticTiming[]`), `work`, `phases`
+(`PhaseResourceDiagnostic[]`), `hotFiles` (`HotFileDiagnostic[]`), and optional
+`peakRssKiB`. `DiagnosticsResult<T>`, `DiagnosticFilePass`, and
+`DiagnosticOperations` are also exported. The selector map preserves each
+operation's required or optional argument tuple and asynchronous result type.
+Selectors cover root analysis APIs, including `analyzeProject`, SQL extraction
+and parsing, and `lockStatus`. Utilities `version`, `diagnosticsSnapshot`,
+`createWorkflowTopologyIndex`, and `writePlanningImpactArtifacts`, the collector
+itself, and raw Markdown helpers `testsComment` and `testsGraphMermaid` are
+excluded.
+
+Phase records contain `label`, `wallMs`, user/system CPU milliseconds
+(`userMs`, `systemMs`), `utilization` as CPU/wall time, process-lifetime peak RSS
+(`peakRssKiB`) and its increase (`peakRssDeltaKiB`). Each label appears once,
+in first-appearance order. Repeated eligible spans sum wall/user/system time;
+utilization divides total CPU by total wall time. Peak RSS takes the maximum
+phase-end sample and its delta sums the individual nonnegative span increases.
+Resource sampling is Unix only; unsupported or failed samples have no resource
+record. Nested and parallel spans retain elapsed timings without CPU/RSS
+attribution. Hot-file records contain `pass`, `path`, `durationMs` and `units`,
+bounded to ten per pass. File `parse` covers parsing and requested fact extraction;
+value-flow extraction/finalization cover collector setup through returned facts.
+All file durations are elapsed milliseconds, including annotation roots. See [diagnostic semantics](cli/diagnostics.md) for pass
+units, ranking, RSS caveats and overlapping durations.
+
+CPU/RSS samples cover the whole Node process, including concurrent work in
+other requests. Use an otherwise idle process for phase attribution.
+
+The native analysis runs on libuv async tasks and collection writes no stderr.
+Each collector call owns its observer; ordinary calls remain uninstrumented
+unless their existing timing or live-progress options are enabled. Reports are
+returned to the caller without a completed-request registry. If observation
+started before rejection, the error carries optional `.diagnostics`
+(`DiagnosticsError`); invalid controls can reject before a report exists.
+Existing `timings` and `diagnosticsId` behavior remains available unchanged.
 
 `check({ timings: true })` returns ordered `timings` entries with `label`, `durationMs`, and `parallel`. Rule entries follow their phase, slowest first; combined passes are labeled accordingly. Parallel durations overlap.
 

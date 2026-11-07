@@ -15,6 +15,8 @@ mod cli_ci;
 mod cli_codebase_acceptance;
 #[path = "cli_config_resolve.rs"]
 mod cli_config_resolve;
+#[path = "cli_diagnostic_resources.rs"]
+mod cli_diagnostic_resources;
 #[path = "cli_diagnostics.rs"]
 mod cli_diagnostics;
 #[path = "cli_exported_value_receivers.rs"]

@@ -3,13 +3,24 @@ use super::*;
 #[test]
 fn timing_metadata_omits_unknown_check_runner_labels() {
     assert_eq!(
-        timing_metadata("queues"),
+        timing_metadata("parse_extract", true),
+        Some((
+            "facts.prepare",
+            no_mistakes::diagnostics::TimingKind::Serial
+        ))
+    );
+    assert_eq!(
+        timing_metadata("parse_extract", false),
+        Some(("parse", no_mistakes::diagnostics::TimingKind::Serial))
+    );
+    assert_eq!(
+        timing_metadata("queues", false),
         Some((
             "analysis.queues",
             no_mistakes::diagnostics::TimingKind::Parallel,
         ))
     );
-    assert_eq!(timing_metadata("not-a-check-timing"), None);
+    assert_eq!(timing_metadata("not-a-check-timing", false), None);
 }
 
 #[test]

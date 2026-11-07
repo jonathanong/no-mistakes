@@ -3,7 +3,6 @@ use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
 use anyhow::Result;
 use std::path::PathBuf;
 use std::sync::Arc;
-
 mod entry;
 mod playwright;
 mod setup;
@@ -11,7 +10,6 @@ mod setup;
 pub(crate) use entry::{
     run_all_with_evidence, run_all_with_options, run_all_with_sql_verdicts, AnalysisOptions,
 };
-
 pub(super) fn run_all_with_session_options(
     session: &Arc<no_mistakes::codebase::analysis_session::AnalysisSession>,
     root: PathBuf,
@@ -135,34 +133,36 @@ pub(super) fn run_all_with_session_options(
     no_mistakes::invocation::set_timeout_phase("check.analysis");
     no_mistakes::invocation::check_timeout()?;
     let (react, queues, rules, integration, codebase, filesystem_rules) =
-        run_domain_checks(DomainCheckInputs {
-            session: session.clone(),
-            root: &root,
-            config_path: &config_path,
-            tsconfig_path: &tsconfig_path,
-            react_enabled,
-            queues_enabled,
-            integration_enabled,
-            unique_exports_enabled,
-            filesystem_rules_enabled,
-            discovered_files: &fs_files,
-            facts: &facts,
-            prepared_playwright: prepared.playwright.as_ref(),
-            prepared_react: &prepared.react,
-            prepared_graph: prepared_graph.as_ref(),
-            dependency_graph: None,
-            prepared_tsconfig: &prepared.tsconfig,
-            prepared_tsconfig_catalog: &prepared.tsconfig_catalog,
-            visible_paths: prepared.visible_paths.as_ref(),
-            sources: std::sync::Arc::clone(&sources),
-            inferred_roots: &prepared.inferred_roots,
-            config,
-            codebase_config: &prepared.codebase_config,
-            vitest_projects: prepared.vitest_projects.as_ref(),
-            playwright_projects: prepared.playwright_projects.as_ref(),
-            workflow_documents: prepared.workflow_documents.as_deref(),
-            tsconfig_gate_project_inputs: prepared.tsconfig_gate_project_inputs.as_ref(),
-            defer_suppression: include_suppressed || config.audits_disable_directives(),
+        no_mistakes::perf_trace::trace("check.analysis", || {
+            run_domain_checks(DomainCheckInputs {
+                session: session.clone(),
+                root: &root,
+                config_path: &config_path,
+                tsconfig_path: &tsconfig_path,
+                react_enabled,
+                queues_enabled,
+                integration_enabled,
+                unique_exports_enabled,
+                filesystem_rules_enabled,
+                discovered_files: &fs_files,
+                facts: &facts,
+                prepared_playwright: prepared.playwright.as_ref(),
+                prepared_react: &prepared.react,
+                prepared_graph: prepared_graph.as_ref(),
+                dependency_graph: None,
+                prepared_tsconfig: &prepared.tsconfig,
+                prepared_tsconfig_catalog: &prepared.tsconfig_catalog,
+                visible_paths: prepared.visible_paths.as_ref(),
+                sources: std::sync::Arc::clone(&sources),
+                inferred_roots: &prepared.inferred_roots,
+                config,
+                codebase_config: &prepared.codebase_config,
+                vitest_projects: prepared.vitest_projects.as_ref(),
+                playwright_projects: prepared.playwright_projects.as_ref(),
+                workflow_documents: prepared.workflow_documents.as_deref(),
+                tsconfig_gate_project_inputs: prepared.tsconfig_gate_project_inputs.as_ref(),
+                defer_suppression: include_suppressed || config.audits_disable_directives(),
+            })
         });
     no_mistakes::invocation::check_timeout()?;
     let mut results = results::finalize_domain_checks(results::FinalizeInput {
