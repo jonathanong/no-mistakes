@@ -13,7 +13,7 @@ pub(super) fn cached_config_file_facts(
     playwright: &PlaywrightFactPlan,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> FileIdMap<super::super::CheckFileFacts> {
-    crate::diagnostics::measure_if_enabled("parse", crate::diagnostics::TimingKind::Serial, || {
+    crate::perf_trace::trace("parse", || {
         let universe = files.iter().chain(graph_files).collect::<HashSet<_>>();
         let collected = playwright
             .config_files()
@@ -43,5 +43,4 @@ pub(super) fn cached_config_file_facts(
             });
         FileIdMap::from_iter_with_inventory(collected, std::sync::Arc::clone(sources.inventory()))
     })
-    .0
 }
