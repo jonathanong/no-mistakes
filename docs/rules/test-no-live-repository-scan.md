@@ -97,7 +97,7 @@ An enumeration passes when its root is provably bounded:
   is reported: normalization removes the `fixtures` segment before matching.
 - The root is anchored at the result of `mkdtemp`/`mkdtempSync`, held directly,
   through a `const`, or through a `let` whose every write is such a root.
-  Same-file zero-argument helpers may create local bindings before their final
+  Same-file zero-argument helpers with no reassignment may create local bindings before their final
   return, including an awaited `mkdtemp` in a nested async helper. Owned paths
   returned as object properties can be read through `const` destructuring.
   `mkdtempDisposableSync` results provide an owned root through their `.path`
@@ -189,9 +189,9 @@ Parent traversal is resolved, so `fixtures/../src` is a live path, not a fixture
 path. A generic helper such as
 `listFiles(dir: string)` is an unresolved root at its enumeration unless every
 reachable caller passes an owned root or a module- or `cwd`-anchored fixture
-path through an imported binding (see
+path through a named call (see
 [Owned parameters and env vars](#owned-parameters-and-env-vars)); a caller that
-passes a relative literal, a variable, or nothing keeps the finding. Otherwise
+passes a relative literal, an unproven variable, or nothing keeps the finding. Otherwise
 enumerate with a path the helper builds itself from a fixture root, or suppress
 the helper.
 
@@ -208,10 +208,12 @@ argument resolves to the default, so one omitting caller keeps the finding. The 
 must not reassign the parameter. Derived paths, nested helpers capturing the
 parameter, and an options parameter read through a static property such as
 `options.root` can retain the caller proof. An object argument must expose the
-requested property in a literal object, without mutation or escape. Anything else keeps the finding, because a caller
+requested property in a literal object, without mutation or escape. Method and
+constructor calls on that object prevent this proof because they may mutate its
+properties. Anything else keeps the finding, because a caller
 the call graph cannot see may pass anything:
 
-- The callee is a top-level function declaration or function-valued `const`, not
+- The callee is a named function declaration or function-valued `const`, not
   a class or object member.
 - Every reference to it is a direct call.
 - Every file that consumes its module does so through named static imports
