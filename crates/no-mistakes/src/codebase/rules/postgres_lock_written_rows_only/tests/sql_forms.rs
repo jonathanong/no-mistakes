@@ -61,12 +61,9 @@ fn alias_derived_join_and_qualified_relation_proofs_keep_their_boundaries() {
 #[test]
 fn cast_unary_arithmetic_and_qualified_advisory_constants_are_global_locks() {
     let findings = findings("ignore");
-    assert_eq!(
-        findings,
-        [22, 23, 24, 25, 26, 27]
-            .map(|line| (line, CHECKS[2].to_owned()))
-            .to_vec()
-    );
+    let mut expected = vec![(18, CHECKS[0].to_owned())];
+    expected.extend([22, 23, 24, 25, 26, 27].map(|line| (line, CHECKS[2].to_owned())));
+    assert_eq!(findings, expected);
     assert!(
         !findings.iter().any(|(line, _)| *line == 28),
         "a hash derived from a row key remains compliant"
