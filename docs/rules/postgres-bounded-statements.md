@@ -244,6 +244,8 @@ WITH c AS (SELECT id FROM exports WHERE expires_at < now() ORDER BY id LIMIT $1 
 SELECT code FROM currencies;   -- allow entry
 ```
 
+## Parameter-array bounds
+
 A `LATERAL` subquery may also use a named column from a preceding
 `unnest` of parameter arrays as its `LIMIT`:
 
