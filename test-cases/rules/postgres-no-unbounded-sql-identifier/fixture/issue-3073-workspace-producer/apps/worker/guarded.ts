@@ -20,3 +20,15 @@ export function numericSuffix(suffix: number) {
   const alias = suffix;
   return read(`SELECT * FROM table_${alias}`);
 }
+
+export function literalReplacement() {
+  let finite = "alpha";
+  finite = "beta";
+  return read(`SELECT * FROM ${finite}`);
+}
+
+export function numericCounter() {
+  let counter = 1;
+  counter++;
+  return read(`SELECT * FROM table_${counter}`);
+}

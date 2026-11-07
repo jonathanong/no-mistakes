@@ -88,6 +88,7 @@ fn metadata_proof_boundaries_ignore_incomplete_lookups_and_invalidate_only_in_ra
     assert!(index.guarded(identity, owner, offset));
     for (at, expected) in [(guard.from, true), (guard.from + 1, false), (offset, true)] {
         collector.value_flow.identifier_writes = vec![IdentifierWrite {
+            assigned: None,
             scope,
             name: guard.name.clone(),
             members: vec![Some("table".into())],

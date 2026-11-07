@@ -1,0 +1,70 @@
+use super::*;
+use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
+use crate::codebase::ts_resolver::normalize_path;
+use crate::codebase::ts_source::facts::{collect_ts_facts, TsFactPlan};
+use std::sync::Arc;
+
+#[test]
+fn reassigned_identifier_locals_lose_bounded_parameter_and_literal_initializers() {
+    let unchecked = normalize_path(
+        &crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
+            .join("issue-3073-workspace-producer/apps/worker/unchecked.ts"),
+    );
+    let guarded = unchecked.with_file_name("guarded.ts");
+    let files = [unchecked.clone(), guarded.clone()];
+    let plan = TsFactPlan {
+        value_flow: true,
+        ..TsFactPlan::imports()
+    };
+    let collected = collect_ts_facts(&files, plan);
+    let mut facts = CheckFactMap::default();
+    facts.files.extend(files);
+    for file in &facts.files {
+        let ts = collected.get(file).unwrap();
+        assert!(ts.parse_error.is_none(), "{:?}", ts.parse_error);
+        facts.ts.insert(
+            file.clone(),
+            CheckFileFacts {
+                ts: Arc::new(ts.clone()),
+                ..Default::default()
+            }
+            .into(),
+        );
+    }
+    let shared = Bindings::new(&facts);
+    let identifier = Bindings::new(&facts).with_numeric_parameter_bounds();
+    for (file, name, unbounded) in [
+        (&unchecked, "alias", true),
+        (&unchecked, "literal", true),
+        (&guarded, "finite", false),
+        (&guarded, "counter", false),
+    ] {
+        let ts = collected.get(file).unwrap();
+        let binding = ts
+            .value_flow
+            .bindings
+            .iter()
+            .find(|binding| binding.name == name && !binding.immutable)
+            .unwrap();
+        let call = ts
+            .value_flow
+            .calls
+            .iter()
+            .find(|call| call.context == binding.owner && call.source_callee == "read")
+            .unwrap();
+        assert!(binding.invalidated_at.is_some());
+        assert!(shared.value(file, binding.scope, name, call.end).is_none());
+        assert!(identifier
+            .value(file, binding.scope, name, call.end)
+            .is_none());
+        assert!(!shared.flows_unbounded(file, binding.scope, name, call.end));
+        assert_eq!(
+            identifier.flows_unbounded(file, binding.scope, name, call.end),
+            unbounded,
+            "{name}"
+        );
+        if name == "literal" {
+            assert!(!identifier.flows_unbounded(file, binding.scope, name, binding.declared_at));
+        }
+    }
+}

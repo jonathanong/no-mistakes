@@ -36,6 +36,7 @@ impl ImportCollector {
                         <[Option<String>]>::to_vec,
                     ),
                     at: offset,
+                    assigned: None,
                 });
         }
         if !member {

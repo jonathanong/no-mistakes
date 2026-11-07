@@ -22,3 +22,9 @@ export function mutableAlias(table: Allowed) {
   alias = process.env.UNCHECKED_TABLE as Allowed;
   return read(`SELECT * FROM ${alias}`);
 }
+
+export function mutableLiteral() {
+  let literal = "alpha";
+  literal = process.env.UNCHECKED_TABLE!;
+  return read(`SELECT * FROM ${literal}`);
+}

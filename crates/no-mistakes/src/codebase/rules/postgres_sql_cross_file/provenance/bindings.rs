@@ -1,6 +1,7 @@
 use super::*;
-use crate::codebase::dependencies::extract::{ValueBinding, ValueFlowFacts};
+use crate::codebase::dependencies::extract::{IdentifierAssignment, ValueBinding, ValueFlowFacts};
 
+mod assignments;
 mod closed_types;
 mod flow;
 mod rows;
@@ -18,6 +19,7 @@ pub(crate) struct Bindings<'a> {
     pub(super) facts: &'a CheckFactMap,
     pub(super) graph: Option<&'a DepGraph>,
     values: FxHashMap<(&'a Path, usize, &'a str), Vec<&'a ValueBinding>>,
+    assignments: FxHashMap<(&'a Path, usize, &'a str), Vec<&'a IdentifierAssignment>>,
     calls: FxHashMap<&'a Path, FxHashSet<(u32, u32)>>,
     overwrites: FxHashMap<RowMemberKey<'a>, FxHashSet<(u32, u32)>>,
     iterations: FxHashMap<(&'a Path, usize, &'a str), Vec<&'a ValueBinding>>,
@@ -41,6 +43,7 @@ impl<'a> Bindings<'a> {
             routes: super::super::graph::RegistryRoutes::new(facts),
             calls: fx_map(),
             values: fx_map(),
+            assignments: fx_map(),
             iterations: fx_map(),
             overwrites: fx_map(),
         };
@@ -57,6 +60,9 @@ impl<'a> Bindings<'a> {
         {
             values.sort_by_key(|binding| binding.declared_at);
         }
+        for writes in result.assignments.values_mut() {
+            writes.sort_by_key(|write| write.completed_at);
+        }
         result
     }
     pub(crate) fn with_graph(mut self, graph: &'a DepGraph) -> Self {
@@ -71,6 +77,14 @@ impl<'a> Bindings<'a> {
         index
     }
     fn add(&mut self, file: &'a Path, flow: &'a ValueFlowFacts) {
+        for write in &flow.identifier_writes {
+            if let Some(assigned) = write.assigned.as_deref() {
+                self.assignments
+                    .entry((file, write.scope, &write.name))
+                    .or_default()
+                    .push(assigned);
+            }
+        }
         for binding in &flow.bindings {
             self.values
                 .entry((file, binding.scope, &binding.name))
@@ -120,3 +134,7 @@ impl<'a> Bindings<'a> {
         self.search_env(file, value, members, &mut super::search::Search::default())
     }
 }
+
+#[cfg(test)]
+#[path = "bindings/reassigned_identifier_tests.rs"]
+mod reassigned_identifier_tests;

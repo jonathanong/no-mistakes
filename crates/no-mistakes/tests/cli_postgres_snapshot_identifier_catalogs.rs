@@ -84,7 +84,13 @@ fn postgres_workspace_identifier_sources_check_json_snapshot() {
         .unwrap();
     assert_eq!(output.status.code(), Some(1));
     let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-    for (line, target) in [(5, "table"), (10, "alias"), (16, "alias"), (23, "alias")] {
+    for (line, target) in [
+        (5, "table"),
+        (10, "alias"),
+        (16, "alias"),
+        (23, "alias"),
+        (29, "literal"),
+    ] {
         assert!(
             report["rules"].as_array().unwrap().iter().any(|finding| {
                 finding["rule"] == "postgres-no-unbounded-sql-identifier"
