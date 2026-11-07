@@ -81,21 +81,37 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session(
         super::production_imports::project(session, path, &source, variants, &mut results);
         return results;
     }
-    let modes = parse_variants
-        .iter()
-        .map(|(_, variant)| VariantParseModes::for_variant(path, variant))
-        .collect::<Vec<_>>();
-    collect_standard_variants(
-        session,
+    crate::diagnostics::hot_files::trace(
+        crate::diagnostics::hot_files::FilePass::Parse,
         path,
-        &source,
-        &parse_variants,
-        &modes,
-        &mut results,
-    );
-    collect_legacy_variants(session, path, &source, parse_variants, &modes, &mut results);
-    super::production_imports::project(session, path, &source, variants, &mut results);
-    results
+        source.len() as u64,
+        || {
+            crate::diagnostics::hot_files::with_file(path, || {
+                let modes = parse_variants
+                    .iter()
+                    .map(|(_, variant)| VariantParseModes::for_variant(path, variant))
+                    .collect::<Vec<_>>();
+                collect_standard_variants(
+                    session,
+                    path,
+                    &source,
+                    &parse_variants,
+                    &modes,
+                    &mut results,
+                );
+                collect_legacy_variants(
+                    session,
+                    path,
+                    &source,
+                    parse_variants,
+                    &modes,
+                    &mut results,
+                );
+                super::production_imports::project(session, path, &source, variants, &mut results);
+                results
+            })
+        },
+    )
 }
 
 #[derive(Clone, Copy)]

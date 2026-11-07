@@ -30,47 +30,60 @@ pub(super) fn collect_file_facts_with_sources_and_session(
             )));
         }
     };
-    // Project-wide collection filters to known TS/JS extensions. Parse those
-    // in standard recovered mode so runner-config analysis can share the same
-    // request cache. The direct-file test/support path retains the historical
-    // TypeScript fallback for unknown extensions.
-    let stored_source = plan.source.then(|| Arc::clone(&source));
-    let result = if is_indexable(path) {
-        session.with_recovered_program_status(
-            path,
-            &source,
-            |program, parsed, parse_error, panicked| {
-                let mut facts = collect_file_facts_from_program(
-                    path,
-                    plan,
-                    context,
-                    parsed,
-                    program,
-                    parse_error,
-                    stored_source.clone(),
-                );
-                facts.fatal_parse_error = panicked;
+    crate::diagnostics::hot_files::trace(
+        crate::diagnostics::hot_files::FilePass::Parse,
+        path,
+        source.len() as u64,
+        || {
+            crate::diagnostics::hot_files::with_file(path, || {
+                // Project-wide collection filters to known TS/JS extensions. Parse those
+                // in standard recovered mode so runner-config analysis can share the same
+                // request cache. The direct-file test/support path retains the historical
+                // TypeScript fallback for unknown extensions.
+                let stored_source = plan.source.then(|| Arc::clone(&source));
+                let result = if is_indexable(path) {
+                    session.with_recovered_program_status(
+                        path,
+                        &source,
+                        |program, parsed, parse_error, panicked| {
+                            let mut facts = collect_file_facts_from_program(
+                                path,
+                                plan,
+                                context,
+                                parsed,
+                                program,
+                                parse_error,
+                                stored_source.clone(),
+                            );
+                            facts.fatal_parse_error = panicked;
+                            facts
+                        },
+                    )
+                } else {
+                    session.with_recovered_typescript_program(
+                        path,
+                        &source,
+                        |program, parsed, parse_error| {
+                            collect_file_facts_from_program(
+                                path,
+                                plan,
+                                context,
+                                parsed,
+                                program,
+                                parse_error,
+                                stored_source,
+                            )
+                        },
+                    )
+                };
+                let facts = Some(facts_from_collection_result(result));
+                if !retain_parse {
+                    crate::ast::evict_request_parse_cache_path(path);
+                }
                 facts
-            },
-        )
-    } else {
-        session.with_recovered_typescript_program(path, &source, |program, parsed, parse_error| {
-            collect_file_facts_from_program(
-                path,
-                plan,
-                context,
-                parsed,
-                program,
-                parse_error,
-                stored_source,
-            )
-        })
-    };
-    let facts = Some(facts_from_collection_result(result));
-    if !retain_parse {
-        crate::ast::evict_request_parse_cache_path(path);
-    }
-    facts
+            })
+        },
+    )
 }
 
 fn failure_facts(error: String) -> TsFileFacts {
