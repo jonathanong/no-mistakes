@@ -226,3 +226,16 @@ fn postgres_annotation_timings_check_json_snapshot() {
         &[("max_effort", root.clone(), root.join(".no-mistakes.yml"))],
     );
 }
+
+#[test]
+fn postgres_annotation_scope_check_json_snapshot() {
+    let cases = [
+        "helper-tracing-excluded-roots",
+        "helper-tracing-shared-initials",
+    ]
+    .map(|name| {
+        let root = rules_path(RULE, "fixture", name);
+        (name, root.clone(), root.join(".no-mistakes.yml"))
+    });
+    assert_saved_fixture("postgres_annotation_scope", &cases);
+}

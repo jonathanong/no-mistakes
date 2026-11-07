@@ -16,6 +16,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct QueryAnnotationFileFacts {
+    pub(crate) in_scope: Option<bool>,
     pub(crate) precise_records: bool,
     pub(super) array_prototype_exposed: bool,
     pub(super) globals: BTreeMap<String, Expr>,

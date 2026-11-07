@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-fn fixture(name: &str) -> PathBuf {
+pub(super) fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-require-query-annotation/fixture")
         .join(name)
@@ -9,15 +9,22 @@ fn fixture(name: &str) -> PathBuf {
         .unwrap()
 }
 
-fn observed_check(
+pub(super) fn observed_check(
     root: &std::path::Path,
+) -> (serde_json::Value, crate::diagnostics::DiagnosticsSnapshot) {
+    observed_check_with_config(root, None)
+}
+
+pub(super) fn observed_check_with_config(
+    root: &std::path::Path,
+    config: Option<PathBuf>,
 ) -> (serde_json::Value, crate::diagnostics::DiagnosticsSnapshot) {
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let report = crate::ast::with_request_parse_cache(|| {
         let _guard = crate::diagnostics::InvocationGuard::install(Arc::clone(&observer));
         let results = crate::check_runner::run_all_with_evidence(
             root.to_path_buf(),
-            None,
+            config,
             None,
             false,
             false,

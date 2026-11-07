@@ -1,0 +1,21 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      effort: max
+      executorNames: [query]
+      include: ["src/**/*.mts"]
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      effort: low
+      unanalyzableSql: ignore
+      executorNames: [query]
+      include: ["tests/**/*.mts"]
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      effort: max
+      unanalyzableSql: ignore
+      executorNames: [query]
+      include: ["**/*.mts"]

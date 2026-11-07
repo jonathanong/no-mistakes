@@ -18,12 +18,13 @@ struct Frame<'a> {
 /// Project reachability directly from the prepared module catalog. Annotation
 /// projection runs before DepGraph construction and also serves supplied-file
 /// extraction; rebuilding a codebase graph here would change resolver semantics.
-/// Only prepared executor spans can emit events. Unresolved external loads
+/// Only scoped executor spans can produce annotation findings. Excluded callers
+/// that reach them retain their contextual argument flow. Unresolved external loads
 /// invalidate values but cannot enter another catalog file, so they do not seed
 /// demand. All resolved runtime imports and re-exports remain reachability edges.
-/// Soundness invariant: events occur only at prepared executor spans, and the
+/// Soundness invariant: findings occur only at scoped executor spans, and the
 /// evaluator reaches another file only through these runtime import/re-export
-/// edges. An executor-free SCC with no path to an executor cannot emit an event.
+/// edges. An SCC with no path to a scoped executor cannot affect a finding.
 /// New non-import file reach must be mirrored here before pruning stays sound.
 /// Iterative Tarjan traversal needs no competing forward/reverse adjacency and
 /// keeps long import chains off the native stack. Completed SCCs are bottom-up.
@@ -31,6 +32,9 @@ pub(super) fn roots<'a>(
     files: &'a FxHashMap<PathBuf, File<'_>>,
     resolve: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> Vec<&'a Path> {
+    if !files.values().any(is_seed) {
+        return Vec::new();
+    }
     let mut visits: FxHashMap<&Path, Visit> = fx_map();
     let mut component = Vec::new();
     let mut frames = Vec::<Frame<'_>>::new();
@@ -128,7 +132,7 @@ fn enter<'a>(
             index,
             low: index,
             active: true,
-            demanded: !files[path].executors.is_empty(),
+            demanded: is_seed(&files[path]),
         },
     );
     component.push(path);
@@ -136,4 +140,8 @@ fn enter<'a>(
         path,
         next_import: 0,
     });
+}
+
+fn is_seed(file: &File<'_>) -> bool {
+    file.facts.in_scope != Some(false) && !file.executors.is_empty()
 }
