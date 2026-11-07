@@ -29,6 +29,15 @@ pub(super) fn prepared() -> (CheckFactMap, DepGraph, PathBuf) {
         "namespace-writes.ts",
         "namespace-reader.ts",
         "namespace-readonly.ts",
+        "namespace-escape-producer.ts",
+        "namespace-bare.ts",
+        "namespace-alias.ts",
+        "namespace-quoted.ts",
+        "namespace-opaque.ts",
+        "namespace-unrelated.ts",
+        "namespace-escape-barrel.ts",
+        "namespace-escapes.ts",
+        "namespace-escape-reader.ts",
     ]
     .iter()
     .map(|name| root.join("src").join(name))
@@ -178,3 +187,6 @@ mod boundaries;
 
 #[path = "fragment_import_prefix_tests.rs"]
 mod prefixes;
+
+#[path = "fragment_namespace_escape_tests.rs"]
+mod namespace_escapes;
