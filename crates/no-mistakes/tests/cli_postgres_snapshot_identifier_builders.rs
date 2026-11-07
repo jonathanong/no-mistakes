@@ -1,5 +1,5 @@
-use common::check_json_snapshot::assert_saved_fixture;
-use common::rules_path;
+use super::check_json_clean::assert_saved_fixture_clean;
+use super::check_json_snapshot::{assert_saved_fixture, rules_path};
 use std::process::Command;
 
 #[test]
@@ -40,9 +40,12 @@ fn postgres_identifier_exact_builders_check_json_snapshot() {
                 );
             }
         }
-        assert_saved_fixture(
-            &format!("postgres_identifier_exact_builders_{shape}"),
-            &[("max", root.clone(), root.join(config))],
-        );
+        let name = format!("postgres_identifier_exact_builders_{shape}");
+        let cases = [("max", root.clone(), root.join(config))];
+        if shape == "clean" {
+            assert_saved_fixture_clean(&name, &cases);
+        } else {
+            assert_saved_fixture(&name, &cases);
+        }
     }
 }

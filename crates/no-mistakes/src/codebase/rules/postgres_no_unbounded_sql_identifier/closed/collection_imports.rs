@@ -90,16 +90,14 @@ pub(super) fn safe(
                 &import.imported,
                 producer,
                 &mut candidates,
-            ) {
-                if writes.contains(import.local.as_str())
-                    || !reads.iter().all(|read| read_safe(read, &read.path))
-                    || ts
-                        .exported_bindings
-                        .iter()
-                        .any(|export| export.specifier.is_none() && export.local == import.local)
-                {
-                    return false;
-                }
+            ) && (writes.contains(import.local.as_str())
+                || !reads.iter().all(|read| read_safe(read, &read.path))
+                || ts
+                    .exported_bindings
+                    .iter()
+                    .any(|export| export.specifier.is_none() && export.local == import.local))
+            {
+                return false;
             }
         }
     }

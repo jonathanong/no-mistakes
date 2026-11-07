@@ -2,6 +2,9 @@ pub(crate) use extract_value_flow::closed_identifiers::{
     unique_closed_collection, FiniteIdentifierGuard, GuardKind, GuardSubject, RegistryKind,
     SetMethod,
 };
+pub(crate) use extract_value_flow::literal_catalogs::{
+    LiteralCatalog, CatalogAccessor, CatalogRead, CatalogReadKind,
+};
 pub use extract_value_flow::{
     CallableAssignment, ValueBinding, ValueCall, ValueDefaultMutations, ValueExpression,
     ValueFlowFacts, ValueMutationHistory, ValueMutationInfo, ValueParameter, ValueProjection,

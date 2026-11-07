@@ -43,6 +43,7 @@ impl ImportCollector {
         &mut self,
         statement: &oxc_ast::ast::ReturnStatement<'_>,
     ) {
+        self.note_literal_catalog_return(statement);
         let Some(owner) = self.current_function_id() else {
             return;
         };

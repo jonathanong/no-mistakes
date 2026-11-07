@@ -1,0 +1,13 @@
+version: 2
+effort: max
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      include: [purge.ts, partition.ts]
+      importSpecifier: db
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [Query]
+      identifierValidators:
+        - {module: sqlid, name: assertWhitelistedSqlIdentifier, argument: 0}
+        - {module: sqlid/partitions, name: assertSafeSqlIdentifier, argument: 0}

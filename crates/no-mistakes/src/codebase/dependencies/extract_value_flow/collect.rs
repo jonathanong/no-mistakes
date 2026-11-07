@@ -56,6 +56,7 @@ impl ImportCollector {
             self.record_value_pattern(&declarator.id, value, declarator.span.start, immutable);
             if immutable {
                 self.note_closed_identifier(&declarator.id, init, declarator.span.start);
+                self.note_literal_catalog_binding(&declarator.id, init, declarator.span.start);
                 self.note_sql_placeholder_binding(&declarator.id, init, declarator.span.start);
             }
         }
@@ -103,6 +104,7 @@ impl ImportCollector {
         if !self.collect_value_flow {
             return;
         }
+        self.note_sql_append_reads(call);
         self.record_replacement_call(call);
         self.note_escaped_call(call);
         let (callee, arguments, spread_at, bound, last_argument_literal) =

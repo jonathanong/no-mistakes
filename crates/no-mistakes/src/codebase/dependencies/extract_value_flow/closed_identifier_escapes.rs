@@ -40,6 +40,7 @@ impl super::super::super::ImportCollector {
             return;
         }
         self.note_metadata_row_expression(expr);
+        self.note_literal_catalog_expression(expr);
         match expr {
             Expression::StaticMemberExpression(member) => mark_read(self, &member.object),
             Expression::UnaryExpression(unary)
@@ -117,7 +118,11 @@ impl super::super::super::ImportCollector {
         &mut self,
         identifier: &IdentifierReference<'_>,
     ) {
+        if self.namespace.type_depth > 0 {
+            return;
+        }
         self.note_metadata_row_identifier(identifier);
+        self.note_literal_catalog_identifier(identifier);
         if !self.collect_value_flow || self.closed_registry_reads.contains(&identifier.span.start) {
             return;
         }

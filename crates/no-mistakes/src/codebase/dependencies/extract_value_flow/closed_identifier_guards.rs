@@ -65,12 +65,29 @@ impl ImportCollector {
     }
 
     fn note_assertion_guard(&mut self, statement: &Statement<'_>, until: u32) {
-        let Statement::ExpressionStatement(expression) = statement else {
-            return;
-        };
-        let Some(call) = plain_call(&expression.expression) else {
-            return;
-        };
+        match statement {
+            Statement::ExpressionStatement(expression) => {
+                if let Some(call) = plain_call(&expression.expression) {
+                    self.note_assertion_call(call, statement.span().end, until);
+                }
+            }
+            Statement::VariableDeclaration(declaration) => {
+                for binding in &declaration.declarations {
+                    if let Some(call) = binding.init.as_ref().and_then(|value| plain_call(value)) {
+                        self.note_assertion_call(call, binding.span.end, until);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn note_assertion_call(
+        &mut self,
+        call: &oxc_ast::ast::CallExpression<'_>,
+        from: u32,
+        until: u32,
+    ) {
         if call
             .arguments
             .iter()
@@ -92,7 +109,7 @@ impl ImportCollector {
             self.push_call_guard(
                 call,
                 argument,
-                statement.span().end,
+                from,
                 until,
                 GuardKind::Assertion {
                     callee: callee.clone(),

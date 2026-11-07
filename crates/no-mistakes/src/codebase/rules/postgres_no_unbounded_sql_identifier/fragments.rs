@@ -61,17 +61,5 @@ impl<'a, 'facts> Proofs<'a, 'facts> {
 }
 
 #[cfg(test)]
-pub(super) fn proven(
-    graph: &DepGraph,
-    opts: &CompiledOptions,
-    facts: &CheckFactMap,
-    bindings: &Bindings<'_>,
-    call: &SqlCall<'_>,
-    source: &Provenance,
-) -> bool {
-    Proofs::new(graph, opts, facts, bindings).proven(call, source)
-}
-
-#[cfg(test)]
 #[path = "fragment_builders_tests.rs"]
 mod builder_tests;

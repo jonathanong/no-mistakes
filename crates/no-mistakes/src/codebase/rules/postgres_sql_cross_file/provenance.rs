@@ -12,6 +12,8 @@ mod binding_tag;
 mod text_tag;
 pub(crate) use text_tag::is_text_tag;
 mod bindings;
+mod validated;
+pub(crate) use validated::IdentifierReturns;
 mod env;
 mod identifier_holes;
 mod identifier_positions;
@@ -151,6 +153,7 @@ fn classify_call(
     bindings: &Bindings<'_>,
 ) {
     if binding_tag::is_bind_tag(bindings, file, value_call)
+        || bindings.identifier_return(file, value_call)
         || is_finite_validator(graph, facts, &bindings.routes, file, &value_call.callee)
         || closed_map_lookup(facts, file, value_call)
     {

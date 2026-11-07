@@ -87,7 +87,8 @@ fn prepared_fragment_proofs_distinguish_tags_and_mutations() {
                     members: vec!["text".into()],
                 };
                 assert_eq!(
-                    fragments::proven(&graph, &opts, &facts, &bindings, &call, &reference),
+                    fragments::Proofs::new(&graph, &opts, &facts, &bindings)
+                        .proven(&call, &reference),
                     expected,
                     "{file_name}: {name}"
                 );

@@ -15,6 +15,7 @@ pub(crate) struct Options {
     pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
     pub(crate) finite_domain_assertions: Vec<FiniteDomainAssertion>,
     pub(crate) identifier_validators: Vec<IdentifierValidator>,
+    pub(crate) identifier_sources: Vec<IdentifierSource>,
 }
 
 #[derive(Deserialize, Clone)]
@@ -32,12 +33,20 @@ pub(crate) struct IdentifierValidator {
     pub(crate) argument: usize,
 }
 
+#[derive(Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct IdentifierSource {
+    pub(crate) module: Option<String>,
+    pub(crate) name: String,
+}
+
 pub(crate) struct CompiledOptions {
     pub(crate) include: GlobMatcher,
     pub(crate) exclude: GlobMatcher,
     pub(crate) embedded: EmbeddedSqlOptions,
     pub(crate) finite_domain_assertions: Vec<FiniteDomainAssertion>,
     pub(crate) identifier_validators: Vec<IdentifierValidator>,
+    pub(crate) identifier_sources: Vec<IdentifierSource>,
 }
 
 impl CompiledOptions {
@@ -58,6 +67,7 @@ pub(crate) fn compile(rule_id: &str, opts: &Options) -> Result<CompiledOptions> 
             .with_trusted_sql_tags(&opts.trusted_sql_tags),
         finite_domain_assertions: opts.finite_domain_assertions.clone(),
         identifier_validators: opts.identifier_validators.clone(),
+        identifier_sources: opts.identifier_sources.clone(),
     })
 }
 

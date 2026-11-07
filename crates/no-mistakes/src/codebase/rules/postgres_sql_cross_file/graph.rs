@@ -6,7 +6,7 @@ mod route_index;
 mod route_targets;
 mod routes;
 pub(crate) use resolve::{
-    unique_export, unique_namespace_member, unique_type_export, UniqueExport,
+    possible_exports, unique_export, unique_namespace_member, unique_type_export, UniqueExport,
 };
 pub(crate) use route_index::RegistryRoutes;
 pub(crate) use routes::registry_route;
@@ -27,17 +27,20 @@ fn needs_module_validators(config: &NoMistakesConfig) -> bool {
         .any(|rule| {
             config.effective_rule_analysis(rule).map_or(true, |policy| {
                 policy.effort == crate::config::v2::Effort::Max
-            }) && rule
-                .options
-                .get("identifierValidators")
-                .and_then(serde_yaml::Value::as_sequence)
-                .is_some_and(|validators| {
-                    validators.iter().any(|validator| {
-                        validator
-                            .get("module")
-                            .and_then(serde_yaml::Value::as_str)
-                            .is_some_and(|module| !module.is_empty())
-                    })
+            }) && ["identifierValidators", "identifierSources"]
+                .iter()
+                .any(|key| {
+                    rule.options
+                        .get(*key)
+                        .and_then(serde_yaml::Value::as_sequence)
+                        .is_some_and(|validators| {
+                            validators.iter().any(|validator| {
+                                validator
+                                    .get("module")
+                                    .and_then(serde_yaml::Value::as_str)
+                                    .is_some_and(|module| !module.is_empty())
+                            })
+                        })
                 })
         })
 }

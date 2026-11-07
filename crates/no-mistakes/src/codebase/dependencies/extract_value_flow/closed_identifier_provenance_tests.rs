@@ -2,6 +2,18 @@ use super::super::{unique_closed_collection, GuardKind, RegistryKind};
 use super::parse_flow;
 
 #[test]
+fn erased_imported_catalog_type_reads_do_not_escape_the_runtime_collection() {
+    let flow = parse_flow(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-no-unbounded-sql-identifier/fixture/issue-3073-imported-guards/save.ts")), true);
+    assert!(!flow
+        .registry_mutations
+        .iter()
+        .any(|mutation| mutation.name == "ALLOWED_TABLES"));
+    assert_eq!(flow.finite_identifier_guards.iter().filter(|guard| {
+        matches!(&guard.kind, crate::codebase::dependencies::extract::GuardKind::ClosedSet { collection, .. } if collection == "ALLOWED_TABLES")
+    }).count(), 2);
+}
+
+#[test]
 fn property_guards_retain_the_exact_lexical_subject_and_member_path() {
     let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-no-unbounded-sql-identifier/fixture/issue-3073-guards/src/guarded.ts"));
     let flow = parse_flow(source, true);

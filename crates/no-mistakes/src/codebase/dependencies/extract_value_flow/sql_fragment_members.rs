@@ -9,6 +9,9 @@ impl ImportCollector {
         if !self.collect_value_flow || matches!(property, Some("text" | "values")) {
             return;
         }
+        if property == Some("append") && self.sql_append_member_read(object) {
+            return;
+        }
         let Some(name) = names::identifier_name(object) else {
             return;
         };

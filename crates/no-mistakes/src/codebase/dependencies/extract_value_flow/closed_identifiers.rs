@@ -1,4 +1,6 @@
 use super::*;
+#[path = "sql_builder_reads.rs"]
+mod sql_builder_reads;
 use oxc_ast::ast::{BindingPattern, CallExpression, Expression};
 
 #[path = "closed_identifier_guards.rs"]
@@ -109,10 +111,10 @@ impl ImportCollector {
 
 #[path = "sql_fragment_members.rs"]
 mod fragment_members;
-#[path = "closed_identifier_hex.rs"]
-mod hex;
 #[path = "closed_identifier_generated.rs"]
 mod generated;
+#[path = "closed_identifier_hex.rs"]
+mod hex;
 pub(crate) use generated::GeneratedIdentifierReturn;
 #[path = "closed_identifier_metadata.rs"]
 pub(super) mod metadata;

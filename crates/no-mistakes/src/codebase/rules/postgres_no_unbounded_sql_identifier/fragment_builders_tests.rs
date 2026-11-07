@@ -110,7 +110,7 @@ fn exact_default_library_builder_shapes_have_parameterized_text() {
                 members: vec!["text".into()],
             };
             assert_eq!(
-                proven(&graph, &opts, &facts, &bindings, &call, &source),
+                Proofs::new(&graph, &opts, &facts, &bindings).proven(&call, &source),
                 expected,
                 "{file_name}: {name}"
             );

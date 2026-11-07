@@ -9,6 +9,8 @@ mod assignment_member_values;
 #[path = "extract_value_flow/assignment_rhs_frame.rs"]
 pub(super) mod assignment_rhs_frame;
 use super::*;
+#[path = "extract_value_flow/literal_catalogs.rs"]
+pub(super) mod literal_catalogs;
 
 include!("extract_value_flow/declarations.rs");
 #[path = "extract_value_flow/mutation_sources.rs"]
