@@ -1,0 +1,26 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "resources": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 9,
+          "message": "src/query.ts:9: row-lock-unwritten-relation: locked row in parents is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT id FROM parents WHERE id = $1 FOR KEY SHARE`, [id]);",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

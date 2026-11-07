@@ -38,6 +38,12 @@ pub(super) fn has_candidates(files: &FileIdMap<CheckFileFacts>) -> bool {
 /// A completed call and where it goes: file, profile index, original span.
 type Completed = (PathBuf, usize, (u32, u32), EmbeddedSqlCall, Vec<u32>);
 type LockCompleted = (PathBuf, usize, (u32, u32), Vec<EmbeddedSqlCall>);
+type CompletedBatch = (
+    Vec<Completed>,
+    Vec<(PathBuf, SqlSourcePrerequisites)>,
+    Vec<LockCompleted>,
+    lock_helpers::Definitions,
+);
 
 pub(super) fn project(
     files: &mut FileIdMap<CheckFileFacts>,
@@ -75,12 +81,7 @@ pub(super) fn project(
 fn complete(
     files: &FileIdMap<CheckFileFacts>,
     resolve: impl FnMut(&str, &Path) -> Option<PathBuf>,
-) -> (
-    Vec<Completed>,
-    Vec<(PathBuf, SqlSourcePrerequisites)>,
-    Vec<LockCompleted>,
-    lock_helpers::Definitions,
-) {
+) -> CompletedBatch {
     let mut shared = Shared::new(files, Locator::new(files, resolve));
     let mut completed = Vec::new();
     let mut prerequisites = Vec::new();

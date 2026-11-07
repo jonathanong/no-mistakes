@@ -1,0 +1,50 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "hashes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 6,
+          "message": "src/query.ts:6: constant-advisory-lock: constant advisory key serializes unrelated writes; use a key derived from the written row",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT pg_advisory_xact_lock(hashtext('global'))`);",
+          "target": "constant-advisory-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 7,
+          "message": "src/query.ts:7: constant-advisory-lock: constant advisory key serializes unrelated writes; use a key derived from the written row",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT pg_advisory_xact_lock(hashtextextended('global', 0))`);",
+          "target": "constant-advisory-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 8,
+          "message": "src/query.ts:8: constant-advisory-lock: constant advisory key serializes unrelated writes; use a key derived from the written row",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT pg_advisory_xact_lock(pg_catalog.hashtext($1))`, [GLOBAL_KEY]);",
+          "target": "constant-advisory-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 9,
+          "message": "src/query.ts:9: constant-advisory-lock: constant advisory key serializes unrelated writes; use a key derived from the written row",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT pg_advisory_xact_lock(hashtextextended($1, $2))`, [GLOBAL_KEY, SEED]);",
+          "target": "constant-advisory-lock"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

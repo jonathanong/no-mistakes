@@ -1,0 +1,50 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "atomic": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 6,
+          "message": "src/query.ts:6: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH candidates AS (SELECT id FROM jobs FOR UPDATE), changed AS (UPDATE logs SET value = 1 RETURNING id) SELECT id FROM candidates`);",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 7,
+          "message": "src/query.ts:7: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT id FROM jobs FOR UPDATE; UPDATE jobs SET claimed_at = now()`);",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 8,
+          "message": "src/query.ts:8: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT id FROM jobs FOR UPDATE`);",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 9,
+          "message": "src/query.ts:9: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH jobs AS (SELECT id FROM logs), candidates AS (SELECT id FROM jobs FOR UPDATE), changed AS (UPDATE jobs SET claimed_at = now() RETURNING id) SELECT id FROM candidates`);",
+          "target": "row-lock-outside-transaction"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

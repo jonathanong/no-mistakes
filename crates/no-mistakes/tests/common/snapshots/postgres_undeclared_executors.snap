@@ -186,7 +186,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "undeclared-executor-type"
         }
       ],
-      "unprovenMemberQuerySql": 163,
+      "unprovenMemberQuerySql": 174,
       "warnings": []
     }
   },
@@ -459,7 +459,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "annotation"
         }
       ],
-      "unprovenMemberQuerySql": 159,
+      "unprovenMemberQuerySql": 170,
       "warnings": []
     }
   },
@@ -481,7 +481,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "annotation"
         }
       ],
-      "unprovenMemberQuerySql": 159,
+      "unprovenMemberQuerySql": 170,
       "warnings": []
     }
   },
@@ -584,7 +584,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "annotation"
         }
       ],
-      "unprovenMemberQuerySql": 159,
+      "unprovenMemberQuerySql": 170,
       "warnings": []
     }
   }
