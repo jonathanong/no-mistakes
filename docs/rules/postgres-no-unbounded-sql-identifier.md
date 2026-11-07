@@ -346,6 +346,13 @@ set the scan can see:
   `export const` of the registry all end the proof.
 - `.get` on a `const` `Map` built only from string-literal pairs, including a
   frozen map, until that map is mutated.
+- A literal ASCII identifier prefix plus `randomBytes(length).toString("hex")`,
+  where `length` is a non-negative integer literal and `randomBytes` is a runtime
+  import from `node:crypto` or `crypto`. Named import aliases and default or
+  namespace receivers are supported. A template suffix may contain ASCII
+  identifier continuation characters. Shadowed names, globals, optional or
+  computed calls, callbacks, dynamic lengths or encodings, and open suffixes do
+  not establish this proof.
 - A temporary name that is a non-empty literal prefix plus `randomUUID()`
   imported from `node:crypto` or `crypto`, or `crypto.randomUUID()` when
   `crypto` is that module's default or namespace import, or is undeclared.
