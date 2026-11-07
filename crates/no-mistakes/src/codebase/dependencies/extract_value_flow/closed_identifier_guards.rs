@@ -142,6 +142,7 @@ impl ImportCollector {
         if self.value_flow.identifier_writes.iter().any(|write| {
             write.scope == scope
                 && write.name == name
+                && reference::write_overlaps(&write.members, &members)
                 && write.at < from
                 && (write.at >= call.span.start
                     || write

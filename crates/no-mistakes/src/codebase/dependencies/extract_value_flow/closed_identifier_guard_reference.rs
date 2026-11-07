@@ -108,3 +108,10 @@ pub(super) fn identifier_name(expr: &Expression<'_>) -> Option<String> {
         _ => None,
     }
 }
+
+pub(super) fn write_overlaps(written: &[Option<String>], guarded: &[String]) -> bool {
+    written
+        .iter()
+        .zip(guarded)
+        .all(|(written, guarded)| written.as_ref().is_none_or(|written| written == guarded))
+}
