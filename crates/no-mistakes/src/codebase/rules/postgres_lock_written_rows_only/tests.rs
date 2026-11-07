@@ -1,4 +1,12 @@
 use super::*;
+
+mod placeholder_provenance;
+mod proof;
+mod sql_forms;
+
+fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
+    check_with_files(root, config, &[root.join("src/query.ts")])
+}
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-lock-written-rows-only/fixture")
