@@ -1,6 +1,6 @@
 use super::{
-    helpers::{access, generated_name, qualifier},
     RowAccess,
+    helpers::{access, generated_name, qualifier},
 };
 use crate::codebase::postgres::idents::{ident_key, object_name_identity, relation_part_key};
 use crate::codebase::postgres::statements::value::PlaceholderPositions;
@@ -10,22 +10,20 @@ use std::collections::BTreeMap;
 #[cfg(test)]
 mod tests;
 
-pub(super) fn collect(
+pub(super) fn collect_advanced(
     query: &Query,
     positions: PlaceholderPositions<'_>,
-    advanced: bool,
-    allow_legacy: bool,
 ) -> Vec<RowAccess> {
-    if advanced && query.locks.iter().all(|lock| lock.of.is_some()) {
+    if query.locks.iter().all(|lock| lock.of.is_some()) {
         return collect_explicit(query, positions);
     }
-    if !allow_legacy {
-        return vec![unresolved()];
-    }
-    collect_legacy(query, positions)
+    vec![collect_legacy(query, positions, true)]
 }
 
-fn collect_explicit(query: &Query, positions: PlaceholderPositions<'_>) -> Vec<RowAccess> {
+pub(super) fn collect_explicit(
+    query: &Query,
+    positions: PlaceholderPositions<'_>,
+) -> Vec<RowAccess> {
     let SetExpr::Select(select) = query.body.as_ref() else {
         return vec![unresolved()];
     };
@@ -113,9 +111,16 @@ fn normalized_ident(ident: &sqlparser::ast::Ident) -> String {
     relation_part_key(&ident_key(ident))
 }
 
-fn collect_legacy(query: &Query, positions: PlaceholderPositions<'_>) -> Vec<RowAccess> {
+pub(super) fn collect_legacy(
+    query: &Query,
+    positions: PlaceholderPositions<'_>,
+    allow: bool,
+) -> RowAccess {
+    if !allow {
+        return unresolved();
+    }
     let SetExpr::Select(select) = query.body.as_ref() else {
-        return vec![unresolved()];
+        return unresolved();
     };
     match select.from.as_slice() {
         [from] if from.joins.is_empty() => {
@@ -127,9 +132,9 @@ fn collect_legacy(query: &Query, positions: PlaceholderPositions<'_>) -> Vec<Row
                             .is_some_and(|name| name == object_name_identity(target))
                 })
             });
-            vec![if valid { row } else { unresolved() }]
+            if valid { row } else { unresolved() }
         }
-        _ => vec![unresolved()],
+        _ => unresolved(),
     }
 }
 

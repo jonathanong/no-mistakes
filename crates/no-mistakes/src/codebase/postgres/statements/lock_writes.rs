@@ -74,18 +74,19 @@ impl<const ADVANCED: bool> Visitor for Collector<'_, '_, ADVANCED> {
             self.cte_depth += usize::from(query.with.is_some());
         }
         if !query.locks.is_empty() {
-            let mut locks = row_locks::collect(
-                query,
-                self.positions,
-                ADVANCED,
-                ADVANCED || self.cte_depth == 0,
-            );
             if ADVANCED {
+                let mut locks = row_locks::collect_advanced(query, self.positions);
                 for lock in &mut locks {
                     scope::hide_cte(lock, &self.scopes);
                 }
+                self.out.locks.extend(locks);
+            } else {
+                self.out.locks.push(row_locks::collect_legacy(
+                    query,
+                    self.positions,
+                    self.cte_depth == 0,
+                ));
             }
-            self.out.locks.extend(locks);
         }
         ControlFlow::Continue(())
     }
