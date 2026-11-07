@@ -38,23 +38,23 @@ fn builder_proof_boundaries_require_call_facts_and_a_canonical_helper_site() {
     let opts = compile("postgres-no-unbounded-sql-identifier", &Options::default()).unwrap();
     let bindings = Bindings::new(&facts);
     let flow = &facts.get_ts_facts(&file).unwrap().value_flow;
-    let mut proof = Proof::new(&graph, &opts, &bindings, &file, flow);
-    assert!(!proof.expression(&ValueExpression::Call(u32::MAX - 1, u32::MAX), false));
-    assert!(!proof.expression(&ValueExpression::Unknown, false));
+    let mut proof = Proof::new(&graph, &opts, &facts, &bindings);
+    assert!(!proof.expression(&file, &ValueExpression::Call(u32::MAX - 1, u32::MAX), false));
+    assert!(!proof.expression(&file, &ValueExpression::Unknown, false));
     let helper = flow
         .bindings
         .iter()
         .find(|binding| binding.name == "returnedStatement")
         .unwrap();
-    assert!(!proof.expression(&helper.value, false));
+    assert!(!proof.expression(&file, &helper.value, false));
 }
 
 #[test]
 fn builder_proof_boundaries_reject_active_cycles_without_publishing_success() {
-    let mut active = FxHashSet::default();
-    let key = Key::Call(1, 2, true);
-    assert!(active.insert(key));
     let root = crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier");
+    let mut active = FxHashSet::default();
+    let key = Key::Call(root.clone(), 1, 2, true);
+    assert!(active.insert(key));
     let facts = CheckFactMap::default();
     let graph = crate::codebase::dependencies::graph::test_support::from_raw_maps(
         root.clone(),
@@ -63,9 +63,8 @@ fn builder_proof_boundaries_reject_active_cycles_without_publishing_success() {
     );
     let opts = compile("postgres-no-unbounded-sql-identifier", &Options::default()).unwrap();
     let bindings = Bindings::new(&facts);
-    let flow = ValueFlowFacts::default();
-    let mut proof = Proof::new(&graph, &opts, &bindings, &root, &flow);
+    let mut proof = Proof::new(&graph, &opts, &facts, &bindings);
     proof.active = active;
-    assert!(!proof.memoized(Key::Call(1, 2, true), |_| true));
+    assert!(!proof.memoized(Key::Call(root, 1, 2, true), |_| true));
     assert!(proof.done.is_empty());
 }

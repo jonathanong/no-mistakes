@@ -7,6 +7,8 @@ mutatedStatement.text = process.env.TABLE
 export const escapedStatement = sql`id FROM items`
 escape(escapedStatement)
 export const consumerMutated = sql`id FROM items`
+export const consumerEscaped = sql`id FROM items`
+export const consumerAliased = sql`id FROM items`
 
 export function buildRaw(table: string): SQLStatement {
   return sql``.append(table)
