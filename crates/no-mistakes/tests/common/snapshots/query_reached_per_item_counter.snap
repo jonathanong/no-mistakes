@@ -1,0 +1,210 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "enabled": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "coverage.mts",
+          "import": "read",
+          "line": 10,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlCounterComparison → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let page = 0; page !== count; page++) await read(page);",
+          "target": "postgres: controlCounterComparison → read"
+        },
+        {
+          "file": "coverage.mts",
+          "import": "read",
+          "line": 14,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlCounterUpdate → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let page = 0; page < MAX; advance()) await read(page);",
+          "target": "postgres: controlCounterUpdate → read"
+        },
+        {
+          "file": "coverage.mts",
+          "import": "read",
+          "line": 17,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlCounterBodyUpdate → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let page = 0; page < MAX; page++) { await read(page); page--; }",
+          "target": "postgres: controlCounterBodyUpdate → read"
+        },
+        {
+          "file": "coverage.mts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlCounterPattern → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let [page] = seed; page < count; page++) await read(page);",
+          "target": "postgres: controlCounterPattern → read"
+        },
+        {
+          "file": "coverage.mts",
+          "import": "read",
+          "line": 7,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlCounterNoInit → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let page: number; page < count; page++) await read(page);",
+          "target": "postgres: controlCounterNoInit → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 13,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlReset → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let page = 0; page < MAX_PAGES; page++) { await read(page); page = 0; }",
+          "target": "postgres: controlReset → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 16,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlShadow → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let page = 0; page < MAX_PAGES; page++) await read(page);",
+          "target": "postgres: controlShadow → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 19,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlUnsafe → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let page = 1e100; page < 1e101; page++) await read(page);",
+          "target": "postgres: controlUnsafe → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 23,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via nested → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const id of ids) await read(id);",
+          "target": "postgres: nested → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 36,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlDirections → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let page = 0; page < MAX_PAGES; page--) await read(page);",
+          "target": "postgres: controlDirections → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 37,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlDirections → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let page = MAX_PAGES; page > 0; page++) await read(page);",
+          "target": "postgres: controlDirections → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 38,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlDirections → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let page = 0; page < MAX_PAGES; page += 0) await read(page);",
+          "target": "postgres: controlDirections → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 39,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlDirections → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let page = 0; page < MAX_PAGES; page += step) await read(page);",
+          "target": "postgres: controlDirections → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 43,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlSelf → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let page = 0; page <= page; page++) await read(page);",
+          "target": "postgres: controlSelf → read"
+        },
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 7,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via control → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let page = 0; page < count; page++) await read(page);",
+          "target": "postgres: control → read"
+        },
+        {
+          "file": "nested.mts",
+          "import": "read",
+          "line": 15,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlEval → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await read(page);",
+          "target": "postgres: controlEval → read"
+        },
+        {
+          "file": "nested.mts",
+          "import": "read",
+          "line": 19,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlTaggedReset → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let page = 0; page < MAX; page++) await read`SELECT ${page = 0}`;",
+          "target": "postgres: controlTaggedReset → read"
+        },
+        {
+          "file": "nested.mts",
+          "import": "read",
+          "line": 23,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via controlLoopWrite → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await read(page);",
+          "target": "postgres: controlLoopWrite → read"
+        },
+        {
+          "file": "nested.mts",
+          "import": "read",
+          "line": 24,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via controlLoopWrite → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (page of offsets) await read(page);",
+          "target": "postgres: controlLoopWrite → read"
+        },
+        {
+          "file": "nested.mts",
+          "import": "read",
+          "line": 6,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via nestedQueries → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const id of ids) await read(id);",
+          "target": "postgres: nestedQueries → read"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

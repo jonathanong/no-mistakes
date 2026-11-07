@@ -58,6 +58,9 @@ macro_rules! visit_type_and_expression_methods {
         }
 
         fn visit_return_statement(&mut self, statement: &oxc_ast::ast::ReturnStatement<'a>) {
+            if let Some(argument) = &statement.argument {
+                self.invalidate_bounded_expression(argument);
+            }
             self.visit_value_return(statement);
         }
 
@@ -70,6 +73,9 @@ macro_rules! visit_type_and_expression_methods {
         }
 
         fn visit_yield_expression(&mut self, expression: &oxc_ast::ast::YieldExpression<'a>) {
+            if let Some(argument) = &expression.argument {
+                self.invalidate_bounded_expression(argument);
+            }
             visit_yield_expression_with_capture(self, expression);
         }
 
@@ -78,10 +84,16 @@ macro_rules! visit_type_and_expression_methods {
         }
 
         fn visit_new_expression(&mut self, new: &NewExpression<'a>) {
+            self.invalidate_bounded_callee(&new.callee);
+            self.invalidate_bounded_arguments(&new.arguments);
             visit_new_expression_with_calls(self, new);
         }
 
         fn visit_tagged_template_expression(&mut self, tagged: &TaggedTemplateExpression<'a>) {
+            self.invalidate_bounded_callee(&tagged.tag);
+            for expression in &tagged.quasi.expressions {
+                self.invalidate_bounded_expression(expression);
+            }
             visit_tagged_template_with_receiver(self, tagged);
         }
     };

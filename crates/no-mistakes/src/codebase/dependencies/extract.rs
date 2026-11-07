@@ -24,6 +24,18 @@ mod extract_value_flow;
 include!("extract_per_item.rs");
 include!("extract_capped_cursor.rs");
 include!("extract_capped_cursor_guards.rs");
+include!("extract_bounded_domains.rs");
+include!("extract_bounded_predeclare.rs");
+include!("extract_bounded_proofs.rs");
+include!("extract_bounded_types.rs");
+include!("extract_bounded_invalidation.rs");
+include!("extract_bounded_bodies.rs");
+include!("extract_bounded_loops.rs");
+include!("extract_bounded_counter_writes.rs");
+include!("extract_bounded_counters.rs");
+include!("extract_bounded_chunk_args.rs");
+include!("extract_keyset_pages.rs");
+include!("extract_keyset_sql.rs");
 include!("extract_replacements.rs");
 
 include!("extract_import_facts.rs");

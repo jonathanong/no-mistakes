@@ -107,6 +107,7 @@ fn predeclare_class_binding(collector: &mut ImportCollector, class: &Class<'_>) 
 }
 
 fn predeclare_import_bindings(collector: &mut ImportCollector, import: &ImportDeclaration<'_>) {
+    collector.record_bounded_import(import);
     let Some(specifiers) = &import.specifiers else {
         return;
     };

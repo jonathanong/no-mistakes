@@ -1,0 +1,134 @@
+{
+  "baselineRevision": "759777752f2399d9b83f17e27b0ac8af6a9fe6d7",
+  "candidateRevision": "3823eb5b8f1cb694c427245fc05b8441e7ed7946",
+  "fixtureRoot": "test-cases/rules/query-reached-per-item/bounded-shapes",
+  "jobs": 1,
+  "shapes": {
+    "chunk": {
+      "main": {
+        "findings": 20,
+        "outputSha256": "0148cd25380e17cf24b8caa9f83b6b097b63f442f9a2b502896ec4d91097f29b"
+      },
+      "main-off": {
+        "findings": 0,
+        "outputSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+      },
+      "candidate": {
+        "findings": 16,
+        "outputSha256": "1889eafb65680f04a902d7958ee584776bc6830307746867e7360221a772ef3b"
+      },
+      "candidate-off": {
+        "findings": 0,
+        "outputSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+      }
+    },
+    "closed-keys": {
+      "main": {
+        "findings": 30,
+        "outputSha256": "b0ae3d7133fabdaa2c286b3bb4ebac32aba318fd952b5a722d152dcefe16e0ad"
+      },
+      "main-off": {
+        "findings": 0,
+        "outputSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+      },
+      "candidate": {
+        "findings": 22,
+        "outputSha256": "b9e1c944f3f9470db17c8eb945bfa744ae714e5fce10d89b992c0df1386e73d7"
+      },
+      "candidate-off": {
+        "findings": 0,
+        "outputSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+      }
+    },
+    "counter": {
+      "main": {
+        "findings": 32,
+        "outputSha256": "a404a81fa95183c27df2283b63754cb79d3a292dcdf0d192d7debad0df42d9c7"
+      },
+      "main-off": {
+        "findings": 0,
+        "outputSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+      },
+      "candidate": {
+        "findings": 20,
+        "outputSha256": "7c505efd6e8d640f512668a130426b1453ca03f9b23181293d708ef768ed4278"
+      },
+      "candidate-off": {
+        "findings": 0,
+        "outputSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+      }
+    },
+    "dependent-chain": {
+      "main": {
+        "findings": 1,
+        "outputSha256": "d004cb4d080fa9367a907eb05144e526aad0af1b08c8f13c67b87831f10f736a"
+      },
+      "main-off": {
+        "findings": 0,
+        "outputSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+      },
+      "candidate": {
+        "findings": 1,
+        "outputSha256": "d004cb4d080fa9367a907eb05144e526aad0af1b08c8f13c67b87831f10f736a"
+      },
+      "candidate-off": {
+        "findings": 0,
+        "outputSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+      }
+    },
+    "distinct-calls": {
+      "main": {
+        "findings": 1,
+        "outputSha256": "8f6ee642bafd0d4c0cdf86c9d0c97e81478ddec213fede45fab1d1b53ec60bb7"
+      },
+      "main-off": {
+        "findings": 0,
+        "outputSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+      },
+      "candidate": {
+        "findings": 1,
+        "outputSha256": "8f6ee642bafd0d4c0cdf86c9d0c97e81478ddec213fede45fab1d1b53ec60bb7"
+      },
+      "candidate-off": {
+        "findings": 0,
+        "outputSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+      }
+    },
+    "keyset": {
+      "main": {
+        "findings": 56,
+        "outputSha256": "1d6e00c08099f2bd8a53a2d4f0e42c5a3ba5dfb6f61cd9a3842879db5736adca"
+      },
+      "main-off": {
+        "findings": 0,
+        "outputSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+      },
+      "candidate": {
+        "findings": 46,
+        "outputSha256": "e516fa4a9a1a7c8475c4ee713219ed150ab91ac6a25282e83809106dbf121862"
+      },
+      "candidate-off": {
+        "findings": 0,
+        "outputSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+      }
+    },
+    "tuple-enum": {
+      "main": {
+        "findings": 37,
+        "outputSha256": "7ba1279989e7f7ad34807b014b75acfc6513a7ad65ce4a30f64568c6c5fd7674"
+      },
+      "main-off": {
+        "findings": 0,
+        "outputSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+      },
+      "candidate": {
+        "findings": 29,
+        "outputSha256": "9e13d7c9aa43550bd9abb218f5ffc634b6364638e278853693bacf2595f0f273"
+      },
+      "candidate-off": {
+        "findings": 0,
+        "outputSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+      }
+    }
+  }
+}

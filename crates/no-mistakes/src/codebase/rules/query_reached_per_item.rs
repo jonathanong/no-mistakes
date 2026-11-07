@@ -100,6 +100,7 @@ pub(crate) fn check_with_graph_and_session(
                 })
                 .collect::<Vec<_>>();
             let policy = candidate_policy::CandidatePolicy {
+                sinks: &configured_sinks,
                 options: &options,
                 effect,
                 filter: &filter,

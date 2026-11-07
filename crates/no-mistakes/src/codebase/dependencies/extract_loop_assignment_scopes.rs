@@ -2,12 +2,15 @@ fn visit_for_statement_with_scope<'a>(
     collector: &mut ImportCollector,
     statement: &oxc_ast::ast::ForStatement<'a>,
 ) {
-    collector.record_capped_cursor_reads(statement);
-    collector.record_per_item_range(
-        statement.body.span(),
-        collector.current_function_id(),
-        "for",
-    );
+    if !collector.constant_counter_loop(statement) {
+        collector.record_capped_cursor_reads(statement);
+        collector.record_chunk_calls(statement);
+        collector.record_per_item_range(
+            statement.body.span(),
+            collector.current_function_id(),
+            "for",
+        );
+    }
     let pushed = collector.push_lexical_scope();
     if let Some(init) = &statement.init {
         collector.visit_for_statement_init(init);
@@ -41,11 +44,20 @@ fn visit_for_in_statement_with_scope<'a>(
     collector: &mut ImportCollector,
     statement: &oxc_ast::ast::ForInStatement<'a>,
 ) {
-    collector.record_per_item_range(
-        statement.body.span(),
-        collector.current_function_id(),
-        "for-in",
-    );
+    if let Some(guard) = collector.closed_body(&statement.right, &statement.body, true) {
+        collector.record_closed_per_item_range(
+            statement.body.span(),
+            collector.current_function_id(),
+            "for-in",
+            guard,
+        );
+    } else {
+        collector.record_per_item_range(
+            statement.body.span(),
+            collector.current_function_id(),
+            "for-in",
+        );
+    }
     let pushed = collector.push_lexical_scope();
     invalidate_for_statement_assignment_target(
         collector,
@@ -102,11 +114,20 @@ fn visit_for_of_statement_with_scope<'a>(
     collector: &mut ImportCollector,
     statement: &oxc_ast::ast::ForOfStatement<'a>,
 ) {
-    collector.record_per_item_range(
-        statement.body.span(),
-        collector.current_function_id(),
-        "for-of",
-    );
+    if let Some(guard) = collector.closed_body(&statement.right, &statement.body, false) {
+        collector.record_closed_per_item_range(
+            statement.body.span(),
+            collector.current_function_id(),
+            "for-of",
+            guard,
+        );
+    } else {
+        collector.record_per_item_range(
+            statement.body.span(),
+            collector.current_function_id(),
+            "for-of",
+        );
+    }
     let pushed = collector.push_lexical_scope();
     invalidate_for_statement_assignment_target(
         collector,

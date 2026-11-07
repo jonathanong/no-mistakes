@@ -2,11 +2,22 @@ fn visit_ts_type_alias_declaration_with_scope<'a>(
     collector: &mut ImportCollector,
     declaration: &TSTypeAliasDeclaration<'a>,
 ) {
-    if collector.collect_value_flow && collector.function_stack.is_empty() && declaration.type_parameters.is_none() {
+    collector.record_bounded_type(declaration);
+    if collector.collect_value_flow
+        && collector.function_stack.is_empty()
+        && declaration.type_parameters.is_none()
+    {
         let shape = collector.annotation_shape(&declaration.type_annotation);
-        collector.value_flow.type_shapes.insert(declaration.id.name.to_string(), shape);
+        collector
+            .value_flow
+            .type_shapes
+            .insert(declaration.id.name.to_string(), shape);
         if collector.export_depth > 0 {
-            collector.value_flow.type_exports.push(ExportedBinding { specifier: None, local: declaration.id.name.to_string(), exported: declaration.id.name.to_string() });
+            collector.value_flow.type_exports.push(ExportedBinding {
+                specifier: None,
+                local: declaration.id.name.to_string(),
+                exported: declaration.id.name.to_string(),
+            });
         }
     }
     if collector.function_stack.is_empty()

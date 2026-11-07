@@ -60,6 +60,7 @@ fn visit_while_statement_per_item<'a>(
     collector: &mut ImportCollector,
     statement: &oxc_ast::ast::WhileStatement<'a>,
 ) {
+    collector.record_keyset_page_reads(statement);
     collector.record_per_item_range(
         statement.body.span(),
         collector.current_function_id(),

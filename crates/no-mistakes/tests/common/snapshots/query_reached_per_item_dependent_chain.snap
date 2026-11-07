@@ -1,0 +1,39 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "enabled": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "entry.mts",
+          "import": "read",
+          "line": 7,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via control → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export async function control(ids: string[]) { for (const id of ids) await read(id); }",
+          "target": "postgres: control → read"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "validatedRevision": "3823eb5b8f1cb694c427245fc05b8441e7ed7946",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "cargoLockSha256": "7d66278ad3492d26ee2e4bd1c772c3a9282812957dc2b14ac20ba0d8ba639027",
+  "coverageFloor": 98,
+  "fullCoverage": {
+    "lines": {
+      "count": 338694,
+      "covered": 335693,
+      "percent": 99.11394946470858
+    },
+    "functions": {
+      "count": 35990,
+      "covered": 35722,
+      "percent": 99.25534870797443
+    },
+    "regions": {
+      "count": 506721,
+      "covered": 498267,
+      "notcovered": 8454,
+      "percent": 98.33162627955029
+    }
+  },
+  "newHelperLines": {
+    "covered": 1089,
+    "count": 1093
+  },
+  "localChangedLineCoverage": {
+    "covered": 1279,
+    "instrumentedChangedLines": 1282,
+    "percent": 99.76599063962558,
+    "uncovered": [
+      "crates/no-mistakes/src/codebase/dependencies/extract_bounded_bodies.rs:53",
+      "crates/no-mistakes/src/codebase/dependencies/extract_bounded_counters.rs:34",
+      "crates/no-mistakes/src/codebase/dependencies/extract_keyset_sql.rs:63"
+    ]
+  },
+  "complexity": {
+    "analyzedFunctions": 18450,
+    "threshold": 30,
+    "exceeding": 0
+  },
+  "checks": {
+    "focusedLibraryTests": 69,
+    "cliSnapshotTests": 9,
+    "snapshotJobs": [
+      1,
+      2
+    ],
+    "fullWorkspaceTests": "passed",
+    "snapshotInventory": "passed",
+    "ruleDocSnippets": "passed",
+    "clippyAllTargetsAllFeatures": "passed",
+    "configuredRepositoryChecks": "passed with zero findings or warnings",
+    "changedTsImportResolution": "all resolve",
+    "astGrepTests": 19,
+    "astGrepScan": "passed",
+    "inlineFixtureAudit": "passed",
+    "spelling": "passed",
+    "duplicates": "passed with zero clones"
+  },
+  "environmentNotes": [
+    "Cargo ran under the shared heavy-work lock with six build jobs and a target directory under /tmp.",
+    "Tests used an isolated temporary root to avoid unrelated ancestor Git metadata, and selected the installed ShellCheck 0.11.0 through an environment override. Repository tool configuration was unchanged.",
+    "Coverage used no filename exclusions."
+  ]
+}

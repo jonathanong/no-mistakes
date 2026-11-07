@@ -9,31 +9,60 @@ pub struct PerItemCall {
     pub construct: String,
     pub is_callback: bool,
     pub capped_cursor_page_read: bool,
+    pub keyset_page_read: bool,
 }
 
 struct PerItemRange {
     span: oxc_span::Span,
     construct: String,
+    guard: Option<Vec<(usize, String)>>,
 }
 
 impl ImportCollector {
-    fn record_per_item_range(&mut self, span: oxc_span::Span, caller_id: Option<CallableId>, construct: &str) {
+    fn record_per_item_range(
+        &mut self,
+        span: oxc_span::Span,
+        caller_id: Option<CallableId>,
+        construct: &str,
+    ) {
         if self.collect_per_item_calls {
-            self.per_item_ranges.entry(caller_id).or_default().push(PerItemRange { span, construct: construct.to_string() });
+            self.per_item_ranges
+                .entry(caller_id)
+                .or_default()
+                .push(PerItemRange {
+                    span,
+                    construct: construct.to_string(),
+                    guard: None,
+                });
         }
     }
 
     fn record_per_item_invocations(&mut self, before: usize) {
-        if !self.collect_per_item_calls { return; }
+        if !self.collect_per_item_calls {
+            return;
+        }
         for call in &self.function_calls[before..] {
-            if call.is_callback { continue; }
-            if let Some(range) = self.per_item_ranges.get(&call.caller_id).into_iter().flatten().rev().find(|range|
-                range.span.start <= call.offset && call.offset < range.span.end
-            ) {
-                self.per_item_calls.push(PerItemCall { offset: call.offset, line: call.line,
-                    callee: call.callee.clone(), caller_id: call.caller_id,
-                    construct: range.construct.clone(), is_callback: false,
-                    capped_cursor_page_read: self.capped_cursor_calls.contains(&call.offset) });
+            if call.is_callback {
+                continue;
+            }
+            if let Some(range) = self
+                .per_item_ranges
+                .get(&call.caller_id)
+                .into_iter()
+                .flatten()
+                .rev()
+                .find(|range| range.span.start <= call.offset && call.offset < range.span.end)
+            {
+                self.per_item_calls.push(PerItemCall {
+                    offset: call.offset,
+                    line: call.line,
+                    callee: call.callee.clone(),
+                    caller_id: call.caller_id,
+                    construct: range.construct.clone(),
+                    is_callback: false,
+                    keyset_page_read: false,
+                    capped_cursor_page_read: self.capped_cursor_calls.contains(&call.offset),
+                });
             }
         }
     }
@@ -41,12 +70,28 @@ impl ImportCollector {
     fn record_iteration_callback(&mut self, call: &CallExpression<'_>) -> Option<(u32, String)> {
         let callee = simple_callee_name(&call.callee)?;
         let (_, method) = callee.rsplit_once('.')?;
-        if !matches!(method, "map" | "flatMap" | "forEach" | "filter" | "some" | "every" | "reduce" | "find") { return None; }
+        if !matches!(
+            method,
+            "map" | "flatMap" | "forEach" | "filter" | "some" | "every" | "reduce" | "find"
+        ) {
+            return None;
+        }
         let callback = call.arguments.first().and_then(Argument::as_expression)?;
+        let bounded = self.closed_callback(call, callback);
         let construct = format!("{method} callback");
         match callback {
-            Expression::ArrowFunctionExpression(function) => self.record_per_item_range(function.span, Some(CallableId(function.span.start)), &construct),
-            Expression::FunctionExpression(function) => self.record_per_item_range(function.span, Some(CallableId(function.span.start)), &construct),
+            Expression::ArrowFunctionExpression(function) => self.record_iteration_range(
+                function.span,
+                CallableId(function.span.start),
+                &construct,
+                bounded,
+            ),
+            Expression::FunctionExpression(function) => self.record_iteration_range(
+                function.span,
+                CallableId(function.span.start),
+                &construct,
+                bounded,
+            ),
             _ => {
                 let name = simple_callee_name(callback)?;
                 // Repository/imported callback transitions belong in the same
@@ -57,11 +102,33 @@ impl ImportCollector {
                     // Imported/global/unknown named iteration callbacks must have the
                     // same graph identity regardless of optional per-item demand.
                     if identity != CallTargetIdentity::RepositoryFunction {
-                        self.function_calls.push(FunctionCall { caller: self.current_function(), caller_id: self.current_function_id(), syntactic_caller: self.current_syntactic_caller(), callee: name.clone(), line: 0, offset: callback.span().start, is_callback: true, invocation: InvocationKind::Callback, target_identity: identity, callee_binding_scope: self.callee_binding_scope(&name), static_arg: None, static_cwd: None });
+                        self.function_calls.push(FunctionCall {
+                            caller: self.current_function(),
+                            caller_id: self.current_function_id(),
+                            syntactic_caller: self.current_syntactic_caller(),
+                            callee: name.clone(),
+                            line: 0,
+                            offset: callback.span().start,
+                            is_callback: true,
+                            invocation: InvocationKind::Callback,
+                            target_identity: identity,
+                            callee_binding_scope: self.callee_binding_scope(&name),
+                            static_arg: None,
+                            static_cwd: None,
+                        });
                     }
-                    if self.collect_per_item_calls { self.per_item_calls.push(PerItemCall { offset: callback.span().start,
-                        line: import_line_at(&self.line_starts, callback.span().start as usize),
-                        callee: name.clone(), caller_id: self.current_function_id(), construct, is_callback: true, capped_cursor_page_read: false }); }
+                    if self.collect_per_item_calls && bounded.is_none() {
+                        self.per_item_calls.push(PerItemCall {
+                            offset: callback.span().start,
+                            line: import_line_at(&self.line_starts, callback.span().start as usize),
+                            callee: name.clone(),
+                            caller_id: self.current_function_id(),
+                            construct,
+                            is_callback: true,
+                            keyset_page_read: false,
+                            capped_cursor_page_read: false,
+                        });
+                    }
                 }
                 return Some((callback.span().start, name));
             }
@@ -72,6 +139,7 @@ impl ImportCollector {
 
 fn visit_call_expression_per_item<'a>(collector: &mut ImportCollector, call: &CallExpression<'a>) {
     collector.record_value_call(call);
+    collector.invalidate_bounded_call(call);
     let iteration = collector.record_iteration_callback(call);
     let before = collector.function_calls.len();
     with_conditional_execution(collector, call_has_execution_guard(call), |collector| {
@@ -82,7 +150,9 @@ fn visit_call_expression_per_item<'a>(collector: &mut ImportCollector, call: &Ca
         // positions. Preserve this actual use offset for canonical alias/TDZ
         // resolution without adding a competing binding resolver.
         for transition in &mut collector.function_calls[before..] {
-            if transition.is_callback && transition.callee == name { transition.offset = offset; }
+            if transition.is_callback && transition.callee == name {
+                transition.offset = offset;
+            }
         }
     }
     collector.record_per_item_invocations(before);

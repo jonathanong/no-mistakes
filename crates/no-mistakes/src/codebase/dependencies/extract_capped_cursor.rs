@@ -22,16 +22,7 @@ impl ImportCollector {
     }
 
     fn record_capped_cursor_reads(&mut self, statement: &oxc_ast::ast::ForStatement<'_>) {
-        if !self.collect_per_item_calls
-            || self
-                .per_item_ranges
-                .get(&self.current_function_id())
-                .into_iter()
-                .flatten()
-                .any(|range| {
-                    range.span.start <= statement.span.start && statement.span.end <= range.span.end
-                })
-        {
+        if !self.collect_per_item_calls || self.inside_per_item(statement.span) {
             return;
         }
         let Some((counter, bound)) = capped_cursor_counter(statement) else {

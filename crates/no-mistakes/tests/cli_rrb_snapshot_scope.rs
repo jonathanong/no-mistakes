@@ -153,3 +153,87 @@ fn query_reached_per_item_capped_cursor_check_json_snapshot() {
         ],
     );
 }
+
+#[test]
+fn query_reached_per_item_counter_check_json_snapshot() {
+    let dir = "query-reached-per-item/bounded-shapes/counter";
+    assert_saved_fixture(
+        "query_reached_per_item_counter",
+        &[
+            rule("enabled", dir, ".no-mistakes.yml"),
+            rule("disabled", dir, "off.yml"),
+        ],
+    );
+}
+
+#[test]
+fn query_reached_per_item_tuple_enum_check_json_snapshot() {
+    let dir = "query-reached-per-item/bounded-shapes/tuple-enum";
+    assert_saved_fixture(
+        "query_reached_per_item_tuple_enum",
+        &[
+            rule("enabled", dir, ".no-mistakes.yml"),
+            rule("disabled", dir, "off.yml"),
+        ],
+    );
+}
+
+#[test]
+fn query_reached_per_item_chunk_check_json_snapshot() {
+    let dir = "query-reached-per-item/bounded-shapes/chunk";
+    assert_saved_fixture(
+        "query_reached_per_item_chunk",
+        &[
+            rule("enabled", dir, ".no-mistakes.yml"),
+            rule("disabled", dir, "off.yml"),
+        ],
+    );
+}
+
+#[test]
+fn query_reached_per_item_keyset_check_json_snapshot() {
+    let dir = "query-reached-per-item/bounded-shapes/keyset";
+    assert_saved_fixture(
+        "query_reached_per_item_keyset",
+        &[
+            rule("enabled", dir, ".no-mistakes.yml"),
+            rule("disabled", dir, "off.yml"),
+        ],
+    );
+}
+
+#[test]
+fn query_reached_per_item_closed_keys_check_json_snapshot() {
+    let dir = "query-reached-per-item/bounded-shapes/closed-keys";
+    assert_saved_fixture(
+        "query_reached_per_item_closed_keys",
+        &[
+            rule("enabled", dir, ".no-mistakes.yml"),
+            rule("disabled", dir, "off.yml"),
+        ],
+    );
+}
+
+#[test]
+fn query_reached_per_item_distinct_calls_check_json_snapshot() {
+    let dir = "query-reached-per-item/bounded-shapes/distinct-calls";
+    assert_saved_fixture(
+        "query_reached_per_item_distinct_calls",
+        &[
+            rule("enabled", dir, ".no-mistakes.yml"),
+            rule("disabled", dir, "off.yml"),
+        ],
+    );
+}
+
+#[test]
+fn query_reached_per_item_dependent_chain_check_json_snapshot() {
+    let dir = "query-reached-per-item/bounded-shapes/dependent-chain";
+    assert_saved_fixture(
+        "query_reached_per_item_dependent_chain",
+        &[
+            rule("enabled", dir, ".no-mistakes.yml"),
+            rule("disabled", dir, "off.yml"),
+        ],
+    );
+}

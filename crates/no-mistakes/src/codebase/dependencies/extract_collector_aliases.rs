@@ -151,6 +151,7 @@ impl ImportCollector {
         path: Option<&[Option<String>]>,
         completed_at: u32,
     ) {
+        self.invalidate_bounded_name(name, false);
         let binding_name = name.split_once('.').map_or(name, |(binding, _)| binding);
         let Some((lexical_scope_depth, binding_scope)) = self
             .local_stack

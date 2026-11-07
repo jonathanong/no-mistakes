@@ -40,6 +40,7 @@ fn visit_parameter_default_with_execution<'a>(
         collector.visit_ts_type_annotation(annotation);
     }
     if let Some(initializer) = &parameter.initializer {
+        collector.invalidate_bounded_expression(initializer);
         with_conditional_receiver_write(collector, |collector| {
             collector.visit_expression(initializer)
         });

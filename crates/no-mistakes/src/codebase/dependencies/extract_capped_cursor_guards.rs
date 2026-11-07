@@ -38,6 +38,7 @@ impl<'a> Visit<'a> for CursorGuards {
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        self.opaque |= simple_callee_name(&call.callee).as_deref() == Some("eval");
         self.escaped
             .extend(cursor_plain_references(&call.callee, true));
         for argument in &call.arguments {
