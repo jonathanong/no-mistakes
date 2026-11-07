@@ -12,7 +12,7 @@ The shared-helper fixture has 32 selected entry modules, one imported excluded h
 
 Each variant has four samples per fixture/job group, run in two balanced baseline/candidate/candidate/baseline blocks. Wall time is monotonic elapsed time. CPU is mean user plus system time. RSS is the maximum across four runs. Each check used observer OFF in a fresh CLI process.
 
-Heavy builds and the complete measurement suite were serialized with `flock /tmp/nm-heavy.lock`; builds used `CARGO_BUILD_JOBS=6`. Earlier runs that reused an output directory were discarded. Only the final, separately stored suite contributes to this report. The timed wrapper adds a small fixed process-launch cost, which was not subtracted.
+Heavy builds and the complete measurement suite were serialized with `flock /tmp/nm-heavy.lock`; builds used `CARGO_BUILD_JOBS=6`. Earlier runs that reused an output directory were discarded. Only the final, separately stored suite and a subsequent disjoint original-reproduction suite contribute to this report. The timed wrapper adds a small fixed process-launch cost, which was not subtracted.
 
 | Fixture (repo-relative)                                                                     | Include/exclude payload                                          | Source bytes | Lines | Source files | JSX files* |    Jobs |        Wall s B→C |         CPU s B→C | Peak RSS KiB B→C |
 | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | -----------: | ----: | -----------: | ---------: | ------: | ----------------: | ----------------: | ---------------: |
@@ -47,9 +47,13 @@ Heavy builds and the complete measurement suite were serialized with `flock /tmp
 | `fixtures/performance/postgres-branch-copies`                                               | include `src/entry-*.mts`; exclude `—`                           |        56065 |   969 |           14 |  1 (7.14%) |       4 | 0.01429 → 0.01535 | 0.01968 → 0.02060 |  26,144 → 26,064 |
 | `fixtures/performance/postgres-branch-copies`                                               | include `src/entry-*.mts`; exclude `—`                           |        56065 |   969 |           14 |  1 (7.14%) | default | 0.01450 → 0.01402 | 0.03150 → 0.03145 |  27,232 → 26,972 |
 
+| `fixtures/performance/annotation-shared-record-dag/excluded-test-root` | include `**/*.mts`; exclude `**/*.test.mts` | 1287 | 40 | 2 | 0 (0.00%) | 1 | 0.01325 → 0.01268 | 0.01126 → 0.01223 | 39,204 → 39,508 |
+| `fixtures/performance/annotation-shared-record-dag/excluded-test-root` | include `**/*.mts`; exclude `**/*.test.mts` | 1287 | 40 | 2 | 0 (0.00%) | 4 | 0.01071 → 0.01098 | 0.01141 → 0.01162 | 39,764 → 39,120 |
+| `fixtures/performance/annotation-shared-record-dag/excluded-test-root` | include `**/*.mts`; exclude `**/*.test.mts` | 1287 | 40 | 2 | 0 (0.00%) | default | 0.01167 → 0.01321 | 0.01593 → 0.01776 | 39,424 → 39,548 |
+
 ## Parity and provenance
 
-Normalized JSON reports, raw stdout SHA-256 hashes, and exit statuses matched for all 30 fixture/job groups (240 total invocations). Existing findings returned status 1 on the annotation fixtures; this status was identical across binaries.
+Normalized JSON reports, raw stdout SHA-256 hashes, and exit statuses matched for all 33 fixture/job groups (264 total invocations). Existing findings returned status 1 on the annotation fixtures; this status was identical across binaries.
 
 - Baseline source revision `7d2e661595a3d53aba5afe301d00e1c6b1580a7d`; binary SHA-256 `d0928a5ee9f2c94eeb9a33777bab09a175d5e5b29b6628354382c6b8baffe75b`.
 - Candidate runtime revision `ecc1bb3ff35deeee0f317a22db659006d584cd7a`; binary SHA-256 `f8019cdcbffc72137d64c28f9a3ddb36a58e4ebf2e5a53a0a86714d938450a65`.
@@ -59,6 +63,8 @@ Normalized JSON reports, raw stdout SHA-256 hashes, and exit statuses matched fo
 - Include/exclude payloads are listed per fixture. The source scanner reports files containing JSX-like markup as a density proxy; the 6.67%/7.14% values come from HTML-like strings in source and are not actual TSX/JSX syntax density.
 
 ## Scope and limits
+
+The original `annotation-shared-record-dag/excluded-test-root` reproduction is included with its full 30-level shared DAG. Both matched revisions complete, and its short runtime is inconclusive: default wall time is 0.01167→0.01321 s, CPU 0.01593→0.01776 s and peak RSS 39,424→39,548 KiB. The matched baseline already contains the shared-record prefix-walk optimization; the historical timeout described in that fixture README is not this baseline. This PR claims no end-to-end gain for that reproduction.
 
 The fast path is limited to statically eligible scalar-only, dependency-free portable helper bodies and leaf closures. Reference-bearing helpers and helpers whose meaning depends on excluded or otherwise contextual callers remain on contextual evaluation; general contextual caching is still open. The excluded-root and shared-helper fixtures, reachability case, and included-root controls retained identical report bytes and exit statuses.
 
