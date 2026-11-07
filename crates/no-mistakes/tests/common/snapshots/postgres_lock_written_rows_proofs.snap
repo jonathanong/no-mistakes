@@ -454,10 +454,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 18,
-          "message": "src/query.ts:18: unanalyzable: locked relation is unresolved; lock a single explicit base relation",
+          "message": "src/query.ts:18: row-lock-unwritten-relation: locked row in items is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await tx.query(`SELECT i.id FROM items AS i JOIN parents AS p ON p.id = i.parent_id FOR UPDATE OF i`);",
-          "target": "unanalyzable"
+          "target": "row-lock-unwritten-relation"
         },
         {
           "file": "src/query.ts",

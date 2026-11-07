@@ -28,4 +28,5 @@ fn four_joined_lock_aliases_are_checked_against_each_write_relation() {
     );
     assert_eq!(findings.len(), 3, "{findings:?}");
     assert!(findings.iter().all(|finding| finding.line != 5));
+    assert!(findings.iter().all(|finding| finding.line < 43));
 }
