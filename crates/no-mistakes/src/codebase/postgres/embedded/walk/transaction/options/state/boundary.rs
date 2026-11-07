@@ -1,9 +1,10 @@
 use super::{unwrap_ts_wrappers, Expression, ScopeVisitor};
-use oxc_ast::ast::IdentifierReference;
+use oxc_ast::ast::{CallExpression, IdentifierReference};
 
 pub(in crate::codebase::postgres::embedded::walk::transaction) fn end_alias(
     visitor: &mut ScopeVisitor<'_>,
     id: &IdentifierReference<'_>,
+    call: &CallExpression<'_>,
 ) -> bool {
     let Some(identity) = visitor
         .lookup(id.name.as_str())
@@ -14,14 +15,13 @@ pub(in crate::codebase::postgres::embedded::walk::transaction) fn end_alias(
     let Some(captured) = visitor.transaction_options.aliases.get(&identity) else {
         return false;
     };
-    for scope in visitor.scopes.iter_mut().rev() {
-        if let Some(binding) = scope.get_mut(&captured.name) {
-            if binding.value_identity == Some(captured.identity) {
-                binding.value_identity = None;
-                return true;
-            }
-        }
-    }
+    let identity = visitor.scopes.iter_mut().rev().find_map(|scope| {
+        let binding = scope.get_mut(&captured.name)?;
+        (binding.value_identity == Some(captured.identity))
+            .then(|| binding.value_identity.take())
+            .flatten()
+    });
+    super::super::super::super::transaction_flow::complete_boundary(visitor, call, identity);
     true
 }
 

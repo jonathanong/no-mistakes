@@ -168,17 +168,18 @@ pub(super) fn end_boundary(
     super::transaction_flow::note_boundary(visitor, call, method_end || sql_end);
     if (method_end || sql_end)
         && visitor.executor_options.track_transaction_helpers
-        && options::end_alias(visitor, id)
+        && options::end_alias(visitor, id, call)
     {
         return;
     }
     if (method_end || sql_end) && visitor.scoped.transactions.contains_key(id.name.as_str()) {
-        for scope in visitor.scopes.iter_mut().rev() {
-            if let Some(binding) = scope.get_mut(id.name.as_str()) {
-                binding.value_identity = None;
-                break;
-            }
-        }
+        let identity = visitor
+            .scopes
+            .iter_mut()
+            .rev()
+            .find_map(|scope| scope.get_mut(id.name.as_str()))
+            .and_then(|binding| binding.value_identity.take());
+        super::transaction_flow::complete_boundary(visitor, call, identity);
     }
 }
 

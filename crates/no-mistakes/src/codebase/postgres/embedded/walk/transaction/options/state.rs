@@ -18,6 +18,10 @@ struct Captured {
 
 #[derive(Default)]
 pub(in crate::codebase::postgres::embedded::walk) struct State {
+    pub(in crate::codebase::postgres::embedded::walk) completed:
+        super::super::super::transaction_flow::Completed,
+    pub(in crate::codebase::postgres::embedded::walk) if_depth: usize,
+    pub(in crate::codebase::postgres::embedded::walk) suspended: usize,
     objects: FxHashMap<NonZeroU32, Captured>,
     aliases: FxHashMap<NonZeroU32, Captured>,
     reads: RefCell<FxHashSet<u32>>,

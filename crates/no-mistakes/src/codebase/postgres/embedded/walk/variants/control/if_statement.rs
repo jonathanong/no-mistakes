@@ -26,7 +26,7 @@ fn visit_if<'a, const TRACK: bool>(visitor: &mut ScopeVisitor<'a>, statement: &I
     let transaction_before = TRACK.then(|| TransactionSnapshot::capture(visitor));
     visitor.restore_variants(&paths::restrict(&original, &yes));
     visitor.variant_paths = yes;
-    visitor.with_control_flow(|visitor| visitor.visit_statement(&statement.consequent));
+    visit_arm::<TRACK>(visitor, &statement.consequent);
     let left = visitor.variant_snapshot();
     let transaction_left = transaction_before.as_ref().map(|before| {
         let left = TransactionSnapshot::capture(visitor);
@@ -36,7 +36,7 @@ fn visit_if<'a, const TRACK: bool>(visitor: &mut ScopeVisitor<'a>, statement: &I
     visitor.restore_variants(&paths::restrict(&original, &no));
     visitor.variant_paths = no;
     if let Some(alternate) = &statement.alternate {
-        visitor.with_control_flow(|visitor| visitor.visit_statement(alternate));
+        visit_arm::<TRACK>(visitor, alternate);
     }
     let right = visitor.variant_snapshot();
     if let (Some(transaction_before), Some(transaction_left)) =
@@ -69,5 +69,18 @@ fn visit_if<'a, const TRACK: bool>(visitor: &mut ScopeVisitor<'a>, statement: &I
             select(visitor, &left, &right)
         }
         None => visitor.join_variants(&left, &right, id, (truth_arm, 1 - truth_arm)),
+    }
+}
+
+fn visit_arm<'a, const TRACK: bool>(
+    visitor: &mut ScopeVisitor<'a>,
+    statement: &oxc_ast::ast::Statement<'a>,
+) {
+    if TRACK {
+        visitor.transaction_options.if_depth += 1;
+    }
+    visitor.with_control_flow(|visitor| visitor.visit_statement(statement));
+    if TRACK {
+        visitor.transaction_options.if_depth -= 1;
     }
 }

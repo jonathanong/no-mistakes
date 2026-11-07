@@ -2,12 +2,15 @@ use super::ScopeVisitor;
 use oxc_ast::ast::Statement;
 use std::num::NonZeroU32;
 
+pub(super) type Completed = crate::fx::FxHashSet<(u32, NonZeroU32)>;
+
 type Identities = Vec<Vec<(String, Option<NonZeroU32>)>>;
 pub(super) struct Snapshot {
     enabled: bool,
     identities: Identities,
     exited: crate::fx::FxHashSet<u32>,
     incomplete: crate::fx::FxHashSet<u32>,
+    completed: Completed,
 }
 impl Snapshot {
     pub(super) fn capture(visitor: &ScopeVisitor<'_>) -> Self {
@@ -19,6 +22,7 @@ impl Snapshot {
                 identities: Vec::new(),
                 exited: Default::default(),
                 incomplete: Default::default(),
+                completed: Default::default(),
             };
         }
         Self {
@@ -36,6 +40,7 @@ impl Snapshot {
                 .collect(),
             exited: visitor.exited_functions.clone(),
             incomplete: visitor.incomplete_transaction_owners.clone(),
+            completed: visitor.transaction_options.completed.clone(),
         }
     }
     pub(super) fn restore(&self, visitor: &mut ScopeVisitor<'_>) {
@@ -51,6 +56,7 @@ impl Snapshot {
         }
         visitor.exited_functions = self.exited.clone();
         visitor.incomplete_transaction_owners = self.incomplete.clone();
+        visitor.transaction_options.completed = self.completed.clone();
     }
     pub(super) fn resume_after(
         &self,
@@ -62,25 +68,16 @@ impl Snapshot {
         if !self.enabled {
             return;
         }
+        let owner = owner(visitor);
         let mut live = false;
-        let all_ended = self
-            .identities
-            .iter()
-            .enumerate()
-            .all(|(index, identities)| {
-                identities.iter().all(|(name, identity)| {
-                    if identity.is_none() {
-                        return true;
-                    }
-                    live = true;
-                    ended
-                        .identities
-                        .get(index)
-                        .and_then(|scope| scope.iter().find(|(key, _)| key == name))
-                        .is_some_and(|(_, ended)| ended != identity)
-                })
-            });
-        if !live || !all_ended || ended.incomplete.contains(&owner(visitor)) {
+        let all_ended = self.identities.iter().flatten().all(|(_, identity)| {
+            let Some(identity) = *identity else {
+                return true;
+            };
+            live = true;
+            ended.completed.contains(&(owner, identity))
+        });
+        if !live || !all_ended || ended.incomplete.contains(&owner) {
             visitor
                 .exited_functions
                 .extend(ended.exited.iter().copied());
@@ -91,20 +88,19 @@ impl Snapshot {
             return;
         }
         self.restore(visitor);
-        let mut divergent = false;
         for (scope, identities) in visitor.scopes.iter_mut().zip(&other.identities) {
             for (name, identity) in identities {
                 if let Some(binding) = scope.get_mut(name) {
                     if binding.value_identity != *identity {
-                        divergent = true;
                         binding.value_identity = None;
                     }
                 }
             }
         }
-        if divergent {
-            visitor.incomplete_transaction_owners.insert(owner(visitor));
-        }
+        visitor
+            .transaction_options
+            .completed
+            .retain(|entry| other.completed.contains(entry));
         visitor
             .incomplete_transaction_owners
             .extend(other.incomplete.iter().copied());
@@ -146,19 +142,22 @@ fn owner(visitor: &ScopeVisitor<'_>) -> u32 {
         .unwrap_or(0)
 }
 
-pub(super) fn note_identity_loss(visitor: &mut ScopeVisitor<'_>, name: &str) {
-    let Some(spans) = visitor.scoped.transactions.get(name) else {
-        return;
-    };
-    if visitor
-        .lookup(name)
-        .and_then(|binding| binding.value_identity)
-        .is_some_and(|identity| {
-            spans
-                .iter()
-                .any(|span| super::transaction::source_identity(span.start) == Some(identity))
-        })
+pub(super) fn complete_boundary(
+    visitor: &mut ScopeVisitor<'_>,
+    call: &oxc_ast::ast::CallExpression<'_>,
+    identity: Option<NonZeroU32>,
+) {
+    if visitor.executor_options.track_transaction_helpers
+        && visitor.loop_depth == 0
+        && visitor.transaction_options.suspended == 0
+        && visitor.control_depth == visitor.transaction_options.if_depth
+        && visitor.awaited_lock_helper_calls.contains(&call.span.start)
     {
-        visitor.incomplete_transaction_owners.insert(owner(visitor));
+        if let Some(identity) = identity {
+            visitor
+                .transaction_options
+                .completed
+                .insert((owner(visitor), identity));
+        }
     }
 }

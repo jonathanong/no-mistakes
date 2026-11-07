@@ -57,6 +57,7 @@ fn only_definite_transaction_closes_discharge_an_early_exit() {
     findings.sort();
     assert_eq!(
         findings,
-        [4, 24, 33].map(|line| (line, "unanalyzable".to_owned()))
+        [4, 24, 33, 57, 67, 77, 87, 97, 107, 117, 127]
+            .map(|line| (line, "unanalyzable".to_owned()))
     );
 }
