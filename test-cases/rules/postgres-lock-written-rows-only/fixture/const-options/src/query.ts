@@ -1,4 +1,4 @@
-import { query, beginTransaction } from '@example/db';
+import { query, write, beginTransaction } from '@example/db';
 async function member(id: string) {
   await using tx = await beginTransaction();
   await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
@@ -129,4 +129,11 @@ async function nestedFunctionOptions(id: string) {
     await query('UPDATE items SET active = true WHERE id = $1', [id], options);
   }
   await write();
+}
+
+async function configuredWrite(id: string) {
+  await using tx = await beginTransaction();
+  await tx.query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+  const options = { query: tx.query };
+  await write('UPDATE items SET active = true WHERE id = $1', [id], options);
 }

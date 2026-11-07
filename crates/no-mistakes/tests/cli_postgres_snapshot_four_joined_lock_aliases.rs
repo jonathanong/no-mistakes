@@ -11,11 +11,7 @@ fn postgres_four_joined_lock_aliases_check_json_snapshot() {
                 "fixture",
                 "four-joined-aliases",
             ),
-            rules_path(
-                "postgres-lock-written-rows-only",
-                "configs",
-                "fail.yml",
-            ),
+            rules_path("postgres-lock-written-rows-only", "configs", "fail.yml"),
         )],
     );
 }

@@ -312,3 +312,36 @@ fn postgres_lock_written_rows_const_options_check_json_snapshot() {
         &[("const_options", "const-options", "resource-options.yml")],
     );
 }
+
+#[test]
+fn postgres_lock_written_rows_phase_three_rule_off_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_phase_three_rule_off",
+        &[
+            ("options", "const-options", "rule-off.yml"),
+            ("fallthrough", "returning-commit", "rule-off.yml"),
+            ("helpers", "helper-nested-query", "rule-off.yml"),
+            ("aliases", "four-joined-aliases", "rule-off.yml"),
+        ],
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_returning_commit_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_returning_commit",
+        &[("fallthrough", "returning-commit", "checks-fail.yml")],
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_nested_query_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_nested_query",
+        &[(
+            "helper_write_sets",
+            "helper-nested-query",
+            "checks-fail.yml",
+        )],
+    );
+}

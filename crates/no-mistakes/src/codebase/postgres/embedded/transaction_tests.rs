@@ -170,12 +170,13 @@ fn const_options_preserve_transaction_membership_without_certifying_controls() {
         "../../test-cases/rules/postgres-lock-written-rows-only/fixture/const-options/src/query.ts",
     );
     let source = std::fs::read_to_string(&path).unwrap();
-    let mut options = EmbeddedSqlOptions::configured("@example/db", &["query".into()])
-        .with_scoped_executors(&["beginTransaction".into()], &[])
-        .with_executor_option_properties(&["query".into()]);
+    let mut options =
+        EmbeddedSqlOptions::configured("@example/db", &["query".into(), "write".into()])
+            .with_scoped_executors(&["beginTransaction".into()], &[])
+            .with_executor_option_properties(&["query".into()]);
     options.track_transaction_helpers = true;
     let facts = extract_embedded_sql_from_source(&path, &source, &options);
-    for (lock_line, write_line) in [(4, 6), (10, 13), (17, 20), (24, 26)] {
+    for (lock_line, write_line) in [(4, 6), (10, 13), (17, 20), (24, 26), (136, 138)] {
         let lock = facts
             .calls
             .iter()

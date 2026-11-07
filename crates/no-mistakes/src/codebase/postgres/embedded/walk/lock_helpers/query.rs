@@ -1,4 +1,4 @@
-use super::{ExecutorAccess, summary::Query};
+use super::{summary::Query, ExecutorAccess};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression};
 

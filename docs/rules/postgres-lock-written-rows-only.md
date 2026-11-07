@@ -63,6 +63,12 @@ its immutable argument bindings before comparing the helper's locked relations
 and keys with the caller's writes. For example, `lockUser(tx.query, userId)`
 requires an update or delete of that same user in `tx`; an update of a membership
 does not satisfy the lock. Diagnostics name the helper and its lock line.
+Straight-line helpers can call other supported local helpers. Their parameterized
+locks and writes are composed at each invocation through a known transaction,
+including a caller that passes its `TransactionQuery` parameter onward. A type
+annotation alone does not prove a transaction; unrelated transaction instances
+and different keys remain distinct. Recursive helper cycles remain unresolved.
+
 Helper effects require a direct `await helper(...)` (including `return await`).
 A plain `return helper(...)` or discarded promise is unanalyzable because an
 `await using` transaction can be disposed before the helper finishes. Within a
@@ -76,6 +82,11 @@ Unsupported local and imported helpers receiving a configured transaction
 executor retain the unanalyzable policy, including dynamic SQL, optional calls,
 shadowed or mutated helpers, and bodies with other control flow. Named imported
 helpers and re-exports use the same summaries through the prepared module resolver. Unresolved imports retain the unanalyzable policy.
+
+`FOR UPDATE OF n, t, r, d` resolves every explicit alias to its base relation.
+Each relation must have a matching update or delete in the same transaction;
+writing only two of four locked relations leaves findings for the other two.
+An unknown alias follows the unanalyzable policy.
 
 An advisory key derived from the written row's id also passes the constant-key
 check.
@@ -225,8 +236,11 @@ follow this policy; recovered SQL placeholders cannot establish their identity.
 A possible earlier return or throw prevents a later write from proving that a
 locked row is written while the transaction remains open. A branch that commits
 and returns ends that transaction path; a matching write on the remaining
-fall-through path can still satisfy the lock. Keep matching writes on every
-continuing transaction path, or remove the lock.
+fall-through path can still satisfy the lock. An uncommitted return, a commit on
+a continuing path, or an explicit SQL transaction boundary remains unresolved.
+Recovery is conservative when another live transaction remains open on the
+returning path: later writes retain the unresolved policy. Keep matching writes
+on every continuing transaction path, or remove the lock.
 
 The rule does not establish advisory-key provenance from unwritten relations,
 unbounded recursive read sets, duplication of unique-index guarantees, or

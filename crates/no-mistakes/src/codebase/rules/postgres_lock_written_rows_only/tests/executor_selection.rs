@@ -114,7 +114,9 @@ fn const_executor_options_route_writes_and_reject_mutated_or_unwritten_controls(
         );
     }
     assert!(
-        findings.iter().all(|finding| finding.line > 21),
+        findings
+            .iter()
+            .all(|finding| finding.line > 21 && finding.line < 133),
         "{findings:?}"
     );
 }
