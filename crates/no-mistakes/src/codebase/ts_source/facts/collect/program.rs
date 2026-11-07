@@ -35,14 +35,16 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
 ) -> TsFileFacts {
     let (parse_error, stored_source) = source_state;
     let import_facts = if plan.needs_import_facts() {
-        extract_import_facts_with_eligibility(
-            program,
-            source,
-            plan.resources,
-            plan.per_item_calls,
-            plan.needs_value_flow(),
-            plan.call_eligibility,
-        )
+        crate::diagnostics::hot_files::with_file(path, || {
+            extract_import_facts_with_eligibility(
+                program,
+                source,
+                plan.resources,
+                plan.per_item_calls,
+                plan.needs_value_flow(),
+                plan.call_eligibility,
+            )
+        })
     } else {
         Default::default()
     };

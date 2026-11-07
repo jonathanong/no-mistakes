@@ -52,7 +52,16 @@ pub(super) fn trace<T>(
     offset: Option<u32>,
     operation: impl FnOnce() -> T,
 ) -> T {
-    located(label, path, offset, operation)
+    if label == "postgres.annotation.root" {
+        crate::diagnostics::hot_files::trace(
+            crate::diagnostics::hot_files::FilePass::PostgresAnnotation,
+            path,
+            1,
+            || located(label, path, offset, operation),
+        )
+    } else {
+        located(label, path, offset, operation)
+    }
 }
 
 fn located<T>(
