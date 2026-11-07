@@ -99,6 +99,9 @@ python3 .ast-grep/check-inline-fixture-writes.py --base "$analysis_base_ref"
 For mixed Rust/Node changes, run `pnpm run fmt:js:check` after integrating runtime,
 declaration and test edits so the aggregate formatter covers every contributor's files.
 
+When moving Rust entrypoint logic, search for `include_str!` source guards and
+run those tests alongside the focused module tests.
+
 Rust integration tests share five explicitly registered suites: `suite_cli_queries`,
 `suite_cli_rules`, `suite_cli_postgres`, `suite_cli_test_plans`, and
 `suite_contracts`. This links the analyzer once per suite instead of once per
