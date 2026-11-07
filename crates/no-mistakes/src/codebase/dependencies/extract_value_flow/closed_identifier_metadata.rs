@@ -79,27 +79,17 @@ pub(super) fn note_guard(
 
 pub(super) fn note_lookup(
     collector: &mut ImportCollector,
-    pattern: &BindingPattern<'_>,
+    name: &str,
     init: &Expression<'_>,
     scope: usize,
     declared_at: u32,
 ) {
-    let BindingPattern::BindingIdentifier(identifier) = pattern else {
-        return;
-    };
     let Some(call) = plain_call(init) else {
         return;
     };
     let Some(collection) = lookup_collection(call) else {
         return;
     };
-    if !unique_closed_collection(
-        &collector.value_flow,
-        &collection,
-        RegistryKind::MetadataArray,
-    ) {
-        return;
-    }
     let Some(registry) = collector
         .value_flow
         .closed_string_registries
@@ -110,13 +100,20 @@ pub(super) fn note_lookup(
     else {
         return;
     };
+    if !unique_closed_collection(
+        &collector.value_flow,
+        &collection,
+        RegistryKind::MetadataArray,
+    ) {
+        return;
+    }
     let source = Some((collection, registry.scope));
     let fields = registry.keys.clone();
     collector.metadata_lookup_calls.insert(call.span.start);
-    rows::note_lookup(collector, identifier.name.as_str(), scope);
+    rows::note_lookup(collector, name, scope);
     for key in fields {
         collector.value_flow.bounded_bindings.push(BoundedBinding {
-            name: identifier.name.to_string(),
+            name: name.to_string(),
             scope,
             declared_at,
             source: source.clone(),

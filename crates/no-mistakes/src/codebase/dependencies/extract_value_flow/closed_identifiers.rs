@@ -105,7 +105,7 @@ impl ImportCollector {
                 requires_guard: false,
             });
         }
-        metadata::note_lookup(self, pattern, init, scope, declared_at);
+        metadata::note_lookup(self, identifier.name.as_str(), init, scope, declared_at);
     }
 }
 

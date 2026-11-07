@@ -12,6 +12,10 @@ pub(super) struct Lookup<'a> {
     pub(super) fields: FxHashSet<&'a str>,
 }
 
+#[cfg(test)]
+#[path = "closed_identifier_row_index_tests.rs"]
+mod tests;
+
 pub(super) struct Index<'a> {
     pub(super) collector: &'a ImportCollector,
     pub(super) lookups: FxHashMap<Identity<'a>, Lookup<'a>>,

@@ -13,6 +13,10 @@ enum Key {
     Call(u32, u32, bool),
 }
 
+#[cfg(test)]
+#[path = "fragment_builder_boundary_tests.rs"]
+mod boundary_tests;
+
 pub(super) struct Proof<'a, 'facts> {
     graph: &'a DepGraph,
     opts: &'a CompiledOptions,

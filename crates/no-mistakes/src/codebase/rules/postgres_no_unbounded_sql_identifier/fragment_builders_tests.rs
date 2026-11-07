@@ -16,6 +16,7 @@ fn prepared() -> (CheckFactMap, DepGraph, PathBuf) {
         root.join("src/exact.ts"),
         root.join("src/negative.ts"),
         root.join("src/variants.ts"),
+        root.join("src/proof-boundaries.ts"),
     ];
     let plan = TsFactPlan {
         value_flow: true,
@@ -59,6 +60,46 @@ fn prepared() -> (CheckFactMap, DepGraph, PathBuf) {
     )
     .unwrap();
     (facts, graph, root)
+}
+
+#[test]
+fn builder_proof_boundaries_preserve_chains_and_reject_opaque_receivers() {
+    let (facts, graph, root) = prepared();
+    let file = root.join("src/proof-boundaries.ts");
+    let opts = compile(RULE_ID, &Options::default()).unwrap();
+    let bindings = Bindings::new(&facts).with_graph(&graph);
+    let embedded = EmbeddedSqlCall::default();
+    let call = SqlCall {
+        file: file.clone(),
+        span: (0, u32::MAX),
+        call: &embedded,
+    };
+    let flow = &facts.get_ts_facts(&file).unwrap().value_flow;
+    let mut proofs = Proofs::new(&graph, &opts, &facts, &bindings);
+    for (name, expected) in [
+        ("chainedStatement", true),
+        ("namedStatement", true),
+        ("returnedStatement", true),
+        ("textReceiver", false),
+        ("literalAppend", false),
+        ("recursiveStatement", false),
+        ("asyncStatement", false),
+        ("boundStatement", false),
+        ("unknownStatement", false),
+    ] {
+        let binding = flow
+            .bindings
+            .iter()
+            .find(|binding| binding.name == name)
+            .unwrap();
+        let source = Provenance::Reference {
+            name: name.into(),
+            scope: binding.scope,
+            offset: u32::MAX,
+            members: vec!["text".into()],
+        };
+        assert_eq!(proofs.proven(&call, &source), expected, "{name}");
+    }
 }
 
 #[test]

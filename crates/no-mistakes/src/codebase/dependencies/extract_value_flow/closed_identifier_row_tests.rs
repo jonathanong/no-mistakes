@@ -94,3 +94,47 @@ fn prototype_initializers_never_become_literal_object_fields_but_map_keys_do() {
                 .as_ref()
                 .is_some_and(|source| source.0 == "ORDINARY_MAP")));
 }
+
+#[test]
+fn metadata_proof_boundaries_reject_opaque_callbacks_and_unclosed_helpers() {
+    let flow = parse_flow(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-no-unbounded-sql-identifier/fixture/issue-3073-guards/src/metadata-proof-boundaries.ts")), true);
+    assert!(flow.metadata_row_helpers.is_empty());
+    assert!(flow
+        .bounded_bindings
+        .iter()
+        .any(|binding| binding.name == "reversedComparison" && binding.requires_guard));
+    for name in [
+        "namedCallback",
+        "asyncCallback",
+        "destructuredCallback",
+        "looseCallback",
+        "opaqueComparison",
+        "computedComparison",
+    ] {
+        assert!(
+            !flow
+                .bounded_bindings
+                .iter()
+                .any(|binding| binding.name == name),
+            "{name}"
+        );
+    }
+    assert!(!flow
+        .finite_identifier_guards
+        .iter()
+        .any(|guard| guard.name == "selected"
+            && flow
+                .parameters
+                .iter()
+                .any(|parameter| parameter.owner == guard.context.unwrap()
+                    && parameter.name == "duplicate")));
+    for source in ["MIXED_ROWS", "ASYNC_ROWS", "SPREAD_ROWS"] {
+        assert!(
+            flow.registry_mutations
+                .iter()
+                .any(|mutation| mutation.name == source),
+            "{source}"
+        );
+    }
+}
