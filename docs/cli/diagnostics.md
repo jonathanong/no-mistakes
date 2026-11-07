@@ -85,13 +85,22 @@ operation rather than a sum across profiles or parse modes. Records can overlap:
 these elapsed durations are non-additive. Basic timings and progress alone do
 not collect hot-file records.
 
-`[hot] parse` brackets the physical OXC parser call only. It excludes file-fact
-extraction and PostgreSQL evaluation, so its elapsed time can be much smaller
-than the inclusive `parse` phase. A declaration file's byte count is its input
-size, not milliseconds or a count of evaluation operations. Within one parallel
-parse/extraction pass, the sum of physical parser durations is bounded by the
-pass's wall time multiplied by its worker count. The retained top ten are only
-a subset, not an accounting of the entire phase.
+`[hot] parse` brackets each file's parsing and requested fact extraction, including
+semantic preparation, recovery, and AST cleanup. It excludes source reads and
+project-wide PostgreSQL evaluation. `value_flow.extract` includes collector
+setup, binding predeclaration and the AST visit; `value_flow.finalize` includes
+alias/write completion, normalization, sorting and construction of returned
+facts. These passes use the same elapsed-millisecond clock as annotation roots.
+Value-flow records are nested within file parsing and must not be added to it.
+A declaration file's byte count is its input size, not milliseconds.
+
+The sum of file durations within a parallel pass is bounded by the pass's wall
+time multiplied by its worker count. Phase CPU is process-wide user plus system
+time; per-file elapsed time also includes scheduling waits. On a small isolated
+workload where all files fit the top ten, file totals should account for a
+substantial share of phase CPU. The retained top ten on a larger repository are
+only a subset, so their sum cannot account for the entire phase. Repeated file
+operations retain the largest record rather than accumulating cache reuse.
 
 Each pass ranks elapsed time from slowest to fastest, breaking ties by ascending
 path and then descending units. Timings and thus membership can vary between

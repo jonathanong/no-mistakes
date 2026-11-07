@@ -118,7 +118,7 @@ fn disabled_scopes_and_traces_preserve_result() {
 }
 
 #[test]
-fn saved_files_report_physical_parse_extraction_and_finalization() {
+fn saved_files_report_complete_parse_extraction_and_finalization() {
     use crate::codebase::ts_source::facts::{
         collect_ts_facts_with_context, TsFactContext, TsFactPlan,
     };
@@ -273,8 +273,7 @@ fn file_cost_brackets_work_and_converts_seconds_to_milliseconds() {
 }
 
 #[test]
-fn real_parser_file_times_fit_the_parallel_phase_wall_budget() {
-    use rayon::prelude::*;
+fn real_file_work_times_fit_the_parallel_phase_wall_budget() {
     let saved =
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/diagnostics/physical-parse");
     let fixture = crate::test_support::materialize_saved_fixture(&saved);
@@ -292,23 +291,29 @@ fn real_parser_file_times_fit_the_parallel_phase_wall_budget() {
                 .build()
                 .unwrap()
                 .install(|| {
-                    inputs.par_iter().for_each(|(path, source)| {
-                        crate::diagnostics::with_observer(Some(observer.clone()), || {
-                            let allocator = oxc_allocator::Allocator::default();
-                            let parsed = crate::ast::parse(
-                                path,
-                                &allocator,
-                                source,
-                                oxc_span::SourceType::from_path(path).unwrap(),
+                    crate::diagnostics::with_observer(Some(observer.clone()), || {
+                        let paths = inputs
+                            .iter()
+                            .map(|(path, _)| path.clone())
+                            .collect::<Vec<_>>();
+                        let facts =
+                            crate::codebase::ts_source::facts::collect_ts_facts_with_context(
+                                &paths,
+                                crate::codebase::ts_source::facts::TsFactPlan::imports(),
+                                &crate::codebase::ts_source::facts::TsFactContext::new(
+                                    fixture.path(),
+                                ),
                             );
-                            assert!(parsed.diagnostics.is_empty());
-                            assert!(!parsed.program.body.is_empty());
-                        });
+                        assert_eq!(facts.len(), inputs.len());
                     });
                 });
         });
         let counts = crate::ast::finish_parse_count(fixture.path());
         let rows = observer.hot_file_snapshot();
+        let rows = rows
+            .into_iter()
+            .filter(|row| row.pass == FilePass::Parse)
+            .collect::<Vec<_>>();
         assert_eq!(rows.len(), inputs.len());
         for (path, source) in &inputs {
             assert_eq!(counts.get(path), Some(&1));

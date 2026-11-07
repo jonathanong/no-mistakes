@@ -112,12 +112,7 @@ pub(crate) fn parse<'a>(
     #[cfg(any(test, feature = "test-instrumentation"))]
     parse_count::record_parse_path(path);
     module_names::enforce(
-        crate::diagnostics::hot_files::trace(
-            crate::diagnostics::hot_files::FilePass::Parse,
-            path,
-            source.len() as u64,
-            || Parser::new(allocator, source, source_type).parse(),
-        ),
+        Parser::new(allocator, source, source_type).parse(),
         allocator,
     )
 }

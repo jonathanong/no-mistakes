@@ -636,7 +636,9 @@ phase-end sample and its delta sums the individual nonnegative span increases.
 Resource sampling is Unix only; unsupported or failed samples have no resource
 record. Nested and parallel spans retain elapsed timings without CPU/RSS
 attribution. Hot-file records contain `pass`, `path`, `durationMs` and `units`,
-bounded to ten per pass. See [diagnostic semantics](cli/diagnostics.md) for pass
+bounded to ten per pass. File `parse` covers parsing and requested fact extraction;
+value-flow extraction/finalization cover collector setup through returned facts.
+All file durations are elapsed milliseconds, including annotation roots. See [diagnostic semantics](cli/diagnostics.md) for pass
 units, ranking, RSS caveats and overlapping durations.
 
 CPU/RSS samples cover the whole Node process, including concurrent work in

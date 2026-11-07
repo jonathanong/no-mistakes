@@ -149,3 +149,67 @@ fn annotation_hot_files_cover_the_prepared_root_evaluation() {
     );
     assert_eq!(lines, attribution(&second, &root));
 }
+
+#[cfg(unix)]
+#[test]
+fn complete_file_parse_times_account_for_phase_cpu() {
+    let fixture = super::saved_fixture::materialize("diagnostics", "file-work");
+    let root = fixture.path().canonicalize().unwrap();
+    for jobs in ["1", "4"] {
+        let result = run(&root, jobs, Some("--verbose-timings"));
+        assert!(result.status.success(), "{:?}", result);
+        let stderr = String::from_utf8(result.stderr).unwrap();
+        let cpu = stderr
+            .lines()
+            .find_map(|line| line.strip_prefix("[cpu] parse: "))
+            .unwrap();
+        let cpu_ms = cpu
+            .split_whitespace()
+            .take(2)
+            .map(|value| {
+                value
+                    .split_once('=')
+                    .unwrap()
+                    .1
+                    .trim_end_matches("ms")
+                    .parse::<f64>()
+                    .unwrap()
+            })
+            .sum::<f64>();
+        let times = |pass| {
+            stderr
+                .lines()
+                .filter(|line| line.starts_with(&format!("[hot] {pass}: ")))
+                .map(|line| {
+                    line.split_once(" units=")
+                        .unwrap()
+                        .0
+                        .rsplit_once(' ')
+                        .unwrap()
+                        .1
+                        .trim_end_matches("ms")
+                        .parse::<f64>()
+                        .unwrap()
+                })
+                .collect::<Vec<_>>()
+        };
+        let parse = times("parse");
+        assert_eq!(parse.len(), 1, "{stderr}");
+        assert!(cpu_ms > 0.0, "{stderr}");
+        let sum = parse.iter().sum::<f64>();
+        assert!(
+            sum >= cpu_ms / 4.0 && sum <= cpu_ms * 8.0 + 20.0,
+            "per-file work must account for phase CPU, allowing scheduling noise: {stderr}"
+        );
+        let extract = times("value_flow.extract");
+        let finalize = times("value_flow.finalize");
+        assert_eq!(extract.len(), 1, "{stderr}");
+        assert_eq!(finalize.len(), 1, "{stderr}");
+        assert!(extract[0] > 0.0 && finalize[0] > 0.0, "{stderr}");
+        assert!(extract[0] + finalize[0] <= sum + 0.01, "{stderr}");
+        let bytes = std::fs::metadata(root.join("work.mts")).unwrap().len();
+        for line in stderr.lines().filter(|line| line.starts_with("[hot] ")) {
+            assert!(line.contains(&format!("units={bytes} ")), "{line}");
+        }
+    }
+}
