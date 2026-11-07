@@ -33,6 +33,20 @@ workers use several CPUs. A zero RSS increase means the previous peak was not
 exceeded; it does not mean the phase allocated no memory. Peak RSS includes
 startup and earlier phases and is not live heap size or retained bytes.
 
+For example, a ten-millisecond phase using thirty milliseconds of CPU can emit:
+
+```text
+[cpu] parse: user=20.000ms sys=10.000ms util=3.000x
+[memory] parse: peak_rss_kib=600 delta_kib=200
+```
+
+`delta_kib` subtracts the process high-water mark sampled at phase start from
+the mark sampled at phase end. The invocation dispatch envelope is transparent
+for resource attribution: it emits no CPU/RSS metrics, allowing its sequential
+child phases to report them. `check.analysis` provides one serial envelope around
+the concurrent domain checks, so its process-wide measurements cover the whole
+domain pass.
+
 Nested or parallel spans retain their elapsed timings but omit process CPU and
 RSS attribution, since process-wide counters cannot separate overlapping work.
 Unsupported platforms and failed resource samples omit values rather than
