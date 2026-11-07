@@ -636,6 +636,9 @@ records contain `pass`, `path`, `durationMs` and `units`, bounded to ten per
 pass. See [diagnostic semantics](cli/diagnostics.md) for pass units, ranking,
 RSS caveats and overlapping durations.
 
+CPU/RSS samples cover the whole Node process, including concurrent work in
+other requests. Use an otherwise idle process for phase attribution.
+
 The native analysis runs on libuv async tasks and collection writes no stderr.
 Each collector call owns its observer; ordinary calls remain uninstrumented
 unless their existing timing or live-progress options are enabled. Reports are
