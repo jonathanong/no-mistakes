@@ -59,10 +59,20 @@ impl InvocationObserver {
         units: u64,
         operation: impl FnOnce() -> T,
     ) -> T {
+        self.trace_file_with_clock(pass, path, units, || self.snapshot_clock().0, operation)
+    }
+    fn trace_file_with_clock<T>(
+        &self,
+        pass: FilePass,
+        path: &Path,
+        units: u64,
+        now: impl FnOnce() -> Instant,
+        operation: impl FnOnce() -> T,
+    ) -> T {
         let Some(files) = &self.hot_files else {
             return operation();
         };
-        let started = Instant::now();
+        let started = now();
         let result = operation();
         let duration = started.elapsed();
         let entry = FileDiagnostic {
