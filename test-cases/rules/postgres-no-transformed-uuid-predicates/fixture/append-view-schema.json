@@ -1,0 +1,29 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "threads": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "root_id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "posts": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    }
+  },
+  "views": {
+    "view_posts": {
+      "definition": "SELECT p.id FROM posts p"
+    }
+  }
+}

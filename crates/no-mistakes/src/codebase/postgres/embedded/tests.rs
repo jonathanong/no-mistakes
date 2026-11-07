@@ -44,6 +44,7 @@ fn first_init<'a>(program: &'a oxc_ast::ast::Program<'a>) -> &'a Expression<'a> 
 }
 
 mod builder_text;
+mod direct_builder_text;
 mod iife_fail_closed;
 mod part1;
 mod part2;
