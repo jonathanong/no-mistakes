@@ -43,3 +43,7 @@ pub(crate) fn interpolations(
     }
     out
 }
+
+#[cfg(test)]
+#[path = "interpolations_tests.rs"]
+mod tests;
