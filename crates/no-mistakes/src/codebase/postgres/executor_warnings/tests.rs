@@ -97,3 +97,30 @@ fn default_empty_and_complete_executor_lists_need_no_warning_facts() {
         assert_eq!(facts.stats.files_parsed, 0, "{name}");
     }
 }
+
+#[test]
+fn repeated_omitted_calls_choose_one_stable_example_per_name() {
+    let saved = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/postgres-executor-names");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    let root = normalize_path(fixture.path());
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join("multiple-sites.yml"))).unwrap();
+    let mut plan = CheckFactPlan {
+        raw_source: true,
+        ..Default::default()
+    };
+    configure_executor_warnings(&root, &config, &mut plan).unwrap();
+    let facts = collect_check_facts(
+        &root,
+        vec![root.join("src/sites.ts"), root.join("src/annotated.ts")],
+        plan,
+    );
+    let warnings = executor_config_warnings(&root, &facts);
+    assert_eq!(warnings.len(), 3, "{warnings:#?}");
+    let read = warnings
+        .iter()
+        .find(|warning| warning.contains("omits `read`"))
+        .unwrap();
+    assert!(read.contains("src/annotated.ts:2"), "{read}");
+}
