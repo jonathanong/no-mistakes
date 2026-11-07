@@ -5,17 +5,20 @@
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 0,
         "stdout": "\"0.109.7\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "latest"
       },
       {
         "status": 0,
         "stdout": "",
-        "stderr": ""
+        "stderr": "",
+        "request": "publish"
       }
     ],
     "tags": [
@@ -28,17 +31,20 @@
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 0,
         "stdout": "\"0.109.9\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "latest"
       },
       {
         "status": 0,
         "stdout": "",
-        "stderr": ""
+        "stderr": "",
+        "request": "publish"
       }
     ],
     "tags": [
@@ -51,7 +57,8 @@
       {
         "status": 0,
         "stdout": "\"0.109.8\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "version"
       }
     ],
     "tags": []
@@ -62,7 +69,8 @@
       {
         "status": 0,
         "stdout": "[\"0.109.8\"]",
-        "stderr": ""
+        "stderr": "",
+        "request": "version"
       }
     ],
     "tags": []
@@ -73,37 +81,44 @@
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 0,
         "stdout": "\"0.109.7\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "latest"
       },
       {
         "status": 1,
         "stdout": "",
-        "stderr": "TLOG_CREATE_ENTRY_ERROR: (409) an equivalent entry already exists"
+        "stderr": "TLOG_CREATE_ENTRY_ERROR: (409) an equivalent entry already exists",
+        "request": "publish"
       },
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 0,
         "stdout": "\"0.109.7\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "latest"
       },
       {
         "status": 0,
         "stdout": "",
-        "stderr": ""
+        "stderr": "",
+        "request": "publish"
       }
     ],
     "tags": [
@@ -120,22 +135,26 @@
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 0,
         "stdout": "\"0.109.7\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "latest"
       },
       {
         "status": 1,
         "stdout": "",
-        "stderr": "ECONNRESET"
+        "stderr": "ECONNRESET",
+        "request": "publish"
       },
       {
         "status": 0,
         "stdout": "\"0.109.8\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "version"
       }
     ],
     "tags": [
@@ -148,27 +167,32 @@
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 0,
         "stdout": "\"0.109.7\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "latest"
       },
       {
         "status": 1,
         "stdout": "",
-        "stderr": "TLOG_CREATE_ENTRY_ERROR"
+        "stderr": "TLOG_CREATE_ENTRY_ERROR",
+        "request": "publish"
       },
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 0,
         "stdout": "\"0.109.8\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "version"
       }
     ],
     "tags": [
@@ -184,37 +208,44 @@
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 0,
         "stdout": "\"0.109.7\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "latest"
       },
       {
         "status": 1,
         "stdout": "",
-        "stderr": "E503"
+        "stderr": "E503",
+        "request": "publish"
       },
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 0,
         "stdout": "\"0.110.0\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "latest"
       },
       {
         "status": 0,
         "stdout": "",
-        "stderr": ""
+        "stderr": "",
+        "request": "publish"
       }
     ],
     "tags": [
@@ -231,22 +262,26 @@
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 0,
         "stdout": "\"0.109.7\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "latest"
       },
       {
         "status": 1,
         "stdout": "",
-        "stderr": "E403"
+        "stderr": "E403",
+        "request": "publish"
       },
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       }
     ],
     "tags": [
@@ -260,62 +295,74 @@
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 0,
         "stdout": "\"0.109.7\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "latest"
       },
       {
         "status": 1,
         "stdout": "",
-        "stderr": "TLOG_CREATE_ENTRY_ERROR"
+        "stderr": "TLOG_CREATE_ENTRY_ERROR",
+        "request": "publish"
       },
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 0,
         "stdout": "\"0.109.7\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "latest"
       },
       {
         "status": 1,
         "stdout": "",
-        "stderr": "TLOG_CREATE_ENTRY_ERROR"
+        "stderr": "TLOG_CREATE_ENTRY_ERROR",
+        "request": "publish"
       },
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 0,
         "stdout": "\"0.109.7\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "latest"
       },
       {
         "status": 1,
         "stdout": "",
-        "stderr": "TLOG_CREATE_ENTRY_ERROR"
+        "stderr": "TLOG_CREATE_ENTRY_ERROR",
+        "request": "publish"
       },
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       }
     ],
     "tags": [
@@ -335,7 +382,8 @@
       {
         "status": 1,
         "stdout": "",
-        "stderr": "E503"
+        "stderr": "E503",
+        "request": "version"
       }
     ],
     "tags": [],
@@ -347,12 +395,14 @@
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 1,
         "stdout": "",
-        "stderr": "E503"
+        "stderr": "E503",
+        "request": "latest"
       }
     ],
     "tags": [],
@@ -364,17 +414,20 @@
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "latest"
       },
       {
         "status": 0,
         "stdout": "",
-        "stderr": ""
+        "stderr": "",
+        "request": "publish"
       }
     ],
     "tags": [
@@ -387,38 +440,45 @@
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 0,
         "stdout": "\"0.109.7\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "latest"
       },
       {
         "throw": {
           "code": "ETIMEDOUT",
           "message": "spawnSync npm ETIMEDOUT"
-        }
+        },
+        "request": "publish"
       },
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 0,
         "stdout": "\"0.109.7\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "latest"
       },
       {
         "status": 0,
         "stdout": "",
-        "stderr": ""
+        "stderr": "",
+        "request": "publish"
       }
     ],
     "tags": [
@@ -435,23 +495,27 @@
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 0,
         "stdout": "\"0.109.7\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "latest"
       },
       {
         "throw": {
           "code": "ETIMEDOUT",
           "message": "spawnSync npm ETIMEDOUT"
-        }
+        },
+        "request": "publish"
       },
       {
         "status": 0,
         "stdout": "\"0.109.8\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "version"
       }
     ],
     "tags": [
@@ -465,7 +529,8 @@
         "throw": {
           "code": "ETIMEDOUT",
           "message": "spawnSync npm ETIMEDOUT"
-        }
+        },
+        "request": "version"
       }
     ],
     "tags": [],
@@ -477,23 +542,80 @@
       {
         "status": 1,
         "stdout": "{\"error\": {\"code\": \"E404\"}}",
-        "stderr": "npm error code E404"
+        "stderr": "npm error code E404",
+        "request": "version"
       },
       {
         "status": 0,
         "stdout": "\"0.109.7\"",
-        "stderr": ""
+        "stderr": "",
+        "request": "latest"
       },
       {
         "throw": {
           "code": "ENOENT",
           "message": "spawnSync npm ENOENT"
-        }
+        },
+        "request": "publish"
       }
     ],
     "tags": [
       "latest"
     ],
     "error": "ENOENT"
+  },
+  {
+    "name": "broken-pipe failure checks registry and retries",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "npm error code EPIPE",
+        "request": "publish"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "request": "publish"
+      }
+    ],
+    "tags": [
+      "latest",
+      "latest"
+    ],
+    "delays": [
+      10000
+    ]
   }
 ]

@@ -59,7 +59,7 @@ async function publish(packageName, version, { run = npm, sleep = delay } = {}) 
     // A failed response can follow a successful registry write.
     if (view(run, `${packageName}@${version}`, "version") === version) return;
     const output = `${result.stdout}\n${result.stderr}`;
-    const transient = /TLOG_CREATE_ENTRY_ERROR|\b(?:E429|E5\d\d|ECONNRESET|ETIMEDOUT|EAI_AGAIN|ECONNREFUSED)\b/.test(output);
+    const transient = /TLOG_CREATE_ENTRY_ERROR|\b(?:E429|E5\d\d|ECONNRESET|EPIPE|ETIMEDOUT|EAI_AGAIN|ECONNREFUSED)\b/.test(output);
     if (!transient || attempt === 3) throw new Error(`npm publish ${packageName}@${version} failed: ${output}`);
     console.log(`Transient publish failure for ${packageName}@${version}; retry ${attempt}/2`);
     await sleep(attempt * 10000);

@@ -14,16 +14,14 @@ for (const scenario of scenarios) {
     const options = {
       run(args) {
         assert.ok(results.length, `Unexpected npm command: ${args.join(" ")}`);
-        if (args[0] === "publish") {
-          assert.deepEqual(args.slice(0, 7), ["publish", "./packages/eslint-plugin-no-mistakes", "--provenance", "--access", "public", "--tag", args[6]]);
-          tags.push(args[6]);
-        } else {
-          assert.equal(args[0], "view");
-          assert.equal(args[3], "--json");
-          assert.ok(args[1] === "eslint-plugin-no-mistakes" || args[1] === "eslint-plugin-no-mistakes@0.109.8");
-          assert.equal(args[2], args[1].includes("@") ? "version" : "dist-tags.latest");
-        }
         const result = results.shift();
+        const requests = {
+          version: ["view", "eslint-plugin-no-mistakes@0.109.8", "version", "--json"],
+          latest: ["view", "eslint-plugin-no-mistakes", "dist-tags.latest", "--json"],
+          publish: ["publish", "./packages/eslint-plugin-no-mistakes", "--provenance", "--access", "public", "--tag", scenario.tags[tags.length]],
+        };
+        assert.deepEqual(args, requests[result.request]);
+        if (args[0] === "publish") tags.push(args[6]);
         if (result.throw) throw Object.assign(new Error(result.throw.message), result.throw);
         return result;
       },
