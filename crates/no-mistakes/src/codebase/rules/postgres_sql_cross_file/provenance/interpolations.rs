@@ -1,6 +1,6 @@
 //! Interpolations of an executor call that are candidate identifier sources.
 use super::bindings::Bindings;
-use super::{binding_tag, classify, classify_call, contains, text_tag, Provenance};
+use super::{binding_tag, classify_call, classify_value, contains, text_tag, Provenance};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, TsFactLookup};
 use crate::codebase::rules::postgres_sql_cross_file::{walk_expression, SqlCall};
@@ -47,13 +47,11 @@ pub(crate) fn interpolations(
                 .iter()
                 .take(if tagged { 1 } else { usize::MAX })
             {
-                classify(graph, facts, &call.file, argument, &mut out, bindings);
+                classify_value(graph, facts, &call.file, argument, &mut out, bindings);
             }
             continue;
         }
-        classify_call(
-            graph, facts, &call.file, value_call, &mut out, bindings, true,
-        );
+        classify_call(graph, facts, &call.file, value_call, &mut out, bindings);
     }
     out
 }

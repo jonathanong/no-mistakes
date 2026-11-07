@@ -59,6 +59,8 @@ fn postgres_workspace_identifier_sources_check_json_snapshot() {
         "wrong",
         "typo",
         "member",
+        "member-wrapped",
+        "value-only",
         "unused-advise",
         "unchecked",
     ] {
