@@ -35,6 +35,12 @@ pub(super) struct HotFiles {
 impl HotFiles {
     fn record(&mut self, entry: FileDiagnostic) {
         let entries = &mut self.entries[entry.pass as usize];
+        if let Some(index) = entries.iter().position(|saved| saved.path == entry.path) {
+            if (entries[index].duration, entries[index].units) >= (entry.duration, entry.units) {
+                return;
+            }
+            entries.swap_remove(index);
+        }
         entries.push(entry);
         entries.sort_unstable_by(|a, b| {
             b.duration
@@ -82,7 +88,7 @@ impl InvocationObserver {
             for entry in entries.into_iter().flatten() {
                 let _ = writeln!(
                     output,
-                    "[hot-file] {} {}: {:.3}ms units={} (parallel; non-additive)",
+                    "[hot] {}: {} {:.3}ms units={} (parallel; non-additive)",
                     entry.pass.label(),
                     entry.path.display(),
                     entry.duration.as_secs_f64() * 1000.0,
@@ -105,25 +111,35 @@ pub(crate) fn trace<T>(
     }
 }
 thread_local! {
-    static FILE: RefCell<Option<PathBuf>> = const { RefCell::new(None) };
+    static FILE: RefCell<Option<(usize, PathBuf)>> = const { RefCell::new(None) };
 }
-struct FileGuard(Option<PathBuf>);
+struct FileGuard(Option<(usize, PathBuf)>);
 impl Drop for FileGuard {
     fn drop(&mut self) {
         FILE.with(|file| *file.borrow_mut() = self.0.take());
     }
 }
 pub(crate) fn with_file<T>(path: &Path, operation: impl FnOnce() -> T) -> T {
-    if !super::current().is_some_and(|observer| observer.verbose()) {
+    let Some(observer) = super::current().filter(|observer| observer.verbose()) else {
         return operation();
-    }
-    let _guard = FileGuard(FILE.with(|file| file.replace(Some(path.to_path_buf()))));
+    };
+    let identity = std::sync::Arc::as_ptr(&observer) as usize;
+    let _guard = FileGuard(FILE.with(|file| file.replace(Some((identity, path.to_path_buf())))));
     operation()
 }
 pub(crate) fn trace_current<T>(pass: FilePass, units: u64, operation: impl FnOnce() -> T) -> T {
-    let path = FILE.with(|file| file.borrow().clone());
+    let Some(observer) = super::current().filter(|observer| observer.verbose()) else {
+        return operation();
+    };
+    let identity = std::sync::Arc::as_ptr(&observer) as usize;
+    let path = FILE.with(|file| {
+        file.borrow()
+            .as_ref()
+            .filter(|(owner, _)| *owner == identity)
+            .map(|(_, path)| path.clone())
+    });
     match path {
-        Some(path) => trace(pass, &path, units, operation),
+        Some(path) => observer.trace_file(pass, &path, units, operation),
         None => operation(),
     }
 }

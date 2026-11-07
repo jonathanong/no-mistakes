@@ -57,7 +57,7 @@ fn collection_is_verbose_only_and_preserves_result() {
         assert_eq!(observer.hot_files.is_some(), verbose);
         let block = observer.hot_file_block();
         if verbose {
-            assert!(block.starts_with("[hot-file] parse file.ts:"));
+            assert!(block.starts_with("[hot] parse: file.ts "));
             assert!(block.contains("units=42 (parallel; non-additive)"));
         } else {
             assert!(block.is_empty());
@@ -71,7 +71,12 @@ fn concurrent_writers_keep_only_ten_per_pass() {
         for index in 0..40 {
             let observer = &observer;
             scope.spawn(move || {
-                observer.trace_file(FilePass::Parse, Path::new("file.ts"), index, || ())
+                observer.trace_file(
+                    FilePass::Parse,
+                    &PathBuf::from(format!("file-{index}.ts")),
+                    index,
+                    || (),
+                )
             });
         }
     });
@@ -136,4 +141,90 @@ fn saved_files_report_physical_parse_extraction_and_finalization() {
     assert!(files.entries[FilePass::Parse as usize]
         .iter()
         .all(|entry| entry.units > 0));
+}
+
+#[test]
+fn repeated_paths_retain_the_largest_operation_without_displacing_other_files() {
+    let mut files = HotFiles::default();
+    for duration in [5, 3, 7, 2] {
+        files.record(entry(FilePass::Parse, 1, duration));
+    }
+    files.record(entry(FilePass::Parse, 2, 4));
+    assert_eq!(files.entries[0].len(), 2);
+    assert_eq!(files.entries[0][0], entry(FilePass::Parse, 1, 7));
+    assert_eq!(files.entries[0][1], entry(FilePass::Parse, 2, 4));
+}
+
+#[test]
+fn nested_requests_never_inherit_another_observers_file() {
+    use crate::diagnostics::with_observer;
+    let outer = InvocationObserver::new(true);
+    let inner = InvocationObserver::new(true);
+    with_observer(Some(outer.clone()), || {
+        with_file(Path::new("outer.ts"), || {
+            with_observer(Some(inner.clone()), || {
+                trace_current(FilePass::ValueFlowExtract, 1, || ());
+                with_file(Path::new("inner.ts"), || {
+                    trace_current(FilePass::ValueFlowExtract, 2, || ())
+                });
+            });
+            with_observer(None, || {
+                with_file(Path::new("disabled.ts"), || {
+                    trace_current(FilePass::ValueFlowExtract, 1, || ())
+                });
+            });
+            trace_current(FilePass::ValueFlowExtract, 3, || ());
+        })
+    });
+    assert_eq!(inner.hot_file_block().lines().count(), 1);
+    assert!(inner.hot_file_block().contains("inner.ts"));
+    assert!(!inner.hot_file_block().contains("outer.ts"));
+    assert_eq!(outer.hot_file_block().lines().count(), 1);
+    assert!(outer.hot_file_block().contains("outer.ts"));
+}
+
+#[test]
+fn rendering_covers_each_pass_in_fixed_order() {
+    let observer = InvocationObserver::new(true);
+    for pass in [
+        FilePass::PostgresAnnotation,
+        FilePass::ValueFlowFinalize,
+        FilePass::ValueFlowExtract,
+        FilePass::Parse,
+    ] {
+        observer
+            .hot_files
+            .as_ref()
+            .unwrap()
+            .lock()
+            .unwrap()
+            .record(entry(pass, 1, 1_000_000));
+    }
+    let text = observer.hot_file_block();
+    assert_eq!(text, "[hot] parse: file-01.ts 1.000ms units=1 (parallel; non-additive)\n[hot] value_flow.extract: file-01.ts 1.000ms units=1 (parallel; non-additive)\n[hot] value_flow.finalize: file-01.ts 1.000ms units=1 (parallel; non-additive)\n[hot] postgres.annotation: file-01.ts 1.000ms units=1 (parallel; non-additive)\n");
+}
+
+#[test]
+fn fixed_measurements_render_identically_with_one_or_two_rayon_workers() {
+    use rayon::prelude::*;
+    let render = |jobs| {
+        let observer = InvocationObserver::new(true);
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(jobs)
+            .build()
+            .unwrap()
+            .install(|| {
+                (0..100).into_par_iter().for_each(|index| {
+                    observer
+                        .hot_files
+                        .as_ref()
+                        .unwrap()
+                        .lock()
+                        .unwrap()
+                        .record(entry(FilePass::Parse, index, index % 5));
+                });
+            });
+        observer.hot_file_block()
+    };
+    assert_eq!(render(1), render(2));
 }
