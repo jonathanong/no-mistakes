@@ -1,4 +1,4 @@
-//! Parameterized tags bind every interpolation; none is raw SQL text.
+//! Import identity for SQL tags and default-library binds.
 use super::bindings::Bindings;
 use crate::codebase::dependencies::extract::{ImportedBindingKind, ValueCall, ValueExpression};
 use crate::codebase::dependencies::graph::TsFactLookup;
@@ -12,7 +12,7 @@ const MODULE: &str = "sql-template-strings";
 /// tagged calls and stay candidates. A parameter or local with the tag's name
 /// shadows the import, so it is not the library tag.
 pub(super) fn is_bind_tag(bindings: &Bindings<'_>, file: &Path, value_call: &ValueCall) -> bool {
-    is_parameterized_tag(bindings, file, value_call, bindings.trusted_tags)
+    is_parameterized_tag(bindings, file, value_call, &[])
 }
 
 pub(crate) fn is_parameterized_tag(
@@ -43,7 +43,7 @@ pub(crate) fn is_parameterized_tag(
                     || ts
                         .value_flow
                         .tagged_templates
-                        .contains(&(value_call.offset, value_call.end))
+                        .contains_key(&(value_call.offset, value_call.end))
                         && import.kind == ImportedBindingKind::Named
                         && tags.iter().any(|tag| {
                             !tag.module.is_empty()

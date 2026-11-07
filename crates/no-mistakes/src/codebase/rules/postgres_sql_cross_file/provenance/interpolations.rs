@@ -1,9 +1,9 @@
 //! Interpolations of an executor call that are candidate identifier sources.
 use super::bindings::Bindings;
-use super::{binding_tag, classify, classify_call, contains, Provenance};
+use super::{binding_tag, classify, classify_call, contains, text_tag, Provenance};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, TsFactLookup};
-use crate::codebase::rules::postgres_sql_cross_file::SqlCall;
+use crate::codebase::rules::postgres_sql_cross_file::{walk_expression, SqlCall};
 use std::collections::BTreeSet;
 
 pub(crate) fn interpolations(
@@ -17,10 +17,22 @@ pub(crate) fn interpolations(
         return out;
     };
     let calls = &ts.value_flow.calls;
-    let binds: Vec<_> = binding_tag::bind_spans(bindings, &call.file, calls)
+    let mut binds: Vec<_> = binding_tag::bind_spans(bindings, &call.file, calls)
         .into_iter()
         .filter(|span| contains(call.span, *span))
         .collect();
+    for value_call in calls
+        .iter()
+        .filter(|value| contains(call.span, (value.offset, value.end)))
+    {
+        for argument in value_call.arguments.iter() {
+            walk_expression(argument, &mut |value| {
+                if let Some(span) = text_tag::projection_span(bindings, &call.file, value) {
+                    binds.push(span);
+                }
+            });
+        }
+    }
     for value_call in calls {
         let span = (value_call.offset, value_call.end);
         if !contains(call.span, span) || binds.iter().any(|bind| contains(*bind, span)) {

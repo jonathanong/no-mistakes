@@ -9,7 +9,8 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 mod binding_tag;
-pub(crate) use binding_tag::is_parameterized_tag;
+mod text_tag;
+pub(crate) use text_tag::is_text_tag;
 mod bindings;
 mod env;
 mod identifier_holes;
@@ -89,6 +90,9 @@ fn classify(
         }
         ValueExpression::Awaited(inner) => classify(graph, facts, file, inner, out, bindings),
         ValueExpression::Member(inner, key) => {
+            if text_tag::projection_span(bindings, file, expr).is_some() {
+                return;
+            }
             let mut members = vec![key.clone()];
             let mut current = inner.as_ref();
             while let ValueExpression::Member(next, next_key) = current {

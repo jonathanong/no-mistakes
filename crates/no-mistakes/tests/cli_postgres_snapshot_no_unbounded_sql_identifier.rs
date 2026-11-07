@@ -377,7 +377,7 @@ fn postgres_identifier_fragments_check_json_snapshot() {
         "fixture",
         "issue-3073-fragments",
     );
-    for shape in ["text", "joins", "union", "negative"] {
+    for shape in ["text", "joins", "union", "negative", "raw"] {
         assert_saved_fixture(
             &format!("postgres_identifier_fragments_{shape}"),
             &[(

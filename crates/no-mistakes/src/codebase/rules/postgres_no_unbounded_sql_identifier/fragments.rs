@@ -43,7 +43,7 @@ pub(super) fn proven(
     let ValueExpression::Call(start, end) = binding.value else {
         return false;
     };
-    if !flow.tagged_templates.contains(&(start, end)) {
+    if !flow.tagged_templates.contains_key(&(start, end)) {
         return false;
     }
     let Some(tag) = flow
@@ -53,7 +53,7 @@ pub(super) fn proven(
     else {
         return false;
     };
-    super::super::postgres_sql_cross_file::is_parameterized_tag(
+    super::super::postgres_sql_cross_file::is_text_tag(
         bindings,
         &call.file,
         tag,

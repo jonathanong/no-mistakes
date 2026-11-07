@@ -2,7 +2,7 @@
 /// prepared catalog and never reparses a factory or helper body.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ValueFlowFacts {
-    pub(crate) tagged_templates: crate::fx::FxHashSet<(u32, u32)>,
+    pub(crate) tagged_templates: TaggedTemplates,
     pub(crate) sql_placeholder_lists: Vec<(usize, String, u32)>,
     /// Failed analysis must not supply definitive value-flow or graph answers.
     pub incomplete_reason: Option<String>,

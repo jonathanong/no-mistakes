@@ -1,5 +1,10 @@
 use super::*;
 
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct TaggedTemplateInfo {
+    pub(crate) literal_arguments: Vec<usize>,
+}
+
 pub(super) fn tag_offset(tagged: &TaggedTemplateExpression<'_>) -> u32 {
     if simple_callee_name(&tagged.tag).is_some() {
         tagged.span.start
@@ -23,9 +28,18 @@ impl ImportCollector {
         if !self.collect_value_flow {
             return;
         }
-        self.value_flow
-            .tagged_templates
-            .insert((tag_offset(tagged), tagged.span.end));
+        self.value_flow.tagged_templates.insert(
+            (tag_offset(tagged), tagged.span.end),
+            TaggedTemplateInfo {
+                literal_arguments: tagged
+                    .quasi
+                    .expressions
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(index, value)| literal_argument(value).then_some(index + 1))
+                    .collect(),
+            },
+        );
         let mut arguments = vec![ValueExpression::Unknown];
         arguments.extend(
             tagged
@@ -48,5 +62,17 @@ impl ImportCollector {
             once: false,
             repeated: self.repeat_depth > self.call_repeat_base,
         });
+    }
+}
+
+fn literal_argument(value: &Expression<'_>) -> bool {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(value) {
+        Expression::StringLiteral(_)
+        | Expression::NumericLiteral(_)
+        | Expression::BigIntLiteral(_)
+        | Expression::BooleanLiteral(_)
+        | Expression::NullLiteral(_) => true,
+        Expression::TemplateLiteral(template) => template.expressions.is_empty(),
+        _ => false,
     }
 }

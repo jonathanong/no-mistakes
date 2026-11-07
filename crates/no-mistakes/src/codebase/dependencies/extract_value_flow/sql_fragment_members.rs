@@ -19,7 +19,7 @@ impl ImportCollector {
             binding.name == name
                 && binding.scope == scope
                 && matches!(binding.value, ValueExpression::Call(start, end)
-                    if self.value_flow.tagged_templates.contains(&(start, end)))
+                    if self.value_flow.tagged_templates.contains_key(&(start, end)))
         }) {
             self.record_registry_mutation(&name);
         }
