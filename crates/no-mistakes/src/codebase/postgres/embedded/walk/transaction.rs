@@ -2,6 +2,7 @@ use super::ScopeVisitor;
 use crate::codebase::postgres::embedded::{bindings::member_query_receiver, EmbeddedSqlCall};
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use oxc_ast::ast::{ArrayExpressionElement, CallExpression, Expression};
+mod options;
 
 pub(super) fn annotate(
     visitor: &ScopeVisitor<'_>,
@@ -17,34 +18,17 @@ pub(super) fn annotate(
     fact.execution_unconditional = visitor.control_depth == 0
         && visitor.loop_depth == 0
         && !visitor.exited_functions.contains(&owner);
-    let receiver = member_query_receiver(call).unwrap_or(&call.callee);
-    if let Expression::Identifier(id) = unwrap_ts_wrappers(receiver) {
-        let name = id.name.as_str();
-        let binding = visitor.lookup(name);
-        let transaction = visitor
-            .scoped
-            .transactions
-            .get(name)
-            .and_then(|spans| {
-                spans
-                    .iter()
-                    .filter(|span| span.start <= call.span.start && call.span.start < span.end)
-                    .max_by_key(|span| span.start)
-            })
-            .filter(|span| {
-                binding.as_ref().and_then(|value| value.value_identity)
-                    == source_identity(span.start)
-            });
-        if let Some(span) = transaction {
-            fact.transaction_id = Some(span.start);
-            fact.transaction_line = Some(byte_offset_to_line(visitor.source, span.start as usize));
-            fact.executor_transaction_known = !visitor.append_crosses_function(name);
-        } else {
-            fact.executor_transaction_known = binding.is_none()
-                && (visitor.bindings.contains(name)
-                    || visitor.imported_namespace_names.contains_key(name));
+    let override_receiver =
+        options::receiver(call, &visitor.executor_options.executor_option_properties);
+    let receiver = match override_receiver {
+        Some(Some(receiver)) => receiver,
+        Some(None) => {
+            fact.executor_transaction_known = false;
+            return;
         }
-    }
+        None => member_query_receiver(call).unwrap_or(&call.callee),
+    };
+    annotate_receiver(visitor, receiver, call.span.start, fact);
     fact.bound_parameters =
         call.arguments
             .get(1)
@@ -74,7 +58,42 @@ pub(super) fn annotate(
             .unwrap_or_default();
 }
 
-fn identity(visitor: &ScopeVisitor<'_>, expression: &Expression<'_>) -> Option<String> {
+pub(super) fn annotate_receiver(
+    visitor: &ScopeVisitor<'_>,
+    receiver: &Expression<'_>,
+    position: u32,
+    fact: &mut EmbeddedSqlCall,
+) {
+    if let Expression::Identifier(id) = unwrap_ts_wrappers(receiver) {
+        let name = id.name.as_str();
+        let binding = visitor.lookup(name);
+        let transaction = visitor
+            .scoped
+            .transactions
+            .get(name)
+            .and_then(|spans| {
+                spans
+                    .iter()
+                    .filter(|span| span.start <= position && position < span.end)
+                    .max_by_key(|span| span.start)
+            })
+            .filter(|span| {
+                binding.as_ref().and_then(|value| value.value_identity)
+                    == source_identity(span.start)
+            });
+        if let Some(span) = transaction {
+            fact.transaction_id = Some(span.start);
+            fact.transaction_line = Some(byte_offset_to_line(visitor.source, span.start as usize));
+            fact.executor_transaction_known = !visitor.append_crosses_function(name);
+        } else {
+            fact.executor_transaction_known = binding.is_none()
+                && (visitor.bindings.contains(name)
+                    || visitor.imported_namespace_names.contains_key(name));
+        }
+    }
+}
+
+pub(super) fn identity(visitor: &ScopeVisitor<'_>, expression: &Expression<'_>) -> Option<String> {
     if let Expression::Identifier(id) = unwrap_ts_wrappers(expression) {
         let binding = visitor.lookup(id.name.as_str())?;
         let identity = binding.value_identity?;

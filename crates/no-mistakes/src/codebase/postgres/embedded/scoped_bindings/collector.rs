@@ -174,7 +174,14 @@ impl<'a> Visit<'a> for ScopeCollector {
                     let hit =
                         owners::factory_hit(&self.factories, &self.provisional_factories, init);
                     let span = Span::new(declarator.id.span().start, end);
-                    if hit.confirmed && declaration.kind == VariableDeclarationKind::Const {
+                    if hit.confirmed
+                        && matches!(
+                            declaration.kind,
+                            VariableDeclarationKind::Const
+                                | VariableDeclarationKind::Using
+                                | VariableDeclarationKind::AwaitUsing
+                        )
+                    {
                         self.found
                             .transactions
                             .entry(ident.name.to_string())

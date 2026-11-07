@@ -199,3 +199,24 @@ await tx.query('LOCK TABLE maintenance_jobs IN EXCLUSIVE MODE');
 bounds. [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) restricts SQL
 shapes. See [executor bindings](../postgres-facts/executor-bindings.md) for
 configured executor ownership.
+
+### Resource-scoped transactions and executor options
+
+Configured factory results bound with `using` or `await using` retain transaction
+membership until the enclosing block ends, just like an immutable `const` binding.
+Nested blocks and shadowed bindings keep distinct transaction identities.
+
+`executorOptionProperties` defaults to `[]`. Configure explicit property names
+(such as `[query]`) when an executor accepts an inline options object that routes
+SQL to another executor:
+
+```ts
+await using tx = await beginTransaction();
+await query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id], { query: tx });
+await query('UPDATE items SET active = true WHERE id = $1', [id], { query: tx });
+```
+
+A configured property may hold the transaction binding or its `.query` member.
+Unknown values, computed properties, spreads, and conflicting executor overrides
+follow the unanalyzable policy; they never establish autocommit membership. Use an
+inline static object and the configured transaction binding to make routing clear.
