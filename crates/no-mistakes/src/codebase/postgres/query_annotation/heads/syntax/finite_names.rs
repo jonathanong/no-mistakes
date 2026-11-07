@@ -38,8 +38,12 @@ impl Syntax {
         binding: &BindingIdentifier<'_>,
         init: &Expression<'_>,
     ) {
-        let Some(values) = finite_comments::plain_ternary(init) else {
-            return;
+        let values = match unwrap_ts_wrappers(init) {
+            Expression::StringLiteral(value) => vec![crate::ast::js_literal(value).into_owned()],
+            _ => match finite_comments::plain_ternary(init) {
+                Some(values) => values,
+                None => return,
+            },
         };
         self.name_domains.push(Domain {
             declaration: span(binding.span),

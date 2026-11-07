@@ -182,6 +182,23 @@ including when the ternary is the template interpolation. A synchronous
 `for (const name of ['one', 'two'])` does too. An unresolved import anywhere
 in that file leaves those calls under `unanalyzable`.
 
+### Literal const comment names
+
+A same-file `const` initialized directly with a string literal can supply the
+first ordinary template interpolation inside the leading comment:
+
+```ts
+const operation = 'accounts/list';
+query(`/* ${operation} */ SELECT id FROM accounts WHERE id = ${id}`);
+```
+
+The exact binding must remain read-only and unexported, and substitution must
+close a nonempty named comment before any other interpolation. A mutable name,
+shadowed parameter, alias, imported name, or dynamically computed initializer
+remains unresolved. This proof checks the comment only; it does not infer the
+SQL body or treat tagged interpolation as a literal name. Existing unresolved
+import and dynamic lexical access restrictions still apply.
+
 These are deliberately narrow low-effort syntax proofs. Low does not run the
 helper/value evaluator, so other helper-produced heads can remain unresolved
 when `effort: max` can recover them. A direct template tagged with an exact
