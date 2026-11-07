@@ -7,6 +7,15 @@ fn imported_helper_projection_reuses_prepared_call_export_and_source_facts() {
     let caller = root.join("src/query.ts");
     let helper = root.join("src/helper.ts");
     let files = [caller.clone(), helper.clone()];
+    let options: Options = config().rules[0].try_rule_options().unwrap();
+    let profile = compile(&options).unwrap().embedded;
+    let source = std::fs::read_to_string(&helper).unwrap();
+    let unprojected =
+        crate::codebase::postgres::extract_embedded_sql_from_source(&helper, &source, &profile);
+    assert!(unprojected
+        .calls
+        .iter()
+        .any(|call| call.line == 3 && !call.helper_definition));
     let sources = crate::codebase::rules::source_store_for_files(&files);
     crate::ast::begin_parse_count(&root);
     let facts = crate::codebase::postgres::prepare_rule_sql_facts(
@@ -36,10 +45,12 @@ fn imported_helper_projection_reuses_prepared_call_export_and_source_facts() {
         .exported_bindings
         .iter()
         .any(|binding| binding.local == "lockUser" && binding.exported == "lockUser"));
-    let options: Options = config().rules[0].try_rule_options().unwrap();
-    let profile = compile(&options).unwrap().embedded;
     let summary = facts.embedded_sql(&helper, &profile).unwrap();
     assert!(summary.lock_helper_summaries.contains_key("lockUser"));
+    assert!(summary
+        .calls
+        .iter()
+        .any(|call| call.line == 3 && call.helper_definition));
     let caller_sql = facts.embedded_sql(&caller, &profile).unwrap();
     assert!(caller_sql.imported_lock_helpers.is_empty());
     let call = caller_sql.calls.iter().find(|call| call.line == 5).unwrap();

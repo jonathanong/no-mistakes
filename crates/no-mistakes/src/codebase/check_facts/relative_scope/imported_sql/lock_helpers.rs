@@ -2,12 +2,15 @@ use super::program::Shared;
 use crate::codebase::postgres::embedded::walk::lock_helpers::{Invocation, Parameter};
 use crate::codebase::postgres::{EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlOptions};
 use std::path::{Path, PathBuf};
+pub(super) type Definitions =
+    crate::fx::FxHashMap<(PathBuf, usize), crate::fx::FxHashSet<(u32, u32)>>;
 
 pub(super) fn complete(
     shared: &mut Shared<'_, impl FnMut(&str, &Path) -> Option<PathBuf>>,
     path: &Path,
     options: &EmbeddedSqlOptions,
     invocation: &Invocation,
+    definitions: &mut Definitions,
 ) -> Vec<EmbeddedSqlCall> {
     if !invocation.resolve_helper {
         return vec![invocation.call.clone()];
@@ -21,12 +24,18 @@ pub(super) fn complete(
                 .and_then(|file| {
                     file.embedded_sql
                         .iter()
-                        .find(|(profile, _)| profile == options)
+                        .enumerate()
+                        .find(|(_, (profile, _))| profile == options)
                 })
-                .and_then(|(_, embedded)| embedded.lock_helper_summaries.get(&name))
+                .and_then(|(profile, (_, embedded))| {
+                    embedded
+                        .lock_helper_summaries
+                        .get(&name)
+                        .map(|summary| (path, profile, summary))
+                })
         });
     let mut calls = Vec::new();
-    if let Some(summary) = summary {
+    if let Some((origin, profile, summary)) = summary {
         if summary.calls.iter().any(|query| {
             invocation.accesses.get(query.executor).copied().flatten() != Some(query.access)
         }) {
@@ -52,6 +61,10 @@ pub(super) fn complete(
                     Parameter::Unknown => None,
                 })
                 .collect();
+            definitions
+                .entry((origin.clone(), profile))
+                .or_default()
+                .insert(query.span);
             calls.push(call);
         }
     }

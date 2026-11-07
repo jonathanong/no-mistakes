@@ -43,7 +43,13 @@ pub(super) fn project(
     files: &mut FileIdMap<CheckFileFacts>,
     resolve: impl FnMut(&str, &Path) -> Option<PathBuf>,
 ) {
-    let (completed, prerequisites, locks) = complete(files, resolve);
+    let (completed, prerequisites, locks, definitions) = complete(files, resolve);
+    for ((path, profile), spans) in definitions {
+        let embedded = &mut files.get_mut(&path).unwrap().embedded_sql[profile].1;
+        for (call, span) in embedded.calls.iter_mut().zip(&embedded.call_spans) {
+            call.helper_definition |= spans.contains(span);
+        }
+    }
     for (path, profile, span, calls) in locks {
         let embedded = &mut files.get_mut(&path).unwrap().embedded_sql[profile].1;
         for call in calls {
@@ -73,16 +79,24 @@ fn complete(
     Vec<Completed>,
     Vec<(PathBuf, SqlSourcePrerequisites)>,
     Vec<LockCompleted>,
+    lock_helpers::Definitions,
 ) {
     let mut shared = Shared::new(files, Locator::new(files, resolve));
     let mut completed = Vec::new();
     let mut prerequisites = Vec::new();
     let mut locks = Vec::new();
+    let mut definitions = lock_helpers::Definitions::default();
     for (path, file) in files {
         let mut provenance = SqlSourcePrerequisites::default();
         for (profile, (options, embedded)) in file.embedded_sql.iter().enumerate() {
             for invocation in &embedded.imported_lock_helpers {
-                let calls = lock_helpers::complete(&mut shared, path, options, invocation);
+                let calls = lock_helpers::complete(
+                    &mut shared,
+                    path,
+                    options,
+                    invocation,
+                    &mut definitions,
+                );
                 locks.push((path.clone(), profile, invocation.span, calls));
             }
             for pending in &embedded.pending_imported {
@@ -103,7 +117,7 @@ fn complete(
             prerequisites.push((path.clone(), provenance));
         }
     }
-    (completed, prerequisites, locks)
+    (completed, prerequisites, locks, definitions)
 }
 
 fn complete_call(

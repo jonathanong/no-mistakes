@@ -28,6 +28,7 @@ pub(crate) struct BindingState {
 }
 
 pub(crate) struct ScopeVisitor<'a> {
+    pub(super) applied_lock_helper_spans: crate::fx::FxHashSet<(u32, u32)>,
     pub(super) awaited_lock_helper_calls: crate::fx::FxHashSet<u32>,
     pub(super) imported_lock_helpers: Vec<super::lock_helpers::Invocation>,
     pub(super) lock_helpers: super::lock_helpers::LockHelpers<'a>,

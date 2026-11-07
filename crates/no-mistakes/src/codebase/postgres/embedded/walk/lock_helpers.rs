@@ -106,6 +106,8 @@ impl<'a> ScopeVisitor<'a> {
                     })
                     .collect();
             }
+            self.applied_lock_helper_spans
+                .insert((query.span.start, query.span.end));
             self.calls.push(fact);
             self.call_spans.push((call.span.start, call.span.end));
             if self.track_order {
@@ -115,18 +117,8 @@ impl<'a> ScopeVisitor<'a> {
         }
     }
     pub(super) fn mark_lock_helper_definitions(&mut self) {
-        let spans: crate::fx::FxHashSet<_> = self
-            .lock_helpers
-            .values()
-            .flat_map(|helper| {
-                helper
-                    .calls
-                    .iter()
-                    .map(|(_, _, call)| (call.span.start, call.span.end))
-            })
-            .collect();
         for (call, span) in self.calls.iter_mut().zip(&self.call_spans) {
-            call.helper_definition = spans.contains(span);
+            call.helper_definition = self.applied_lock_helper_spans.contains(span);
         }
     }
 }

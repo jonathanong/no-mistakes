@@ -5,6 +5,7 @@ pub(crate) struct Summary {
 }
 #[derive(Clone, PartialEq, Eq)]
 pub(crate) struct Query {
+    pub(crate) span: (u32, u32),
     pub(crate) access: ExecutorAccess,
     pub(crate) executor: usize,
     pub(crate) sql: String,
@@ -80,6 +81,7 @@ pub(super) fn summaries(helpers: &LockHelpers<'_>, source: &str) -> FxHashMap<St
                         _ => Vec::new(),
                     };
                     Query {
+                        span: (query.span.start, query.span.end),
                         access: *access,
                         executor: *executor,
                         sql: crate::codebase::postgres::embedded::sql_text(

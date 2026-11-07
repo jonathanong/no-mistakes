@@ -79,3 +79,13 @@ fn helper_executor_option_does_not_prove_a_write_on_the_callee_transaction() {
         "{findings:?}"
     );
 }
+#[test]
+fn uncalled_helper_keeps_unknown_transaction_membership_diagnostic() {
+    let findings = check(&fixture("unresolved"), &config()).unwrap();
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.line == 7 && finding.target.as_deref() == Some("unanalyzable")),
+        "{findings:?}"
+    );
+}
