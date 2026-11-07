@@ -88,7 +88,7 @@ not collect hot-file records.
 `[hot] parse` brackets each file's parsing and requested fact extraction, including
 semantic preparation, recovery, and AST cleanup. It excludes source reads and
 project-wide PostgreSQL evaluation. `value_flow.extract` includes collector
-setup, binding predeclaration and the AST visit; `value_flow.finalize` includes
+setup, binding declarations and the AST visit; `value_flow.finalize` includes
 alias/write completion, normalization, sorting and construction of returned
 facts. These passes use the same elapsed-millisecond clock as annotation roots.
 Value-flow records are nested within file parsing and must not be added to it.
