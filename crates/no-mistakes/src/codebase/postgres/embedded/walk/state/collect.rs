@@ -29,7 +29,7 @@ pub(crate) fn collect_calls<'a>(
         super::super::finite_identifiers::vitest_it_imports(program)
     };
     let mut visitor = ScopeVisitor {
-        #[cfg(test)]
+        #[cfg(feature = "test-instrumentation")]
         lock_summary_passes: 0,
         applied_lock_helper_spans: Default::default(),
         awaited_lock_helper_calls: Default::default(),
@@ -147,7 +147,7 @@ pub(crate) fn collect_calls<'a>(
         Default::default()
     };
     CollectedCalls {
-        #[cfg(test)]
+        #[cfg(feature = "test-instrumentation")]
         lock_summary_passes: visitor.lock_summary_passes,
         lock_helper_summaries,
         imported_lock_helpers: visitor.imported_lock_helpers,
@@ -169,5 +169,5 @@ pub(crate) fn collect_calls<'a>(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "test-instrumentation"))]
 mod summary_pass_tests;

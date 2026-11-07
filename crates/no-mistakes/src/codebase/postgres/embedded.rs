@@ -83,6 +83,8 @@ pub(crate) fn extract_embedded_sql_from_program_with_demand(
         options,
         head_calls_only,
     );
+    #[cfg(feature = "test-instrumentation")]
+    let _ = collected.lock_summary_passes;
     scoped.prune_unused_diagnostic_candidates(&collected.undeclared_executor_types);
     let mut fragments = collected.fragments;
     for fragment in &mut fragments {

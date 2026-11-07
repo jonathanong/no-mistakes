@@ -125,7 +125,7 @@ impl<'a> ScopeVisitor<'a> {
 
 impl ScopeVisitor<'_> {
     pub(super) fn lock_helper_summaries(&mut self) -> FxHashMap<String, Summary> {
-        #[cfg(test)]
+        #[cfg(feature = "test-instrumentation")]
         {
             self.lock_summary_passes += 1;
         }

@@ -28,7 +28,7 @@ pub(crate) struct BindingState {
 }
 
 pub(crate) struct ScopeVisitor<'a> {
-    #[cfg(test)]
+    #[cfg(feature = "test-instrumentation")]
     pub(super) lock_summary_passes: usize,
     pub(super) applied_lock_helper_spans: crate::fx::FxHashSet<(u32, u32)>,
     pub(super) awaited_lock_helper_calls: crate::fx::FxHashSet<u32>,
