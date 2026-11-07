@@ -8,7 +8,9 @@ pub use extract_value_flow::{
     ValueReceiverMutations, ValueRepeatCall, ValueRepeatRegion, ValueReplacementFacts,
     ValueReplacementWrite, ValueType,
 };
-pub(crate) use extract_value_flow::{ModuleAssignedMutations, ValueAssignedMutations};
+pub(crate) use extract_value_flow::{
+    ModuleAssignedMutations, TextOrigin, TextOrigins, ValueAssignedMutations,
+};
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ImportFacts {
     /// Top-level literal requires without a conditional execution guard.

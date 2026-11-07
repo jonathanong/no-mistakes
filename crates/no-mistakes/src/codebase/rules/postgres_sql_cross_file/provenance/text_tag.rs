@@ -1,6 +1,6 @@
 use super::{binding_tag, value_call_at, Bindings};
 use crate::codebase::dependencies::extract::{
-    ValueCall, ValueExpression, ValueParameter, ValueProjection,
+    TextOrigin, TextOrigins, ValueCall, ValueExpression, ValueParameter, ValueProjection,
 };
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::postgres::TrustedSqlTag;
@@ -24,6 +24,7 @@ struct ProofState {
     active: FxHashSet<ProofKey>,
     done: FxHashMap<ProofKey, bool>,
     opaque_parameter_defaults: FxHashSet<usize>,
+    origins: Option<std::sync::Arc<TextOrigins>>,
     callers: callers::State,
 }
 
@@ -93,6 +94,7 @@ fn text_tag(
     state
         .opaque_parameter_defaults
         .extend(info.opaque_parameter_defaults.iter().copied());
+    state.origins.clone_from(&info.origins);
     memoized(state, ProofKey::Call(call.offset, call.end), |state| {
         call.arguments
             .iter()
@@ -108,6 +110,9 @@ fn text_tag(
 #[cfg(test)]
 #[path = "text_tag_callers_tests.rs"]
 mod caller_tests;
+#[cfg(test)]
+#[path = "text_tag_opaque_callers_tests.rs"]
+mod opaque_caller_tests;
 #[cfg(test)]
 #[path = "text_tag_tests.rs"]
 mod tests;

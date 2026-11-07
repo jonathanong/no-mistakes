@@ -1,36 +1,97 @@
 use super::*;
 
-pub(super) fn ordinary(
+pub(super) fn caller_argument(
+    bindings: &Bindings<'_>,
+    file: &Path,
+    call: &ValueCall,
+    index: usize,
+    members: &[String],
+    tags: &[TrustedSqlTag],
+    state: &mut ProofState,
+) -> bool {
+    let origins = state.origins.clone();
+    call.arguments.get(index).is_none_or(|value| {
+        let origin = origins
+            .as_ref()
+            .and_then(|origins| origins.argument((call.offset, call.end), index));
+        ordinary(bindings, file, value, origin, members, tags, state)
+    })
+}
+
+fn ordinary(
     bindings: &Bindings<'_>,
     file: &Path,
     value: &ValueExpression,
+    origin: Option<&TextOrigin>,
     members: &[String],
     tags: &[TrustedSqlTag],
     state: &mut ProofState,
 ) -> bool {
     match value {
-        ValueExpression::Unknown | ValueExpression::Undefined | ValueExpression::Null => true,
-        ValueExpression::Derived(parts) if members.is_empty() => parts
-            .iter()
-            .all(|part| ordinary(bindings, file, part, &[], tags, state)),
-        ValueExpression::Awaited(inner) => ordinary(bindings, file, inner, members, tags, state),
+        ValueExpression::Unknown => origin.is_some_and(|origin| origin.literal),
+        ValueExpression::Undefined | ValueExpression::Null => true,
+        ValueExpression::Derived(parts) if members.is_empty() => {
+            parts.iter().enumerate().all(|(index, part)| {
+                ordinary(
+                    bindings,
+                    file,
+                    part,
+                    origin
+                        .and_then(|origin| origin.parts.get(index))
+                        .and_then(Option::as_ref),
+                    &[],
+                    tags,
+                    state,
+                )
+            })
+        }
+        ValueExpression::Awaited(inner) => {
+            ordinary(bindings, file, inner, origin, members, tags, state)
+        }
         ValueExpression::Either(left, right)
         | ValueExpression::Default(left, right)
         | ValueExpression::Nullish(left, right) => {
-            ordinary(bindings, file, left, members, tags, state)
-                && ordinary(bindings, file, right, members, tags, state)
+            ordinary(
+                bindings,
+                file,
+                left,
+                origin
+                    .and_then(|origin| origin.parts.first())
+                    .and_then(Option::as_ref),
+                members,
+                tags,
+                state,
+            ) && ordinary(
+                bindings,
+                file,
+                right,
+                origin
+                    .and_then(|origin| origin.parts.get(1))
+                    .and_then(Option::as_ref),
+                members,
+                tags,
+                state,
+            )
         }
         ValueExpression::Member(inner, key) => {
             let mut path = vec![key.clone()];
             path.extend_from_slice(members);
-            ordinary(bindings, file, inner, &path, tags, state)
+            ordinary(bindings, file, inner, origin, &path, tags, state)
         }
         ValueExpression::Object(fields, _) | ValueExpression::Array(fields)
             if !members.is_empty() =>
         {
-            fields
-                .get(&members[0])
-                .is_none_or(|value| ordinary(bindings, file, value, &members[1..], tags, state))
+            fields.get(&members[0]).is_none_or(|value| {
+                ordinary(
+                    bindings,
+                    file,
+                    value,
+                    origin.and_then(|origin| origin.fields.get(&members[0])),
+                    &members[1..],
+                    tags,
+                    state,
+                )
+            })
         }
         ValueExpression::Call(start, end) if members.is_empty() => {
             value_call_at(bindings.facts, file, *start, *end)
@@ -66,6 +127,10 @@ fn named(
         return false;
     };
     if let Some(binding) = bindings.value(file, scope, name, offset) {
+        let origins = state.origins.clone();
+        let origin = origins
+            .as_ref()
+            .and_then(|origins| origins.binding(scope, name, binding.declared_at));
         return origin_memoized(
             state,
             ProofKey::Binding(
@@ -86,7 +151,7 @@ fn named(
                         .registry_mutations
                         .iter()
                         .any(|mutation| mutation.name == name && mutation.scope == scope))
-                    && ordinary(bindings, file, &binding.value, members, tags, state)
+                    && ordinary(bindings, file, &binding.value, origin, members, tags, state)
             },
         );
     }

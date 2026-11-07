@@ -76,6 +76,7 @@ struct ImportCollector {
     assignment_target_start: Option<u32>,
     value_parameter_indexes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
     opaque_text_parameter_defaults: FxHashSet<usize>,
+    text_origins: extract_value_flow::TextOrigins,
     collect_value_flow: bool,
     collect_per_item_calls: bool,
     per_item_calls: Vec<PerItemCall>,

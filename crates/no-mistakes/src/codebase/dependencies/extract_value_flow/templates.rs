@@ -1,9 +1,13 @@
 use super::*;
 
+#[path = "text_origin_facts.rs"]
+pub(super) mod origins;
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct TaggedTemplateInfo {
     pub(crate) literal_arguments: Vec<usize>,
     pub(crate) opaque_parameter_defaults: Vec<usize>,
+    pub(crate) origins: Option<std::sync::Arc<origins::TextOrigins>>,
 }
 
 pub(super) fn tag_offset(tagged: &TaggedTemplateExpression<'_>) -> u32 {
@@ -48,8 +52,10 @@ impl ImportCollector {
             .copied()
             .collect();
         indices.sort_unstable();
+        let origins = std::sync::Arc::new(std::mem::take(&mut self.text_origins));
         for info in self.value_flow.tagged_templates.values_mut() {
             info.opaque_parameter_defaults.clone_from(&indices);
+            info.origins = Some(std::sync::Arc::clone(&origins));
         }
     }
 
@@ -71,6 +77,7 @@ impl ImportCollector {
         self.value_flow.tagged_templates.insert(
             (tag_offset(tagged), tagged.span.end),
             TaggedTemplateInfo {
+                origins: None,
                 opaque_parameter_defaults: Vec::new(),
                 literal_arguments: tagged
                     .quasi

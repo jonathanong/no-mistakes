@@ -50,6 +50,9 @@ impl ImportCollector {
                 self.record_mutable_receiver_binding(&declarator.id, value, declarator.span.end);
                 return;
             }
+            if immutable {
+                self.note_text_binding_origin(&declarator.id, init, declarator.span.start, &value);
+            }
             self.record_value_pattern(&declarator.id, value, declarator.span.start, immutable);
             if immutable {
                 self.note_closed_identifier(&declarator.id, init, declarator.span.start);
@@ -121,6 +124,7 @@ impl ImportCollector {
                 && self.repeat_depth == 0
                 && collect_helpers::direct_arrow(&call.callee),
         };
+        self.note_text_call_origins(call, &value_call);
         self.note_array_push(&value_call, true);
         self.note_closed_registry_call(call);
         self.finite_guard_call_indexes
