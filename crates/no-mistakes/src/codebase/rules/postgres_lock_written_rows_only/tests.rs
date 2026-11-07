@@ -2,6 +2,7 @@ use super::*;
 
 mod binding_control_flow;
 mod executor_selection;
+mod helpers;
 mod phase_two_sql;
 mod placeholder_provenance;
 mod proof;

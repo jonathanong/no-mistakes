@@ -110,6 +110,9 @@ fn scan_file(
         }
     }
     for (index, call) in embedded.calls.iter().enumerate() {
+        if call.helper_definition {
+            continue;
+        }
         let site = Site {
             file: &file,
             source: &source,

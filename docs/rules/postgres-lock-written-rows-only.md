@@ -3,7 +3,8 @@
 <!-- cspell:ignore xact -->
 
 Opt-in PostgreSQL transaction lock checks. Findings point at the lock statement;
-there is no autofix because changing a transaction's locking needs application
+static same-file helper locks are reported at their caller, with the helper lock line.
+There is no autofix because changing a transaction's locking needs application
 review.
 
 ## Why and when
@@ -56,6 +57,15 @@ export async function updateChild(childId: string, name: string) {
 ```
 
 The same relation and key are locked and updated within one transaction.
+A top-level helper with a straight-line body of static executor calls can accept
+an executor parameter. Each invocation through a known transaction substitutes
+its immutable argument bindings before comparing the helper's locked relations
+and keys with the caller's writes. For example, `lockUser(tx.query, userId)`
+requires an update or delete of that same user in `tx`; an update of a membership
+does not satisfy the lock. Diagnostics name the helper and its lock line.
+Nested helpers, dynamic SQL, and bodies with other control flow retain the
+unanalyzable policy. Imported executor helpers are not summarized.
+
 An advisory key derived from the written row's id also passes the constant-key
 check.
 

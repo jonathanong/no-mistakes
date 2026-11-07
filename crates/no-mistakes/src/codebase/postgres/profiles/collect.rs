@@ -23,7 +23,7 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
                 continue;
             }
             let options: EmbeddedSqlRuleOptions = rule.try_rule_options()?;
-            let profile = EmbeddedSqlOptions::configured(
+            let mut profile = EmbeddedSqlOptions::configured(
                 options.import_specifier.as_deref().unwrap_or_default(),
                 &options.executor_names,
             )
@@ -42,6 +42,7 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
                     &[]
                 },
             );
+            profile.track_transaction_helpers = *rule_id == "postgres-lock-written-rows-only";
             // Legacy statement policies select only SQL files until executors
             // are explicitly configured; do not request an empty TS projection.
             if *rule_id != "postgres-sql-statement-policy" || profile.selects_executors() {

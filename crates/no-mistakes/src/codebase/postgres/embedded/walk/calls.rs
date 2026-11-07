@@ -98,6 +98,7 @@ impl<'a> ScopeVisitor<'a> {
         if let Some((name, values)) = variants {
             self.set_variants(&name, values);
         }
+        self.record_lock_helper_call(call);
         let before = (self.calls.len(), self.pending_calls.len());
         resolve::record_executor_call(self, call);
         super::transaction::end_boundary(self, call, before.0);
