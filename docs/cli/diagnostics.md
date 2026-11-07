@@ -52,6 +52,9 @@ metrics. Within it, `parse` covers syntax parsing and file-fact extraction.
 PostgreSQL module evaluation runs afterward under `postgres.annotation.project`,
 so its CPU and RSS are attributed separately. The historical `parse_extract`
 check-result duration remains the inclusive preparation duration.
+Basic `--timings` retains its existing phase catalog and inclusive `parse`
+duration. The split syntax/preparation spans are detailed diagnostics, enabled
+by `--verbose-timings` or progress.
 
 Repeated resource labels produce one CPU row and one memory row, in order of
 first appearance. Only spans eligible for resource attribution contribute:

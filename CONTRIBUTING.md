@@ -102,6 +102,9 @@ declaration and test edits so the aggregate formatter covers every contributor's
 When moving Rust entrypoint logic, search for `include_str!` source guards and
 run those tests alongside the focused module tests.
 
+For shared diagnostics changes, run the full `suite_cli_queries` target to cover
+every command's basic timing catalog alongside verbose instrumentation.
+
 Rust integration tests share five explicitly registered suites: `suite_cli_queries`,
 `suite_cli_rules`, `suite_cli_postgres`, `suite_cli_test_plans`, and
 `suite_contracts`. This links the analyzer once per suite instead of once per

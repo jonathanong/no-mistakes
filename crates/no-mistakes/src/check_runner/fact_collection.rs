@@ -32,8 +32,13 @@ pub(crate) fn collect(
         playwright_fact_plan,
         sources,
     } = input;
+    let label = if no_mistakes::perf_trace::enabled() {
+        "facts.prepare"
+    } else {
+        "parse"
+    };
     let result = no_mistakes::diagnostics::measure_if_enabled(
-        "facts.prepare",
+        label,
         no_mistakes::diagnostics::TimingKind::Serial,
         || {
             if needs_shared_facts {

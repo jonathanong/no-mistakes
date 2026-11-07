@@ -129,7 +129,7 @@ fn record_missing_check_timings(results: &check_runner::CheckResults) {
         .map(|entry| entry.label)
         .collect::<std::collections::HashSet<_>>();
     for (label, duration) in &results.timings {
-        let Some((label, kind)) = timing_metadata(label) else {
+        let Some((label, kind)) = timing_metadata(label, observer.detailed()) else {
             continue;
         };
         if !existing.contains(label) {
@@ -138,11 +138,14 @@ fn record_missing_check_timings(results: &check_runner::CheckResults) {
     }
 }
 
-fn timing_metadata(label: &str) -> Option<(&'static str, no_mistakes::diagnostics::TimingKind)> {
+fn timing_metadata(
+    label: &str,
+    detailed: bool,
+) -> Option<(&'static str, no_mistakes::diagnostics::TimingKind)> {
     Some(match label {
         "discover" => ("discovery", no_mistakes::diagnostics::TimingKind::Serial),
         "parse_extract" => (
-            "facts.prepare",
+            if detailed { "facts.prepare" } else { "parse" },
             no_mistakes::diagnostics::TimingKind::Serial,
         ),
         "react" => (
