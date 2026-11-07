@@ -9,6 +9,11 @@ use std::sync::Arc;
 fn prepared_fragment_proofs_distinguish_tags_and_mutations() {
     let root = crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
         .join("issue-3073-fragments");
+    let graph = crate::codebase::dependencies::graph::test_support::from_raw_maps(
+        root.clone(),
+        Default::default(),
+        Default::default(),
+    );
     for (file_name, expected) in [
         (
             "text.ts",
@@ -82,7 +87,7 @@ fn prepared_fragment_proofs_distinguish_tags_and_mutations() {
                     members: vec!["text".into()],
                 };
                 assert_eq!(
-                    fragments::proven(&opts, &facts, &bindings, &call, &reference),
+                    fragments::proven(&graph, &opts, &facts, &bindings, &call, &reference),
                     expected,
                     "{file_name}: {name}"
                 );

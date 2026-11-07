@@ -1,7 +1,11 @@
 use super::*;
 use crate::codebase::rules::postgres_sql_cross_file::CompiledOptions;
 
+#[path = "fragment_builders.rs"]
+mod builders;
+
 pub(super) fn proven(
+    graph: &DepGraph,
     opts: &CompiledOptions,
     facts: &CheckFactMap,
     bindings: &Bindings<'_>,
@@ -20,43 +24,13 @@ pub(super) fn proven(
     if members.as_slice() != ["text"] {
         return false;
     }
-    let Some(binding) = bindings.value(&call.file, *scope, name, *offset) else {
-        return false;
-    };
     let Some(ts) = facts.get_ts_facts(&call.file) else {
         return false;
     };
-    let flow = &ts.value_flow;
-    if !binding.immutable
-        || flow
-            .registry_mutations
-            .iter()
-            .any(|write| write.name == *name && write.scope == *scope)
-        || flow.calls.iter().any(|call| {
-            matches!(&call.callee, ValueExpression::Member(base, _) if matches!(base.as_ref(),
-            ValueExpression::Named { name: receiver, scope: receiver_scope, .. }
-            if receiver == name && receiver_scope.unwrap_or(0) == *scope))
-        })
-    {
-        return false;
-    }
-    let ValueExpression::Call(start, end) = binding.value else {
-        return false;
-    };
-    if !flow.tagged_templates.contains_key(&(start, end)) {
-        return false;
-    }
-    let Some(tag) = flow
-        .calls
-        .iter()
-        .find(|tag| (tag.offset, tag.end) == (start, end))
-    else {
-        return false;
-    };
-    super::super::postgres_sql_cross_file::is_text_tag(
-        bindings,
-        &call.file,
-        tag,
-        &opts.embedded.trusted_sql_tags,
-    )
+    builders::Proof::new(graph, opts, bindings, &call.file, &ts.value_flow)
+        .binding(*scope, name, *offset, false)
 }
+
+#[cfg(test)]
+#[path = "fragment_builders_tests.rs"]
+mod builder_tests;
