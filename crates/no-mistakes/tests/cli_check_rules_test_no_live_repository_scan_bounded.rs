@@ -2,7 +2,7 @@ use serde_json::Value;
 use std::path::PathBuf;
 
 const RULE: &str = "test-no-live-repository-scan";
-const CASES: [&str; 35] = [
+const CASES: [&str; 37] = [
     "const-load",
     "nested-async-return",
     "owned-object-return",
@@ -10,6 +10,8 @@ const CASES: [&str; 35] = [
     "nested-recursion",
     "same-file-call-chain",
     "options-root",
+    "assignment-target-options",
+    "assignment-read-options",
     "glob-options-flow",
     "disposable-root",
     "rewritten-spread",
@@ -91,6 +93,7 @@ fn bounded_supported_forms_and_controls_stay_clean() {
         "nested-recursion",
         "same-file-call-chain",
         "options-root",
+        "assignment-read-options",
         "disposable-root",
         "barrel-route",
         "control-direct",
@@ -136,6 +139,7 @@ fn bounded_arbitrary_roots_and_escaped_callers_stay_advisory() {
         "barrel-escaped",
         "recursive-unsafe-sibling",
         "mutated-options",
+        "assignment-target-options",
         "mutated-object",
         "method-mutated-options",
         "new-mutated-options",
@@ -148,4 +152,10 @@ fn bounded_arbitrary_roots_and_escaped_callers_stay_advisory() {
             "{name}: {report}"
         );
     }
+}
+
+#[test]
+fn bounded_assignment_targets_each_invalidate_options_root() {
+    let report = report("assignment-target-options");
+    assert_eq!(advisory_targets(&report), vec!["unresolved root"; 10]);
 }
