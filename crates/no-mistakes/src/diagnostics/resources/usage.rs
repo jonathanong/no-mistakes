@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 #[derive(Clone, Copy)]
-pub(super) struct Usage {
+pub(in crate::diagnostics) struct Usage {
     pub(super) user: Duration,
     pub(super) sys: Duration,
     pub(super) peak_rss_kib: u64,
