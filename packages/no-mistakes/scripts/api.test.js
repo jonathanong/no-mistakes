@@ -263,6 +263,7 @@ test("Vitest project property policy exports named configuration types", () => {
 test("PostgreSQL executor options expose additive selection and final exclusions beside replacement", () => {
   for (const file of [
     "postgres-test-state-mutation-types.d.ts",
+    "postgres-lock-written-rows-types.d.ts",
     "postgres-bounded-statements-types.d.ts",
     "postgres-query-annotation-types.d.ts",
     "executed-postgres-sql-types.d.ts",

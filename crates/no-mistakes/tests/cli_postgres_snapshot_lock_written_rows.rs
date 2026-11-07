@@ -153,3 +153,66 @@ fn postgres_lock_written_rows_proofs_check_json_snapshot() {
         ],
     );
 }
+
+#[test]
+fn postgres_lock_written_rows_executors_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_executors",
+        &[
+            ("defaults", "executor-selection", "executor-defaults.yml"),
+            ("extras", "executor-selection", "executor-extras.yml"),
+            (
+                "replacement_warnings",
+                "executor-selection",
+                "executor-replacement.yml",
+            ),
+            (
+                "excluded_default",
+                "executor-selection",
+                "executor-excluded-default.yml",
+            ),
+            (
+                "all_defaults_excluded_scoped_retained",
+                "executor-selection",
+                "executor-all-excluded-scoped.yml",
+            ),
+            (
+                "unused_exclusion_warning",
+                "executor-unused-exclusion",
+                "executor-unused-exclusion.yml",
+            ),
+            (
+                "project_inherited_extras_and_exclusion",
+                "executor-selection",
+                "executor-project-inherited.yml",
+            ),
+        ],
+    );
+}
+
+#[test]
+fn lock_written_rows_executor_replacement_and_extension_cannot_both_be_configured() {
+    let root = rules_path(RULE, "fixture", "executor-selection");
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(rules_path(RULE, "configs", "executor-conflict.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let diagnostic = format!(
+        "{}{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    for expected in [
+        RULE,
+        "executorNames",
+        "extraExecutorNames",
+        "cannot both be set",
+    ] {
+        assert!(diagnostic.contains(expected), "{diagnostic}");
+    }
+}

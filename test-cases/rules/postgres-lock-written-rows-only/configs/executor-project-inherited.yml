@@ -1,0 +1,19 @@
+version: 2
+projects:
+  database:
+    root: .
+    include: [src/query.ts]
+    postgres:
+      unanalyzableSql: fail
+      executors:
+        importSpecifier: "@example/db"
+        extraExecutorNames: [custom]
+        excludeExecutorNames: [query]
+        factoryNames: [beginTransaction]
+rules:
+  - rule: postgres-lock-written-rows-only
+    projects: [database]
+    options:
+      checks:
+        row-lock-unwritten-relation: fail
+        row-lock-outside-transaction: fail

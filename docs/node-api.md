@@ -661,5 +661,7 @@ configuration as `no-mistakes check`; it adds no runtime export. Its public
 contracts are `PostgresLockWrittenRowsOnlyOptions`,
 `PostgresLockWrittenRowsCheck`, `PostgresLockWrittenRowsSeverity`,
 `PostgresLockWrittenRowsAllow`, and `PostgresLockWrittenRowsWriteSet`.
-Per-check severity defaults to `advise`. Unresolved SQL or transaction
+`PostgresLockWrittenRowsOnlyOptions` includes `executorNames`,
+`extraExecutorNames`, and `excludeExecutorNames` with the selection contract
+above. Per-check severity defaults to `advise`. Unresolved SQL or transaction
 membership follows the configured unanalyzable policy.

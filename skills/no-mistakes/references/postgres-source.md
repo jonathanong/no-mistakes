@@ -192,7 +192,8 @@ never imported from the selected module and called in scoped files. See
 Use opt-in `postgres-lock-written-rows-only` to audit configured transaction
 executors. Start with its default advisory checks, then set individual check
 ids to `fail` after reviewing row, table, constant advisory, and autocommit
-locks. Configure transaction factories through `executorFactoryNames`; keep
+locks. The executor replacement, additive, and exclusion options above also
+apply to this rule. Configure transaction factories through `executorFactoryNames`; keep
 `allow` reasons and `writeSets` assertions narrow. Unknown SQL or transaction
 membership follows the unanalyzable policy and never proves a safe lock. See
 [the rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-lock-written-rows-only.md) for phase 1

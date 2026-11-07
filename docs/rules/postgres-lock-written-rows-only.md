@@ -135,6 +135,16 @@ empty; factories identify transaction executor bindings declared with `const tx 
 await beginTransaction()`. Callback transaction membership is unresolved in
 phase 1 and follows the unanalyzable policy. With an import
 specifier, executor names default to `query`, `read`, and `write`.
+`executorNames` replaces that list; use `extraExecutorNames` to extend it instead.
+The two options are mutually exclusive, including when either list is empty.
+`extraExecutorNames` defaults to absent and `excludeExecutorNames` defaults to
+`[]`; exclusions remove names after replacement or defaults plus extras are
+selected. For example, `extraExecutorNames: [readPool]` with
+`excludeExecutorNames: [query]` selects `read`, `write`, and `readPool`.
+Factory/type receiver selection remains independent of these imported-executor
+names. See [executor selection](../configuration/rules.md#postgresql-executor-selection)
+for explicit empty lists and configuration warnings. Declare these options in
+the project's PostgreSQL scope when the rule inherits one.
 
 `checks` defaults to all four ids at `advise`. `allow` defaults to `[]`;
 selectors are optional `relation`, `key`, `file`, and `line`, with a required

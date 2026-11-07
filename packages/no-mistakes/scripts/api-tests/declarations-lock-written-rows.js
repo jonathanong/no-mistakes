@@ -14,6 +14,9 @@ test("lock-written-rows options expose named checks, policies, exceptions and wr
   for (const field of [
     'export type PostgresLockWrittenRowsSeverity = "fail" | "advise" | "ignore";',
     "checks?: Partial<Record<PostgresLockWrittenRowsCheck, PostgresLockWrittenRowsSeverity>>;",
+    "executorNames?: string[];",
+    "extraExecutorNames?: string[];",
+    "excludeExecutorNames?: string[];",
     "allow?: PostgresLockWrittenRowsAllow[];",
     "writeSets?: PostgresLockWrittenRowsWriteSet[];",
     "transactionLine: number;",

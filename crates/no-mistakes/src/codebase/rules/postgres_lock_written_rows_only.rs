@@ -24,6 +24,8 @@ struct Options {
     exclude: Vec<String>,
     import_specifier: String,
     executor_names: Vec<String>,
+    extra_executor_names: Option<Vec<String>>,
+    exclude_executor_names: Vec<String>,
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
     trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
@@ -94,6 +96,8 @@ fn compile(options: &Options) -> Result<CompiledOptions> {
             &options.import_specifier,
             &options.executor_names,
         )
+        .with_extra_executor_names(options.extra_executor_names.as_deref())
+        .with_exclude_executor_names(&options.exclude_executor_names)
         .with_scoped_executors(
             &options.executor_factory_names,
             &options.executor_type_names,
