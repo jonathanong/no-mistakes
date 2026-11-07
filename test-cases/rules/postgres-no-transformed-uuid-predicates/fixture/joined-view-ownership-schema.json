@@ -1,0 +1,112 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "a": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "parent_id": {
+          "dataType": "uuid"
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    },
+    "b": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "a_id": {
+          "dataType": "uuid"
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    },
+    "audit.a": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    }
+  },
+  "views": {
+    "plain_view": {
+      "definition": "SELECT a.id, a.parent_id FROM a JOIN b ON b.a_id = a.id"
+    },
+    "lateral_view": {
+      "definition": "SELECT a.id, a.parent_id FROM a LEFT JOIN LATERAL (SELECT b.id FROM b WHERE b.a_id = a.id LIMIT 1) related ON true"
+    },
+    "view_join": {
+      "definition": "SELECT a.id, a.parent_id FROM a JOIN other_view related ON related.a_id = a.id"
+    },
+    "other_view": {
+      "definition": "SELECT b.id, b.a_id FROM b"
+    },
+    "qualified_star": {
+      "definition": "SELECT a.* FROM a JOIN b ON b.a_id=a.id"
+    },
+    "renamed": {
+      "definition": "SELECT a.id AS key FROM a JOIN b joined ON joined.a_id=a.id"
+    },
+    "anonymous_derived": {
+      "definition": "SELECT a.id FROM a JOIN (SELECT 1) ON true"
+    },
+    "nested_exposed": {
+      "definition": "SELECT a.id FROM a JOIN (b JOIN a x ON true) ON true"
+    },
+    "nested_hidden": {
+      "definition": "SELECT a.id FROM a JOIN (b JOIN a ON true) grouped ON true"
+    },
+    "qualified_schema": {
+      "definition": "SELECT public.a.id FROM public.a JOIN audit.a ON true"
+    },
+    "partial": {
+      "definition": "SELECT a.id, COALESCE(a.parent_id,a.id) AS parent_id FROM a JOIN b ON true"
+    },
+    "unqualified": {
+      "definition": "SELECT id FROM a JOIN b ON true"
+    },
+    "unqualified_star": {
+      "definition": "SELECT * FROM a JOIN b ON true"
+    },
+    "alias_collision": {
+      "definition": "SELECT base.id FROM a base JOIN b base ON true"
+    },
+    "table_collision": {
+      "definition": "SELECT a.id FROM a JOIN audit.a ON true"
+    },
+    "derived_collision": {
+      "definition": "SELECT a.id FROM a JOIN (SELECT 1) a ON true"
+    },
+    "nested_collision": {
+      "definition": "SELECT a.id FROM a JOIN (b JOIN a ON true) ON true"
+    },
+    "nested_alias_collision": {
+      "definition": "SELECT a.id FROM a JOIN (b JOIN b other ON true) a ON true"
+    },
+    "unsupported_factor": {
+      "definition": "SELECT a.id FROM a JOIN UNNEST(ARRAY[1]) AS x(n) ON true"
+    },
+    "joined_star_collision": {
+      "definition": "SELECT a.* FROM a JOIN b a ON true"
+    },
+    "wrong_owner": {
+      "definition": "SELECT missing.id FROM a JOIN b ON true"
+    },
+    "chained": {
+      "definition": "SELECT v.id FROM plain_view v JOIN b ON true"
+    }
+  }
+}

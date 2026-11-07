@@ -1,10 +1,10 @@
-//! Executor calls receiving tracked SQL builders or their text and values.
+//! Executor calls shaped ``read(`... ${b.text}`, b.values)``.
 
 use super::super::super::{EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlVariant};
 use super::super::variants::ValueKind;
 use super::super::ScopeVisitor;
-use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
-use oxc_ast::ast::{CallExpression, Expression};
+use crate::codebase::ts_source::byte_offset_to_line;
+use oxc_ast::ast::CallExpression;
 
 /// The call recovered from the template and the builder's final state, or
 /// `None` so the caller falls back to the ordinary (fail-closed) path.
@@ -14,20 +14,8 @@ pub(super) fn executor_call(
     callee: &str,
 ) -> Option<EmbeddedSqlCall> {
     let versions = visitor.recover_builder_text(call)?;
-    if versions.is_empty()
-        || versions.iter().any(|value| value.value != ValueKind::Sql)
-        || (call.arguments.len() == 1 && versions.iter().all(|value| value.append_sites.is_empty()))
-    {
+    if versions.is_empty() || versions.iter().any(|value| value.value != ValueKind::Sql) {
         return None;
-    }
-    if let [argument] = call.arguments.as_slice() {
-        let argument = unwrap_ts_wrappers(argument.as_expression()?);
-        let Expression::Identifier(id) = argument else {
-            return None;
-        };
-        if visitor.lookup(id.name.as_str())?.kind != EmbeddedSqlKind::Composed {
-            return None;
-        }
     }
     let line = byte_offset_to_line(visitor.source, call.span.start as usize);
     let base = EmbeddedSqlCall {

@@ -4,9 +4,9 @@ rules:
     scope: repository
     include:
       - append-view-object-positive.ts
-      - append-view-schema.json
+      - joined-view-schema.json
     options:
-      schemaCatalogPath: append-view-schema.json
+      schemaCatalogPath: joined-view-schema.json
       importSpecifier: db
       executorNames: [read]
 effort: max

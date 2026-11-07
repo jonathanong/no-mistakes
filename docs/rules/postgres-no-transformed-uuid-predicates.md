@@ -90,7 +90,11 @@ qualified key or the catalog's explicit matching schema can establish that ident
 
 The bare probe key may belong to a view when its output column maps through
 a direct bare projection to a base-table catalog UUID column. Renamed
-projections and plain wildcard projections are supported.
+projections and plain wildcard projections are supported. A view may join other
+tables, views, or lateral subqueries when the projected key explicitly names its
+base-table owner, such as `a.id` or `a.*`. Unqualified columns and `*` in joined
+views do not establish ownership; conflicting relation aliases also remain
+unproven. Joining another view does not require resolving columns through it.
 Computed, missing, ambiguous, recursive, or chained view columns do not establish that
 proof, so their driving transforms remain reported.
 

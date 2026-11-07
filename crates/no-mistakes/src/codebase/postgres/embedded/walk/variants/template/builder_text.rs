@@ -1,4 +1,4 @@
-//! Recover a tracked SQL builder or its `.text` paired with its own `.values`,
+//! Recover a tracked SQL builder's `.text` paired with its own `.values`,
 //! optionally wrapped in a template with one interpolation.
 
 use super::{combine, piece, Recovered, ScopeVisitor, ValueKind};
@@ -6,19 +6,13 @@ use crate::codebase::postgres::embedded::walk::variants::expression;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression, TemplateLiteral};
 
-/// The optional template and builder identifier for either executor overload.
-/// Paired text and values must use the same builder.
+/// The template and builder identifier of an executor call with exactly this
+/// shape. Any other interpolation, a different second argument, or an extra
+/// argument is not recognized.
 pub(in crate::codebase::postgres::embedded::walk) fn shape<'a>(
     call: &'a CallExpression<'a>,
 ) -> Option<(Option<&'a TemplateLiteral<'a>>, &'a Expression<'a>)> {
-    if call.optional {
-        return None;
-    }
-    if let [argument] = call.arguments.as_slice() {
-        let builder = unwrap_ts_wrappers(argument.as_expression()?);
-        return matches!(builder, Expression::Identifier(_)).then_some((None, builder));
-    }
-    if call.arguments.len() != 2 {
+    if call.optional || call.arguments.len() != 2 {
         return None;
     }
     let argument = unwrap_ts_wrappers(call.arguments[0].as_expression()?);

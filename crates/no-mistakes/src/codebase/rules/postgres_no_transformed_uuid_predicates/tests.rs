@@ -92,7 +92,7 @@ fn view_projection_controls_preserve_unknown_and_ambiguous_probe_keys() {
     for use_ in &facts.transformed_column_uses {
         assert_eq!(
             columns.resolve(use_).unwrap().1,
-            use_.line > 8,
+            use_.line > 8 && use_.line != 16,
             "view projection on line {}: {use_:?}",
             use_.line,
         );
