@@ -1,0 +1,34 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "cte-writes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "cte-writes.sql",
+          "line": 4,
+          "message": "cte-writes.sql:4: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH picked AS (SELECT id FROM accounts) UPDATE accounts t SET name = 'x' FROM picked WHERE t.id = picked.id;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "cte-writes.sql",
+          "line": 5,
+          "message": "cte-writes.sql:5: DELETE can remove every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH picked AS (SELECT id FROM accounts) DELETE FROM accounts t USING picked WHERE t.id = picked.id;",
+          "target": "table:accounts"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

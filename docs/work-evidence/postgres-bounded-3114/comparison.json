@@ -1,0 +1,189 @@
+{
+  "baselineRevision": "759777752f2399d9b83f17e27b0ac8af6a9fe6d7",
+  "analyzerChanges": false,
+  "effort": "default",
+  "jobs": "default",
+  "instructionCounts": {
+    "before": null,
+    "after": null,
+    "reason": "perf_event_paranoid=4; perf stat reports no supported events",
+    "attempts": {
+      "before": 6,
+      "after": 6,
+      "blocked": 12
+    }
+  },
+  "binarySha256": "50ed9806684201fb8a0524972e8b2f46a310e1b59fb7e99d2367eb1481d80e54",
+  "comparisons": {
+    "drivers": {
+      "status": 1,
+      "stdoutSha256": "89c4d02eabd61df511a7c8d4a27d496427974245bb964ec819a586e1205a5720",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "findings": [
+        {
+          "file": "drivers.sql",
+          "line": 4,
+          "target": "table:accounts"
+        },
+        {
+          "file": "drivers.sql",
+          "line": 4,
+          "target": "table:profiles"
+        }
+      ]
+    },
+    "cte-writes": {
+      "status": 1,
+      "stdoutSha256": "7c0d036f3767c3d9858f4e1fd533065ab0902b4910d9240430ebbbee2ad35ff9",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "findings": [
+        {
+          "file": "cte-writes.sql",
+          "line": 4,
+          "target": "table:accounts"
+        },
+        {
+          "file": "cte-writes.sql",
+          "line": 5,
+          "target": "table:accounts"
+        }
+      ]
+    },
+    "unnest": {
+      "status": 1,
+      "stdoutSha256": "352caae2e54c91a7a1d37e0ef44a94acc16dbb232035927fe40e8d15433ba260",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "findings": [
+        {
+          "file": "unnest.sql",
+          "line": 3,
+          "target": "table:accounts"
+        }
+      ]
+    },
+    "unqualified": {
+      "status": 1,
+      "stdoutSha256": "eb77b4663f2f22d598e22294d3dc240bf9a605a0059bd4b247dab5157eb21271",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "findings": [
+        {
+          "file": "unqualified.sql",
+          "line": 2,
+          "target": "table:accounts"
+        },
+        {
+          "file": "unqualified.sql",
+          "line": 2,
+          "target": "table:contacts"
+        }
+      ]
+    },
+    "indexes": {
+      "status": 1,
+      "stdoutSha256": "202226f46e1650cbfdf8cd4daaf91459d7031e1e496d62d7d4f1635a5e9caf36",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "findings": [
+        {
+          "file": "indexes.sql",
+          "line": 5,
+          "target": "table:partial_keys"
+        },
+        {
+          "file": "indexes.sql",
+          "line": 6,
+          "target": "table:usernames"
+        },
+        {
+          "file": "indexes.sql",
+          "line": 7,
+          "target": "table:expr_keys"
+        }
+      ]
+    },
+    "off": {
+      "status": 0,
+      "stdoutSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "findings": []
+    },
+    "valid": {
+      "status": 0,
+      "stdoutSha256": "980ea8289794ce3e4acf41c75fc25005115f406432bbf9557b755265d63c8dbe",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "findings": []
+    },
+    "invalid": {
+      "status": 1,
+      "stdoutSha256": "af4b09522b5b8b89e3248d511eabd9132f73114d40be227221fe55095c29a10c",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "findings": [
+        {
+          "file": "sql/invalid.sql",
+          "line": 1,
+          "target": "table:invoices"
+        },
+        {
+          "file": "sql/invalid.sql",
+          "line": 2,
+          "target": "table:exports"
+        },
+        {
+          "file": "sql/invalid.sql",
+          "line": 3,
+          "target": "table:sessions"
+        }
+      ]
+    },
+    "keys": {
+      "status": 1,
+      "stdoutSha256": "883b279068cd6856ff4962e9afb8f4d9f63afaa8d5a87f024dc9c415402538d6",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "findings": [
+        {
+          "file": "sql/keys.sql",
+          "line": 6,
+          "target": "table:order_lines"
+        },
+        {
+          "file": "sql/keys.sql",
+          "line": 8,
+          "target": "table:partial_keys"
+        },
+        {
+          "file": "sql/keys.sql",
+          "line": 9,
+          "target": "table:invalid_keys"
+        },
+        {
+          "file": "sql/keys.sql",
+          "line": 10,
+          "target": "table:deferred_keys"
+        },
+        {
+          "file": "sql/keys.sql",
+          "line": 13,
+          "target": "table:orders"
+        }
+      ]
+    }
+  },
+  "allOutputStatusAndStderrEqual": true,
+  "candidateBinarySha256": "50ed9806684201fb8a0524972e8b2f46a310e1b59fb7e99d2367eb1481d80e54",
+  "candidateBuild": "cargo build -p no-mistakes --bin no-mistakes (default features, dev profile)",
+  "baselineBuild": "cargo build -p no-mistakes --bin no-mistakes (default features, dev profile)",
+  "binaryArtifactsByteIdentical": true,
+  "fixtureSha256": {
+    "cte-writes.sql": "e52af084497de3938ec6ef15d2184915b3d2b2ac8f6e81cd04eeb75faa9fba8a",
+    "cte-writes.yml": "e576f5572530cfd9afb56eefc344a8630efb5ab37a370d24eb8cc5a8b77a16bc",
+    "drivers.sql": "0c1742f206a16d1b142a656e67f29faeedbf78c2b8fdf951838b3ee5e3d17472",
+    "drivers.yml": "19b847b811eb1aa99a946bce682bdc3818dbe5316c2ea663ab720936c58a773d",
+    "indexes.sql": "f10c3cc0f78f8e8e83325eaa92d4c0c74dd267c887ab48d9422919c9e1993b27",
+    "indexes.yml": "c941ca70a290054fdcdf094111b2d00e707bb6336fc00400594479824643966c",
+    "off.yml": "e0dfa70eb69d47fe9cb2be8a4fcd53e74cf7fe26fcbb1f06912b57a9c028e4e0",
+    "schema.json": "8fb990e3964a0227455928ce242fb4237a105578716a64be301aacfaa5c7f67e",
+    "unnest.sql": "7d1111da46e382342f3d1f4d4e245cd185414357b30c1da93a99a4041d84452e",
+    "unnest.yml": "f33ee14935bc57564e757cd215049f861e19d557cb741d297479ca2f06092977",
+    "unqualified.sql": "a07a615148763031900d5c24bd117d3724ca3661d2793714b237b4953dc79bf3",
+    "unqualified.yml": "e8810503c6edda527d3e2a655d506b336121b6c4bb5acc32d85b6dfd66eb188a"
+  }
+}
