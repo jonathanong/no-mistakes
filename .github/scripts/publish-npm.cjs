@@ -48,7 +48,13 @@ async function publish(packageName, version, { run = npm, sleep = delay } = {}) 
     }
     if (existing !== null) throw new Error(`Unexpected version ${existing} for ${packageName}@${version}`);
     const tag = distTag(version, view(run, packageName, "dist-tags.latest"));
-    const result = run(["publish", `./packages/${packageName}`, "--provenance", "--access", "public", "--tag", tag]);
+    let result;
+    try {
+      result = run(["publish", `./packages/${packageName}`, "--provenance", "--access", "public", "--tag", tag]);
+    } catch (error) {
+      if (error.code !== "ETIMEDOUT") throw error;
+      result = { status: 1, stdout: "", stderr: `${error.code}: ${error.message}` };
+    }
     if (result.status === 0) return;
     // A failed response can follow a successful registry write.
     if (view(run, `${packageName}@${version}`, "version") === version) return;

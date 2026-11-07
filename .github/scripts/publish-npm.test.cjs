@@ -23,7 +23,9 @@ for (const scenario of scenarios) {
           assert.ok(args[1] === "eslint-plugin-no-mistakes" || args[1] === "eslint-plugin-no-mistakes@0.109.8");
           assert.equal(args[2], args[1].includes("@") ? "version" : "dist-tags.latest");
         }
-        return results.shift();
+        const result = results.shift();
+        if (result.throw) throw Object.assign(new Error(result.throw.message), result.throw);
+        return result;
       },
       async sleep(ms) { delays.push(ms); },
     };

@@ -27,7 +27,8 @@ when `resume_version` selects an older tag. Before each publish attempt, the
 helper checks `npm view <package>@<version> version --json`; an existing version
 is skipped. Failed publishes are checked again in case the registry accepted the
 write before the response failed. Sigstore `TLOG_CREATE_ENTRY_ERROR`, rate limits,
-server errors, and transient connection errors get at most three publish attempts
+server errors, process timeouts, and transient connection errors get at most
+three publish attempts
 with 10 and 20 second delays. Other failures stop the job. Registry lookup errors
 other than a missing version fail closed. Each npm command has a two minute
 process deadline and a one minute fetch timeout with npm fetch retries disabled.

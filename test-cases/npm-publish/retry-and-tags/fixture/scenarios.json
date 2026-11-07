@@ -380,5 +380,120 @@
     "tags": [
       "latest"
     ]
+  },
+  {
+    "name": "process timeout retries after checking registry",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": ""
+      },
+      {
+        "throw": {
+          "code": "ETIMEDOUT",
+          "message": "spawnSync npm ETIMEDOUT"
+        }
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": ""
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "tags": [
+      "latest",
+      "latest"
+    ],
+    "delays": [
+      10000
+    ]
+  },
+  {
+    "name": "process timeout after accepted upload is skipped",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": ""
+      },
+      {
+        "throw": {
+          "code": "ETIMEDOUT",
+          "message": "spawnSync npm ETIMEDOUT"
+        }
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": ""
+      }
+    ],
+    "tags": [
+      "latest"
+    ]
+  },
+  {
+    "name": "lookup process timeout fails closed",
+    "results": [
+      {
+        "throw": {
+          "code": "ETIMEDOUT",
+          "message": "spawnSync npm ETIMEDOUT"
+        }
+      }
+    ],
+    "tags": [],
+    "error": "ETIMEDOUT"
+  },
+  {
+    "name": "permanent process error fails without retry",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": ""
+      },
+      {
+        "throw": {
+          "code": "ENOENT",
+          "message": "spawnSync npm ENOENT"
+        }
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "error": "ENOENT"
   }
 ]
