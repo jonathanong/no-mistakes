@@ -1,12 +1,17 @@
 import json
 import unittest
 from pathlib import Path
-from common import descendant_usage, distinct, parity, rss_kib, sha
+from common import descendant_usage, distinct, parity, rss_kib, sha, verbose_metrics
 
 SAVED = json.loads((Path(__file__).parent / "fixtures/validation.json").read_text())
 
 
 class ValidationTests(unittest.TestCase):
+    def test_verbose_counters_coexist_with_resource_and_hot_file_lines(self):
+        fixtures = Path(__file__).parent / "fixtures"
+        self.assertEqual(verbose_metrics((fixtures / "verbose.stderr").read_bytes()),
+                         json.loads((fixtures / "verbose.json").read_text()))
+
     def test_sha_rejects_non_commit_inputs(self):
         self.assertEqual(sha(SAVED["validSha"]), SAVED["validSha"])
         for value in SAVED["invalidShas"]:

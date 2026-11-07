@@ -42,7 +42,7 @@ Signals, unexpected exits, parity failures and provenance failures fail the job.
 Download `annotation-macos-comparison` from the workflow run. `summary.md` and the
 job summary show mean user/total CPU and wall time, plus maximum RSS. `summary.json` adds user/system
 CPU, per-group max/p95 and provenance; `samples.json` retains all 144 bounded
-samples and output hashes. `diagnostics.json` separately contains observer-on work counters and timings. Executables and individual manifests are retained in
+samples and output hashes. `diagnostics.json` separately contains observer-on work counters, timings and complete verbose stderr, including phase CPU/RSS and hot-file diagnostics. Executables and individual manifests are retained in
 `annotation-base` and `annotation-candidate`. Eight samples cannot establish a
 guaranteed tail bound; empirical p95 is the maximum. There is no numerical CPU
 regression gate or claim that hosted measurements reproduce a downstream result.

@@ -3,7 +3,7 @@ import type { CiTopologyOptions } from "./workflow-topology-types";
 import type { CiEnvOptions, CiImpactOptions, ImpactedChecksOptions } from "./ci-types";
 import type { FetchesOptions, FlowOptions } from "./flow-types";
 import type { ImportUsagesOptions } from "./import-usage-types";
-import type { InvocationDiagnostics, JobsPoolWarning } from "./invocation-types";
+import type { JobsPoolWarning } from "./invocation-types";
 import type { MermaidValidationOptions } from "./mermaid-types";
 import type {
   DataPwOptions,
@@ -174,5 +174,4 @@ export interface AnalyzeProjectResult {
    * Other analysis JSON objects use the same optional field.
    */
   jobsPoolWarning?: JobsPoolWarning;
-  invocationDiagnostics?: InvocationDiagnostics;
 }

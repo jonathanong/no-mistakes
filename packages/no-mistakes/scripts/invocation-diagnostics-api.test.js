@@ -9,7 +9,7 @@ const root = join(
   "../../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-excluded-roots",
 );
 
-function stable({ jobsPoolWarning: _warning, invocationDiagnostics: _diagnostics, ...report }) {
+function stable({ jobsPoolWarning: _warning, ...report }) {
   return report;
 }
 
@@ -27,6 +27,29 @@ function annotation(diagnostics) {
       (span) => span.label === "postgres.annotation.shared_init.build" && span.durationMs === 0,
     ),
   );
+  assert.equal(typeof diagnostics.elapsedMs, "number");
+  if (process.platform === "win32") assert.deepEqual(diagnostics.phases, []);
+  else assert.ok(diagnostics.phases.length > 0);
+  for (const phase of diagnostics.phases) {
+    assert.equal(typeof phase.label, "string");
+    for (const field of [
+      "wallMs",
+      "userMs",
+      "systemMs",
+      "utilization",
+      "peakRssKiB",
+      "peakRssDeltaKiB",
+    ]) {
+      assert.equal(typeof phase[field], "number", field);
+    }
+  }
+  assert.ok(diagnostics.hotFiles.some((file) => file.pass === "postgres.annotation"));
+  for (const file of diagnostics.hotFiles) {
+    assert.equal(typeof file.pass, "string");
+    assert.equal(typeof file.path, "string");
+    assert.equal(typeof file.durationMs, "number");
+    assert.equal(typeof file.units, "number");
+  }
   for (const span of diagnostics.timings) {
     assert.equal(typeof span.label, "string");
     assert.equal(typeof span.durationMs, "number");
@@ -35,7 +58,7 @@ function annotation(diagnostics) {
 }
 
 test(
-  "compiled verbose invocation diagnostics preserve default reports and async CLI parity",
+  "compiled annotation collectDiagnostics preserves default reports and async CLI parity",
   { skip: !compiled },
   async () => {
     const cjs = require("../index.js");
@@ -50,36 +73,32 @@ test(
     const cliReport = JSON.parse(command.stdout);
     for (const api of [cjs, esm]) {
       const plain = await api.check({ root, jobs: 1 });
-      assert.equal(Object.hasOwn(plain, "invocationDiagnostics"), false);
       assert.deepEqual(stable(plain), stable(cliReport));
-      assert.deepEqual(
-        stable(await api.check({ root, jobs: 1, diagnosticsVerbose: false })),
-        stable(plain),
-      );
-      const id = "compiled-verbose-invocation";
-      const pending = api.check({ root, jobs: 1, diagnosticsVerbose: true, diagnosticsId: id });
+      const id = "compiled-annotation-diagnostics";
+      const pending = api.collectDiagnostics("check", { root, jobs: 1, diagnosticsId: id });
       assert.ok(pending instanceof Promise);
-      const verbose = await pending;
-      annotation(verbose.invocationDiagnostics);
-      assert.deepEqual(stable(verbose), stable(plain));
+      const observed = await pending;
+      annotation(observed.diagnostics);
+      assert.deepEqual(stable(observed.result), stable(plain));
       assert.equal(await api.diagnosticsSnapshot({ id }), null);
-      const batch = await api.analyzeProject({
+      const batch = await api.collectDiagnostics("analyzeProject", {
         root,
         jobs: 1,
-        diagnosticsVerbose: true,
         reports: [{ type: "check" }],
       });
-      annotation(batch.invocationDiagnostics);
-      assert.deepEqual(stable(batch.reports[0].result), stable(plain));
-      assert.equal(Object.hasOwn(batch.reports[0].result, "invocationDiagnostics"), false);
+      annotation(batch.diagnostics);
+      assert.deepEqual(stable(batch.result.reports[0].result), stable(plain));
+      assert.equal(Object.hasOwn(batch.result, "diagnostics"), false);
       await assert.rejects(
-        api.check({ root, diagnosticsVerbose: "true" }),
-        /diagnosticsVerbose must be a boolean/u,
-      );
-      await assert.rejects(
-        api.check({ root, diagnosticsId: id, diagnosticsVerbose: true, unknownOption: true }),
+        api.collectDiagnostics("check", { root, diagnosticsId: id, unknownOption: true }),
+        (error) => {
+          assert.ok(error.diagnostics);
+          assert.ok(Array.isArray(error.diagnostics.phases));
+          return true;
+        },
       );
       assert.equal(await api.diagnosticsSnapshot({ id }), null);
+      assert.deepEqual(stable(await api.check({ root, jobs: 1 })), stable(plain));
     }
   },
 );

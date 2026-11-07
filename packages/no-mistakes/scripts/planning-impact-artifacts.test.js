@@ -112,15 +112,10 @@ test("writes the compatible four-report contract from one prepared analysis", as
         jobs: 2,
         profile: "ci",
         diagnosticsId: "planning-contract",
-        diagnosticsVerbose: true,
       },
       async (options) => {
         calls.push(options);
-        return {
-          ...aggregateResult,
-          jobsPoolWarning,
-          invocationDiagnostics: { work: { requested: 1 }, timings: [] },
-        };
+        return { ...aggregateResult, jobsPoolWarning };
       },
     );
 
@@ -134,7 +129,6 @@ test("writes the compatible four-report contract from one prepared analysis", as
         jobs: 2,
         profile: "ci",
         diagnosticsId: "planning-contract",
-        diagnosticsVerbose: true,
         reports: [
           {
             id: "dependencies",
@@ -163,7 +157,6 @@ test("writes the compatible four-report contract from one prepared analysis", as
     ]);
     assert.deepEqual(result.plan, aggregateResult.reports[3].result);
     assert.deepEqual(result.jobsPoolWarning, jobsPoolWarning);
-    assert.deepEqual(result.invocationDiagnostics, { work: { requested: 1 }, timings: [] });
     assert.deepEqual(JSON.parse(await readFile(join(directory, "plan.json"), "utf8")), {
       changed_files: ["a.mts"],
       selected_tests: [{ test_file: "a.test.mts" }],

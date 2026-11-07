@@ -50,3 +50,11 @@ def parity(expected, actual, subject="public fixture report or exit status"):
 
 def save(path, value):
     Path(path).write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
+
+
+def verbose_metrics(errors):
+    work = {match[1].decode(): int(match[2]) for match in
+            re.finditer(rb"^\[work\] ([^:]+): (\d+)$", errors, re.M)}
+    timings = {match[1].decode(): float(match[2]) for match in
+               re.finditer(rb"^\[timing\] ([^:]+): ([\d.]+)ms", errors, re.M)}
+    return {"work": work or None, "timingsMs": timings}

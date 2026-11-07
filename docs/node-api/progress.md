@@ -82,35 +82,23 @@ projections do not infer arbitrary heap transfers through function calls.
 
 [Node/N-API guide](../node-api.md)
 
-## Final verbose diagnostics
+## Annotation work counters
 
-Pass `diagnosticsVerbose: true` to receive `invocationDiagnostics` on a successful
-object result. This is the programmatic counterpart of CLI `--verbose-timings`:
+Use the existing asynchronous `collectDiagnostics()` wrapper for annotation
+work counters and the shared phase-resource and hot-file report:
 
 ```js
-const report = await check({ root: ".", diagnosticsVerbose: true });
-console.log(report.invocationDiagnostics.work);
-// Includes postgres.annotation.roots_before_scoping / roots_after_scoping,
-// module_initializations and shared_init.cache_hits / cache_misses.
-console.log(report.invocationDiagnostics.timings);
-// [{ label, durationMs, parallel }]
+const { result, diagnostics } = await collectDiagnostics("check", { root: "." });
+console.log(diagnostics.work["postgres.annotation.roots_before_scoping"]);
+console.log(diagnostics.work["postgres.annotation.roots_after_scoping"]);
+console.log(diagnostics.phases, diagnostics.hotFiles);
 ```
 
-The exported `InvocationDiagnostics` uses `Record<string, number>` for work and
-`CompletedTimingSpan[]` for timings. Annotation shared-initialization counters
-report the disabled cache with zero builds, misses, hits and build duration.
-Verbose observation adds diagnostic work, including the former root-selection
-comparison; measure ordinary performance with observation disabled.
-
-No live ID is required. Combining `diagnosticsVerbose` with `diagnosticsId`
-allows live polling and returns the final snapshot on the result; the live ID
-still disappears at completion or rejection. Completed observers are never
-retained in the registry. Progress alone does not allocate a verbose work ledger.
-Omitting the option or passing `false` preserves the original report shape.
-Non-boolean values are rejected. Errors retain their existing rejection behavior.
-
-Like `jobsPoolWarning`, final metadata is attached only to objects, never arrays
-or scalars. Use an `analyzeProject()` object wrapper to collect diagnostics for
-array-valued commands. Planning artifact calls forward the option and return
-metadata on their object result. These APIs remain asynchronous and analysis
-continues to run through libuv tasks.
+The same wrapper accepts `"analyzeProject"` and returns its normal result plus
+request-scoped diagnostics. Annotation counters include module initializations;
+the removed shared-initialization cache reports zero builds, hits, misses and
+build duration. Verbose observation performs extra diagnostic work, including
+the former root-selection comparison. Measure ordinary performance with
+observation disabled. Plain API calls preserve their existing result shape.
+See the [verbose diagnostics contract](../node-api.md) for
+`VerboseDiagnostics`, phase resources, hot files and error behavior.

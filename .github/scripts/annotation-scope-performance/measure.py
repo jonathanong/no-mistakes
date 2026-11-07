@@ -4,7 +4,6 @@ import json
 import math
 import os
 import platform
-import re
 import signal
 import statistics
 import subprocess
@@ -13,7 +12,7 @@ import tempfile
 import time
 from pathlib import Path
 
-from common import command, descendant_usage, digest, distinct, parity, refs, rss_kib, save
+from common import command, descendant_usage, digest, distinct, parity, refs, rss_kib, save, verbose_metrics
 
 FIXTURES = ("annotation-excluded-callers-large", "annotation-excluded-callers-unrelated",
             "annotation-excluded-shared-initials")
@@ -52,12 +51,9 @@ def sample(binary, root, jobs, verbose=False):
         if process.returncode < 0:
             raise RuntimeError("sample was signaled or exceeded its 60-second cap")
         json.loads(report)
-        work = {match[1]: int(match[2]) for match in
-                re.finditer(rb"^\[work\] ([^:]+): (\d+)$", errors, re.M)} if verbose else None
-        timings = {match[1].decode(): float(match[2]) for match in
-                   re.finditer(rb"^\[timing\] ([^:]+): ([\d.]+)ms", errors, re.M)} if verbose else None
-        return {"work": {key.decode(): value for key, value in work.items()} if work else None,
-                "timingsMs": timings, "wallSeconds": wall, "userSeconds": usage.ru_utime,
+        metrics = verbose_metrics(errors) if verbose else {"work": None, "timingsMs": None}
+        return {**metrics, "verboseStderr": errors.decode() if verbose else None,
+                "wallSeconds": wall, "userSeconds": usage.ru_utime,
                 "systemSeconds": usage.ru_stime, "cpuSeconds": usage.ru_utime + usage.ru_stime,
                 "rssKiB": rss_kib(usage.ru_maxrss, platform.system()),
                 "exit": process.returncode, "reportSha256": hashlib.sha256(report).hexdigest(),

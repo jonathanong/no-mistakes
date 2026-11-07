@@ -94,7 +94,6 @@ function invocationOptions(options) {
       "jobs",
       "profile",
       "diagnosticsId",
-      "diagnosticsVerbose",
     ]
       .filter((name) => Object.hasOwn(options, name))
       .map((name) => [name, options[name]]),

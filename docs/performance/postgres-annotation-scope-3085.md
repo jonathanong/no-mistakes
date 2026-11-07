@@ -98,8 +98,9 @@ cache has `shared_init.disabled: 1`, zero hits, misses and builds, and zero buil
 duration. The before-scope comparison performs extra resolver work only with
 verbose observation. Default execution and coarse timings skip it.
 
-Async `check()` and `analyzeProject()` expose the same final work and timing
-information through opt-in `diagnosticsVerbose: true`, without retaining a
-completed observer or changing default reports. See
+Async `collectDiagnostics("check", options)` and
+`collectDiagnostics("analyzeProject", options)` expose these counters in the
+shared `VerboseDiagnostics` report alongside phase CPU/RSS and hot files,
+without retaining a completed observer or changing default reports. See
 [CLI diagnostics](../cli/diagnostics.md) and
-[Node diagnostics](../node-api/progress.md#final-verbose-diagnostics).
+[Node diagnostics](../node-api/progress.md#annotation-work-counters).
