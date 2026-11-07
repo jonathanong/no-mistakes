@@ -5,7 +5,6 @@ use crate::codebase::rules::postgres_sql_cross_file::{
 };
 use crate::codebase::ts_resolver::{load_tsconfig, normalize_path};
 use crate::codebase::ts_source::facts::TsFactPlan;
-use std::path::PathBuf;
 
 #[test]
 fn aliased_allow_list_guards_a_transaction_after_an_early_return() {
