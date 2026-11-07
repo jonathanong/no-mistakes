@@ -9,8 +9,16 @@ pub(in crate::codebase::postgres::statements) fn is_fixed_at(
     expr: &Expr,
     positions: value::PlaceholderPositions<'_>,
 ) -> bool {
+    is_fixed_with_columns(expr, positions, &|_| false)
+}
+
+pub(in crate::codebase::postgres::statements) fn is_fixed_with_columns(
+    expr: &Expr,
+    positions: value::PlaceholderPositions<'_>,
+    column: &impl Fn(&Expr) -> bool,
+) -> bool {
     matches!(
-        fixed_count_at(expr, positions),
+        fixed_count_at(expr, positions, column),
         Some(FixedCount::Caller | FixedCount::NonNull)
     )
 }
@@ -23,22 +31,27 @@ enum FixedCount {
 }
 
 /// A bind retains its caller contract, but cannot guarantee a non-NULL conditional fallback.
-fn fixed_count_at(expr: &Expr, positions: value::PlaceholderPositions<'_>) -> Option<FixedCount> {
+fn fixed_count_at(
+    expr: &Expr,
+    positions: value::PlaceholderPositions<'_>,
+    column: &impl Fn(&Expr) -> bool,
+) -> Option<FixedCount> {
     match expr {
-        Expr::Nested(inner) => fixed_count_at(inner, positions),
+        Expr::Nested(inner) => fixed_count_at(inner, positions, column),
         Expr::Value(value) => Some(match value.value {
             Value::Null => FixedCount::Nullable,
             Value::Placeholder(_) => FixedCount::Caller,
             _ => FixedCount::NonNull,
         }),
-        Expr::Identifier(ident) => {
-            value::is_placeholder_ident_at(ident, positions).then_some(FixedCount::Caller)
-        }
+        Expr::Identifier(ident) => (value::is_placeholder_ident_at(ident, positions)
+            || column(expr))
+        .then_some(FixedCount::Caller),
+        Expr::CompoundIdentifier(_) => column(expr).then_some(FixedCount::Caller),
         Expr::Cast { expr, .. } | Expr::UnaryOp { expr, .. } => {
-            is_fixed_at(expr, positions).then_some(FixedCount::Caller)
+            is_fixed_with_columns(expr, positions, column).then_some(FixedCount::Caller)
         }
-        Expr::BinaryOp { left, right, .. } => (is_fixed_at(left, positions)
-            && is_fixed_at(right, positions))
+        Expr::BinaryOp { left, right, .. } => (is_fixed_with_columns(left, positions, column)
+            && is_fixed_with_columns(right, positions, column))
         .then_some(FixedCount::Caller),
         // Only the functions that return NULL for nothing but NULL arguments: `NULLIF(1, 1)`,
         // like any function that can produce NULL from fixed inputs, is `LIMIT ALL`.
@@ -59,7 +72,7 @@ fn fixed_count_at(expr: &Expr, positions: value::PlaceholderPositions<'_>) -> Op
                             FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => {
                                 // Visit every argument once, including those after a fixed fallback:
                                 // unknown/data-derived inputs never gain a caller-owned count proof.
-                                let count = fixed_count_at(expr, positions)?;
+                                let count = fixed_count_at(expr, positions, column)?;
                                 Some((
                                     nullable || count == FixedCount::Nullable,
                                     non_null || count == FixedCount::NonNull,

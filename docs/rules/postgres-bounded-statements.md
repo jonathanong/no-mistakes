@@ -244,6 +244,24 @@ WITH c AS (SELECT id FROM exports WHERE expires_at < now() ORDER BY id LIMIT $1 
 SELECT code FROM currencies;   -- allow entry
 ```
 
+A `LATERAL` subquery may also use a named column from a preceding
+`unnest` of parameter arrays as its `LIMIT`:
+
+```sql
+SELECT child.id, frontier.parent_id
+FROM unnest($1::uuid[], $2::integer[]) AS frontier(parent_id, row_limit)
+CROSS JOIN LATERAL (
+  SELECT p.id FROM posts p
+  WHERE p.parent_post_id = frontier.parent_id
+  ORDER BY p.id
+  LIMIT frontier.row_limit
+) AS child;
+```
+
+The parameter arrays bound the outer relation, and each supplied limit bounds
+its corresponding subquery. A limit taken from a table column, including a
+table column passed to `unnest`, does not establish this bound.
+
 ## Counterexample
 
 The first three statements are unbounded under this catalog. The currencies

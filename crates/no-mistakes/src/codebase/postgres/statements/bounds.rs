@@ -12,6 +12,7 @@ mod dml;
 mod functions;
 mod inserted;
 mod items;
+mod limit_columns;
 mod pins;
 mod predicate;
 mod query;
@@ -41,6 +42,7 @@ pub(super) fn is_aggregate(name: &sqlparser::ast::ObjectName) -> bool {
 pub(super) struct Scope {
     frame: Rc<ScopeFrame>,
     table_tokens: Option<Rc<RefCell<TableTokenCursor>>>,
+    limit_columns: limit_columns::Relations,
     scalar_functions: std::sync::Arc<BTreeSet<Vec<String>>>,
 }
 

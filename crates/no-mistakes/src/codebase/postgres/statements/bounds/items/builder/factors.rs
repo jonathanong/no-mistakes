@@ -44,7 +44,13 @@ impl<'a> Builder<'a> {
                 alias,
                 ..
             } => {
-                let bound = query::bound_query(subquery, self.scope, self.positions);
+                let mut scope = self.scope.clone();
+                scope.limit_columns = if *lateral {
+                    self.limit_columns.clone()
+                } else {
+                    Default::default()
+                };
+                let bound = query::bound_query(subquery, &scope, self.positions);
                 let mut item = SqlBoundItem::new(
                     SqlBoundItemKind::Query(bound),
                     alias_key(alias),
@@ -91,6 +97,7 @@ impl<'a> Builder<'a> {
             }
             other => self.push(SqlBoundItemKind::Opaque, &None, start(other.span())),
         }
+        self.limit_columns.add(factor, self.positions);
     }
 
     /// A CTE reference carries the CTE's bound; anything else is a base relation.

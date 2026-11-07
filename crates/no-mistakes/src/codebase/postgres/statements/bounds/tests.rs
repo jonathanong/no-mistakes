@@ -24,6 +24,7 @@ mod compact_aliases;
 mod current_database;
 mod interpolated_bind;
 mod lateral_review;
+mod limit_columns;
 mod materialized_drop;
 mod materialized_namesake;
 mod multi_table_arms;

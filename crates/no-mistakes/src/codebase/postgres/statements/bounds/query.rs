@@ -64,7 +64,7 @@ fn bound_body_observed(
     if is_zero_limited(query) {
         bound.capped = true;
         bound.input_mode = SqlBoundInputMode::Skipped;
-    } else if (super::super::limit::is_limited_at(query, positions)
+    } else if (super::limit_columns::is_limited(query, scope, positions)
         || super::scalar_limit::is_limited(query, scope, positions))
         && limit_bounds_input(query, scope)
     {

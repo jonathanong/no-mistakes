@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      executorNames: [read]
+      unanalyzableSql: fail
+      include: [src/frontier.mts]
