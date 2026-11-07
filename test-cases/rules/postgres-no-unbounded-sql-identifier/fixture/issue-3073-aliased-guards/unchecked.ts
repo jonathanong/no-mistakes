@@ -1,5 +1,6 @@
 import { beginTransaction } from 'db'
-type Allowed = 'alpha' | 'beta' | 'gamma'
+import { ALLOWED_TABLES } from '@scope/pkg/config'
+type Allowed = (typeof ALLOWED_TABLES)[number]
 
 export async function uncheckedUnion(tableName: Allowed, items: string[]) {
   if (items.length === 0) return []
