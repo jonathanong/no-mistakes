@@ -29,7 +29,10 @@ impl SchemaCatalog {
         project: impl FnOnce(&PreparedView) -> Option<T>,
     ) -> Option<T> {
         let view = self.view_relation(name)?;
-        let cache = self.view_projections.get_or_init(Default::default);
+        let cache = self
+            .projections()
+            .view_projections
+            .get_or_init(Default::default);
         let prepared = cache
             .entry(view.name.clone())
             .or_insert_with(|| prepare(&view.definition));

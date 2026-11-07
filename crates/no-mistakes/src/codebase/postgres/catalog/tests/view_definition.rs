@@ -48,12 +48,15 @@ fn uncertain_view_output_names_and_colliding_identities_stay_unknown() {
 #[test]
 fn view_projection_preparation_is_lazy_shared_and_catalog_local() {
     let catalog = catalog();
-    assert!(catalog.view_projections.get().is_none());
+    assert!(catalog.projections.get().is_none());
     assert!(catalog.view_query("missing_view").is_none());
-    assert!(catalog.view_projections.get().is_none());
+    assert!(catalog.projections.get().is_none());
     let names = catalog.view_column_names("simple_view").unwrap();
     let query = catalog.view_query("simple_view").unwrap();
-    assert_eq!(catalog.view_projections.get().unwrap().len(), 1);
+    assert_eq!(
+        catalog.projections().view_projections.get().unwrap().len(),
+        1
+    );
     for _ in 0..10 {
         assert!(Arc::ptr_eq(
             &names,
@@ -77,7 +80,10 @@ fn view_projection_preparation_is_lazy_shared_and_catalog_local() {
     for _ in 0..2 {
         assert!(catalog.view_query("invalid_view").is_none());
     }
-    assert_eq!(catalog.view_projections.get().unwrap().len(), 2);
+    assert_eq!(
+        catalog.projections().view_projections.get().unwrap().len(),
+        2
+    );
 }
 
 #[test]
@@ -93,5 +99,8 @@ fn concurrent_view_queries_reuse_one_prepared_ast() {
             .collect();
         assert!(queries.iter().all(|query| Arc::ptr_eq(&queries[0], query)));
     });
-    assert_eq!(catalog.view_projections.get().unwrap().len(), 1);
+    assert_eq!(
+        catalog.projections().view_projections.get().unwrap().len(),
+        1
+    );
 }

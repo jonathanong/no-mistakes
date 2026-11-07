@@ -28,11 +28,10 @@ pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCata
         model_tables,
         relation_fallback: Default::default(),
         functions,
-        scalar_function_names: Default::default(),
+        projections: Default::default(),
         enums: enums(snapshot.enums),
         views: views(snapshot.views),
         view_fallback: Default::default(),
-        view_projections: Default::default(),
         column_lines: BTreeMap::new(),
     })
 }

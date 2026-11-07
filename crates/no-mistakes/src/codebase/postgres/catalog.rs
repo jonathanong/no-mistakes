@@ -26,6 +26,7 @@ mod nesting;
 mod order;
 mod partition;
 mod paths;
+mod projection_cache;
 mod relation_identity;
 mod resolve;
 mod scalar_functions;
@@ -70,11 +71,10 @@ pub struct SchemaCatalog {
     model_tables: BTreeMap<String, CatalogTable>,
     relation_fallback: std::sync::OnceLock<fallback::RelationFallback>,
     functions: BTreeMap<String, CatalogFunction>,
-    scalar_function_names: std::sync::OnceLock<std::sync::Arc<BTreeSet<Vec<String>>>>,
+    projections: std::sync::OnceLock<std::sync::Arc<projection_cache::ProjectionCache>>,
     enums: BTreeMap<String, CatalogEnum>,
     views: BTreeMap<String, CatalogView>,
     view_fallback: std::sync::OnceLock<fallback::RelationFallback>,
-    view_projections: std::sync::OnceLock<std::sync::Arc<view_definition::ViewProjections>>,
     column_lines: BTreeMap<(String, String), usize>,
 }
 
