@@ -1,6 +1,8 @@
 use super::super::select::uses::scope::{self, BaseRel};
-use crate::codebase::postgres::idents::{object_name_identity, relation_part_key};
-use sqlparser::ast::{TableFactor, TableWithJoins};
+use crate::codebase::postgres::idents::{
+    ident_key, object_name_identity, relation_part_key, relation_suffix_key,
+};
+use sqlparser::ast::{Expr, TableFactor, TableWithJoins};
 
 pub(super) fn base_relations(tables: &[TableWithJoins], ctes: &[String]) -> Vec<BaseRel> {
     let mut out = Vec::new();
@@ -45,5 +47,44 @@ pub(super) fn push_factor(factor: &TableFactor, ctes: &[String], out: &mut Vec<B
         for relation in &mut out[start..] {
             relation.unknown = true;
         }
+    }
+}
+
+pub(super) fn owner(
+    relations: &[BaseRel],
+    qualifier: Option<&str>,
+) -> (String, Option<Vec<String>>) {
+    let Some(qualifier) = qualifier else {
+        return (
+            String::new(),
+            (!relations.iter().any(|rel| rel.unknown))
+                .then(|| relations.iter().map(|rel| rel.table.clone()).collect()),
+        );
+    };
+    let mut matches = relations.iter().filter(|rel| {
+        rel.alias.as_deref().map_or_else(
+            || rel.table == qualifier || relation_suffix_key(&rel.table) == qualifier,
+            |alias| alias == qualifier,
+        )
+    });
+    match (matches.next(), matches.next()) {
+        (Some(relation), None) if !relation.unknown => {
+            (relation.table.clone(), Some(vec![relation.table.clone()]))
+        }
+        _ => (String::new(), None),
+    }
+}
+
+pub(super) fn qualifier(expr: &Expr) -> Option<String> {
+    match expr {
+        Expr::Nested(expr) => qualifier(expr),
+        Expr::CompoundIdentifier(parts) => Some(
+            parts[..parts.len() - 1]
+                .iter()
+                .map(|part| relation_part_key(&ident_key(part)))
+                .collect::<Vec<_>>()
+                .join("."),
+        ),
+        _ => None,
     }
 }

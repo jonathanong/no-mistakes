@@ -63,10 +63,11 @@ A cast or function around a boolean comparison result leaves its UUID operands
 bare and is allowed. Transformations inside that comparison remain checked.
 
 For positive `JOIN ON` equality conjuncts, the newly joined relation is the probed side.
-A bare qualified key such as `root.id = COALESCE(c.account_id, c.id)`
+A catalog-backed bare qualified UUID key such as `root.id = COALESCE(c.account_id, c.id)`
 allows the transform on preceding driving relations. Reversing the equality
 operands is also allowed. `COALESCE(root.id, c.id) = c.account_id` still
-transforms the probed key and is reported. Unknown owners, unqualified keys,
+transforms the probed key and is reported. Missing probe tables or columns,
+non-UUID probe columns, unknown owners, unqualified keys,
 non-equality comparisons, negated or disjunctive equalities, and transforms
 on both sides retain findings.
 

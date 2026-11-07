@@ -29,3 +29,6 @@ SELECT 1 FROM orders c JOIN accounts root ON root.id = COALESCE(c.account_id, c.
 SELECT 1 FROM orders c JOIN accounts root ON root.id = COALESCE(CASE c.id::text WHEN $1 THEN c.id END, c.id);
 SELECT 1 FROM orders c JOIN accounts root ON (root.id = COALESCE(c.account_id, c.id)) = FALSE;
 SELECT 1 FROM orders root JOIN accounts root ON root.id = COALESCE(root.account_id, root.id);
+SELECT 1 FROM orders c JOIN missing root ON root.id = COALESCE(c.account_id, c.id);
+SELECT 1 FROM orders c JOIN accounts root ON root.missing = COALESCE(c.account_id, c.id);
+SELECT 1 FROM orders c JOIN accounts root ON root.email = COALESCE(c.account_id::text, c.id::text);

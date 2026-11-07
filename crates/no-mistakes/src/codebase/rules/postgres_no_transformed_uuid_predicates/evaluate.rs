@@ -29,6 +29,17 @@ impl<'a> Columns<'a> {
         &self,
         use_: &SqlTransformedColumnUseFact,
     ) -> Result<(&'a str, bool), &'static str> {
+        let (table, uuid) = self.resolve_owner(use_)?;
+        let drives_uuid_probe = use_.driving_probe.as_ref().is_some_and(|probe| {
+            self.column(&probe.table, &probe.column)
+                .is_some_and(|(_, uuid)| uuid)
+        });
+        Ok((table, uuid && !drives_uuid_probe))
+    }
+    fn resolve_owner(
+        &self,
+        use_: &SqlTransformedColumnUseFact,
+    ) -> Result<(&'a str, bool), &'static str> {
         if !use_.table.is_empty() {
             return self
                 .column(&use_.table, &use_.column)

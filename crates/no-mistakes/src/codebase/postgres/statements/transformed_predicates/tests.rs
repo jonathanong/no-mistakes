@@ -53,18 +53,31 @@ fn aggregate_boundaries_preserve_filter_and_subquery_predicates_with_locations()
 }
 
 #[test]
-fn driving_values_leave_the_joined_key_bare_but_residuals_remain_checked() {
+fn driving_values_retain_probe_metadata_for_catalog_classification() {
     let facts = facts("probe-direction.sql");
-    let lines: Vec<_> = facts
+    let probes: Vec<_> = facts
         .transformed_column_uses
         .iter()
-        .map(|fact| fact.line)
+        .filter(|fact| matches!(fact.line, 1 | 32 | 33 | 34))
+        .map(|fact| {
+            let probe = fact
+                .driving_probe
+                .as_ref()
+                .expect("catalog proof remains required");
+            (fact.line, probe.table.as_str(), probe.column.as_str())
+        })
         .collect();
     assert_eq!(
-        lines,
+        probes,
         [
-            3, 3, 4, 4, 6, 6, 7, 7, 8, 8, 9, 9, 9, 10, 10, 11, 12, 13, 14, 15, 15, 19, 19, 20, 20,
-            21, 21, 22, 22, 25, 27, 28, 29, 30, 30, 31, 31
+            (1, "accounts", "id"),
+            (1, "accounts", "id"),
+            (32, "missing", "id"),
+            (32, "missing", "id"),
+            (33, "accounts", "missing"),
+            (33, "accounts", "missing"),
+            (34, "accounts", "email"),
+            (34, "accounts", "email"),
         ]
     );
 }
