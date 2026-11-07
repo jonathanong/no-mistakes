@@ -10,6 +10,7 @@ pub struct CallSiteFact {
     pub callee: String,
     /// Zero-based source byte identifying this invocation in resolved call facts.
     pub offset: u32,
+    pub(crate) callee_reference_offset: Option<u32>,
     /// Whether invocation is conditional through an optional call or member chain.
     pub is_optional: bool,
     pub line: u32,
@@ -88,6 +89,7 @@ pub(crate) fn record_call_site(
     sites.push(CallSiteFact {
         callee,
         offset: call.span.start,
+        callee_reference_offset: callee_reference_offset(&call.callee),
         is_optional,
         line: byte_offset_to_line(source, call.span.start as usize),
         caller: caller.map(str::to_string),
@@ -99,4 +101,17 @@ pub(crate) fn record_call_site(
             .any(|arg| matches!(arg, Argument::SpreadElement(_))),
         args: call.arguments.iter().map(arg_tag).collect(),
     });
+}
+
+fn callee_reference_offset(expression: &Expression<'_>) -> Option<u32> {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
+        Expression::Identifier(identifier) => Some(identifier.span.start),
+        Expression::StaticMemberExpression(member) => callee_reference_offset(&member.object),
+        Expression::ComputedMemberExpression(member) => callee_reference_offset(&member.object),
+        Expression::SequenceExpression(sequence) => sequence
+            .expressions
+            .last()
+            .and_then(callee_reference_offset),
+        _ => None,
+    }
 }

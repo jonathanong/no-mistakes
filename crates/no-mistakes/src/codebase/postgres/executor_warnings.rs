@@ -1,6 +1,5 @@
 use crate::codebase::check_facts::{CheckFactMap, CheckFactPlan};
 use crate::codebase::postgres::sql_identifier_syntax::plan::SqlIdentifierScan;
-use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
@@ -91,11 +90,7 @@ pub fn configure_executor_warnings(
 }
 
 #[doc(hidden)]
-pub fn executor_config_warnings(
-    root: &Path,
-    facts: &CheckFactMap,
-    sources: &SourceStore,
-) -> Vec<String> {
+pub fn executor_config_warnings(root: &Path, facts: &CheckFactMap) -> Vec<String> {
     let mut warnings = Vec::new();
     for scan in facts.postgres_executor_warning_scans.iter() {
         let examples = facts
@@ -105,8 +100,7 @@ pub fn executor_config_warnings(
             .filter_map(|path| {
                 let file = facts.ts.get(path)?;
                 let module = file.ts.module_bindings.as_deref()?;
-                let source = sources.read_path(path).ok()?;
-                let calls = calls::omitted_calls(module, &file.ts.call_sites, &source, scan);
+                let calls = calls::omitted_calls(module, &file.ts.call_sites, scan);
                 let relative = crate::codebase::ts_source::relative_slash_path(root, path);
                 Some(
                     calls

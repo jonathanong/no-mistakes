@@ -7,7 +7,6 @@ use std::collections::BTreeMap;
 pub(super) fn omitted_calls(
     module: &TypeScriptModuleFacts,
     calls: &[CallSiteFact],
-    source: &str,
     scan: &ExecutorWarningScan,
 ) -> BTreeMap<String, u32> {
     let bindings = module
@@ -48,15 +47,12 @@ pub(super) fn omitted_calls(
     }
     let mut found = BTreeMap::new();
     for call in calls {
-        let Some((&offset, targets)) = references.range(call.offset..).next() else {
+        let Some(targets) = call
+            .callee_reference_offset
+            .and_then(|offset| references.get(&offset))
+        else {
             continue;
         };
-        let Some(prefix) = source.get(call.offset as usize..offset as usize) else {
-            continue;
-        };
-        if !prefix.chars().all(|ch| ch.is_whitespace() || ch == '(') {
-            continue;
-        }
         for (callee, name) in targets {
             if &call.callee == callee {
                 found
