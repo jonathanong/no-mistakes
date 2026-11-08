@@ -66,6 +66,7 @@ fn coverage_producer_assertion_owner_builtins_json_matches_snapshot() {
         "namespace-bare",
         "namespace-value",
         "builtin-name-only",
+        "external-nested",
         "disabled",
     ];
     let cases: Vec<Case> = names

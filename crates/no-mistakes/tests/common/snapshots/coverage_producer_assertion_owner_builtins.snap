@@ -172,6 +172,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "external-nested": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "client.transport.send",
+              "detail": "external call has no ownership model",
+              "file": "src/external-nested.mts",
+              "kind": "unresolved-dispatch",
+              "line": 2,
+              "sourceLine": "export function namedExternalMember() { client.transport.send(); }"
+            }
+          ],
+          "file": "src/external-nested.mts",
+          "line": 2,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/external-nested.mts:2 callee `client.transport.send` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/external-nested.mts#namedExternalMember",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function namedExternalMember() { client.transport.send(); }",
+          "target": "namedExternalMember"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "globals": {
     "exitCode": 0,
     "report": {
