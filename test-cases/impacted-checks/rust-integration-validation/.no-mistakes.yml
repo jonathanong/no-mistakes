@@ -1,0 +1,11 @@
+checks:
+  commands:
+    - name: rust-integration-validation
+      include:
+        - "crates/no-mistakes/tests/**/*.rs"
+        - crates/no-mistakes/Cargo.toml
+        - Cargo.toml
+        - Cargo.lock
+        - .no-mistakes.yml
+      command: [cargo, test, --locked, --workspace, --all-features, --lib, --bins, --tests]
+      fileArgs: none

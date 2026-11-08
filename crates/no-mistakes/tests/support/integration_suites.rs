@@ -59,7 +59,8 @@ fn every_integration_source_is_registered_once() {
 
 #[test]
 fn changed_suite_modules_select_the_configured_workspace_test_command() {
-    let repo_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let repo_root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/impacted-checks/rust-integration-validation");
     let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
         .args([
             "impacted-checks",
@@ -110,4 +111,22 @@ fn changed_suite_modules_select_the_configured_workspace_test_command() {
             "crates/no-mistakes/tests/postgres_catalog_real/bounded.rs"
         ])
     );
+}
+
+#[test]
+fn repository_config_keeps_the_workspace_integration_command() {
+    let repo_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let configured = |root: &Path| -> serde_yaml::Value {
+        let text = std::fs::read_to_string(root.join(".no-mistakes.yml")).unwrap();
+        let config: serde_yaml::Value = serde_yaml::from_str(&text).unwrap();
+        config["checks"]["commands"]
+            .as_sequence()
+            .unwrap()
+            .iter()
+            .find(|check| check["name"] == "rust-integration-validation")
+            .expect("rust-integration-validation must stay configured")
+            .clone()
+    };
+    let fixture = repo_root.join("test-cases/impacted-checks/rust-integration-validation");
+    assert_eq!(configured(&repo_root), configured(&fixture));
 }
