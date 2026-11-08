@@ -11,8 +11,8 @@ mod prepared_schema;
 mod schema;
 mod shapes;
 use schema::{
-    column_requires_trigger, conflict_ordering, duplicate_function_body, lock_ordering,
-    required_comments,
+    column_check_constraints, column_requires_trigger, conflict_ordering, duplicate_function_body,
+    lock_ordering, required_comments,
 };
 mod no_offset;
 
@@ -73,6 +73,9 @@ fn run_schema_rules(
         },
         POSTGRES_DUPLICATE_FUNCTION_BODY => {
             duplicate_function_body(root, config, files, sources, facts)
+        }
+        POSTGRES_COLUMN_CHECK_CONSTRAINTS => {
+            column_check_constraints(root, config, files, sources, facts)
         }
         POSTGRES_REQUIRED_COMMENTS => required_comments(root, config, files, sources, facts),
         POSTGRES_COLUMN_REQUIRES_TRIGGER => {

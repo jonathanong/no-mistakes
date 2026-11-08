@@ -1,0 +1,291 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "metrics": {
+      "columns": {
+        "ge_count": {
+          "dataType": "integer"
+        },
+        "reverse_count": {
+          "dataType": "integer"
+        },
+        "gt_count": {
+          "dataType": "integer"
+        },
+        "and_count": {
+          "dataType": "integer"
+        },
+        "nested_count": {
+          "dataType": "integer"
+        },
+        "or_count": {
+          "dataType": "integer"
+        },
+        "not_count": {
+          "dataType": "integer"
+        },
+        "wrong_count": {
+          "dataType": "integer"
+        },
+        "negative_count": {
+          "dataType": "integer"
+        },
+        "missing_count": { // no-mistakes-disable-line postgres-column-check-constraints
+          "dataType": "integer"
+        },
+        "unvalidated_count": {
+          "dataType": "integer"
+        },
+        "cast_count": {
+          "dataType": "integer"
+        },
+        "quoted_count": {
+          "dataType": "integer"
+        },
+        "case_count": {
+          "dataType": "integer"
+        },
+        "broken_count": {
+          "dataType": "integer"
+        },
+        "null_count": {
+          "dataType": "integer"
+        },
+        "other": {
+          "dataType": "integer"
+        },
+        "text_count": {
+          "dataType": "text"
+        },
+        "ignored": {
+          "dataType": "bigint"
+        },
+        "small_count": {
+          "dataType": "smallint"
+        },
+        "big_count": {
+          "dataType": "bigint"
+        },
+        "alias_count": {
+          "dataType": "int8"
+        },
+        "int_count": {
+          "dataType": "int"
+        },
+        "CASE_count": {
+          "dataType": "integer"
+        },
+        "upper_count": {
+          "dataType": "integer"
+        },
+        "wrong_case_count": {
+          "dataType": "integer"
+        },
+        "malformed_count": {
+          "dataType": "integer"
+        },
+        "trailing_count": {
+          "dataType": "integer"
+        },
+        "no_inherit_count": {
+          "dataType": "integer"
+        },
+        "not_enforced_count": {
+          "dataType": "integer"
+        },
+        "invalid_token_count": {
+          "dataType": "integer"
+        },
+        "not_check_count": {
+          "dataType": "integer"
+        },
+        "string_count": {
+          "dataType": "integer"
+        },
+        "function_count": {
+          "dataType": "integer"
+        },
+        "overflow_count": {
+          "dataType": "integer"
+        },
+        "eq_count": {
+          "dataType": "integer"
+        },
+        "catalog_gt_count": {
+          "dataType": "bigint"
+        },
+        "catalog_reverse_count": {
+          "dataType": "bigint"
+        },
+        "text_cast_count": {
+          "dataType": "bigint"
+        },
+        "positive_count": {
+          "dataType": "integer"
+        },
+        "strict_count": {
+          "dataType": "integer"
+        },
+        "reverse_strict_count": {
+          "dataType": "integer"
+        },
+        "constant_count": {
+          "dataType": "integer"
+        },
+        "negative_equal_count": {
+          "dataType": "integer"
+        },
+        "weak_strict_count": {
+          "dataType": "integer"
+        },
+        "weak_reverse_count": {
+          "dataType": "integer"
+        },
+        "Needs_count": {
+          "dataType": "integer"
+        }
+      },
+      "checkConstraints": {
+        "ge_count": {
+          "definition": "CHECK (ge_count >= 0)",
+          "validated": true
+        },
+        "reverse_count": {
+          "definition": "CHECK (0 <= reverse_count)",
+          "validated": true
+        },
+        "gt_count": {
+          "definition": "CHECK (gt_count > -1)",
+          "validated": true
+        },
+        "and_count": {
+          "definition": "CHECK (and_count >= 0 AND other > 2)",
+          "validated": true
+        },
+        "nested_count": {
+          "definition": "CHECK ((other > 2 OR other IS NULL) AND (nested_count > -1))",
+          "validated": true
+        },
+        "or_count": {
+          "definition": "CHECK (or_count >= 0 OR other > 2)",
+          "validated": true
+        },
+        "not_count": {
+          "definition": "CHECK (NOT (not_count >= 0))",
+          "validated": true
+        },
+        "wrong_count": {
+          "definition": "CHECK (other >= 0)",
+          "validated": true
+        },
+        "negative_count": {
+          "definition": "CHECK (negative_count >= -1)",
+          "validated": true
+        },
+        "unvalidated_count": {
+          "definition": "CHECK (unvalidated_count >= 0)",
+          "validated": false
+        },
+        "cast_count": {
+          "definition": "CHECK (cast_count::smallint >= 0)",
+          "validated": true
+        },
+        "quoted_count": {
+          "definition": "CHECK (\"quoted_count\" >= 0)",
+          "validated": true
+        },
+        "case_count": {
+          "definition": "CHECK (\"CASE_count\" >= 0)",
+          "validated": true
+        },
+        "broken_count": {
+          "definition": "CHECK (invalid !!!)",
+          "validated": true
+        },
+        "null_count": {
+          "definition": "CHECK (null_count >= 0 OR null_count IS NULL)",
+          "validated": true
+        },
+        "upper_count": {
+          "definition": "CHECK (UPPER_COUNT >= 0)"
+        },
+        "wrong_case_count": {
+          "definition": "CHECK (\"WRONG_CASE_COUNT\" >= 0)"
+        },
+        "malformed_count": {
+          "definition": "CHECK (malformed_count >= 0) garbage"
+        },
+        "trailing_count": {
+          "definition": "CHECK (trailing_count >= 0)); SELECT 1; --"
+        },
+        "no_inherit_count": {
+          "definition": "CHECK (no_inherit_count >= 0) NO INHERIT"
+        },
+        "not_enforced_count": {
+          "definition": "CHECK (not_enforced_count >= 0) NOT ENFORCED"
+        },
+        "invalid_token_count": {
+          "definition": "CHECK ('"
+        },
+        "not_check_count": {
+          "definition": "UNIQUE (not_check_count)"
+        },
+        "string_count": {
+          "definition": "CHECK (string_count >= '0')"
+        },
+        "function_count": {
+          "definition": "CHECK (abs(function_count) >= 0)"
+        },
+        "overflow_count": {
+          "definition": "CHECK (overflow_count > -999999999999999999999999999999999)"
+        },
+        "eq_count": {
+          "definition": "CHECK (eq_count = 0)"
+        },
+        "catalog_gt_count": {
+          "definition": "CHECK (catalog_gt_count > '-1'::integer)"
+        },
+        "catalog_reverse_count": {
+          "definition": "CHECK (0::bigint <= catalog_reverse_count)"
+        },
+        "text_cast_count": {
+          "definition": "CHECK (text_cast_count >= '0'::text)"
+        },
+        "positive_count": {
+          "definition": "CHECK (positive_count >= 3)"
+        },
+        "strict_count": {
+          "definition": "CHECK (strict_count > 0)"
+        },
+        "reverse_strict_count": {
+          "definition": "CHECK (-1 < reverse_strict_count)"
+        },
+        "constant_count": {
+          "definition": "CHECK (0 = constant_count)"
+        },
+        "negative_equal_count": {
+          "definition": "CHECK (negative_equal_count = -1)"
+        },
+        "weak_strict_count": {
+          "definition": "CHECK (weak_strict_count > -2)"
+        },
+        "weak_reverse_count": {
+          "definition": "CHECK (-1 <= weak_reverse_count)"
+        }
+      }
+    },
+    "unselected": {
+      "columns": {
+        "name": {
+          "dataType": "text"
+        }
+      },
+      "checkConstraints": {
+        "check": {
+          "definition": "CHECK (length(name) > 0)"
+        }
+      }
+    }
+  }
+}

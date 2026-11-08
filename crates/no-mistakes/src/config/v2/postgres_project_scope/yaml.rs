@@ -34,7 +34,12 @@ pub(super) fn string_list(value: Option<&Value>, rule: &str, key: &str) -> Resul
 
 /// Catalog rules deny unknown fields and only read `schemaCatalogPath`.
 pub(super) fn write_catalog_only(rule: &str, options: &mut Mapping, path: &str) -> bool {
-    if !matches!(rule, "postgres-column-naming" | "postgres-key-column-types") {
+    if !matches!(
+        rule,
+        "postgres-column-naming"
+            | "postgres-key-column-types"
+            | "postgres-column-check-constraints"
+    ) {
         return false;
     }
     if !path.is_empty() {

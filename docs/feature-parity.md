@@ -1147,3 +1147,11 @@ static helper calls and re-exports, atomic same-statement lock/write CTEs, and
 configured executor-option properties. Helper effects require directly awaited
 calls with matching executor parameters. Cross-transaction order and
 schema-dependent advisory checks remain outside scope.
+
+
+The opt-in [`postgres-column-check-constraints`](rules/postgres-column-check-constraints.md)
+rule shares catalog CHECK proofs across Rust, CLI `check`, async Node `check()`,
+and prepared `analyzeProject()` check reports. Column patterns, integer types,
+and the required predicate are explicit. Standard error severity applies;
+`severity: advisory` is recommended for adoption. Unsupported CHECK expressions
+leave the required proof missing.

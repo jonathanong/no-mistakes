@@ -52,6 +52,7 @@ const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::PACKAGE_JSON_WORKSPACE_COVERAGE,
     rules::PNPM_OVERRIDES_BAN,
     rules::PNPM_RELEASE_AGE_POLICY,
+    rules::POSTGRES_COLUMN_CHECK_CONSTRAINTS,
     rules::POSTGRES_COLUMN_REQUIRES_TRIGGER,
     rules::POSTGRES_REQUIRED_COMMENTS,
     rules::POSTGRES_DUPLICATE_FUNCTION_BODY,
@@ -192,7 +193,6 @@ fn run_remaining_filesystem_rules(
         defer_suppression,
     )
 }
-
 pub(crate) fn filesystem_rules_configured(config: &NoMistakesConfig) -> bool {
     FILESYSTEM_RULE_IDS
         .iter()

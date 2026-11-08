@@ -67,6 +67,7 @@ pub mod pnpm_overrides_ban;
 pub mod pnpm_release_age_policy;
 pub mod postgres_array_columns;
 pub mod postgres_bounded_statements;
+pub mod postgres_column_check_constraints;
 pub mod postgres_column_naming;
 pub mod postgres_column_requires_trigger;
 pub mod postgres_conflict_ordering;

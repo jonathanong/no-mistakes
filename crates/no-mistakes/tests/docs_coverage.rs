@@ -42,6 +42,26 @@ fn github_actions_job_permissions_is_in_the_public_rule_inventory() {
 }
 
 #[test]
+fn column_check_constraints_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::POSTGRES_COLUMN_CHECK_CONSTRAINTS;
+    assert_eq!(rule, "postgres-column-check-constraints");
+    assert!(rule_ids_from_source(&repo_root()).contains(rule));
+    let body = read(&repo_root().join(format!("docs/rules/{rule}.md")));
+    for option in [
+        "schemaCatalogPath",
+        "columns:",
+        "pattern:",
+        "types:",
+        "require:",
+        "severity: advisory",
+        "allow:",
+        "reason:",
+    ] {
+        assert!(body.contains(option), "missing {option}");
+    }
+}
+
+#[test]
 fn identifier_inventory_includes_root_and_agent_documents() {
     // Saved root/agent documents protect scan scope; ignored build output stays out.
     let source = repo_root().join("test-cases/docs/identifier-inventory/fixture");

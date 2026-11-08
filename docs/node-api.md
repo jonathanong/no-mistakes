@@ -767,3 +767,9 @@ membership follows the configured unanalyzable policy.
 `PostgresLockWrittenRowsOnlyOptions.executorOptionProperties` selects static inline
 executor-routing options (for example `{ query: tx }`); it defaults to `[]`.
 Configured factory bindings support `const`, `using`, and `await using`.
+
+
+The [`postgres-column-check-constraints`](rules/postgres-column-check-constraints.md)
+catalog rule maps `check` to the existing async `check()` runtime export and
+`analyzeProject()` check reports; it adds no runtime export. Named option types
+are exported from `no-mistakes`; see [catalog checks](node-api/postgres-catalog.md).

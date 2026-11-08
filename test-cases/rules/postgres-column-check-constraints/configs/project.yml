@@ -1,0 +1,17 @@
+projects:
+  database:
+    root: .
+    postgres:
+      schemaCatalogPath: schema.json
+      executors:
+        importSpecifier: pg
+        executorNames: [query]
+rules:
+  - rule: postgres-column-check-constraints
+    projects: [database]
+    severity: advisory
+    options:
+      columns:
+        - pattern: '*_count'
+          types: [smallint, integer, bigint]
+          require: non-negative

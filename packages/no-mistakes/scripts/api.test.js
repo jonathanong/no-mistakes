@@ -282,3 +282,28 @@ test("PostgreSQL executor options expose additive selection and final exclusions
 });
 
 require("./api-tests/declarations-lock-written-rows");
+
+test("column CHECK options export named predicates, requirements and exceptions", () => {
+  const declarations = readFileSync(
+    join(packageRoot, "postgres-column-check-constraints-types.d.ts"),
+    "utf8",
+  );
+  for (const name of [
+    "PostgresColumnCheckPredicate",
+    "PostgresColumnCheckIntegerType",
+    "PostgresColumnCheckRequirement",
+    "PostgresColumnCheckAllowEntry",
+    "PostgresColumnCheckConstraintsOptions",
+  ]) {
+    assert.match(declarations, new RegExp(`export (?:type|interface) ${name}\\b`));
+  }
+  assert.match(declarations, /require: PostgresColumnCheckPredicate;/);
+  assert.match(declarations, /types: PostgresColumnCheckIntegerType\[\];/);
+  assert.match(declarations, /column: string;/);
+  assert.match(declarations, /reason: string;/);
+  assert.ok(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(
+      'export type * from "./postgres-column-check-constraints-types";',
+    ),
+  );
+});

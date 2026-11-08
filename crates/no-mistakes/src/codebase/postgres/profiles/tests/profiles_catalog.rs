@@ -55,6 +55,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
     assert_eq!(
         SCHEMA_CATALOG_RULE_IDS,
         [
+            "postgres-column-check-constraints",
             "postgres-column-requires-trigger",
             "postgres-conflict-ordering",
             "postgres-lock-ordering",

@@ -539,3 +539,10 @@ in unused-entry accounting. Unresolved SQL and transaction membership follow
 follows the unanalyzable policy and is never classified as autocommit.
 Configured factory bindings support `const`, `using`, and `await using` with
 block scope. See the rule page for helper summaries and supported proof limits.
+
+
+[`postgres-column-check-constraints`](../rules/postgres-column-check-constraints.md)
+uses an optional `schemaCatalogPath`, explicit `columns` entries with `pattern`,
+integer `types`, and `require: non-negative`, plus reasoned `allow` column
+exceptions. Use application-level `severity: advisory` for adoption; the default
+error severity enforces failures.

@@ -1,0 +1,130 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "metrics": {
+      "columns": {
+        "nullable_count": {
+          "dataType": "integer"
+        },
+        "paired_count": {
+          "dataType": "integer"
+        },
+        "strong_count": {
+          "dataType": "integer"
+        },
+        "bounded_or_count": {
+          "dataType": "integer"
+        },
+        "nested_count": {
+          "dataType": "integer"
+        },
+        "null_only_count": {
+          "dataType": "integer"
+        },
+        "Quoted_count": {
+          "dataType": "integer"
+        },
+        "joint_left_count": {
+          "dataType": "integer"
+        },
+        "and_count": {
+          "dataType": "integer"
+        },
+        "unsafe_count": {
+          "dataType": "integer"
+        },
+        "wrong_null_count": {
+          "dataType": "integer"
+        },
+        "unknown_count": {
+          "dataType": "integer"
+        },
+        "weak_or_count": {
+          "dataType": "integer"
+        },
+        "nested_unsafe_count": {
+          "dataType": "integer"
+        },
+        "nonnull_count": {
+          "dataType": "integer"
+        },
+        "unvalidated_or_count": {
+          "dataType": "integer"
+        },
+        "joint_right_count": {
+          "dataType": "integer"
+        },
+        "other": {
+          "dataType": "integer"
+        }
+      },
+      "checkConstraints": {
+        "nullable_count": {
+          "definition": "CHECK ((nullable_count IS NULL) OR (nullable_count >= 0))",
+          "validated": true
+        },
+        "paired_count": {
+          "definition": "CHECK (((other IS NULL) AND (paired_count IS NULL)) OR ((other IS NOT NULL) AND (paired_count IS NOT NULL) AND (paired_count >= 0)))",
+          "validated": true
+        },
+        "strong_count": {
+          "definition": "CHECK (strong_count > 1)",
+          "validated": true
+        },
+        "bounded_or_count": {
+          "definition": "CHECK ((bounded_or_count >= 0 AND other > 0) OR (bounded_or_count > 1 AND other <= 0))",
+          "validated": true
+        },
+        "nested_count": {
+          "definition": "CHECK ((nested_count IS NULL) OR ((nested_count >= 0) AND (other > 0 OR other IS NULL)))",
+          "validated": true
+        },
+        "null_only_count": {
+          "definition": "CHECK (null_only_count IS NULL)",
+          "validated": true
+        },
+        "Quoted_count": {
+          "definition": "CHECK ((\"Quoted_count\" IS NULL) OR (\"Quoted_count\" >= 0))",
+          "validated": true
+        },
+        "joint_left_count": {
+          "definition": "CHECK ((joint_left_count >= 0 AND joint_right_count >= 0) OR (joint_left_count IS NULL AND joint_right_count >= 1))",
+          "validated": true
+        },
+        "and_count": {
+          "definition": "CHECK (((and_count IS NULL) OR (and_count >= 0)) AND other > 0)",
+          "validated": true
+        },
+        "unsafe_count": {
+          "definition": "CHECK ((unsafe_count >= 0) OR (other > 0))",
+          "validated": true
+        },
+        "wrong_null_count": {
+          "definition": "CHECK ((wrong_null_count >= 0) OR (other IS NULL))",
+          "validated": true
+        },
+        "unknown_count": {
+          "definition": "CHECK ((unknown_count >= 0) OR NULL)",
+          "validated": true
+        },
+        "weak_or_count": {
+          "definition": "CHECK ((weak_or_count >= 0) OR (weak_or_count >= -1))",
+          "validated": true
+        },
+        "nested_unsafe_count": {
+          "definition": "CHECK ((nested_unsafe_count IS NULL) OR ((nested_unsafe_count >= 0) OR (other > 0)))",
+          "validated": true
+        },
+        "nonnull_count": {
+          "definition": "CHECK (nonnull_count IS NOT NULL)",
+          "validated": true
+        },
+        "unvalidated_or_count": {
+          "definition": "CHECK ((unvalidated_or_count IS NULL) OR (unvalidated_or_count >= 0))",
+          "validated": false
+        }
+      }
+    }
+  }
+}

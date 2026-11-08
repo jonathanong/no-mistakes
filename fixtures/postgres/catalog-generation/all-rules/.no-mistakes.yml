@@ -104,3 +104,12 @@ rules:
       schemaCatalogPath: schema.json
       # Exercise an existing unique text key without changing the generated catalog.
       fingerprintNamePattern: '^email$'
+
+  - rule: postgres-column-check-constraints
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      columns:
+        - pattern: id
+          types: [smallint, integer, bigint]
+          require: non-negative

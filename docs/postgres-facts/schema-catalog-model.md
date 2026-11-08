@@ -151,3 +151,8 @@ finding per unused entry:
 `<rule-id> option schemaCatalogPath: required` when the path is empty.
 
 [PostgreSQL fact sources](../postgres-facts.md)
+
+
+`postgres-column-check-constraints` uses integer column types and validated CHECK
+constraints to prove configured lower bounds. It shares the prepared catalog and
+does not load or parse schema source separately.

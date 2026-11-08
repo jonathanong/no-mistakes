@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-column-check-constraints
+    scope: repository
+    severity: advisory
+    options:
+      columns:
+        - pattern: "*_count"
+          types: [smallint, integer, bigint]
+          require: non-negative
