@@ -251,3 +251,6 @@ mod cli_postgres_snapshot_literal_comment_names;
 
 #[path = "cli_postgres_unused_disables.rs"]
 mod cli_postgres_unused_disables;
+
+#[path = "cli_check_rules_test_no_live_repository_scan_env.rs"]
+mod cli_check_rules_test_no_live_repository_scan_env;

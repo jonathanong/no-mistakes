@@ -1,4 +1,5 @@
 # `test-no-live-repository-scan`
+
 <!-- cspell:ignore fdir -->
 
 Rejects directory enumeration of the live repository that a Vitest root runs.
@@ -255,8 +256,34 @@ around it carry the variable through. The enumeration is accepted when:
   `process.env["X"] = ...`, `vi.stubEnv("X", ...)`) assigns an owned root, and
 - an unconditional owned write dominates every call chain that reaches the
   enumeration: a module top-level statement before the call, a statement earlier
-  in the same function body, or one in a `beforeAll`/`beforeEach` callback that
-  covers an `it`/`test` callback calling it.
+  in the same function body, or one in a same-file `beforeAll`/`beforeEach`
+  callback that covers an `it`/`test` callback calling it. An unconditional
+  module-level write in an eagerly imported setup module also dominates the
+  importing module body, including through a chain of static imports.
+
+Both direct assignment and `vi.stubEnv` carry owned provenance across these
+static setup imports:
+
+```typescript
+// setup.mts
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { vi } from "vitest";
+vi.stubEnv("OWNED_SCAN_ROOT", mkdtempSync(join(tmpdir(), "scan-")));
+// Equivalently: process.env.OWNED_SCAN_ROOT = mkdtempSync(join(tmpdir(), "scan-"));
+```
+
+A test can import that setup before calling a named source helper that reads
+`process.env.OWNED_SCAN_ROOT ?? ""`. A statically configured Vitest `setupFiles`
+module also supplies this proof when every matching project supplies an owned
+write. The existing prepared project catalog supplies setup ownership; configs
+are not parsed again. Only unconditional module-level writes in setup files or their
+static imports qualify. `globalSetup`, unknown setup paths, imported hooks,
+unexecuted functions, conditional or dynamic imports, and import cycles that
+can reach the caller before the write retain the advisory. A write after an
+earlier call in the setup file does not cover that call. An env value without a stub
+or any write naming a repository path also retains the advisory.
 
 An owned root is only owned below itself: a path that climbs out of it with
 `..` (`join(dir, "..", "src")`) keeps the finding for both parameters and env
@@ -274,7 +301,9 @@ A setup-and-restore pair remains unresolved: assigning an owned root in
 prove a lifecycle interval for every imported caller, concurrent test, and hook;
 it cannot discard the restore write merely because a visible caller is in an
 `it` callback. Pass the owned root as an argument to a statically named helper
-instead, or keep the advisory with a reasoned suppression.
+instead. The unresolved-root hint leads with passing a temporary root the test
+owns (mkdtemp) as a parameter or via `vi.stubEnv`, or using a constant fixture
+path. A reasoned suppression is the last option.
 
 The finding is kept when the write comes after the call, sits in an `if`, loop,
 or `try`, or is overwritten with a live value elsewhere. Writes are read from
@@ -325,7 +354,7 @@ poison wherever they appear, because they restore the default between tests.
 `stubGlobal("process", ...)` poisons too, including a named import, a member, a
 string computed member, and an optional call, even when the receiver is not
 named `vi`. `stubGlobal` with a first argument that is not a string literal
-poisons. `stubGlobal("fetch", ...)` and `` stubGlobal(`location`, ...) `` do not,
+poisons. `stubGlobal("fetch", ...)` and ``stubGlobal(`location`, ...)`` do not,
 by themselves.
 
 A computed object key poisons when its text is the literal `unstubEnvs` or
@@ -465,9 +494,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const workflows = join(import.meta.dirname, "..", ".github", "workflows");
-const entries = readdirSync(workflows).map((name) =>
-  readFileSync(join(workflows, name), "utf8"),
-);
+const entries = readdirSync(workflows).map((name) => readFileSync(join(workflows, name), "utf8"));
 ```
 
 Reported at the `readdirSync` call: it enumerates a path under the test

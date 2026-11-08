@@ -115,8 +115,11 @@ pub(crate) fn check_with_graph(
                                 facts,
                                 graph_files,
                                 resolution,
-                                &root,
-                                config,
+                                owned::Environment {
+                                    root: &root,
+                                    config,
+                                    vitest,
+                                },
                             )
                         })
                         .owned(origin, site, facts, &fixture_dirs)

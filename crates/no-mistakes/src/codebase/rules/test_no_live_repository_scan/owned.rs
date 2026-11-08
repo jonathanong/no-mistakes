@@ -3,7 +3,10 @@
 //! Recall first: any caller, write, or file this pass cannot read keeps the finding.
 mod consumers;
 pub(super) mod env;
+mod env_query;
+mod imports;
 mod parameters;
+mod setups;
 pub(crate) use consumers::Resolution;
 
 use crate::codebase::dependencies::extract::InvocationKind;
@@ -37,6 +40,10 @@ pub(super) struct Owners<'g> {
     /// Reachable call sites by the callable they invoke.
     callers: FxHashMap<NodeId, Vec<&'g ResolvedCallSite>>,
     env: env::EnvWrites,
+    imported: imports::ImportedWrites<'g>,
+    setups: std::cell::OnceCell<setups::ConfiguredSetups>,
+    root: &'g std::path::Path,
+    catalog: Option<&'g crate::codebase::rules::PreparedVitestProjectCatalog>,
     nodes: FxHashMap<PathBuf, FxHashMap<u32, NodeId>>,
     /// Names of functions referenced other than as a direct callee, anywhere.
     escaped: FxHashSet<String>,
@@ -53,8 +60,7 @@ impl<'g> Owners<'g> {
         facts: &dyn TsFactLookup,
         graph_files: &[PathBuf],
         resolution: &Resolution<'_>,
-        root: &std::path::Path,
-        config: &crate::config::v2::NoMistakesConfig,
+        environment: Environment<'g>,
     ) -> Self {
         let mut callers: FxHashMap<NodeId, Vec<&ResolvedCallSite>> = FxHashMap::default();
         let mut nodes: FxHashMap<PathBuf, FxHashMap<u32, NodeId>> = FxHashMap::default();
@@ -102,7 +108,11 @@ impl<'g> Owners<'g> {
         Self {
             callers,
             nodes,
-            env: env::EnvWrites::new(facts, graph_files, root, config),
+            imported: imports::ImportedWrites::new(graph),
+            env: env::EnvWrites::new(facts, graph_files, environment.root, environment.config),
+            setups: std::cell::OnceCell::new(),
+            root: environment.root,
+            catalog: environment.vitest,
             escaped,
             consumed,
             escape_unknown,
@@ -166,20 +176,10 @@ impl<'g> Owners<'g> {
         entries.dedup_by(|a, b| a.file == b.file && a.offset == b.offset);
         Some(entries)
     }
+}
 
-    fn env_owned(&self, name: &str, site: &ResolvedCallSite, facts: &dyn TsFactLookup) -> bool {
-        if !self.env.all_owned(name) {
-            return false;
-        }
-        let Some(entries) = self.entries(site_source_node(site)) else {
-            return false;
-        };
-        !entries.is_empty()
-            && entries.iter().all(|entry| {
-                facts
-                    .get_ts_facts(&entry.file)
-                    .and_then(path_provenance)
-                    .is_some_and(|provenance| env::dominated(provenance, name, entry.offset))
-            })
-    }
+pub(super) struct Environment<'a> {
+    pub(super) root: &'a std::path::Path,
+    pub(super) config: &'a crate::config::v2::NoMistakesConfig,
+    pub(super) vitest: Option<&'a crate::codebase::rules::PreparedVitestProjectCatalog>,
 }
