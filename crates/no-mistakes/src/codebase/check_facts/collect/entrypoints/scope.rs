@@ -28,14 +28,15 @@ pub(super) fn collect_with_scope(
         }
         plan.graph_context.set_visible_files(visible_files);
     }
-    if precollected.is_empty()
+    if crate::codebase::check_facts::sql_scope::eligible(&plan, playwright.as_ref())
+        && precollected.is_empty()
+        && supplemental_call_sites.is_empty()
         && session
             .existing_sources_for(root)
             .is_some_and(|existing| Arc::ptr_eq(&existing, &sources))
         && files
             .iter()
             .any(|path| crate::codebase::dependencies::extract::is_indexable(path))
-        && crate::codebase::check_facts::sql_scope::eligible(&plan, playwright.as_ref())
     {
         let mut map = crate::codebase::check_facts::batch::collect_check_fact_batch_with_session(
             session,

@@ -8,6 +8,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 pub(super) fn eligible(plan: &CheckFactPlan, playwright: Option<&PlaywrightFactPlan>) -> bool {
+    #[cfg(test)]
+    if tests::BROAD.with(std::cell::Cell::get) {
+        return false;
+    }
     plan.embedded_sql
         && !plan.embedded_sql_options.is_empty()
         && plan.query_annotation_catalog.is_some()
@@ -22,9 +26,12 @@ pub(super) fn eligible(plan: &CheckFactPlan, playwright: Option<&PlaywrightFactP
         && plan.integration_runner_configs.is_none()
         && playwright.is_none()
         && plan.embedded_sql_options.iter().all(|profile| {
-            plan.embedded_sql_rule_ids
-                .get(profile)
-                .is_some_and(|scans| !scans.is_empty())
+            profile.sql_literal_helpers.is_empty()
+                && !profile.track_transaction_helpers
+                && plan
+                    .embedded_sql_rule_ids
+                    .get(profile)
+                    .is_some_and(|scans| !scans.is_empty())
         })
         && !crate::ast::current_request_parse_cache().is_some_and(|cache| cache.entry_count() > 0)
 }
@@ -44,11 +51,11 @@ pub(super) fn collect(
     let Some((id, request)) = sql.next() else {
         return Vec::new();
     };
-    if !session
-        .existing_sources_for(&request.root)
-        .is_some_and(|sources| std::sync::Arc::ptr_eq(&sources, &request.sources))
-        || sql.next().is_some()
+    if sql.next().is_some()
         || !eligible(&request.plan, request.playwright.as_ref())
+        || !session
+            .existing_sources_for(&request.root)
+            .is_some_and(|sources| std::sync::Arc::ptr_eq(&sources, &request.sources))
         || requests.iter().any(|request| {
             request.playwright.is_some() || request.plan.integration_runner_configs.is_some()
         })

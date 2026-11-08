@@ -165,6 +165,28 @@ fn direct_annotation_low_and_ambiguous_requests_keep_broad_demand() {
     let mut annotation = original.clone();
     annotation.query_annotation = true;
     assert!(!eligible(&annotation, None));
+    for literal_helper in [true, false] {
+        let mut unsupported = original.clone();
+        let scans = unsupported
+            .embedded_sql_rule_ids
+            .values()
+            .next()
+            .unwrap()
+            .clone();
+        let profile = &mut unsupported.embedded_sql_options[0];
+        if literal_helper {
+            profile
+                .sql_literal_helpers
+                .push("@helpers/page#pageClause".into());
+        } else {
+            profile.track_transaction_helpers = true;
+        }
+        unsupported.embedded_sql_rule_ids.clear();
+        unsupported
+            .embedded_sql_rule_ids
+            .insert(profile.clone(), scans);
+        assert!(!eligible(&unsupported, None));
+    }
     let mut heads = original.clone();
     heads.query_annotation_heads = true;
     assert!(!eligible(&heads, None));
@@ -174,6 +196,18 @@ fn direct_annotation_low_and_ambiguous_requests_keep_broad_demand() {
     }
     let session = AnalysisSession::disabled();
     let sources = session.visible_paths(&root).source_store_for(&root);
+    let (empty, count) = counts(|| {
+        vec![collect_single(
+            &root,
+            vec![root.join("tsconfig.json")],
+            original.clone(),
+        )]
+    });
+    assert!(empty[0].ts.is_empty());
+    assert_eq!(
+        count, 0,
+        "non-source-only inputs must not recurse through batch assembly"
+    );
     let request = || BatchCheckFactRequest {
         root: root.clone(),
         files: files.clone(),
@@ -189,4 +223,57 @@ fn direct_annotation_low_and_ambiguous_requests_keep_broad_demand() {
         )
     });
     assert_eq!(count, 10, "two SQL variants retain the existing broad path");
+}
+
+thread_local! {
+    pub(super) static BROAD: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+#[test]
+fn actual_check_json_preparation_activates_scoping_and_preserves_full_report() {
+    struct Restore;
+    impl Drop for Restore {
+        fn drop(&mut self) {
+            BROAD.with(|value| value.set(false));
+        }
+    }
+    let root = fixture();
+    let run = |broad| {
+        BROAD.with(|value| value.set(broad));
+        let _restore = Restore;
+        let observer = crate::diagnostics::InvocationObserver::new(true);
+        let report = crate::diagnostics::with_observer(Some(observer.clone()), || {
+            crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+                serde_json::json!({ "root": root, "config": ".no-mistakes.yml" }),
+            ))
+            .unwrap()
+        });
+        let count = observer
+            .snapshot()
+            .work
+            .get("postgres.embedded.collections")
+            .copied()
+            .unwrap_or(0);
+        (
+            serde_json::from_str::<serde_json::Value>(&report).unwrap(),
+            count,
+        )
+    };
+    let (full, broad_count) = run(true);
+    let (scoped, scoped_count) = run(false);
+    assert_eq!(scoped, full);
+    assert_eq!(broad_count, 5);
+    assert_eq!(
+        scoped_count, 4,
+        "actual check preparation must use the scope scheduler"
+    );
+    assert_eq!(
+        scoped["rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|finding| finding["rule"] == "postgres-no-offset")
+            .count(),
+        1
+    );
 }
