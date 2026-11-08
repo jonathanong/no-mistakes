@@ -550,6 +550,32 @@ unbounded anchor, or a non-key join also retains its findings.
 
 ### Correlated builder fragments
 
+Straight-line `.append()` mutations of a local SQL statement are evaluated before
+the executor consumes it. A separately appended `LIMIT` caps the statement:
+
+```ts
+const statement = sql`SELECT id FROM accounts WHERE name = ${name} ORDER BY id`;
+statement.append(sql` LIMIT ${limit}`);
+return read(statement);
+```
+
+A local keyed subject also retains its bound when appended into a derived table:
+
+```ts
+const subject = sql`SELECT id FROM accounts WHERE id = ${id}`;
+const statement = sql`SELECT s.id FROM (`;
+statement.append(subject).append(sql`) s`);
+return read(statement);
+```
+
+These examples assume configured executors and SQL tags, and a catalog primary
+or unique key on `accounts.id`. Appending only `OFFSET 1` to the first example
+still reports: an offset does not cap rows. Replacing the second example's key
+predicate with a non-unique `name` predicate also reports at the executing
+`read(statement)`, following appended-fragment attribution. Fix those controls
+by appending a `LIMIT` before execution or matching the complete catalog key.
+An append after execution cannot bound the earlier read.
+
 SQL fragments appended into an executed statement are checked in the recovered
 outer statement. A correlated predicate such as `WHERE x = target.placement_id`
 is not judged as a separate executable statement. A declared non-unique column
