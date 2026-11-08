@@ -50,6 +50,7 @@ fn collect_matches(
             continue;
         }
         findings.push(RuleFinding {
+            causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file: rel.to_string(),
             line,

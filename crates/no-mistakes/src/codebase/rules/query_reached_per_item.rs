@@ -168,6 +168,7 @@ pub(crate) fn check_with_graph_and_session(
                 findings.push((
                     position.offset,
                     RuleFinding {
+                        causes: Vec::new(),
                         rule: RULE_ID.to_string(),
                         file,
                         line: position.line as usize,

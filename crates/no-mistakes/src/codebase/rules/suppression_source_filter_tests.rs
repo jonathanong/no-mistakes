@@ -4,6 +4,7 @@ use super::*;
 
 fn sample_finding(file: &str, line: usize) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: "my-rule".to_string(),
         file: file.to_string(),
         line,

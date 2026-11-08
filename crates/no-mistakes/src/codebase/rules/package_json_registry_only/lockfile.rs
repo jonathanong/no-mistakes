@@ -62,7 +62,7 @@ pub(super) fn check(
                 if !seen.insert((pkg_name.to_string(), blocked_key.to_string())) {
                     break;
                 }
-                findings.push(ClassifiedFinding::Definite(RuleFinding {
+                findings.push(ClassifiedFinding::Definite(RuleFinding { causes: Vec::new(),
                     rule: RULE_ID.to_string(),
                     file: file.clone(),
                     line: 1,
@@ -82,6 +82,7 @@ pub(super) fn check(
 
 fn parse_finding(file: &str, detail: &str) -> ClassifiedFinding {
     ClassifiedFinding::Unanalyzable(RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: 1,

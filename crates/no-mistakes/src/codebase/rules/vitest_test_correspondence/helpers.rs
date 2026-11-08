@@ -135,6 +135,7 @@ pub(super) fn check_source_to_test(
                 None
             } else {
                 Some(RuleFinding {
+                    causes: Vec::new(),
                     rule: RULE_ID.to_string(),
                     file: rel.clone(),
                     line: 1,

@@ -61,6 +61,7 @@ pub(super) fn included_exclude(
 
 fn finding(file: String, message: String) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file,
         line: 1,

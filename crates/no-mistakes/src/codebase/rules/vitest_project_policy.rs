@@ -129,7 +129,7 @@ pub(crate) fn check_with_files(
 }
 
 fn finding(root: &Path, value: &Value, project: &str, message: String) -> RuleFinding {
-    RuleFinding { rule: RULE_ID.into(), file: relative_slash_path(root, &value.file), line: value.line,
+    RuleFinding { causes: Vec::new(), rule: RULE_ID.into(), file: relative_slash_path(root, &value.file), line: value.line,
         message: format!("Vitest project {project}: {message}; declare literal test properties to keep project policy statically verifiable"),
         import: None, target: None }
 }

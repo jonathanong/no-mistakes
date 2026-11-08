@@ -157,7 +157,7 @@ impl PreparedDisableDirectives {
                 DirectiveStatus::IneffectivePlacement => ("invalid-disable-directive", format!("directive for `{}` in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead", comment.rule)),
                 DirectiveStatus::Unknown => ("invalid-disable-directive", format!("directive names unknown rule `{}`", comment.rule)),
             };
-            Some(RuleFinding {
+            Some(RuleFinding { causes: Vec::new(),
                 rule: rule.to_owned(), file: comment.file.clone(), line: comment.directive.line,
                 message: format!("{detail}; remove or correct the comment so suppressions cannot hide stale rule intent"),
                 import: None, target: Some(comment.rule.clone()),

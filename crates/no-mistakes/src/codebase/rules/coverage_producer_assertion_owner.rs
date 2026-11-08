@@ -8,6 +8,8 @@ use crate::config::v2::{schema::RuleDef, NoMistakesConfig};
 use crate::fx::{FxHashMap, FxHashSet};
 use anyhow::Result;
 use std::path::Path;
+mod builtin_tables;
+mod builtins;
 mod config;
 mod external;
 mod ownership;
@@ -64,6 +66,11 @@ pub(crate) fn check(
                 message: format!("{}: {}#{}", reason, producer.file, producer.symbol),
                 import: None,
                 target: Some(producer.symbol.clone()),
+                causes: if outcome.uncertain() {
+                    outcome.finding_causes(&root)
+                } else {
+                    Vec::new()
+                },
             };
             if outcome.uncertain() {
                 diagnostics.unanalyzable(policy, finding);

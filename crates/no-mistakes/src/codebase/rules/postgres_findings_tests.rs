@@ -3,6 +3,7 @@ use super::{site_suffixes, RuleFinding};
 #[test]
 fn suffixes_number_only_fully_identical_public_sites_and_ignore_input_order() {
     let finding = RuleFinding {
+        causes: Vec::new(),
         rule: "postgres-no-transformed-uuid-predicates".into(),
         file: "shared.ts".into(),
         line: 2,

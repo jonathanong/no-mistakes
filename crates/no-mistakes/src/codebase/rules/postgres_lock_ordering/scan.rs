@@ -184,6 +184,7 @@ fn lock_findings(
 
 fn finding(file: &str, line: u32, message: String, target: &str) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: line as usize,

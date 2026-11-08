@@ -43,7 +43,7 @@ pub(super) fn check_source(
                         .and_then(|items| items.get(&(index + 1)))
                         .copied()
                         .unwrap_or(1);
-                    output.findings.push(RuleFinding {
+                    output.findings.push(RuleFinding { causes: Vec::new(),
                         rule: RULE_ID.to_owned(), file: rel.to_owned(), line,
                         message: format!("{rel}:{line}: job `{job_id}` uses local action `{uses}` before an unconditional root self checkout covering its path. Add actions/checkout before this step without `if` or a nonroot `path`, and include the action directory in sparse-checkout. Local actions must exist in the workspace before GitHub can load them."),
                         import: Some(uses.to_owned()), target: Some(format!("{job_id}#{}", index + 1)),
@@ -118,7 +118,7 @@ fn sparse_covers(step: &Value, action: &str) -> bool {
 }
 
 pub(super) fn unresolved(rel: &str, line: usize, job: &str, reason: &str) -> RuleFinding {
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: RULE_ID.to_owned(), file: rel.to_owned(), line,
         message: format!("{rel}:{line}: cannot determine local action checkout order ({reason}). Use a static workflow jobs mapping so local action availability can be checked."),
         import: None, target: Some(job.to_owned()),

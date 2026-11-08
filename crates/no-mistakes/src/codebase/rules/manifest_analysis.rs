@@ -72,7 +72,7 @@ pub(super) fn unavailable(
     error: impl std::fmt::Display,
 ) -> ClassifiedFinding {
     let file = crate::codebase::ts_source::relative_slash_path(root, path);
-    ClassifiedFinding::Unanalyzable(RuleFinding {
+    ClassifiedFinding::Unanalyzable(RuleFinding { causes: Vec::new(),
         rule: rule.to_owned(), file: file.clone(), line: 1,
         message: format!("{file}: cannot verify dependency policy because this manifest could not be read or parsed: {error}. Repair the manifest or restore read access."),
         import: None, target: Some("unanalyzable".to_owned()),

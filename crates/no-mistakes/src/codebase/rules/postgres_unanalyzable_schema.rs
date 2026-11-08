@@ -153,7 +153,7 @@ fn append_rule(
                 };
             output.unanalyzable(
                 policy,
-                RuleFinding {
+                RuleFinding { causes: Vec::new(),
                     rule: rule_id.to_owned(),
                     file: rel.clone(),
                     line,

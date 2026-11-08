@@ -163,7 +163,7 @@ fn module_findings(
                 .filter(|matched| {
                     !strings::is_inside_string(comments_removed.as_bytes(), matched.start())
                 })
-                .map(|matched| RuleFinding {
+                .map(|matched| RuleFinding { causes: Vec::new(),
                     rule: RULE_ID.to_string(),
                     file: rel.to_string(),
                     line: byte_offset_to_line(comments_removed, matched.start()) as usize,

@@ -129,14 +129,14 @@ pub(super) fn finding(file: &str, table: &str, use_: &SqlTransformedColumnUseFac
     } else {
         ""
     };
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: RULE_ID.into(), file: file.into(), line,
         message: format!("{file}:{line}: {clause} applies {} to UUID column {table}.{}; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics{residual_rewrite}", use_.transformation, use_.column),
         import: None, target: Some(format!("{table}.{}", use_.column)),
     }
 }
 pub(super) fn unknown(file: &str, line: usize) -> RuleFinding {
-    RuleFinding { rule: RULE_ID.into(), file: file.into(), line,
+    RuleFinding { causes: Vec::new(), rule: RULE_ID.into(), file: file.into(), line,
         message: format!("{file}:{line}: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore"),
         import: None, target: Some("unanalyzable".into()),
     }

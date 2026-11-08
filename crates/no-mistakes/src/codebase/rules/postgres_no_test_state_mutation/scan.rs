@@ -151,7 +151,7 @@ pub(super) fn is_pg_sleep(parts: &[String]) -> bool {
 
 fn finding(file: &str, line: usize, operation: &str) -> RuleFinding {
     let line = line.max(1);
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: RULE_ID.into(),
         file: file.into(),
         line,
@@ -165,7 +165,7 @@ fn finding(file: &str, line: usize, operation: &str) -> RuleFinding {
 
 fn unknown(file: &str, line: usize) -> RuleFinding {
     let line = line.max(1);
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: RULE_ID.into(),
         file: file.into(),
         line,

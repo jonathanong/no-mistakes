@@ -120,7 +120,7 @@ pub(super) fn scan(
 }
 
 fn unknown(file: &str, call: &SqlCall) -> RuleFinding {
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: RULE_ID.into(),
         file: file.into(),
         line: call.line as usize,

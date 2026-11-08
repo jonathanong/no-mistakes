@@ -88,6 +88,7 @@ pub fn catalog_finding(
     let path = slash_normalize(catalog_path);
     let object = object.to_string();
     RuleFinding {
+        causes: Vec::new(),
         rule: rule_id.to_string(),
         file: path.clone(),
         line: 1,

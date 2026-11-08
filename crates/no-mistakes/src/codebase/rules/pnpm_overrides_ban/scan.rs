@@ -126,6 +126,7 @@ pub(super) fn finding(
 ) -> RuleFinding {
     let file = relative_slash_path(root, path);
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.clone(),
         line,

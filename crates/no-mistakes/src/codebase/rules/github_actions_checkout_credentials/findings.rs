@@ -14,6 +14,7 @@ pub(super) fn uncertain(
          GitHub state."
     );
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line,
@@ -37,6 +38,7 @@ pub(super) fn finding(
         "the GITHUB_TOKEN can write"
     };
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line,
@@ -63,6 +65,7 @@ pub(super) fn reference(
         "cannot analyze the checkout ref or its repository in a pull_request_target workflow"
     };
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line,

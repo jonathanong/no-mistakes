@@ -81,6 +81,7 @@ fn required_file_findings(
     {
         if !crate::codebase::markdown_sections::has_required_heading(&content, heading) {
             local.push(RuleFinding {
+                causes: Vec::new(),
                 rule: RULE_ID.to_string(),
                 file: req_file.to_string(),
                 line: 1,
@@ -95,6 +96,7 @@ fn required_file_findings(
             continue;
         }
         local.push(RuleFinding {
+            causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file: req_file.to_string(),
             line: 1,
@@ -111,6 +113,7 @@ fn required_file_findings(
 
 fn missing_file(req_file: &str) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: req_file.to_string(),
         line: 1,
@@ -138,6 +141,7 @@ fn ban_findings(
             for banned in &opts.banned_substrings {
                 if content.contains(banned.as_str()) {
                     local.push(RuleFinding {
+                        causes: Vec::new(),
                         rule: RULE_ID.to_string(),
                         file: rel.clone(),
                         line: 1,

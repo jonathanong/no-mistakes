@@ -135,6 +135,7 @@ impl ConfigAnchor {
         target: Option<String>,
     ) -> RuleFinding {
         RuleFinding {
+            causes: Vec::new(),
             rule: rule_id.to_string(),
             file: self.file.clone(),
             line,

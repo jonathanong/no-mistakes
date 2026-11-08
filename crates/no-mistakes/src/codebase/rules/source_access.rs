@@ -43,6 +43,7 @@ fn input_failure(
     action: &str,
 ) -> super::RuleFinding {
     super::RuleFinding {
+        causes: Vec::new(),
         rule: rule.to_string(),
         file: crate::codebase::ts_source::relative_slash_path(root, path),
         line: 1,

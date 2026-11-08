@@ -2,6 +2,7 @@ use super::{RuleFinding, RULE_ID};
 
 pub(super) fn sql_finding(file: &str, line: usize, message: &str, target: &str) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

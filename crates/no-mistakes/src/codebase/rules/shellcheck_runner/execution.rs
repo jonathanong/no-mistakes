@@ -72,6 +72,7 @@ fn make_finding(root: &Path, path: &Path) -> RuleFinding {
     let rel = relative_slash_path(root, path);
     let msg = format!("{rel}: shellcheck found issues (run shellcheck manually for details)");
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: rel,
         line: 1,

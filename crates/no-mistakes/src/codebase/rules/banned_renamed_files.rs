@@ -89,6 +89,7 @@ pub(crate) fn check_file(
             )
         })
         .map(|banned| RuleFinding {
+            causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file: rel.clone(),
             line: 1,

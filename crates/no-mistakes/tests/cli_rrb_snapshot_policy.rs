@@ -32,6 +32,30 @@ fn coverage_producer_assertion_owner_uncertainty_json_matches_snapshot() {
 }
 
 #[test]
+fn coverage_producer_assertion_owner_builtins_json_matches_snapshot() {
+    let dir = "coverage-producer-assertion-owner-builtins/fixture";
+    let names = [
+        "pass",
+        "no-owner",
+        "callback-named",
+        "callback-inline",
+        "callback-storage",
+        "callback-stored",
+        "callback-unresolved",
+        "third-party",
+        "many",
+        "globals",
+        "imported-callback",
+        "member-callback",
+    ];
+    let cases: Vec<Case> = names
+        .iter()
+        .map(|name| rule(name, dir, &format!("{name}.yml")))
+        .collect();
+    assert_saved_fixture("coverage_producer_assertion_owner_builtins", &cases);
+}
+
+#[test]
 fn coverage_producer_assertion_owner_json_matches_snapshot() {
     let dir = "coverage-producer-assertion-owner/fixture";
     assert_saved_fixture(

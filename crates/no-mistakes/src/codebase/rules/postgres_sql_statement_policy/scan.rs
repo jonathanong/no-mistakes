@@ -25,6 +25,7 @@ pub(super) fn scan(
                 continue;
             }
             findings.push(RuleFinding {
+                causes: Vec::new(),
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
                 line: statement.line.max(1),
@@ -131,6 +132,7 @@ pub(super) fn scan(
                         crate::codebase::postgres::statements::SqlFactSite::StatementKind(index),
                         source.as_deref(),
                         RuleFinding {
+                            causes: Vec::new(),
                             rule: RULE_ID.into(),
                             file: rel.clone(),
                             line: statement.line.max(1),
@@ -153,6 +155,7 @@ pub(super) fn scan(
 
 fn unanalyzable(file: &str, line: usize) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.into(),
         file: file.into(),
         line,
@@ -172,6 +175,7 @@ fn settings(
     uses.iter()
         .filter(|setting| opts.settings.contains(&setting.name))
         .map(|setting| RuleFinding {
+            causes: Vec::new(),
             rule: RULE_ID.into(),
             file: file.into(),
             line: setting.line.max(1),

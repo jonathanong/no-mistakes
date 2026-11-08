@@ -72,6 +72,7 @@ pub(super) fn finding(
     target: Option<&str>,
 ) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.into(),
         file: file.into(),
         line,

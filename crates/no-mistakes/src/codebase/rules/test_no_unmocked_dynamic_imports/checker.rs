@@ -134,6 +134,7 @@ fn build_finding(
         .unwrap_or("dynamic import")
         .to_string();
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: rel_file,
         line,

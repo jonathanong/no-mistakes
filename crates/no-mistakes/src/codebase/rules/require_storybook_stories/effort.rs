@@ -1,7 +1,7 @@
 use super::{types::Component, RuleFinding, RULE_ID};
 
 pub(super) fn unanalyzable(component: Component) -> RuleFinding {
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: component.repo_file,
         line: component.line,
@@ -15,7 +15,7 @@ pub(super) fn unanalyzable(component: Component) -> RuleFinding {
 }
 
 pub(super) fn missing(component: Component) -> RuleFinding {
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: component.repo_file,
         line: component.line,

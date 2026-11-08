@@ -17,6 +17,7 @@ pub(super) fn missed_path(
         .collect::<Vec<_>>()
         .join(", ");
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: filters[0].workflow.clone(),
         line: 1,

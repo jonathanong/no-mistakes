@@ -38,6 +38,7 @@ pub(crate) fn check_source_with_deferred_suppression(
         return None;
     }
     Some(RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: relative_slash_path(root, path),
         line: 1,

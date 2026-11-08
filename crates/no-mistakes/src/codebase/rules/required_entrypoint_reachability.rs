@@ -169,6 +169,7 @@ fn check_rule_application(
             }
             let file = relative_slash_path(root, &source);
             findings.push(RuleFinding {
+                causes: Vec::new(),
                 rule: RULE_ID.to_string(),
                 file: file.clone(),
                 line: 1,

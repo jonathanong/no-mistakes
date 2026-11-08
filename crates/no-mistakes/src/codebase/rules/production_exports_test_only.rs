@@ -47,7 +47,7 @@ fn finding(
     file: &Path,
     export: &crate::codebase::ts_symbols::Export,
 ) -> RuleFinding {
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: RULE_ID.to_owned(),
         file: relative_slash_path(root, file),
         line: export.line.max(1) as usize,
@@ -69,6 +69,7 @@ fn uncertain(
 ) -> RuleFinding {
     let detail = format!("cannot analyze production export importers: {reason}; use explicit named imports and statically analyzable exports");
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_owned(),
         file: relative_slash_path(root, file),
         line: line.max(1),

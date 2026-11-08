@@ -80,6 +80,7 @@ fn finding(
     sources: &SourceStore,
 ) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         line: references::finding_line(root, file, allowed, sources),
         file: file.to_owned(),

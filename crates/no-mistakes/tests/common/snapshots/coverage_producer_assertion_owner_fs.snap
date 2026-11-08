@@ -12,12 +12,632 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "causes": [
+            {
+              "callee": "<unknown>",
+              "detail": "callee target is unknown",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 32,
+              "sourceLine": "export function computedMember(name: 'readFileSync') { void (fsDefault[name]('a', 'utf8'), 'x'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 32,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:32 callee `<unknown>` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#computedMember",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function computedMember(name: 'readFileSync') { void (fsDefault[name]('a', 'utf8'), 'x'); }",
+          "target": "computedMember"
+        },
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.readFileSync",
+              "detail": "callee target is unknown",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 35,
+              "sourceLine": "export function dynamicRequire() { void (require('node:fs').readFileSync('a', 'utf8'), 'x'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 35,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:35 callee `<unknown>.readFileSync` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#dynamicRequire",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function dynamicRequire() { void (require('node:fs').readFileSync('a', 'utf8'), 'x'); }",
+          "target": "dynamicRequire"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 100,
+              "sourceLine": "export function depthOptions() { void (fsNs.createReadStream('a', { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: 'utf8' } } } } } } } } } } } } } } } } }).path, 'a'); }"
+            }
+          ],
           "file": "src/fs-io.mts",
           "line": 100,
           "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:100 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#depthOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function depthOptions() { void (fsNs.createReadStream('a', { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: 'utf8' } } } } } } } } } } } } } } } } }).path, 'a'); }",
           "target": "depthOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 74,
+              "sourceLine": "export function ternaryOptions(flag: boolean) { void (fsNs.createReadStream('a', flag ? { encoding: 'utf8' } : { encoding: 'ascii' }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 74,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:74 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#ternaryOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function ternaryOptions(flag: boolean) { void (fsNs.createReadStream('a', flag ? { encoding: 'utf8' } : { encoding: 'ascii' }).path, 'a'); }",
+          "target": "ternaryOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 75,
+              "sourceLine": "export function fnPropertyOptions() { void (fsNs.createReadStream('a', { cb: () => {} }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 75,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:75 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#fnPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function fnPropertyOptions() { void (fsNs.createReadStream('a', { cb: () => {} }).path, 'a'); }",
+          "target": "fnPropertyOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 76,
+              "sourceLine": "export function functionPropertyOptions() { void (fsNs.createReadStream('a', { cb: function () {} }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 76,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:76 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#functionPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function functionPropertyOptions() { void (fsNs.createReadStream('a', { cb: function () {} }).path, 'a'); }",
+          "target": "functionPropertyOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 77,
+              "sourceLine": "export function classPropertyOptions() { void (fsNs.createReadStream('a', { Handler: class {} }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 77,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:77 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#classPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function classPropertyOptions() { void (fsNs.createReadStream('a', { Handler: class {} }).path, 'a'); }",
+          "target": "classPropertyOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 78,
+              "sourceLine": "export function nestedFnPropertyOptions() { void (fsNs.createReadStream('a', { nested: { callbacks: [() => {}] } }).path, 'a'); }"
+            },
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback execution alongside fs I/O is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 78,
+              "sourceLine": "export function nestedFnPropertyOptions() { void (fsNs.createReadStream('a', { nested: { callbacks: [() => {}] } }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 78,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:78 callee `fsNs.createReadStream` (callback argument execution is not modeled); unresolved dispatch at src/fs-io.mts:78 callee `fsNs.createReadStream` (callback execution alongside fs I/O is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#nestedFnPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function nestedFnPropertyOptions() { void (fsNs.createReadStream('a', { nested: { callbacks: [() => {}] } }).path, 'a'); }",
+          "target": "nestedFnPropertyOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 79,
+              "sourceLine": "export function unknownPropertyOptions(value: object) { void (fsNs.createReadStream('a', { nested: value }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 79,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:79 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#unknownPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function unknownPropertyOptions(value: object) { void (fsNs.createReadStream('a', { nested: value }).path, 'a'); }",
+          "target": "unknownPropertyOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 80,
+              "sourceLine": "export function memberPropertyOptions(value: { encoding: string }) { void (fsNs.createReadStream('a', { encoding: value.encoding }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 80,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:80 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#memberPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function memberPropertyOptions(value: { encoding: string }) { void (fsNs.createReadStream('a', { encoding: value.encoding }).path, 'a'); }",
+          "target": "memberPropertyOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 81,
+              "sourceLine": "export function callPropertyOptions() { void (fsNs.createReadStream('a', { nested: makeOptions() }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 81,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:81 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#callPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function callPropertyOptions() { void (fsNs.createReadStream('a', { nested: makeOptions() }).path, 'a'); }",
+          "target": "callPropertyOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 82,
+              "sourceLine": "export function conditionalPropertyOptions(flag: boolean) { void (fsNs.createReadStream('a', { encoding: flag ? 'utf8' : 'ascii' }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 82,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:82 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#conditionalPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function conditionalPropertyOptions(flag: boolean) { void (fsNs.createReadStream('a', { encoding: flag ? 'utf8' : 'ascii' }).path, 'a'); }",
+          "target": "conditionalPropertyOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 83,
+              "sourceLine": "export function logicalPropertyOptions(encoding: string | undefined) { void (fsNs.createReadStream('a', { encoding: encoding || 'utf8' }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 83,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:83 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#logicalPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function logicalPropertyOptions(encoding: string | undefined) { void (fsNs.createReadStream('a', { encoding: encoding || 'utf8' }).path, 'a'); }",
+          "target": "logicalPropertyOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 84,
+              "sourceLine": "export function arrayFunctionOptions() { void (fsNs.createReadStream('a', [() => {}]).path, 'a'); }"
+            },
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback execution alongside fs I/O is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 84,
+              "sourceLine": "export function arrayFunctionOptions() { void (fsNs.createReadStream('a', [() => {}]).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 84,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:84 callee `fsNs.createReadStream` (callback argument execution is not modeled); unresolved dispatch at src/fs-io.mts:84 callee `fsNs.createReadStream` (callback execution alongside fs I/O is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#arrayFunctionOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function arrayFunctionOptions() { void (fsNs.createReadStream('a', [() => {}]).path, 'a'); }",
+          "target": "arrayFunctionOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 85,
+              "sourceLine": "export function arrayUnknownOptions(callback: () => void) { void (fsNs.createReadStream('a', [callback]).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 85,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:85 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#arrayUnknownOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function arrayUnknownOptions(callback: () => void) { void (fsNs.createReadStream('a', [callback]).path, 'a'); }",
+          "target": "arrayUnknownOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 86,
+              "sourceLine": "export function methodOptions() { void (fsNs.createReadStream('a', { cb() {} }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 86,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:86 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#methodOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function methodOptions() { void (fsNs.createReadStream('a', { cb() {} }).path, 'a'); }",
+          "target": "methodOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 87,
+              "sourceLine": "export function getterOptions() { void (fsNs.createReadStream('a', { get encoding() { return 'utf8' } }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 87,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:87 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#getterOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function getterOptions() { void (fsNs.createReadStream('a', { get encoding() { return 'utf8' } }).path, 'a'); }",
+          "target": "getterOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 88,
+              "sourceLine": "export function shorthandOptions(callback: () => void) { void (fsNs.createReadStream('a', { callback }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 88,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:88 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#shorthandOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function shorthandOptions(callback: () => void) { void (fsNs.createReadStream('a', { callback }).path, 'a'); }",
+          "target": "shorthandOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 89,
+              "sourceLine": "export function spreadOptions(value: object) { void (fsNs.createReadStream('a', { ...value }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 89,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:89 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#spreadOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function spreadOptions(value: object) { void (fsNs.createReadStream('a', { ...value }).path, 'a'); }",
+          "target": "spreadOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 90,
+              "sourceLine": "export function arraySpreadOptions(values: unknown[]) { void (fsNs.createReadStream('a', [...values]).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 90,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:90 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#arraySpreadOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function arraySpreadOptions(values: unknown[]) { void (fsNs.createReadStream('a', [...values]).path, 'a'); }",
+          "target": "arraySpreadOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 91,
+              "sourceLine": "export function arrayHoleOptions() { void (fsNs.createReadStream('a', [,]).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 91,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:91 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#arrayHoleOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function arrayHoleOptions() { void (fsNs.createReadStream('a', [,]).path, 'a'); }",
+          "target": "arrayHoleOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 92,
+              "sourceLine": "export function computedKeyOptions(key: string) { void (fsNs.createReadStream('a', { [key]: 'utf8' }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 92,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:92 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#computedKeyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function computedKeyOptions(key: string) { void (fsNs.createReadStream('a', { [key]: 'utf8' }).path, 'a'); }",
+          "target": "computedKeyOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 93,
+              "sourceLine": "export function computedStaticKeyOptions() { void (fsNs.createReadStream('a', { ['encoding']: 'utf8' }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 93,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:93 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#computedStaticKeyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function computedStaticKeyOptions() { void (fsNs.createReadStream('a', { ['encoding']: 'utf8' }).path, 'a'); }",
+          "target": "computedStaticKeyOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 94,
+              "sourceLine": "export function templatePropertyOptions(encoding: string) { void (fsNs.createReadStream('a', { encoding: `${encoding}` }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 94,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:94 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#templatePropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function templatePropertyOptions(encoding: string) { void (fsNs.createReadStream('a', { encoding: `${encoding}` }).path, 'a'); }",
+          "target": "templatePropertyOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 97,
+              "sourceLine": "export function callFnPropertyOptions() { void (fsNs.createReadStream.call(null, 'a', { cb: () => {} }).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 97,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:97 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#callFnPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function callFnPropertyOptions() { void (fsNs.createReadStream.call(null, 'a', { cb: () => {} }).path, 'a'); }",
+          "target": "callFnPropertyOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.createReadStream",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 98,
+              "sourceLine": "export function applyFnPropertyOptions() { void (fsNs.createReadStream.apply(null, ['a', { cb: () => {} }]).path, 'a'); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 98,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:98 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#applyFnPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function applyFnPropertyOptions() { void (fsNs.createReadStream.apply(null, ['a', { cb: () => {} }]).path, 'a'); }",
+          "target": "applyFnPropertyOptions"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.readFile",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 46,
+              "sourceLine": "fsNs.readFile('a', flag ? first : second);"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 45,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:46 callee `fsNs.readFile` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#ternaryCallback",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function ternaryCallback(flag: boolean, first: () => void, second: () => void) {",
+          "target": "ternaryCallback"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.readFile",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 49,
+              "sourceLine": "fsNs.readFile('a', first || second);"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 48,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:49 callee `fsNs.readFile` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#logicalCallback",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function logicalCallback(first: (() => void) | undefined, second: () => void) {",
+          "target": "logicalCallback"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.readFile",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 51,
+              "sourceLine": "export function computedCallback() { fsNs.readFile('a', makeCallback()); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 51,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:51 callee `fsNs.readFile` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#computedCallback",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function computedCallback() { fsNs.readFile('a', makeCallback()); }",
+          "target": "computedCallback"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.readFile",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 56,
+              "sourceLine": "export function dynamicTemplateArgument(encoding: string) { fsNs.readFile('a', `${encoding}`); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 56,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:56 callee `fsNs.readFile` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#dynamicTemplateArgument",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function dynamicTemplateArgument(encoding: string) { fsNs.readFile('a', `${encoding}`); }",
+          "target": "dynamicTemplateArgument"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.readFile",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 57,
+              "sourceLine": "export function spreadArguments(...callbacks: Array<() => void>) { fsNs.readFile('a', ...callbacks); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 57,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:57 callee `fsNs.readFile` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#spreadArguments",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function spreadArguments(...callbacks: Array<() => void>) { fsNs.readFile('a', ...callbacks); }",
+          "target": "spreadArguments"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.watch",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 61,
+              "sourceLine": "export function applyCallbackArgument(flag: boolean, first: () => void, second: () => void) { fsNs.watch.apply(null, ['file', flag ? first : second]); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 61,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:61 callee `fsNs.watch` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#applyCallbackArgument",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function applyCallbackArgument(flag: boolean, first: () => void, second: () => void) { fsNs.watch.apply(null, ['file', flag ? first : second]); }",
+          "target": "applyCallbackArgument"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.watch",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 64,
+              "sourceLine": "export function applySpreadArguments(...callbacks: Array<() => void>) { fsNs.watch.apply(null, ['file', ...callbacks]); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 64,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:64 callee `fsNs.watch` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#applySpreadArguments",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function applySpreadArguments(...callbacks: Array<() => void>) { fsNs.watch.apply(null, ['file', ...callbacks]); }",
+          "target": "applySpreadArguments"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fsNs.watch",
+              "detail": "callback argument execution is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 66,
+              "sourceLine": "export function callCallbackArgument(first: (() => void) | undefined, second: () => void) { fsNs.watch.call(null, 'file', first || second); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 66,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:66 callee `fsNs.watch` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#callCallbackArgument",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function callCallbackArgument(first: (() => void) | undefined, second: () => void) { fsNs.watch.call(null, 'file', first || second); }",
+          "target": "callCallbackArgument"
         },
         {
           "file": "src/fs-io.mts",
@@ -93,54 +713,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 32,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:32 callee `<unknown>` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#computedMember",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function computedMember(name: 'readFileSync') { void (fsDefault[name]('a', 'utf8'), 'x'); }",
-          "target": "computedMember"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 35,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:35 callee `<unknown>.readFileSync` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#dynamicRequire",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function dynamicRequire() { void (require('node:fs').readFileSync('a', 'utf8'), 'x'); }",
-          "target": "dynamicRequire"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 37,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:37 callee `<unknown>.then` (callee target is unknown); unresolved dispatch at src/fs-io.mts:37 callee `readFile` (callback execution alongside fs I/O is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#callbackAsserted",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function callbackAsserted() { readFile('a', 'utf8').then((text) => { equal(text, 'x'); }); }",
-          "target": "callbackAsserted"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 45,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:46 callee `fsNs.readFile` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#ternaryCallback",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function ternaryCallback(flag: boolean, first: () => void, second: () => void) {",
-          "target": "ternaryCallback"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 48,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:49 callee `fsNs.readFile` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#logicalCallback",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function logicalCallback(first: (() => void) | undefined, second: () => void) {",
-          "target": "logicalCallback"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 51,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:51 callee `fsNs.readFile` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#computedCallback",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function computedCallback() { fsNs.readFile('a', makeCallback()); }",
-          "target": "computedCallback"
-        },
-        {
-          "file": "src/fs-io.mts",
           "line": 53,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#literalLastArgument",
           "rule": "coverage-producer-assertion-owner",
@@ -162,22 +734,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function typedLiteralArgument() { fsNs.readFile('a', 'utf8' as const); }",
           "target": "typedLiteralArgument"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 56,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:56 callee `fsNs.readFile` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#dynamicTemplateArgument",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function dynamicTemplateArgument(encoding: string) { fsNs.readFile('a', `${encoding}`); }",
-          "target": "dynamicTemplateArgument"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 57,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:57 callee `fsNs.readFile` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#spreadArguments",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function spreadArguments(...callbacks: Array<() => void>) { fsNs.readFile('a', ...callbacks); }",
-          "target": "spreadArguments"
         },
         {
           "file": "src/fs-io.mts",
@@ -205,14 +761,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 61,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:61 callee `fsNs.watch` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#applyCallbackArgument",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function applyCallbackArgument(flag: boolean, first: () => void, second: () => void) { fsNs.watch.apply(null, ['file', flag ? first : second]); }",
-          "target": "applyCallbackArgument"
-        },
-        {
-          "file": "src/fs-io.mts",
           "line": 62,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#applyNoArguments",
           "rule": "coverage-producer-assertion-owner",
@@ -229,211 +777,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 64,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:64 callee `fsNs.watch` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#applySpreadArguments",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function applySpreadArguments(...callbacks: Array<() => void>) { fsNs.watch.apply(null, ['file', ...callbacks]); }",
-          "target": "applySpreadArguments"
-        },
-        {
-          "file": "src/fs-io.mts",
           "line": 65,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#callLiteralArgument",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function callLiteralArgument() { fsNs.watch.call(null, 'file'); }",
           "target": "callLiteralArgument"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 66,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:66 callee `fsNs.watch` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#callCallbackArgument",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function callCallbackArgument(first: (() => void) | undefined, second: () => void) { fsNs.watch.call(null, 'file', first || second); }",
-          "target": "callCallbackArgument"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 74,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:74 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#ternaryOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function ternaryOptions(flag: boolean) { void (fsNs.createReadStream('a', flag ? { encoding: 'utf8' } : { encoding: 'ascii' }).path, 'a'); }",
-          "target": "ternaryOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 75,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:75 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#fnPropertyOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function fnPropertyOptions() { void (fsNs.createReadStream('a', { cb: () => {} }).path, 'a'); }",
-          "target": "fnPropertyOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 76,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:76 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#functionPropertyOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function functionPropertyOptions() { void (fsNs.createReadStream('a', { cb: function () {} }).path, 'a'); }",
-          "target": "functionPropertyOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 77,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:77 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#classPropertyOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function classPropertyOptions() { void (fsNs.createReadStream('a', { Handler: class {} }).path, 'a'); }",
-          "target": "classPropertyOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 78,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:78 callee `fsNs.createReadStream` (callback argument execution is not modeled); unresolved dispatch at src/fs-io.mts:78 callee `fsNs.createReadStream` (callback execution alongside fs I/O is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#nestedFnPropertyOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function nestedFnPropertyOptions() { void (fsNs.createReadStream('a', { nested: { callbacks: [() => {}] } }).path, 'a'); }",
-          "target": "nestedFnPropertyOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 79,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:79 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#unknownPropertyOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function unknownPropertyOptions(value: object) { void (fsNs.createReadStream('a', { nested: value }).path, 'a'); }",
-          "target": "unknownPropertyOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 80,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:80 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#memberPropertyOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function memberPropertyOptions(value: { encoding: string }) { void (fsNs.createReadStream('a', { encoding: value.encoding }).path, 'a'); }",
-          "target": "memberPropertyOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 81,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:81 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#callPropertyOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function callPropertyOptions() { void (fsNs.createReadStream('a', { nested: makeOptions() }).path, 'a'); }",
-          "target": "callPropertyOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 82,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:82 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#conditionalPropertyOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function conditionalPropertyOptions(flag: boolean) { void (fsNs.createReadStream('a', { encoding: flag ? 'utf8' : 'ascii' }).path, 'a'); }",
-          "target": "conditionalPropertyOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 83,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:83 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#logicalPropertyOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function logicalPropertyOptions(encoding: string | undefined) { void (fsNs.createReadStream('a', { encoding: encoding || 'utf8' }).path, 'a'); }",
-          "target": "logicalPropertyOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 84,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:84 callee `fsNs.createReadStream` (callback argument execution is not modeled); unresolved dispatch at src/fs-io.mts:84 callee `fsNs.createReadStream` (callback execution alongside fs I/O is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#arrayFunctionOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function arrayFunctionOptions() { void (fsNs.createReadStream('a', [() => {}]).path, 'a'); }",
-          "target": "arrayFunctionOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 85,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:85 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#arrayUnknownOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function arrayUnknownOptions(callback: () => void) { void (fsNs.createReadStream('a', [callback]).path, 'a'); }",
-          "target": "arrayUnknownOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 86,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:86 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#methodOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function methodOptions() { void (fsNs.createReadStream('a', { cb() {} }).path, 'a'); }",
-          "target": "methodOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 87,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:87 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#getterOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function getterOptions() { void (fsNs.createReadStream('a', { get encoding() { return 'utf8' } }).path, 'a'); }",
-          "target": "getterOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 88,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:88 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#shorthandOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function shorthandOptions(callback: () => void) { void (fsNs.createReadStream('a', { callback }).path, 'a'); }",
-          "target": "shorthandOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 89,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:89 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#spreadOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function spreadOptions(value: object) { void (fsNs.createReadStream('a', { ...value }).path, 'a'); }",
-          "target": "spreadOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 90,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:90 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#arraySpreadOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function arraySpreadOptions(values: unknown[]) { void (fsNs.createReadStream('a', [...values]).path, 'a'); }",
-          "target": "arraySpreadOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 91,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:91 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#arrayHoleOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function arrayHoleOptions() { void (fsNs.createReadStream('a', [,]).path, 'a'); }",
-          "target": "arrayHoleOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 92,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:92 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#computedKeyOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function computedKeyOptions(key: string) { void (fsNs.createReadStream('a', { [key]: 'utf8' }).path, 'a'); }",
-          "target": "computedKeyOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 93,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:93 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#computedStaticKeyOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function computedStaticKeyOptions() { void (fsNs.createReadStream('a', { ['encoding']: 'utf8' }).path, 'a'); }",
-          "target": "computedStaticKeyOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 94,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:94 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#templatePropertyOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function templatePropertyOptions(encoding: string) { void (fsNs.createReadStream('a', { encoding: `${encoding}` }).path, 'a'); }",
-          "target": "templatePropertyOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 97,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:97 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#callFnPropertyOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function callFnPropertyOptions() { void (fsNs.createReadStream.call(null, 'a', { cb: () => {} }).path, 'a'); }",
-          "target": "callFnPropertyOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 98,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:98 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#applyFnPropertyOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function applyFnPropertyOptions() { void (fsNs.createReadStream.apply(null, ['a', { cb: () => {} }]).path, 'a'); }",
-          "target": "applyFnPropertyOptions"
         }
       ],
       "warnings": []

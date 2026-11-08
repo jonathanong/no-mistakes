@@ -7,6 +7,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [
         {
+          "causes": [
+            {
+              "callee": "dispatch",
+              "detail": "callee target is unknown",
+              "file": "src/producer.mts",
+              "kind": "unresolved-dispatch",
+              "line": 2,
+              "sourceLine": "export function dynamic(dispatch: () => void) { dispatch(); }"
+            }
+          ],
           "file": "src/producer.mts",
           "line": 2,
           "message": "unanalyzable coverage producer: unresolved dispatch at src/producer.mts:2 callee `dispatch` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producer.mts#dynamic",
@@ -33,6 +43,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "causes": [
+            {
+              "detail": "maxDepth=1; last module src/helper.mts#helper",
+              "file": "src/helper.mts",
+              "kind": "traversal-limit"
+            },
+            {
+              "detail": "maxNodes=2; last module src/helper.mts#helper",
+              "file": "src/helper.mts",
+              "kind": "traversal-limit"
+            }
+          ],
           "file": "src/producer.mts",
           "line": 3,
           "message": "unanalyzable coverage producer: traversal limit maxDepth=1; last module src/helper.mts#helper; traversal limit maxNodes=2; last module src/helper.mts#helper; model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producer.mts#bounded",
@@ -54,6 +76,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "causes": [
+            {
+              "callee": "dispatch",
+              "detail": "callee target is unknown",
+              "file": "src/producer.mts",
+              "kind": "unresolved-dispatch",
+              "line": 2,
+              "sourceLine": "export function dynamic(dispatch: () => void) { dispatch(); }"
+            }
+          ],
           "file": "src/producer.mts",
           "line": 2,
           "message": "Assert the dispatch result; unanalyzable coverage producer: unresolved dispatch at src/producer.mts:2 callee `dispatch` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producer.mts#dynamic",
@@ -75,6 +107,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "causes": [
+            {
+              "detail": "maxDepth=1; last module src/helper.mts#helper",
+              "file": "src/helper.mts",
+              "kind": "traversal-limit"
+            }
+          ],
           "file": "src/producer.mts",
           "line": 3,
           "message": "unanalyzable coverage producer: traversal limit maxDepth=1; last module src/helper.mts#helper; model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producer.mts#bounded",
@@ -108,6 +147,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "causes": [
+            {
+              "callee": "dispatch",
+              "detail": "callee target is unknown",
+              "file": "src/producer.mts",
+              "kind": "unresolved-dispatch",
+              "line": 2,
+              "sourceLine": "export function dynamic(dispatch: () => void) { dispatch(); }"
+            }
+          ],
           "file": "src/producer.mts",
           "line": 2,
           "message": "unanalyzable coverage producer: unresolved dispatch at src/producer.mts:2 callee `dispatch` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producer.mts#dynamic",
@@ -129,6 +178,21 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "causes": [
+            {
+              "callee": "dispatch",
+              "detail": "callee target is unknown",
+              "file": "src/producer.mts",
+              "kind": "unresolved-dispatch",
+              "line": 4,
+              "sourceLine": "export function mixed(dispatch: () => void) { dispatch(); helper(); }"
+            },
+            {
+              "detail": "maxDepth=1; last module src/helper.mts#helper",
+              "file": "src/helper.mts",
+              "kind": "traversal-limit"
+            }
+          ],
           "file": "src/producer.mts",
           "line": 4,
           "message": "unanalyzable coverage producer: unresolved dispatch at src/producer.mts:4 callee `dispatch` (callee target is unknown); traversal limit maxDepth=1; last module src/helper.mts#helper; model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producer.mts#mixed",
@@ -150,6 +214,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "causes": [
+            {
+              "detail": "maxNodes=1; last module src/producer.mts#bounded",
+              "file": "src/producer.mts",
+              "kind": "traversal-limit"
+            }
+          ],
           "file": "src/producer.mts",
           "line": 3,
           "message": "unanalyzable coverage producer: traversal limit maxNodes=1; last module src/producer.mts#bounded; model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producer.mts#bounded",

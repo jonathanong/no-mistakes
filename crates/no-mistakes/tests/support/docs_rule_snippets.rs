@@ -463,6 +463,7 @@ pub fn run_rule(root: &Path, rule_id: &str) -> Result<Vec<String>, String> {
                 .into_iter()
                 .filter(|finding| finding.rule == rule_id)
                 .map(|finding| no_mistakes::codebase::rules::RuleFinding {
+                    causes: Vec::new(),
                     rule: finding.rule,
                     file: finding.file,
                     line: finding.line as usize,

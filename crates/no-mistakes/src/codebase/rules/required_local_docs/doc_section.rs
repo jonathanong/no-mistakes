@@ -99,6 +99,7 @@ pub(super) fn scan_doc_section_with_sources(
             &opts.required_heading,
         ) {
             findings.push(RuleFinding {
+                causes: Vec::new(),
                 rule: REQUIRED_DOC_SECTION_RULE_ID.to_string(),
                 file: rel.clone(),
                 line: 1,

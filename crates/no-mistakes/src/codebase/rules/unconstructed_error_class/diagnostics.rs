@@ -42,7 +42,7 @@ pub(super) fn unknown_constructs(
         site.invocation == InvocationKind::Construct && unresolved_constructor(graph, site)
             && !is_test(&site.file) && is_reported(&site.file)
             && !is_declaration_file(&site.file)
-    }).map(|site| RuleFinding {
+    }).map(|site| RuleFinding { causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: relative_slash_path(root, &site.file),
         line: site.line.max(1) as usize,

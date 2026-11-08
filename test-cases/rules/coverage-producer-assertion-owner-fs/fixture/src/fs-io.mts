@@ -33,7 +33,7 @@ export function computedMember(name: 'readFileSync') { void (fsDefault[name]('a'
 export function aliasedDefault() { const f = fsDefault; equal(f.readFileSync('a', 'utf8'), 'x'); }
 export function otherModuleAsserted() { equal(hostname(), 'h'); }
 export function dynamicRequire() { void (require('node:fs').readFileSync('a', 'utf8'), 'x'); }
-// An fs callback or promise continuation has no resolved invocation: uncertain.
+// An inline promise continuation is executed by the built-in `.then`: the assertion is reached.
 export function callbackAsserted() { readFile('a', 'utf8').then((text) => { equal(text, 'x'); }); }
 export function writeOnly() { fsNs.writeFileSync('a', 'x'); equal(1, 1); }
 // no-mistakes-disable-next-line coverage-producer-assertion-owner -- suppression still applies to fs producers

@@ -24,7 +24,7 @@ pub(crate) fn findings_from_parsed(
     visitor
         .findings
         .into_iter()
-        .map(|finding| RuleFinding {
+        .map(|finding| RuleFinding { causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file: file.clone(),
             line: finding.line,

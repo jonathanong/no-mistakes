@@ -123,7 +123,7 @@ impl FindingSink<'_> {
     fn push(&mut self, chain: &[&str], target: &str, node: &PackageNode) {
         let file = relative_slash_path(self.root, &node.manifest);
         let chain_text = chain.join(" -> ");
-        self.findings.push(RuleFinding {
+        self.findings.push(RuleFinding { causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file,
             line: 1,

@@ -156,6 +156,7 @@ pub(crate) fn check(
                 }
                 if policy == Unanalyzable::Report {
                     findings.push(RuleFinding {
+                        causes: Vec::new(),
                         rule: rule_id.into(),
                         file: rel.clone(),
                         line: call.line as usize,

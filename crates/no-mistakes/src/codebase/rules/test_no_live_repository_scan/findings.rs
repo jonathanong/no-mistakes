@@ -80,7 +80,7 @@ pub(super) fn unresolved_require(
     } else {
         "binds a directory enumerator under a name this analysis cannot follow"
     };
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: relative_slash_path(root, file),
         line: line as usize,
@@ -100,6 +100,7 @@ fn build(
     target: &str,
 ) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: relative_slash_path(root, &site.file),
         line: site.line as usize,

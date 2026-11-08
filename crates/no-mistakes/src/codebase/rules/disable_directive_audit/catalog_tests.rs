@@ -130,6 +130,7 @@ fn recent_rules_consumed_suppressions_are_used_and_shadowed_comments_remain_unus
         .rules
         .iter()
         .map(|rule| RuleFinding {
+            causes: Vec::new(),
             rule: rule.rule.clone(),
             file: "recent-rules.mts".into(),
             line: 6,

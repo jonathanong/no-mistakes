@@ -172,6 +172,7 @@ impl<'a> Output<'a> {
 }
 fn finding(file: &str, line: usize, target: &str, message: &str) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.into(),
         file: file.into(),
         line,

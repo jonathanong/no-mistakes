@@ -164,6 +164,7 @@ pub(super) fn package_findings(
             .is_none();
     if unnamed {
         findings.push(RuleFinding {
+            causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file: rel.clone(),
             line: 1,
@@ -178,6 +179,7 @@ pub(super) fn package_findings(
         return findings;
     }
     findings.push(RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: rel.clone(),
         line: 1,

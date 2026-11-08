@@ -118,6 +118,7 @@ fn invalid_utf8_retained_bytes_share_used_and_unused_directive_semantics() {
     // A required-source finding is hidden by the file directive, while the
     // shadowed next-line directive still suppressed nothing.
     let mut findings = vec![RuleFinding {
+        causes: Vec::new(),
         rule: "postgres-no-offset".into(),
         file: "invalid-utf8.sql".into(),
         line: 3,

@@ -10,7 +10,7 @@ fn baseline(name: &str) -> String {
 }
 
 #[test]
-fn public_rule_finding_keeps_its_six_field_literal_json_and_value_traits() {
+fn public_rule_finding_keeps_its_seven_field_literal_json_and_value_traits() {
     // This integration target compiles as a downstream library consumer.
     let finding = RuleFinding {
         rule: "postgres-no-offset".into(),
@@ -19,6 +19,7 @@ fn public_rule_finding_keeps_its_six_field_literal_json_and_value_traits() {
         message: "use cursor pagination".into(),
         import: None,
         target: Some("offset".into()),
+        causes: Vec::new(),
     };
     let expected: serde_json::Value = serde_json::from_str(&baseline("expected.json")).unwrap();
     assert_eq!(serde_json::to_value(&finding).unwrap(), expected);

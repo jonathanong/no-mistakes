@@ -120,6 +120,7 @@ fn check_tsconfig(root: &Path, opts: &Options) -> Result<Vec<RuleFinding>> {
 
 fn make_finding(file: &str, line: usize, message: &str) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

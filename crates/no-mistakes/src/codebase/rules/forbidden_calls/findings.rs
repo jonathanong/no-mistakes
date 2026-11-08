@@ -27,6 +27,7 @@ pub(super) fn finding_for_site_with_arguments(
     )?;
     let message = application.message.as_deref().unwrap_or("forbidden call");
     Some(RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: relative_slash_path(root, &site.file),
         line: site.line as usize,

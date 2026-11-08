@@ -23,6 +23,7 @@ pub(super) fn duplicate_setting_findings(
         .into_iter()
         .filter(|setting| setting == "catalog" || setting.starts_with("catalogs"))
         .map(|setting| RuleFinding {
+            causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file: "pnpm-workspace.yaml".to_string(),
             line: 1,

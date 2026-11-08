@@ -63,6 +63,7 @@ pub(crate) fn finding(
     target: Option<String>,
 ) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: rule.to_string(),
         file: relative_slash_path(root, file),
         line: line as usize,

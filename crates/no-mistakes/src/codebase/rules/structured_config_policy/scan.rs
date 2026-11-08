@@ -60,6 +60,7 @@ pub(super) fn scan_with_state(
                     Ok(value) => value,
                     Err(error) => {
                         findings.push(RuleFinding {
+                            causes: Vec::new(),
                             rule: RULE_ID.to_string(),
                             file: rel.clone(),
                             line: 1,
@@ -76,6 +77,7 @@ pub(super) fn scan_with_state(
             for key in &policy.required_keys {
                 if value_at_key(&value, key).is_none() {
                     findings.push(RuleFinding {
+                        causes: Vec::new(),
                         rule: RULE_ID.to_string(),
                         file: rel.clone(),
                         line: 1,
@@ -88,6 +90,7 @@ pub(super) fn scan_with_state(
             for key in &policy.banned_keys {
                 if value_at_key(&value, key).is_some() {
                     findings.push(RuleFinding {
+                        causes: Vec::new(),
                         rule: RULE_ID.to_string(),
                         file: rel.clone(),
                         line: 1,

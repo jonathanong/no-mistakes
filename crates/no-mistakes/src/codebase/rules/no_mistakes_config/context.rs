@@ -94,6 +94,7 @@ impl<'a> Context<'a> {
             })
             .unwrap_or_else(|| (self.file.clone(), line));
         RuleFinding {
+            causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file,
             line,

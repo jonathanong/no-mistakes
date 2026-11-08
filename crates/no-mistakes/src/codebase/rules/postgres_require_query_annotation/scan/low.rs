@@ -88,6 +88,7 @@ pub(super) fn scan(
             if definite_violation {
                 findings.push_at(
                     RuleFinding {
+                        causes: Vec::new(),
                         rule: RULE_ID.to_string(),
                         file: rel.clone(),
                         line: call.line as usize,
@@ -103,6 +104,7 @@ pub(super) fn scan(
             } else if !visible && opts.unanalyzable_sql == UnanalyzableSql::Report {
                 findings.push_at(
                     RuleFinding {
+                        causes: Vec::new(),
                         rule: RULE_ID.to_string(),
                         file: rel.clone(),
                         line: call.line as usize,

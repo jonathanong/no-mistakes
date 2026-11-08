@@ -131,9 +131,8 @@ deferred: the rule asks whether some owner is reached, so once any owner is
 reached the producer passes even when another call is dynamic, hits a bound, or
 is an unmodeled external module call such as a PostgreSQL client or another
 Node builtin. With no owner reached, any such uncertainty is reported with
-a cause-specific `unanalyzable` message. Known globals retain the call graph's
-classification; external process
-calls need contracts.
+a cause-specific `unanalyzable` message. Standard built-ins are not uncertainty
+(see [Built-in calls](#built-in-calls)); external process calls need contracts.
 
 ## Uncertainty diagnostics
 
@@ -156,10 +155,63 @@ applicable cause in deterministic order:
   `incomplete[].message`. Human output carries the same file and error. Fix the
   source read or parse failure; changing traversal bounds cannot resolve it.
 
+A message names the first five causes in sorted order (file, line, then
+position; traversal limits and generators after calls) and ends with `+N more`
+when others exist. JSON `rules[]` / `advisories[]` findings also carry
+`causes`: up to 25 entries of `{ kind, file, line?, callee?, detail }`, where
+`kind` is `unresolved-dispatch`, `traversal-limit`, or `unmodeled-generator`.
+Ordinary no-owner findings omit `causes`. A custom `message` is followed by the
+same text. Only sites which block the proof are listed.
+
 A producer with multiple uncertain paths reports their causes together. A reached
 assertion still passes despite dispatch or traversal uncertainty. Source failures
 remain errors even when an assertion is reached. Disabling this rule retains the
 same output and does not collect its uncertainty details.
+
+## Built-in calls
+
+Standard ECMAScript built-ins and a small set of Node modules cannot reach a
+repository assertion, so calling them is neither evidence nor uncertainty.
+Without this model a producer whose closure is ordinary utility code would be
+reported as `unanalyzable` for every `JSON.stringify`, `items.map`, or
+`join` call even though none can hide an assertion. A reached assertion already
+passed regardless; the model changes only which result a producer with no
+reached owner receives: the definitive no-owner finding instead of a long list of
+unresolved dispatch.
+
+- Global namespaces: `JSON`, `Math`, `Number`, `String`, `Boolean`, `BigInt`,
+  `Symbol`, `Date`, `Object`, `Array`, `Promise`, `console`, `Intl`, `RegExp`,
+  `Buffer`, `URL`, `performance`; plus `parseInt`, `parseFloat`, `isNaN`,
+  `isFinite`, `encodeURIComponent`, `decodeURIComponent`, `structuredClone`.
+- Prototype methods on a receiver the call graph cannot resolve, matched by
+  name: string, `RegExp`, `Date`, array, `Map`/`Set`, `Promise`, and
+  `console` methods such as `trim`, `slice`, `split`, `join`, `push`, `has`,
+  `get`, `set`, `test`, `getTime`, `toISOString`, and `log`. A receiver which
+  resolves to a repository method is never classified by name. A repository
+  class whose method shares one of these names on an unresolved receiver is
+  treated as a built-in; call it through a resolvable receiver.
+- `AsyncLocalStorage` `getStore`, `enterWith`, `disable`, `run`, and `exit`,
+  in files which import it from `async_hooks` or `node:async_hooks`.
+- Synchronous Node modules `path`, `url`, `os`, `querystring`, `buffer`, and
+  `string_decoder` (with or without the `node:` prefix). Other external modules,
+  such as an error reporter, remain `external call has no ownership model`.
+
+A built-in that invokes a callback keeps the proof: `map`, `filter`, `forEach`,
+`flatMap`, `reduce`, `some`, `every`, `find`, `findIndex`, `sort`, `then`,
+`catch`, `finally`, `Array.from` (second argument), `AsyncLocalStorage.run` /
+`exit`, and the timers `setTimeout`, `setInterval`, `setImmediate`, and
+`queueMicrotask`. The built-in executes the callback, so an inline function or a
+named function the call graph resolves in the same callable is traversed and can
+reach an assertion. An argument which is a parameter, a member read, a call
+result, or a function imported from another module (outside `map`-family
+iteration) is reported as `built-in callback `name` is not statically resolved`
+at the built-in call. Inline the callback or pass a function declared in the
+same file. `String.prototype.replace` callbacks are not tracked.
+
+```ts
+export function owned(items: number[]) { items.map((item) => assertItem(item)); } // reaches assertItem
+export function opaque(items: number[], fn: (item: number) => void) { items.map(fn); } // unanalyzable: `fn`
+```
 
 ## Node `fs` is modeled I/O
 

@@ -111,6 +111,19 @@ export interface RuleFinding {
   message: string;
   import?: string;
   target?: string;
+  /** Structured reasons a rule could not prove its result; omitted for ordinary findings. */
+  causes?: FindingCause[];
+}
+
+/** One uncertainty cause behind a `coverage-producer-assertion-owner` finding. */
+export interface FindingCause {
+  kind: "unresolved-dispatch" | "traversal-limit" | "unmodeled-generator";
+  /** Repository-relative call site, or the last module for a traversal limit. */
+  file: string;
+  line?: number;
+  /** Source spelling of the unresolved callee. */
+  callee?: string;
+  detail: string;
 }
 
 export interface IntegrationFinding {

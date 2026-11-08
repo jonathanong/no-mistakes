@@ -76,7 +76,17 @@ pub(super) fn analyze(
             // External calls are opaque boundaries unless explicitly modeled. Node `fs`
             // is modeled I/O; known globals remain syntactically classified, while
             // dynamic targets abstain.
-            if site.has_unknown_target() {
+            if let Some(callbacks) = builtins::classify(site, node_sites, facts) {
+                for callback in callbacks.executed {
+                    targets.extend(callback.target_nodes().cloned());
+                }
+                for callback in callbacks.unresolved {
+                    out.dispatch(
+                        site,
+                        format!("built-in callback `{callback}` is not statically resolved"),
+                    );
+                }
+            } else if site.has_unknown_target() {
                 out.dispatch(site, "callee target is unknown");
             } else if modeled.is_empty() && external::unmodeled_external(site) {
                 out.dispatch(site, "external call has no ownership model");

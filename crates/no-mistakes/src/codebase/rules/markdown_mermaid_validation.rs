@@ -146,6 +146,7 @@ fn finding(diagnostic: MermaidValidationDiagnostic) -> RuleFinding {
         MermaidValidationDiagnosticCode::UnclosedFence => diagnostic.message,
     };
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: diagnostic.file,
         line: diagnostic.fence_line,

@@ -76,7 +76,7 @@ pub(super) fn scan_with_sources(
                     || (proof == HeadProof::Unproven
                         && opts.unanalyzable_sql == super::UnanalyzableSql::Report)
                 {
-                    findings.push(RuleFinding {
+                    findings.push(RuleFinding { causes: Vec::new(),
                         rule: RULE_ID.to_string(), file: rel.clone(), line: call.line as usize,
                         message: format!("{rel}:{}: {}", call.line, if proof == HeadProof::Missing {
                             "query execution must start with a /* name */ annotation"
@@ -139,7 +139,7 @@ pub(super) fn scan_with_sources(
                 projected.sql_text = Some(sql.to_string());
                 findings.extend(findings_for_call(&rel, &projected));
             } else if opts.unanalyzable_sql == super::UnanalyzableSql::Report {
-                findings.push(RuleFinding {
+                findings.push(RuleFinding { causes: Vec::new(),
                     rule: RULE_ID.to_string(), file: rel.clone(), line: call.line as usize,
                     message: format!("{rel}:{}: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation", call.line),
                     import: None, target: Some("annotation".to_string()),
@@ -166,6 +166,7 @@ pub(super) fn findings_for_call(
 
 fn missing_annotation_finding(file: &str, line: u32) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: line as usize,

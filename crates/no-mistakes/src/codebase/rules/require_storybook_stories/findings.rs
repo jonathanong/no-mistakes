@@ -36,7 +36,7 @@ pub(super) fn namespace_import_findings(
             if !resolved.starts_with(project_root) {
                 continue;
             }
-            findings.push(RuleFinding {
+            findings.push(RuleFinding { causes: Vec::new(),
                 rule: RULE_ID.to_string(),
                 file: relative_slash_path(root, file),
                 line: import.line as usize,
@@ -111,6 +111,7 @@ fn component_allow_finding(
 ) -> RuleFinding {
     let file = key.split_once('#').map(|(file, _)| file).unwrap_or(key);
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: relative_slash_path(root, &project_root.join(file)),
         line: 1,
@@ -126,6 +127,7 @@ fn component_allow_finding(
 
 fn file_allow_finding(pattern: &str, reason: &str) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: pattern.to_string(),
         line: 1,
