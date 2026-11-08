@@ -48,7 +48,7 @@ fn nested_template_bind_containers_accept_scalars_without_exposing_the_map() {
     assert!(bind_reads(&lowered(template(safe)), "binding:1"));
     for expr in [
         Expr::Array(vec![Expr::Ident("binding:1".into())]),
-        Expr::Call("unknown".into(), Vec::new()),
+        Expr::Call("unknown".into(), Vec::new(), 0),
         Expr::Member(Box::new(Expr::Ident("binding:2".into())), "sql".into()),
         Expr::Opaque,
     ] {

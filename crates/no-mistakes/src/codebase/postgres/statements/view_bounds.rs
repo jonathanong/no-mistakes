@@ -15,7 +15,7 @@ pub(crate) fn bounded_view_selects(
     functions: &[String],
     catalog: &SchemaCatalog,
 ) -> Result<Vec<SqlSelectFact>, PostgresParseError> {
-    let query = catalog.view_query(&view.name)?;
+    let query = catalog.try_view_query(&view.name)?;
     let definition = &view.definition;
     let projection = Bounds {
         functions,

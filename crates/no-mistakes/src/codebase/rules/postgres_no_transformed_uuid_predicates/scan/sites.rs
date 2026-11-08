@@ -24,13 +24,28 @@ pub(super) fn project(
         use_.expression_site,
         file.variant_locations
             .as_ref()
-            .map(|locations| (true, locations.call_index))
+            .map(|locations| {
+                (
+                    relative_slash_path(root, &file.path),
+                    true,
+                    locations.call_index,
+                )
+            })
             .or_else(|| {
                 (file
                     .path
                     .extension()
                     .is_none_or(|extension| extension != "sql"))
-                .then_some((false, execution))
+                .then(|| (relative_slash_path(root, &file.path), false, execution))
             }),
+        file.variant_locations
+            .as_ref()
+            .and_then(|locations| {
+                locations
+                    .grouping_invocations
+                    .get(&SqlFactSite::TransformedExpression(index))
+            })
+            .cloned()
+            .unwrap_or_default(),
     )
 }

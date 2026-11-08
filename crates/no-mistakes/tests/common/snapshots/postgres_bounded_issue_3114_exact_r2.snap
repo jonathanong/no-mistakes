@@ -1,0 +1,34 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "r2": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "r2.sql",
+          "line": 12,
+          "message": "r2.sql:12: UPDATE can change every row of auth_sessions; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE auth_sessions SET revoked_at = CURRENT_TIMESTAMP",
+          "target": "table:auth_sessions"
+        },
+        {
+          "file": "r2.sql",
+          "line": 17,
+          "message": "r2.sql:17: UPDATE can change every row of auth_sessions; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE auth_sessions SET revoked_at = CURRENT_TIMESTAMP",
+          "target": "table:auth_sessions"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -90,6 +90,7 @@ impl Engine<'_> {
         id: usize,
         args: &[Expr],
         state: State,
+        site: u32,
     ) -> Option<Vec<(State, Value)>> {
         let key = self.catalog.callee(self.file()?, id)?;
         let mut out = Vec::new();
@@ -101,7 +102,10 @@ impl Engine<'_> {
                 self.failures += 1;
                 continue;
             };
-            for value in values {
+            for mut value in values {
+                if let Value::Text(text) | Value::Sql(text) = &mut value {
+                    text.raw.invocations.record(text.raw.sql.len(), site);
+                }
                 let Some(mut state) = self.copy_state(&state) else {
                     self.failures += 1;
                     continue;

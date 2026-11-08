@@ -32,6 +32,7 @@ mod recursive_depth;
 mod recursive_forward;
 mod referential;
 mod rejecting_having_projection;
+mod returning_context;
 mod review_table;
 mod scalar_call_array;
 mod scalar_case_projection;

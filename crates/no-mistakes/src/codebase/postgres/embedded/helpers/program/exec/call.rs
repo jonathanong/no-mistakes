@@ -46,6 +46,7 @@ impl Machine<'_> {
         args: &[Expr],
         path: Path,
         statement: bool,
+        mark: u32,
     ) -> Option<Vec<(Path, Val)>> {
         // A parameter or local of that name is a value, not the module's helper.
         if path.lookup(name).is_some() {
@@ -67,7 +68,16 @@ impl Machine<'_> {
                     out.push((path, Val::Unknown));
                 }
                 Callee::Done(outcomes) => {
-                    for outcome in outcomes {
+                    for mut outcome in outcomes {
+                        for (_, suffix) in &mut outcome.suffixes {
+                            suffix.invocations.record(suffix.sql.len(), mark);
+                        }
+                        match &mut outcome.ret {
+                            Ret::Sql(text) | Ret::Str(_, Some(text)) => {
+                                text.invocations.record(text.sql.len(), mark);
+                            }
+                            _ => {}
+                        }
                         out.push(apply(path.clone(), &values, outcome)?);
                     }
                 }

@@ -90,6 +90,7 @@ impl ScopeVisitor<'_> {
             sql: hole.sql.clone(),
             line: hole.line,
             origins: hole.origins.clone(),
+            invocations: Default::default(),
             positions: hole.positions.clone(),
             fragment: false,
             enumerated: false,

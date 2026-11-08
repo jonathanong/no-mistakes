@@ -115,7 +115,7 @@ impl Engine<'_> {
         if sink || member.is_some() {
             return None;
         }
-        self.invoke_helper(id, args, state)
+        self.invoke_helper(id, args, state, site)
     }
 }
 

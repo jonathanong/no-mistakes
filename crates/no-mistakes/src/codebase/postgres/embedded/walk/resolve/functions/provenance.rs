@@ -8,12 +8,23 @@ use oxc_span::GetSpan;
 use std::path::Path;
 
 /// Recovered SQL and its physical positions, carried through helper resolution.
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, Eq)]
 pub(crate) struct RecoveredSql {
     pub(crate) sql: String,
     pub(crate) line: u32,
     pub(crate) positions: Vec<EmbeddedSqlSourcePosition>,
     pub(crate) origins: Vec<u32>,
+    pub(crate) invocations: crate::codebase::postgres::embedded::site_identity::Invocations,
+}
+
+// Grouping identity must not change SQL evaluation equality or effort budgets.
+impl PartialEq for RecoveredSql {
+    fn eq(&self, other: &Self) -> bool {
+        self.sql == other.sql
+            && self.line == other.line
+            && self.positions == other.positions
+            && self.origins == other.origins
+    }
 }
 
 impl RecoveredSql {
@@ -42,6 +53,7 @@ impl RecoveredSql {
             },
         );
         Self {
+            invocations: Default::default(),
             origins: source_positions::origins::expression(expr, source, &sql),
             sql,
             line,
@@ -51,6 +63,8 @@ impl RecoveredSql {
 
     pub(crate) fn append(&mut self, suffix: Self) {
         let offset = count_placeholders(&self.sql);
+        self.invocations
+            .append(&suffix.invocations, &suffix.sql, offset, self.sql.len());
         self.origins
             .extend(super::super::super::variants::origins::rewrite(
                 &suffix.sql,

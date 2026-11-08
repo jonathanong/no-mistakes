@@ -11,6 +11,7 @@ use std::path::PathBuf;
 
 fn sql(text: &str) -> RecoveredSql {
     RecoveredSql {
+        invocations: Default::default(),
         sql: text.to_string(),
         line: 1,
         positions: Vec::new(),

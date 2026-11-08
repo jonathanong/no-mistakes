@@ -56,6 +56,7 @@ pub(super) struct Path {
 
 pub(super) fn empty_sql() -> RecoveredSql {
     RecoveredSql {
+        invocations: Default::default(),
         sql: String::new(),
         line: 1,
         positions: Vec::new(),

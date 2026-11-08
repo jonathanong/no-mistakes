@@ -27,6 +27,9 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope_visiting_wri
         return Cow::Borrowed(outer);
     };
     let mut scope = outer.child();
+    let donors = with
+        .recursive
+        .then(|| super::recursive_domain::stable_donors(&with.cte_tables));
     if with.recursive {
         // A recursive WITH exposes every alias, including later declarations.
         // Until each body is projected, an unresolved reference remains opaque.
@@ -68,6 +71,9 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope_visiting_wri
         } else {
             bound_query(&cte.query, &scope, positions)
         };
+        if let Some(donors) = &donors {
+            super::recursive_domain::project(cte, donors, &mut bound);
+        }
         // SELECT and RETURNING CTEs can both duplicate prior bound trees. Keep the same
         // conservative expansion cap before either kind enters the shared scope.
         if size(&bound) > MAX_BOUND_ITEMS {

@@ -6,7 +6,8 @@ use super::{decoded_parts, SchemaCatalog};
 impl SchemaCatalog {
     pub(crate) fn scalar_function_names(&self) -> Arc<BTreeSet<Vec<String>>> {
         Arc::clone(
-            self.scalar_function_names
+            self.projections()
+                .scalar_function_names
                 .get_or_init(|| Arc::new(self.collect_scalar_function_names())),
         )
     }

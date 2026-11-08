@@ -1,4 +1,5 @@
 mod finite;
+mod unnest;
 
 use super::super::super::value::{is_placeholder_ident_at, PlaceholderPositions};
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
@@ -23,6 +24,7 @@ pub(super) fn select(
                 source_column: resolver.column(expr),
                 array_aggregate_column: array_element(expr, select, &resolver),
                 constant_null: constant_null(expr),
+                recursive_domain: false,
             }),
             SelectItem::UnnamedExpr(expr) => Some(SqlBoundOutput {
                 name: projected_name(expr),
@@ -31,6 +33,7 @@ pub(super) fn select(
                 source_column: resolver.column(expr),
                 array_aggregate_column: array_element(expr, select, &resolver),
                 constant_null: constant_null(expr),
+                recursive_domain: false,
             }),
             // Wildcards have catalog-dependent width, so later ordinal aliases cannot be mapped.
             _ => None,
@@ -46,6 +49,12 @@ pub(super) fn select(
 fn projected_name(expr: &Expr) -> Option<String> {
     match unwrap_expr(expr) {
         Expr::Identifier(ident) => Some(ident_key(ident)),
+        Expr::Value(value) if matches!(value.value, Value::Number(..)) => {
+            Some("?column?".to_owned())
+        }
+        Expr::Function(function) => {
+            crate::codebase::postgres::idents::object_name_ident(&function.name).map(ident_key)
+        }
         _ => None,
     }
 }
@@ -96,6 +105,7 @@ pub(super) fn common(left: &[SqlBoundOutput], right: &[SqlBoundOutput]) -> Vec<S
             source_column: None,
             array_aggregate_column: None,
             constant_null: left.constant_null && right.constant_null,
+            recursive_domain: false,
         })
         .collect()
 }
@@ -109,6 +119,7 @@ fn scalar(
     match expr {
         Expr::Nested(expr) => scalar(expr, items, resolver, positions),
         Expr::Value(value) => !matches!(value.value, Value::Placeholder(_)),
+        Expr::Function(function) => unnest::scalar(function),
         Expr::Cast {
             data_type:
                 DataType::Uuid

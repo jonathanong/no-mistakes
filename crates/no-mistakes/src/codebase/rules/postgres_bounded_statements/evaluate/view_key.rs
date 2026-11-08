@@ -13,7 +13,7 @@ pub(in crate::codebase::rules::postgres_bounded_statements) fn visible_key(
     catalog: &SchemaCatalog,
     name: &str,
 ) -> Option<Vec<String>> {
-    let query = catalog.view_query(name).ok()?;
+    let query = catalog.view_query(name)?;
     if query.with.is_some()
         || query.limit_clause.is_some()
         || query.fetch.is_some()

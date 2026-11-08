@@ -69,6 +69,7 @@ pub(super) fn lower(scope: &mut Scope<'_>, node: &Expression<'_>) -> Expr {
             Expr::Call(
                 "operation:await".into(),
                 vec![scope.expression(&value.argument)],
+                value.span.start,
             )
         }
         Expression::CallExpression(call) => super::calls::lower(scope, call),

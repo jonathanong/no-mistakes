@@ -11,6 +11,10 @@ pub(super) fn name(
     returning: &[SelectItem],
     positions: super::super::value::PlaceholderPositions<'_>,
 ) {
+    for output in &mut query.outputs {
+        output.source_column = None;
+        output.recursive_domain = false;
+    }
     if query.outputs.len() == returning.len() {
         name_returning(query, returning);
         return;
@@ -38,6 +42,7 @@ pub(super) fn name(
             source_column: None,
             array_aggregate_column: None,
             constant_null: false,
+            recursive_domain: false,
         })
         .collect();
 }

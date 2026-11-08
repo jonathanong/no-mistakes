@@ -1,0 +1,76 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "imported-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "imported.ts",
+          "line": 3,
+          "message": "imported.ts:3: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from helper.ts:2)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(statementSql());",
+          "target": "table:accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "off": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "imported.ts",
+          "line": 4,
+          "message": "directive names disabled or out-of-scope rule `postgres-bounded-statements`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-bounded-statements -- caller exemption",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "suppressed-helper.ts",
+          "line": 2,
+          "message": "directive names disabled or out-of-scope rule `postgres-bounded-statements`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-bounded-statements -- helper exemption",
+          "target": "postgres-bounded-statements"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "off-control.ts",
+          "line": 2,
+          "message": "off-control.ts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "query('SELECT id FROM accounts OFFSET 1');",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppressed-import-max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

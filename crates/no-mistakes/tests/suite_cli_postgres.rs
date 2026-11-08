@@ -90,6 +90,8 @@ mod cli_postgres_snapshot_issue_3037;
 mod cli_postgres_snapshot_issue_3046;
 #[path = "cli_postgres_snapshot_issue_3114.rs"]
 mod cli_postgres_snapshot_issue_3114;
+#[path = "cli_postgres_snapshot_issue_3114_exact.rs"]
+mod cli_postgres_snapshot_issue_3114_exact;
 #[path = "cli_postgres_snapshot_json_relation_ids.rs"]
 mod cli_postgres_snapshot_json_relation_ids;
 #[path = "cli_postgres_snapshot_key_column_types.rs"]
@@ -280,3 +282,6 @@ mod cli_postgres_snapshot_four_joined_lock_aliases;
 
 #[path = "cli_postgres_transformed_sites.rs"]
 mod cli_postgres_transformed_sites;
+
+#[path = "cli_postgres_site_identity.rs"]
+mod cli_postgres_site_identity;

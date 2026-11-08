@@ -132,6 +132,7 @@ fn exported_constant(visitor: &ScopeVisitor<'_>, name: &str) -> Option<ExportedC
     Some(ExportedConstant {
         fragment,
         sql: RecoveredSql {
+            invocations: Default::default(),
             origins: vec![0; sql.len()],
             sql,
             line: binding.line,

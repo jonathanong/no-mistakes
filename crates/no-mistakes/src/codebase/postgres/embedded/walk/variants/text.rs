@@ -6,6 +6,8 @@ impl Recovered {
             self.line = suffix.line;
         }
         let offset = placeholders::count_placeholders(&self.sql);
+        self.invocations
+            .append(&suffix.invocations, &suffix.sql, offset, self.sql.len());
         self.origins.extend(origins::rewrite(
             &suffix.sql,
             &suffix.origins,

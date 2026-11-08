@@ -15,9 +15,9 @@ mod propagation;
 mod qualified;
 mod reads;
 mod scalar_output;
+mod target;
 mod view_key;
 use outer_reads::reads_outer;
-use reads::relation_offender;
 pub(super) use view_key::visible_key;
 
 /// A catalog relation that a statement can read or change in unbounded numbers.
@@ -36,6 +36,7 @@ struct Evaluation {
     bounded: bool,
     /// Per FROM item: whether that item is bounded.
     items: Vec<bool>,
+    finite_outputs: Option<Vec<bool>>,
     offenders: Vec<Offender>,
 }
 
@@ -69,26 +70,11 @@ fn offenders_with_columns(
     precise_columns: bool,
 ) -> Vec<Offender> {
     let query = possible_temporary::project(&fact.query, catalog);
-    let evaluation = evaluate(&query, catalog, views, precise_columns);
+    let evaluation = evaluate(&query, catalog, views, precise_columns, fact.target);
     let Some(target) = fact.target else {
         return evaluation.offenders;
     };
-    // An UPDATE or DELETE changes each target row at most once, so only the target must be bounded.
-    if query.capped || evaluation.items[target] {
-        return Vec::new();
-    }
-    if let Some(roots) = driven::roots(&query, target, &evaluation.offenders, catalog) {
-        return roots;
-    }
-    let item = &query.items[target];
-    match &item.kind {
-        SqlBoundItemKind::Table(name) => {
-            relation_offender(name, item.line, item.column, catalog, views)
-                .into_iter()
-                .collect()
-        }
-        _ => Vec::new(),
-    }
+    target::offenders(&query, target, &evaluation, catalog, views)
 }
 
 fn evaluate(
@@ -96,11 +82,13 @@ fn evaluate(
     catalog: &SchemaCatalog,
     views: &ViewBounds,
     precise_columns: bool,
+    write_target: Option<usize>,
 ) -> Evaluation {
     if query.input_mode == SqlBoundInputMode::Skipped {
         return Evaluation {
             bounded: true,
             items: vec![true; query.items.len()],
+            finite_outputs: None,
             offenders: Vec::new(),
         };
     }
@@ -123,7 +111,7 @@ fn evaluate(
                     SqlPinSource::Query(inner)
                     | SqlPinSource::ReadQuery(inner)
                     | SqlPinSource::ArrayQuery(inner) => {
-                        Some(evaluate(inner, catalog, views, precise_columns))
+                        Some(evaluate(inner, catalog, views, precise_columns, None))
                     }
                     _ => None,
                 })
@@ -155,6 +143,13 @@ fn evaluate(
             SqlBoundItemKind::Opaque => false,
         })
         .collect();
+    let write_target =
+        write_target.or((query.input_mode == SqlBoundInputMode::Returning).then_some(0));
+    let domains = if write_target.is_some() {
+        keys::finite_domains(query, &nested)
+    } else {
+        Default::default()
+    };
     let keys: Vec<_> = query
         .items
         .iter()
@@ -168,7 +163,7 @@ fn evaluate(
             keys::prepare(
                 item,
                 index,
-                &owners,
+                (&owners, (write_target == Some(index)).then_some(&domains)),
                 &pin_subqueries[index],
                 &pin_arrays[index],
                 catalog,
@@ -186,9 +181,15 @@ fn evaluate(
         views,
         precise_columns,
     );
-    Evaluation {
-        bounded: query.capped || bounded.iter().all(|state| *state),
-        items: bounded,
-        offenders,
-    }
+    target::project(
+        query,
+        Evaluation {
+            bounded: query.capped || bounded.iter().all(|state| *state),
+            finite_outputs: keys::output_domains(query, &nested),
+            items: bounded,
+            offenders,
+        },
+        catalog,
+        views,
+    )
 }

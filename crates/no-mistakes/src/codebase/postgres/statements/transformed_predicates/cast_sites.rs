@@ -31,14 +31,14 @@ pub(super) fn site(tokens: &[TokenWithSpan], span: Span, kind: &CastKind) -> Opt
         match cursor.token(after) {
             Some(Token::DoubleColon) => {
                 let marker = after;
-                after = cursor.name(cursor.next(after + 1))?;
+                after = cursor.data_type(cursor.next(after + 1))?;
                 postfix = Some((marker, after));
             }
             Some(Token::Word(word)) if word.keyword == Keyword::AS => {
                 let Some(Some((marker, syntax))) = wrappers.get(closed) else {
                     break;
                 };
-                let end = cursor.name(cursor.next(after + 1))?;
+                let end = cursor.data_type(cursor.next(after + 1))?;
                 if cursor.token(end) != Some(&Token::RParen) {
                     break;
                 }
@@ -84,6 +84,10 @@ impl Cursor<'_> {
         Some(index)
     }
     fn name(&self, start: usize) -> Option<usize> {
+        let end = self.arrays(self.name_end(start)?)?;
+        (self.token(end) != Some(&Token::LParen)).then_some(end)
+    }
+    fn name_end(&self, start: usize) -> Option<usize> {
         if !matches!(self.token(start), Some(Token::Word(word)) if word.keyword != Keyword::AS) {
             return None;
         }
@@ -95,6 +99,35 @@ impl Cursor<'_> {
             }
             end = self.next(part + 1);
         }
+        Some(end)
+    }
+    fn data_type(&self, start: usize) -> Option<usize> {
+        let mut end = self.name_end(start)?;
+        if matches!(self.token(start), Some(Token::Word(word)) if matches!(word.keyword, Keyword::CHARACTER | Keyword::CHAR | Keyword::BIT))
+            && matches!(self.token(end), Some(Token::Word(word)) if word.keyword == Keyword::VARYING)
+        {
+            end = self.next(end + 1);
+        }
+        if self.token(end) == Some(&Token::LParen) {
+            end = self.next(end + 1);
+            loop {
+                if !matches!(self.token(end), Some(Token::Number(_, _))) {
+                    return None;
+                }
+                end = self.next(end + 1);
+                match self.token(end) {
+                    Some(Token::Comma) => end = self.next(end + 1),
+                    Some(Token::RParen) => {
+                        end = self.next(end + 1);
+                        break;
+                    }
+                    _ => return None,
+                }
+            }
+        }
+        self.arrays(end)
+    }
+    fn arrays(&self, mut end: usize) -> Option<usize> {
         while self.token(end) == Some(&Token::LBracket) {
             let close = self.next(end + 1);
             if self.token(close) != Some(&Token::RBracket) {
@@ -102,7 +135,7 @@ impl Cursor<'_> {
             }
             end = self.next(close + 1);
         }
-        (self.token(end) != Some(&Token::LParen)).then_some(end)
+        Some(end)
     }
     fn grouping(&self, open: usize) -> bool {
         self.previous(open)
