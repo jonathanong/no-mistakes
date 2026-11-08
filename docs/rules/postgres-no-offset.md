@@ -28,6 +28,22 @@ borrows those facts, including source locations, instead of reading or parsing
 source again. At max, unparseable statements are skipped while recoverable sibling
 statements remain checked; comments and prose are not clauses.
 
+For a configured, bounded source selection, check preparation starts embedded
+SQL extraction from files selected by the rule's `include`/`exclude` globs and
+then follows resolved imports and re-exports only when an extracted SQL fact
+records a pending imported binding, imported lock helper, or relative SQL
+candidate. Those support files are parsed through the same request-owned source
+store. Files outside that closure do not receive embedded SQL extraction, while
+their ordinary requested graph facts remain available. This narrowing is used
+only for a single SQL request sharing the session source store, with a query
+annotation catalog, bounded scans, no annotation or head-only mode, no SQL
+identifier or integration-runner consumer, no Playwright plan, no literal or
+transaction helper profiles, and no already populated request parse cache.
+Unrestricted scans, mixed SQL requests, and other unsupported shapes retain
+the broad preparation path. SQL files selected by `sqlInclude` retain their
+existing behavior. The optimization changes fact preparation only; findings,
+source locations, suppressions, and uncertainty policy are unchanged.
+
 ## Analysis
 
 ### Effort
