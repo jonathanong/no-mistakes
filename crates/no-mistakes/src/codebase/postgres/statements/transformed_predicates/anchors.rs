@@ -86,10 +86,8 @@ fn conjuncts(
             negated: false,
             low,
             high,
-        } => {
-            if independent(low, occurrence(rels, expr), rels, positions) {
-                record(expr, high, rels, positions, out);
-            }
+        } if independent(low, occurrence(rels, expr), rels, positions) => {
+            record(expr, high, rels, positions, out);
         }
         _ => {}
     }

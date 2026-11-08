@@ -117,6 +117,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "anchored-indexes.sql",
+          "line": 21,
+          "message": "anchored-indexes.sql:21: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM accounts WHERE (id = $1) AND fn(token) = $2;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 22,
+          "message": "anchored-indexes.sql:22: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM accounts WHERE id = (SELECT id FROM accounts LIMIT 1) AND fn(token) = $2;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 23,
+          "message": "anchored-indexes.sql:23: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM accounts WHERE missing = $1 AND fn(token) = $2;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 25,
+          "message": "anchored-indexes.sql:25: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM accounts a INNER JOIN accounts b USING (id) WHERE fn(b.token) = $1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "anchored-indexes.sql",
           "line": 3,
           "message": "anchored-indexes.sql:3: SELECT can return every row of keyed; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",

@@ -18,3 +18,8 @@ SELECT * FROM accounts a LEFT JOIN accounts b ON b.id = a.token WHERE fn(a.token
 SELECT * FROM accounts a JOIN accounts b ON b.id = a.token AND fn(b.token) = $1;
 SELECT * FROM accounts a JOIN accounts b ON b.id = a.token OR fn(b.token) = $1;
 SELECT * FROM accounts WHERE id = $1 AND EXISTS (SELECT * FROM accounts WHERE fn(token) = $2);
+SELECT * FROM accounts WHERE (id = $1) AND fn(token) = $2;
+SELECT * FROM accounts WHERE id = (SELECT id FROM accounts LIMIT 1) AND fn(token) = $2;
+SELECT * FROM accounts WHERE missing = $1 AND fn(token) = $2;
+SELECT * FROM mapped_accounts WHERE id = $1 AND fn(token) = $2;
+SELECT * FROM accounts a INNER JOIN accounts b USING (id) WHERE fn(b.token) = $1;

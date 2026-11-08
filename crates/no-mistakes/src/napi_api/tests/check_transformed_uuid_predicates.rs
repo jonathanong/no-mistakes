@@ -166,7 +166,7 @@ fn anchored_uuid_residuals_match_public_check_and_analyze_project() {
         ("left-join", 3),
         ("range", 8),
         ("embedded", 2),
-        ("indexes", 14),
+        ("indexes", 18),
     ] {
         for effort in ["low", "max"] {
             let config = root

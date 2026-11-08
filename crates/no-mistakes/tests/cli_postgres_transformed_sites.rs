@@ -111,7 +111,9 @@ fn uuid_residuals_require_mandatory_indexed_anchors_on_the_same_relation_occurre
         ("anchored-embedded", vec![3, 9]),
         (
             "anchored-indexes",
-            vec![3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 16, 17, 19, 20],
+            vec![
+                3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 16, 17, 19, 20, 22, 23, 24, 25,
+            ],
         ),
         ("anchored-left-join", vec![2, 2, 3]),
         ("anchored-range", vec![2, 3, 4, 5, 6, 7, 8, 9]),

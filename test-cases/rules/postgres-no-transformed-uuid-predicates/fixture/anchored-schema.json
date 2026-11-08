@@ -255,5 +255,10 @@
         }
       }
     }
+  },
+  "views": {
+    "mapped_accounts": {
+      "definition": "SELECT id, token FROM accounts"
+    }
   }
 }
