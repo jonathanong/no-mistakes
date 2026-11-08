@@ -1,6 +1,6 @@
-/// Members a type-only namespace import proves, or `None` when the namespace
-/// escapes (`typeof ns`, no uses) and must remain an unknown selector.
-fn type_namespace_members<'a>(
+/// Members a namespace import proves, or `None` when any reference escapes
+/// the supported static syntax (including unused bindings).
+fn import_namespace_members<'a>(
     file_facts: &'a crate::codebase::ts_source::facts::TsFileFacts,
     source: &str,
     local: &str,
@@ -89,7 +89,7 @@ fn collect_type_import_selectors(
     for import in &inputs.symbols.imports {
         let Some(members) = import
             .is_type_only
-            .then(|| type_namespace_members(file_facts, &import.source, &import.local))
+            .then(|| import_namespace_members(file_facts, &import.source, &import.local))
             .flatten()
             .filter(|_| import.imported == "*")
         else {

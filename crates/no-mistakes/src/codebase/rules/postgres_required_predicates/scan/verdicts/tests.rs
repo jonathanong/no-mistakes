@@ -42,6 +42,7 @@ fn indexed_probes_clear_each_verdict_obligation_but_keep_the_control() {
         crate::codebase::postgres::statements::SqlLocationDemand::None,
         false,
         true,
+        false,
     );
     let control = facts.selects.pop().unwrap();
     for obligation in [

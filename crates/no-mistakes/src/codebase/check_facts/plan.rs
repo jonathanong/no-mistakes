@@ -104,6 +104,7 @@ pub struct CheckFactPlan {
     /// Literal JSON relation keys, collected only for their configured consumer.
     pub postgres_json_writes: bool,
     pub postgres_index_probes: bool,
+    pub postgres_body_bounds: bool,
     /// Opted-in builder-fragment statement facts for shape-policy consumers.
     pub postgres_fragments: bool,
     /// Query-file globs for write facts, independent of migration schema scope.

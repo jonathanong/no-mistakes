@@ -403,3 +403,40 @@ fn postgres_bounded_statements_more_check_json_snapshot() {
     });
     assert_saved_fixture("postgres_bounded_statements_more", &cases);
 }
+
+#[test]
+fn postgres_bounded_statements_bodies_check_json_snapshot() {
+    let root = repo_rel("test-cases/rules/postgres-bounded-statements/materialized-bodies/fixture");
+    let mut cases = [
+        "off",
+        "ignore",
+        "advise",
+        "tagged-advise",
+        "report",
+        "embedded",
+        "allow",
+        "mixed",
+        "imported-report",
+        "imported-advise",
+        "tagged-imported-advise",
+        "lock",
+    ]
+    .map(|policy| (policy, root.clone(), root.join(format!("{policy}.yml"))))
+    .to_vec();
+    let deep = root.parent().unwrap().join("deep");
+    cases.push(("deep", deep.clone(), deep.join(".no-mistakes.yml")));
+    let owners = root.parent().unwrap().join("owners");
+    for kind in ["updates", "deletes", "selects"] {
+        cases.push((kind, owners.clone(), owners.join(format!("{kind}.yml"))));
+    }
+    let probes = root.parent().unwrap().join("probes");
+    for (label, policy) in [
+        ("probes-off", "off"),
+        ("probes-ignore", "ignore"),
+        ("probes-advise", "advise"),
+        ("probes-report", "report"),
+    ] {
+        cases.push((label, probes.clone(), probes.join(format!("{policy}.yml"))));
+    }
+    assert_saved_fixture("postgres_bounded_statements_bodies", &cases);
+}

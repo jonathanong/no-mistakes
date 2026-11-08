@@ -235,3 +235,18 @@ fn vitest_project_policy_is_in_the_public_rule_inventory() {
     assert!(rule_ids_from_source(&repo_root()).contains(rule));
     assert!(repo_root().join(format!("docs/rules/{rule}.md")).is_file());
 }
+
+#[test]
+fn bounded_statement_body_policy_is_documented_for_cli_and_node() {
+    let root = repo_root();
+    for path in [
+        "docs/rules/postgres-bounded-statements.md",
+        "docs/node-api.md",
+        "docs/configuration/rules.md",
+    ] {
+        assert!(
+            read(&root.join(path)).contains("materializedBodies"),
+            "{path}"
+        );
+    }
+}

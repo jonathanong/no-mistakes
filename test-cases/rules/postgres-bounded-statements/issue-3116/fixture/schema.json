@@ -1,0 +1,110 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "comments": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "parent_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "comments_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX comments_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "image_placements": {
+      "relationKind": "table",
+      "columns": {
+        "placement_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "created_by_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "external_ref": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "placement_id"
+        ]
+      },
+      "indexes": {
+        "image_placements_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX image_placements_pkey",
+          "keys": [
+            {
+              "column": "placement_id",
+              "expression": "placement_id"
+            }
+          ]
+        },
+        "image_placements_external_ref": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX image_placements_external_ref",
+          "keys": [
+            {
+              "column": "external_ref",
+              "expression": "external_ref"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

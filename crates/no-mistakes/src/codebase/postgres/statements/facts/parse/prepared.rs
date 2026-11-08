@@ -34,6 +34,10 @@ pub(super) fn extract(
                 policy: super::super::StatementPolicySources {
                     collect_json_writes,
                     collect_index_probes,
+                    collect_body_bounds: matches!(
+                        projection,
+                        StatementProjection::BodyBounds | StatementProjection::BodyBoundsLockScope
+                    ),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -80,6 +84,11 @@ pub(super) fn extract(
                     policy: super::super::StatementPolicySources {
                         collect_json_writes,
                         collect_index_probes,
+                        collect_body_bounds: matches!(
+                            projection,
+                            StatementProjection::BodyBounds
+                                | StatementProjection::BodyBoundsLockScope
+                        ),
                         tokens: Some(&policy_sources),
                         schema: None,
                         functions: &functions,
