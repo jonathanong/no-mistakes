@@ -1,0 +1,12 @@
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      executorNames: []
+      schemaCatalogPath: schema.json
+      sqlInclude: ["**/*.sql"]
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      executorNames: []
+      sqlInclude: ["**/*.sql"]
