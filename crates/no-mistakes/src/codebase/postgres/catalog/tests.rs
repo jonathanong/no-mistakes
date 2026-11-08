@@ -23,8 +23,10 @@ mod model;
 mod names;
 mod order;
 mod parse;
+mod projection_cache;
 mod relation;
 mod resolve;
+mod view_definition;
 mod view_relation;
 
 fn load_fixture(name: &str) -> Result<SchemaCatalog, String> {

@@ -62,10 +62,10 @@ fn a_positional_limit_keeps_page_key_pins_on_the_returning_read() {
 }
 
 #[test]
-fn a_page_without_a_limit_drops_the_returning_key_pins() {
+fn a_page_without_a_limit_keeps_catalog_dependent_returning_key_evidence() {
     let select = select_query(&parsed("issue-2961-page-uncapped.sql"));
     assert!(!contains_capped_query(&select), "{}", query(&select));
-    assert!(messages_key_pins(&select).is_empty(), "{}", query(&select));
+    assert!(!messages_key_pins(&select).is_empty(), "{}", query(&select));
 }
 
 #[test]
@@ -80,7 +80,7 @@ fn array_pins_to_a_capped_sibling_survive_returning_projection() {
 }
 
 #[test]
-fn only_the_capped_sibling_stays_and_its_pin_index_is_remapped() {
+fn returning_drivers_keep_their_original_item_ordinals() {
     let sql = "WITH extra AS (SELECT id FROM other), \
         page AS (SELECT id FROM messages ORDER BY id LIMIT 1), \
         changed AS (UPDATE messages SET deleted_at = now() FROM extra, page \
@@ -88,11 +88,11 @@ fn only_the_capped_sibling_stays_and_its_pin_index_is_remapped() {
     let facts = extract_sql_statement_facts(sql);
     assert!(!facts.parse_failed, "{facts:?}");
     let rendered = query(&select_query(sql));
-    assert!(rendered.contains("id=#1"), "{rendered}");
-    assert!(!rendered.contains("#2"), "{rendered}");
+    assert!(rendered.contains("id=#2"), "{rendered}");
+    assert!(rendered.contains("other"), "{rendered}");
 }
 
 #[test]
 fn an_empty_returning_projection_is_absent() {
-    assert!(super::super::super::returning::project(SqlBoundQuery::default()).is_none());
+    assert!(super::super::super::returning::project(SqlBoundQuery::default(), &[]).is_none());
 }

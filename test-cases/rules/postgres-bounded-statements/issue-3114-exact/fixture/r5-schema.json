@@ -1,0 +1,142 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "change_rows": {
+      "relationKind": "table",
+      "columns": {
+        "tenant_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "entry_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "value": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "state": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "token": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 5
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "tenant_id",
+          "entry_id"
+        ]
+      },
+      "indexes": {
+        "change_rows_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX change_rows_pkey",
+          "keys": [
+            {
+              "column": "tenant_id",
+              "expression": "tenant_id"
+            },
+            {
+              "column": "entry_id",
+              "expression": "entry_id"
+            }
+          ]
+        }
+      }
+    },
+    "record_rows": {
+      "relationKind": "table",
+      "columns": {
+        "tenant_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "value": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "pushed_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": false,
+          "ordinalPosition": 4
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "tenant_id",
+          "id"
+        ]
+      },
+      "indexes": {
+        "record_rows_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX record_rows_pkey",
+          "keys": [
+            {
+              "column": "tenant_id",
+              "expression": "tenant_id"
+            },
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "functions": {},
+  "enums": {},
+  "views": {
+    "public.stream_view": {
+      "materialized": false,
+      "definition": "SELECT id, is_enabled FROM public.streams"
+    },
+    "public.ambiguous_stream_view": {
+      "materialized": false,
+      "definition": "SELECT id, is_enabled, 'hidden'::text AS item_type FROM public.streams"
+    },
+    "public.grouped_stream_view": {
+      "materialized": false,
+      "definition": "SELECT id, bool_or(is_enabled) AS is_enabled FROM public.streams GROUP BY id"
+    },
+    "public.wildcard_stream_view": {
+      "materialized": false,
+      "definition": "SELECT * FROM archive.stream_entries"
+    }
+  }
+}

@@ -364,6 +364,18 @@ or caller-array lookup inside the CTE supplies that bound, as can bounded
 `RETURNING` rows. An unrestricted `SELECT id FROM accounts` CTE supplies no
 bound; add a key restriction or a batch `LIMIT` inside it.
 
+A write restricted by its complete composite primary key returns at most one
+row. Its `RETURNING` column names remain visible to later writes, so matching
+every target key column against that returned row keeps the later write bounded.
+Names alone grant no caller-value, array-element or predicate-propagation proof.
+An `INSERT` source can bound the returned row count, but its finite key domain
+does not prove the domain of generated `RETURNING` values.
+Implicit labels for numeric literals and function calls, along with qualified
+projected column names, identify which relation owns a bare key beside a lock or
+`LIMIT 1` CTE. Ambiguous names,
+wildcard layouts and incomplete keys remain conservative; qualify the key or
+declare explicit output aliases when ownership is unclear.
+
 `JOIN unnest($1::uuid[]) AS req(id) ON t.id = req.id` also bounds a primary-key
 lookup on `t.id`. The parameter array sizes the driver, while the target key
 limits its fan-out. Using a non-unique target column still reports.
@@ -380,6 +392,47 @@ repeat the predicate and match the indexed expression, or cap the query.
 The [saved key-proof cases](../../test-cases/rules/postgres-bounded-statements/issue-3114/)
 pair these accepted forms with still-reported controls. Each shape has a
 normalized CLI snapshot checked at one and two jobs.
+### Projected keys and catalog views
+
+A bounded data-modifying CTE can drive another keyed write inside a CTE:
+`WITH changed AS (UPDATE input_rows SET error_message = NULL WHERE id = $1
+RETURNING batch_id), updated AS (UPDATE work_batches SET completed_rows = 1
+FROM changed WHERE work_batches.id = changed.batch_id RETURNING work_batches.id)
+SELECT * FROM updated` stays bounded. The outer `SELECT` preserves the changed
+target's bound. A non-key restriction such as `WHERE error_message = $1` does
+not bound the first write; use a key lookup or select a capped batch first.
+
+`WITH selected AS (SELECT unnest($1::uuid[]) AS id)` can supply
+`WHERE id = ANY(ARRAY(SELECT id FROM selected))`. The typed built-in `unnest`
+proves scalar elements, and its parameter array supplies the row bound.
+Selecting every `id` from a table instead remains unbounded. Keep the source
+caller-sized or cap its rows; unknown element types do not gain scalar proof.
+As with the rule's other builtin proofs, bare names assume standard PostgreSQL
+builtins. User-defined overloads and search-path shadowing of builtin names are
+outside this static model; use `pg_catalog.unnest` to state the builtin identity.
+
+A recursive CTE used by `UPDATE ... FROM` or `DELETE ... USING` can supply a
+finite key domain when both arms project keys from the same independently
+bounded CTE. The recursive arm may rejoin that CTE by primary key, including
+capped lateral lookups. This proves a bound on changed target keys, not on
+recursive output rows or termination. An anchor's `LIMIT` alone does not bound
+a recursive arm that walks an unrestricted table or CTE. Keep both arms inside
+the bounded source, or rewrite the mutation to select an explicit capped batch.
+The donor must be declared in the same `WITH` scope and use default or
+`MATERIALIZED` evaluation. Explicit `NOT MATERIALIZED` donors and donors from
+an outer scope remain unsupported for this proof; use a local materialized
+bounded source. Ordinary SELECT joins do not gain a recursive row-count bound.
+Recursive finite-domain credit through view writes or `IN (SELECT ...)` remains
+unsupported; use a direct keyed table write with `FROM` or `USING`.
+
+An unqualified key or `columnBounds` column still resolves beside a catalog
+view when the view's definition explicitly names its output columns and none
+owns that name. This column evidence is independent of view key inference or
+`viewBounds`. An ambiguous name, wildcard or unknown projection stays
+conservative; qualify the column with its intended relation alias.
+
+The [exact key-projection fixtures](../../test-cases/rules/postgres-bounded-statements/issue-3114-exact/fixture/)
+include each reported form, a passing variant and a still-reported control.
 
 A capped CTE keeps its bound for a later statement. That includes a join on a non-`id` unique key, a one-row candidate, and a derived `LIMIT 1` subquery:
 
@@ -522,6 +575,32 @@ Unknown outer qualifiers, local self-comparisons, and an `OR` branch without a
 complete key do not prove a bounded lookup.
 
 ### Correlated builder fragments
+
+Straight-line `.append()` mutations of a local SQL statement are evaluated before
+the executor consumes it. A separately appended `LIMIT` caps the statement:
+
+```ts
+const statement = sql`SELECT id FROM accounts WHERE name = ${name} ORDER BY id`;
+statement.append(sql` LIMIT ${limit}`);
+return read(statement);
+```
+
+A local keyed subject also retains its bound when appended into a derived table:
+
+```ts
+const subject = sql`SELECT id FROM accounts WHERE id = ${id}`;
+const statement = sql`SELECT s.id FROM (`;
+statement.append(subject).append(sql`) s`);
+return read(statement);
+```
+
+These examples assume configured executors and SQL tags, and a catalog primary
+or unique key on `accounts.id`. Appending only `OFFSET 1` to the first example
+still reports: an offset does not cap rows. Replacing the second example's key
+predicate with a non-unique `name` predicate also reports at the executing
+`read(statement)`, following appended-fragment attribution. Fix those controls
+by appending a `LIMIT` before execution or matching the complete catalog key.
+An append after execution cannot bound the earlier read.
 
 SQL fragments appended into an executed statement are checked in the recovered
 outer statement. A correlated predicate such as `WHERE x = target.placement_id`

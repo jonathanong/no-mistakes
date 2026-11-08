@@ -3,7 +3,9 @@ use super::{qualified, reads_outer, Evaluation};
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlPinSource};
 use crate::codebase::postgres::{RelationKind, SchemaCatalog};
 use std::collections::BTreeMap;
+mod domains;
 mod indexes;
+pub(super) use domains::{output_domains, prepare as finite_domains, Domains};
 mod view;
 
 /// Each pin source requires all its referenced items to be bounded.
@@ -23,7 +25,7 @@ pub(super) fn dependent_on(items: SourceItems) -> Keys {
 pub(super) fn prepare(
     item: &SqlBoundItem,
     item_index: usize,
-    owners: &BTreeMap<String, usize>,
+    (owners, domains): (&BTreeMap<String, usize>, Option<&Domains>),
     subqueries: &[Option<Evaluation>],
     arrays: &[bool],
     catalog: &SchemaCatalog,
@@ -78,6 +80,11 @@ pub(super) fn prepare(
             }
             match &pin.source {
                 SqlPinSource::Value => Some(Vec::new()),
+                SqlPinSource::Items(_)
+                    if domains.is_some_and(|domains| domains::supplies(pin, domains)) =>
+                {
+                    Some(Vec::new())
+                }
                 SqlPinSource::Items(items) | SqlPinSource::Array { items, .. } => {
                     Some(items.clone())
                 }

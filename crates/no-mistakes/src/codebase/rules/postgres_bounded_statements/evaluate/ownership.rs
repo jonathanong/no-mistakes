@@ -2,6 +2,21 @@
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlBoundQuery};
 use crate::codebase::postgres::{CatalogCoverage, SchemaCatalog};
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
+
+enum VisibleColumns {
+    Owned(BTreeSet<String>),
+    Shared(Arc<BTreeSet<String>>),
+}
+
+impl VisibleColumns {
+    fn as_set(&self) -> &BTreeSet<String> {
+        match self {
+            Self::Owned(names) => names,
+            Self::Shared(names) => names,
+        }
+    }
+}
 
 pub(super) fn owners(items: &[SqlBoundItem], catalog: &SchemaCatalog) -> BTreeMap<String, usize> {
     let candidates: BTreeSet<_> = items
@@ -21,7 +36,7 @@ pub(super) fn owners(items: &[SqlBoundItem], catalog: &SchemaCatalog) -> BTreeMa
         let Some(names) = visible_columns(item, catalog) else {
             return BTreeMap::new();
         };
-        for column in &names {
+        for column in names.as_set() {
             if !candidates.contains(column) {
                 continue;
             }
@@ -34,22 +49,24 @@ pub(super) fn owners(items: &[SqlBoundItem], catalog: &SchemaCatalog) -> BTreeMa
     owners
 }
 
-fn visible_columns(item: &SqlBoundItem, catalog: &SchemaCatalog) -> Option<BTreeSet<String>> {
+fn visible_columns(item: &SqlBoundItem, catalog: &SchemaCatalog) -> Option<VisibleColumns> {
     match &item.kind {
         SqlBoundItemKind::Table(name) => {
             if !item.column_aliases.is_empty() {
                 return None;
             }
-            let table = catalog.bounded_relation(name)?;
-            Some(
-                table
-                    .columns
-                    .iter()
-                    .map(|column| column.name.clone())
-                    .collect(),
-            )
+            match catalog.bounded_relation(name) {
+                Some(table) => Some(VisibleColumns::Owned(
+                    table
+                        .columns
+                        .iter()
+                        .map(|column| column.name.clone())
+                        .collect(),
+                )),
+                None => catalog.view_column_names(name).map(VisibleColumns::Shared),
+            }
         }
-        SqlBoundItemKind::Query(query) => query_columns(item, query),
+        SqlBoundItemKind::Query(query) => query_columns(item, query).map(VisibleColumns::Owned),
         SqlBoundItemKind::Other | SqlBoundItemKind::Opaque => None,
     }
 }
@@ -66,6 +83,11 @@ fn query_columns(item: &SqlBoundItem, query: &SqlBoundQuery) -> Option<BTreeSet<
     query
         .outputs
         .iter()
-        .map(|output| output.name.clone())
+        .map(|output| {
+            output
+                .name
+                .clone()
+                .or_else(|| output.source_column.as_ref().map(|(_, name)| name.clone()))
+        })
         .collect()
 }

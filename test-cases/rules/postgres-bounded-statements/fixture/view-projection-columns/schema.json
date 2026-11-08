@@ -1,0 +1,127 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "entries": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "label": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "enabled": {
+          "dataType": "boolean",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {}
+    },
+    "colliding_view": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "label": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "enabled": {
+          "dataType": "boolean",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {}
+    }
+  },
+  "views": {
+    "simple_view": {
+      "materialized": false,
+      "definition": "SELECT entry.id, entry.label AS label_text, entry.enabled AS active FROM entries entry"
+    },
+    "grouped_view": {
+      "materialized": false,
+      "definition": "SELECT id, bool_or(enabled) AS active FROM entries GROUP BY id"
+    },
+    "union_view": {
+      "materialized": false,
+      "definition": "SELECT id AS key FROM entries UNION ALL SELECT id AS other_key FROM entries"
+    },
+    "nested_view": {
+      "materialized": false,
+      "definition": "((SELECT id FROM entries))"
+    },
+    "cte_view": {
+      "materialized": false,
+      "definition": "WITH selected AS (SELECT id FROM entries) SELECT id FROM selected"
+    },
+    "quoted_view": {
+      "materialized": false,
+      "definition": "SELECT id AS \"MiXeD\" FROM entries"
+    },
+    "wildcard_view": {
+      "materialized": false,
+      "definition": "SELECT * FROM entries"
+    },
+    "qualified_wildcard_view": {
+      "materialized": false,
+      "definition": "SELECT entry.* FROM entries entry"
+    },
+    "unnamed_view": {
+      "materialized": false,
+      "definition": "SELECT id + 1 FROM entries"
+    },
+    "values_view": {
+      "materialized": false,
+      "definition": "VALUES (1)"
+    },
+    "non_query_view": {
+      "materialized": false,
+      "definition": "CREATE TABLE example_table (id bigint)"
+    },
+    "invalid_view": {
+      "materialized": false,
+      "definition": "SELECT 'unterminated"
+    },
+    "multiple_view": {
+      "materialized": false,
+      "definition": "SELECT id FROM entries; SELECT label FROM entries"
+    },
+    "by_name_view": {
+      "materialized": false,
+      "definition": "SELECT id FROM entries UNION BY NAME SELECT label FROM entries"
+    },
+    "colliding_view": {
+      "materialized": false,
+      "definition": "SELECT id FROM entries"
+    },
+    "pipe_view": {
+      "materialized": false,
+      "definition": "SELECT id FROM entries |> EXTEND 1 AS additional_column"
+    }
+  },
+  "functions": {},
+  "enums": {},
+  "schema": "public"
+}
