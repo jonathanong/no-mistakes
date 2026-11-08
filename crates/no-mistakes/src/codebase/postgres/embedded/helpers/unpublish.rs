@@ -48,6 +48,21 @@ pub(crate) fn unpublish_origins(
     Some(out)
 }
 
+pub(crate) fn unpublish_invocations(
+    text: &str,
+    placeholders: &[(u32, u32)],
+    invocations: super::super::site_identity::Invocations,
+) -> Option<super::super::site_identity::Invocations> {
+    if invocations.is_empty() {
+        return Some(invocations);
+    }
+    let markers = locate(text, placeholders)?;
+    Some(invocations.remap(|at| {
+        let count = markers.partition_point(|marker| marker.start < at);
+        at - count * (PLACEHOLDER_MARKER.len() - INTERNAL_PLACEHOLDER.len())
+    }))
+}
+
 fn locate(text: &str, placeholders: &[(u32, u32)]) -> Option<Vec<Marker>> {
     let mut found = Vec::with_capacity(placeholders.len());
     let (mut line, mut column) = (1u32, 1u32);
@@ -85,3 +100,7 @@ fn advance_to(rest: &str, line: &mut u32, column: &mut u32, target: (u32, u32)) 
     }
     ((*line, *column) == target).then_some(rest.len())
 }
+
+#[cfg(test)]
+#[path = "unpublish_tests.rs"]
+mod tests;

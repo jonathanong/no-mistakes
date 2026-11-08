@@ -1,0 +1,275 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "casts-control-low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "casts-control.ts",
+          "line": 2,
+          "message": "casts-control.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from casts-control.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts-control.ts",
+          "line": 2,
+          "message": "casts-control.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:32 from casts-control.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts-control.ts",
+          "line": 2,
+          "message": "casts-control.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:50 from casts-control.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts-control.ts",
+          "line": 2,
+          "message": "casts-control.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:56 from casts-control.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "casts-control-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "casts-control.ts",
+          "line": 2,
+          "message": "casts-control.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from casts-control.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts-control.ts",
+          "line": 2,
+          "message": "casts-control.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:32 from casts-control.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts-control.ts",
+          "line": 2,
+          "message": "casts-control.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:50 from casts-control.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts-control.ts",
+          "line": 2,
+          "message": "casts-control.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:56 from casts-control.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "casts-low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "casts.ts",
+          "line": 2,
+          "message": "casts.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from casts.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts.ts",
+          "line": 2,
+          "message": "casts.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:32 from casts.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts.ts",
+          "line": 2,
+          "message": "casts.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:57 from casts.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts.ts",
+          "line": 2,
+          "message": "casts.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:63 from casts.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "casts-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "casts.ts",
+          "line": 2,
+          "message": "casts.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from casts.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts.ts",
+          "line": 2,
+          "message": "casts.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:32 from casts.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts.ts",
+          "line": 2,
+          "message": "casts.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:57 from casts.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts.ts",
+          "line": 2,
+          "message": "casts.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:63 from casts.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "casts-multiword-low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "casts-multiword.ts",
+          "line": 2,
+          "message": "casts-multiword.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from casts-multiword.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts-multiword.ts",
+          "line": 2,
+          "message": "casts-multiword.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:32 from casts-multiword.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts-multiword.ts",
+          "line": 2,
+          "message": "casts-multiword.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:67 from casts-multiword.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts-multiword.ts",
+          "line": 2,
+          "message": "casts-multiword.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:73 from casts-multiword.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "casts-multiword-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "casts-multiword.ts",
+          "line": 2,
+          "message": "casts-multiword.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from casts-multiword.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts-multiword.ts",
+          "line": 2,
+          "message": "casts-multiword.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:32 from casts-multiword.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts-multiword.ts",
+          "line": 2,
+          "message": "casts-multiword.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:67 from casts-multiword.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "casts-multiword.ts",
+          "line": 2,
+          "message": "casts-multiword.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:73 from casts-multiword.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function getColumn() { return 'id'; }",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

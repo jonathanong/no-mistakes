@@ -1,0 +1,305 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "repeated-alternatives-low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repeated-alternatives.ts",
+          "line": 4,
+          "message": "repeated-alternatives.ts:4: WHERE applies fn to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query('SELECT 1 FROM accounts WHERE ' + (flag ? transform('id') : transform('token')) + ' = $1');",
+          "target": "accounts.id, accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repeated-alternatives-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repeated-alternatives.ts",
+          "line": 2,
+          "message": "repeated-alternatives.ts:2: WHERE applies fn to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function transform(column: string) { return 'fn(' + column + ')'; }",
+          "target": "accounts.id, accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repeated-binding-low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repeated-binding.ts",
+          "line": 4,
+          "message": "repeated-binding.ts:4: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query('SELECT 1 FROM accounts WHERE ' + part + ' = $1 AND ' + part + ' = $2');",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repeated-binding-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repeated-binding.ts",
+          "line": 2,
+          "message": "repeated-binding.ts:2: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from repeated-binding.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function expression() { return 'fn(id)'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "repeated-binding.ts",
+          "line": 2,
+          "message": "repeated-binding.ts:2: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:46 from repeated-binding.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function expression() { return 'fn(id)'; }",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repeated-binds-low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repeated-binds.ts",
+          "line": 3,
+          "message": "repeated-binds.ts:3: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(sql`SELECT ${1}, ${2}, ${3}, ${4}, ${5}, ${6}, ${7}, ${8}, ${9} FROM accounts WHERE `",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repeated-binds-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repeated-binds.ts",
+          "line": 2,
+          "message": "repeated-binds.ts:2: WHERE applies fn to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:219 from repeated-binds.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function predicate(value: string) { return sql`${value} = fn(id, token)`; }",
+          "target": "accounts.id, accounts.token"
+        },
+        {
+          "file": "repeated-binds.ts",
+          "line": 2,
+          "message": "repeated-binds.ts:2: WHERE applies fn to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:258 from repeated-binds.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function predicate(value: string) { return sql`${value} = fn(id, token)`; }",
+          "target": "accounts.id, accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repeated-control-low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repeated-control.ts",
+          "line": 2,
+          "message": "repeated-control.ts:2: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function expression() { return 'fn(id)'; }",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repeated-control-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repeated-control.ts",
+          "line": 2,
+          "message": "repeated-control.ts:2: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function expression() { return 'fn(id)'; }",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repeated-low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repeated.ts",
+          "line": 2,
+          "message": "repeated.ts:2: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from repeated.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function expression() { return 'fn(id)'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "repeated.ts",
+          "line": 2,
+          "message": "repeated.ts:2: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:46 from repeated.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function expression() { return 'fn(id)'; }",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repeated-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repeated.ts",
+          "line": 2,
+          "message": "repeated.ts:2: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:30 from repeated.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function expression() { return 'fn(id)'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "repeated.ts",
+          "line": 2,
+          "message": "repeated.ts:2: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 1:46 from repeated.ts)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function expression() { return 'fn(id)'; }",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repeated-optional-low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repeated-optional.ts",
+          "line": 4,
+          "message": "repeated-optional.ts:4: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query('SELECT 1 FROM accounts WHERE ' + (flag ? transform('id') + ' = $1 AND ' : '') + transform('token') + ' = $2');",
+          "target": "accounts.id"
+        },
+        {
+          "file": "repeated-optional.ts",
+          "line": 4,
+          "message": "repeated-optional.ts:4: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query('SELECT 1 FROM accounts WHERE ' + (flag ? transform('id') + ' = $1 AND ' : '') + transform('token') + ' = $2');",
+          "target": "accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repeated-optional-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repeated-optional.ts",
+          "line": 2,
+          "message": "repeated-optional.ts:2: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function transform(column: string) { return 'fn(' + column + ')'; }",
+          "target": "accounts.id"
+        },
+        {
+          "file": "repeated-optional.ts",
+          "line": 2,
+          "message": "repeated-optional.ts:2: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function transform(column: string) { return 'fn(' + column + ')'; }",
+          "target": "accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

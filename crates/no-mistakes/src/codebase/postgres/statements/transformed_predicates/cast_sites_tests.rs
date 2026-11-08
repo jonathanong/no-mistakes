@@ -26,7 +26,7 @@ fn cast_token_sites_support_qualified_array_types_and_stop_at_context_boundaries
         (1, 5, CastKind::DoubleColon, Some(5)),
         (3, 5, CastKind::DoubleColon, Some(7)),
         (9, 11, CastKind::Cast, Some(4)),
-        (6, 8, CastKind::Cast, None),
+        (6, 8, CastKind::Cast, Some(1)),
         (16, 18, CastKind::Cast, None),
         (6, 14, CastKind::Cast, Some(1)),
         (6, 8, CastKind::Cast, Some(1)),
@@ -76,4 +76,30 @@ fn missing_or_misaligned_root_spans_do_not_reuse_nearby_tokens() {
     assert_eq!(site(tokens, span(11, 12), &CastKind::TryCast), None);
     assert_eq!(site(tokens, span(9, 10), &CastKind::TryCast), None);
     assert_eq!(site(tokens, span(10, 12), &CastKind::Cast), None);
+}
+
+#[test]
+fn parameterized_cast_sites_require_complete_numeric_modifiers() {
+    let source = source("parameterized.sql.tokens");
+    let cases = [
+        (6, 8, CastKind::Cast, Some(1)),
+        (1, 3, CastKind::DoubleColon, Some(3)),
+        (6, 8, CastKind::Cast, None),
+        (6, 8, CastKind::Cast, None),
+        (6, 8, CastKind::Cast, None),
+        (6, 8, CastKind::Cast, None),
+        (1, 3, CastKind::DoubleColon, Some(3)),
+        (6, 8, CastKind::Cast, Some(1)),
+        (6, 8, CastKind::Cast, Some(1)),
+        (1, 3, CastKind::DoubleColon, Some(3)),
+    ];
+    assert_eq!(source.lines().count(), cases.len());
+    for (sql, (start, end, kind, expected)) in source.lines().zip(cases) {
+        let prepared = PreparedSql::new(sql);
+        assert_eq!(
+            site(prepared.tokens(), span(start, end), &kind),
+            expected.map(|column| Location::new(1, column)),
+            "{sql}"
+        );
+    }
 }

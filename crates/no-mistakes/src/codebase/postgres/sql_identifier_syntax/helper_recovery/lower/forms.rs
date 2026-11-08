@@ -35,7 +35,7 @@ pub(super) fn lower(scope: &mut Scope<'_>, node: &Expression<'_>) -> Expr {
                 BinaryOperator::StrictEquality => Expr::Eq(a, b, true, false),
                 BinaryOperator::StrictInequality => Expr::Eq(a, b, true, true),
                 // Comparisons and other arithmetic do not splice SQL text.
-                _ => Expr::Call("operation:ord".into(), vec![*a, *b]),
+                _ => Expr::Call("operation:ord".into(), vec![*a, *b], value.span.start),
             }
         }
         _ => Expr::Opaque,

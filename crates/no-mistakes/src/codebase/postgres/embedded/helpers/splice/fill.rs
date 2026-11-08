@@ -66,8 +66,14 @@ pub(super) fn fill_with_boundaries(
             let mut parts = Vec::with_capacity(pieces.len() * 2);
             let mut pieces = pieces.iter().cloned();
             parts.extend(pieces.next());
-            for (slot, piece) in slots.iter().zip(pieces) {
-                parts.push(combo[*slot].clone());
+            for ((slot, piece), (range, _)) in slots.iter().zip(pieces).zip(&markers) {
+                let mut replacement = combo[*slot].clone();
+                replacement.invocations.inherit(
+                    &caller.invocations,
+                    range.start,
+                    replacement.sql.len(),
+                );
+                parts.push(replacement);
                 parts.push(piece);
             }
             Some((

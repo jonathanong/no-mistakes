@@ -19,7 +19,7 @@ impl Machine<'_> {
                 self.eval_sql(pieces, holes, path, *parameterizes_all)
             }
             Expr::Append(target, arg, mark) => self.eval_append(target, arg, *mark, path),
-            Expr::Call(name, args) => self.call(name, args, path, false),
+            Expr::Call(name, args, mark) => self.call(name, args, path, false, *mark),
             Expr::Member(object, property) => self.eval_member(object, property, path),
             // Computed reads are currently emitted only by the low projector.
             Expr::ComputedMember(..) => None,
@@ -90,7 +90,7 @@ impl Machine<'_> {
     /// is ignorable, anything else is evaluated for its effects.
     pub(super) fn eval_statement(&mut self, expr: &Expr, path: Path) -> Option<Forks> {
         match expr {
-            Expr::Call(name, args) => self.call(name, args, path, true),
+            Expr::Call(name, args, mark) => self.call(name, args, path, true, *mark),
             _ => self.eval(expr, path),
         }
     }

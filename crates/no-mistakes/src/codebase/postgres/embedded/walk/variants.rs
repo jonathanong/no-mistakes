@@ -40,6 +40,7 @@ pub(super) struct Recovered {
     pub sql: String,
     pub line: u32,
     pub origins: Vec<u32>,
+    pub invocations: super::super::site_identity::Invocations,
     pub positions: Vec<EmbeddedSqlSourcePosition>,
     pub fragment: bool,
     pub enumerated: bool,
@@ -58,6 +59,7 @@ impl Recovered {
             sql: String::new(),
             line,
             origins: Vec::new(),
+            invocations: Default::default(),
             positions: Vec::new(),
             fragment: false,
             enumerated: false,
@@ -103,6 +105,8 @@ impl Recovered {
     pub(super) fn same_value(&self, other: &Self) -> bool {
         let mut left = self.clone();
         let mut right = other.clone();
+        left.invocations = Default::default();
+        right.invocations = Default::default();
         left.first_append_offset = None;
         right.first_append_offset = None;
         left.append_sites.clear();
@@ -121,11 +125,13 @@ impl Recovered {
             .first_append_offset
             .map(|at| placeholders::publish_placeholders(self.sql[..at].to_owned()).len());
         let sql_source_offsets = origins::rewrite(&self.sql, &self.origins, 0, true);
+        let invocations = self.invocations.publish(&self.sql);
         let (sql_text, recovered_placeholder_positions) =
             placeholders::publish_placeholders_with_positions(self.sql);
         EmbeddedSqlVariant {
             sql_text,
             sql_source_offsets,
+            invocations,
             line: self.line,
             sql_source_positions: self.positions,
             recovered_placeholder_positions,

@@ -280,3 +280,6 @@ mod cli_postgres_snapshot_four_joined_lock_aliases;
 
 #[path = "cli_postgres_transformed_sites.rs"]
 mod cli_postgres_transformed_sites;
+
+#[path = "cli_postgres_site_identity.rs"]
+mod cli_postgres_site_identity;

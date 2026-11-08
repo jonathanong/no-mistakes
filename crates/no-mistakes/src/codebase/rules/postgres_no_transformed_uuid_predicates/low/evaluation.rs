@@ -103,7 +103,8 @@ fn direct(
                                 relative.to_string(),
                                 None,
                                 use_.expression_site,
-                                Some((false, source_span.0 as usize)),
+                                Some((relative.to_string(), false, source_span.0 as usize)),
+                                Vec::new(),
                             ),
                             finding.into(),
                         );

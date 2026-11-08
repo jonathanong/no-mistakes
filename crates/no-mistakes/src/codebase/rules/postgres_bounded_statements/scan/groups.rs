@@ -1,4 +1,5 @@
 mod append;
+mod normalize;
 mod report;
 mod site;
 
@@ -49,9 +50,9 @@ impl Groups {
             .as_ref()
             .map(|locations| Execution::Call(locations.call_index))
             .or_else(|| embedded_projection.map(Execution::Projection));
-        let (position, at) = self
-            .positions
-            .identify(file, bound_index, bound, embedded_projection);
+        let (position, at) =
+            self.positions
+                .identify(file, bound_index, bound, embedded_projection, call);
         let group = self
             .statements
             .entry((file.path.clone(), call, position))
@@ -79,7 +80,7 @@ impl Groups {
         allow: &AllowList,
     ) {
         let mut sites = Vec::new();
-        for (_, group) in self.statements {
+        for (_, group) in normalize::coalesce(self.statements, self.positions) {
             let executor = crate::codebase::ts_source::relative_slash_path(root, &group.executor);
             let mut findings = group.findings;
             let grouped = merge(

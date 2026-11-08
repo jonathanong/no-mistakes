@@ -33,6 +33,10 @@ pub(crate) fn rebase_embedded_lines(
     if let Some(locations) = &mut locations {
         let sql = call.sql_text.as_deref().unwrap_or_default();
         for (site, position) in &mut locations.positions {
+            locations.grouping_invocations.extend(
+                grouping_identity(call, site, sql, (position.sql_line, position.sql_column))
+                    .map(|identity| (site.clone(), identity)),
+            );
             position.source_line = source_line(position.sql_line, position.sql_column);
             position.source_offset = (variant
                 || matches!(site, SqlFactSite::TransformedExpression(_)))
@@ -142,6 +146,22 @@ pub(crate) fn rebase_embedded_lines(
     }
     rebase_source_lines(facts, &source_line);
     facts.variant_locations = locations;
+}
+
+fn grouping_identity(
+    call: &EmbeddedSqlCall,
+    site: &SqlFactSite,
+    sql: &str,
+    position: (usize, usize),
+) -> Option<Vec<u32>> {
+    if !matches!(
+        site,
+        SqlFactSite::BoundStatement(_) | SqlFactSite::TransformedExpression(_)
+    ) {
+        return None;
+    }
+    let identity = call.variants.first()?.invocations.at(sql, position);
+    (!identity.is_empty()).then_some(identity)
 }
 
 fn rebase_source_lines(

@@ -55,6 +55,7 @@ pub(super) fn scan(
         }
     }
     for (execution, statement) in inputs.statements.into_iter().enumerate() {
+        groups.begin_projection();
         let rel = relative_slash_path(root, &statement.path);
         let source = crate::codebase::rules::read_source(sources, &statement.path);
         let mut residuals = std::collections::BTreeMap::new();

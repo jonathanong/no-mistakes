@@ -26,6 +26,7 @@ impl SqlText {
     pub fn bind(mark: Mark, file: &Path, executor_payload: bool) -> Self {
         Self {
             raw: RecoveredSql {
+                invocations: Default::default(),
                 sql: "$1".into(),
                 line: mark.line,
                 origins: vec![mark.origin; 2],
@@ -44,6 +45,9 @@ impl SqlText {
         suffix.renumber(self.binds.len())?;
         self.executor_payload |= suffix.executor_payload;
         let prefix_bytes = self.raw.sql.len();
+        self.raw
+            .invocations
+            .append(&suffix.raw.invocations, &suffix.raw.sql, 0, prefix_bytes);
         let (line, column) = coordinate(&self.raw.sql, prefix_bytes)?;
         self.raw
             .positions
@@ -102,6 +106,19 @@ impl SqlText {
             }
             (position.sql_line, position.sql_column) = coordinate(&output, mapped)?;
         }
+        self.raw.invocations = std::mem::take(&mut self.raw.invocations).remap(|old| {
+            let mut mapped = old;
+            for &(start, end, next, next_end) in &edits {
+                if old < start {
+                    break;
+                }
+                if old < end {
+                    return next;
+                }
+                mapped = next_end + old - end;
+            }
+            mapped
+        });
         self.raw.sql = output;
         self.raw.origins = origins;
         self.binds = ranges;
@@ -130,3 +147,7 @@ fn byte_offset(text: &str, line: u32, column: u32) -> Option<usize> {
     }
     (at == (line, column)).then_some(text.len())
 }
+
+#[cfg(test)]
+#[path = "sql_text_tests.rs"]
+mod tests;

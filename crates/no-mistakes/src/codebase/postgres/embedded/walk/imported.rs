@@ -3,7 +3,6 @@
 //! The walk sees only this file, so it composes a private hole where the
 //! helper's SQL would go and records the call's arguments. The projection step
 //! later resolves the import and fills the hole (see `helpers`).
-
 use super::super::helpers::split::{compose, plain, Marker};
 use super::super::helpers::{sentinel, ImportedSite, SiteArg};
 use super::resolve::functions::provenance::RecoveredSql;
@@ -98,6 +97,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn recover_call(
     };
     let (sql, positions, origin) = visitor.functions.argument_base(argument, call, visitor)?;
     let base = RecoveredSql {
+        invocations: Default::default(),
         origins: vec![call.span.start; sql.len()],
         sql,
         line: origin,

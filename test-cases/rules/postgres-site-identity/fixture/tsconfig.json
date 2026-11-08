@@ -1,0 +1,6 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": { "db": ["db.ts"], "sql-template-strings": ["db.ts"] }
+  }
+}

@@ -36,6 +36,7 @@ fn extract(name: &str) -> EmbeddedSqlFileFacts {
 
 fn caller(sql: String, line: u32) -> RecoveredSql {
     RecoveredSql {
+        invocations: Default::default(),
         origins: vec![0; sql.len()],
         sql,
         line,

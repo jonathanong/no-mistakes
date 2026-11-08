@@ -104,7 +104,7 @@ fn default_path(scope: &mut Scope<'_>, statements: &[Statement<'_>]) -> Option<V
                 return None;
             }
             let call = scope.expression(ret.argument.as_ref()?);
-            if !matches!(call, Expr::Call(_, _)) {
+            if !matches!(call, Expr::Call(_, _, _)) {
                 return None;
             }
             // If the prepared callee returns, the default is not an abrupt path.
