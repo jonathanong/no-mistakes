@@ -32,7 +32,9 @@ pub fn diagnostics_with_files_and_sources(
         .into_par_iter()
         .map(|rule| {
             let options: Options = rule.try_rule_options()?;
-            let files = super::super::selected_rule_files(root, config, rule, all_files)?;
+            let files = super::super::selected_rule_files_with_sources(
+                root, config, rule, all_files, sources,
+            )?;
             let audit = super::super::allow_audit::AllowAudit::new_files(
                 root,
                 config,

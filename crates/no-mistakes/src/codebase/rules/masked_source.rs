@@ -142,7 +142,41 @@ impl FileAllow {
         }
     }
 
+    pub(crate) fn audits_missing_files(&self) -> bool {
+        self.audit
+            .as_ref()
+            .is_some_and(AllowAudit::audits_missing_files)
+    }
+
+    pub(crate) fn finish_missing_selected(
+        &self,
+        selected: impl Fn(&str) -> bool,
+    ) -> Vec<RuleFinding> {
+        self.audit.as_ref().map_or_else(Vec::new, |audit| {
+            audit.finish_files(
+                |_| false,
+                |index| {
+                    if selected(&self.patterns[index]) {
+                        self.patterns[index].clone()
+                    } else {
+                        String::new()
+                    }
+                },
+                |index| self.patterns[index].clone(),
+            )
+        })
+    }
+
     pub(crate) fn finish(&self, root: &Path, sources: &SourceStore) -> Vec<RuleFinding> {
+        self.finish_selected(root, sources, |_| true)
+    }
+
+    pub(crate) fn finish_selected(
+        &self,
+        root: &Path,
+        sources: &SourceStore,
+        selected: impl Fn(&str) -> bool,
+    ) -> Vec<RuleFinding> {
         let Some(audit) = &self.audit else {
             return Vec::new();
         };
@@ -150,7 +184,13 @@ impl FileAllow {
         let scope = CheckedScope::new(root, Some(sources), &checked);
         audit.finish_files(
             |index| scope.glob(&self.patterns[index]),
-            |index| self.patterns[index].clone(),
+            |index| {
+                if selected(&self.patterns[index]) {
+                    self.patterns[index].clone()
+                } else {
+                    String::new()
+                }
+            },
             |index| self.patterns[index].clone(),
         )
     }

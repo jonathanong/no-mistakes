@@ -156,7 +156,8 @@ pub(crate) fn run_prepared_file_rule<C>(
     } = context;
     run_rule_applications(config, rule_id, |rule| {
         let compiled = compile(rule)?;
-        let files = super::selected_rule_files(root, config, rule, all_files)?;
+        let files =
+            super::selected_rule_files_with_sources(root, config, rule, all_files, sources)?;
         scan(root, &compiled, &files, sources, facts)
     })
 }

@@ -45,8 +45,14 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
     for rule in config.rule_applications(RULE_ID) {
         let mut opts = compile_options(rule.try_rule_options()?)?;
         opts.allow.setup(root, config, rule, sources);
-        let files =
-            super::selected_rule_files_matching(root, config, rule, all_files, is_csharp_file)?;
+        let files = super::selected_rule_files_matching_with_sources(
+            root,
+            config,
+            rule,
+            all_files,
+            sources,
+            is_csharp_file,
+        )?;
         findings.extend(super::scan_masked_files(
             root,
             &opts,

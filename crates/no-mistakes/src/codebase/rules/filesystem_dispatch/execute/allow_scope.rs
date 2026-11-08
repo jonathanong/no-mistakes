@@ -17,10 +17,17 @@ pub(super) fn config<'a>(
     {
         return Ok(Cow::Borrowed(config));
     }
-    let roots = super::super::preserved::filesystem_rule_target_roots(
+    let projects = super::super::FILESYSTEM_RULE_IDS
+        .iter()
+        .flat_map(|id| config.rule_applications(id))
+        .flat_map(|rule| rule.projects.iter())
+        .filter_map(|name| config.projects.get(name));
+    let mut inferred = sources.inferred_roots_for_projects(root, projects);
+    let roots = super::super::preserved::filesystem_rule_target_roots_with_inferred(
         root,
         config,
         super::super::FILESYSTEM_RULE_IDS,
+        &mut inferred,
     )?;
     let expected = crate::codebase::ts_source::discover_files_preserving_roots_from_visible(
         root,

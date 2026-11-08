@@ -2,6 +2,11 @@ reportUnusedAllowEntries: report
 projects:
   web: {type: nextjs, root: src}
 rules:
+  - rule: no-raw-ephemeral-port
+    scope: repository
+    options:
+      include: [src/live.mts]
+      allow: [src/deleted.mts]
   - rule: github-actions-job-timeouts
     scope: repository
     options:
@@ -55,5 +60,5 @@ rules:
         deleted.mts: outside-include
         './deleted.tsx': excluded-normalized
         './deleted.mts': outside-normalized-include
-        'gone*/../deleted.tsx': glob
+        'gone*/../glob-target.tsx': glob
       allowComponents: {'deleted.tsx#Retired': excluded, 'deleted.mts#Retired': outside-include}

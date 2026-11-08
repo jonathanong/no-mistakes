@@ -9,7 +9,10 @@ mod exceptions;
 mod missing;
 mod scope;
 pub(crate) use exceptions::ExceptionAudit;
-pub(crate) use missing::{findings as missing_file_findings, is_literal_file, MissingFiles};
+pub(crate) use missing::{
+    findings as missing_file_findings,
+    findings_with_inferred as missing_file_findings_with_inferred, is_literal_file, MissingFiles,
+};
 pub(crate) use scope::CheckedScope;
 
 pub(crate) const RULE_ID: &str = "unused-allow-entry";
@@ -83,9 +86,26 @@ impl AllowAudit {
         option: &str,
         count: usize,
     ) -> Self {
+        Self::new_files_with_inferred(root, config, rule, sources, option, count, None)
+    }
+
+    pub(crate) fn new_files_with_inferred(
+        root: &Path,
+        config: &NoMistakesConfig,
+        rule: &RuleDef,
+        sources: Option<&SourceStore>,
+        option: &str,
+        count: usize,
+        inferred: Option<&crate::codebase::config::InferredRoots>,
+    ) -> Self {
         let mut audit = Self::new(root, config, rule, sources, option, count);
         if count > 0 {
-            audit.missing = MissingFiles::new(root, config, rule, sources);
+            audit.missing = match inferred {
+                Some(inferred) => {
+                    MissingFiles::new_with_inferred(root, config, rule, sources, inferred)
+                }
+                None => MissingFiles::new(root, config, rule, sources),
+            };
         }
         audit
     }

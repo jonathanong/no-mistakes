@@ -23,7 +23,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".no-mistakes.yml",
           "import": "file-extension-policy",
-          "line": 51,
+          "line": 52,
           "message": "stale file-extension-policy allowlist entry `src/deleted.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
           "sourceLine": "allowlist: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]",
@@ -32,7 +32,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".no-mistakes.yml",
           "import": "forbidden-dependencies",
-          "line": 79,
+          "line": 81,
           "message": "stale forbidden-dependencies exceptions[0].allowedFiles entry `src/deleted.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
           "sourceLine": "allowedFiles: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]",
@@ -41,7 +41,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".no-mistakes.yml",
           "import": "github-actions-job-timeouts",
-          "line": 103,
+          "line": 105,
           "message": "stale github-actions-job-timeouts allow entry `src/deleted.mts#build` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
           "sourceLine": "- {job: 'src/deleted.mts#build'}",
@@ -50,7 +50,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".no-mistakes.yml",
           "import": "github-actions-test-timeout-literals",
-          "line": 113,
+          "line": 115,
           "message": "stale github-actions-test-timeout-literals allow entry `src/deleted.mts#retired` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
           "sourceLine": "- {file: src/deleted.mts, text: retired, reason: retired}",
@@ -68,7 +68,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".no-mistakes.yml",
           "import": "markdown-eval-tests",
-          "line": 86,
+          "line": 88,
           "message": "stale markdown-eval-tests allow entry `src/deleted.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
           "sourceLine": "allow: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]",
@@ -77,7 +77,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".no-mistakes.yml",
           "import": "no-empty-or-comments-only-files",
-          "line": 57,
+          "line": 58,
           "message": "stale no-empty-or-comments-only-files intentionallyEmpty entry `src/deleted.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
           "sourceLine": "intentionallyEmpty: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]",
@@ -86,7 +86,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".no-mistakes.yml",
           "import": "no-git-identity-mutation",
-          "line": 69,
+          "line": 71,
           "message": "stale no-git-identity-mutation conditionallyAllowedWorkflows entry `src/deleted.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
           "sourceLine": "conditionallyAllowedWorkflows: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]",
@@ -104,11 +104,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".no-mistakes.yml",
           "import": "package-json-workspace-coverage",
-          "line": 63,
-          "message": "stale package-json-workspace-coverage allowlist entry `src/deleted.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "line": 65,
+          "message": "stale package-json-workspace-coverage allowlist entry `packages/deleted/package.json` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
-          "sourceLine": "allowlist: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]",
-          "target": "src/deleted.mts"
+          "sourceLine": "allowlist: [packages/deleted/package.json, packages/excluded/package.json, packages/unmatched-*/package.json]",
+          "target": "packages/deleted/package.json"
         },
         {
           "file": ".no-mistakes.yml",
@@ -140,7 +140,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".no-mistakes.yml",
           "import": "tsconfig-file-coverage",
-          "line": 93,
+          "line": 95,
           "message": "stale tsconfig-file-coverage allow entry `src/deleted.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
           "sourceLine": "- {path: src/deleted.mts, reason: retired}",
@@ -166,7 +166,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "advise.yml",
           "import": "file-extension-policy",
-          "line": 51,
+          "line": 52,
           "message": "stale file-extension-policy allowlist entry `src/deleted.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
           "sourceLine": "allowlist: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]",
@@ -175,7 +175,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "advise.yml",
           "import": "forbidden-dependencies",
-          "line": 79,
+          "line": 81,
           "message": "stale forbidden-dependencies exceptions[0].allowedFiles entry `src/deleted.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
           "sourceLine": "allowedFiles: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]",
@@ -184,7 +184,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "advise.yml",
           "import": "github-actions-job-timeouts",
-          "line": 103,
+          "line": 105,
           "message": "stale github-actions-job-timeouts allow entry `src/deleted.mts#build` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
           "sourceLine": "- {job: 'src/deleted.mts#build'}",
@@ -193,7 +193,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "advise.yml",
           "import": "github-actions-test-timeout-literals",
-          "line": 113,
+          "line": 115,
           "message": "stale github-actions-test-timeout-literals allow entry `src/deleted.mts#retired` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
           "sourceLine": "- {file: src/deleted.mts, text: retired, reason: retired}",
@@ -211,7 +211,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "advise.yml",
           "import": "markdown-eval-tests",
-          "line": 86,
+          "line": 88,
           "message": "stale markdown-eval-tests allow entry `src/deleted.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
           "sourceLine": "allow: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]",
@@ -220,7 +220,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "advise.yml",
           "import": "no-empty-or-comments-only-files",
-          "line": 57,
+          "line": 58,
           "message": "stale no-empty-or-comments-only-files intentionallyEmpty entry `src/deleted.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
           "sourceLine": "intentionallyEmpty: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]",
@@ -229,7 +229,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "advise.yml",
           "import": "no-git-identity-mutation",
-          "line": 69,
+          "line": 71,
           "message": "stale no-git-identity-mutation conditionallyAllowedWorkflows entry `src/deleted.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
           "sourceLine": "conditionallyAllowedWorkflows: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]",
@@ -247,11 +247,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "advise.yml",
           "import": "package-json-workspace-coverage",
-          "line": 63,
-          "message": "stale package-json-workspace-coverage allowlist entry `src/deleted.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "line": 65,
+          "message": "stale package-json-workspace-coverage allowlist entry `packages/deleted/package.json` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
-          "sourceLine": "allowlist: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]",
-          "target": "src/deleted.mts"
+          "sourceLine": "allowlist: [packages/deleted/package.json, packages/excluded/package.json, packages/unmatched-*/package.json]",
+          "target": "packages/deleted/package.json"
         },
         {
           "file": "advise.yml",
@@ -283,7 +283,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "advise.yml",
           "import": "tsconfig-file-coverage",
-          "line": 93,
+          "line": 95,
           "message": "stale tsconfig-file-coverage allow entry `src/deleted.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
           "rule": "unused-allow-entry",
           "sourceLine": "- {path: src/deleted.mts, reason: retired}",
@@ -307,6 +307,92 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "empty-ignore-invalid.yml": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty-report-invalid.yml": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty-scope.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "empty-scope.yml",
+          "import": "github-actions-test-timeout-literals",
+          "line": 14,
+          "message": "stale github-actions-test-timeout-literals allow entry `src/deleted.test.mts#retired` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allow: [{file: src/deleted.test.mts, text: retired, reason: retired}]",
+          "target": "src/deleted.test.mts#retired"
+        },
+        {
+          "file": "empty-scope.yml",
+          "import": "no-raw-ephemeral-port",
+          "line": 8,
+          "message": "stale no-raw-ephemeral-port allow entry `src/deleted.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "options: {allow: [src/deleted.mts]}",
+          "target": "src/deleted.mts"
+        },
+        {
+          "file": "empty-scope.yml",
+          "import": "query-reached-per-item",
+          "line": 20,
+          "message": "stale query-reached-per-item allow entry `src/deleted.mts#read` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allow: [{file: src/deleted.mts, callee: read}]",
+          "target": "src/deleted.mts#read"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "gates.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "gates.yml",
+          "import": "tsconfig-gate-coverage",
+          "line": 9,
+          "message": "stale tsconfig-gate-coverage allowProjects entry `src/tsconfig.deleted.json` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "src/tsconfig.deleted.json: retired",
+          "target": "src/tsconfig.deleted.json"
+        }
+      ],
       "warnings": []
     }
   },
@@ -334,6 +420,66 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "implicit-root.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "implicit-root.yml",
+          "import": "require-storybook-stories",
+          "line": 9,
+          "message": "stale require-storybook-stories allowFiles entry `src/deleted.tsx` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allowFiles: {src/deleted.tsx: retired}",
+          "target": "src/deleted.tsx"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "indices.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "indices.yml",
+          "import": "github-actions-job-timeouts",
+          "line": 9,
+          "message": "stale github-actions-job-timeouts allow entry `src/deleted.yml#build` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {job: 'src/deleted.yml#build'}",
+          "target": "src/deleted.yml#build"
+        },
+        {
+          "file": "indices.yml",
+          "import": "github-actions-step-timeouts",
+          "line": 16,
+          "message": "stale github-actions-step-timeouts allow entry `src/deleted.yml#build#run` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {step: 'src/deleted.yml#build#run', reason: retired}",
+          "target": "src/deleted.yml#build#run"
+        },
+        {
+          "file": "malformed",
+          "line": 1,
+          "message": "malformed: malformed github-actions-step-timeouts allow selector; expected file#job#step",
+          "rule": "github-actions-step-timeouts",
+          "target": "malformed"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "migrations.yml": {
     "exitCode": 1,
     "report": {
@@ -357,6 +503,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "narrowed.yml": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "options-narrowed.yml": {
     "exitCode": 0,
     "report": {
       "advisories": [],
@@ -421,6 +579,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "storybook-dotted.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "storybook-dotted.yml",
+          "import": "require-storybook-stories",
+          "line": 10,
+          "message": "stale require-storybook-stories allowComponents entry `./deleted.tsx#Retired` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allowComponents: {'./deleted.tsx#Retired': retired}",
+          "target": "./deleted.tsx#Retired"
+        },
+        {
+          "file": "storybook-dotted.yml",
+          "import": "require-storybook-stories",
+          "line": 9,
+          "message": "stale require-storybook-stories allowFiles entry `./deleted.tsx` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allowFiles: {'./deleted.tsx': retired}",
+          "target": "./deleted.tsx"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "storybook.yml": {
     "exitCode": 1,
     "report": {
@@ -461,6 +650,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "windows.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "windows.yml",
+          "import": "tsconfig-file-coverage",
+          "line": 9,
+          "message": "stale tsconfig-file-coverage allow entry `src/deleted.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {path: 'src\\deleted.mts', reason: retired}",
+          "target": "src/deleted.mts"
+        }
+      ],
       "warnings": []
     }
   }

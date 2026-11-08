@@ -54,8 +54,18 @@ pub(crate) fn check_with_files_and_sources(
     for rule in config.rule_applications(RULE_ID) {
         let raw: Options = rule.try_rule_options()?;
         validate_options(&raw)?;
-        let (selected, roots) =
-            super::selected_rule_files_with_roots(root, config, rule, all_files)?;
+        let (selected, roots) = super::selected_rule_files_with_roots_and_sources(
+            root, config, rule, all_files, sources,
+        )?;
+        if selected.is_empty()
+            && (config.report_unused_allow_entries
+                == crate::config::v2::DisableDirectivePolicy::Ignore
+                || config.missing_allow_audit_scope_incomplete
+                || !sources.inventory_is_complete()
+                || raw.allow.is_empty())
+        {
+            continue;
+        }
         let defaults = raw.include.is_empty();
         let matcher = super::file_matching::FileMatcher::new(
             root,
@@ -64,7 +74,11 @@ pub(crate) fn check_with_files_and_sources(
                 .iter()
                 .map(String::as_str)
                 .chain(DEFAULT_INCLUDE.iter().copied().filter(|_| defaults)),
-        )?;
+        );
+        if selected.is_empty() && matcher.is_err() {
+            continue;
+        }
+        let matcher = matcher?;
         let missing = super::allow_audit::missing_file_findings(
             root,
             config,

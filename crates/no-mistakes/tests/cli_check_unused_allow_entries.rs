@@ -175,6 +175,10 @@ fn unused_allow_missing_files_check_json_snapshot() {
         "options-narrowed.yml",
         "indices.yml",
         "storybook-dotted.yml",
+        "implicit-root.yml",
+        "empty-scope.yml",
+        "empty-ignore-invalid.yml",
+        "empty-report-invalid.yml",
     ]
     .into_iter()
     .map(|name| (name, root.clone(), root.join(name)))

@@ -53,7 +53,8 @@ pub(crate) fn check_with_files_and_sources(
         .into_par_iter()
         .map(|rule| {
             let opts: Options = rule.try_rule_options()?;
-            let files = super::selected_rule_files(root, config, rule, all_files)?;
+            let files =
+                super::selected_rule_files_with_sources(root, config, rule, all_files, sources)?;
             let audit = super::allow_audit::AllowAudit::new_files(
                 root,
                 config,

@@ -73,26 +73,17 @@ pub(crate) fn check_with_prepared(
         .into_par_iter()
         .map(|rule| {
             let opts: Options = rule.try_rule_options()?;
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let candidates = tracked
+            let paths = tracked
                 .iter()
-                .filter(|candidate| {
-                    let path = root.join(candidate);
-                    super::file_allowed_by_roots_and_skip(root, &skip, &path, &target_roots)
-                })
-                .cloned()
+                .map(|candidate| root.join(candidate))
                 .collect::<Vec<_>>();
-            let candidates = super::path_filter::filter_rule_files(
+            let candidates = super::selected_rule_files_with_sources(
                 root,
                 config,
                 rule,
-                &candidates
-                    .iter()
-                    .map(|candidate| root.join(candidate))
-                    .collect::<Vec<_>>(),
-            );
-            let candidates = candidates?;
+                &paths,
+                prepared.sources,
+            )?;
             let candidates = candidates
                 .iter()
                 .map(|path| relative_slash_path(root, path))

@@ -13,7 +13,8 @@ pub(crate) fn check_with_files_and_sources(
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
-        let files = super::super::selected_rule_files(root, config, rule, all_files)?;
+        let files =
+            super::super::selected_rule_files_with_sources(root, config, rule, all_files, sources)?;
         let audit = AllowAudit::new_files(
             root,
             config,

@@ -93,3 +93,23 @@ pub(super) fn finish(
         },
     )
 }
+
+pub(super) fn filter(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    rule: &crate::config::v2::schema::RuleDef,
+    sources: Option<&SourceStore>,
+) -> anyhow::Result<RulePathFilter> {
+    let mut inferred = sources
+        .filter(|sources| sources.inventory_is_complete())
+        .map(|sources| {
+            sources.inferred_roots_for_projects(
+                root,
+                rule.projects
+                    .iter()
+                    .filter_map(|name| config.projects.get(name)),
+            )
+        })
+        .unwrap_or_default();
+    RulePathFilter::new_with_inferred(root, config, rule, &mut inferred)
+}

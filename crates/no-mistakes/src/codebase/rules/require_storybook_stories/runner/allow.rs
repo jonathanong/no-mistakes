@@ -1,6 +1,6 @@
 use super::{NoMistakesConfig, Options, Path};
 use crate::codebase::rules::{
-    allow_audit::{is_literal_file, missing_file_findings},
+    allow_audit::{is_literal_file, missing_file_findings_with_inferred},
     RuleFinding,
 };
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
@@ -13,9 +13,13 @@ pub(super) fn missing_findings(
     rule: &RuleDef,
     sources: &SourceStore,
     opts: &Options,
-    selection: (&super::GlobMatcher, &super::GlobMatcher),
+    selection: (
+        &super::GlobMatcher,
+        &super::GlobMatcher,
+        &crate::codebase::config::InferredRoots,
+    ),
 ) -> Vec<RuleFinding> {
-    let (include, exclude) = selection;
+    let (include, exclude, inferred) = selection;
     let mut findings = Vec::new();
     for (option, alias, entries, component) in [
         ("allowFiles", "allow_files", &opts.allow_files, false),
@@ -31,7 +35,7 @@ pub(super) fn missing_findings(
         } else {
             alias
         };
-        findings.extend(missing_file_findings(
+        findings.extend(missing_file_findings_with_inferred(
             root,
             config,
             rule,
@@ -47,7 +51,7 @@ pub(super) fn missing_findings(
                 let relative = relative_slash_path(project_root, &path);
                 (
                     if is_literal_file(file)
-                        && (include.is_empty() || include.is_match(&relative))
+                        && (opts.include.is_empty() || include.is_match(&relative))
                         && !exclude.is_match(&relative)
                     {
                         relative_slash_path(root, &path)
@@ -57,6 +61,7 @@ pub(super) fn missing_findings(
                     key.clone(),
                 )
             }),
+            Some(inferred),
         ));
     }
     findings

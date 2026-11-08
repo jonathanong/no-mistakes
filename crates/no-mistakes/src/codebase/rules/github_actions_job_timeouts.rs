@@ -72,8 +72,9 @@ pub(crate) fn check_with_files_and_sources_deferred(
     super::run_rule_applications(config, RULE_ID, |rule| {
         let raw: Options = rule.try_rule_options()?;
         let partner_cap = effort::certified_cap(config, rule)?;
-        let (selected, roots) =
-            super::selected_rule_files_with_roots(root, config, rule, all_files)?;
+        let (selected, roots) = super::selected_rule_files_with_roots_and_sources(
+            root, config, rule, all_files, sources,
+        )?;
         let defaults = raw.include.is_empty();
         let matcher = super::file_matching::FileMatcher::new(
             root,

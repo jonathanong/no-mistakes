@@ -72,8 +72,14 @@ fn banned_lockfile_flagged() {
         "allowed: [pnpm-lock.yaml]\nbannedBasenames: [package-lock.json, yarn.lock]",
     );
     let findings = check(&root, &config).unwrap();
-    assert_eq!(findings.len(), 1);
-    assert!(findings[0].file.contains("yarn.lock"));
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert!(findings
+        .iter()
+        .any(|finding| finding.rule == RULE_ID && finding.file.contains("yarn.lock")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.rule == "unused-allow-entry"
+            && finding.target.as_deref() == Some("pnpm-lock.yaml")));
 }
 
 #[test]
@@ -143,7 +149,9 @@ fn custom_banned_basenames_ignore_default_npm_lockfile() {
         &config_with_rule("allowed: [pnpm-lock.yaml]\nbannedBasenames: [yarn.lock]"),
     )
     .unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].rule, "unused-allow-entry");
+    assert_eq!(findings[0].target.as_deref(), Some("pnpm-lock.yaml"));
 }
 
 #[test]

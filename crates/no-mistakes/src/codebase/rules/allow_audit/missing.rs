@@ -25,11 +25,43 @@ impl MissingFiles {
             return None;
         }
         let sources = sources.filter(|sources| sources.inventory_is_complete())?;
+        let mut inferred = sources.inferred_roots_for_projects(
+            root,
+            rule.projects
+                .iter()
+                .filter_map(|name| config.projects.get(name)),
+        );
+        Self::from_inferred(root, config, rule, sources, &mut inferred)
+    }
+
+    pub(crate) fn new_with_inferred(
+        root: &Path,
+        config: &NoMistakesConfig,
+        rule: &RuleDef,
+        sources: Option<&SourceStore>,
+        inferred: &crate::codebase::config::InferredRoots,
+    ) -> Option<Self> {
+        if config.missing_allow_audit_scope_incomplete
+            || config.report_unused_allow_entries == DisableDirectivePolicy::Ignore
+        {
+            return None;
+        }
+        let sources = sources.filter(|sources| sources.inventory_is_complete())?;
+        Self::from_inferred(root, config, rule, sources, &mut inferred.clone())
+    }
+
+    fn from_inferred(
+        root: &Path,
+        config: &NoMistakesConfig,
+        rule: &RuleDef,
+        sources: &SourceStore,
+        inferred: &mut crate::codebase::config::InferredRoots,
+    ) -> Option<Self> {
         Some(Self {
             root: crate::codebase::ts_resolver::normalize_path(root),
             inventory: Arc::clone(sources.inventory()),
-            filter: RulePathFilter::new(root, config, rule).ok()?,
-            roots: super::super::target_roots(root, config, rule),
+            filter: RulePathFilter::new_with_inferred(root, config, rule, inferred).ok()?,
+            roots: super::super::target_roots_with_inferred(root, config, rule, inferred),
             skip: config.filesystem.skip_directories.iter().cloned().collect(),
         })
     }
@@ -67,6 +99,18 @@ pub(crate) fn findings(
     option: &str,
     entries: impl Iterator<Item = (String, String)>,
 ) -> Vec<super::RuleFinding> {
+    findings_with_inferred(root, config, rule, sources, option, entries, None)
+}
+
+pub(crate) fn findings_with_inferred(
+    root: &Path,
+    config: &NoMistakesConfig,
+    rule: &RuleDef,
+    sources: &SourceStore,
+    option: &str,
+    entries: impl Iterator<Item = (String, String)>,
+    inferred: Option<&crate::codebase::config::InferredRoots>,
+) -> Vec<super::RuleFinding> {
     if config.report_unused_allow_entries == DisableDirectivePolicy::Ignore
         || config.missing_allow_audit_scope_incomplete
         || !sources.inventory_is_complete()
@@ -74,8 +118,15 @@ pub(crate) fn findings(
         return Vec::new();
     }
     let entries: Vec<_> = entries.collect();
-    let audit =
-        super::AllowAudit::new_files(root, config, rule, Some(sources), option, entries.len());
+    let audit = super::AllowAudit::new_files_with_inferred(
+        root,
+        config,
+        rule,
+        Some(sources),
+        option,
+        entries.len(),
+        inferred,
+    );
     audit.finish_files(
         |_| false,
         |i| entries[i].0.clone(),

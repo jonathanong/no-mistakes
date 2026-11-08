@@ -72,20 +72,39 @@ pub fn diagnostics_with_files_and_sources(
     for rule in config.rule_applications(RULE_ID) {
         let mut opts = compile_options(rule.try_rule_options()?)?;
         opts.allow.setup(root, config, rule, sources);
-        let target_roots = super::target_roots(root, config, rule);
-        let skip = super::skip_dir_set(config);
-        let files: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots))
-            .cloned()
-            .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        let (files, target_roots) = super::selected_rule_files_with_roots_and_sources(
+            root, config, rule, all_files, sources,
+        )?;
         if files.is_empty() {
+            if opts.allow.audits_missing_files() {
+                if let Ok(matcher) = super::file_matching::FileMatcher::new(
+                    root,
+                    &target_roots,
+                    opts.include.iter().map(String::as_str),
+                ) {
+                    diagnostics
+                        .findings
+                        .extend(opts.allow.finish_missing_selected(|file| {
+                            matcher.is_match(&crate::codebase::ts_resolver::normalize_path(
+                                &root.join(file),
+                            ))
+                        }));
+                }
+            }
             continue;
         }
-        let files = super::matching_files(root, &opts.include, &files, &target_roots)?;
+        let matcher = super::file_matching::FileMatcher::new(
+            root,
+            &target_roots,
+            opts.include.iter().map(String::as_str),
+        )?;
+        let files = matcher.select(&files);
         let mut findings = scan_files(root, &opts, &files, sources, defer_suppression);
-        findings.extend(opts.allow.finish(root, sources));
+        findings.extend(opts.allow.finish_selected(root, sources, |file| {
+            matcher.is_match(&crate::codebase::ts_resolver::normalize_path(
+                &root.join(file),
+            ))
+        }));
         diagnostics.append(super::file_diagnostics::application(
             root,
             sources,
