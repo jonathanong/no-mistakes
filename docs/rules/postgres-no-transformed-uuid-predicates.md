@@ -169,12 +169,11 @@ Nested predicates remain checked, including CASE conditions, aggregate FILTER
 conditions, and
 `COALESCE(id::text = $1, false) IS NOT NULL`.
 
-A transformed residual predicate remains reported even after an indexed or
-primary-key equality on the same table, including queries with `LIMIT 1`.
-The rule does not prove PostgreSQL's access path from a sibling conjunct.
-For COALESCE, the diagnostic names the rewrite: first select rows by an indexed
-or primary-key equality on that table, then apply COALESCE to those rows.
-A limit alone does not establish an indexed access path.
+A mandatory bare indexed-key predicate exempts a transformed residual on the
+same relation, including a sibling `COALESCE` predicate in a query with `LIMIT 1`.
+Without that anchor, the transformed predicate remains reported. For COALESCE,
+first narrow rows by a bare indexed or primary key, then retain the residual
+filter when needed. A limit alone does not establish an indexed access path.
 
 ## Options and defaults
 
@@ -300,6 +299,8 @@ SELECT id FROM users WHERE id = $1::uuid;
 SELECT id FROM users WHERE id >= uuidv7_lower_bound($1);
 -- A computed bound on the other operand leaves the UUID column bare.
 SELECT id FROM users WHERE id >= fn_min_child_uuidv7($1);
+-- The bare primary key anchors the residual; LIMIT is optional.
+SELECT id FROM users WHERE id = $1 AND COALESCE(id, $2) = $3 LIMIT 1;
 
 -- Null tests and comparison values leave UUID value probes bare.
 SELECT id FROM users WHERE COALESCE(id, id) IS NOT NULL;
