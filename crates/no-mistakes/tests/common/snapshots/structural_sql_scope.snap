@@ -2,6 +2,36 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "active_audit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "helpers/directive.mts",
+          "line": 3,
+          "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-no-offset",
+          "target": "postgres-no-offset"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/selected.mts",
+          "line": 2,
+          "message": "src/selected.mts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "export function selected() { return read('SELECT id FROM accounts OFFSET 20'); }",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "all_selected": {
     "exitCode": 1,
     "report": {
