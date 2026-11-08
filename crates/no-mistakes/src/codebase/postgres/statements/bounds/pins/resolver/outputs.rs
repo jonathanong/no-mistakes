@@ -58,6 +58,7 @@ pub(super) fn array_outputs(
             source_column: Some(column.clone()),
             array_aggregate_column: None,
             constant_null: false,
+            recursive_domain: false,
         }];
         named.insert(name.clone(), input);
     }

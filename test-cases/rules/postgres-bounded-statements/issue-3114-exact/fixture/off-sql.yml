@@ -1,0 +1,6 @@
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      executorNames: []
+      sqlInclude: ["r1.sql", "r2.sql", "r3.sql", "r4.sql", "off-control.sql"]

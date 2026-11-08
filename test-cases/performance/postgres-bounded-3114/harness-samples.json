@@ -1,0 +1,39 @@
+[
+  { "name": "clean", "findings": 0, "status": 0, "expected": 0, "valid": true },
+  { "name": "expected finding", "findings": 1, "status": 1, "expected": 1, "valid": true },
+  { "name": "wrong successful status", "findings": 1, "status": 0, "expected": 1, "valid": false },
+  { "name": "analysis failure", "findings": 0, "status": 2, "expected": 0, "valid": false },
+  { "name": "missing finding", "findings": 0, "status": 0, "expected": 1, "valid": false },
+  {
+    "name": "stderr",
+    "findings": 0,
+    "status": 0,
+    "expected": 0,
+    "stderr": "unexpected",
+    "valid": false
+  },
+  {
+    "name": "warning",
+    "findings": 0,
+    "status": 0,
+    "expected": 0,
+    "extra": "warnings",
+    "valid": false
+  },
+  {
+    "name": "advisory",
+    "findings": 0,
+    "status": 0,
+    "expected": 0,
+    "extra": "advisories",
+    "valid": false
+  },
+  {
+    "name": "other finding",
+    "findings": 1,
+    "status": 1,
+    "expected": 1,
+    "extra": "codebase",
+    "valid": false
+  }
+]

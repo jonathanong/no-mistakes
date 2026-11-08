@@ -26,6 +26,7 @@ mod nesting;
 mod order;
 mod partition;
 mod paths;
+mod projection_cache;
 mod relation_identity;
 mod resolve;
 mod scalar_functions;
@@ -35,6 +36,7 @@ mod table_scope;
 #[cfg(test)]
 mod tests;
 mod trigger;
+mod view_definition;
 mod view_relation;
 
 use arbiter::ArbiterTable;
@@ -69,7 +71,8 @@ pub struct SchemaCatalog {
     model_tables: BTreeMap<String, CatalogTable>,
     relation_fallback: std::sync::OnceLock<fallback::RelationFallback>,
     functions: BTreeMap<String, CatalogFunction>,
-    scalar_function_names: std::sync::OnceLock<std::sync::Arc<BTreeSet<Vec<String>>>>,
+    projections:
+        std::sync::Arc<std::sync::OnceLock<std::sync::Arc<projection_cache::ProjectionCache>>>,
     enums: BTreeMap<String, CatalogEnum>,
     views: BTreeMap<String, CatalogView>,
     view_fallback: std::sync::OnceLock<fallback::RelationFallback>,

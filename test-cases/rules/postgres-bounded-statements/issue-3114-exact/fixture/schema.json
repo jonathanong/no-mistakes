@@ -1,0 +1,302 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "input_rows": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "batch_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "error_message": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "input_rows_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX input_rows_pkey ON public.input_rows USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "work_batches": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "completed_rows": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "work_batches_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX work_batches_pkey ON public.work_batches USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "auth_sessions": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "revoked_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "auth_sessions_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX auth_sessions_pkey ON public.auth_sessions USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "token_rows": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "replaced_by_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "owner_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "token_rows_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX token_rows_pkey ON public.token_rows USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "content_items": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "stream_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "item_type": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "deleted_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true,
+          "ordinalPosition": 4
+        },
+        "position": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 5
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "content_items_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX content_items_pkey ON public.content_items USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "streams": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "deleted_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "is_enabled": {
+          "dataType": "boolean",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "streams_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX streams_pkey ON public.streams USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "functions": {},
+  "enums": {},
+  "views": {
+    "public.stream_view": {
+      "materialized": false,
+      "definition": "SELECT id, is_enabled FROM public.streams"
+    },
+    "public.ambiguous_stream_view": {
+      "materialized": false,
+      "definition": "SELECT id, is_enabled, 'hidden'::text AS item_type FROM public.streams"
+    },
+    "public.grouped_stream_view": {
+      "materialized": false,
+      "definition": "SELECT id, bool_or(is_enabled) AS is_enabled FROM public.streams GROUP BY id"
+    },
+    "public.wildcard_stream_view": {
+      "materialized": false,
+      "definition": "SELECT * FROM archive.stream_entries"
+    }
+  }
+}

@@ -68,8 +68,7 @@ fn push(
     });
 }
 
-/// RETURNING emits one row per changed target row. Keep key pins only when every
-/// sibling they name is row-bounded, and drop other auxiliary FROM/USING items.
+/// RETURNING keeps target and driver evidence for catalog-backed target-row evaluation.
 pub(super) fn returning_bound(
     query: &Query,
     statement: &Statement,
@@ -99,7 +98,7 @@ pub(super) fn returning_bound(
         }
         return None;
     }
-    match statement {
+    let returning = match statement {
         Statement::Update(update)
             if update
                 .returning
@@ -107,6 +106,7 @@ pub(super) fn returning_bound(
                 .is_some_and(|items| !items.is_empty()) =>
         {
             self::update(update, &projection_scope, positions, &mut facts);
+            update.returning.as_deref()?
         }
         Statement::Delete(delete)
             if delete
@@ -115,8 +115,9 @@ pub(super) fn returning_bound(
                 .is_some_and(|items| !items.is_empty()) =>
         {
             self::delete(delete, &projection_scope, positions, &mut facts);
+            delete.returning.as_deref()?
         }
         _ => return None,
-    }
-    super::returning::project(facts.pop()?.query)
+    };
+    super::returning::project(facts.pop()?.query, returning)
 }

@@ -1,0 +1,8 @@
+WITH changed AS (UPDATE accounts SET name = 'x' WHERE id = $1 RETURNING id), changed_again AS (UPDATE profiles p SET bio = 'done' FROM changed c WHERE p.account_id = c.id RETURNING p.account_id) SELECT * FROM changed_again;
+WITH changed AS (UPDATE accounts SET name = 'x' WHERE name = $1 RETURNING id), changed_again AS (UPDATE profiles p SET bio = 'done' FROM changed c WHERE p.account_id = c.id RETURNING p.account_id) SELECT * FROM changed_again;
+WITH candidates AS (SELECT id FROM accounts ORDER BY id LIMIT $1), changed AS (UPDATE profiles p SET bio = 'done' FROM candidates c WHERE p.account_id = c.id RETURNING p.account_id) SELECT * FROM changed;
+WITH candidates AS (SELECT id FROM accounts), changed AS (UPDATE profiles p SET bio = 'done' FROM candidates c WHERE p.account_id = c.id RETURNING p.account_id) SELECT * FROM changed;
+WITH extra AS (SELECT id FROM accounts), changed AS (UPDATE profiles p SET bio = 'done' FROM extra c WHERE p.account_id = $1 RETURNING p.account_id) SELECT * FROM changed;
+WITH extra AS (SELECT id FROM accounts), changed AS (UPDATE profiles p SET bio = 'done' FROM extra c WHERE p.account_id = c.id RETURNING p.account_id) SELECT * FROM changed;
+WITH changed AS (UPDATE accounts SET name = 'x' WHERE id = $1 RETURNING name), changed_again AS (UPDATE profiles p SET bio = 'done' FROM changed c WHERE p.bio = c.name RETURNING p.account_id) SELECT * FROM changed_again;
+WITH changed AS (UPDATE accounts SET name = 'x' WHERE id = $1 RETURNING id), removed AS (DELETE FROM profiles p USING changed c WHERE p.account_id = c.id RETURNING p.account_id) SELECT * FROM removed;

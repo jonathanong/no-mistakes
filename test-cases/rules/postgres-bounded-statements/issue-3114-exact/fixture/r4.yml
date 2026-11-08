@@ -1,0 +1,13 @@
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      executorNames: []
+      schemaCatalogPath: schema.json
+      sqlInclude: ["r4.sql"]
+      columnBounds:
+        content_items.item_type:
+          reason: "Each item type has at most 20 configured items"
+      viewBounds:
+        public.grouped_stream_view: bounded
+        public.wildcard_stream_view: bounded

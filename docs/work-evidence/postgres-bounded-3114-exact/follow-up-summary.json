@@ -1,0 +1,218 @@
+{
+  "baseline": {
+    "revision": "62f2a4fac9973cd07490133f812d0fb234e7bd28",
+    "verification": "unverified caller label"
+  },
+  "candidate": {
+    "revision": "c502b32d916d90636f9402f617579a3ddd8e40d8",
+    "verification": "unverified caller label"
+  },
+  "profile": "caller-provided executables; CLI jobs1",
+  "counters": "not measured by this harness",
+  "binaryHashes": {
+    "before": "9cf3ed2643ffe908e22c9f140de772855ab5c690930dcf54b30b352e58d7a1f9",
+    "after": "ca6db8c2901efba2bfca64716a4e19282357b0a7c56de7744c6d330421eade76"
+  },
+  "controls": {
+    "r1": {
+      "before": {
+        "userSeconds": 0.013257999999999999,
+        "systemSeconds": 0.015971,
+        "wallSeconds": 0.036218398017808795,
+        "peakRssKiB": 129920,
+        "exitCode": 1,
+        "stdoutSha256": "a6f9bbec3e6bed9e94a82e6652388b003138e5f74e5ca50de46b662cce9cbf01",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "findings": 1,
+        "advisories": 0,
+        "warnings": 0
+      },
+      "after": {
+        "userSeconds": 0.014863,
+        "systemSeconds": 0.010879,
+        "wallSeconds": 0.02528324699960649,
+        "peakRssKiB": 131336,
+        "exitCode": 1,
+        "stdoutSha256": "a6f9bbec3e6bed9e94a82e6652388b003138e5f74e5ca50de46b662cce9cbf01",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "findings": 1,
+        "advisories": 0,
+        "warnings": 0
+      }
+    },
+    "r2": {
+      "before": {
+        "userSeconds": 0.014535999999999999,
+        "systemSeconds": 0.010114,
+        "wallSeconds": 0.024761158972978592,
+        "peakRssKiB": 131568,
+        "exitCode": 1,
+        "stdoutSha256": "1de64a2229fd225c656fdd3cec2375d92fb6dc6240d6f2007617eb0ae0e06e23",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "findings": 2,
+        "advisories": 0,
+        "warnings": 0
+      },
+      "after": {
+        "userSeconds": 0.018156,
+        "systemSeconds": 0.007071999999999999,
+        "wallSeconds": 0.025331504992209375,
+        "peakRssKiB": 132188,
+        "exitCode": 1,
+        "stdoutSha256": "1de64a2229fd225c656fdd3cec2375d92fb6dc6240d6f2007617eb0ae0e06e23",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "findings": 2,
+        "advisories": 0,
+        "warnings": 0
+      }
+    },
+    "r3": {
+      "before": {
+        "userSeconds": 0.026347,
+        "systemSeconds": 0.00811,
+        "wallSeconds": 0.03466115798801184,
+        "peakRssKiB": 132452,
+        "exitCode": 1,
+        "stdoutSha256": "fc8c780467cef0f012a6a6f54e7d9d455738f1e11d7747a4de21b1f4a9d6189b",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "findings": 4,
+        "advisories": 0,
+        "warnings": 0
+      },
+      "after": {
+        "userSeconds": 0.021599,
+        "systemSeconds": 0.013002999999999999,
+        "wallSeconds": 0.035259934957139194,
+        "peakRssKiB": 133344,
+        "exitCode": 1,
+        "stdoutSha256": "fc8c780467cef0f012a6a6f54e7d9d455738f1e11d7747a4de21b1f4a9d6189b",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "findings": 4,
+        "advisories": 0,
+        "warnings": 0
+      }
+    },
+    "r4": {
+      "before": {
+        "userSeconds": 0.016079,
+        "systemSeconds": 0.012969999999999999,
+        "wallSeconds": 0.02912585693411529,
+        "peakRssKiB": 128540,
+        "exitCode": 1,
+        "stdoutSha256": "0627f0a73cbfa4344cee99bfca19b1a96df5b492c7eff90c12a41b9b726cd5d3",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "findings": 2,
+        "advisories": 0,
+        "warnings": 0
+      },
+      "after": {
+        "userSeconds": 0.019205,
+        "systemSeconds": 0.008617,
+        "wallSeconds": 0.028255951940082014,
+        "peakRssKiB": 129800,
+        "exitCode": 1,
+        "stdoutSha256": "0627f0a73cbfa4344cee99bfca19b1a96df5b492c7eff90c12a41b9b726cd5d3",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "findings": 2,
+        "advisories": 0,
+        "warnings": 0
+      }
+    },
+    "off": {
+      "before": {
+        "userSeconds": 0.006536999999999999,
+        "systemSeconds": 0.009467,
+        "wallSeconds": 0.01569879101589322,
+        "peakRssKiB": 102088,
+        "exitCode": 0,
+        "stdoutSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "findings": 0,
+        "advisories": 0,
+        "warnings": 0
+      },
+      "after": {
+        "userSeconds": 0.007403,
+        "systemSeconds": 0.007810999999999999,
+        "wallSeconds": 0.015124232973903418,
+        "peakRssKiB": 102772,
+        "exitCode": 0,
+        "stdoutSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "findings": 0,
+        "advisories": 0,
+        "warnings": 0
+      }
+    },
+    "off-sql": {
+      "before": {
+        "userSeconds": 0.025008,
+        "systemSeconds": 0.010048999999999999,
+        "wallSeconds": 0.03528822003863752,
+        "peakRssKiB": 129680,
+        "exitCode": 1,
+        "stdoutSha256": "bf566b8c3f715e0a66ad1ec8bb0415e72f4ee181d6845bb8bd14eb9b01f4f7f2",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "findings": 1,
+        "advisories": 0,
+        "warnings": 0
+      },
+      "after": {
+        "userSeconds": 0.026389,
+        "systemSeconds": 0.009125,
+        "wallSeconds": 0.035132450982928276,
+        "peakRssKiB": 131468,
+        "exitCode": 1,
+        "stdoutSha256": "bf566b8c3f715e0a66ad1ec8bb0415e72f4ee181d6845bb8bd14eb9b01f4f7f2",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "findings": 1,
+        "advisories": 0,
+        "warnings": 0
+      }
+    }
+  },
+  "capturedBuilds": {
+    "baseline": "62f2a4fac9973cd07490133f812d0fb234e7bd28",
+    "candidate": "c502b32d916d90636f9402f617579a3ddd8e40d8",
+    "base": "ba93010d5aa2c3e7a597364f80ca770f956cb002",
+    "build": "Separate locked default-feature dev builds, rustc 1.99.1, six build jobs; task-recorded build provenance, not inferred by the harness."
+  },
+  "workloads": {
+    "follow-up": {
+      "before": {
+        "userSeconds": 0.0298824,
+        "wallSeconds": 0.04233065890148282,
+        "peakRssKiB": 131808.8
+      },
+      "after": {
+        "userSeconds": 0.0310106,
+        "wallSeconds": 0.041558572731446475,
+        "peakRssKiB": 134432
+      }
+    },
+    "rule-off": {
+      "before": {
+        "userSeconds": 0.0277472,
+        "wallSeconds": 0.03583253842080012,
+        "peakRssKiB": 130051.6
+      },
+      "after": {
+        "userSeconds": 0.0252688,
+        "wallSeconds": 0.036406796891242266,
+        "peakRssKiB": 131282
+      }
+    },
+    "repository": {
+      "before": {
+        "userSeconds": 3.1860109999999997,
+        "wallSeconds": 3.3503907929407433,
+        "peakRssKiB": 252694
+      },
+      "after": {
+        "userSeconds": 3.2429777499999997,
+        "wallSeconds": 3.404984253225848,
+        "peakRssKiB": 252496
+      }
+    }
+  }
+}

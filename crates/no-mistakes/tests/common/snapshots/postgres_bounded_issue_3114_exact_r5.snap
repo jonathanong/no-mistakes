@@ -1,0 +1,66 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "r5": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "r5-lock-chain.sql",
+          "line": 21,
+          "message": "r5-lock-chain.sql:21: UPDATE can change every row of change_rows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key; UPDATE can change every row of record_rows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE change_rows SET state = 1 FROM lock_cte",
+          "target": "table:change_rows, table:record_rows"
+        },
+        {
+          "file": "r5.sql",
+          "line": 27,
+          "message": "r5.sql:27: UPDATE can change every row of change_rows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key; UPDATE can change every row of record_rows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE change_rows c SET value = $3 WHERE c.tenant_id = $1",
+          "target": "table:change_rows, table:record_rows"
+        },
+        {
+          "file": "r5.sql",
+          "line": 38,
+          "message": "r5.sql:38: UPDATE can change every row of record_rows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE record_rows r SET value = $3 FROM done",
+          "target": "table:record_rows"
+        },
+        {
+          "file": "r5.sql",
+          "line": 60,
+          "message": "r5.sql:60: UPDATE can change every row of record_rows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE record_rows SET value = $3 FROM gate",
+          "target": "table:record_rows"
+        },
+        {
+          "file": "r5.sql",
+          "line": 64,
+          "message": "r5.sql:64: UPDATE can change every row of record_rows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE record_rows SET value = $3 FROM gate",
+          "target": "table:record_rows"
+        },
+        {
+          "file": "r5.sql",
+          "line": 68,
+          "message": "r5.sql:68: UPDATE can change every row of record_rows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE record_rows SET value = $3 FROM gate",
+          "target": "table:record_rows"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

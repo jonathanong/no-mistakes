@@ -13,6 +13,7 @@ mod scalar_reducer_arrays;
 mod standalone_table;
 mod stored_array;
 mod table_only;
+mod typed_unnest;
 use crate::codebase::postgres::statements::{
     extract_sql_statement_facts, SqlBoundFact, SqlBoundItem, SqlBoundItemKind, SqlBoundKind,
     SqlPinSource,
