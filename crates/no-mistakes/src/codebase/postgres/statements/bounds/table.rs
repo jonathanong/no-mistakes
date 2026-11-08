@@ -24,7 +24,7 @@ pub(super) fn bound(table: &Table, scope: &Scope, at: (usize, usize)) -> SqlBoun
         SqlBoundItem::new(
             match cte {
                 Some(bound) => {
-                    scope.record_pool_reference(cte_name, at);
+                    scope.record_pool_reference(bound, || at);
                     SqlBoundItemKind::Query(bound.clone())
                 }
                 None => SqlBoundItemKind::Table(relation),

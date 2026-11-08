@@ -631,6 +631,11 @@ asynchronous `check()` →
 catalog validation and caller-bounded key proof. No separate runtime export is
 needed.
 
+`materializedBodies` excludes existence and known correlated scalar probes.
+Pool-building IN/array/derived bodies and explicit MATERIALIZED CTEs remain
+independent obligations. A consumer of an existing materialized pool retains
+that source obligation without repeating it; new unbounded scans still report.
+
 `collectDiagnostics(operation, ...args)` is the asynchronous equivalent of CLI
 `--verbose-timings`. Pass a public operation name and its normal arguments:
 

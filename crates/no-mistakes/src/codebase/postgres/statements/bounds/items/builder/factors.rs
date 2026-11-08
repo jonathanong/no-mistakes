@@ -111,7 +111,7 @@ impl<'a> Builder<'a> {
         match cte {
             Some(bound) => {
                 self.scope
-                    .record_pool_reference(&object_name_key(name), start(name.span()));
+                    .record_pool_reference(bound, || start(name.span()));
                 SqlBoundItemKind::Query(bound.clone())
             }
             None => SqlBoundItemKind::Table(sql_name(name)),

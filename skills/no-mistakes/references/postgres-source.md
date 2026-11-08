@@ -222,3 +222,6 @@ For independent candidate pools, configure
 `advise` / `require-bound` for advisory diagnostics, or `report` for findings.
 An outer LIMIT does not prove a MATERIALIZED CTE or subquery body bounded.
 Use a body-local LIMIT or primary/unique/`columnBounds` key predicate.
+Existence and known correlated scalar probes are excluded. Keep IN, array and
+derived pools bounded. An already materialized pool is reported at its source;
+only new unbounded scans add a consumer diagnostic.
