@@ -62,12 +62,7 @@ pub(crate) fn run_sql_rule_with_glob_filters<O: DeserializeOwned + Default, C>(
                                 .with_low_sql(rule_id),
                         )
                     } else if rule_id == super::postgres_bounded_statements::RULE_ID
-                        && matches!(
-                            rule.options
-                                .get("materializedBodies")
-                                .and_then(serde_yaml::Value::as_str),
-                            Some("advise" | "require-bound")
-                        )
+                        && super::postgres_bounded_statements::body_advice_requested(&rule.options)
                     {
                         Some(facts.for_sql_application_with_advice(index, rule.name.as_deref()))
                     } else {

@@ -46,6 +46,9 @@ advisories, or `report` to make violations findings. This option checks every
 explicit `AS MATERIALIZED` CTE and subquery body independently of the surrounding
 statement. Ordinary and `AS NOT MATERIALIZED` CTE declarations retain their
 existing behavior. Recursive bodies keep the existing depth-predicate proof.
+The `statements` filter selects the owning executed statement: selecting UPDATE
+or DELETE also checks its CTE and subquery bodies, while unrelated SELECT bodies
+remain outside that selection. Separate bodies on one line retain separate advisories.
 
 An outer cap cannot establish a bounded candidate pool inside a body:
 

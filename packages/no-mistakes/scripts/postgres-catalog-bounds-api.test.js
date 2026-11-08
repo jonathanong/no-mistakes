@@ -25,6 +25,12 @@ test(
       ["../materialized-bodies/deep", ".no-mistakes.yml", 20],
       ["../materialized-bodies/fixture", "imported-report.yml", 1],
       ["../materialized-bodies/fixture", "imported-advise.yml", 0],
+      ["../materialized-bodies/fixture", "tagged-imported-advise.yml", 0],
+      ["../materialized-bodies/fixture", "advise.yml", 2],
+      ["../materialized-bodies/fixture", "tagged-advise.yml", 2],
+      ["../materialized-bodies/owners", "updates.yml", 3],
+      ["../materialized-bodies/owners", "deletes.yml", 3],
+      ["../materialized-bodies/owners", "selects.yml", 1],
       ["column-policy", "../../configs/column-bounds-composite-prefix.yml", 1],
       ["column-policy", "../../configs/recursive-depth.yml", 10],
       ["join-roots", "valid.yml", 22],
@@ -48,7 +54,7 @@ test(
       const options = { root, config, includeSqlVerdicts: true };
       const standalone = await cjs.check(options);
       assert.equal(standalone.rules.length, expected, config);
-      if (config === "imported-advise.yml") {
+      if (config === "imported-advise.yml" || config === "tagged-imported-advise.yml") {
         assert.equal(standalone.advisories.length, 1);
         assert.equal(standalone.advisories[0].file, "imported.ts");
         assert.equal(standalone.advisories[0].line, 5);
@@ -56,6 +62,22 @@ test(
         const plain = await cjs.check({ root, config });
         assert.deepEqual(plain.rules, standalone.rules);
         assert.deepEqual(plain.advisories, standalone.advisories);
+      }
+      if (
+        directory === "../materialized-bodies/fixture" &&
+        (config === "advise.yml" || config === "tagged-advise.yml")
+      ) {
+        assert.equal(standalone.advisories.length, 25);
+        assert.equal(
+          standalone.advisories.filter((row) => row.file === "table.sql" && row.line === 1).length,
+          2,
+        );
+        assert.equal(
+          standalone.advisories.filter((row) => row.file === "clauses.sql" && row.line === 5)
+            .length,
+          2,
+        );
+        assert.deepEqual((await cjs.check({ root, config })).advisories, standalone.advisories);
       }
       const relationTargets = {
         "key-resolution.yml": ["table:public.ambiguous_left", "table:public.ambiguous_right"],

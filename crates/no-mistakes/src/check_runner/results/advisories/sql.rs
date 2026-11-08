@@ -27,6 +27,7 @@ pub(crate) fn merge_sql(
                 &verdict.application,
                 &verdict.file,
                 verdict.span,
+                (verdict.subcheck == "materialized-body").then_some(&verdict.residual_reasons),
             ))
             .or_insert_with(Vec::new)
             .push(verdict);

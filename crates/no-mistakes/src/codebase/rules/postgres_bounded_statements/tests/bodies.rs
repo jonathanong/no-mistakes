@@ -129,3 +129,38 @@ fn deeply_nested_derived_bodies_are_projected_once() {
     assert_eq!(&counts[..20], &[1; 20]);
     assert_eq!(&counts[20..], &[0; 20]);
 }
+
+#[test]
+fn body_statement_filters_follow_the_owning_execution() {
+    use crate::codebase::postgres::SqlBoundKind;
+    let sql =
+        std::fs::read_to_string(fixture_root().join("../materialized-bodies/owners/query.sql"))
+            .unwrap();
+    let facts = extract_sql_statement_facts_with_json_writes(
+        &sql,
+        true,
+        None,
+        SqlLocationDemand::None,
+        false,
+        false,
+        true,
+    );
+    assert!(!facts.parse_failed);
+    let catalog = catalog();
+    let views = ViewBounds::compile(&Default::default(), &catalog).unwrap();
+    for (kind, count) in [
+        (SqlBoundKind::Update, 3),
+        (SqlBoundKind::Delete, 3),
+        (SqlBoundKind::Select, 1),
+    ] {
+        assert_eq!(
+            facts
+                .bounds
+                .iter()
+                .filter(|fact| fact.body.is_some() && fact.kind == kind)
+                .flat_map(|fact| evaluate::offenders_with_views(fact, &catalog, &views))
+                .count(),
+            count
+        );
+    }
+}

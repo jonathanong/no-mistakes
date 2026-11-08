@@ -12,6 +12,7 @@ pub enum SqlBoundKind {
 /// against a schema catalog.
 #[derive(Clone, PartialEq, Eq)]
 pub struct SqlBoundFact {
+    /// Owning executed statement, including for independently judged query bodies.
     pub kind: SqlBoundKind,
     /// Independent body obligation, present only when explicitly requested.
     pub body: Option<String>,

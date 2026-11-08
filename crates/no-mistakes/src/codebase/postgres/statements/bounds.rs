@@ -6,6 +6,7 @@
 //! a relation single-row.
 mod aggregate;
 mod bodies;
+mod body_owner;
 mod catalog_functions;
 pub(super) use catalog_functions::needs_catalog;
 mod compact_pins;
@@ -43,6 +44,7 @@ pub(super) fn is_aggregate(name: &sqlparser::ast::ObjectName) -> bool {
 pub(super) struct Scope {
     frame: Rc<ScopeFrame>,
     bodies: Option<Rc<RefCell<Vec<SqlBoundFact>>>>,
+    body_owner: Option<SqlBoundKind>,
     table_tokens: Option<Rc<RefCell<TableTokenCursor>>>,
     limit_columns: limit_columns::Relations,
     scalar_functions: std::sync::Arc<BTreeSet<Vec<String>>>,
@@ -75,15 +77,16 @@ fn collect_in(
     positions: super::value::PlaceholderPositions<'_>,
     out: &mut Vec<SqlBoundFact>,
 ) {
+    let scope = scope.with_body_owner(Some(statement));
     match statement {
-        Statement::Query(query) => collect_query(query, scope, positions, out),
+        Statement::Query(query) => collect_query(query, &scope, positions, out),
         // `COPY (SELECT …) TO` runs the query like any other.
         Statement::Copy {
             source: CopySource::Query(query),
             ..
-        } => collect_query(query, scope, positions, out),
-        Statement::Update(update) => dml::update(update, scope, positions, out),
-        Statement::Delete(delete) => dml::delete(delete, scope, positions, out),
+        } => collect_query(query, &scope, positions, out),
+        Statement::Update(update) => dml::update(update, &scope, positions, out),
+        Statement::Delete(delete) => dml::delete(delete, &scope, positions, out),
         _ => {}
     }
 }
@@ -94,7 +97,8 @@ fn collect_query(
     positions: super::value::PlaceholderPositions<'_>,
     out: &mut Vec<SqlBoundFact>,
 ) {
-    let scope = query::with_scope_visiting_writes(query, scope, positions, |cte, visible| {
+    let scope = scope.with_body_owner(query::modifying_statement(query));
+    let scope = query::with_scope_visiting_writes(query, &scope, positions, |cte, visible| {
         collect_query(cte, visible, positions, out);
     });
     // RECURSIVE exposes every sibling; keep its completed scope and declaration-order facts.

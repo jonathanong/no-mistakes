@@ -6,10 +6,5 @@ pub(super) fn body_bounds_requested(config: &NoMistakesConfig) -> bool {
     config
         .rule_applications("postgres-bounded-statements")
         .iter()
-        .any(|rule| {
-            rule.options
-                .get("materializedBodies")
-                .and_then(serde_yaml::Value::as_str)
-                .is_some_and(|value| value != "ignore")
-        })
+        .any(|rule| crate::codebase::rules::postgres_bounded_statements::body_bounds_requested(&rule.options))
 }

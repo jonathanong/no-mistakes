@@ -13,6 +13,20 @@ pub(super) enum Policy {
     Report,
 }
 
+pub(in crate::codebase) fn body_bounds_requested(options: &serde_yaml::Value) -> bool {
+    policy(options).is_some_and(|policy| policy != Policy::Ignore)
+}
+
+pub(in crate::codebase) fn body_advice_requested(options: &serde_yaml::Value) -> bool {
+    policy(options) == Some(Policy::Advise)
+}
+
+fn policy(options: &serde_yaml::Value) -> Option<Policy> {
+    options
+        .get("materializedBodies")
+        .and_then(|value| serde_yaml::from_value(value.clone()).ok())
+}
+
 pub(super) fn message(body: &str, table: &str) -> String {
     format!("{body} can build an unbounded candidate pool from {table}; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body")
 }

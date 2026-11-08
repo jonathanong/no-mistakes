@@ -411,17 +411,23 @@ fn postgres_bounded_statements_bodies_check_json_snapshot() {
         "off",
         "ignore",
         "advise",
+        "tagged-advise",
         "report",
         "embedded",
         "allow",
         "mixed",
         "imported-report",
         "imported-advise",
+        "tagged-imported-advise",
         "lock",
     ]
     .map(|policy| (policy, root.clone(), root.join(format!("{policy}.yml"))))
     .to_vec();
     let deep = root.parent().unwrap().join("deep");
     cases.push(("deep", deep.clone(), deep.join(".no-mistakes.yml")));
+    let owners = root.parent().unwrap().join("owners");
+    for kind in ["updates", "deletes", "selects"] {
+        cases.push((kind, owners.clone(), owners.join(format!("{kind}.yml"))));
+    }
     assert_saved_fixture("postgres_bounded_statements_bodies", &cases);
 }

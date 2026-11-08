@@ -41,7 +41,7 @@ impl Scope {
         if let Some(bodies) = &self.bodies {
             let at = at();
             bodies.borrow_mut().push(SqlBoundFact {
-                kind: SqlBoundKind::Select,
+                kind: self.body_owner.unwrap_or(SqlBoundKind::Select),
                 body: Some(name()),
                 line: at.0,
                 column: at.1,

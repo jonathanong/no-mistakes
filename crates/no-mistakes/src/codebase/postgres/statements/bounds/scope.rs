@@ -5,6 +5,7 @@ impl Scope {
         Self {
             frame: Rc::default(),
             bodies: None,
+            body_owner: None,
             table_tokens: Some(Rc::new(RefCell::new(tokens))),
             limit_columns: Default::default(),
             scalar_functions: std::sync::Arc::default(),
@@ -60,6 +61,7 @@ impl Scope {
                 ..ScopeFrame::default()
             }),
             bodies: self.bodies.clone(),
+            body_owner: self.body_owner,
             table_tokens: self.table_tokens.clone(),
             limit_columns: self.limit_columns.clone(),
             scalar_functions: self.scalar_functions.clone(),
