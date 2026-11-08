@@ -33,12 +33,17 @@ pub(super) fn collect(
                 type_only: type_only || individual_type,
                 binding_id: symbol.index(),
                 span: specifier.span().into(),
-                namespace_members: (type_only
-                    && matches!(
-                        specifier,
-                        ImportDeclarationSpecifier::ImportNamespaceSpecifier(_)
-                    ))
-                .then(|| namespace_members(semantic, symbol))
+                namespace_members: matches!(
+                    specifier,
+                    ImportDeclarationSpecifier::ImportNamespaceSpecifier(_)
+                )
+                .then(|| {
+                    if type_only {
+                        namespace_members(semantic, symbol)
+                    } else {
+                        super::imports_namespace::runtime_members(semantic, symbol)
+                    }
+                })
                 .flatten(),
             }
         })

@@ -355,8 +355,27 @@ module-binding forms are unanalyzable. Unresolved local aliases
 also report uncertainty; `baseUrl` resolution candidates are treated
 conservatively when the target cannot be resolved. Ordinary external packages
 and non-code assets are outside the production TS/JS export catalog.
-Namespace imports and namespace re-exports are module-wide uncertainty in this
-projection; use explicit named imports and re-exports to establish each consumer.
+A runtime namespace import counts exactly the members it reads when every reference
+is a direct static member access: `ns.work`, `ns["work"]`, calls through those
+members, and repeated reads. This includes imports through static `export *`
+barrels. Other exports remain eligible for the test-only finding:
+
+```ts
+import * as ns from "./worker.mjs";
+ns.work(); // production use of work only; testOnly can still be reported
+const again = ns["work"]; // another read of work
+```
+
+The namespace stays module-wide uncertainty if any reference passes or returns
+it as a value, aliases it, spreads it, uses destructuring (including rest), uses a
+computed non-string-literal key, re-exports it, or reassigns it. Mixed static and
+escaping uses also stay uncertain. Unused namespace imports, namespace type
+queries, writes to namespace members, and namespace re-exports (`export * as ns`)
+stay uncertain. Literal bracket keys are strings only: template literals and
+numeric keys are unsupported. A missing member reports unresolved-symbol
+uncertainty. Only references to the imported binding count; shadowed locals do
+not establish a consumer. Rewrite uncertain imports and re-exports with explicit
+names to establish each consumer.
 When an export has a known production consumer, an additional unknown selector
 cannot make it exclusively test-consumed, so it produces no per-export uncertainty
 diagnostic. This also applies when the production import reaches the definition

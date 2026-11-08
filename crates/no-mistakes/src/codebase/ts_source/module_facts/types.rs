@@ -51,8 +51,8 @@ pub struct ModuleImportBinding {
     pub type_only: bool,
     pub binding_id: usize,
     pub span: ModuleSpan,
-    /// Members read through a `import type * as ns` binding, or `None` when
-    /// any use of the namespace is not a plain `ns.Member` type reference.
+    /// Exact members of a namespace binding, or `None` when any reference
+    /// escapes the supported static member syntax.
     #[serde(skip)]
     pub(crate) namespace_members: Option<Vec<String>>,
 }
