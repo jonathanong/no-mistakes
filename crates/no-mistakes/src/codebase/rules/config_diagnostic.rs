@@ -76,6 +76,17 @@ impl ConfigAnchor {
         self.located(key, Some(item))
     }
 
+    pub(crate) fn option_key_line(&self, option: &str, key: &str) -> usize {
+        self.rule_path
+            .clone()
+            .and_then(|rule| {
+                self.locations
+                    .as_deref()?
+                    .line(&rule.key("options").key(option).key(key))
+            })
+            .unwrap_or_else(|| self.option_line(option))
+    }
+
     pub(crate) fn nested_option_item_line(
         &self,
         key: &str,

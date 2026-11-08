@@ -1,0 +1,12 @@
+reportUnusedAllowEntries: report
+rules:
+  - rule: github-actions-step-timeouts
+    scope: repository
+    include: [src/**]
+    exclude: [src/excluded.yml]
+    options:
+      include: [src/**]
+      allow:
+        - {step: 'src/deleted.yml#build#run', reason: retired}
+        - {step: 'src/excluded.yml#build#run', reason: excluded}
+        - {step: 'src/unmatched-*.yml#build#run', reason: pattern}

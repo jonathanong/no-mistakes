@@ -1,0 +1,16 @@
+reportUnusedAllowEntries: report
+rules:
+  - rule: github-actions-job-timeouts
+    scope: repository
+    options:
+      include: [src/**]
+      allow:
+        - {job: malformed}
+        - {job: 'src/deleted.yml#build'}
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      include: [src/**]
+      allow:
+        - {step: malformed, reason: invalid}
+        - {step: 'src/deleted.yml#build#run', reason: retired}

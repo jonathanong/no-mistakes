@@ -2,6 +2,8 @@ use super::*;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+mod allow_scope;
+mod finalize;
 mod next_config;
 mod outcomes;
 mod parallel;
@@ -110,6 +112,8 @@ fn run_prepared_filesystem_rules(
         tsconfig_gate_project_inputs,
         config_path,
     } = prepared;
+    let scoped = allow_scope::config(root, config, files, snapshot, &sources)?;
+    let config = scoped.as_ref();
     let acc = Mutex::new(Vec::new());
     let metadata_files = metadata::metadata_files(root, config, files, snapshot);
     let candidates = candidate_index::RuleCandidateIndex::prepare_with_inventory(
@@ -184,12 +188,7 @@ fn run_prepared_filesystem_rules(
             ],
         );
     }
-    findings.sort();
-    findings.dedup_by(|left, right| {
-        left == right
-            && !crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS
-                .contains(&left.rule.as_str())
-    });
+    finalize::findings(&mut findings);
     Ok(findings)
 }
 

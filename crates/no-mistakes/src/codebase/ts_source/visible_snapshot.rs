@@ -174,34 +174,22 @@ fn snapshot_path_view(
         .collect::<Vec<_>>();
     sort_os_str_paths(&mut tracked_paths);
     tracked_paths.dedup();
+    let inventory = Arc::new(FileInventory::from_classified_paths_counted(
+        paths.visible,
+        paths.metadata_stats,
+    ));
+    let sources = SourceStore::new_observed(inventory, observer).with_complete_inventory();
     Arc::new(SnapshotPathView {
-        sources: Arc::new(SourceStore::new_observed(
-            Arc::new(FileInventory::from_classified_paths_counted(
-                paths.visible,
-                paths.metadata_stats,
-            )),
-            observer,
-        )),
+        sources: Arc::new(sources),
         tracked_paths: Arc::new(tracked_paths),
         git_index_paths: normalized_index_paths(&paths.git_index_paths),
         git_index_available: paths.git_index_available,
     })
 }
 
-
 fn contains_path(paths: &[PathBuf], path: &Path) -> bool {
     // Exact OsStr membership. Canonical remapping does not belong here.
     paths
         .binary_search_by(|candidate| cmp_os_str_paths(candidate, path))
         .is_ok()
-}
-
-fn increment(
-    observer: &Option<Arc<crate::diagnostics::InvocationObserver>>,
-    metric: &'static str,
-    amount: u64,
-) {
-    if let Some(observer) = observer {
-        observer.increment(metric, amount);
-    }
 }

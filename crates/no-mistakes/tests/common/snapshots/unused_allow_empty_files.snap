@@ -19,6 +19,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "unused-allow-entry",
           "sourceLine": "- clean.ts",
           "target": "clean.ts"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "import": "no-empty-or-comments-only-files",
+          "line": 12,
+          "message": "stale no-empty-or-comments-only-files intentionallyEmpty entry `missing.ts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- missing.ts",
+          "target": "missing.ts"
         }
       ],
       "warnings": []

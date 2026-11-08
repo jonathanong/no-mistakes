@@ -29,7 +29,8 @@ pub(crate) struct Options {
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     let files =
         crate::codebase::ts_source::discover_files(root, &config.filesystem.skip_directories);
-    check_with_files(root, config, &files)
+    let sources = super::source_access::complete_source_store_for_files(&files);
+    check_with_files_and_sources(root, config, &files, &sources)
 }
 
 pub(crate) fn check_with_files(
@@ -52,8 +53,9 @@ pub(crate) fn check_with_files_and_sources(
         .into_par_iter()
         .map(|rule| {
             let opts: Options = rule.try_rule_options()?;
-            let files = super::selected_rule_files(root, config, rule, all_files)?;
-            let audit = super::allow_audit::AllowAudit::new(
+            let files =
+                super::selected_rule_files_with_sources(root, config, rule, all_files, sources)?;
+            let audit = super::allow_audit::AllowAudit::new_files(
                 root,
                 config,
                 rule,
@@ -75,8 +77,9 @@ pub(crate) fn check_with_files_and_sources(
                         .map(|matcher| matcher.is_match(&finding.file)),
                 )
             });
-            findings.extend(audit.finish(
+            findings.extend(audit.finish_files(
                 |index| scope.glob(&opts.allowed[index]),
+                |index| opts.allowed[index].clone(),
                 |index| opts.allowed[index].clone(),
             ));
             Ok(findings)

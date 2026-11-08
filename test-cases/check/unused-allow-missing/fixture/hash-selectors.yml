@@ -1,0 +1,20 @@
+reportUnusedAllowEntries: report
+projects:
+  web:
+    type: nextjs
+    root: src
+rules:
+  - rule: github-actions-job-timeouts
+    scope: repository
+    options:
+      include: [src/**]
+      allow:
+        - {job: 'src/excluded#hash.tsx#build'}
+        - {job: malformed}
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      allowFiles:
+        'excluded#hash.tsx': existing
+      allowComponents:
+        'excluded#hash.tsx#Hash': existing

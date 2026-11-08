@@ -7,6 +7,9 @@ use serde::Deserialize;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
+mod allow;
+use allow::{audited, file_extension};
+
 pub const RULE_ID: &str = "file-extension-policy";
 
 #[derive(Deserialize, Default)]
@@ -25,7 +28,8 @@ pub(crate) struct Options {
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     let files = discover_files(root, &config.filesystem.skip_directories);
-    check_with_files(root, config, &files)
+    let sources = super::source_access::complete_source_store_for_files(&files);
+    check_with_files_and_sources(root, config, &files, &sources)
 }
 
 pub(crate) fn check_with_files(
@@ -48,9 +52,10 @@ pub(crate) fn check_with_files_and_sources(
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
             let opts: Options = rule.try_rule_options()?;
-            let files = super::selected_rule_files(root, config, rule, all_files)?;
+            let files =
+                super::selected_rule_files_with_sources(root, config, rule, all_files, sources)?;
             let config_file = super::configured_root::config_file_for_rule(root, config, rule);
-            let audit = super::allow_audit::AllowAudit::new(
+            let audit = super::allow_audit::AllowAudit::new_files(
                 root,
                 config,
                 rule,
@@ -60,10 +65,19 @@ pub(crate) fn check_with_files_and_sources(
             );
             let scope = super::allow_audit::CheckedScope::new(root, Some(sources), &files);
             let mut findings = scan(root, &opts, &files, &config_file, &audit);
-            findings.extend(audit.finish(
+            findings.extend(audit.finish_files(
                 |index| {
                     scope.exact(&opts.allowlist[index])
                         && audited(&opts.allowlist[index], &opts.scopes)
+                },
+                |index| {
+                    let file = &opts.allowlist[index];
+                    let path = crate::codebase::ts_resolver::normalize_path(&root.join(file));
+                    if audited(&relative_slash_path(root, &path), &opts.scopes) {
+                        file.clone()
+                    } else {
+                        String::new()
+                    }
                 },
                 |index| opts.allowlist[index].clone(),
             ));
@@ -171,22 +185,6 @@ fn normalized_scope_path(path: &str) -> Option<String> {
         None
     } else {
         Some(normalized)
-    }
-}
-
-fn audited(file: &str, scopes: &[ScopeSpec]) -> bool {
-    !is_typescript_declaration_file(file)
-        && scopes.iter().any(|scope| {
-            normalized_scope_path(&scope.path).is_some_and(|path| {
-                path == "." || file == path || file.starts_with(&format!("{path}/"))
-            })
-        })
-}
-
-fn file_extension(rel: &str) -> &str {
-    match rel.rfind('.') {
-        Some(i) => &rel[i..],
-        None => "",
     }
 }
 

@@ -501,3 +501,10 @@ Stale allow reporting retains this rule's established diagnostic messages and
 severity for checked inputs. Entries outside the checked scope stay silent;
 uncertain or partial selector coverage cannot prove staleness. See
 [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
+
+With `reportUnusedAllowEntries: report` or `advise`, literal `allowProjects`
+file paths also produce `unused-allow-entry` when absent from both the request
+inventory and disk within the configured scope. Remove the entry or correct
+its path. Existing excluded or ignored files and empty glob matches stay
+silent; partial supplied work lists cannot establish a missing-path proof.
+See [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

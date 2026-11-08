@@ -82,8 +82,9 @@ fn scan(
                 .collect()
         })
         .collect();
-    findings.extend(audit.finish(
+    findings.extend(audit.finish_files(
         |index| checked.contains(&opts.intentionally_empty[index]),
+        |index| opts.intentionally_empty[index].clone(),
         |index| opts.intentionally_empty[index].clone(),
     ));
     findings.sort_by(|a, b| a.file.cmp(&b.file));

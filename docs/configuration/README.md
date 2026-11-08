@@ -97,7 +97,8 @@ Use `report` to fail or `ignore` to omit it. See
 `reportUnusedAllowEntries` independently controls proven stale configured
 exceptions: `advise` (default) returns `unused-allow-entry` advice, `report`
 fails the check, and `ignore` omits those diagnostics. Incomplete selector
-coverage never establishes staleness. See [allow-entry hygiene](suppressions.md#allow-entry-hygiene).
+coverage never establishes staleness, but a literal file path within the configured
+scope is also stale when absent from both the visible inventory and disk. See [allow-entry hygiene](suppressions.md#allow-entry-hygiene).
 
 The top-level `frontendRoot`, `assertNoFetch`, and `reactTraits` fields are
 legacy compatibility settings for the standalone `react` command. Prefer

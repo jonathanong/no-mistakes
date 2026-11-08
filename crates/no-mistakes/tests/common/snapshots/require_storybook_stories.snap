@@ -34,7 +34,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "allow_opt_outs": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "<repo>/test-cases/rules/require-storybook-stories/configs/allow-opt-outs.yml",
+          "import": "require-storybook-stories",
+          "line": 14,
+          "message": "stale require-storybook-stories allowComponents entry `components/Gone.tsx#Gone` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "\"components/Gone.tsx#Gone\": \"no longer exists\"",
+          "target": "components/Gone.tsx#Gone"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -1645,7 +1655,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "stories_allow_absent": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "<repo>/test-cases/rules/require-storybook-stories/configs/stories-allow-absent.yml",
+          "import": "require-storybook-stories",
+          "line": 16,
+          "message": "stale require-storybook-stories allowComponents entry `components/Absent.tsx#Absent` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "\"components/Absent.tsx#Absent\": \"Separate harness\"",
+          "target": "components/Absent.tsx#Absent"
+        }
+      ],
       "codebase": [],
       "incomplete": [
         {

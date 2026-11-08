@@ -31,7 +31,10 @@ pub fn check(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
 ) -> Result<Vec<RuleFinding>> {
-    super::check_sourced_standalone(root, config, check_with_files)
+    let files =
+        crate::codebase::ts_source::discover_files(root, &config.filesystem.skip_directories);
+    let sources = super::source_access::complete_source_store_for_files(&files);
+    check_with_files_and_sources(root, config, &files, &sources)
 }
 
 pub(crate) fn check_with_files(

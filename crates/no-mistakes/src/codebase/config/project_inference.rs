@@ -62,9 +62,7 @@ pub fn infer_nextjs_root_from_visible(root: &Path, visible_paths: &[PathBuf]) ->
 
 fn is_remix_vite_config(path: &Path) -> bool {
     std::fs::read_to_string(path)
-        .map(|content| {
-            content.contains("@remix-run/dev") || content.contains("vitePlugin as remix")
-        })
+        .map(|content| is_remix_vite_source(&content))
         .unwrap_or(false)
 }
 
@@ -91,4 +89,36 @@ pub fn infer_vitejs_root_from_visible(root: &Path, visible_paths: &[PathBuf]) ->
     infer_framework_root_from_visible(root, visible_paths, VITE_CONFIG_NAMES, |path| {
         !is_remix_vite_config(path)
     })
+}
+
+fn is_remix_vite_source(content: &str) -> bool {
+    content.contains("@remix-run/dev") || content.contains("vitePlugin as remix")
+}
+
+impl super::project::InferredRoots {
+    pub(crate) fn remix_from_sources(
+        root: &Path,
+        paths: &[PathBuf],
+        sources: &crate::codebase::ts_source::SourceStore,
+    ) -> Option<PathBuf> {
+        infer_framework_root_from_visible(root, paths, REMIX_CONFIG_NAMES, |_| true).or_else(|| {
+            infer_framework_root_from_visible(root, paths, VITE_CONFIG_NAMES, |path| {
+                sources
+                    .read_path(path)
+                    .is_ok_and(|content| is_remix_vite_source(&content))
+            })
+        })
+    }
+
+    pub(crate) fn vitejs_from_sources(
+        root: &Path,
+        paths: &[PathBuf],
+        sources: &crate::codebase::ts_source::SourceStore,
+    ) -> Option<PathBuf> {
+        infer_framework_root_from_visible(root, paths, VITE_CONFIG_NAMES, |path| {
+            !sources
+                .read_path(path)
+                .is_ok_and(|content| is_remix_vite_source(&content))
+        })
+    }
 }

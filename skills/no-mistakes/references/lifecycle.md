@@ -89,5 +89,7 @@ Review `unused-allow-entry` advisories at configuration entry locations. Remove
 obsolete exceptions or correct their selectors. Repository
 `reportUnusedAllowEntries` defaults to `advise`; use `report` to fail or
 `ignore` to omit these diagnostics. The shared audit stays silent
-unless the entire relevant selector scope was checked successfully; partial
+unless the entire relevant selector scope was checked successfully, or a literal
+file path within the configured scope is absent from both inventory and disk.
+Existing excluded or ignored files and empty glob matches stay silent; partial
 changed-file runs cannot prove a broader allowance stale.

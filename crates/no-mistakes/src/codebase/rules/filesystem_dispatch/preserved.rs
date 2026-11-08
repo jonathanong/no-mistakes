@@ -12,9 +12,18 @@ pub(super) fn filesystem_rule_target_roots(
     config: &crate::config::v2::NoMistakesConfig,
     rule_ids: &[&str],
 ) -> anyhow::Result<Vec<PathBuf>> {
+    filesystem_rule_target_roots_with_inferred(root, config, rule_ids, &mut Default::default())
+}
+
+pub(super) fn filesystem_rule_target_roots_with_inferred(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    rule_ids: &[&str],
+    inferred: &mut crate::codebase::config::InferredRoots,
+) -> anyhow::Result<Vec<PathBuf>> {
     let mut roots = Vec::new();
     for rule_id in rule_ids {
-        roots.extend(filesystem_rule_preserved_roots(root, config, rule_id)?);
+        roots.extend(rule_preserved_roots(root, config, rule_id, inferred)?);
     }
     Ok(sort_dedup_roots(roots))
 }
@@ -24,12 +33,23 @@ pub(super) fn filesystem_rule_preserved_roots(
     config: &crate::config::v2::NoMistakesConfig,
     rule_id: &str,
 ) -> anyhow::Result<Vec<PathBuf>> {
+    rule_preserved_roots(root, config, rule_id, &mut Default::default())
+}
+
+fn rule_preserved_roots(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    rule_id: &str,
+    inferred: &mut crate::codebase::config::InferredRoots,
+) -> anyhow::Result<Vec<PathBuf>> {
     let mut roots = Vec::new();
     for rule in config.rule_applications(rule_id) {
         if rule_id == super::FORBIDDEN_WORKSPACE_CLOSURE {
             roots.push(root.to_path_buf());
         }
-        roots.extend(super::super::target_roots(root, config, rule));
+        roots.extend(super::super::target_roots_with_inferred(
+            root, config, rule, inferred,
+        ));
         if !rule_supports_discovery_roots(rule_id) {
             continue;
         }

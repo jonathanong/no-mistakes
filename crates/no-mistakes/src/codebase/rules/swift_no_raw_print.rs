@@ -1,10 +1,8 @@
 use super::masked_source::FileAllow;
 use super::RuleFinding;
-use crate::codebase::ts_source::SourceStore;
-use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use serde::Deserialize;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 mod scan;
 
@@ -25,34 +23,7 @@ pub(super) struct CompiledOptions {
     pub(super) message: String,
 }
 
-super::borrowed_source_rule_entrypoints!();
-
-pub(crate) fn check_with_files_sources_and_deferred_suppression(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-    sources: &SourceStore,
-    defer_suppression: bool,
-) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let mut opts = compile_options(rule.try_rule_options()?)?;
-        opts.allow.setup(root, config, rule, sources);
-        let files =
-            super::selected_rule_files_matching(root, config, rule, all_files, is_swift_file)?;
-        findings.extend(super::scan_masked_files(
-            root,
-            &opts,
-            &files,
-            sources,
-            defer_suppression,
-            scan::check_file,
-        ));
-        findings.extend(opts.allow.finish(root, sources));
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
-}
+super::masked_source_rule_entrypoints!(compile_options, is_swift_file, scan::check_file);
 
 fn compile_options(opts: Options) -> Result<CompiledOptions> {
     Ok(CompiledOptions {

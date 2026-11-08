@@ -358,9 +358,9 @@ CLI: `no-mistakes check --root . --format json`. Node API: the asynchronous
 `check({root, config})` and `analyzeProject()` check query expose the same rule.
 
 Unused `allow` entries are non-failing `unused-allow-entry` advisories by default at the
-configuration entry's file and line. An entry must name a file actually checked
-by this application, and supporting graph facts must be usable. Entries for
-excluded, missing, or unchecked files stay silent. Overlapping selectors that
+configuration entry's file and line. For an existing file, the application must
+actually check that file, and supporting graph facts must be usable. Entries for
+existing excluded or unchecked files stay silent. Overlapping selectors that
 match a finding all count as used. A function selector that matches no finding
 is unused even when another function in that file has a finding. File-only
 entries are also reported when unused. Remove obsolete entries or correct their
@@ -368,3 +368,19 @@ selectors; see [allow-entry hygiene](../configuration/suppressions.md#allow-entr
 
 Repository `reportUnusedAllowEntries: report` makes these diagnostics fail;
 `ignore` omits them. See [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
+
+With `reportUnusedAllowEntries: report` or `advise`, `allow[].file` also
+produce `unused-allow-entry` when the literal path is absent from both the
+request inventory and disk, within the application's configured scope. Remove
+the entry or fix its path. Existing excluded or ignored files and empty glob
+matches stay silent; narrowed runs do not audit paths outside their scope.
+See [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
+
+Callee-qualified entries such as `{ file: src/deleted.mts, callee: query }`
+use the same missing-file proof, including when the rule excludes
+`**/*.test.*`. Only matching excluded paths stay silent; the exclude list does
+not disable the audit. Default and configured skipped directories are omitted
+from the expected analysis scope, while explicitly reopened project roots remain
+included. Missing-file proof needs complete requested file membership, not
+successful parsing of unrelated files. Existing-file staleness still requires
+usable graph facts; narrowed primary or graph requests stay conservative.

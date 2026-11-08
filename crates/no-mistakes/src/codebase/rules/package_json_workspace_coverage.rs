@@ -40,15 +40,9 @@ pub(crate) fn check_with_files_and_sources(
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
             let opts: Options = rule.try_rule_options()?;
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
-                .cloned()
-                .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            let audit = super::allow_audit::AllowAudit::new(
+            let files =
+                super::selected_rule_files_with_sources(root, config, rule, all_files, sources)?;
+            let audit = super::allow_audit::AllowAudit::new_files(
                 root,
                 config,
                 rule,
@@ -63,7 +57,7 @@ pub(crate) fn check_with_files_and_sources(
                     finding.target.is_some() && normalize_relative_path(entry) == finding.file
                 }))
             });
-            findings.extend(audit.finish(
+            findings.extend(audit.finish_files(
                 |index| {
                     let entry = normalize_relative_path(&opts.allowlist[index]);
                     scope.exact(&entry)
@@ -73,6 +67,19 @@ pub(crate) fn check_with_files_and_sources(
                             entry.trim_end_matches("/package.json"),
                             &opts.package_roots,
                         )
+                },
+                |index| {
+                    let file = normalize_relative_path(&opts.allowlist[index]);
+                    if file.ends_with("/package.json")
+                        && patterns::path_under_package_roots(
+                            file.trim_end_matches("/package.json"),
+                            &opts.package_roots,
+                        )
+                    {
+                        file
+                    } else {
+                        String::new()
+                    }
                 },
                 |index| opts.allowlist[index].clone(),
             ));

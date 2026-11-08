@@ -153,3 +153,57 @@ fn unused_allow_postgres_names_and_sweeps_check_json_snapshot() {
         .collect();
     assert_saved_fixture("unused_allow_postgres_names_and_sweeps", &cases);
 }
+
+#[test]
+fn unused_allow_missing_files_check_json_snapshot() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/check/unused-allow-missing/fixture");
+    let cases: Vec<_> = [
+        ".no-mistakes.yml",
+        "ignore.yml",
+        "narrowed.yml",
+        "advise.yml",
+        "migrations.yml",
+        "storybook.yml",
+        "storybook-alias.yml",
+        "steps.yml",
+        "disabled.yml",
+        "trimmed.yml",
+        "hash-selectors.yml",
+        "windows.yml",
+        "functions.yml",
+        "gates.yml",
+        "options-narrowed.yml",
+        "indices.yml",
+        "storybook-dotted.yml",
+        "implicit-root.yml",
+        "empty-scope.yml",
+        "empty-ignore-invalid.yml",
+        "empty-report-invalid.yml",
+    ]
+    .into_iter()
+    .map(|name| (name, root.clone(), root.join(name)))
+    .collect();
+    assert_saved_fixture("unused_allow_missing_files", &cases);
+}
+
+#[test]
+fn unused_allow_query_scope_check_json_snapshot() {
+    let saved = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/check/unused-allow-query-scope/fixture");
+    let cases: Vec<_> = [
+        ("callee", "skipped", ".no-mistakes.yml"),
+        ("function", "skipped", "functions.yml"),
+        ("excluded-target", "skipped", "excluded-target.yml"),
+        ("ignore", "skipped", "ignore.yml"),
+        ("custom-skip", "skipped", "custom-skip.yml"),
+        ("excluded-error", "excluded-error", ".no-mistakes.yml"),
+    ]
+    .into_iter()
+    .map(|(label, folder, config)| {
+        let root = saved.join(folder);
+        (label, root.clone(), root.join(config))
+    })
+    .collect();
+    assert_saved_fixture("unused_allow_query_scope", &cases);
+}

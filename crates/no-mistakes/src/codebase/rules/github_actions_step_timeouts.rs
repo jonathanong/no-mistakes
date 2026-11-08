@@ -27,7 +27,6 @@ struct AllowEntry {
 }
 
 struct CompiledOptions {
-    include: Vec<String>,
     max_minutes: u64,
     allow: BTreeMap<String, AllowEntry>,
     allow_by_file: BTreeMap<String, Vec<String>>,
@@ -53,12 +52,43 @@ pub(crate) fn check_with_files_and_sources(
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
     super::run_rule_applications(config, RULE_ID, |rule| {
-        let mut compiled = compile_options(rule.try_rule_options()?);
+        let raw: Options = rule.try_rule_options()?;
+        let (selected, roots) = super::selected_rule_files_with_roots_and_sources(
+            root, config, rule, all_files, sources,
+        )?;
+        let defaults = raw.include.is_empty();
+        let matcher = super::file_matching::FileMatcher::new(
+            root,
+            &roots,
+            raw.include
+                .iter()
+                .map(String::as_str)
+                .chain(DEFAULT_INCLUDE.iter().copied().filter(|_| defaults)),
+        )?;
+        let missing = super::allow_audit::missing_file_findings(
+            root,
+            config,
+            rule,
+            sources,
+            "allow",
+            raw.allow.iter().map(|entry| {
+                let file = selector_file(&entry.step)
+                    .filter(|file| {
+                        matcher.is_match(&crate::codebase::ts_resolver::normalize_path(
+                            &root.join(file),
+                        ))
+                    })
+                    .unwrap_or_default()
+                    .to_string();
+                (file, entry.step.clone())
+            }),
+        );
+        let mut compiled = compile_options(raw);
         compiled.defer_suppression = defer_suppression;
-        let (selected, target_roots) =
-            super::selected_rule_files_with_roots(root, config, rule, all_files)?;
-        let files = super::matching_files(root, &compiled.include, &selected, &target_roots)?;
-        Ok(scan_files(root, &compiled, &files, sources))
+        let files = matcher.select(&selected);
+        let mut findings = scan_files(root, &compiled, &files, sources);
+        findings.extend(missing);
+        Ok(findings)
     })
 }
 
@@ -90,7 +120,6 @@ fn compile_options(opts: Options) -> CompiledOptions {
         }
     }
     CompiledOptions {
-        include: super::configured_includes(opts.include, DEFAULT_INCLUDE),
         max_minutes: opts
             .max_minutes
             .unwrap_or(GITHUB_MAX_MINUTES)

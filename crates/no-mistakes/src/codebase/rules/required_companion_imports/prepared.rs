@@ -72,6 +72,7 @@ impl PreparedCompanionImportPlan {
 fn companion_view(config: &NoMistakesConfig) -> NoMistakesConfig {
     let mut view = config.clone();
     view.rules.retain(|rule| rule.rule == RULE_ID);
+    view.missing_allow_audit_scope_incomplete = false;
     view
 }
 

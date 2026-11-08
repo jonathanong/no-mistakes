@@ -1,0 +1,10 @@
+reportUnusedAllowEntries: ignore
+effects:
+  postgres: {functions: [query]}
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    exclude: ['**/*.test.*']
+    options:
+      effects: [postgres]
+      allow: [{file: src/deleted.mts, callee: query}]

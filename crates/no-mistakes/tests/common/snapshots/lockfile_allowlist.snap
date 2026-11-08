@@ -5,7 +5,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "fail": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "lockfile-allowlist",
+          "line": 5,
+          "message": "stale lockfile-allowlist allowed entry `pnpm-lock.yaml` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allowed: [pnpm-lock.yaml]",
+          "target": "pnpm-lock.yaml"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],

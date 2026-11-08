@@ -53,7 +53,11 @@ pub struct NoMistakesConfig {
     pub unanalyzable_sql: Option<super::Unanalyzable>,
     /// Policy for stale, unknown, or disabled suppression directives.
     pub report_unused_disable_directives: DisableDirectivePolicy,
+    /// Policy for unused exceptions, including absent literal file selectors.
     pub report_unused_allow_entries: DisableDirectivePolicy,
+    #[doc(hidden)]
+    #[serde(skip)]
+    pub missing_allow_audit_scope_incomplete: bool,
     #[serde(skip)]
     pub effort_override: Option<super::Effort>,
     #[serde(skip)]

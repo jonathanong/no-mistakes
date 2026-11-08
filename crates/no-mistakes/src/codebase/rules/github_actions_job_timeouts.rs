@@ -38,7 +38,6 @@ pub(crate) struct AllowEntry {
 
 struct CompiledOptions {
     defer_suppression: bool,
-    include: Vec<String>,
     max_minutes: Option<u64>,
     reject_step_exceeding_job: bool,
     reject_job_at_or_above_step_sum: bool,
@@ -71,21 +70,51 @@ pub(crate) fn check_with_files_and_sources_deferred(
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
     super::run_rule_applications(config, RULE_ID, |rule| {
-        let mut compiled = compile_options(rule.try_rule_options()?);
+        let raw: Options = rule.try_rule_options()?;
+        let partner_cap = effort::certified_cap(config, rule)?;
+        let (selected, roots) = super::selected_rule_files_with_roots_and_sources(
+            root, config, rule, all_files, sources,
+        )?;
+        let defaults = raw.include.is_empty();
+        let matcher = super::file_matching::FileMatcher::new(
+            root,
+            &roots,
+            raw.include
+                .iter()
+                .map(String::as_str)
+                .chain(DEFAULT_INCLUDE.iter().copied().filter(|_| defaults)),
+        )?;
+        let missing = super::allow_audit::missing_file_findings(
+            root,
+            config,
+            rule,
+            sources,
+            "allow",
+            raw.allow.iter().map(|entry| {
+                let file = entry.job.rsplit_once('#').map_or("", |(file, _)| file);
+                let file = if matcher.is_match(&crate::codebase::ts_resolver::normalize_path(
+                    &root.join(file),
+                )) {
+                    file.to_string()
+                } else {
+                    String::new()
+                };
+                (file, entry.job.clone())
+            }),
+        );
+        let mut compiled = compile_options(raw);
         compiled.defer_suppression = defer_suppression;
-        compiled.partner_cap = effort::certified_cap(config, rule)?;
-        let (selected, roots) =
-            super::selected_rule_files_with_roots(root, config, rule, all_files)?;
-        let files = super::matching_files(root, &compiled.include, &selected, &roots)?;
-        Ok(scan_files(root, &compiled, &files, sources))
+        compiled.partner_cap = partner_cap;
+        let files = matcher.select(&selected);
+        let mut findings = scan_files(root, &compiled, &files, sources);
+        findings.extend(missing);
+        Ok(findings)
     })
 }
 
 fn compile_options(opts: Options) -> CompiledOptions {
-    let include = super::configured_includes(opts.include, DEFAULT_INCLUDE);
     CompiledOptions {
         defer_suppression: false,
-        include,
         max_minutes: opts.max_minutes,
         partner_cap: None,
         reject_step_exceeding_job: opts.reject_step_exceeding_job,
