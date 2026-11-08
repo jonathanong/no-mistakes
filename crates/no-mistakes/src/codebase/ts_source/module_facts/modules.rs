@@ -68,10 +68,11 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
                 if mocks::typed_mock_import(value, node.id(), semantic) {
                     facts.mock_import_spans.push(value.span.into());
                 }
-                if let Some(names) = selectors::proven(node.id(), semantic) {
+                let mut calls = Vec::new();
+                if let Some(names) = selectors::proven(node.id(), semantic, &mut calls) {
                     facts
                         .dynamic_import_selectors
-                        .push((value.span.start, names));
+                        .push((value.span.start, names, calls));
                 }
                 loads::dynamic(value, facts);
             }

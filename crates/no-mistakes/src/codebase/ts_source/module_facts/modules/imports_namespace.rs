@@ -27,33 +27,7 @@ pub(super) fn runtime_members(
             }
             _ => return None,
         };
-        let writes_member = match nodes.parent_kind(member) {
-            AstKind::AssignmentExpression(value) => value.left.span() == nodes.kind(member).span(),
-            AstKind::ForInStatement(value) => value
-                .left
-                .span()
-                .contains_inclusive(nodes.kind(member).span()),
-            AstKind::ForOfStatement(value) => value
-                .left
-                .span()
-                .contains_inclusive(nodes.kind(member).span()),
-            AstKind::AssignmentTargetPropertyProperty(value) => value
-                .binding
-                .span()
-                .contains_inclusive(nodes.kind(member).span()),
-            AstKind::AssignmentTargetWithDefault(value) => value
-                .binding
-                .span()
-                .contains_inclusive(nodes.kind(member).span()),
-            AstKind::ArrayAssignmentTarget(_)
-            | AstKind::AssignmentTargetRest(_)
-            | AstKind::UpdateExpression(_) => true,
-            AstKind::UnaryExpression(value) => {
-                value.operator == oxc_syntax::operator::UnaryOperator::Delete
-            }
-            _ => false,
-        };
-        if writes_member {
+        if writes_member(nodes, member) {
             return None;
         }
         if receiver_use(nodes, member) {
@@ -66,7 +40,10 @@ pub(super) fn runtime_members(
     (!members.is_empty()).then_some(members)
 }
 
-fn receiver_use(nodes: &oxc_semantic::AstNodes<'_>, member: oxc_semantic::NodeId) -> bool {
+pub(super) fn receiver_use(
+    nodes: &oxc_semantic::AstNodes<'_>,
+    member: oxc_semantic::NodeId,
+) -> bool {
     let span = nodes.kind(member).span();
     nodes
         .ancestors(member)
@@ -85,4 +62,36 @@ fn receiver_use(nodes: &oxc_semantic::AstNodes<'_>, member: oxc_semantic::NodeId
             _ => Some(false),
         })
         .unwrap_or(false)
+}
+
+pub(super) fn writes_member(
+    nodes: &oxc_semantic::AstNodes<'_>,
+    member: oxc_semantic::NodeId,
+) -> bool {
+    match nodes.parent_kind(member) {
+        AstKind::AssignmentExpression(value) => value.left.span() == nodes.kind(member).span(),
+        AstKind::ForInStatement(value) => value
+            .left
+            .span()
+            .contains_inclusive(nodes.kind(member).span()),
+        AstKind::ForOfStatement(value) => value
+            .left
+            .span()
+            .contains_inclusive(nodes.kind(member).span()),
+        AstKind::AssignmentTargetPropertyProperty(value) => value
+            .binding
+            .span()
+            .contains_inclusive(nodes.kind(member).span()),
+        AstKind::AssignmentTargetWithDefault(value) => value
+            .binding
+            .span()
+            .contains_inclusive(nodes.kind(member).span()),
+        AstKind::ArrayAssignmentTarget(_)
+        | AstKind::AssignmentTargetRest(_)
+        | AstKind::UpdateExpression(_) => true,
+        AstKind::UnaryExpression(value) => {
+            value.operator == oxc_syntax::operator::UnaryOperator::Delete
+        }
+        _ => false,
+    }
 }

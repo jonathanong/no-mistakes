@@ -146,7 +146,7 @@ fn collect_symbol_import_selectors_file(
     }
     collect_type_import_selectors(&inputs, file_facts, exported, &mut edges, &mut sites);
     let mock_sites = typed_mock_import_sites(file_facts);
-    let proven_sites = proven_dynamic_selectors(file_facts);
+    let proven_sites = proven_dynamic_selectors(&inputs, file_facts);
     for import in &file_facts.imports {
         if !import.computed
             && import.kind == ImportKind::Dynamic
