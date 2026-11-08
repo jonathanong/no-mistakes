@@ -394,3 +394,83 @@ fn all_selected_payload_classifies_once_and_retains_no_seed_set() {
         Some(&(source_files.len() as u64))
     );
 }
+
+#[test]
+fn middle_exclusion_retains_selected_prefix_and_required_excluded_support() {
+    let saved = crate::test_support::materialize_saved_fixture(&fixture());
+    let root = crate::codebase::ts_resolver::normalize_path(saved.path());
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join("middle-exclude.yml"))).unwrap();
+    let plan = prepared(&root, &files, &config);
+    let demands = files
+        .iter()
+        .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
+        .map(|path| {
+            (
+                path.clone(),
+                vec![FactDemand {
+                    request: 0,
+                    plan: plan.clone(),
+                }],
+            )
+        })
+        .collect();
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let selected = crate::diagnostics::with_observer(Some(observer.clone()), || {
+        seeds::select(
+            &BatchCheckFactRequest {
+                root: root.clone(),
+                files: files.clone(),
+                graph_files: vec![],
+                plan: plan.clone(),
+                playwright: None,
+                sources: Arc::clone(&sources),
+            },
+            0,
+            &demands,
+        )
+    })
+    .expect("middle exclusions retain a strict subset");
+    let expected = [
+        "helpers/barrel.mts",
+        "helpers/paging.mts",
+        "src/caller.mts",
+        "unrelated/dense.mts",
+    ]
+    .map(|path| root.join(path))
+    .into_iter()
+    .collect::<BTreeSet<_>>();
+    assert_eq!(selected, expected);
+    assert_eq!(
+        observer.snapshot().work.get("sql_scope.seed_checks"),
+        Some(&6)
+    );
+    let mut full = plan.clone();
+    full.embedded_sql = false;
+    let (mut maps, count) = counts(|| vec![collect_single(&root, files.clone(), plan)]);
+    let narrow = maps.pop().unwrap();
+    let full = collect_single(&root, files.clone(), full);
+    assert_eq!(
+        count, 5,
+        "the excluded constant remains required supporting SQL"
+    );
+    assert!(!narrow.ts[&root.join("helpers/constant.mts")]
+        .embedded_sql
+        .is_empty());
+    assert!(narrow.ts[&root.join("unrelated/broken.mts")]
+        .parse_error
+        .is_some());
+    assert_eq!(
+        narrow.ts[&root.join("unrelated/broken.mts")].parse_error,
+        full.ts[&root.join("unrelated/broken.mts")].parse_error
+    );
+    let actual = findings(&root, &files, &sources, &config, &narrow);
+    assert_eq!(actual, findings(&root, &files, &sources, &config, &full));
+    assert_eq!(
+        actual.len(),
+        2,
+        "selected caller and unrelated selected executor both retain findings"
+    );
+}

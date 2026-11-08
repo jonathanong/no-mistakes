@@ -1,0 +1,8 @@
+effort: max
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      include: ['**/*.mts']
+      exclude: [helpers/constant.mts, unrelated/broken.mts]
+      importSpecifier: '@example/db'
