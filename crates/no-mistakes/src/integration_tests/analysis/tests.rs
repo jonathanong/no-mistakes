@@ -361,6 +361,20 @@ fn disabled_integration_collects_no_discovery_work() {
             None,
         );
         assert!(facts.integration.is_none());
+        assert!(facts.react.is_none());
+        assert!(facts.react_usages.is_none());
+        assert!(facts.symbols.is_none());
+        assert!(facts.dynamic_imports.is_none());
+        assert!(facts.nextjs_caching.is_none());
+        assert!(facts.nextjs_caching_low.is_none());
+        assert!(facts.storybook.is_none());
+        assert!(facts.server_route_client_boundary.is_none());
+        assert!(facts.embedded_sql.is_empty());
+        assert!(facts.query_annotation.is_empty());
+        assert!(facts.query_annotation_heads.is_none());
+        assert!(facts.ts.imports.is_empty());
+        assert!(facts.ts.function_calls.is_empty());
+        assert!(facts.ts.call_sites.is_empty());
     })
     .unwrap();
     assert_eq!(MODE_DECISIONS.with(std::cell::Cell::get), 0);
@@ -423,3 +437,5 @@ fn existing_configured_fixtures_keep_full_discovery_findings_and_errors() {
         assert_eq!(report(&scoped), report(&full), "{name}");
     }
 }
+
+mod all_families;
