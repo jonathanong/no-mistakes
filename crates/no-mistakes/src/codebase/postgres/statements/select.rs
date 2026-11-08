@@ -1,14 +1,17 @@
 mod collector;
+mod defaults;
 mod from;
 mod line;
 mod nested;
+mod projection;
 mod shapes;
 mod stars;
 mod table_arms;
 pub(super) mod uses;
-pub(super) use collector::collect_query_at;
+pub(super) use collector::collect_query_projected;
+pub(super) use defaults::{collect_query_at, walk_expr_at, walk_node_at};
 pub(in crate::codebase::postgres::statements) use from::predicate_text;
-pub(super) use nested::{walk_expr_at, walk_node_at};
+pub(super) use projection::policy;
 pub(super) use stars::arg_expr;
 pub(super) use table_arms::collect as collect_table_arms;
 

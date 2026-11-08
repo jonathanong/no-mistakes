@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: postgres-materialized-view-shape
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      windowFunctions: ["fn_floor()"]

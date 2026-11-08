@@ -1,12 +1,12 @@
 use super::SchemaCatalog;
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
-use crate::codebase::postgres::parse_postgres_sql;
+use crate::codebase::postgres::{parse_postgres_sql, PostgresParseError};
 use dashmap::DashMap;
 use sqlparser::ast::{Expr, Query, SelectItem, SetExpr, SetQuantifier, Statement};
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
-pub(super) type ViewProjections = DashMap<String, Option<PreparedView>>;
+pub(super) type ViewProjections = DashMap<String, Result<PreparedView, PostgresParseError>>;
 
 #[derive(Debug)]
 pub(super) struct PreparedView {
@@ -16,17 +16,36 @@ pub(super) struct PreparedView {
 
 impl SchemaCatalog {
     pub(crate) fn view_query(&self, name: &str) -> Option<Arc<Query>> {
-        self.project_view(name, |view| Some(view.query.clone()))
+        self.project_view(name, |view| {
+            view.as_ref().ok().map(|view| Arc::clone(&view.query))
+        })
+        .flatten()
+    }
+
+    pub(crate) fn try_view_query(&self, name: &str) -> Result<Arc<Query>, PostgresParseError> {
+        self.project_view(name, |view| {
+            view.as_ref()
+                .map(|view| Arc::clone(&view.query))
+                .map_err(Clone::clone)
+        })
+        .unwrap_or_else(|| {
+            Err(PostgresParseError {
+                message: format!("unknown catalog view {name}"),
+            })
+        })
     }
 
     pub(crate) fn view_column_names(&self, name: &str) -> Option<Arc<BTreeSet<String>>> {
-        self.project_view(name, |view| view.columns.clone())
+        self.project_view(name, |view| {
+            view.as_ref().ok().and_then(|view| view.columns.clone())
+        })
+        .flatten()
     }
 
     fn project_view<T>(
         &self,
         name: &str,
-        project: impl FnOnce(&PreparedView) -> Option<T>,
+        project: impl FnOnce(&Result<PreparedView, PostgresParseError>) -> T,
     ) -> Option<T> {
         let view = self.view_relation(name)?;
         let cache = self
@@ -36,19 +55,21 @@ impl SchemaCatalog {
         let prepared = cache
             .entry(view.name.clone())
             .or_insert_with(|| prepare(&view.definition));
-        project(prepared.as_ref()?)
+        Some(project(&prepared))
     }
 }
 
-fn prepare(definition: &str) -> Option<PreparedView> {
-    let mut statements = parse_postgres_sql(definition).ok()?;
-    if statements.len() != 1 {
-        return None;
-    }
-    let Statement::Query(query) = statements.pop()? else {
-        return None;
+fn prepare(definition: &str) -> Result<PreparedView, PostgresParseError> {
+    let mut statements = parse_postgres_sql(definition)?.into_iter();
+    let query = match (statements.next(), statements.next()) {
+        (Some(Statement::Query(query)), None) => query,
+        _ => {
+            return Err(PostgresParseError {
+                message: "expected one static SELECT view definition".into(),
+            })
+        }
     };
-    Some(PreparedView {
+    Ok(PreparedView {
         columns: query_columns(&query).map(Arc::new),
         query: Arc::from(query),
     })

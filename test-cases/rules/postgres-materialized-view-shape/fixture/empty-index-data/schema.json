@@ -1,0 +1,18 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "views": {
+    "summary_one": {
+      "materialized": true,
+      "definition": "SELECT 1 AS id",
+      "comment": null,
+      "indexes": {}
+    },
+    "summary_two": {
+      "materialized": true,
+      "definition": "SELECT 1 AS id",
+      "comment": null,
+      "indexes": {}
+    }
+  }
+}

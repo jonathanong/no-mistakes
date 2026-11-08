@@ -1,0 +1,2309 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advisory_severity": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_cte: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_cte"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_equality: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_equality"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_expression_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_expression_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_invalid_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_invalid_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_join: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_left_join: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_left_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_limit: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_limit"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events via view unbounded_source; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_nested_view"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_indexes: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_indexes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_indexes: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_indexes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_live: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_live"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_ready: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_ready"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_only_unique: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_only_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_or: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_or"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_parse: cannot analyze definition: Expected: identifier, found: EOF; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_parse"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_partial_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_partial_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_scalar_subquery: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_scalar_subquery"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_self_join: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_self_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unbounded: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unbounded"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unindexed: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unindexed"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unknown: unbounded base table unavailable_table; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unknown"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "allow_view": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_cte: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_cte"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_equality: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_equality"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_expression_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_expression_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_invalid_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_invalid_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_join: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_left_join: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_left_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_limit: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_limit"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events via view unbounded_source; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_nested_view"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_indexes: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_indexes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_indexes: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_indexes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_live: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_live"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_ready: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_ready"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_only_unique: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_only_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_or: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_or"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_parse: cannot analyze definition: Expected: identifier, found: EOF; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_parse"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_partial_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_partial_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_scalar_subquery: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_scalar_subquery"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_self_join: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_self_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unindexed: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unindexed"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unknown: unbounded base table unavailable_table; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unknown"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "compliant": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "default_errors": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_cte: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_cte"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_equality: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_equality"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_expression_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_expression_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_invalid_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_invalid_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_join: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_left_join: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_left_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_limit: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_limit"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events via view unbounded_source; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_nested_view"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_indexes: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_indexes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_indexes: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_indexes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_live: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_live"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_ready: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_ready"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_only_unique: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_only_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_or: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_or"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_parse: cannot analyze definition: Expected: identifier, found: EOF; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_parse"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_partial_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_partial_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_scalar_subquery: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_scalar_subquery"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_self_join: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_self_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unbounded: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unbounded"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unindexed: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unindexed"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unknown: unbounded base table unavailable_table; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unknown"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_index_data": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:summary_one: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:summary_one"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:summary_one: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:summary_one"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:summary_two: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:summary_two"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:summary_two: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:summary_two"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "excluded_error_application": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "advised.json",
+          "line": 1,
+          "message": "Review the advised view advised.json: materialized-view:bad_advised: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_advised"
+        },
+        {
+          "file": "advised.json",
+          "line": 1,
+          "message": "Review the advised view advised.json: materialized-view:bad_advised: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_advised"
+        },
+        {
+          "file": "advised.json",
+          "line": 1,
+          "message": "Review the advised view advised.json: materialized-view:bad_advised: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_advised"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "explicit_error_severity": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_cte: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_cte"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_equality: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_equality"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_expression_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_expression_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_invalid_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_invalid_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_join: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_left_join: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_left_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_limit: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_limit"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events via view unbounded_source; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_nested_view"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_indexes: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_indexes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_indexes: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_indexes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_live: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_live"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_ready: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_ready"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_only_unique: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_only_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_or: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_or"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_parse: cannot analyze definition: Expected: identifier, found: EOF; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_parse"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_partial_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_partial_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_scalar_subquery: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_scalar_subquery"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_self_join: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_self_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unbounded: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unbounded"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unindexed: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unindexed"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unknown: unbounded base table unavailable_table; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unknown"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "index_and_identity_edges": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_bare_ambiguous_range: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_bare_ambiguous_range"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_bare_unknown_peer: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_bare_unknown_peer"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_bare_unknown_peer: unbounded base table unavailable_table; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_bare_unknown_peer"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_cte_table_arm: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_cte_table_arm"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_deferred_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_deferred_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_distinct_subquery: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_distinct_subquery"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_empty_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_empty_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_foreign_schema: unbounded base table audit.events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_foreign_schema"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_from_function_subquery: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_from_function_subquery"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_function_between_nonkey: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_function_between_nonkey"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_function_range_nonkey: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_function_range_nonkey"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_function_wrapped_range_nonkey: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_function_wrapped_range_nonkey"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_in_list: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_in_list"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_invalid_read: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_invalid_read"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_lateral_function_subquery: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_lateral_function_subquery"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_multiple_statements: cannot analyze definition: expected one static SELECT view definition; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_multiple_statements"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_named_window_subquery: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_named_window_subquery"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_nested_full_on: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_nested_full_on"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_nested_outer_on: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_nested_outer_on"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_nonkey_function_equality: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_nonkey_function_equality"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_nonleading_base_index: unbounded base table nonleading_events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_nonleading_base_index"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_ready_read: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_ready_read"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_or_different_aliases: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_or_different_aliases"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_or_different_aliases: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_or_different_aliases"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_or_unindexed_column: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_or_unindexed_column"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_partial_base_index: unbounded base table partial_events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_partial_base_index"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_query_kind: cannot analyze definition: expected one static SELECT view definition; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_query_kind"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_quoted_function_case: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_quoted_function_case"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_quoted_function_identity: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_quoted_function_identity"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_quoted_wrong_case: unbounded base table public.eventlog; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_quoted_wrong_case"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_recursive: cannot prove bounded definition through recursive view loop_a; rewrite it statically or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_recursive"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_renamed_table_columns: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_renamed_table_columns"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_table_arm: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_table_arm"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_union_table_arm: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_union_table_arm"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unnest_subquery: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unnest_subquery"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "legacy_index_data": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: catalog lacks materialized-view index data; regenerate it with `no-mistakes postgres catalog --coverage complete` before checking view indexes",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "mixed_severities": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "advised.json",
+          "line": 1,
+          "message": "Review the advised view advised.json: materialized-view:bad_advised: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_advised"
+        },
+        {
+          "file": "advised.json",
+          "line": 1,
+          "message": "Review the advised view advised.json: materialized-view:bad_advised: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_advised"
+        },
+        {
+          "file": "advised.json",
+          "line": 1,
+          "message": "Review the advised view advised.json: materialized-view:bad_advised: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_advised"
+        },
+        {
+          "file": "reported.json",
+          "line": 1,
+          "message": "reported.json: materialized-view:bad_reported: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_reported"
+        },
+        {
+          "file": "reported.json",
+          "line": 1,
+          "message": "reported.json: materialized-view:bad_reported: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_reported"
+        },
+        {
+          "file": "reported.json",
+          "line": 1,
+          "message": "reported.json: materialized-view:bad_reported: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_reported"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no_base_allow": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_cte: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_cte"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_equality: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_equality"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_expression_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_expression_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_invalid_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_invalid_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_join: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_left_join: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_left_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_limit: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_limit"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events via view unbounded_source; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_nested_view"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_indexes: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_indexes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_indexes: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_indexes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_live: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_live"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_ready: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_ready"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_only_unique: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_only_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_or: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_or"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_parse: cannot analyze definition: Expected: identifier, found: EOF; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_parse"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_partial_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_partial_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_scalar_subquery: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_scalar_subquery"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_self_join: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_self_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unbounded: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unbounded"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unindexed: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unindexed"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unknown: unbounded base table unavailable_table; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unknown"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:good_allowed: unbounded base table countries; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:good_allowed"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ordering_catalog": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-materialized-view-shape",
+          "message": "schemaCatalogPath schema.json has ordering-only coverage; this rule requires a complete schema catalog"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "table_view_identity": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_collision: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_collision"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_qualified_view: unbounded base table orders via view archive.events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_qualified_view"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "two_additional": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_cte: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_cte"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_cte: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_cte"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_equality: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_equality"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_equality: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_equality"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_expression_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_expression_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_invalid_unique: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_invalid_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_invalid_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_invalid_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_join: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_join: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_left_join: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_left_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_left_join: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_left_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_limit: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_limit"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_limit: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_limit"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_nested_view: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_nested_view"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events via view unbounded_source; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_nested_view"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_indexes: has 0 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_indexes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_indexes: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_indexes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_live: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_live"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_live: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_live"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_ready: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_ready"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_ready: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_ready"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_only_unique: has 0 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_only_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_or: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_or"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_or: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_or"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_parse: cannot analyze definition: Expected: identifier, found: EOF; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_parse"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_parse: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_parse"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_partial_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_partial_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_scalar_subquery: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_scalar_subquery"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_scalar_subquery: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_scalar_subquery"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_self_join: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_self_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_self_join: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_self_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unbounded: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unbounded"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unbounded: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unbounded"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unindexed: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unindexed"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unindexed: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unindexed"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unknown: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unknown"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unknown: unbounded base table unavailable_table; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unknown"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:good_allowed: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:good_allowed"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:good_between: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:good_between"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:good_cte: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:good_cte"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:good_join: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:good_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:good_nested_view: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:good_nested_view"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:good_or: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:good_or"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:good_range: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:good_range"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:good_reversed: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:good_reversed"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:good_time: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:good_time"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:good_window: has 1 additional indexes, needs at least 2; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:good_window"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unconfigured_window_function": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_cte: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_cte"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_equality: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_equality"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_expression_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_expression_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_invalid_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_invalid_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_join: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_left_join: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_left_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_limit: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_limit"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events via view unbounded_source; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_nested_view"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_indexes: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_indexes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_indexes: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_indexes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_live: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_live"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_ready: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_ready"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_only_unique: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_only_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_or: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_or"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_parse: cannot analyze definition: Expected: identifier, found: EOF; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_parse"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_partial_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_partial_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_scalar_subquery: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_scalar_subquery"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_self_join: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_self_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unbounded: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unbounded"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unindexed: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unindexed"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unknown: unbounded base table unavailable_table; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unknown"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:good_window: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:good_window"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "view_read_path": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:both_reads: unbounded base table records via view some_view; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:both_reads"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:both_reads: unbounded base table records; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:both_reads"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:direct_read: unbounded base table records; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:direct_read"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:nested_chain: unbounded base table records via view wrapper_view -> view some_view; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:nested_chain"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:nested_read: unbounded base table records via view some_view; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:nested_read"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "zero_additional": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_cte: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_cte"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_equality: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_equality"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_expression_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_expression_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_invalid_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_invalid_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_join: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_left_join: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_left_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_limit: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_limit"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events via view unbounded_source; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_nested_view"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_indexes: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_indexes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_no_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_no_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_live: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_live"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_not_ready: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_not_ready"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_or: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_or"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_parse: cannot analyze definition: Expected: identifier, found: EOF; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_parse"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_partial_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_partial_unique"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_scalar_subquery: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_scalar_subquery"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_self_join: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_self_join"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unbounded: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unbounded"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unindexed: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unindexed"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unknown: unbounded base table unavailable_table; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unknown"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

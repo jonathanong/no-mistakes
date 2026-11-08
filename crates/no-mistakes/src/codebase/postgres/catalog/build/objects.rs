@@ -3,9 +3,10 @@ use super::super::model::{
     CatalogUnique,
 };
 use super::super::partition::{parse_partition_key, PartitionParseError};
-use super::super::snapshot::SnapshotTable;
+use super::super::snapshot::{SnapshotIndex, SnapshotTable};
 use super::super::trigger::parse_trigger;
 use anyhow::{bail, Result};
+use std::collections::BTreeMap;
 
 pub(super) fn foreign_keys(table: &SnapshotTable) -> Vec<CatalogForeignKey> {
     table
@@ -46,32 +47,36 @@ pub(super) fn uniques(table: &SnapshotTable) -> Vec<CatalogUnique> {
         .collect()
 }
 
-pub(super) fn indexes(table: &SnapshotTable) -> Vec<CatalogIndexInfo> {
-    table
-        .indexes
+pub(super) fn indexes(indexes: &BTreeMap<String, SnapshotIndex>) -> Vec<CatalogIndexInfo> {
+    indexes
         .iter()
-        .map(|(name, index)| CatalogIndexInfo {
-            valid: index.valid,
-            ready: index.ready,
-            live: index.live.unwrap_or(true),
-            name: name.clone(),
-            unique: index.unique,
-            primary: index.primary,
-            constraint_backed: index.constraint_backed,
-            access_method: index.access_method.clone(),
-            keys: index
-                .keys
-                .iter()
-                .map(|key| CatalogIndexKey {
-                    ordering_supported: key.ordering_supported.unwrap_or(true),
-                    column: key.column.clone(),
-                    expression: key.expression.clone(),
-                })
-                .collect(),
-            predicate: index.predicate.clone(),
-            definition: index.definition.clone(),
-        })
+        .map(|(name, index)| index_info(name, index))
         .collect()
+}
+
+fn index_info(name: &str, index: &SnapshotIndex) -> CatalogIndexInfo {
+    CatalogIndexInfo {
+        immediate: index.immediate.unwrap_or(true),
+        valid: index.valid,
+        ready: index.ready,
+        live: index.live.unwrap_or(true),
+        name: name.to_string(),
+        unique: index.unique,
+        primary: index.primary,
+        constraint_backed: index.constraint_backed,
+        access_method: index.access_method.clone(),
+        keys: index
+            .keys
+            .iter()
+            .map(|key| CatalogIndexKey {
+                ordering_supported: key.ordering_supported.unwrap_or(true),
+                column: key.column.clone(),
+                expression: key.expression.clone(),
+            })
+            .collect(),
+        predicate: index.predicate.clone(),
+        definition: index.definition.clone(),
+    }
 }
 
 pub(super) fn triggers(

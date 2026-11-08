@@ -249,6 +249,8 @@ mod cli_postgres_snapshot_literal_tables;
 #[path = "cli_postgres_snapshot_literal_comment_names.rs"]
 mod cli_postgres_snapshot_literal_comment_names;
 
+#[path = "cli_postgres_snapshot_materialized_view_shape.rs"]
+mod cli_postgres_snapshot_materialized_view_shape;
 #[path = "cli_postgres_unused_disables.rs"]
 mod cli_postgres_unused_disables;
 

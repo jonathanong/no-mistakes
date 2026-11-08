@@ -34,6 +34,31 @@ fn committed_catalog_exercises_the_advisory_only_rule_without_a_database() {
 }
 
 #[test]
+fn committed_catalog_checks_materialized_view_shape_with_a_compliant_control() {
+    let root = committed();
+    let (_, findings) = check(&root, &root.join(".no-mistakes.yml"));
+    let own: Vec<_> = findings
+        .iter()
+        .filter(|(rule, _, _)| rule == "postgres-materialized-view-shape")
+        .collect();
+    assert_eq!(own.len(), 3, "{own:#?}");
+    assert!(own.iter().all(|(_, _, message)| {
+        message.contains("materialized-view:unbounded_orders:")
+            && !message.contains("materialized-view:bounded_orders:")
+    }));
+    for expected in [
+        "unique index",
+        "additional indexes",
+        "unbounded base table orders",
+    ] {
+        assert!(
+            own.iter().any(|(_, _, message)| message.contains(expected)),
+            "{expected}: {own:#?}"
+        );
+    }
+}
+
+#[test]
 fn generated_catalog_is_stable_and_matches_the_committed_fixture() {
     let Some(database) = Database::create("fixture") else {
         return;

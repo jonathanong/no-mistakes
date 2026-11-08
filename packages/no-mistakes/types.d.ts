@@ -27,6 +27,7 @@ export type * from "./postgres-mutable-sql-registry-types";
 export type * from "./postgres-uuid-predicate-types";
 export type * from "./postgres-test-state-mutation-types";
 export type * from "./postgres-json-relation-ids-types";
+export type * from "./postgres-materialized-view-shape-types";
 export type * from "./coverage-assertion-owner-types";
 export type * from "./lint-suppression-types";
 
