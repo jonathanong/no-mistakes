@@ -20,9 +20,17 @@ fn prepared(
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
     let visible = snapshot.paths_for(root);
     let sources = snapshot.source_store_for(root);
+    let mut config = config.clone();
+    crate::codebase::rules::analysis_policy::prepare_rule_analysis(
+        root,
+        &mut config,
+        &visible,
+        &sources,
+    )
+    .unwrap();
     let mut plan = CheckFactPlan::default();
-    crate::codebase::postgres::assign_prepared_embedded_sql_options(config, &mut plan).unwrap();
-    crate::codebase::postgres::configure_prepared_postgres_plan(root, config, &mut plan).unwrap();
+    crate::codebase::postgres::assign_prepared_embedded_sql_options(&config, &mut plan).unwrap();
+    crate::codebase::postgres::configure_prepared_postgres_plan(root, &config, &mut plan).unwrap();
     plan.query_annotation_catalog = Some(Arc::new(TsConfigCatalog::from_visible_and_sources(
         root,
         &[root.to_path_buf()],
@@ -206,7 +214,11 @@ fn direct_annotation_low_and_ambiguous_requests_keep_broad_demand() {
     assert!(!eligible(&heads, None));
     for file in ["low.yml", "broad.yml"] {
         let config = crate::config::v2::load_v2_config(&root, Some(&root.join(file))).unwrap();
-        assert!(!eligible(&prepared(&root, &files, &config), None), "{file}");
+        let plan = prepared(&root, &files, &config);
+        if file == "low.yml" {
+            assert!(!plan.sql_identifier_profiles.is_empty());
+        }
+        assert!(!eligible(&plan, None), "{file}");
     }
     let session = AnalysisSession::disabled();
     let sources = session.visible_paths(&root).source_store_for(&root);
