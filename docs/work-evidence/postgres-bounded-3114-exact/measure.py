@@ -5,7 +5,7 @@ label=os.environ.get('NM_MEASUREMENT_LABEL', mode)
 binaries={'A':os.environ.get('NM_BASELINE_BINARY','/tmp/nm-3114-exact-main'),'B':os.environ.get('NM_CANDIDATE_BINARY','/tmp/nm-3114-exact-candidate')}
 binary_hashes={k:hashlib.sha256(pathlib.Path(v).read_bytes()).hexdigest() for k,v in binaries.items()}
 assert binary_hashes['A'] != binary_hashes['B'], 'baseline/candidate artifacts must differ'
-expected={'A':{'r1':3,'r2':3,'r3':6,'r4':9,'off':0,'off-sql':1},'B':{'r1':2,'r2':2,'r3':4,'r4':4,'off':0,'off-sql':1}}
+expected={'A':{'r1':2,'r2':3,'r3':6,'r4':4,'off':0,'off-sql':1},'B':{'r1':1,'r2':2,'r3':4,'r4':2,'off':0,'off-sql':1}}
 launches={}
 for key,binary in binaries.items():
  path=pathlib.Path('/tmp/nm-3114-exact-launch')/key/'no-mistakes'

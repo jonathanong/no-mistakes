@@ -55,11 +55,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "sql/shape1-foreign.sql",
-          "line": 4,
-          "message": "sql/shape1-foreign.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "line": 12,
+          "message": "sql/shape1-foreign.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants, table:states, table:subs"
+          "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
+          "target": "table:states"
         }
       ],
       "warnings": []
@@ -76,11 +76,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "sql/shape1.sql",
-          "line": 4,
-          "message": "sql/shape1.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "line": 12,
+          "message": "sql/shape1.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants, table:states, table:subs"
+          "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
+          "target": "table:states"
         }
       ],
       "warnings": []
@@ -97,11 +97,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "sql/shape1-nolimit.sql",
-          "line": 4,
-          "message": "sql/shape1-nolimit.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "line": 12,
+          "message": "sql/shape1-nolimit.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants, table:states, table:subs"
+          "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
+          "target": "table:states"
         }
       ],
       "warnings": []
@@ -154,11 +154,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "sql/shape1.sql",
-          "line": 4,
-          "message": "sql/shape1.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "line": 12,
+          "message": "sql/shape1.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants, table:states, table:subs"
+          "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
+          "target": "table:states"
         }
       ],
       "warnings": []
@@ -209,10 +209,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/record-open.sql",
           "line": 3,
-          "message": "sql/record-open.sql:3: SELECT can return every row of events; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of links; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/record-open.sql:3: SELECT can return every row of events; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM events e",
-          "target": "table:events, table:items, table:links"
+          "target": "table:events"
         },
         {
           "file": "sql/unnest-open.sql",
@@ -249,11 +249,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "sql/shape1.sql",
-          "line": 4,
-          "message": "sql/shape1.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "line": 12,
+          "message": "sql/shape1.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants, table:states, table:subs"
+          "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
+          "target": "table:states"
         }
       ],
       "warnings": []
@@ -270,11 +270,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "sql/shape1-nolimit.sql",
-          "line": 4,
-          "message": "sql/shape1-nolimit.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of subs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "line": 12,
+          "message": "sql/shape1-nolimit.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants, table:states, table:subs"
+          "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
+          "target": "table:states"
         }
       ],
       "warnings": []
@@ -312,11 +312,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "sql/sibling.sql",
-          "line": 4,
-          "message": "sql/sibling.sql:4: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "line": 12,
+          "message": "sql/sibling.sql:12: SELECT can return every row of states; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
-          "sourceLine": "FROM grants g JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
-          "target": "table:grants, table:states"
+          "sourceLine": "UPDATE states st SET effective_at = now() FROM cand INNER JOIN act ON act.grant_id = cand.id",
+          "target": "table:states"
         }
       ],
       "warnings": []

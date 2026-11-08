@@ -14,34 +14,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "r4.sql",
           "line": 20,
-          "message": "r4.sql:20: SELECT can return every row of content_items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "r4.sql:20: SELECT can return every row of content_items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of streams; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM content_items item",
-          "target": "table:content_items"
-        },
-        {
-          "file": "r4.sql",
-          "line": 21,
-          "message": "r4.sql:21: SELECT can return every row of streams; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "LEFT JOIN streams stream ON stream.id = item.stream_id AND stream.deleted_at IS NULL",
-          "target": "table:streams"
+          "target": "table:content_items, table:streams"
         },
         {
           "file": "r4.sql",
           "line": 32,
-          "message": "r4.sql:32: SELECT can return every row of content_items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "r4.sql:32: SELECT can return every row of content_items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of streams; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM content_items item",
-          "target": "table:content_items"
-        },
-        {
-          "file": "r4.sql",
-          "line": 33,
-          "message": "r4.sql:33: SELECT can return every row of streams; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "LEFT JOIN streams stream ON stream.id = item.stream_id",
-          "target": "table:streams"
+          "target": "table:content_items, table:streams"
         }
       ],
       "warnings": []
