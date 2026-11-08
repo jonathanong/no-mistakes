@@ -48,7 +48,7 @@ pub(super) fn from_source(
         }
         _ => {
             out.modules_unknown = true;
-            out.env_unknown_write = true;
+            out.poison_env();
             false
         }
     }

@@ -14,7 +14,7 @@ pub(super) fn from_assignment<'a>(
     let name = match &assignment.left {
         AssignmentTarget::StaticMemberExpression(member) => {
             if member.property.name == "env" && process_global(semantic, &member.object) {
-                out.env_unknown_write = true;
+                out.poison_env();
                 return;
             }
             is_process_env(semantic, &member.object).then(|| member.property.name.to_string())
@@ -26,7 +26,7 @@ pub(super) fn from_assignment<'a>(
             match member.expression.get_inner_expression() {
                 Expression::StringLiteral(key) => Some(crate::ast::js_literal(key).into_owned()),
                 _ => {
-                    out.env_unknown_write = true;
+                    out.poison_env();
                     return;
                 }
             }
@@ -71,7 +71,7 @@ pub(super) fn from_delete<'a>(
             PathOrigin::unknown(),
             unary.span.end,
         ),
-        None => out.env_unknown_write = true,
+        None => out.poison_env(),
     }
 }
 
@@ -83,7 +83,7 @@ pub(super) fn from_call<'a>(
     out: &mut PathProvenance,
 ) {
     if super::stub_global::stubs_process(call) {
-        out.env_unknown_write = true;
+        out.poison_env();
     }
     let semantic = projector.semantic;
     let Expression::StaticMemberExpression(callee) = call.callee.get_inner_expression() else {
@@ -104,7 +104,7 @@ pub(super) fn from_call<'a>(
                     .map_or_else(PathOrigin::unknown, |value| projector.path_of(value));
                 record(out, projector, node, name, origin, call.span.end);
             }
-            None => out.env_unknown_write = true,
+            None => out.poison_env(),
         }
         return;
     }
@@ -115,7 +115,7 @@ pub(super) fn from_call<'a>(
             "assign" | "defineProperty" | "defineProperties" | "set" | "deleteProperty" | "setPrototypeOf"
         ));
     if mutator && first.is_some_and(|first| is_process_env(semantic, first)) {
-        out.env_unknown_write = true;
+        out.poison_env();
     }
 }
 
@@ -131,7 +131,7 @@ pub(super) fn from_alias<'a>(
             .as_ref()
             .is_some_and(|init| is_process_env(projector.semantic, init))
     {
-        out.env_unknown_write = true;
+        out.poison_env();
     }
 }
 

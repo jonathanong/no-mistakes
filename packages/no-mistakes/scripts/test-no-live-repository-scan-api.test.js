@@ -192,3 +192,59 @@ for (const name of [
     },
   );
 }
+
+for (const [name, advisories] of [
+  ["same-test-owned", 0],
+  ["same-test-repository", 1],
+  ["same-test-conditional", 1],
+  ["same-test-restored", 0],
+  ["same-test-unrelated-write", 0],
+  ["same-test-reset-between", 1],
+  ["same-test-helper-reset", 1],
+  ["same-test-default-reset", 1],
+  ["same-test-argument-reset", 1],
+  ["same-test-await-between", 1],
+  ["same-test-unknown-vi", 1],
+
+  ["stub-direct", 0],
+  ["assignment-direct", 0],
+  ["stub-setup", 0],
+  ["assignment-setup", 0],
+  ["configured-stub", 0],
+  ["configured-assignment", 0],
+  ["transitive-setup", 0],
+  ["unstubbed", 1],
+  ["repository", 1],
+  ["mocked-setup", 1],
+  ["typed-mocked-setup", 1],
+]) {
+  test(
+    `compiled owned env ${name} preserves async check and prepared analysis parity`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const fixture = join(root, "../env-provenance", name);
+      let expected;
+      for (const jobs of [1, 2]) {
+        const options = { root: fixture, config: join(fixture, ".no-mistakes.yml"), jobs };
+        const request = { ...options, reports: [{ type: "check" }] };
+        for (const [index, call] of [
+          () => cjs.check(options),
+          () => esm.check(options),
+          () => cjs.analyzeProject(request),
+          () => esm.analyzeProject(request),
+        ].entries()) {
+          const pending = call();
+          assert.equal(typeof pending.then, "function", `${name}: API ${index} is not async`);
+          const result = await pending;
+          const report = withoutPoolWarning(index < 2 ? result : result.reports[0].result);
+          if (expected) assert.deepEqual(report, expected, `${name}: API ${index}, jobs ${jobs}`);
+          else expected = report;
+          assert.deepEqual(report.rules, [], `${name}: unexpected live repository scan`);
+          assert.equal(report.advisories.length, advisories, name);
+        }
+      }
+    },
+  );
+}
