@@ -1,0 +1,165 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "ambient": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "augmentation": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "computed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/loader.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Non-literal dynamic import specifier at column 29; use a literal named import; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import(target); await import(target);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/loader.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Non-literal dynamic import specifier at column 7; use a literal named import; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import(target); await import(target);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/loader.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: Non-literal dynamic import specifier at column 7; use a literal named import; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import(target);",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "overloads-production": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "overloads-tests": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/api.mts",
+          "line": 1,
+          "message": "production export `choose` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function choose(x: string): string;",
+          "target": "choose"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "runtime-controls": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/assignment.cts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export = value;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/merged.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: Merged binding declarations are unsupported; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function merged() { return 1; }",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/merged.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export namespace merged { export const value = 1; }",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/namespace.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export namespace Runtime { export const value = 1; }",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/api.mts",
+          "line": 1,
+          "message": "production export `run` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function run() { return 1; }",
+          "target": "run"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

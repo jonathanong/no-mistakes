@@ -3,6 +3,7 @@ use oxc_semantic::SemanticBuilder;
 use oxc_span::GetSpan;
 
 pub(crate) mod arguments;
+mod importer_precision;
 mod legacy_references;
 mod modules;
 mod node_loaders;
@@ -42,6 +43,10 @@ pub(crate) fn extract_from_semantic(
         let name = scoping.symbol_name(id);
         let flags = scoping.symbol_flags(id);
         if !scoping.symbol_redeclarations(id).is_empty() {
+            if importer_precision::overload(semantic, id) {
+                let span = scoping.symbol_span(id);
+                facts.importer_safe.push((span.start, span.end));
+            }
             facts.diagnostics.push(ModuleDiagnostic {
                 kind: "unsupported".into(),
                 message: "Merged binding declarations are unsupported".into(),
@@ -132,3 +137,6 @@ mod path_provenance_tests;
 
 #[cfg(test)]
 mod mock_boundary_tests;
+
+#[cfg(test)]
+mod precision_tests;

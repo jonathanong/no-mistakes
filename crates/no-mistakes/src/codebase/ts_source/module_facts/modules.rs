@@ -22,9 +22,10 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
         .map(|(index, _)| index)
         .collect::<Vec<_>>();
     inline_bindings.sort_unstable_by_key(|&index| facts.bindings[index].span.start);
-    let mut wildcards = Vec::new();
+    let mut ambient = Vec::new();
     let mut references = Vec::new();
     for node in semantic.nodes().iter() {
+        super::importer_precision::ambient(node.kind(), semantic, &mut ambient);
         let root_module = matches!(semantic.nodes().parent_kind(node.id()), AstKind::Program(_));
         if matches!(
             node.kind(),
@@ -82,12 +83,6 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
                 loads::created_escape(value, node.id(), semantic, &mut node_loaders, facts);
                 exports::commonjs_reference(value, node.id(), semantic, &mut assignments, facts)
             }
-            AstKind::TSExternalModuleDeclaration(value)
-                if root_module && value.declare && value.id.value.contains('*') =>
-            {
-                unsupported(facts, value.span, UNSUPPORTED_FORM);
-                wildcards.push(value.span);
-            }
             AstKind::TSExternalModuleDeclaration(_)
             | AstKind::TSNamespaceDeclaration(_)
             | AstKind::TSImportEqualsDeclaration(_)
@@ -100,14 +95,8 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
         }
     }
     exports::finish_commonjs(assignments, facts);
-    for span in wildcards {
-        if !references
-            .iter()
-            .any(|at| span.start <= *at && *at < span.end)
-        {
-            facts.importer_safe.push((span.start, span.end));
-        }
-    }
+    references.sort_unstable();
+    super::importer_precision::finish_ambient(&ambient, &references, facts);
 }
 
 pub(super) fn collect_require_bindings(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts) {

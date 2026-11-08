@@ -49,7 +49,13 @@ pub(crate) fn check_with_graph_and_session(
                     let local_uses = options
                         .ignore_exports_used_in_file
                         .then(|| used_in_file::exports(ts));
+                    let mut functions = std::collections::BTreeSet::new();
                     for export in &symbols.exports {
+                        if matches!(export.kind, ExportKind::Function)
+                            && !functions.insert(&export.name)
+                        {
+                            continue;
+                        }
                         if forwarded(symbols, export) {
                             continue;
                         }

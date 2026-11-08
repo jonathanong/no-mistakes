@@ -82,8 +82,6 @@ fn near_misses_keep_their_advisories() {
                 "src/body-import-equals.d.ts",
                 "src/body-import-type.d.ts",
                 "src/body-import.d.ts",
-                "src/legacy.d.ts",
-                "src/named.d.ts",
             ],
         ),
         (
@@ -106,8 +104,6 @@ fn near_misses_keep_their_advisories() {
                 "tests/numeric-key.test.mts",
                 "tests/omit.test.mts",
                 "tests/other-generic.test.mts",
-                // The local namespace declaration is its own unsupported form.
-                "tests/qualified-pick.test.mts",
                 "tests/qualified-pick.test.mts",
             ],
         ),

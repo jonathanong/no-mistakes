@@ -322,6 +322,43 @@ export default { ready: true };
 The same file with no bundler script, imported only by a configured test, is
 reported.
 
+## Overloads and ambient declarations
+
+TypeScript overload signatures and their implementation describe one binding.
+For example, this export produces one finding when only configured tests call it,
+and none when production code imports and calls it:
+
+```typescript
+export function choose(value: string): string;
+export function choose(value: number): number;
+export function choose(value: unknown) { return value; }
+```
+
+Remove the export or move the test-only implementation into a configured helper
+root. Function/namespace merges remain uncertain rather than being treated as
+ordinary overloads.
+
+Declaration-only ambient modules and namespaces, ambient `export =` assignments,
+and type-only module augmentations do not create runtime exports or importers.
+The rule skips their binding-form uncertainty in declaration files and ambient
+blocks, including augmentations in runtime source files:
+
+```typescript
+declare module "package" { export function run(): string; }
+declare module "legacy" { function run(): string; export = run; }
+declare module "./context.mjs" { interface Context { extra: string } }
+```
+
+Imports, re-exports, import-equals declarations, and `import()` type references
+inside these blocks retain their own analysis requirements. Runtime namespaces,
+function/namespace merges, and runtime `export =` remain uncertain. These
+exceptions affect only this rule; public TypeScript module-facts diagnostics and
+checks with the rule disabled retain their existing output.
+
+A computed runtime `import(target)` emits one uncertainty diagnostic per site,
+with its source column, including separate sites on the same line. Replace it
+with a literal named import to make the consumer statically analyzable.
+
 ## Incomplete analysis
 
 Dynamic or unresolved module/symbol relationships cannot prove exclusive test
