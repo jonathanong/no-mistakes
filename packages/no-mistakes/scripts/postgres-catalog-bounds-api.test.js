@@ -52,6 +52,9 @@ test(
         assert.equal(standalone.advisories[0].file, "imported.ts");
         assert.equal(standalone.advisories[0].line, 5);
         assert.match(standalone.advisories[0].message, /MATERIALIZED CTE shared_pool/);
+        const plain = await cjs.check({ root, config });
+        assert.deepEqual(plain.rules, standalone.rules);
+        assert.deepEqual(plain.advisories, standalone.advisories);
       }
       const relationTargets = {
         "key-resolution.yml": ["table:public.ambiguous_left", "table:public.ambiguous_right"],
