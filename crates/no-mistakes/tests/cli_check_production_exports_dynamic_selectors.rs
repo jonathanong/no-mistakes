@@ -13,6 +13,8 @@ const STATIC: &[&str] = &[
     "all-pair",
 ];
 const UNKNOWN: &[&str] = &[
+    "loader-inherited-escape",
+    "loader-receiver-escape",
     "loader-reference",
     "loader-optional-member",
     "loader-unselected",

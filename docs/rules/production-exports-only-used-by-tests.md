@@ -122,7 +122,11 @@ plain expression-bodied arrows with no parameters, and no spreads, methods, or
 computed properties. Every reference to the map must call a dot-named loader
 with no arguments; the selected loader's result must be awaited and read only
 through proven members or object destructuring. Exporting, aliasing, passing,
-mutating, or indexing the map with a computed key keeps uncertainty. Mixed proven
+mutating, or indexing the map with a computed key keeps uncertainty. Every map
+value must be an arrow: another function-valued member could expose the map
+through its `this` receiver and conceal further loader calls. Rewrite such
+members as arrows or keep them outside the loader map. Every call must name a
+declared loader key; inherited members such as `valueOf()` stay uncertain. Mixed proven
 and escaping uses of a loader result also stay uncertain.
 
 A `.then` callback parameter uses the same static member and escape rules as a

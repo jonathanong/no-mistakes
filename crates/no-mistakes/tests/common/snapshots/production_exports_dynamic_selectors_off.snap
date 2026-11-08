@@ -374,6 +374,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "loader-inherited-escape": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "loader-let": {
     "exitCode": 0,
     "report": {
@@ -495,6 +507,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "loader-read": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "loader-receiver-escape": {
     "exitCode": 0,
     "report": {
       "advisories": [],

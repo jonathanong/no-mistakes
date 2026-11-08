@@ -17,8 +17,12 @@ pub(super) fn selected(
         return None;
     };
     let key = crate::ast::property_key_name(&property.key)?;
-    let symbol = local_registry(property_id, semantic)?;
-    super::super::imports_namespace::runtime_members(semantic, symbol, &mut Vec::new())?;
+    let (symbol, keys) = local_registry(property_id, semantic)?;
+    let members =
+        super::super::imports_namespace::runtime_members(semantic, symbol, &mut Vec::new())?;
+    if members.iter().any(|name| !keys.contains(name.as_str())) {
+        return None;
+    }
     let mut names = Vec::new();
     for reference in semantic.scoping().get_resolved_references(symbol) {
         let (member_id, AstKind::StaticMemberExpression(member)) =
@@ -49,7 +53,7 @@ pub(super) fn selected(
 fn local_registry(
     property_id: NodeId,
     semantic: &Semantic<'_>,
-) -> Option<oxc_syntax::symbol::SymbolId> {
+) -> Option<(oxc_syntax::symbol::SymbolId, crate::fx::FxHashSet<String>)> {
     let (object_id, kind) = parent(property_id, semantic)?;
     let object = kind.as_object_expression()?;
     let mut keys = crate::fx::FxHashSet::default();
@@ -60,7 +64,11 @@ fn local_registry(
         if entry.computed
             || entry.method
             || entry.kind != PropertyKind::Init
-            || !keys.insert(crate::ast::property_key_name(&entry.key)?)
+            || !matches!(
+                entry.value.get_inner_expression(),
+                Expression::ArrowFunctionExpression(_)
+            )
+            || !keys.insert(crate::ast::property_key_name(&entry.key)?.into_owned())
         {
             return None;
         }
@@ -82,5 +90,5 @@ fn local_registry(
     {
         return None;
     }
-    Some(binding.symbol_id())
+    Some((binding.symbol_id(), keys))
 }
