@@ -90,23 +90,31 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "barrel": {
-    "exitCode": 1,
+    "exitCode": 0,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./barrel.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./barrel.mjs\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./barrel.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./barrel.mjs\";",
+          "target": "unanalyzable"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [
-        {
-          "file": "src/worker.mts",
-          "line": 2,
-          "message": "production export `testOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "export function testOnly() {}",
-          "target": "testOnly"
-        }
-      ],
+      "rules": [],
       "warnings": []
     }
   },
@@ -128,6 +136,572 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "testOnly"
         }
       ],
+      "warnings": []
+    }
+  },
+  "bracket-read-this": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/worker.mts",
+          "line": 2,
+          "message": "production export `testOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function testOnly() {}",
+          "target": "testOnly"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "call-arrow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/worker.mts",
+          "line": 2,
+          "message": "production export `testOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function testOnly() {}",
+          "target": "testOnly"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "call-arrow-alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/worker.mts",
+          "line": 3,
+          "message": "production export `testOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function testOnly() {}",
+          "target": "testOnly"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "call-bracket-this": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "call-cast-this": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "call-class": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/worker.mts",
+          "line": 2,
+          "message": "production export `testOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function testOnly() {}",
+          "target": "testOnly"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "call-class-method-this": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/worker.mts",
+          "line": 2,
+          "message": "production export `testOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function testOnly() {}",
+          "target": "testOnly"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "call-class-this": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "call-default-arrow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/worker.mts",
+          "line": 3,
+          "message": "production export `testOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function testOnly() {}",
+          "target": "testOnly"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "call-default-class": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/worker.mts",
+          "line": 3,
+          "message": "production export `testOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function testOnly() {}",
+          "target": "testOnly"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "call-default-function": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/worker.mts",
+          "line": 3,
+          "message": "production export `testOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function testOnly() {}",
+          "target": "testOnly"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "call-destructured-binding": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "call-expression": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "call-imported": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "call-missing": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "call-nested-arrow-this": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "call-nested-function-this": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/worker.mts",
+          "line": 2,
+          "message": "production export `testOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function testOnly() {}",
+          "target": "testOnly"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "call-parameter-this": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "call-parenthesized-this": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "call-reassigned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "call-tag-this": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "call-this": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as ns from \"./worker.mjs\";",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
       "warnings": []
     }
   },
@@ -798,6 +1372,48 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "read-barrel-this": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/worker.mts",
+          "line": 2,
+          "message": "production export `testOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function testOnly() {}",
+          "target": "testOnly"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "read-this": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/worker.mts",
+          "line": 2,
+          "message": "production export `testOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function testOnly() {}",
+          "target": "testOnly"
+        }
+      ],
       "warnings": []
     }
   },

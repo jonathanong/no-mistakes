@@ -356,9 +356,9 @@ also report uncertainty; `baseUrl` resolution candidates are treated
 conservatively when the target cannot be resolved. Ordinary external packages
 and non-code assets are outside the production TS/JS export catalog.
 A runtime namespace import counts exactly the members it reads when every reference
-is a direct static member access: `ns.work`, `ns["work"]`, calls through those
-members, and repeated reads. This includes imports through static `export *`
-barrels. Other exports remain eligible for the test-only finding:
+is a direct static member access: `ns.work`, `ns["work"]`, and repeated reads.
+Plain non-call reads also work through static `export *` barrels. Other exports
+remain eligible for the test-only finding:
 
 ```ts
 import * as ns from "./worker.mjs";
@@ -366,14 +366,31 @@ ns.work(); // production use of work only; testOnly can still be reported
 const again = ns["work"]; // another read of work
 ```
 
+A member call such as `ns.work()` or `ns["work"]()` passes the namespace as
+`this`. It proves only that member when the direct exported binding is an arrow
+function, or a function or class declaration whose own body never references
+`this`. Nested arrows share the receiver and are checked; nested non-arrow
+functions have their own receiver and are excluded. Function parameter defaults
+are checked too. Reassigned bindings, function expressions, re-exported members,
+and unresolved callees stay uncertain. Parentheses, TypeScript wrappers, optional
+calls, and tagged templates retain the same receiver check.
+
+```ts
+export function work() { return this; } // ns.work() stays uncertain
+export const safe = () => {}; // ns.safe() proves only safe
+```
+
+A plain `ns.work` or `ns["work"]` read remains proven even when `work` uses
+`this`; reading the function does not pass the namespace as a receiver.
+
 The namespace stays module-wide uncertainty if any reference passes or returns
 it as a value, aliases it, spreads it, uses destructuring (including rest), uses a
 computed non-string-literal key, re-exports it, or reassigns it. Mixed static and
 escaping uses also stay uncertain. Unused namespace imports, namespace type
 queries, writes to namespace members, and namespace re-exports (`export * as ns`)
 stay uncertain. Literal bracket keys are strings only: template literals and
-numeric keys are unsupported. A missing member reports unresolved-symbol
-uncertainty. Only references to the imported binding count; shadowed locals do
+numeric keys are unsupported. A missing member in a plain read reports
+unresolved-symbol uncertainty. Only references to the imported binding count; shadowed locals do
 not establish a consumer. Rewrite uncertain imports and re-exports with explicit
 names to establish each consumer.
 When an export has a known production consumer, an additional unknown selector

@@ -72,9 +72,13 @@ fn collect_symbol_import_selectors_file(
                 continue;
             }
             if !import.is_type_only {
-                if let Some(members) =
-                    import_namespace_members(file_facts, &import.source, &import.local)
-                {
+                if let Some(members) = runtime_namespace_members(
+                    &inputs,
+                    file_facts,
+                    &import.source,
+                    &import.local,
+                    &target,
+                ) {
                     let names: Vec<_> = members.iter().map(String::as_str).collect();
                     push_dynamic_selectors(
                         &inputs,

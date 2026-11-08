@@ -26,6 +26,14 @@ pub(super) fn collect(
                 }
             };
             let symbol = local.symbol_id.get().expect("semantic import binding");
+            let mut namespace_calls = Vec::new();
+            let namespace_members = if kind != "namespace" {
+                None
+            } else if type_only {
+                namespace_members(semantic, symbol)
+            } else {
+                super::imports_namespace::runtime_members(semantic, symbol, &mut namespace_calls)
+            };
             ModuleImportBinding {
                 imported,
                 local: local.name.to_string(),
@@ -33,18 +41,8 @@ pub(super) fn collect(
                 type_only: type_only || individual_type,
                 binding_id: symbol.index(),
                 span: specifier.span().into(),
-                namespace_members: matches!(
-                    specifier,
-                    ImportDeclarationSpecifier::ImportNamespaceSpecifier(_)
-                )
-                .then(|| {
-                    if type_only {
-                        namespace_members(semantic, symbol)
-                    } else {
-                        super::imports_namespace::runtime_members(semantic, symbol)
-                    }
-                })
-                .flatten(),
+                namespace_members,
+                namespace_calls,
             }
         })
         .collect();

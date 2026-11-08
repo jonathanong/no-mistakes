@@ -6,6 +6,7 @@ pub(crate) mod arguments;
 mod legacy_references;
 mod modules;
 mod node_loaders;
+mod receiver_safety;
 mod report;
 pub use report::*;
 mod types;
@@ -89,6 +90,7 @@ pub(crate) fn extract_from_semantic(
         })
         .collect();
     modules::collect(semantic, &mut facts, collect);
+    receiver_safety::collect(semantic, &mut facts);
     if collect && facts.diagnostics.iter().all(argument_safe_diagnostic) {
         modules::collect_require_bindings(semantic, &mut facts);
         if let Some(observer) = crate::diagnostics::current() {

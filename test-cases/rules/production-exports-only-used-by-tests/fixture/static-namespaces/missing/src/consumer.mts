@@ -1,2 +1,2 @@
 import * as ns from "./worker.mjs";
-ns.missing();
+void ns.missing;

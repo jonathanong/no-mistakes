@@ -55,6 +55,8 @@ pub struct ModuleImportBinding {
     /// escapes the supported static member syntax.
     #[serde(skip)]
     pub(crate) namespace_members: Option<Vec<String>>,
+    #[serde(skip)]
+    pub(crate) namespace_calls: Vec<String>,
 }
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -112,6 +114,8 @@ pub(crate) struct ModuleMockCall {
 }
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct TypeScriptModuleFacts {
+    #[serde(skip)]
+    pub(crate) receiver_safe_exports: crate::fx::FxHashSet<String>,
     #[serde(skip)]
     pub(crate) module_mock_calls: Vec<ModuleMockCall>,
     #[serde(skip)]

@@ -58,7 +58,10 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
                 exports::inline(value, &inline_bindings, facts)
             }
             AstKind::ExportDefaultDeclaration(value) if root_module => {
-                exports::default(value, semantic, facts)
+                exports::default(value, semantic, facts);
+                if super::receiver_safety::default_safe(value) {
+                    facts.receiver_safe_exports.insert("default".into());
+                }
             }
             AstKind::ImportExpression(value) => {
                 if mocks::typed_mock_import(value, node.id(), semantic) {
