@@ -157,3 +157,9 @@ From the corrected checkout, reproduce with `python3
  <rejected-cli> --after <corrected-cli> --output <empty-output-directory>`.
 Build the two executables in separate targets under `/tmp` with the shared
 Cargo lock and remove those targets after measurement.
+
+The reusable harness records optional `--before-revision` and `--after-revision`
+values as unverified caller labels. It cannot infer build revisions from an
+executable or the current checkout. The captured measurements above were tied
+to separate builds during this run; their binary hashes are retained. Later
+production changes require a separate comparison.

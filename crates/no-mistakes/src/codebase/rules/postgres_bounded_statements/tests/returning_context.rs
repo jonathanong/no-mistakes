@@ -104,14 +104,33 @@ fn a_materialized_lock_driver_keeps_the_exact_nested_write_bounded() {
     let sql = std::fs::read_to_string(root.join("r5-lock-chain.sql")).unwrap();
     let facts = extract_sql_statement_facts(&sql);
     assert!(!facts.parse_failed);
-    assert!(facts
-        .bounds
-        .iter()
-        .filter(|fact| fact.line < 15)
-        .all(|fact| offenders(fact, &catalog).is_empty()));
-    assert!(facts
-        .bounds
-        .iter()
-        .filter(|fact| fact.line >= 15)
-        .any(|fact| !offenders(fact, &catalog).is_empty()));
+    for (line, bounded) in [(7, true), (11, true), (21, false), (25, false)] {
+        let fact = facts.bounds.iter().find(|fact| fact.line == line).unwrap();
+        assert!(fact.target.is_some());
+        assert_eq!(offenders(fact, &catalog).is_empty(), bounded, "line {line}");
+    }
+}
+
+#[test]
+fn inserted_returning_keeps_row_bounds_without_source_domains() {
+    let root = fixture_root().join("../issue-3114-exact/fixture");
+    let sources = crate::codebase::rules::source_store_for_files(&[root.join("schema.json")]);
+    let catalog =
+        crate::codebase::postgres::SchemaCatalog::load(&root, "schema.json", &sources).unwrap();
+    let sql = std::fs::read_to_string(root.join("r6.sql")).unwrap();
+    let facts = extract_sql_statement_facts(&sql);
+    assert!(!facts.parse_failed);
+    for (line, bounded) in [(14, false), (21, true)] {
+        let fact = facts.bounds.iter().find(|fact| fact.line == line).unwrap();
+        assert_eq!(offenders(fact, &catalog).is_empty(), bounded, "line {line}");
+        let crate::codebase::postgres::SqlBoundItemKind::Query(emitted) = &fact.query.items[1].kind
+        else {
+            panic!("INSERT RETURNING driver");
+        };
+        assert!(!emitted.outputs.is_empty());
+        assert!(emitted
+            .outputs
+            .iter()
+            .all(|output| output.source_column.is_none() && !output.recursive_domain));
+    }
 }

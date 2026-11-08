@@ -1,6 +1,6 @@
-import argparse,csv,hashlib,json,os,statistics,subprocess,tempfile,time
+import argparse,csv,hashlib,json,os,statistics,tempfile,time
 from pathlib import Path
-parser=argparse.ArgumentParser();parser.add_argument('--before',required=True);parser.add_argument('--after',required=True);parser.add_argument('--output',type=Path,required=True);options=parser.parse_args()
+parser=argparse.ArgumentParser();parser.add_argument('--before',required=True);parser.add_argument('--after',required=True);parser.add_argument('--output',type=Path,required=True);parser.add_argument('--before-revision');parser.add_argument('--after-revision');options=parser.parse_args()
 options.output.mkdir(parents=True,exist_ok=True)
 root=Path.cwd();fixture=root/'test-cases/rules/postgres-bounded-statements/issue-3114-exact/fixture'
 bins={'before':str(Path(options.before).resolve()),'after':str(Path(options.after).resolve())}
@@ -13,7 +13,7 @@ def run(side,args):
 def args(config):return ['check','--root',str(fixture),'--config',config+'.yml','--format','json','--jobs','1']
 def sha(path):
  with open(path,'rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
-result=dict(baseline='62f2a4fac9973cd07490133f812d0fb234e7bd28',candidate=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),profile='dev/default features/locked/rustc1.99.1/jobs1',counters='unavailable: perf_event_paranoid4',binaryHashes={k:sha(v) for k,v in bins.items()},controls={},workloads={})
+result=dict(baseline={'revision':options.before_revision,'verification':'unverified caller label'},candidate={'revision':options.after_revision,'verification':'unverified caller label'},profile='dev/default features/locked/rustc1.99.1/jobs1',counters='unavailable: perf_event_paranoid4',binaryHashes={k:sha(v) for k,v in bins.items()},controls={},workloads={})
 assert len(set(result['binaryHashes'].values()))==2
 for case in ['r1','r2','r3','r4','off','off-sql']:
  a=run('before',args(case));b=run('after',args(case));assert (a['stdoutSha256'],a['stderrSha256'],a['exitCode'])==(b['stdoutSha256'],b['stderrSha256'],b['exitCode']),case

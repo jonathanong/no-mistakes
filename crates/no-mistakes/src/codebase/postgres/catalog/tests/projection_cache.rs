@@ -48,3 +48,20 @@ fn view_projections_do_not_initialize_scalar_names() {
     ));
     assert_eq!(cache.view_projections.get().unwrap().len(), 1);
 }
+
+#[test]
+fn cold_clones_share_later_projection_preparation() {
+    let catalog = catalog();
+    let cloned = catalog.clone();
+    assert!(catalog.projections.get().is_none());
+    assert!(cloned.projections.get().is_none());
+    let query = catalog.view_query("simple_view").unwrap();
+    assert!(Arc::ptr_eq(
+        &query,
+        &cloned.view_query("simple_view").unwrap()
+    ));
+    assert!(Arc::ptr_eq(
+        catalog.projections.get().unwrap(),
+        cloned.projections.get().unwrap()
+    ));
+}

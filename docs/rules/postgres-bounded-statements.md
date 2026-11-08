@@ -368,6 +368,8 @@ A write restricted by its complete composite primary key returns at most one
 row. Its `RETURNING` column names remain visible to later writes, so matching
 every target key column against that returned row keeps the later write bounded.
 Names alone grant no caller-value, array-element or predicate-propagation proof.
+An `INSERT` source can bound the returned row count, but its finite key domain
+does not prove the domain of generated `RETURNING` values.
 Implicit labels for numeric literals and function calls, along with qualified
 projected column names, identify which relation owns a bare key beside a lock or
 `LIMIT 1` CTE. Ambiguous names,

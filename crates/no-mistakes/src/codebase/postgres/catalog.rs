@@ -71,7 +71,8 @@ pub struct SchemaCatalog {
     model_tables: BTreeMap<String, CatalogTable>,
     relation_fallback: std::sync::OnceLock<fallback::RelationFallback>,
     functions: BTreeMap<String, CatalogFunction>,
-    projections: std::sync::OnceLock<std::sync::Arc<projection_cache::ProjectionCache>>,
+    projections:
+        std::sync::Arc<std::sync::OnceLock<std::sync::Arc<projection_cache::ProjectionCache>>>,
     enums: BTreeMap<String, CatalogEnum>,
     views: BTreeMap<String, CatalogView>,
     view_fallback: std::sync::OnceLock<fallback::RelationFallback>,

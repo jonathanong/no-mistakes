@@ -13,6 +13,7 @@ fn prepared_postgres_exact_key_proofs_match_standalone() {
         ("r3.yml", 4),
         ("r4.yml", 2),
         ("r5.yml", 6),
+        ("r6.yml", 1),
         ("off.yml", 0),
         ("off-sql.yml", 1),
     ] {
