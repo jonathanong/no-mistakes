@@ -534,19 +534,48 @@ step, and have a conjunctive `<` or `<=` cap against a parameter or numeric
 literal (reversed comparisons also work):
 
 ```sql
-WITH RECURSIVE walk(id, depth) AS (
-  SELECT id, 0 FROM accounts WHERE id = $1
+WITH RECURSIVE ancestors AS (
+  SELECT id, parent_id, 1 AS depth FROM comments WHERE id = $1
   UNION ALL
-  SELECT a.id, w.depth + 1
-  FROM accounts a JOIN walk w ON a.id = w.id
-  WHERE w.depth < $2
+  SELECT c.id, c.parent_id, a.depth + 1
+  FROM comments c JOIN ancestors a ON c.id = a.parent_id
+  WHERE a.depth < 50
 )
-SELECT id FROM walk;
+SELECT * FROM ancestors;
 ```
 
 Without the cap, a cycle can revisit the same key forever, so the recursive
-lookup remains reported. A non-increasing depth, a cap bypassed by `OR`, an
+lookup remains reported; add a conjunctive depth cap to fix it. The catalog must
+include a valid, immediate primary or unique index for the joined key.
+A non-increasing depth, a cap bypassed by `OR`, an
 unbounded anchor, or a non-key join also retains its findings.
+
+### Correlated primary-key subqueries
+
+A subquery can use an equality between its primary or unique key and a known
+outer row's qualified column. The lookup is bounded per outer row; it does not
+make an unrestricted outer scan bounded. For example, both lookups below pass
+when `placement_id` has a valid primary-key index in the catalog:
+
+```sql
+SELECT target.placement_id FROM image_placements target
+WHERE target.placement_id = $1 AND target.created_by_id IN (
+  SELECT p.created_by_id FROM image_placements p
+  WHERE p.placement_id = target.placement_id
+);
+```
+
+Scalar projections such as `(SELECT p.created_by_id FROM image_placements p
+WHERE p.placement_id = target.placement_id)` also remain accepted when the
+outer lookup is bounded. Changing the inner predicate to the non-unique
+`p.created_by_id = target.created_by_id` retains an inner finding in the `IN`
+example; use a primary/unique key or declare a reviewed `columnBounds` contract
+to fix it. Removing `target.placement_id = $1` retains an outer finding.
+Unknown outer qualifiers, local self-comparisons, and an `OR` branch without a
+complete key do not prove a bounded lookup. In an `IN` subquery, an unrelated
+bare read from an explicitly aliased unknown table does not erase an
+independently proven qualified key equality. That unknown source still bounds
+nothing, and the outer query must establish its own bound.
 
 ### Correlated builder fragments
 

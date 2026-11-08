@@ -110,9 +110,14 @@ fn evaluate(
                 .map(|pin| match &pin.source {
                     SqlPinSource::Query(inner)
                     | SqlPinSource::ReadQuery(inner)
-                    | SqlPinSource::ArrayQuery(inner) => {
-                        Some(evaluate(inner, catalog, views, precise_columns, None))
-                    }
+                    | SqlPinSource::ArrayQuery(inner) => Some(correlated::pin_query(
+                        inner,
+                        pin,
+                        &query.items,
+                        catalog,
+                        views,
+                        precise_columns,
+                    )),
                     _ => None,
                 })
                 .collect()
