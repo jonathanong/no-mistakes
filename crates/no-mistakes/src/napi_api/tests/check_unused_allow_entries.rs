@@ -178,6 +178,7 @@ fn missing_file_allowances_match_batched_check() {
         ("narrowed.yml", 0),
         ("options-narrowed.yml", 0),
         ("windows.yml", 1),
+        ("functions.yml", 1),
         ("gates.yml", 1),
         ("indices.yml", 3),
         ("hash-selectors.yml", 0),

@@ -171,6 +171,7 @@ fn unused_allow_missing_files_check_json_snapshot() {
         "trimmed.yml",
         "hash-selectors.yml",
         "windows.yml",
+        "functions.yml",
         "gates.yml",
         "options-narrowed.yml",
         "indices.yml",
