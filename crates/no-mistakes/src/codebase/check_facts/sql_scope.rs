@@ -7,11 +7,20 @@ use rayon::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
+#[cfg(not(test))]
+macro_rules! reject_broad_control {
+    () => {};
+}
+#[cfg(not(test))]
+macro_rules! record_seed_check {
+    () => {};
+}
+#[cfg(test)]
+#[macro_use]
+mod work_tests;
+
 pub(super) fn eligible(plan: &CheckFactPlan, playwright: Option<&PlaywrightFactPlan>) -> bool {
-    #[cfg(test)]
-    if tests::BROAD.with(std::cell::Cell::get) {
-        return false;
-    }
+    reject_broad_control!();
     plan.embedded_sql
         && !plan.postgres_sql_audit
         && !plan.embedded_sql_options.is_empty()

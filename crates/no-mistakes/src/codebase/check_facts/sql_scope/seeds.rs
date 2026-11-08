@@ -11,10 +11,7 @@ pub(super) fn select(
             .any(|variant| variant.request == id && variant.plan.embedded_sql)
     };
     let selected = |path: &PathBuf| {
-        #[cfg(test)]
-        if let Some(observer) = crate::diagnostics::current() {
-            observer.increment("sql_scope.seed_checks", 1);
-        }
+        record_seed_check!();
         let relative = crate::codebase::ts_source::relative_slash_path(&request.root, path);
         request
             .plan
