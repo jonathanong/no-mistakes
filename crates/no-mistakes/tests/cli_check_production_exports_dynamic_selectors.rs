@@ -4,6 +4,7 @@ const STATIC: &[&str] = &[
     "loader-read",
     "then-bracket",
     "all-hole",
+    "all-hole-import",
     "loader",
     "loader-multi",
     "then-call",
@@ -11,13 +12,18 @@ const STATIC: &[&str] = &[
     "then-default",
     "all",
     "all-pair",
+    "loader-unselected",
+    "loader-unused",
 ];
 const UNKNOWN: &[&str] = &[
+    "loader-unselected-escape",
+    "loader-unselected-write",
+    "loader-unselected-computed",
+    "all-hole-rest",
     "loader-inherited-escape",
     "loader-receiver-escape",
     "loader-reference",
     "loader-optional-member",
-    "loader-unselected",
     "all-direct-call",
     "all-receiver-call",
     "all-detached-await",
@@ -27,7 +33,6 @@ const UNKNOWN: &[&str] = &[
     "loader-optional",
     "loader-args",
     "loader-let",
-    "loader-unused",
     "loader-result-write",
     "loader-result-mutation",
     "loader-result-this",
@@ -113,13 +118,16 @@ fn dynamic_selectors_prove_members_and_preserve_escapes() {
                 .map(|row| row["target"].as_str().unwrap())
                 .collect();
             targets.sort_unstable();
-            let expected = if case.starts_with("loader") {
-                vec!["testOnly", "work"]
-            } else if *case == "named-control" {
-                vec!["testOnly"]
-            } else {
-                vec!["main", "testOnly"]
-            };
+            let expected =
+                if ["loader-unused", "loader-unselected", "all-hole-import"].contains(case) {
+                    vec!["main", "testOnly", "work"]
+                } else if case.starts_with("loader") {
+                    vec!["testOnly", "work"]
+                } else if *case == "named-control" {
+                    vec!["testOnly"]
+                } else {
+                    vec!["main", "testOnly"]
+                };
             assert_eq!(targets, expected, "{case}: {report}");
         }
     }

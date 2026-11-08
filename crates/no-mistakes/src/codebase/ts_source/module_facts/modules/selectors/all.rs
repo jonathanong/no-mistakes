@@ -53,8 +53,9 @@ pub(super) fn selected(
     if pattern.rest.is_some() {
         return None;
     }
-    let BindingPattern::ObjectPattern(object) = pattern.elements.get(index)?.as_ref()? else {
-        return None;
-    };
-    object_names(object)
+    match pattern.elements.get(index)? {
+        None => Some(Vec::new()),
+        Some(BindingPattern::ObjectPattern(object)) => object_names(object),
+        _ => None,
+    }
 }
