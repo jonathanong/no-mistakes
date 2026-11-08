@@ -1132,6 +1132,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
+          "message": "schema.json: materialized-view:bad_constant_lookup: unbounded base table users; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_constant_lookup"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
           "message": "schema.json: materialized-view:bad_constant_nonleading: unbounded base table pairs; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
@@ -1292,10 +1300,34 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
+          "message": "schema.json: materialized-view:bad_mixed_cycle_lookup: unbounded base table pairs; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_mixed_cycle_lookup"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_mixed_or_constant_lookup: unbounded base table pairs; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_mixed_or_constant_lookup"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
           "message": "schema.json: materialized-view:bad_multiple_values: unbounded base table posts; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
           "target": "materialized-view:bad_multiple_values"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_nonkey_driver_lookup: unbounded base table users; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_nonkey_driver_lookup"
         },
         {
           "file": "schema.json",

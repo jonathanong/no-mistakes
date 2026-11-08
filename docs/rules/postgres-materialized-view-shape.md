@@ -39,7 +39,10 @@ using a configured `windowFunctions` function (including equality). A predicate
 on a bounded driver also bounds a lookup joined through its full primary key
 or a nonpartial unique key, using the key proof shared with
 `postgres-bounded-statements`. Every column of a composite lookup key must be
-equated to bounded inputs in every predicate alternative. A bounded CTE or
+equated to bounded inputs or scalar constants in every predicate alternative,
+with at least one key column supplied by a bounded driver. Constants can
+complete a composite lookup key; they do not establish a window alone.
+A bounded CTE or
 derived SELECT can also drive these lookups; aggregate and LIMIT output caps
 do not establish bounded base-table reads. An incomplete key,
 a join without a unique key, or an unbounded driver still leaves the lookup
