@@ -80,14 +80,20 @@ fn sql_seed_closure_preserves_imported_helper_findings_and_skips_unrelated_walks
     let (mut maps, narrow_count) = counts(|| vec![collect_single(&root, files.clone(), narrow)]);
     let narrow = maps.pop().unwrap();
     let parses = crate::ast::finish_parse_count(&root);
-    assert_eq!(parses.len(), files.len());
+    assert_eq!(
+        parses.len(),
+        files
+            .iter()
+            .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
+            .count()
+    );
     assert!(parses.values().all(|count| *count == 1), "{parses:#?}");
     let (mut maps, full_count) = counts(|| vec![collect_single(&root, files.clone(), full)]);
     let full = maps.pop().unwrap();
     assert_eq!(narrow_count, 4, "caller, barrel, helper, constant");
     assert_eq!(
-        full_count, 5,
-        "unrelated valid module previously paid SQL extraction"
+        full_count, 6,
+        "unrelated valid and recovered malformed modules previously paid SQL extraction"
     );
     assert_eq!(
         findings(&root, &files, &sources, &config, &narrow),
@@ -164,7 +170,7 @@ fn direct_annotation_low_and_ambiguous_requests_keep_broad_demand() {
     direct.query_annotation_catalog = None;
     assert!(!eligible(&direct, None));
     let (_, direct_count) = counts(|| vec![collect_check_facts(&root, files.clone(), direct)]);
-    assert_eq!(direct_count, 5, "direct requests keep broad compatibility");
+    assert_eq!(direct_count, 6, "direct requests keep broad compatibility");
     let mut annotation = original.clone();
     annotation.query_annotation = true;
     assert!(!eligible(&annotation, None));
@@ -230,7 +236,7 @@ fn direct_annotation_low_and_ambiguous_requests_keep_broad_demand() {
             vec![request(), request()],
         )
     });
-    assert_eq!(count, 10, "two SQL variants retain the existing broad path");
+    assert_eq!(count, 12, "two SQL variants retain the existing broad path");
 }
 
 thread_local! {
@@ -276,7 +282,7 @@ fn actual_check_json_preparation_activates_scoping_and_preserves_full_report() {
     let (full, broad_count) = run(true);
     let (scoped, scoped_count) = run(false);
     assert_eq!(scoped, full);
-    assert_eq!(broad_count, 5);
+    assert_eq!(broad_count, 6);
     assert_eq!(
         scoped_count, 4,
         "actual check preparation must use the scope scheduler"
@@ -336,11 +342,15 @@ fn all_selected_payload_classifies_once_and_retains_no_seed_set() {
         crate::config::v2::load_v2_config(&root, Some(&root.join("all-selected.yml"))).unwrap();
     let plan = prepared(&root, &files, &config);
     assert!(eligible(&plan, None));
-    let demands = files
+    let source_files = files
+        .iter()
+        .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
+        .collect::<Vec<_>>();
+    let demands = source_files
         .iter()
         .map(|path| {
             (
-                path.clone(),
+                (*path).clone(),
                 vec![FactDemand {
                     request: 0,
                     plan: plan.clone(),
@@ -369,6 +379,6 @@ fn all_selected_payload_classifies_once_and_retains_no_seed_set() {
     );
     assert_eq!(
         session.snapshot().work.get("sql_scope.seed_checks"),
-        Some(&(files.len() as u64))
+        Some(&(source_files.len() as u64))
     );
 }

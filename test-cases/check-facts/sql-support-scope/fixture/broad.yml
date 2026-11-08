@@ -3,5 +3,5 @@ rules:
   - rule: postgres-no-offset
     scope: repository
     options:
-      include: [**/*]
+      include: ['**/*']
       importSpecifier: '@example/db'
