@@ -24,3 +24,11 @@ changed AS (
   FROM candidates WHERE work_batches.id = candidates.id RETURNING work_batches.id
 )
 SELECT * FROM changed;
+
+WITH candidate AS (SELECT completed_rows FROM work_batches WHERE id = $1),
+changed AS (
+  UPDATE work_batches SET completed_rows = work_batches.completed_rows + 1
+  FROM candidate WHERE work_batches.completed_rows = candidate.completed_rows
+  RETURNING work_batches.id
+)
+SELECT * FROM changed;

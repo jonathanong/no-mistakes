@@ -8,10 +8,10 @@ fn prepared_postgres_exact_key_proofs_match_standalone() {
         "fixture",
     ]);
     for (config, expected) in [
-        ("r1.yml", 1),
-        ("r2.yml", 2),
-        ("r3.yml", 4),
-        ("r4.yml", 2),
+        ("r1.yml", 2),
+        ("r2.yml", 3),
+        ("r3.yml", 5),
+        ("r4.yml", 3),
         ("r5.yml", 6),
         ("r6.yml", 1),
         ("off.yml", 0),

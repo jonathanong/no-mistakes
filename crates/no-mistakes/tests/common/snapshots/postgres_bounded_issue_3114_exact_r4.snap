@@ -26,6 +26,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM content_items item",
           "target": "table:content_items, table:streams"
+        },
+        {
+          "file": "r4.sql",
+          "line": 38,
+          "message": "r4.sql:38: SELECT can return every row of content_items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of streams; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; Select can read unbounded rows from view public.stream_view; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM content_items item",
+          "target": "table:content_items, table:streams, view:public.stream_view"
         }
       ],
       "warnings": []

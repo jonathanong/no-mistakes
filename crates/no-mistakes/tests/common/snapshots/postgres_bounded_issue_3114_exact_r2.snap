@@ -26,6 +26,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE auth_sessions SET revoked_at = CURRENT_TIMESTAMP",
           "target": "table:auth_sessions"
+        },
+        {
+          "file": "r2.sql",
+          "line": 22,
+          "message": "r2.sql:22: UPDATE can change every row of auth_sessions; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE auth_sessions SET revoked_at = CURRENT_TIMESTAMP",
+          "target": "table:auth_sessions"
         }
       ],
       "warnings": []

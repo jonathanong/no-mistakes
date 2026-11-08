@@ -42,6 +42,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "DELETE FROM token_rows AS target USING eligible WHERE target.id = eligible.id;",
           "target": "table:token_rows"
+        },
+        {
+          "file": "r3.sql",
+          "line": 86,
+          "message": "r3.sql:86: DELETE can remove every row of token_rows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM token_rows AS target USING eligible WHERE target.id = eligible.id;",
+          "target": "table:token_rows"
         }
       ],
       "warnings": []
