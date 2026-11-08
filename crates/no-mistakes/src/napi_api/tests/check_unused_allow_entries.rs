@@ -205,3 +205,33 @@ fn missing_file_allowances_match_batched_check() {
         assert_eq!(batch["reports"][0]["result"], report);
     }
 }
+
+#[test]
+fn missing_file_query_scope_matches_batched_check() {
+    let saved = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/check/unused-allow-query-scope/fixture");
+    for (folder, config, count) in [
+        ("skipped", ".no-mistakes.yml", 1),
+        ("skipped", "functions.yml", 1),
+        ("skipped", "excluded-target.yml", 0),
+        ("skipped", "ignore.yml", 0),
+        ("skipped", "custom-skip.yml", 1),
+        ("excluded-error", ".no-mistakes.yml", 1),
+    ] {
+        let root = saved.join(folder).canonicalize().unwrap();
+        let options = json!({"root": root, "config": root.join(config)});
+        let report: Value = serde_json::from_str(
+            &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string())).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(report["rules"].as_array().unwrap().len(), count, "{report}");
+        let batch: Value = serde_json::from_str(
+            &crate::napi_api::analyze_project::analyze_project_json_impl(
+                crate::napi_api::options::test_json_arg(
+                    json!({"root": root, "config": root.join(config), "reports": [{"type": "check"}]}).to_string(),
+                ),
+            ).unwrap(),
+        ).unwrap();
+        assert_eq!(batch["reports"][0]["result"], report);
+    }
+}

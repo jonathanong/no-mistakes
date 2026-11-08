@@ -95,3 +95,37 @@ fn missing_literals_respect_skipped_directories_and_invalid_filters() {
     rule.include = vec!["[".into()];
     assert!(MissingFiles::new(root, &config, &rule, Some(&sources)).is_none());
 }
+
+#[test]
+fn missing_scope_reuses_skip_filters_and_explicit_project_roots() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let sources = super::super::source_access::complete_source_store_for_files(&[]);
+    let mut config = NoMistakesConfig::default();
+    config.filesystem.skip_directories.push("generated".into());
+    let mut rule = RuleDef {
+        scope: Some(crate::config::v2::schema::RuleScope::Repository),
+        exclude: vec!["**/*.test.*".into()],
+        ..Default::default()
+    };
+    let scope = MissingFiles::new(root, &config, &rule, Some(&sources)).unwrap();
+    assert!(scope.includes_path(&root.join("src/live.mts")));
+    for file in [
+        "fixtures/helper.mts",
+        "generated/helper.mts",
+        "src/ignored.test.mts",
+    ] {
+        assert!(!scope.includes_path(&root.join(file)), "{file}");
+    }
+    config.projects.insert(
+        "saved".into(),
+        crate::config::v2::schema::Project {
+            root: Some("fixtures".into()),
+            ..Default::default()
+        },
+    );
+    rule.scope = None;
+    rule.projects = vec!["saved".into()];
+    let scope = MissingFiles::new(root, &config, &rule, Some(&sources)).unwrap();
+    assert!(scope.includes_path(&root.join("fixtures/helper.mts")));
+    assert!(!scope.includes_path(&root.join("src/live.mts")));
+}

@@ -71,13 +71,19 @@ impl MissingFiles {
             return false;
         }
         let path = crate::codebase::ts_resolver::normalize_path(&self.root.join(selector));
+        self.includes_path(&path)
+            && self.inventory.id_for_normalized_path(&path).is_none()
+            && path.try_exists().is_ok_and(|exists| !exists)
+    }
+
+    pub(crate) fn includes_path(&self, path: &Path) -> bool {
         path.starts_with(&self.root)
-            && self.filter.is_match(&path)
+            && self.filter.is_match(path)
             && self.roots.iter().any(|root| {
                 path.strip_prefix(root).is_ok_and(|relative| {
                     !crate::codebase::ts_source::is_under_skipped_dir(
                         root,
-                        &path,
+                        path,
                         &std::collections::HashSet::new(),
                     ) && !relative.components().any(|part| {
                         part.as_os_str()
@@ -86,8 +92,6 @@ impl MissingFiles {
                     })
                 })
             })
-            && self.inventory.id_for_normalized_path(&path).is_none()
-            && path.try_exists().is_ok_and(|exists| !exists)
     }
 }
 

@@ -186,3 +186,24 @@ fn unused_allow_missing_files_check_json_snapshot() {
     .collect();
     assert_saved_fixture("unused_allow_missing_files", &cases);
 }
+
+#[test]
+fn unused_allow_query_scope_check_json_snapshot() {
+    let saved = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/check/unused-allow-query-scope/fixture");
+    let cases: Vec<_> = [
+        ("callee", "skipped", ".no-mistakes.yml"),
+        ("function", "skipped", "functions.yml"),
+        ("excluded-target", "skipped", "excluded-target.yml"),
+        ("ignore", "skipped", "ignore.yml"),
+        ("custom-skip", "skipped", "custom-skip.yml"),
+        ("excluded-error", "excluded-error", ".no-mistakes.yml"),
+    ]
+    .into_iter()
+    .map(|(label, folder, config)| {
+        let root = saved.join(folder);
+        (label, root.clone(), root.join(config))
+    })
+    .collect();
+    assert_saved_fixture("unused_allow_query_scope", &cases);
+}

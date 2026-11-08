@@ -1,0 +1,117 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "callee": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "query-reached-per-item",
+          "line": 10,
+          "message": "stale query-reached-per-item allow entry `src/deleted.mts#query` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allow: [{file: src/deleted.mts, callee: query}]",
+          "target": "src/deleted.mts#query"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom-skip": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "custom-skip.yml",
+          "import": "query-reached-per-item",
+          "line": 12,
+          "message": "stale query-reached-per-item allow entry `src/deleted.mts#query` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allow: [{file: src/deleted.mts, callee: query}]",
+          "target": "src/deleted.mts#query"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "excluded-error": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "query-reached-per-item",
+          "line": 10,
+          "message": "stale query-reached-per-item allow entry `src/deleted.mts#query` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allow: [{file: src/deleted.mts, callee: query}]",
+          "target": "src/deleted.mts#query"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "excluded-target": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "function": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "functions.yml",
+          "import": "query-reached-per-item",
+          "line": 10,
+          "message": "stale query-reached-per-item allow entry `src/deleted.mts#query@loadItems` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "allow: [{file: src/deleted.mts, callee: query, function: loadItems}]",
+          "target": "src/deleted.mts#query@loadItems"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

@@ -375,3 +375,12 @@ request inventory and disk, within the application's configured scope. Remove
 the entry or fix its path. Existing excluded or ignored files and empty glob
 matches stay silent; narrowed runs do not audit paths outside their scope.
 See [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
+
+Callee-qualified entries such as `{ file: src/deleted.mts, callee: query }`
+use the same missing-file proof, including when the rule excludes
+`**/*.test.*`. Only matching excluded paths stay silent; the exclude list does
+not disable the audit. Default and configured skipped directories are omitted
+from the expected analysis scope, while explicitly reopened project roots remain
+included. Missing-file proof needs complete requested file membership, not
+successful parsing of unrelated files. Existing-file staleness still requires
+usable graph facts; narrowed primary or graph requests stay conservative.

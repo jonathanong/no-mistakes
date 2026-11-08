@@ -31,12 +31,13 @@ pub(super) fn finish(
     options: &Options,
     audit: &AllowAudit,
 ) -> Vec<RuleFinding> {
-    if facts.graph_file_universe().iter().any(|file| {
+    let graph_usable = !facts.graph_file_universe().iter().any(|file| {
         crate::codebase::dependencies::extract::is_indexable(file)
             && facts.get_ts_facts(file).is_none_or(|facts| {
                 facts.parse_error.is_some() || facts.operational_error.is_some()
             })
-    }) {
+    });
+    if !graph_usable && !audit.audits_missing_files() {
         return Vec::new();
     }
     let graph_files =
@@ -56,20 +57,19 @@ pub(super) fn finish(
     let scope = CheckedScope::new(root, sources, &checked);
     let complete = audit.audits_missing_files()
         && sources.is_some_and(|sources| {
+            let primary = crate::codebase::check_facts::PathMembership::new(facts.files());
             sources
                 .inventory()
                 .paths()
                 .iter()
                 .filter(|file| {
                     crate::codebase::dependencies::extract::is_indexable(file)
-                        && filter.is_match(file)
+                        && audit.missing_scope_includes(file)
                 })
-                .all(|file| {
-                    scope.exact(&crate::codebase::ts_source::relative_slash_path(root, file))
-                })
+                .all(|file| primary.contains(file) && graph_files.contains(file))
         });
     audit.finish_files(
-        |index| scope.exact(&options.allow[index].file),
+        |index| graph_usable && scope.exact(&options.allow[index].file),
         |index| {
             if complete {
                 options.allow[index].file.clone()

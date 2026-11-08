@@ -114,6 +114,12 @@ impl AllowAudit {
         self.missing.is_some()
     }
 
+    pub(crate) fn missing_scope_includes(&self, path: &Path) -> bool {
+        self.missing
+            .as_ref()
+            .is_some_and(|scope| scope.includes_path(path))
+    }
+
     pub(crate) fn finish_files(
         &self,
         eligible: impl Fn(usize) -> bool,
