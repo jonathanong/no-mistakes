@@ -325,7 +325,8 @@ reported.
 
 ## Overloads and ambient declarations
 
-TypeScript overload signatures and their implementation describe one binding.
+Named and default-exported TypeScript overload signatures and their implementation
+describe one binding.
 For example, this export produces one finding when only configured tests call it,
 and none when production code imports and calls it:
 

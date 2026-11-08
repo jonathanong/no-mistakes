@@ -4,6 +4,8 @@ use std::process::Command;
 const CASES: &[&str] = &[
     "overloads-tests",
     "overloads-production",
+    "overloads-default-tests",
+    "overloads-default-production",
     "ambient",
     "augmentation",
     "runtime-controls",
@@ -40,6 +42,8 @@ fn precision_controls_preserve_enforcement_and_site_counts() {
     for (case, violations, advisories) in [
         ("overloads-tests", 1, 0),
         ("overloads-production", 0, 0),
+        ("overloads-default-tests", 1, 0),
+        ("overloads-default-production", 0, 0),
         ("ambient", 0, 0),
         ("augmentation", 0, 0),
         ("runtime-controls", 1, 4),

@@ -15,22 +15,24 @@ fn module(case: &str, file: &str) -> TypeScriptModule {
 
 #[test]
 fn overloads_share_one_binding_and_preserve_public_diagnostics() {
-    let module = module("overloads-tests", "src/api.mts");
-    let bindings: Vec<_> = module
-        .facts
-        .bindings
-        .iter()
-        .filter(|binding| binding.name == "choose")
-        .collect();
-    assert_eq!(bindings.len(), 1);
-    assert!(!module.complete);
-    assert_eq!(module.facts.diagnostics.len(), 1);
-    assert_eq!(
-        module.facts.diagnostics[0].message,
-        "Merged binding declarations are unsupported"
-    );
-    let span = bindings[0].span;
-    assert!(module.facts.importer_safe.contains(&(span.start, span.end)));
+    for case in ["overloads-tests", "overloads-default-tests"] {
+        let module = module(case, "src/api.mts");
+        let bindings: Vec<_> = module
+            .facts
+            .bindings
+            .iter()
+            .filter(|binding| binding.name == "choose")
+            .collect();
+        assert_eq!(bindings.len(), 1);
+        assert!(!module.complete);
+        assert_eq!(module.facts.diagnostics.len(), 1);
+        assert_eq!(
+            module.facts.diagnostics[0].message,
+            "Merged binding declarations are unsupported"
+        );
+        let span = bindings[0].span;
+        assert!(module.facts.importer_safe.contains(&(span.start, span.end)));
+    }
 }
 
 #[test]
