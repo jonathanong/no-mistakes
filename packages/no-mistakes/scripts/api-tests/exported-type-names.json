@@ -78,6 +78,7 @@
   "DependencyBoundOptions",
   "DependencyFile",
   "DependencyResult",
+  "DiagnosticArguments",
   "DiagnosticFilePass",
   "DiagnosticOperations",
   "DiagnosticTiming",

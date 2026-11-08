@@ -76,8 +76,15 @@ export function collectDiagnostics(
   options: Api.ExecutedPostgresSqlOptions<boolean>,
 ): Promise<DiagnosticsResult<Api.ExecutedPostgresSql[] | Api.ExecutedPostgresSqlReport>>;
 
+/** Arguments must satisfy every operation in a selector union. */
+export type DiagnosticArguments<K extends keyof DiagnosticOperations> = (
+  K extends unknown ? (...args: Parameters<DiagnosticOperations[K]>) => void : never
+) extends (...args: infer Args) => void
+  ? Args
+  : never;
+
 /** Collect verbose diagnostics without stderr output or changing the operation result. */
 export function collectDiagnostics<K extends keyof DiagnosticOperations>(
   operation: K,
-  ...args: Parameters<DiagnosticOperations[K]>
+  ...args: DiagnosticArguments<K>
 ): Promise<DiagnosticsResult<Awaited<ReturnType<DiagnosticOperations[K]>>>>;

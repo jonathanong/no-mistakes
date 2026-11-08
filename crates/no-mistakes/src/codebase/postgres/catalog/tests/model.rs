@@ -225,7 +225,7 @@ fn full_snapshot_fills_the_read_only_model() {
     assert!(views[0].materialized);
     assert_eq!(views[0].definition, "SELECT count(*) AS n FROM accounts");
     assert_eq!(views[0].comment, None);
-    let indexes = &views[0].indexes;
+    let indexes = views[0].indexes.as_ref().unwrap();
     assert_eq!(indexes.len(), 4);
     assert!(indexes[0].unique && indexes[0].valid && indexes[0].ready && indexes[0].live);
     assert_eq!(indexes[0].keys[0].column.as_deref(), Some("n"));
@@ -234,7 +234,7 @@ fn full_snapshot_fills_the_read_only_model() {
     assert!(!indexes[3].ready);
     assert_eq!(views[1].name, "active_accounts");
     assert!(!views[1].materialized);
-    assert!(views[1].indexes.is_empty());
+    assert!(views[1].indexes.is_none());
     assert_eq!(views[1].comment.as_deref(), Some("active accounts"));
 }
 

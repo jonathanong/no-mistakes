@@ -78,7 +78,7 @@ fn views(views: BTreeMap<String, super::snapshot::SnapshotView>) -> BTreeMap<Str
             (
                 normalize_table_name(&name),
                 CatalogView {
-                    indexes: objects::indexes(&view.indexes),
+                    indexes: view.indexes.as_ref().map(objects::indexes),
                     name,
                     materialized: view.materialized,
                     definition: view.definition,

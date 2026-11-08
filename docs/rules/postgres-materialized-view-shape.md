@@ -68,7 +68,11 @@ subquery into an explicit CTE or derived `SELECT`, with bounds at its base-table
 reads, when that rewrite preserves the query's semantics.
 
 Findings identify the materialized view and the missing index or unbounded
-base table. Catalog scope filters apply to `schemaCatalogPath`.
+base table. A read inside a referenced view includes its path, for example
+`unbounded base table records via view some_view`. A direct unbounded read
+has no `via view` suffix. Separate direct and referenced reads remain separate
+findings, even when they read the same table. Catalog scope filters apply to
+`schemaCatalogPath`.
 
 ## Options and defaults
 
@@ -164,7 +168,8 @@ supported window.
   "views": {
     "all_orders": {
       "materialized": true,
-      "definition": "SELECT id, score FROM orders"
+      "definition": "SELECT id, score FROM orders",
+      "indexes": {}
     }
   }
 }
@@ -201,6 +206,14 @@ standard warning. The rule reads only the selected schema catalog and does
 not collect executor facts from TS/JS.
 
 ### Unanalyzable inputs
+
+A materialized view without an `indexes` key has unknown index metadata,
+as in older format-version-2 snapshots. The rule emits one catalog finding
+asking you to regenerate with `no-mistakes postgres catalog --coverage complete`,
+and skips index requirements for those views. It still checks their definitions.
+An explicit `"indexes": {}` records that there are no indexes and produces the
+usual unique-index and additional-index findings. Regeneration requires the
+connection and output arguments documented by [`postgres catalog`](../cli/postgres.md).
 
 A missing, unreadable, or invalid catalog is a configuration error. An ordering-only catalog produces an incomplete-input error; regenerate it with `postgres catalog --coverage complete`. A definition
 that the shared SQL parser cannot analyze, an unsupported `TABLE` set-operation

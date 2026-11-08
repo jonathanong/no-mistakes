@@ -55,6 +55,9 @@ imports and the historical TypeScript/TSX interpretation of source extensions.
 Within each rule application, each distinct source/specifier pair is resolved
 once, then package reachability uses those prepared relationships. Preparation
 and memoization belong to that invocation and do not persist between checks.
+With verbose diagnostics enabled, historical import projections also attribute
+value-flow extraction and finalization to their source file, including files
+with nonstandard extensions. Diagnostics do not widen the rule's source scope.
 
 ## Why and when
 

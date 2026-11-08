@@ -331,6 +331,6 @@ test("catalog views expose indexes with the same named contract as tables", () =
   const types = readFileSync(join(packageRoot, "postgres-catalog-types.d.ts"), "utf8");
   assert.match(
     types,
-    /export interface PostgresCatalogView \{[^}]*indexes: Record<string, PostgresCatalogIndex>;/,
+    /export interface PostgresCatalogView \{[^}]*indexes\?: Record<string, PostgresCatalogIndex>;/,
   );
 });

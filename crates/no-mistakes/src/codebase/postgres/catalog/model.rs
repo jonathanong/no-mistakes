@@ -179,7 +179,7 @@ pub struct CatalogEnum {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CatalogView {
     pub name: String,
-    pub indexes: Vec<CatalogIndexInfo>,
+    pub indexes: Option<Vec<CatalogIndexInfo>>,
     pub materialized: bool,
     pub definition: String,
     pub comment: Option<String>,

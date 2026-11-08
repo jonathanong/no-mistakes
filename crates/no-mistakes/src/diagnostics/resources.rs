@@ -1,4 +1,5 @@
 use super::{InvocationObserver, TimingKind};
+use std::cell::RefCell;
 use std::fmt::Write;
 use std::time::Duration;
 
@@ -8,9 +9,14 @@ use super::report::PhaseResourceDiagnostic;
 use aggregation::aggregate;
 use usage::{sample, Usage};
 
+thread_local! {
+    static PARENTS: RefCell<Vec<usize>> = const { RefCell::new(Vec::new()) };
+}
+
 #[derive(Default)]
 pub(super) struct ResourceState {
     active: usize,
+    eligible: bool,
     completed: Vec<PhaseResources>,
 }
 
@@ -25,6 +31,7 @@ struct PhaseResources {
 pub(super) struct ResourceGuard<'a> {
     observer: &'a InvocationObserver,
     start: Option<Usage>,
+    completed: bool,
 }
 
 impl<'a> ResourceGuard<'a> {
@@ -38,50 +45,61 @@ impl<'a> ResourceGuard<'a> {
         if matches!(label, "invocation.dispatch" | "facts.prepare") {
             return None;
         }
+        let identity = std::ptr::from_ref(observer) as usize;
+        let nested = PARENTS.with(|parents| parents.borrow().contains(&identity));
         let top_level = {
             let mut state = state.lock().unwrap();
             let top_level = state.active == 0 && kind == TimingKind::Serial;
+            if state.active == 0 {
+                state.eligible = top_level;
+            } else if !nested && kind == TimingKind::Serial {
+                state.eligible = false;
+            }
             state.active += 1;
             top_level
         };
+        PARENTS.with(|parents| parents.borrow_mut().push(identity));
         let start = top_level.then(sample).flatten();
-        Some(Self { observer, start })
+        Some(Self {
+            observer,
+            start,
+            completed: false,
+        })
     }
 
     pub(super) fn finish(&self) -> Option<Usage> {
         self.start.and_then(|_| sample())
     }
 
-    pub(super) fn record(&self, label: &str, wall: Duration, end: Option<Usage>) {
-        let Some((start, end)) = self.start.zip(end) else {
-            return;
-        };
-        let completed = PhaseResources {
-            label: label.to_owned(),
-            wall,
-            start,
-            end,
-        };
-        self.observer
-            .resources
-            .as_ref()
-            .unwrap()
-            .lock()
-            .unwrap()
-            .completed
-            .push(completed);
+    pub(super) fn record(mut self, label: &str, wall: Duration, end: Option<Usage>) {
+        let mut state = self.observer.resources.as_ref().unwrap().lock().unwrap();
+        state.active -= 1;
+        self.completed = true;
+        if let Some((start, end)) = self.start.zip(end).filter(|_| state.eligible) {
+            state.completed.push(PhaseResources {
+                label: label.to_owned(),
+                wall,
+                start,
+                end,
+            });
+        }
     }
 }
 
 impl Drop for ResourceGuard<'_> {
     fn drop(&mut self) {
-        self.observer
-            .resources
-            .as_ref()
-            .unwrap()
-            .lock()
-            .unwrap()
-            .active -= 1;
+        PARENTS.with(|parents| {
+            parents.borrow_mut().pop();
+        });
+        if !self.completed {
+            self.observer
+                .resources
+                .as_ref()
+                .unwrap()
+                .lock()
+                .unwrap()
+                .active -= 1;
+        }
     }
 }
 

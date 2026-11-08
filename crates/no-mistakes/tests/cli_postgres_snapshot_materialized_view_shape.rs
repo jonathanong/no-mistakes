@@ -55,6 +55,9 @@ fn postgres_materialized_view_shape_check_json_snapshot() {
         ("compliant", "pass", "pass.yml"),
         ("ordering_catalog", "ordering", "default.yml"),
         ("table_view_identity", "collision", "collision.yml"),
+        ("legacy_index_data", "legacy-index-data", "advisory.yml"),
+        ("empty_index_data", "empty-index-data", "advisory.yml"),
+        ("view_read_path", "view-read-path", "advisory.yml"),
         ("mixed_severities", "mixed", "mixed.yml"),
         ("excluded_error_application", "mixed", "excluded-error.yml"),
         ("zero_additional", "fail", "zero-additional.yml"),
@@ -316,4 +319,55 @@ fn materialized_view_bounds_do_not_borrow_keys_or_allowances_across_view_collisi
             "materialized-view:bad_qualified_view",
         ])
     );
+}
+
+#[test]
+fn materialized_view_missing_index_data_requires_one_catalog_regeneration_finding() {
+    let checked = report("legacy-index-data", "advisory.yml");
+    let findings = checked["advisories"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{checked}");
+    assert!(findings[0]["target"].is_null(), "{checked}");
+    let message = findings[0]["message"].as_str().unwrap();
+    assert!(message.contains("catalog lacks materialized-view index data"));
+    assert!(message.contains("no-mistakes postgres catalog --coverage complete"));
+    assert!(!message.contains("missing a usable"));
+    let explicit = report("empty-index-data", "advisory.yml");
+    let findings = explicit["advisories"].as_array().unwrap();
+    assert_eq!(findings.len(), 4, "{explicit}");
+    for name in ["summary_one", "summary_two"] {
+        assert_eq!(
+            findings
+                .iter()
+                .filter(|finding| { finding["target"] == format!("materialized-view:{name}") })
+                .count(),
+            2,
+            "{explicit}"
+        );
+    }
+}
+
+#[test]
+fn materialized_view_unbounded_reads_retain_each_referenced_view_path() {
+    let checked = report("view-read-path", "advisory.yml");
+    let findings = checked["advisories"].as_array().unwrap();
+    assert_eq!(findings.len(), 5, "{checked}");
+    for (target, expected) in [
+        ("nested_read", "records via view some_view;"),
+        (
+            "nested_chain",
+            "records via view wrapper_view -> view some_view;",
+        ),
+        ("direct_read", "records;"),
+        ("both_reads", "records;"),
+        ("both_reads", "records via view some_view;"),
+    ] {
+        assert!(
+            findings.iter().any(|finding| {
+                finding["target"] == format!("materialized-view:{target}")
+                    && finding["message"].as_str().unwrap().contains(expected)
+            }),
+            "{target}: {checked}"
+        );
+    }
+    assert!(!targets(&checked).contains("materialized-view:bounded_direct"));
 }

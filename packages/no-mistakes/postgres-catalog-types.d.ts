@@ -117,7 +117,8 @@ export interface PostgresCatalogEnum {
   values: string[];
 }
 export interface PostgresCatalogView {
-  indexes: Record<string, PostgresCatalogIndex>;
+  /** Absent in older snapshots; regenerate the catalog before checking view indexes. */
+  indexes?: Record<string, PostgresCatalogIndex>;
   materialized: boolean;
   /** `pg_get_viewdef` text. */
   definition: string;

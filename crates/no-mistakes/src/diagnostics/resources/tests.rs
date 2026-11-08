@@ -236,3 +236,53 @@ fn facts_preparation_is_transparent_to_syntax_and_projection_resources() {
     assert_eq!(phases[0].label, "parse");
     assert_eq!(phases[1].label, "postgres.annotation.project");
 }
+
+#[test]
+#[cfg(unix)]
+fn overlapping_independent_serial_siblings_omit_both_resource_records() {
+    let observer = InvocationObserver::new(true);
+    let barrier = std::sync::Barrier::new(2);
+    std::thread::scope(|scope| {
+        scope.spawn(|| {
+            observer.trace("first", TimingKind::Serial, || {
+                barrier.wait();
+                barrier.wait();
+            })
+        });
+        barrier.wait();
+        observer.trace("second", TimingKind::Serial, || {
+            barrier.wait();
+        });
+    });
+    assert!(
+        observer.resource_snapshot().is_empty(),
+        "{}",
+        observer.resource_block()
+    );
+    assert_eq!(observer.snapshot().timings.len(), 2);
+    observer.trace("after", TimingKind::Serial, || ());
+    assert_eq!(observer.resource_snapshot()[0].label, "after");
+}
+
+#[test]
+#[cfg(unix)]
+fn serial_envelope_keeps_parallel_workers_and_their_serial_children() {
+    let observer = InvocationObserver::new(true);
+    observer.trace("envelope", TimingKind::Serial, || {
+        let barrier = std::sync::Barrier::new(2);
+        std::thread::scope(|scope| {
+            for _ in 0..2 {
+                let observer = &observer;
+                let barrier = &barrier;
+                scope.spawn(move || {
+                    observer.trace("worker", TimingKind::Parallel, || {
+                        barrier.wait();
+                        observer.trace("child", TimingKind::Serial, || ());
+                    })
+                });
+            }
+        });
+    });
+    assert_eq!(observer.resource_snapshot().len(), 1);
+    assert_eq!(observer.resource_snapshot()[0].label, "envelope");
+}

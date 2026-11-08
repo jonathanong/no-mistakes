@@ -65,7 +65,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
-          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events via view unbounded_source; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
           "target": "materialized-view:bad_nested_view"
@@ -254,7 +254,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
-          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events via view unbounded_source; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
           "target": "materialized-view:bad_nested_view"
@@ -452,7 +452,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
-          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events via view unbounded_source; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
           "target": "materialized-view:bad_nested_view"
@@ -573,6 +573,51 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "empty_index_data": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:summary_one: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:summary_one"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:summary_one: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:summary_one"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:summary_two: has 0 additional indexes, needs at least 1; add read indexes for ranking queries",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:summary_two"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:summary_two: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:summary_two"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "excluded_error_application": {
     "exitCode": 1,
     "report": {
@@ -678,7 +723,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
-          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events via view unbounded_source; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
           "target": "materialized-view:bad_nested_view"
@@ -1092,6 +1137,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "legacy_index_data": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: catalog lacks materialized-view index data; regenerate it with `no-mistakes postgres catalog --coverage complete` before checking view indexes",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "mixed_severities": {
     "exitCode": 1,
     "report": {
@@ -1216,7 +1281,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
-          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events via view unbounded_source; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
           "target": "materialized-view:bad_nested_view"
@@ -1407,7 +1472,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
-          "message": "schema.json: materialized-view:bad_qualified_view: unbounded base table orders; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "message": "schema.json: materialized-view:bad_qualified_view: unbounded base table orders via view archive.events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
           "target": "materialized-view:bad_qualified_view"
@@ -1540,7 +1605,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
-          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events via view unbounded_source; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
           "target": "materialized-view:bad_nested_view"
@@ -1881,7 +1946,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
-          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events via view unbounded_source; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
           "target": "materialized-view:bad_nested_view"
@@ -2015,6 +2080,59 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "view_read_path": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:both_reads: unbounded base table records via view some_view; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:both_reads"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:both_reads: unbounded base table records; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:both_reads"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:direct_read: unbounded base table records; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:direct_read"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:nested_chain: unbounded base table records via view wrapper_view -> view some_view; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:nested_chain"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:nested_read: unbounded base table records via view some_view; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:nested_read"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "zero_additional": {
     "exitCode": 0,
     "report": {
@@ -2078,7 +2196,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
-          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "message": "schema.json: materialized-view:bad_nested_view: unbounded base table events via view unbounded_source; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
           "target": "materialized-view:bad_nested_view"

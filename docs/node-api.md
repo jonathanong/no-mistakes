@@ -654,8 +654,12 @@ postprocessing. `diagnostics` is an exported `VerboseDiagnostics` report with
 `elapsedMs`, `timings` (`DiagnosticTiming[]`), `work`, `phases`
 (`PhaseResourceDiagnostic[]`), `hotFiles` (`HotFileDiagnostic[]`), and optional
 `peakRssKiB`. `DiagnosticsResult<T>`, `DiagnosticFilePass`, and
-`DiagnosticOperations` are also exported. The selector map preserves each
-operation's required or optional argument tuple and asynchronous result type.
+`DiagnosticOperations` and `DiagnosticArguments<K>` are also exported. The selector
+map preserves each operation's required or optional argument tuple and asynchronous
+result type.
+For a union-valued selector, arguments must satisfy every possible operation;
+otherwise narrow the selector before calling. For example, `"check" | "dependents"`
+requires options with `files`, even though a literal `"check"` needs no options.
 Selectors cover root analysis APIs, including `analyzeProject`, SQL extraction
 and parsing, and `lockStatus`. Utilities `version`, `diagnosticsSnapshot`,
 `createWorkflowTopologyIndex`, and `writePlanningImpactArtifacts`, the collector
@@ -669,8 +673,9 @@ in first-appearance order. Repeated eligible spans sum wall/user/system time;
 utilization divides total CPU by total wall time. Peak RSS takes the maximum
 phase-end sample and its delta sums the individual nonnegative span increases.
 Resource sampling is Unix only; unsupported or failed samples have no resource
-record. Nested and parallel spans retain elapsed timings without CPU/RSS
-attribution. Hot-file records contain `pass`, `path`, `durationMs` and `units`,
+record. Overlapping independent serial spans omit both resource records;
+intentional serial envelopes still cover their parallel workers. Nested and
+parallel spans retain elapsed timings without CPU/RSS attribution. Hot-file records contain `pass`, `path`, `durationMs` and `units`,
 bounded to ten per pass. File `parse` covers parsing and requested fact extraction;
 value-flow extraction/finalization cover collector setup through returned facts.
 All file durations are elapsed milliseconds, including annotation roots. See [diagnostic semantics](cli/diagnostics.md) for pass

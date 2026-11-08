@@ -43,8 +43,12 @@ test("verbose diagnostics exposes named report contracts and preserves operation
   assert.match(declarations, /work: Record<string, number>;/);
   assert.match(declarations, /peakRssKiB\?: number;/);
   assert.match(declarations, /diagnostics\?: VerboseDiagnostics;/);
+  assert.match(
+    declarations,
+    /export type DiagnosticArguments<K extends keyof DiagnosticOperations>/,
+  );
   assert.match(declarations, /collectDiagnostics<K extends keyof DiagnosticOperations>\(/);
-  assert.match(declarations, /\.\.\.args: Parameters<DiagnosticOperations\[K\]>/);
+  assert.match(declarations, /\.\.\.args: DiagnosticArguments<K>/);
   assert.match(
     declarations,
     /Promise<DiagnosticsResult<Awaited<ReturnType<DiagnosticOperations\[K\]>>>>/,

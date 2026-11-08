@@ -56,7 +56,9 @@ pub(crate) fn project(
     session.record_work("production_dependencies.legacy_import_projections", 1);
     let imports = session
         .with_legacy_symbols_program(path, source, |program, parsed, _| {
-            extract_import_facts_from_program_with_source(program, parsed).imports
+            crate::diagnostics::hot_files::with_file(path, || {
+                extract_import_facts_from_program_with_source(program, parsed).imports
+            })
         })
         .unwrap_or_default();
     let imports = Arc::new(imports);

@@ -115,7 +115,9 @@ contract keeps the `RETURNS` clause, including a `RETURNS TABLE` column list,
 `ROWS`, and `SUPPORT` are stored separately from the body. Enum objects
 carry `values`. View objects carry `materialized`, `definition`, `comment`,
 and an `indexes` map with the same index objects as tables. Missing view
-indexes in older snapshots load as an empty collection. Both table and view
+indexes in older snapshots remain unavailable (`None` in the Rust view model),
+distinct from an explicit empty map (`Some` with an empty collection).
+Regenerate those snapshots before checking view index requirements. Both table and view
 index models retain `valid`, `ready`, and `live`; missing validity/readiness
 is false and a missing legacy `live` flag is true. Rules must check these
 flags before using an index as evidence. Invalid indexes remain visible in
