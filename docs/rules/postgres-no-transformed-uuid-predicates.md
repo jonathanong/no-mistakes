@@ -72,8 +72,8 @@ WHERE num_nonnulls(a.id, b.id) = 1;
 The anchor must belong to the same relation occurrence in the same query scope;
 a different self-join alias, nested query, or separate statement cannot exempt
 it. Unqualified references require a single known relation for this exemption.
-Disjunctions, negations, self-dependent bounds, unindexed columns, partial
-indexes, and non-leading index columns do not establish an anchor. An outer
+Disjunctions, negations, self-dependent bounds, columns without indexes,
+partial indexes, and non-leading index columns do not establish an anchor. An outer
 join's key anchors only the newly joined relation. A cast on that key, such as
 `LEFT JOIN accounts a ON a.id::text = e.email`, still reports. Without a bare
 anchor, `WHERE uuid_extract_timestamp(id) >= $1` still reports: fix it by
