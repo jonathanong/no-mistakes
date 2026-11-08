@@ -36,7 +36,14 @@ Every base table is presumed growing unless `allowBaseTables` names it with
 a reason. The defining query must constrain each read through either a range
 on an indexed column or a comparison on the leading column of a primary or unique key
 using a configured `windowFunctions` function (including equality). A predicate
-on another table does not bound that read. An ordinary equality, a limit, or
+on a bounded driver also bounds a lookup joined through its full primary key
+or a nonpartial unique key, using the key proof shared with
+`postgres-bounded-statements`. Every column of a composite lookup key must be
+equated to bounded inputs in every predicate alternative. A bounded CTE or
+derived SELECT can also drive these lookups; aggregate and LIMIT output caps
+do not establish bounded base-table reads. An incomplete key,
+a join without a unique key, or an unbounded driver still leaves the lookup
+unbounded. An ordinary equality, a limit, or
 an arbitrary function name does not establish a window. Plain time ranges may
 use `now`, `current_timestamp`, `current_date`, or `localtimestamp`. Definitions use the existing SQL view parser and
 required-predicate analysis; the request catalog shares parsed definitions with other view checks. Unsupported definitions are reported for review.
@@ -47,6 +54,13 @@ index). The bound belongs in the SELECT that reads the base table; predicates
 on an outer CTE or referenced view are not pushed into its definition. Flatten
 parenthesized joins into explicit joins with base-table WHERE bounds when a
 definition needs review.
+
+A qualified column of a single-row `VALUES` CTE or a constant `SELECT` CTE
+without recursion can supply the same window as its inline scalar expression.
+CTE column names
+and aliases are respected, including `column1` for unnamed `VALUES` outputs.
+Multiple-row CTEs, relation-reading CTEs, subquery-valued bounds, and arbitrary
+functions do not establish constant window values.
 
 Supported `FROM` sources are plain tables, catalog views, CTE references,
 and derived `SELECT` subqueries, with ordinary alias names and explicit joins.
@@ -103,6 +117,23 @@ WHERE id >= fn_min_uuidv7(now() - interval '7 days');
 CREATE UNIQUE INDEX recent_orders_id ON recent_orders (id);
 CREATE INDEX recent_orders_score ON recent_orders (score DESC);
 ```
+
+A bounded driver may read lookup rows by their complete keys, with a window
+supplied by a one-row CTE (`users.id` is its primary key):
+
+```sql
+CREATE MATERIALIZED VIEW recent_authors AS
+WITH w AS (VALUES (fn_min_uuidv7(now() - '7 days'::interval)))
+SELECT p.id, u.name FROM posts p
+JOIN w ON p.id >= w.column1
+JOIN users u ON u.id = p.author_id;
+CREATE UNIQUE INDEX recent_authors_id ON recent_authors (id);
+CREATE INDEX recent_authors_name ON recent_authors (name);
+```
+
+A timestamp range may also use `WITH w(days) AS (VALUES (7))` and
+`published_at > CURRENT_TIMESTAMP - w.days * INTERVAL '1 day'`, provided
+`published_at` leads an eligible index.
 
 The counterexample migration has no indexes or base-table window:
 
@@ -176,6 +207,10 @@ supported window.
 ```
 
 This has no refresh index, no ranking index, and no bound on `orders`.
+Whole-table aggregates such as `SELECT count(*) FROM orders` still read
+unbounded input. For a primary key `(tenant_id, id)`, a window on `id` alone
+also remains unbounded because it does not lead that key's index. Joining a
+lookup on only `id` does not complete the composite key either.
 
 ## Fix
 

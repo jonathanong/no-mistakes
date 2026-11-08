@@ -1040,7 +1040,7 @@
   "views": {
     "bounded_orders": {
       "comment": null,
-      "definition": " SELECT id,\n    total_cents\n   FROM orders\n  WHERE id >= '018f0000-0000-7000-8000-000000000000'::uuid AND id < '01900000-0000-7000-8000-000000000000'::uuid;",
+      "definition": " WITH w AS (\n         VALUES ('018f0000-0000-7000-8000-000000000000'::uuid)\n        )\n SELECT o.id,\n    o.total_cents\n   FROM orders o\n     JOIN w ON o.id >= w.column1\n     JOIN accounts a ON a.id = o.account_id\n  WHERE o.id < '01900000-0000-7000-8000-000000000000'::uuid;",
       "indexes": {
         "bounded_orders_ranking": {
           "accessMethod": "btree",

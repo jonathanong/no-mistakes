@@ -134,3 +134,8 @@ fn start(span: sqlparser::tokenizer::Span) -> (usize, usize) {
         (span.start.column as usize).max(1),
     )
 }
+
+/// Equality facts for key lookups; no output cardinality cap is consulted.
+pub(super) fn lookup_query(query: &Query) -> SqlBoundQuery {
+    query::bound_query(query, &Scope::default(), None)
+}

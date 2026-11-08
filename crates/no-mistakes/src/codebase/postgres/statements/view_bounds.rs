@@ -4,9 +4,13 @@ use sqlparser::ast::{BinaryOperator, Expr, Query, TableFactor};
 use std::cell::{Cell, RefCell};
 use std::collections::HashSet;
 
+mod constants;
+mod joins;
 mod keys;
 mod queries;
 mod scalar;
+
+type LookupProof = fn(&mut [super::SqlBoundItem], &mut [bool], &SchemaCatalog);
 
 pub(crate) const BOUNDED_VIEW_MARKER: &str = "__no_mistakes_bounded_view__";
 
@@ -14,8 +18,10 @@ pub(crate) fn bounded_view_selects(
     view: &CatalogView,
     functions: &[String],
     catalog: &SchemaCatalog,
+    lookup: LookupProof,
 ) -> Result<Vec<SqlSelectFact>, PostgresParseError> {
     let query = catalog.try_view_query(&view.name)?;
+    let query = constants::inline(&query, functions);
     let definition = &view.definition;
     let projection = Bounds {
         functions,
@@ -36,6 +42,12 @@ pub(crate) fn bounded_view_selects(
     if projection.unsupported.get() || !queries::complete(&query, &projection.queries.borrow()) {
         return Err(unsupported());
     }
+    joins::project(
+        &super::bounds::lookup_query(&query),
+        &mut selects,
+        catalog,
+        lookup,
+    );
     Ok(selects)
 }
 

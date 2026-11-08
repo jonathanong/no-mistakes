@@ -53,6 +53,8 @@ fn postgres_materialized_view_shape_check_json_snapshot() {
         ("advisory_severity", "fail", "advisory.yml"),
         ("index_and_identity_edges", "edges", "edges.yml"),
         ("compliant", "pass", "pass.yml"),
+        ("lookup_windows", "lookup-windows", "advisory.yml"),
+        ("lookup_windows_off", "lookup-windows", "off.yml"),
         ("ordering_catalog", "ordering", "default.yml"),
         ("table_view_identity", "collision", "collision.yml"),
         ("legacy_index_data", "legacy-index-data", "advisory.yml"),
@@ -95,10 +97,8 @@ fn materialized_view_controls_cover_indexes_and_every_base_read() {
         "bad_equality",
         "bad_unindexed",
         "bad_or",
-        "bad_join",
         "bad_left_join",
         "bad_cte",
-        "bad_self_join",
         "bad_scalar_subquery",
         "bad_limit",
         "bad_unknown",
@@ -143,7 +143,7 @@ fn materialized_view_configuration_changes_only_selected_requirements() {
 
     let allowed = report("fail", "allow.yml");
     assert!(!targets(&allowed).contains("materialized-view:bad_unbounded"));
-    assert!(targets(&allowed).contains("materialized-view:bad_join"));
+    assert!(targets(&allowed).contains("materialized-view:bad_left_join"));
 }
 
 #[test]
@@ -370,4 +370,25 @@ fn materialized_view_unbounded_reads_retain_each_referenced_view_path() {
         );
     }
     assert!(!targets(&checked).contains("materialized-view:bounded_direct"));
+}
+
+#[test]
+fn materialized_view_lookup_windows_preserve_unbounded_controls() {
+    let checked = report("lookup-windows", "advisory.yml");
+    let schema: Value = serde_json::from_str(include_str!(
+        "../../../test-cases/rules/postgres-materialized-view-shape/fixture/lookup-windows/schema.json"
+    )).unwrap();
+    let expected: BTreeSet<_> = schema["views"]
+        .as_object()
+        .unwrap()
+        .keys()
+        .filter(|name| name.starts_with("bad_"))
+        .map(|name| format!("materialized-view:{name}"))
+        .collect();
+    let actual: BTreeSet<_> = targets(&checked).into_iter().map(str::to_owned).collect();
+    assert_eq!(actual, expected, "{checked}");
+    let off = run("lookup-windows", "off.yml");
+    let empty = run("lookup-windows", "empty.yml");
+    assert!(off.status.success());
+    assert_eq!(off.stdout, empty.stdout);
 }

@@ -1,3 +1,4 @@
+use super::super::postgres_bounded_statements::bound_lookup_items;
 use super::{Compiled, RULE_ID};
 use crate::codebase::postgres::statements::{bounded_view_selects, BOUNDED_VIEW_MARKER};
 use crate::codebase::postgres::{
@@ -94,7 +95,8 @@ fn definition_problems(
     view: &CatalogView,
 ) -> Problems {
     let mut problems = Problems::default();
-    let selects = match bounded_view_selects(view, &compiled.functions, catalog) {
+    let selects = match bounded_view_selects(view, &compiled.functions, catalog, bound_lookup_items)
+    {
         Ok(selects) => selects,
         Err(error) => {
             problems.messages.insert(format!("cannot analyze definition: {error}; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason"));
