@@ -14,6 +14,7 @@ fn index_probe_evidence_is_opt_in_and_preserves_other_facts() {
             SqlLocationDemand::Full,
             false,
             enabled,
+            false,
         )
     };
     let without = extract(false);

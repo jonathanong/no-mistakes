@@ -33,14 +33,21 @@ impl Positions {
         projection: Option<usize>,
         execution: Option<super::Execution>,
     ) -> (Position, Coordinates) {
-        let mut fallback = bound.statement_start.unwrap_or((bound.line, bound.column));
+        let mut fallback = if bound.body.is_some() {
+            (bound.line, bound.column)
+        } else {
+            bound.statement_start.unwrap_or((bound.line, bound.column))
+        };
         if file.variant_locations.is_none() && projection.is_some() {
             fallback.0 = fallback.0.saturating_sub(file.origin_line) + 1;
         }
-        let position = file
-            .variant_locations
-            .as_ref()
-            .and_then(|locations| locations.position(SqlFactSite::BoundStatement(bound_index)));
+        let position = file.variant_locations.as_ref().and_then(|locations| {
+            locations.position(if bound.body.is_some() {
+                SqlFactSite::Bound(bound_index)
+            } else {
+                SqlFactSite::BoundStatement(bound_index)
+            })
+        });
         let at = position
             .map(|position| (position.sql_line, position.sql_column))
             .unwrap_or(fallback);

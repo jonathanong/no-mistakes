@@ -1,0 +1,357 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "source_rows": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "group_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 3
+        },
+        "label_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 4
+        },
+        "key_hash": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 5
+        },
+        "slug": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 6
+        },
+        "active": {
+          "dataType": "boolean",
+          "nullable": true,
+          "ordinalPosition": 7
+        },
+        "inactive_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true,
+          "ordinalPosition": 8
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "source_rows_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX source_rows_pkey ON source_rows USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "edge_rows": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "group_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 3
+        },
+        "label_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 4
+        },
+        "key_hash": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 5
+        },
+        "slug": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 6
+        },
+        "active": {
+          "dataType": "boolean",
+          "nullable": true,
+          "ordinalPosition": 7
+        },
+        "inactive_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true,
+          "ordinalPosition": 8
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "edge_rows_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX edge_rows_pkey ON edge_rows USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "lookup_rows": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "group_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 3
+        },
+        "label_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 4
+        },
+        "key_hash": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 5
+        },
+        "slug": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 6
+        },
+        "active": {
+          "dataType": "boolean",
+          "nullable": true,
+          "ordinalPosition": 7
+        },
+        "inactive_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true,
+          "ordinalPosition": 8
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "lookup_rows_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX lookup_rows_pkey ON lookup_rows USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "label_rows": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "group_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 3
+        },
+        "label_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 4
+        },
+        "key_hash": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 5
+        },
+        "slug": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 6
+        },
+        "active": {
+          "dataType": "boolean",
+          "nullable": true,
+          "ordinalPosition": 7
+        },
+        "inactive_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true,
+          "ordinalPosition": 8
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "label_rows_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX label_rows_pkey ON label_rows USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "member_rows": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "group_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 3
+        },
+        "label_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 4
+        },
+        "key_hash": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 5
+        },
+        "slug": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 6
+        },
+        "active": {
+          "dataType": "boolean",
+          "nullable": true,
+          "ordinalPosition": 7
+        },
+        "inactive_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true,
+          "ordinalPosition": 8
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "member_rows_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX member_rows_pkey ON member_rows USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -2,18 +2,13 @@ use super::aggregate::orders_by_aggregate;
 use super::{items, start, Scope};
 use crate::codebase::postgres::statements::limit::is_zero_limited;
 use crate::codebase::postgres::statements::{SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery};
-use sqlparser::ast::{Query, SetExpr, SetOperator, SetQuantifier, Statement};
+use sqlparser::ast::{Query, SetExpr, SetOperator, SetQuantifier, Spanned, Statement};
 mod blocking;
 mod compact;
 mod distinct_on;
 mod outputs;
 
-pub(super) fn caller_value(
-    expr: &sqlparser::ast::Expr,
-    positions: super::super::value::PlaceholderPositions<'_>,
-) -> bool {
-    outputs::caller_value(expr, positions)
-}
+pub(super) use outputs::caller_value;
 mod recursive_depth;
 mod recursive_domain;
 mod recursive_order;
@@ -59,6 +54,12 @@ fn bound_body_observed(
     observe: impl FnOnce(&BlockingStatuses),
 ) -> SqlBoundQuery {
     let mut bound = set::bound(&query.body, scope, positions);
+    scope.expressions_at(
+        &query.order_by,
+        &bound.items,
+        || query.body.span().end,
+        positions,
+    );
     if let Some(capped) = super::aggregate::order_expansion_predicates_reject(query, positions) {
         bound.capped = capped;
     }

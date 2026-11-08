@@ -38,6 +38,71 @@ rules:
 
 See [rationale](postgres-bounded-statements-rationale.md).
 
+## Independent candidate bodies
+
+`materializedBodies` defaults to `ignore`, preserving existing findings and fact
+collection. Set it to `require-bound` (an alias of `advise`) to receive non-failing
+advisories, or `report` to make violations findings. This option checks
+explicit `AS MATERIALIZED` CTEs and pool-building subquery bodies independently of the surrounding
+statement. Ordinary and `AS NOT MATERIALIZED` CTE declarations retain their
+existing behavior. Recursive bodies keep the existing depth-predicate proof.
+The `statements` filter selects the owning executed statement: selecting UPDATE
+or DELETE also checks its CTE and subquery bodies, while unrelated SELECT bodies
+remain outside that selection. Separate bodies on one line retain separate advisories.
+
+`EXISTS` and `NOT EXISTS` bodies are existence probes, so they do not receive
+independent pool diagnostics. Known correlated scalar subqueries are also
+per-row probes. `IN`, `ANY`, array subqueries and derived tables retain their
+body obligations. Materialized CTEs and pool-building bodies nested inside a
+probe are still checked.
+
+A later body that consumes an already materialized CTE inherits that pool's
+obligation. Report the unbounded source CTE once rather than repeating its
+underlying relations at every consumer. A consumer that adds a new unbounded
+scan still reports that scan; separate consumers of an ordinary inline CTE
+retain separate obligations. These body-only projections do not change the
+parent statement's cardinality or key proofs.
+
+An outer cap cannot establish a bounded candidate pool inside a body:
+
+```sql
+-- Reported with materializedBodies: report
+WITH candidates AS MATERIALIZED (SELECT id FROM posts)
+SELECT id FROM candidates LIMIT 20;
+
+-- Accepted: bound the body itself
+WITH candidates AS MATERIALIZED (SELECT id FROM posts LIMIT 200)
+SELECT id FROM candidates LIMIT 20;
+
+-- Reported: the outer LIMIT cannot bound the derived body
+SELECT id FROM (SELECT id FROM posts) candidates LIMIT 20;
+```
+
+A body can instead restrict every relation by an existing primary/unique-key
+proof, or by equality / `= ANY` on a reviewed `columnBounds` key. For example,
+`SELECT id FROM follows WHERE follower_id = $1` is bounded when
+`columnBounds` declares `follows.follower_id` with a finite fan-out reason.
+Outer predicates do not supply that body-local proof. Findings name the body
+and its unbounded relations, at the CTE declaration or subquery start. A body
+LIMIT retains the rule's existing conservative LIMIT-expression proofs.
+
+```yaml
+options:
+  schemaCatalogPath: schema.json
+  materializedBodies: report
+  columnBounds:
+    follows.follower_id:
+      reason: Application enforces at most 500 followed accounts per viewer
+```
+
+Use `-- no-mistakes-disable-next-line postgres-bounded-statements` immediately
+before the CTE/body statement, `-- no-mistakes-disable-line` on its line, or
+`-- no-mistakes-disable-file postgres-bounded-statements` for a file exception.
+The existing `allow` list can exempt a catalog relation with a reason. Prefer a
+body-local LIMIT or a documented finite key over suppressing the check: this
+policy prevents capped queries from constructing unbounded intermediate pools.
+
+
 ## What it catches/requires
 
 See [proof cases](postgres-bounded-statements-proof.md).

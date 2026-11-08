@@ -63,3 +63,48 @@ fn unanalyzable_sql_is_validated() {
     assert!(!compiled.fail_unanalyzable);
     assert!(error("schemaCatalogPath: s.json\nunanalyzableSql: maybe").contains("unanalyzableSql"));
 }
+
+#[test]
+fn independent_body_policy_is_opt_in_and_require_bound_advises() {
+    use super::bodies::Policy;
+    assert!(
+        compile("schemaCatalogPath: schema.json")
+            .unwrap()
+            .materialized_bodies
+            == Policy::Ignore
+    );
+    for (name, expected) in [
+        ("ignore", Policy::Ignore),
+        ("advise", Policy::Advise),
+        ("require-bound", Policy::Advise),
+        ("report", Policy::Report),
+        ("!ignore null", Policy::Ignore),
+        ("!advise null", Policy::Advise),
+        ("!report null", Policy::Report),
+    ] {
+        let value: serde_yaml::Value =
+            serde_yaml::from_str(&format!("materializedBodies: {name}")).unwrap();
+        assert_eq!(
+            super::body_bounds_requested(&value),
+            expected != Policy::Ignore
+        );
+        assert_eq!(
+            super::body_advice_requested(&value),
+            expected == Policy::Advise
+        );
+        assert!(
+            compile(&format!(
+                "schemaCatalogPath: schema.json\nmaterializedBodies: {name}"
+            ))
+            .unwrap()
+            .materialized_bodies
+                == expected
+        );
+    }
+    assert!(serde_yaml::from_str::<Options>("materializedBodies: unexpected").is_err());
+    for value in ["{}", "materializedBodies: unexpected"] {
+        let value = serde_yaml::from_str(value).unwrap();
+        assert!(!super::body_bounds_requested(&value));
+        assert!(!super::body_advice_requested(&value));
+    }
+}

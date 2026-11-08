@@ -265,3 +265,32 @@ fn lock_policy_severity_advice_does_not_claim_sql_is_unresolved() {
     );
     assert!(advice[0].message.contains("remaining SQL is unresolved"));
 }
+
+#[test]
+fn body_policy_wording_does_not_change_legacy_bounded_statement_advice() {
+    let sources = SourceStore::new(std::sync::Arc::new(
+        no_mistakes::codebase::ts_source::FileInventory::from_paths(&[]),
+    ));
+    for (subcheck, expected) in [
+        (
+            "select",
+            "proved a violation, but remaining SQL is unresolved for",
+        ),
+        ("materialized-body", "reports an advisory violation for"),
+    ] {
+        let mut verdict = row();
+        verdict.rule = no_mistakes::codebase::rules::postgres_bounded_statements::RULE_ID.into();
+        verdict.subcheck = subcheck.into();
+        verdict.status = SqlVerdictStatus::Violation;
+        let mut advice = Vec::new();
+        merge_sql(
+            &mut advice,
+            Path::new("/missing"),
+            &sources,
+            &CheckFactMap::default(),
+            &[verdict],
+        );
+        assert_eq!(advice.len(), 1);
+        assert!(advice[0].message.contains(expected), "{:?}", advice[0]);
+    }
+}
