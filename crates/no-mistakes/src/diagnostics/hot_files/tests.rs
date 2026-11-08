@@ -349,3 +349,30 @@ fn syntax_only_parse_is_recorded_unless_complete_file_work_owns_it() {
         assert_eq!(rows[0].units, source.len() as u64);
     });
 }
+
+#[test]
+fn control_characters_cannot_split_or_restyle_hot_file_rows() {
+    let observer = InvocationObserver::new(true);
+    let path = Path::new("src/line\nnext\r\t\x1b[31m.ts");
+    observer.trace_file(FilePass::Parse, path, 1, || ());
+    let text = observer.hot_file_block();
+    assert_eq!(text.lines().count(), 1, "{text:?}");
+    assert!(
+        text.contains("src/line\\nnext\\r\\t\\u{1b}[31m.ts"),
+        "{text:?}"
+    );
+    assert_eq!(observer.hot_file_snapshot()[0].path, path.to_string_lossy());
+}
+
+#[test]
+fn unicode_line_separators_are_escaped_without_changing_ordinary_unicode_paths() {
+    let observer = InvocationObserver::new(true);
+    let path = Path::new("src/café\u{2028}next\u{2029}.ts");
+    observer.trace_file(FilePass::Parse, path, 1, || ());
+    let text = observer.hot_file_block();
+    assert!(
+        text.contains("src/café\\u{2028}next\\u{2029}.ts"),
+        "{text:?}"
+    );
+    assert_eq!(observer.hot_file_snapshot()[0].path, path.to_string_lossy());
+}
