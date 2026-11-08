@@ -1,6 +1,6 @@
 [package]
 name = "no-mistakes"
-version = "0.109.26"
+version = "0.109.27"
 edition = "2021"
 # Explicit suites avoid statically linking the analyzer once per test source.
 autotests = false
