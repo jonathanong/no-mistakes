@@ -24,20 +24,22 @@ pub(super) fn poison_process_imports(
             .is_some_and(|specifier| PROCESS_MODULES.contains(&specifier))
     });
     if imported || reexported {
-        out.env_unknown_write = true;
+        out.poison_env();
     }
 }
 
 /// `require("process")` and `import("process")`: another route to the real `env`.
 pub(super) fn poison_process_loads(source: &str, out: &mut PathProvenance) {
     if PROCESS_MODULES.contains(&source) || super::vi_refs::RUNNER_MODULES.contains(&source) {
-        out.env_unknown_write = true;
+        out.poison_env();
     }
 }
 
 pub(super) fn poison_name(name: &str, out: &mut PathProvenance) {
-    if matches!(name, "unstubAllEnvs" | "unstubEnvs" | "createRequire") {
+    if matches!(name, "unstubAllEnvs" | "unstubEnvs") {
         out.env_unknown_write = true;
+    } else if name == "createRequire" {
+        out.poison_env();
     }
 }
 
@@ -67,7 +69,7 @@ pub(super) fn from_identifier(
         _ => true,
     };
     if !safe {
-        out.env_unknown_write = true;
+        out.poison_env();
     }
 }
 

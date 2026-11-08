@@ -4,6 +4,23 @@ use std::process::Command;
 
 const RULE: &str = "test-no-live-repository-scan";
 const CASES: &[(&str, usize, usize)] = &[
+    ("same-test-fake-stub", 0, 1),
+    ("same-test-shadowed-vi", 0, 1),
+    ("same-test-getter-reset", 0, 1),
+    ("same-test-configured-reset", 0, 0),
+    ("same-test-aliased-vi", 0, 0),
+    ("same-test-owned", 0, 0),
+    ("same-test-repository", 0, 1),
+    ("same-test-conditional", 0, 1),
+    ("same-test-restored", 0, 0),
+    ("same-test-async", 0, 0),
+    ("same-test-unrelated-write", 0, 0),
+    ("same-test-reset-between", 0, 1),
+    ("same-test-helper-reset", 0, 1),
+    ("same-test-default-reset", 0, 1),
+    ("same-test-argument-reset", 0, 1),
+    ("same-test-await-between", 0, 1),
+    ("same-test-unknown-vi", 0, 1),
     ("stub-direct", 0, 0),
     ("assignment-direct", 0, 0),
     ("stub-hook", 0, 0),

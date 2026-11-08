@@ -261,7 +261,32 @@ around it carry the variable through. The enumeration is accepted when:
   module-level write in an eagerly imported setup module also dominates the
   importing module body, including through a chain of static imports.
 
-Both direct assignment and `vi.stubEnv` carry owned provenance across these
+A same-test `vi.stubEnv` can prove a smaller synchronous interval even when
+teardown restores env or another test writes the same key:
+
+```typescript
+it("scans an owned environment", () => {
+  const root = mkdtempSync(join(tmpdir(), "x-"));
+  vi.stubEnv("OWNED_SCAN_ROOT", root);
+  scanOwnedEnvironment();
+});
+
+export function scanOwnedEnvironment() {
+  return readdirSync(process.env.OWNED_SCAN_ROOT ?? "");
+}
+```
+
+This proof requires a named `vi` import from `vitest`, an unconditional stub,
+and the immediately following statement calling a named helper without
+arguments. The helper must have no parameters and a single return statement
+whose root reads `process.env` directly. Every caller must satisfy that proof.
+No other call or `await` can run between the stub and the read, so an
+`afterEach` reset, `unstubEnvs`, or another test's env value cannot interrupt it.
+Conditional stubs and `vi.stubEnv("OWNED_SCAN_ROOT", process.cwd())` retain
+advisories. Resetting in an argument, helper, or getter, passing an unknown
+`vi` alias, and methods merely named `stubEnv` do not establish this proof.
+
+Otherwise, the whole-run proof above applies. Both direct assignment and `vi.stubEnv` carry owned provenance across these
 static setup imports:
 
 ```typescript
@@ -295,7 +320,7 @@ The env read must happen at the call: a value captured into a module- or
 function-level `const` (`const dir = process.env.X ?? "."`) keeps the finding, as
 does a `beforeAll`/`beforeEach` registered inside a branch.
 
-A setup-and-restore pair remains unresolved: assigning an owned root in
+A hook setup-and-restore pair remains unresolved: assigning an owned root in
 `beforeAll` and restoring the prior value (or deleting the variable) in
 `afterAll` does not establish that every write is owned. The analysis does not
 prove a lifecycle interval for every imported caller, concurrent test, and hook;
@@ -306,7 +331,7 @@ owns (mkdtemp) as a parameter or via `vi.stubEnv`, or using a constant fixture
 path. A reasoned suppression is the last option.
 
 The finding is kept when the write comes after the call, sits in an `if`, loop,
-or `try`, or is overwritten with a live value elsewhere. Writes are read from
+or `try`, or the whole-run proof encounters a live write elsewhere. Writes are read from
 every file in the run, including Vitest setup files that the rule's `include`/
 `exclude` filters remove from reporting, because a setup `beforeEach` runs after
 a test file's `beforeAll`.

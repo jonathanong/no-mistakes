@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 pub(super) struct EnvWrites {
     /// A write this pass cannot attribute to a variable, or a file it cannot read.
     poisoned: bool,
+    locally_poisoned: bool,
     /// Per variable: whether every write anywhere is an owned temp root.
     owned: FxHashMap<String, bool>,
 }
@@ -38,6 +39,8 @@ impl EnvWrites {
             }
             let provenance = path_provenance(ts);
             writes.poisoned |= provenance.is_none_or(|found| found.env_unknown_write);
+            writes.locally_poisoned |= provenance.is_none_or(|found| found.env_opaque_write)
+                || (runner_config(file) && provenance.is_some_and(|found| found.opaque_config_key));
             writes.poisoned |=
                 runner_config(file) && provenance.is_some_and(|found| found.opaque_config_key);
             for write in provenance.iter().flat_map(|found| &found.env_writes) {
@@ -46,8 +49,14 @@ impl EnvWrites {
                     && !write.origin.segments.iter().any(|segment| segment == "..");
             }
         }
-        writes.poisoned |= json_configs_poison(root, config);
+        let json_poison = json_configs_poison(root, config);
+        writes.poisoned |= json_poison;
+        writes.locally_poisoned |= json_poison;
         writes
+    }
+
+    pub(super) fn local_known(&self) -> bool {
+        !self.locally_poisoned
     }
 
     pub(super) fn all_owned(&self, name: &str) -> bool {

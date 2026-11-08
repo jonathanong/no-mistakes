@@ -84,6 +84,9 @@ pub(crate) struct PathProvenance {
     pub(crate) env_writes: Vec<EnvWrite>,
     /// A `process.env` mutation whose variable cannot be named.
     pub(crate) env_unknown_write: bool,
+    pub(crate) env_opaque_write: bool,
+    pub(crate) test_env_calls: FxHashMap<u32, u32>,
+    pub(crate) immediate_env_reads: crate::fx::FxHashSet<u32>,
     /// A computed object key whose text is not a literal other than `unstubEnvs`.
     pub(crate) opaque_config_key: bool,
     /// Function spans of `it`/`test` callbacks.
@@ -95,4 +98,11 @@ pub(crate) struct PathProvenance {
     /// A `require`/`import()`/`vi.mock` whose module cannot be read.
     pub(crate) modules_unknown: bool,
     pub(crate) resolved_import_spans: Vec<(u32, u32)>,
+}
+
+impl PathProvenance {
+    pub(super) fn poison_env(&mut self) {
+        self.env_unknown_write = true;
+        self.env_opaque_write = true;
+    }
 }

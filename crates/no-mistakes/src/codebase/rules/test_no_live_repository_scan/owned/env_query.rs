@@ -10,7 +10,7 @@ impl Owners<'_> {
         facts: &dyn TsFactLookup,
     ) -> bool {
         if !self.env.all_owned(name) {
-            return false;
+            return self.local_env_owned(name, site, facts);
         }
         let Some(entries) = self.entries(site_source_node(site)) else {
             return false;

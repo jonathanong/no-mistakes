@@ -5,6 +5,7 @@
 mod config_keys;
 mod consumers;
 mod env_writes;
+mod local_env;
 mod member_paths;
 mod member_refs;
 mod pass_through;
@@ -56,11 +57,17 @@ pub(super) fn collect(
                     }
                     let paths = argument_paths(&mut projector, call);
                     if !paths.is_empty() {
+                        if paths.iter().any(|(_, path)| path.env.is_some())
+                            && local_env::immediate_read(semantic, node.id())
+                        {
+                            result.immediate_env_reads.insert(call.span.start);
+                        }
                         result.arg_paths.insert(call.span.start, paths);
                     }
                 }
                 if let Some(span) = test_callback(call) {
                     result.test_callbacks.push(span);
+                    local_env::test_calls(semantic, facts, call, &mut result);
                 }
                 env_writes::from_call(&mut projector, call, node.id(), &mut result);
             }
@@ -134,6 +141,7 @@ fn argument_paths<'a>(
             origin.anchor,
             PathAnchor::Temp | PathAnchor::Module | PathAnchor::Cwd
         ) || origin.param.is_some()
+            || origin.env.is_some()
         {
             paths.push((index, origin));
         }

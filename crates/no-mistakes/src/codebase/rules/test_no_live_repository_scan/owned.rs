@@ -5,6 +5,7 @@ mod consumers;
 pub(super) mod env;
 mod env_query;
 mod imports;
+mod local_env;
 mod parameters;
 mod setups;
 pub(crate) use consumers::Resolution;

@@ -194,6 +194,18 @@ for (const name of [
 }
 
 for (const [name, advisories] of [
+  ["same-test-owned", 0],
+  ["same-test-repository", 1],
+  ["same-test-conditional", 1],
+  ["same-test-restored", 0],
+  ["same-test-unrelated-write", 0],
+  ["same-test-reset-between", 1],
+  ["same-test-helper-reset", 1],
+  ["same-test-default-reset", 1],
+  ["same-test-argument-reset", 1],
+  ["same-test-await-between", 1],
+  ["same-test-unknown-vi", 1],
+
   ["stub-direct", 0],
   ["assignment-direct", 0],
   ["stub-setup", 0],
