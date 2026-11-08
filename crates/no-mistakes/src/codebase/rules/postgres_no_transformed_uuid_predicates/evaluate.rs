@@ -1,4 +1,5 @@
 use crate::codebase::postgres::statements::SqlTransformedColumnUseFact;
+mod anchored;
 #[path = "view_columns.rs"]
 mod view_columns;
 use crate::codebase::postgres::{SchemaCatalog, SqlBranchJudgment};
@@ -51,7 +52,7 @@ impl<'a> Columns<'a> {
                         .is_some_and(|view| view.name == table))
             })
         });
-        Ok((table, uuid && !drives_uuid_probe))
+        Ok((table, uuid && !drives_uuid_probe && !self.anchored(use_)))
     }
     fn resolve_owner(
         &self,

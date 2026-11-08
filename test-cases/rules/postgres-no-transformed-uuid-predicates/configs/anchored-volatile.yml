@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    include: [anchored-volatile.sql, anchored-schema.json]
+    options:
+      schemaCatalogPath: anchored-schema.json
+      sqlInclude: ["*.sql"]
+      importSpecifier: db
+      executorNames: [query]

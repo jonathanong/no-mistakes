@@ -103,3 +103,32 @@ fn uuid_site_messages_are_independent_of_native_sql_scope_and_verdict_projection
         );
     }
 }
+
+#[test]
+fn uuid_residuals_require_mandatory_indexed_anchors_on_the_same_relation_occurrence() {
+    for (shape, expected) in [
+        ("anchored-residual", vec![3]),
+        ("anchored-volatile", vec![1, 2, 3, 4, 5, 8, 9]),
+        ("anchored-operators", vec![1, 2, 3, 4, 7, 8, 9, 12]),
+        ("anchored-embedded", vec![3, 9]),
+        (
+            "anchored-indexes",
+            vec![
+                3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 16, 17, 19, 20, 22, 23, 24, 25,
+            ],
+        ),
+        ("anchored-left-join", vec![2, 2, 3]),
+        ("anchored-range", vec![2, 3, 4, 5, 6, 7, 8, 9]),
+    ] {
+        for effort in ["", "-low"] {
+            let report = report(&format!("{shape}{effort}.yml"));
+            let lines: Vec<_> = report["rules"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|finding| finding["line"].as_u64().unwrap())
+                .collect();
+            assert_eq!(lines, expected, "{shape}{effort}: {report}");
+        }
+    }
+}

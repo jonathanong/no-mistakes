@@ -1,0 +1,319 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "anchored-indexes.sql",
+          "line": 10,
+          "message": "anchored-indexes.sql:10: WHERE applies fn to UUID column keyed.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM keyed WHERE fn(id) = $1;",
+          "target": "keyed.id"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 12,
+          "message": "anchored-indexes.sql:12: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id BETWEEN token AND $2 AND fn(token) = $3;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 15,
+          "message": "anchored-indexes.sql:15: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a RIGHT JOIN accounts b ON b.id = a.token WHERE fn(b.token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 16,
+          "message": "anchored-indexes.sql:16: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a FULL JOIN accounts b ON b.id = a.token WHERE fn(b.token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 17,
+          "message": "anchored-indexes.sql:17: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a LEFT JOIN accounts b ON b.id = a.token WHERE fn(a.token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 19,
+          "message": "anchored-indexes.sql:19: JOIN ON applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a JOIN accounts b ON b.id = a.token OR fn(b.token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 20,
+          "message": "anchored-indexes.sql:20: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id = $1 AND EXISTS (SELECT * FROM accounts WHERE fn(token) = $2);",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 22,
+          "message": "anchored-indexes.sql:22: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id = (SELECT id FROM accounts LIMIT 1) AND fn(token) = $2;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 23,
+          "message": "anchored-indexes.sql:23: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE missing = $1 AND fn(token) = $2;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 24,
+          "message": "anchored-indexes.sql:24: WHERE applies fn to UUID column mapped_accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM mapped_accounts WHERE id = $1 AND fn(token) = $2;",
+          "target": "mapped_accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 25,
+          "message": "anchored-indexes.sql:25: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a INNER JOIN accounts b USING (id) WHERE fn(b.token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 3,
+          "message": "anchored-indexes.sql:3: WHERE applies fn to UUID column keyed.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM keyed WHERE tail = $1 AND fn(id) = $2;",
+          "target": "keyed.id"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 4,
+          "message": "anchored-indexes.sql:4: WHERE applies fn to UUID column partial.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM partial WHERE key = $1 AND fn(id) = $2;",
+          "target": "partial.id"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 5,
+          "message": "anchored-indexes.sql:5: WHERE applies fn to UUID column invalid.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM invalid WHERE key = $1 AND fn(id) = $2;",
+          "target": "invalid.id"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 6,
+          "message": "anchored-indexes.sql:6: WHERE applies fn to UUID column unready.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM unready WHERE key = $1 AND fn(id) = $2;",
+          "target": "unready.id"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 7,
+          "message": "anchored-indexes.sql:7: WHERE applies fn to UUID column dead.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM dead WHERE key = $1 AND fn(id) = $2;",
+          "target": "dead.id"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 8,
+          "message": "anchored-indexes.sql:8: WHERE applies fn to UUID column hash.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM hash WHERE key = $1 AND fn(id) = $2;",
+          "target": "hash.id"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 9,
+          "message": "anchored-indexes.sql:9: WHERE applies fn to UUID column expression.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM expression WHERE key = $1 AND fn(id) = $2;",
+          "target": "expression.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "anchored-indexes.sql",
+          "line": 10,
+          "message": "anchored-indexes.sql:10: WHERE applies fn to UUID column keyed.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM keyed WHERE fn(id) = $1;",
+          "target": "keyed.id"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 12,
+          "message": "anchored-indexes.sql:12: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id BETWEEN token AND $2 AND fn(token) = $3;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 15,
+          "message": "anchored-indexes.sql:15: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a RIGHT JOIN accounts b ON b.id = a.token WHERE fn(b.token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 16,
+          "message": "anchored-indexes.sql:16: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a FULL JOIN accounts b ON b.id = a.token WHERE fn(b.token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 17,
+          "message": "anchored-indexes.sql:17: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a LEFT JOIN accounts b ON b.id = a.token WHERE fn(a.token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 19,
+          "message": "anchored-indexes.sql:19: JOIN ON applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a JOIN accounts b ON b.id = a.token OR fn(b.token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 20,
+          "message": "anchored-indexes.sql:20: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id = $1 AND EXISTS (SELECT * FROM accounts WHERE fn(token) = $2);",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 22,
+          "message": "anchored-indexes.sql:22: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id = (SELECT id FROM accounts LIMIT 1) AND fn(token) = $2;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 23,
+          "message": "anchored-indexes.sql:23: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE missing = $1 AND fn(token) = $2;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 24,
+          "message": "anchored-indexes.sql:24: WHERE applies fn to UUID column mapped_accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM mapped_accounts WHERE id = $1 AND fn(token) = $2;",
+          "target": "mapped_accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 25,
+          "message": "anchored-indexes.sql:25: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a INNER JOIN accounts b USING (id) WHERE fn(b.token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 3,
+          "message": "anchored-indexes.sql:3: WHERE applies fn to UUID column keyed.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM keyed WHERE tail = $1 AND fn(id) = $2;",
+          "target": "keyed.id"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 4,
+          "message": "anchored-indexes.sql:4: WHERE applies fn to UUID column partial.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM partial WHERE key = $1 AND fn(id) = $2;",
+          "target": "partial.id"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 5,
+          "message": "anchored-indexes.sql:5: WHERE applies fn to UUID column invalid.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM invalid WHERE key = $1 AND fn(id) = $2;",
+          "target": "invalid.id"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 6,
+          "message": "anchored-indexes.sql:6: WHERE applies fn to UUID column unready.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM unready WHERE key = $1 AND fn(id) = $2;",
+          "target": "unready.id"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 7,
+          "message": "anchored-indexes.sql:7: WHERE applies fn to UUID column dead.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM dead WHERE key = $1 AND fn(id) = $2;",
+          "target": "dead.id"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 8,
+          "message": "anchored-indexes.sql:8: WHERE applies fn to UUID column hash.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM hash WHERE key = $1 AND fn(id) = $2;",
+          "target": "hash.id"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 9,
+          "message": "anchored-indexes.sql:9: WHERE applies fn to UUID column expression.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM expression WHERE key = $1 AND fn(id) = $2;",
+          "target": "expression.id"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

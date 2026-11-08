@@ -1,0 +1,159 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "anchored-range.sql",
+          "line": 2,
+          "message": "anchored-range.sql:2: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE uuid_extract_timestamp(id) >= $3;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "anchored-range.sql",
+          "line": 3,
+          "message": "anchored-range.sql:3: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id >= $1 OR uuid_extract_timestamp(id) >= $3;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "anchored-range.sql",
+          "line": 4,
+          "message": "anchored-range.sql:4: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a WHERE a.id = a.id AND fn(a.token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-range.sql",
+          "line": 5,
+          "message": "anchored-range.sql:5: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a WHERE a.email = $1 AND fn(a.token) = $2;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-range.sql",
+          "line": 6,
+          "message": "anchored-range.sql:6: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a JOIN accounts b ON a.id = $1 WHERE fn(b.id) = $2;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "anchored-range.sql",
+          "line": 7,
+          "message": "anchored-range.sql:7: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id = $1; SELECT * FROM accounts WHERE fn(id) = $2;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "anchored-range.sql",
+          "line": 8,
+          "message": "anchored-range.sql:8: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a WHERE EXISTS (SELECT 1 FROM accounts b WHERE b.id = $1) AND fn(a.id) = $2;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "anchored-range.sql",
+          "line": 9,
+          "message": "anchored-range.sql:9: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a WHERE NOT (a.id = $1) AND fn(a.id) = $2;",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "anchored-range.sql",
+          "line": 2,
+          "message": "anchored-range.sql:2: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE uuid_extract_timestamp(id) >= $3;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "anchored-range.sql",
+          "line": 3,
+          "message": "anchored-range.sql:3: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id >= $1 OR uuid_extract_timestamp(id) >= $3;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "anchored-range.sql",
+          "line": 4,
+          "message": "anchored-range.sql:4: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a WHERE a.id = a.id AND fn(a.token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-range.sql",
+          "line": 5,
+          "message": "anchored-range.sql:5: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a WHERE a.email = $1 AND fn(a.token) = $2;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-range.sql",
+          "line": 6,
+          "message": "anchored-range.sql:6: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a JOIN accounts b ON a.id = $1 WHERE fn(b.id) = $2;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "anchored-range.sql",
+          "line": 7,
+          "message": "anchored-range.sql:7: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id = $1; SELECT * FROM accounts WHERE fn(id) = $2;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "anchored-range.sql",
+          "line": 8,
+          "message": "anchored-range.sql:8: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a WHERE EXISTS (SELECT 1 FROM accounts b WHERE b.id = $1) AND fn(a.id) = $2;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "anchored-range.sql",
+          "line": 9,
+          "message": "anchored-range.sql:9: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a WHERE NOT (a.id = $1) AND fn(a.id) = $2;",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

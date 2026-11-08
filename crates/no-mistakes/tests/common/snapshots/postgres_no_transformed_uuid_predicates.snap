@@ -2543,14 +2543,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "UPDATE accounts a SET email = $1 FROM orders o WHERE a.id = o.account_id AND o.id::text = $2;",
           "target": "orders.id"
-        },
-        {
-          "file": "predicate-forms.sql",
-          "line": 7,
-          "message": "predicate-forms.sql:7: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
-          "rule": "postgres-no-transformed-uuid-predicates",
-          "sourceLine": "DELETE FROM orders o USING accounts a WHERE o.account_id = a.id AND a.id::text = $1;",
-          "target": "accounts.id"
         }
       ],
       "warnings": []
@@ -2764,14 +2756,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT 1 FROM accounts c JOIN accounts root ON COALESCE(root.id, c.id) = c.token;",
           "target": "accounts.id"
-        },
-        {
-          "file": "probe-direction.sql",
-          "line": 7,
-          "message": "probe-direction.sql:7: WHERE applies COALESCE to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
-          "rule": "postgres-no-transformed-uuid-predicates",
-          "sourceLine": "SELECT 1 FROM accounts WHERE id = $1 AND COALESCE(token, id) = $2 LIMIT 1;",
-          "target": "accounts.id, accounts.token"
         },
         {
           "file": "probe-direction.sql",
@@ -3009,14 +2993,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT 1 FROM accounts c JOIN accounts root ON COALESCE(root.id, c.id) = c.token;",
           "target": "accounts.id"
-        },
-        {
-          "file": "probe-direction.sql",
-          "line": 7,
-          "message": "probe-direction.sql:7: WHERE applies COALESCE to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics; for a residual filter, first select rows by an indexed or primary-key equality on the same table, then apply COALESCE to those rows",
-          "rule": "postgres-no-transformed-uuid-predicates",
-          "sourceLine": "SELECT 1 FROM accounts WHERE id = $1 AND COALESCE(token, id) = $2 LIMIT 1;",
-          "target": "accounts.id, accounts.token"
         },
         {
           "file": "probe-direction.sql",

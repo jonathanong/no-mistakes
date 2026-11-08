@@ -1,0 +1,408 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "accounts": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "email": {
+          "dataType": "text"
+        },
+        "token": {
+          "dataType": "pg_catalog.uuid"
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    },
+    "keyed": {
+      "columns": {
+        "key": {
+          "dataType": "text"
+        },
+        "tail": {
+          "dataType": "uuid"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "key_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "key",
+              "expression": "key"
+            },
+            {
+              "column": "tail",
+              "expression": "tail"
+            }
+          ]
+        }
+      }
+    },
+    "partial": {
+      "columns": {
+        "key": {
+          "dataType": "text"
+        },
+        "tail": {
+          "dataType": "uuid"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "key_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "key",
+              "expression": "key"
+            },
+            {
+              "column": "tail",
+              "expression": "tail"
+            }
+          ],
+          "predicate": "key IS NOT NULL"
+        }
+      }
+    },
+    "invalid": {
+      "columns": {
+        "key": {
+          "dataType": "text"
+        },
+        "tail": {
+          "dataType": "uuid"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "key_idx": {
+          "valid": false,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "key",
+              "expression": "key"
+            },
+            {
+              "column": "tail",
+              "expression": "tail"
+            }
+          ]
+        }
+      }
+    },
+    "unready": {
+      "columns": {
+        "key": {
+          "dataType": "text"
+        },
+        "tail": {
+          "dataType": "uuid"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "key_idx": {
+          "valid": true,
+          "ready": false,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "key",
+              "expression": "key"
+            },
+            {
+              "column": "tail",
+              "expression": "tail"
+            }
+          ]
+        }
+      }
+    },
+    "dead": {
+      "columns": {
+        "key": {
+          "dataType": "text"
+        },
+        "tail": {
+          "dataType": "uuid"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "key_idx": {
+          "valid": true,
+          "ready": true,
+          "live": false,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "key",
+              "expression": "key"
+            },
+            {
+              "column": "tail",
+              "expression": "tail"
+            }
+          ]
+        }
+      }
+    },
+    "hash": {
+      "columns": {
+        "key": {
+          "dataType": "text"
+        },
+        "tail": {
+          "dataType": "uuid"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "key_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "hash",
+          "keys": [
+            {
+              "column": "key",
+              "expression": "key"
+            },
+            {
+              "column": "tail",
+              "expression": "tail"
+            }
+          ]
+        }
+      }
+    },
+    "expression": {
+      "columns": {
+        "key": {
+          "dataType": "text"
+        },
+        "tail": {
+          "dataType": "uuid"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "key_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(key)"
+            }
+          ]
+        }
+      }
+    },
+    "uniqued": {
+      "columns": {
+        "key": {
+          "dataType": "text"
+        },
+        "tail": {
+          "dataType": "uuid"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "uniqueConstraints": {
+        "key_unique": {
+          "columns": [
+            "key",
+            "tail"
+          ]
+        }
+      }
+    },
+    "patterned": {
+      "columns": {
+        "key": {
+          "dataType": "text"
+        },
+        "tail": {
+          "dataType": "uuid"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "key_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "key",
+              "expression": "key",
+              "orderingSupported": false
+            },
+            {
+              "column": "tail",
+              "expression": "tail"
+            }
+          ]
+        }
+      }
+    },
+    "pattern_pk": {
+      "columns": {
+        "key": {
+          "dataType": "text"
+        },
+        "tail": {
+          "dataType": "uuid"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "key_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "key",
+              "expression": "key",
+              "orderingSupported": false
+            },
+            {
+              "column": "tail",
+              "expression": "tail"
+            }
+          ],
+          "primary": true
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "key",
+          "tail"
+        ]
+      }
+    },
+    "pattern_unique": {
+      "columns": {
+        "key": {
+          "dataType": "text"
+        },
+        "tail": {
+          "dataType": "uuid"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "key_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "key",
+              "expression": "key",
+              "orderingSupported": false
+            },
+            {
+              "column": "tail",
+              "expression": "tail"
+            }
+          ],
+          "constraintBacked": true
+        }
+      },
+      "uniqueConstraints": {
+        "key_unique": {
+          "columns": [
+            "key",
+            "tail"
+          ]
+        }
+      }
+    },
+    "mixed_order": {
+      "columns": {
+        "key": {
+          "dataType": "text"
+        },
+        "tail": {
+          "dataType": "uuid"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "key_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "key",
+              "expression": "key"
+            },
+            {
+              "column": "tail",
+              "expression": "tail",
+              "orderingSupported": false
+            }
+          ]
+        }
+      }
+    }
+  },
+  "views": {
+    "mapped_accounts": {
+      "definition": "SELECT id, token FROM accounts"
+    }
+  }
+}

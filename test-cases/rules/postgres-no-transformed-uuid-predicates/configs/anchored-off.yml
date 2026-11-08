@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    include: [anchored-indexes.sql, anchored-schema.json]
+    options:
+      schemaCatalogPath: anchored-schema.json
+      sqlInclude: ["*.sql"]
+      importSpecifier: db
+      executorNames: [query]

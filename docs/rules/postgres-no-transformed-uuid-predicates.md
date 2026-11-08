@@ -43,6 +43,52 @@ function changes the predicate operand, so it may no longer match an
 ordinary UUID index expression. For UUIDv7 timestamps, compute a UUID range bound
 before the query and compare the indexed column directly.
 
+A scalar transform can be a residual filter after the same relation is already
+anchored by an indexable key predicate. The rule allows this when a mandatory
+`WHERE` or supported `JOIN ON` conjunct compares a bare leading primary-key,
+unique-key, or valid non-partial B-tree index column with an independent value.
+Equality, `= ANY(...)`, and range comparisons (including `BETWEEN`) qualify.
+The anchor can use a different key column from the transformed UUID column.
+For example:
+
+```sql
+SELECT * FROM accounts a
+WHERE a.id = $1 AND fn_remaining_duration(a.token) > interval '0';
+
+SELECT * FROM accounts
+WHERE id >= $1 AND id < $2 AND uuid_extract_timestamp(id) >= $3;
+```
+
+A bare key on the newly joined side of an inner or left join also anchors that
+relation for a later residual filter:
+
+```sql
+SELECT * FROM accounts e
+LEFT JOIN accounts a ON a.id = e.token
+LEFT JOIN accounts b ON b.id = e.token
+WHERE num_nonnulls(a.id, b.id) = 1;
+```
+
+The anchor must belong to the same relation occurrence in the same query scope;
+a different self-join alias, nested query, or separate statement cannot exempt
+it. Unqualified references require a single known relation for this exemption.
+Disjunctions, negations, self-dependent bounds, columns without indexes,
+partial indexes, and non-leading index columns do not establish an anchor.
+Bounds containing known row-variant builtins such as `gen_random_uuid()`,
+`uuidv7()`, or `clock_timestamp()` also retain findings, including inside casts
+or other functions. Compute such a value once and pass it as a bind when the
+query should perform a fixed key lookup. Explicit `COLLATE` bounds do not qualify.
+Index keys with catalog `orderingSupported: false` do not prove an anchor for
+any comparison: this flag covers non-default operator classes and collations,
+including cases whose equality may differ. An explicit backing index with
+incompatible operators also prevents primary/unique constraint metadata from
+establishing the anchor. Other compatible indexes can still establish it. An outer
+join's key anchors only the newly joined relation. A cast on that key, such as
+`LEFT JOIN accounts a ON a.id::text = e.email`, still reports. Without a bare
+anchor, `WHERE uuid_extract_timestamp(id) >= $1` still reports: fix it by
+computing UUID bounds and comparing the bare indexed key, then retain any
+necessary timestamp check as a residual filter.
+
 Enable this rule on application SQL when key lookups and range scans should use
 their UUID indexes.
 
@@ -123,12 +169,11 @@ Nested predicates remain checked, including CASE conditions, aggregate FILTER
 conditions, and
 `COALESCE(id::text = $1, false) IS NOT NULL`.
 
-A transformed residual predicate remains reported even after an indexed or
-primary-key equality on the same table, including queries with `LIMIT 1`.
-The rule does not prove PostgreSQL's access path from a sibling conjunct.
-For COALESCE, the diagnostic names the rewrite: first select rows by an indexed
-or primary-key equality on that table, then apply COALESCE to those rows.
-A limit alone does not establish an indexed access path.
+A mandatory bare indexed-key predicate exempts a transformed residual on the
+same relation, including a sibling `COALESCE` predicate in a query with `LIMIT 1`.
+Without that anchor, the transformed predicate remains reported. For COALESCE,
+first narrow rows by a bare indexed or primary key, then retain the residual
+filter when needed. A limit alone does not establish an indexed access path.
 
 ## Options and defaults
 
@@ -254,6 +299,8 @@ SELECT id FROM users WHERE id = $1::uuid;
 SELECT id FROM users WHERE id >= uuidv7_lower_bound($1);
 -- A computed bound on the other operand leaves the UUID column bare.
 SELECT id FROM users WHERE id >= fn_min_child_uuidv7($1);
+-- The bare primary key anchors the residual; LIMIT is optional.
+SELECT id FROM users WHERE id = $1 AND COALESCE(id, $2) = $3 LIMIT 1;
 
 -- Null tests and comparison values leave UUID value probes bare.
 SELECT id FROM users WHERE COALESCE(id, id) IS NOT NULL;

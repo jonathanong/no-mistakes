@@ -1,4 +1,5 @@
 //! Project predicate transformations from the request's already parsed SQL AST.
+mod anchors;
 mod boolean;
 mod cast_sites;
 mod cte_scope;
@@ -53,7 +54,7 @@ impl Collector<'_, '_> {
             expressions::collect(
                 having,
                 Clause::Having,
-                &base_relations(&select.from, ctes),
+                (&base_relations(&select.from, ctes), &[]),
                 None,
                 self.positions,
                 self.tokens,
@@ -62,11 +63,12 @@ impl Collector<'_, '_> {
         }
     }
     fn predicates(&mut self, tables: &[TableWithJoins], selection: Option<&Expr>, ctes: &[String]) {
+        let anchors = anchors::collect(tables, selection, ctes, self.positions);
         if let Some(selection) = selection {
             expressions::collect(
                 selection,
                 Clause::Where,
-                &base_relations(tables, ctes),
+                (&base_relations(tables, ctes), &anchors),
                 None,
                 self.positions,
                 self.tokens,
@@ -95,7 +97,7 @@ impl Collector<'_, '_> {
                     expressions::collect(
                         expr,
                         Clause::Join,
-                        &visible,
+                        (&visible, &anchors),
                         probe_scope,
                         self.positions,
                         self.tokens,

@@ -157,3 +157,56 @@ fn transformed_uuid_followup_probes_match_public_check_and_analyze_project() {
         }
     }
 }
+
+#[test]
+fn anchored_uuid_residuals_match_public_check_and_analyze_project() {
+    let root = crate::test_support::rule_fixture_root("postgres-no-transformed-uuid-predicates");
+    for (shape, count) in [
+        ("residual", 1),
+        ("volatile", 7),
+        ("operators", 8),
+        ("left-join", 3),
+        ("range", 8),
+        ("embedded", 2),
+        ("indexes", 18),
+    ] {
+        for effort in ["low", "max"] {
+            let config = root
+                .parent()
+                .unwrap()
+                .join("configs")
+                .join(format!("anchored-{shape}.yml"));
+            let check: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
+                serde_json::from_str(
+                    &check_json_impl(crate::napi_api::options::test_json_arg(
+                        json!({"root": root, "config": config, "effort": effort}).to_string(),
+                    ))
+                    .unwrap(),
+                )
+                .unwrap(),
+            );
+            assert_eq!(
+                check["rules"].as_array().unwrap().len(),
+                count,
+                "{shape}/{effort}: {check}"
+            );
+            assert_eq!(check["warnings"], json!([]));
+            let project: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
+                serde_json::from_str(
+                    &crate::napi_api::analyze_project::analyze_project_json_impl(
+                        crate::napi_api::options::test_json_arg(
+                            json!({
+                                "root": root, "config": config,
+                                "reports": [{"type": "check", "effort": effort}],
+                            })
+                            .to_string(),
+                        ),
+                    )
+                    .unwrap(),
+                )
+                .unwrap(),
+            );
+            assert_eq!(project["reports"][0]["result"], check, "{shape}/{effort}");
+        }
+    }
+}

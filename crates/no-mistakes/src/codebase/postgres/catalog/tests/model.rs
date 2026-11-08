@@ -252,6 +252,7 @@ fn index(expect: IndexExpect<'_>) -> CatalogIndexInfo {
         constraint_backed: expect.constraint_backed,
         access_method: expect.access_method.to_string(),
         keys: vec![CatalogIndexKey {
+            ordering_supported: true,
             column: Some(expect.column.to_string()),
             expression: expect.column.to_string(),
         }],
