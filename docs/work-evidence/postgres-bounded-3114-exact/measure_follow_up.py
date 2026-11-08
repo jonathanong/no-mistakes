@@ -13,7 +13,7 @@ def run(side,args):
 def args(config):return ['check','--root',str(fixture),'--config',config+'.yml','--format','json','--jobs','1']
 def sha(path):
  with open(path,'rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
-result=dict(baseline={'revision':options.before_revision,'verification':'unverified caller label'},candidate={'revision':options.after_revision,'verification':'unverified caller label'},profile='dev/default features/locked/rustc1.99.1/jobs1',counters='unavailable: perf_event_paranoid4',binaryHashes={k:sha(v) for k,v in bins.items()},controls={},workloads={})
+result=dict(baseline={'revision':options.before_revision,'verification':'unverified caller label'},candidate={'revision':options.after_revision,'verification':'unverified caller label'},profile='caller-provided executables; CLI jobs1',counters='not measured by this harness',binaryHashes={k:sha(v) for k,v in bins.items()},controls={},workloads={})
 assert len(set(result['binaryHashes'].values()))==2
 for case in ['r1','r2','r3','r4','off','off-sql']:
  a=run('before',args(case));b=run('after',args(case));assert (a['stdoutSha256'],a['stderrSha256'],a['exitCode'])==(b['stdoutSha256'],b['stderrSha256'],b['exitCode']),case

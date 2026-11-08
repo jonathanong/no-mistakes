@@ -1,0 +1,26 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "r6": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "r6.sql",
+          "line": 14,
+          "message": "r6.sql:14: UPDATE can change every row of token_rows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE token_rows target SET owner_id = $2 FROM emitted WHERE target.id = emitted.id;",
+          "target": "table:token_rows"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
