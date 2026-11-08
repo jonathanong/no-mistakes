@@ -518,7 +518,8 @@ External package star re-exports use the package's exact public `exports` entry
 when a concrete declaration or runtime source establishes its exported names.
 Those external definitions remain outside the configured production candidates.
 Missing or blocked entries, ambiguous or unsupported condition maps, unresolved
-forwarded members, and cycles retain uncertainty advisories. This does not guess
+forwarded members, cycles, and external hops back into visible project sources
+retain uncertainty advisories. This does not guess
 `main`/`index` targets or add installed packages to the production file universe.
 
 Passing a namespace to a helper remains uncertain, including a helper whose

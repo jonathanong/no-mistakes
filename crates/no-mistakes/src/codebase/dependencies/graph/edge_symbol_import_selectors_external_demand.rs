@@ -114,3 +114,65 @@ impl ExternalStarProjection<'_> {
         .map(|path| (path, true))
     }
 }
+
+impl ExternalStarProjection<'_> {
+    fn named_reexport(
+        &self,
+        path: &Path,
+        source: &str,
+        imported: &str,
+        type_only: bool,
+        active: &mut FxHashSet<PathBuf>,
+    ) -> Option<ExternalStarSymbol> {
+        if imported == "*" {
+            return None;
+        }
+        let (target, external) = self.target(path, source, true)?;
+        let nested = self.exports(&target, external, active)?;
+        let mut origin = nested.get(imported)?.clone();
+        if origin.blocked {
+            return None;
+        }
+        if type_only && !origin.type_capable {
+            return None;
+        }
+        origin.typed |= type_only;
+        Some(origin)
+    }
+}
+
+impl ExternalStarProjection<'_> {
+    fn remove_blocked_edges(
+        &self,
+        path: &Path,
+        exports: &ExternalStarExports,
+        edges: &mut Vec<Edge>,
+    ) {
+        edges.retain(|(from, to, _)| {
+            let blocked = |node: &NodeId| match node {
+                NodeId::Symbol { file, symbol, .. } if file.as_ref() == path => exports
+                    .get(symbol.as_ref())
+                    .is_some_and(|origin| origin.blocked && origin.external),
+                _ => false,
+            };
+            !blocked(from) && !(matches!(from, NodeId::File(_)) && blocked(to))
+        });
+    }
+}
+
+fn merge_external_star_origin(
+    exports: &mut ExternalStarExports,
+    name: String,
+    mut origin: ExternalStarSymbol,
+) {
+    if let Some(prior) = exports.get(&name) {
+        if prior.blocked || origin.blocked || prior.file != origin.file || prior.name != origin.name
+        {
+            origin.blocked = true;
+            origin.external |= prior.external;
+        } else {
+            origin.typed &= prior.typed;
+        }
+    }
+    exports.insert(name, origin);
+}

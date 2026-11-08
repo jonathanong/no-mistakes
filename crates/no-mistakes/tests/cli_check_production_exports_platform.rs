@@ -32,7 +32,7 @@ fn platform_consumed_exports_are_exact_and_keep_sibling_uncertainty() {
     let advisories = enabled["advisories"].as_array().unwrap();
     assert_eq!(advisories.len(), 1, "{enabled}");
     assert_eq!(advisories[0]["file"], "tests/helper.mts");
-    assert!(baseline["advisories"].as_array().unwrap().len() >= 1);
+    assert!(!baseline["advisories"].as_array().unwrap().is_empty());
 }
 
 #[test]
@@ -67,6 +67,21 @@ fn platform_consumed_check_json_snapshot() {
 fn external_star_exports_check_json_snapshot() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/external-star-exports/fixture");
+    let controls = root.join("../../external-star-exports-controls/fixture");
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--root"])
+        .arg(&controls)
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    let targets: Vec<_> = report["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| finding["target"].as_str().unwrap())
+        .collect();
+    assert_eq!(targets, ["testOnly", "Queue"], "{report}");
     crate::check_json_snapshot::assert_saved_fixture(
         "production_exports_external_star",
         &[

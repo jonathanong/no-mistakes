@@ -86,6 +86,13 @@ fn external_star_projection_keeps_cycles_conditions_and_collisions_unknown() {
         "malformed",
         "missing-target",
         "known-ambiguous",
+        "escaped-adapter",
+        "named-missing",
+        "named-namespace",
+        "named-cycle",
+        "named-type",
+        "single-collision",
+        "nested-collision",
     ] {
         let suffix = format!("{barrel}.mts#Queue");
         assert!(
@@ -100,6 +107,8 @@ fn external_star_projection_keeps_cycles_conditions_and_collisions_unknown() {
         ("override", EdgeKind::SymbolImport),
         ("same", EdgeKind::SymbolImport),
         ("runtime-nested", EdgeKind::SymbolImport),
+        ("runtime-named", EdgeKind::SymbolImport),
+        ("typed-named", EdgeKind::SymbolImport),
         ("types", EdgeKind::SymbolTypeImport),
     ] {
         let symbol = NodeId::symbol(dir.path().join(format!("src/{barrel}.mts")), "Queue");
@@ -115,6 +124,37 @@ fn external_star_projection_keeps_cycles_conditions_and_collisions_unknown() {
             "{barrel}: {edges:#?}"
         );
     }
+    let shared = NodeId::symbol(dir.path().join("src/diamond.mts"), "shared");
+    assert!(edges
+        .iter()
+        .any(|(target, kind)| target == &shared && *kind == EdgeKind::SymbolImport));
+    assert!(!edges
+        .iter()
+        .any(|(target, kind)| *kind == EdgeKind::SymbolImportUnknown
+            && matches!(target, NodeId::Module(name) if name.ends_with("diamond.mts#shared"))));
+    let typed_name = NodeId::symbol(dir.path().join("src/typed-named.mts"), "QueueType");
+    assert!(edges
+        .iter()
+        .any(|(target, kind)| target == &typed_name && *kind == EdgeKind::SymbolTypeImport));
+    let runtime_name = NodeId::symbol(dir.path().join("src/runtime-named.mts"), "Queue");
+    assert!(graph.dependencies_of_node(&runtime_name).into_iter().flatten().any(|(target, kind)|
+        *kind == EdgeKind::SymbolReexport && matches!(target, NodeId::Module(name) if name.replace('\\', "/").ends_with("runtime-named/queue.js#OriginalQueue"))));
+    let typed_origin = NodeId::symbol(dir.path().join("src/typed-named.mts"), "QueueType");
+    assert!(graph.dependencies_of_node(&typed_origin).into_iter().flatten().any(|(target, kind)|
+        *kind == EdgeKind::SymbolTypeReexport && matches!(target, NodeId::Module(name) if name.replace('\\', "/").ends_with("typed-named/queue.d.ts#OriginalQueue"))));
+    let escaped = NodeId::symbol(dir.path().join("src/escaped-adapter.mts"), "Queue");
+    assert!(!graph
+        .dependencies_of_node(&escaped)
+        .into_iter()
+        .flatten()
+        .any(|(target, _)| matches!(target, NodeId::Module(_))));
+    let local = NodeId::file(dir.path().join("src/escaped.mjs"));
+    let local_symbol = NodeId::symbol(dir.path().join("src/escaped.mjs"), "Queue");
+    assert!(graph
+        .dependencies_of_node(&local)
+        .into_iter()
+        .flatten()
+        .any(|(target, _)| target == &local_symbol));
     let types = NodeId::file(dir.path().join("src/types.mts"));
     let value = NodeId::symbol(dir.path().join("src/types.mts"), "valueOnly");
     assert!(!graph

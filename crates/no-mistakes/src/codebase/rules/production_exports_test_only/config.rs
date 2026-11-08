@@ -61,7 +61,7 @@ impl Selection {
         let mut platform_exports =
             std::collections::BTreeMap::<_, std::collections::BTreeSet<_>>::new();
         for entry in options.platform_consumed_exports {
-            if entry.file.trim().is_empty() || Path::new(&entry.file).is_absolute() {
+            if entry.file.trim().is_empty() || Path::new(&entry.file).has_root() {
                 bail!("{RULE_ID}: options.platformConsumedExports file must be a nonempty root-relative file path");
             }
             let file = normalize_path(&root.join(&entry.file));

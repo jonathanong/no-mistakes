@@ -5,6 +5,7 @@ struct ExternalStarSymbol {
     external: bool,
     typed: bool,
     type_capable: bool,
+    blocked: bool,
 }
 
 type ExternalStarExports = FxHashMap<String, ExternalStarSymbol>;
@@ -63,7 +64,11 @@ impl<'a> ExternalStarProjection<'a> {
         let Some(exports) = self.exports(path, false, &mut fx_set()) else {
             return;
         };
-        for (name, origin) in exports.iter().filter(|(_, origin)| origin.external) {
+        self.remove_blocked_edges(path, &exports, edges);
+        for (name, origin) in exports
+            .iter()
+            .filter(|(_, origin)| origin.external && !origin.blocked)
+        {
             let symbol = NodeId::symbol_in(&self.input.interner, path, name);
             let kind = if origin.typed {
                 EdgeKind::SymbolTypeReexport
@@ -89,6 +94,9 @@ impl<'a> ExternalStarProjection<'a> {
         external: bool,
         active: &mut FxHashSet<PathBuf>,
     ) -> Option<Arc<ExternalStarExports>> {
+        if external && self.input.graph_files.visible_path(path).is_some() {
+            return None;
+        }
         let key = (path.to_path_buf(), external);
         if let Some(cached) = self.cache.get(&key) {
             return cached.clone();
@@ -119,15 +127,24 @@ impl<'a> ExternalStarProjection<'a> {
             return None;
         }
         let symbols = facts.symbols.as_ref()?;
+        let imported: FxHashSet<_> = symbols
+            .imports
+            .iter()
+            .filter(|_| external)
+            .map(|import| import.local.as_str())
+            .collect();
         let mut exports = fx_map();
         for export in symbols.exports.iter().filter(|export| export.name != "*") {
-            if external
-                && (matches!(export.kind, ExportKind::ReExport { .. })
-                    || symbols.imports.iter().any(|import| {
-                        import.local == *export.local.as_ref().unwrap_or(&export.name)
-                    }))
-            {
-                return None;
+            if external {
+                if let ExportKind::ReExport { source, imported } = &export.kind {
+                    let origin =
+                        self.named_reexport(path, source, imported, export.is_type_only, active)?;
+                    exports.insert(export.name.clone(), origin);
+                    continue;
+                }
+                if imported.contains(export.local.as_deref().unwrap_or(&export.name)) {
+                    return None;
+                }
             }
             exports.insert(
                 export.name.clone(),
@@ -135,6 +152,7 @@ impl<'a> ExternalStarProjection<'a> {
                     file: path.to_path_buf(),
                     name: export.name.clone(),
                     external,
+                    blocked: false,
                     typed: export.is_type_only,
                     type_capable: export.is_type_only
                         || matches!(
@@ -148,7 +166,6 @@ impl<'a> ExternalStarProjection<'a> {
             );
         }
         let explicit: FxHashSet<_> = exports.keys().cloned().collect();
-        let mut ambiguous = fx_set();
         for export in &symbols.exports {
             let ExportKind::ReExport { source, imported } = &export.kind else {
                 continue;
@@ -160,19 +177,14 @@ impl<'a> ExternalStarProjection<'a> {
             let nested = self.exports(&target, is_external, active)?;
             for (name, origin) in nested.iter() {
                 let (name, mut origin) = (name.clone(), origin.clone());
-                if name == "default" || explicit.contains(&name) || ambiguous.contains(&name) {
+                if name == "default" || explicit.contains(&name) {
                     continue;
                 }
                 if export.is_type_only && !origin.type_capable {
                     continue;
                 }
                 origin.typed |= export.is_type_only;
-                if exports.get(&name).is_some_and(|prior| prior != &origin) {
-                    exports.remove(&name);
-                    ambiguous.insert(name);
-                } else {
-                    exports.insert(name, origin);
-                }
+                merge_external_star_origin(&mut exports, name, origin);
             }
         }
         Some(exports)

@@ -878,7 +878,10 @@ The selector projection resolves installed external star exports through an exac
 public package `exports` entry. Proven names get the same forwarding edges to an
 external module identity; supplemental sources belong to the request session and
 do not expand the configured production file universe. Unresolved or ambiguous
-entries keep `symbol-import-unknown` edges. This projection is demanded by the
+entries keep `symbol-import-unknown` edges. Proven external/local star collisions
+remove only the affected forwarding edges, including through nested barrels;
+explicit overrides and existing proofs of identical local origins remain intact.
+This projection is demanded by the
 rule and leaves checks with the rule disabled unchanged.
 
 At maximum effort, `postgres-no-unbounded-sql-identifier` also retains sparse
