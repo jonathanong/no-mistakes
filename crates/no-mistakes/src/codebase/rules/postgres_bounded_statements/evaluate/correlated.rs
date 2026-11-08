@@ -42,7 +42,7 @@ pub(super) fn pin_query(
 ) -> Evaluation {
     let projected = if !pin.qualified_reads.is_empty()
         && !matches!(pin.source, SqlPinSource::ReadQuery(_))
-        && lateral::read_dependencies(&pin.reads, &pin.qualified_reads, outer, catalog).is_some()
+        && lateral::qualified_dependencies(&pin.qualified_reads, outer, catalog).is_some()
     {
         project(inner, &pin.qualified_reads, catalog, views)
     } else {

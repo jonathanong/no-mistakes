@@ -9,6 +9,7 @@ fn issue_3116_recursive_and_correlated_key_lookups_keep_unsafe_controls() {
         ("recursive.sql", vec![0, 1, 1, 1, 1, 1]),
         ("correlated.sql", vec![0, 1, 0, 1, 1, 1, 1, 0, 1]),
         ("lateral-bare.sql", vec![2, 0]),
+        ("correlated-unknown.sql", vec![0, 1, 1, 1]),
     ] {
         let sql = std::fs::read_to_string(root.join(name)).unwrap();
         let facts = extract_sql_statement_facts(&sql);

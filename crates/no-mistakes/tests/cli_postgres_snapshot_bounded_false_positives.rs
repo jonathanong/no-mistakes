@@ -83,6 +83,11 @@ fn issue_3116_correlated_check_json_snapshot() {
             ("correlated", root.clone(), root.join("correlated.yml")),
             ("embedded", root.clone(), root.join("embedded.yml")),
             ("lateral_bare", root.clone(), root.join("lateral-bare.yml")),
+            (
+                "unknown_bare",
+                root.clone(),
+                root.join("correlated-unknown.yml"),
+            ),
         ],
     );
 }

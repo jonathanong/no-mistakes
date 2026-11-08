@@ -572,7 +572,10 @@ outer lookup is bounded. Changing the inner predicate to the non-unique
 example; use a primary/unique key or declare a reviewed `columnBounds` contract
 to fix it. Removing `target.placement_id = $1` retains an outer finding.
 Unknown outer qualifiers, local self-comparisons, and an `OR` branch without a
-complete key do not prove a bounded lookup.
+complete key do not prove a bounded lookup. In an `IN` subquery, an unrelated
+bare read from an explicitly aliased unknown table does not erase an
+independently proven qualified key equality. That unknown source still bounds
+nothing, and the outer query must establish its own bound.
 
 ### Correlated builder fragments
 
