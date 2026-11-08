@@ -12,6 +12,7 @@ mod bodies;
 pub(in crate::codebase) use bodies::{body_advice_requested, body_bounds_requested};
 mod column_bounds;
 mod evaluate;
+pub(crate) use evaluate::lookup::bound as bound_lookup_items;
 mod scan;
 mod view_bounds;
 use std::collections::BTreeMap;

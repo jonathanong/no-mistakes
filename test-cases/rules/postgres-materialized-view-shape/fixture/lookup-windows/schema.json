@@ -1,0 +1,2080 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "posts": {
+      "columns": {
+        "id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "created_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "payload": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "author_id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "tenant_id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 5
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "primary": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "time": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "users": {
+      "columns": {
+        "id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "created_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "payload": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "author_id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "tenant_id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 5
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "primary": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "time": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "handles": {
+      "columns": {
+        "id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "created_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "payload": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "author_id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "tenant_id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 5
+        }
+      },
+      "indexes": {
+        "time": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        },
+        "handle_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ],
+          "constraintBacked": true
+        }
+      },
+      "uniqueConstraints": {
+        "handle_key": {
+          "columns": [
+            "id"
+          ]
+        }
+      }
+    },
+    "pairs": {
+      "columns": {
+        "id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "created_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "payload": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "author_id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "tenant_id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 5
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "tenant_id",
+          "id"
+        ]
+      },
+      "indexes": {
+        "primary": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "tenant_id",
+              "expression": "tenant_id"
+            },
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "time": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "partial_users": {
+      "columns": {
+        "id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "created_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "payload": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "author_id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "tenant_id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 5
+        }
+      },
+      "indexes": {
+        "primary": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ],
+          "predicate": "id > 0"
+        },
+        "time": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bounds": {
+      "columns": {
+        "id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "created_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "payload": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "author_id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "tenant_id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 5
+        },
+        "cutoff": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 6
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "primary": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "time": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "nullable_users": {
+      "columns": {
+        "id": {
+          "dataType": "bigint",
+          "nullable": true,
+          "ordinalPosition": 1
+        },
+        "created_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "payload": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "author_id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "tenant_id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 5
+        }
+      },
+      "indexes": {
+        "time": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        },
+        "handle_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ],
+          "constraintBacked": true
+        }
+      },
+      "uniqueConstraints": {
+        "handle_key": {
+          "columns": [
+            "id"
+          ]
+        }
+      }
+    },
+    "indexed_users": {
+      "columns": {
+        "id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "created_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "payload": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "author_id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "tenant_id": {
+          "dataType": "bigint",
+          "nullable": false,
+          "ordinalPosition": 5
+        }
+      },
+      "indexes": {
+        "primary": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "time": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "views": {
+    "good_primary_lookup": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p JOIN users u ON u.id = p.author_id WHERE p.id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_unique_lookup": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p JOIN handles u ON u.id = p.author_id WHERE p.id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_composite_lookup": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p JOIN pairs u ON u.id = p.author_id AND u.tenant_id = p.tenant_id WHERE p.id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_chained_lookup": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p JOIN users u ON u.id = p.author_id JOIN handles h ON h.id = u.author_id WHERE p.id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_left_lookup": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p LEFT JOIN users u ON u.id = p.author_id WHERE p.id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_values_window": {
+      "materialized": true,
+      "definition": "WITH w AS (VALUES (fn_min_uuidv7(now() - '7 days'::interval))) SELECT p.id FROM posts p JOIN w ON p.id >= w.column1",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_named_values_window": {
+      "materialized": true,
+      "definition": "WITH w(cutoff) AS (VALUES (fn_min_uuidv7(now() - '7 days'::interval))) SELECT p.id FROM posts p JOIN w ON p.id >= w.cutoff",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_constant_window": {
+      "materialized": true,
+      "definition": "WITH w AS (SELECT fn_min_uuidv7(now() - '7 days'::interval) AS cutoff) SELECT p.id FROM posts p JOIN w ON p.id >= w.cutoff",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_days_window": {
+      "materialized": true,
+      "definition": "WITH w(days) AS (VALUES (7)) SELECT p.id FROM posts p CROSS JOIN w WHERE p.created_at > CURRENT_TIMESTAMP - w.days * INTERVAL '1 day'",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_cte_lookup": {
+      "materialized": true,
+      "definition": "WITH w AS (VALUES (fn_min_uuidv7(now() - '7 days'::interval))) SELECT p.id FROM posts p JOIN w ON p.id >= w.column1 JOIN users u ON u.id = p.author_id",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_whole_aggregate": {
+      "materialized": true,
+      "definition": "SELECT count(*) FROM posts",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_nonleading_window": {
+      "materialized": true,
+      "definition": "SELECT id FROM pairs WHERE id >= fn_min_uuidv7(now() - '7 days'::interval)",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_partial_composite_lookup": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p JOIN pairs u ON u.id = p.author_id WHERE p.id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_partial_unique_lookup": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p JOIN partial_users u ON u.id = p.author_id WHERE p.id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_unbounded_driver": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p JOIN users u ON u.id = p.author_id",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_or_lookup": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p JOIN users u ON u.id = p.author_id OR u.author_id = p.author_id WHERE p.id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_self_join": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p JOIN posts u ON u.author_id = p.author_id WHERE p.id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_multiple_values": {
+      "materialized": true,
+      "definition": "WITH w AS (VALUES (100), (200)) SELECT p.id FROM posts p JOIN w ON p.id >= w.column1",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_cte_table_read": {
+      "materialized": true,
+      "definition": "WITH w AS (SELECT id AS cutoff FROM users) SELECT p.id FROM posts p JOIN w ON p.id >= w.cutoff",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_cte_subquery": {
+      "materialized": true,
+      "definition": "WITH w AS (SELECT (SELECT min(id) FROM users) AS cutoff) SELECT p.id FROM posts p JOIN w ON p.id >= w.cutoff",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_cte_function": {
+      "materialized": true,
+      "definition": "WITH w AS (SELECT generate_series(1, 10) AS cutoff) SELECT p.id FROM posts p JOIN w ON p.id >= w.cutoff",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_cte_shadow": {
+      "materialized": true,
+      "definition": "WITH w AS (VALUES (100)) SELECT p.id FROM posts p WHERE EXISTS (WITH w AS (SELECT id AS column1 FROM users) SELECT 1 FROM posts q JOIN w ON q.id >= w.column1)",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_alias_shadow": {
+      "materialized": true,
+      "definition": "WITH w AS (VALUES (100)) SELECT p.id FROM posts p JOIN users w ON p.id >= w.id",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_preserved_join": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p FULL JOIN users u ON u.id = p.author_id AND p.id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_lookup_aggregate": {
+      "materialized": true,
+      "definition": "SELECT count(*) FROM posts p JOIN users u ON u.id = p.author_id",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_forward_cte": {
+      "materialized": true,
+      "definition": "WITH first AS (SELECT p.id FROM posts p JOIN bounds b ON p.id >= b.cutoff WHERE b.id >= 100), bounds(cutoff) AS (VALUES (100)) SELECT * FROM first",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_cte_alias": {
+      "materialized": true,
+      "definition": "WITH w(cutoff) AS (VALUES (100)) SELECT p.id FROM posts p JOIN w window_bound ON p.id >= window_bound.cutoff",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_nullable_lookup": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p JOIN nullable_users u ON u.id IS NOT DISTINCT FROM p.author_id WHERE p.id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_nonunique_lookup": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p JOIN users u ON u.author_id = p.author_id WHERE p.id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_constant_nonleading": {
+      "materialized": true,
+      "definition": "WITH w AS (VALUES (100)) SELECT p.id FROM pairs p JOIN w ON p.id >= w.column1",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_cte_qualified_shadow": {
+      "materialized": true,
+      "definition": "WITH w AS (VALUES (100)) SELECT p.id FROM posts p JOIN public.bounds w ON p.id >= w.cutoff WHERE w.id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_unique_index_lookup": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p JOIN indexed_users u ON u.id = p.author_id WHERE p.id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_using_lookup": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p JOIN users u USING (id) WHERE p.id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_or_key_lookup": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p JOIN users u ON u.id = p.author_id WHERE p.id >= 100 AND (u.id = p.id OR u.id = p.author_id)",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_constant_aliased_window": {
+      "materialized": true,
+      "definition": "WITH w(cutoff) AS (SELECT 100) SELECT p.id FROM posts p JOIN w ON w.cutoff <= p.id",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_quoted_window": {
+      "materialized": true,
+      "definition": "WITH \"Window\"(\"Cutoff\") AS (VALUES (100)) SELECT p.id FROM posts p JOIN \"Window\" \"W\" ON p.id >= \"W\".\"Cutoff\"",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_quoted_window_case": {
+      "materialized": true,
+      "definition": "WITH \"Window\"(\"Cutoff\") AS (VALUES (100)) SELECT p.id FROM posts p JOIN \"Window\" \"W\" ON p.id >= \"W\".cutoff",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_lookup_range": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p JOIN users u ON u.id >= p.author_id WHERE p.id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_limit": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p JOIN users u ON u.id = p.author_id LIMIT 10",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_partial_implied": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM posts p JOIN partial_users u ON u.id = p.author_id WHERE p.id >= 100 AND u.id > 0",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_nullable_cte": {
+      "materialized": true,
+      "definition": "WITH w AS (VALUES (100)) SELECT p.id FROM posts p LEFT JOIN w ON true WHERE p.id >= w.column1",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_preserved_cte": {
+      "materialized": true,
+      "definition": "WITH w AS (VALUES (100)) SELECT p.id FROM posts p LEFT JOIN w ON p.id >= w.column1",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_recursive_cte": {
+      "materialized": true,
+      "definition": "WITH RECURSIVE w(cutoff) AS (VALUES (100)) SELECT p.id FROM posts p JOIN w ON p.id >= w.cutoff",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_cte_driver": {
+      "materialized": true,
+      "definition": "WITH recent AS (SELECT p.id, p.author_id FROM posts p WHERE p.id >= 100) SELECT p.id FROM recent p JOIN users u ON u.id = p.author_id",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_derived_driver": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM (SELECT id, author_id FROM posts WHERE id >= 100) p JOIN users u ON u.id = p.author_id",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_aggregate_driver": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM (SELECT min(id) AS id, min(author_id) AS author_id FROM posts) p JOIN users u ON u.id = p.author_id",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_limited_driver": {
+      "materialized": true,
+      "definition": "SELECT p.id FROM (SELECT id, author_id FROM posts LIMIT 10) p JOIN users u ON u.id = p.author_id",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_cte_driver": {
+      "materialized": true,
+      "definition": "WITH recent AS (SELECT p.id, p.author_id FROM posts p) SELECT p.id FROM recent p JOIN users u ON u.id = p.author_id",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_expanding_driver": {
+      "materialized": true,
+      "definition": "SELECT u.id FROM (SELECT get_all_user_ids() AS id FROM posts p WHERE p.id >= 100) d JOIN users u ON u.id = d.id",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

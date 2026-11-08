@@ -8,6 +8,7 @@ mod correlated;
 mod driven;
 mod keys;
 mod lateral;
+pub(super) mod lookup;
 mod outer_reads;
 mod ownership;
 mod possible_temporary;
@@ -76,7 +77,6 @@ fn offenders_with_columns(
     };
     target::offenders(&query, target, &evaluation, catalog, views)
 }
-
 fn evaluate(
     query: &SqlBoundQuery,
     catalog: &SchemaCatalog,
