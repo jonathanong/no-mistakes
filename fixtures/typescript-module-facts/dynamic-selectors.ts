@@ -37,9 +37,11 @@ export async function proven() {
   const { G } = (await import("./a")) as any;
   return [ns.E, ns.F, G];
 }
+import("./a").then((m) => m?.A);
+import("./a").then((m) => m.a.b);
+import("./a").then((m) => { m.A; });
 // Everything below must stay unproven and so must not appear in the facts.
 import("./a").then((m) => m[key]);
-import("./a").then((m) => m?.A);
 import("./a").then(onLoad);
 import("./a").then((m) => m.A, onError);
 import("./a").then(({ ...rest }) => rest);
@@ -49,8 +51,6 @@ import("./a").then((a, b) => a.A);
 import("./a").then(() => 1);
 import("./a").then((m) => 1);
 import("./a").then((m) => other.A);
-import("./a").then((m) => m.a.b);
-import("./a").then((m) => { m.A; });
 import("./a").then(function* (m) { yield m.A; });
 import("./a")?.then((m) => m.A);
 import("./a").then?.((m) => m.A);

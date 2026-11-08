@@ -1,9 +1,10 @@
 /// Export names proven for a dynamic `import()` site, keyed by specifier and
 /// line. Imports carry no byte offsets, so a site where any same-line,
 /// same-specifier runtime occurrence is unproven stays unknown.
-fn proven_dynamic_selectors(
-    facts: &crate::codebase::ts_source::facts::TsFileFacts,
-) -> FxHashMap<(&str, u32), Vec<&str>> {
+fn proven_dynamic_selectors<'a>(
+    inputs: &ExportEdgeInputs<'_>,
+    facts: &'a crate::codebase::ts_source::facts::TsFileFacts,
+) -> FxHashMap<(&'a str, u32), Vec<&'a str>> {
     let (Some(module), Some(source)) = (&facts.module_bindings, facts.source.as_deref()) else {
         return fx_map();
     };
@@ -18,8 +19,13 @@ fn proven_dynamic_selectors(
         let proven = module
             .dynamic_import_selectors
             .iter()
-            .find(|(start, _)| *start == load.span.start)
-            .map(|(_, names)| names.iter().map(String::as_str).collect::<Vec<_>>());
+            .find(|(start, _, _)| *start == load.span.start)
+            .filter(|(_, _, calls)| {
+                calls.is_empty()
+                    || selector_target(inputs, &load.specifier)
+                        .is_some_and(|target| receiver_safe(inputs, &target, calls))
+            })
+            .map(|(_, names, _)| names.iter().map(String::as_str).collect::<Vec<_>>());
         let entry = sites
             .entry((load.specifier.as_str(), line))
             .or_insert(Some(Vec::new()));

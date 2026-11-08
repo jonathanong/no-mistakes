@@ -113,10 +113,40 @@ consumer of the exports it provably reads. These forms are recognized:
 | `const X = dynamic(() => import("./x"))`, `export default lazy(() => import("./x"))`, a wrapper call as a bare statement or directly inside a JSX expression container (an expression-bodied arrow passed directly as a call argument whose wrapper call sits only in one of those places, or in a `const` binding whose every reference is a JSX element name, a `typeof` or type query, or an export specifier) | `default` |
 | `const m = await import("./x")` where every use of `m` is `m.Name` | `Name` |
 | `const { Name } = await import("./x")` | `Name` |
+| `const registry = { x: () => import("./x") }; (await registry.x()).default()` | `default`, subject to receiver safety |
+| `import("./x").then(m => m.work())` (also block bodies and literal string member keys) | `work`, subject to receiver safety |
+| `const [{ work }] = await Promise.all([import("./x")])` | `work` |
 
-Everything else keeps the "unknown import selector" advisory: computed or
-optional member reads (`m[key]`, `m?.Name`), an object literal with any key other
-than a sole `default` (`({ default: m.X, other: 1 })`, `({ ...m })`,
+Stored loader maps must be local `const` object literals with unique static keys,
+plain expression-bodied arrows with no parameters, and no spreads, methods, or
+computed properties. Every reference to the map must call a dot-named loader
+with no arguments; the selected loader's result must be awaited and read only
+through proven members or object destructuring. Exporting, aliasing, passing,
+mutating, or indexing the map with a computed key keeps uncertainty. Every map
+value must be an arrow: another function-valued member could expose the map
+through its `this` receiver and conceal further loader calls. Rewrite such
+members as arrows or keep them outside the loader map. Every call must name a
+declared loader key; inherited members such as `valueOf()` stay uncertain. Mixed proven
+and escaping uses of a loader result also stay uncertain.
+
+A `.then` callback parameter uses the same static member and escape rules as a
+runtime namespace import. Every reference must read a static member; passing,
+returning, aliasing, spreading, reassigning, or mutating the namespace prevents
+proof. Shadowed parameters do not select exports. Member calls on a callback
+parameter or awaited namespace use the same receiver safety check as `ns.work()`
+below: an exported callable that can inspect `this` keeps uncertainty. A plain
+member read does not pass a receiver.
+
+`Promise.all` must refer to the global `Promise` without local shadowing, take one literal
+array without spreads, and be awaited directly into an array pattern. Each
+selected element maps by position to its own literal import and an object
+pattern with static keys and no rest. Multiple imports and array holes preserve
+that position. A whole-module element binding, rest pattern, computed key,
+shadowed `Promise`, or stored result keeps uncertainty for that import.
+
+Other forms keep the "unknown import selector" advisory: computed nonliteral
+member reads (`m[key]`), optional reads on stored awaited bindings (`m?.Name`),
+an object literal with any key other than a sole `default` (`({ default: m.X, other: 1 })`, `({ ...m })`,
 `({ [k]: m.X })`), a mock factory returning a whole module
 (`vi.mock(path, async () => import("./x"))`, a namespace use that is never
 recorded as `default`), a rest element or computed key in a
