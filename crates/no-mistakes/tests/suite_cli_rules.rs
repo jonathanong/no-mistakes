@@ -266,3 +266,5 @@ mod cli_check_production_exports_precision;
 
 #[path = "cli_check_production_exports_platform.rs"]
 mod cli_check_production_exports_platform;
+#[path = "cli_call_site_assembly.rs"]
+mod cli_call_site_assembly;

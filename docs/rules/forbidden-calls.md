@@ -94,6 +94,13 @@ Source prerequisite checks follow the runtime import closure independently of
 behind a re-export barrel reports `incomplete` with its path, even when the
 barrel chain exceeds the call-hop limit. Healthy prerequisites remain complete.
 
+Parallel file analysis retains every call occurrence. The graph assembles
+the combined occurrence vector at its final length and takes ownership of
+that allocation. Refinement copies original records only for its fixed set of
+admitted sites. Incoming arguments still include known callers and constructors,
+and the visit budget still uses the full occurrence count. See the
+[saved memory comparison](../performance/call-site-assembly.md).
+
 `traversal` defaults to `direct`, `unknownCalls` defaults to `finding`, and
 `invocations` defaults to `call`. An omitted `maxDepth` is unbounded for
 `file` and `transitive` traversal. `targets` must be non-empty unless

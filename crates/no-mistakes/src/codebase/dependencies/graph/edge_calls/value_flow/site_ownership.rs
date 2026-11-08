@@ -17,18 +17,20 @@ fn swap_resolution(site: &mut ResolvedCallSite, previous: &mut PreviousResolutio
 fn selected_sites<'a>(
     sites: &'a mut [ResolvedCallSite],
     batch: &[usize],
+    admitted: &[usize],
 ) -> Vec<(usize, &'a mut ResolvedCallSite)> {
     let mut tail = sites;
     let mut next = 0;
     batch
         .iter()
-        .map(|&index| {
-            // Batch is sorted and unique because it was drained from the pending set.
+        .map(|&dense| {
+            let index = admitted[dense];
+            // Admission preserves physical order; the batch is sorted and unique.
             let (_, selected) = std::mem::take(&mut tail).split_at_mut(index - next);
             let (site, rest) = selected.split_first_mut().unwrap();
             tail = rest;
             next = index + 1;
-            (index, site)
+            (dense, site)
         })
         .collect()
 }

@@ -1,0 +1,119 @@
+version: 2
+rules:
+  - name: boundary-0
+    rule: forbidden-calls
+    scope: repository
+    include: ["**/*.ts", "**/*.tsx"]
+    options:
+      roots: [{glob: ["**/*.ts", "**/*.tsx"]}]
+      traversal: transitive
+      unknownCalls: ignore
+      targets: [{global: setTimeout}]
+  - name: boundary-1
+    rule: forbidden-calls
+    scope: repository
+    include: ["**/*.ts", "**/*.tsx"]
+    options:
+      roots: [{glob: ["**/*.ts", "**/*.tsx"]}]
+      traversal: transitive
+      unknownCalls: ignore
+      targets: [{global: forbiddenApi1}]
+  - name: boundary-2
+    rule: forbidden-calls
+    scope: repository
+    include: ["**/*.ts", "**/*.tsx"]
+    options:
+      roots: [{glob: ["**/*.ts", "**/*.tsx"]}]
+      traversal: transitive
+      unknownCalls: ignore
+      targets: [{global: forbiddenApi2}]
+  - name: boundary-3
+    rule: forbidden-calls
+    scope: repository
+    include: ["**/*.ts", "**/*.tsx"]
+    options:
+      roots: [{glob: ["**/*.ts", "**/*.tsx"]}]
+      traversal: transitive
+      unknownCalls: ignore
+      targets: [{global: forbiddenApi3}]
+  - name: boundary-4
+    rule: forbidden-calls
+    scope: repository
+    include: ["**/*.ts", "**/*.tsx"]
+    options:
+      roots: [{glob: ["**/*.ts", "**/*.tsx"]}]
+      traversal: transitive
+      unknownCalls: ignore
+      targets: [{global: forbiddenApi4}]
+  - name: boundary-5
+    rule: forbidden-calls
+    scope: repository
+    include: ["**/*.ts", "**/*.tsx"]
+    options:
+      roots: [{glob: ["**/*.ts", "**/*.tsx"]}]
+      traversal: transitive
+      unknownCalls: ignore
+      targets: [{global: forbiddenApi5}]
+  - name: boundary-6
+    rule: forbidden-calls
+    scope: repository
+    include: ["**/*.ts", "**/*.tsx"]
+    options:
+      roots: [{glob: ["**/*.ts", "**/*.tsx"]}]
+      traversal: transitive
+      unknownCalls: ignore
+      targets: [{global: forbiddenApi6}]
+  - name: boundary-7
+    rule: forbidden-calls
+    scope: repository
+    include: ["**/*.ts", "**/*.tsx"]
+    options:
+      roots: [{glob: ["**/*.ts", "**/*.tsx"]}]
+      traversal: transitive
+      unknownCalls: ignore
+      targets: [{global: forbiddenApi7}]
+  - name: boundary-8
+    rule: forbidden-calls
+    scope: repository
+    include: ["**/*.ts", "**/*.tsx"]
+    options:
+      roots: [{glob: ["**/*.ts", "**/*.tsx"]}]
+      traversal: transitive
+      unknownCalls: ignore
+      targets: [{global: forbiddenApi8}]
+  - name: boundary-9
+    rule: forbidden-calls
+    scope: repository
+    include: ["**/*.ts", "**/*.tsx"]
+    options:
+      roots: [{glob: ["**/*.ts", "**/*.tsx"]}]
+      traversal: transitive
+      unknownCalls: ignore
+      targets: [{global: forbiddenApi9}]
+  - name: boundary-10
+    rule: forbidden-calls
+    scope: repository
+    include: ["**/*.ts", "**/*.tsx"]
+    options:
+      roots: [{glob: ["**/*.ts", "**/*.tsx"]}]
+      traversal: transitive
+      unknownCalls: ignore
+      targets: [{global: forbiddenApi10}]
+  - name: boundary-11
+    rule: forbidden-calls
+    scope: repository
+    include: ["**/*.ts", "**/*.tsx"]
+    options:
+      roots: [{glob: ["**/*.ts", "**/*.tsx"]}]
+      traversal: transitive
+      unknownCalls: ignore
+      targets: [{global: forbiddenApi11}]
+  - name: boundary-12
+    rule: forbidden-calls
+    scope: repository
+    include: ["**/*.ts", "**/*.tsx"]
+    options:
+      roots: [{glob: ["**/*.ts", "**/*.tsx"]}]
+      traversal: transitive
+      unknownCalls: ignore
+      targets: [{global: forbiddenApi12}]

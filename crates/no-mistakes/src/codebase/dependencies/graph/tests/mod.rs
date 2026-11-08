@@ -200,3 +200,4 @@ mod symbol_import_selectors;
 mod value_import_selectors;
 
 mod external_star_exports;
+mod call_pass;

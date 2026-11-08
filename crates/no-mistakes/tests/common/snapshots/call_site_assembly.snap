@@ -1,0 +1,112 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "large-imports": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "large-off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "large-on": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "entry.ts",
+          "import": "setTimeout",
+          "line": 2,
+          "message": "forbidden call (boundary-0, application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function run() { work0(0); setTimeout(() => {}, 1); }",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "small-off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "small-on": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "entry.mts",
+          "import": "<unknown>",
+          "line": 8,
+          "message": "forbidden call (application #1): unknown call",
+          "rule": "forbidden-calls",
+          "sourceLine": "unknownReceiver[name]();",
+          "target": "unknown call"
+        },
+        {
+          "file": "entry.mts",
+          "import": "<unknown>.fire",
+          "line": 5,
+          "message": "forbidden call (application #1): unknown call",
+          "rule": "forbidden-calls",
+          "sourceLine": "new Timer().fire();",
+          "target": "unknown call"
+        },
+        {
+          "file": "entry.mts",
+          "import": "Math.random",
+          "line": 7,
+          "message": "forbidden call (application #1): unknown call",
+          "rule": "forbidden-calls",
+          "sourceLine": "const name = Math.random() ? 'a' : 'b';",
+          "target": "unknown call"
+        },
+        {
+          "file": "sink.mts",
+          "import": "setTimeout",
+          "line": 1,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function sink() { setTimeout(() => {}, 1); }",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

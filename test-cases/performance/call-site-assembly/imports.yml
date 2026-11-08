@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    include: ["**/*.ts", "**/*.tsx"]
+    options:
+      roots: ["**/*.ts", "**/*.tsx"]
+      forbiddenModules: ["node:fs"]
+      relationships: [import]

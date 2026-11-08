@@ -58,6 +58,7 @@ fn scalar_refinement_removes_actual_nonempty_single_site_vectors() {
 #[test]
 fn scalar_refinement_preserves_full_graph_incoming_and_physical_edges() {
     for name in [
+        "call-site-assembly",
         "value-flow-replacement-cold",
         "inline-member-precision-no-writes",
         "value-flow-replacement-scale-16",
@@ -131,6 +132,7 @@ fn in_place_refinement_removes_per_visit_whole_site_clones() {
 #[test]
 fn in_place_refinement_preserves_scalar_vector_incoming_and_physical_edges() {
     for name in [
+        "call-site-assembly",
         "value-flow-replacement-cold",
         "inline-member-precision-no-writes",
         "value-flow-replacement-scale-16",
