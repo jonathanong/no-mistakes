@@ -237,3 +237,18 @@ fn query_reached_per_item_dependent_chain_check_json_snapshot() {
         ],
     );
 }
+
+#[test]
+fn query_reached_per_item_allow_function_check_json_snapshot() {
+    let dir = "query-reached-per-item/allow-function";
+    assert_saved_fixture(
+        "query_reached_per_item_allow_function",
+        &[
+            rule("unallowed", dir, "no-allow.yml"),
+            rule("function", dir, ".no-mistakes.yml"),
+            rule("file_only", dir, "file-only.yml"),
+            rule("unused", dir, "hygiene.yml"),
+            rule("disabled", dir, "off.yml"),
+        ],
+    );
+}

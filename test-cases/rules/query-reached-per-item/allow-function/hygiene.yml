@@ -1,0 +1,24 @@
+reportUnusedAllowEntries: report
+effects:
+  postgres:
+    functions: [query]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres]
+      allow:
+        - file: entry.mts
+          function: backfillPage
+          callee: query
+          line: 4
+        - file: entry.mts
+          function: removedFunction
+          callee: query
+        - file: entry.mts
+          function: processItems
+          callee: otherQuery
+        - file: entry.mts
+          function: processItems
+          line: 4
+        - file: clean.mts

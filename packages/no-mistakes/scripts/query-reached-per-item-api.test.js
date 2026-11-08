@@ -6,6 +6,44 @@ const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
 test(
+  "compiled function allowances retain other callers and unused legacy entries",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(__dirname, "../../../test-cases/rules/query-reached-per-item/allow-function");
+    for (const [config, lines, unused] of [
+      ["no-allow.yml", [4, 8], 0],
+      [".no-mistakes.yml", [8], 0],
+      ["file-only.yml", [], 0],
+      ["hygiene.yml", [8], 4],
+      ["off.yml", [], 0],
+    ]) {
+      const expected = await cjs.check({ root, config });
+      assert.deepEqual(expected.warnings, []);
+      assert.deepEqual(
+        expected.rules
+          .filter((finding) => finding.rule === "query-reached-per-item")
+          .map((finding) => finding.line),
+        lines,
+      );
+      assert.equal(
+        expected.rules.filter((finding) => finding.rule === "unused-allow-entry").length,
+        unused,
+      );
+      assert.deepEqual(await esm.check({ root, config }), expected);
+      for (const api of [cjs, esm]) {
+        const prepared = await api.analyzeProject({
+          root,
+          reports: [{ type: "check", config }],
+        });
+        assert.deepEqual(prepared.reports[0].result, expected);
+      }
+    }
+  },
+);
+
+test(
   "compiled callback findings keep each lexical binding and occurrence distinct",
   { skip: !compiled },
   async () => {

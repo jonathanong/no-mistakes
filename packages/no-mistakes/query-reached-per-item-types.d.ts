@@ -1,6 +1,8 @@
 /** A reviewed allowance in repository-relative source coordinates. */
 export interface QueryReachedPerItemAllowEntry {
   file: string;
+  /** Exact enclosing caller name; combines with callee and line when supplied. */
+  function?: string;
   callee?: string;
   line?: number;
 }

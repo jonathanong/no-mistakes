@@ -15,6 +15,7 @@ pub(super) struct Options {
 #[serde(deny_unknown_fields)]
 pub(super) struct Allowance {
     pub(super) file: String,
+    pub(super) function: Option<String>,
     pub(super) callee: Option<String>,
     pub(super) line: Option<u32>,
 }

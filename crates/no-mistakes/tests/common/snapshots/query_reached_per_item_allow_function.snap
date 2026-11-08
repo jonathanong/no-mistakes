@@ -1,0 +1,140 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file_only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "function": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "entry.mts",
+          "import": "query",
+          "line": 8,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `query` reaches `postgres` via processItems → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const id of ids) await query(id);",
+          "target": "postgres: processItems → query"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unallowed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "entry.mts",
+          "import": "query",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `query` reaches `postgres` via backfillPage → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const id of ids) await query(id);",
+          "target": "postgres: backfillPage → query"
+        },
+        {
+          "file": "entry.mts",
+          "import": "query",
+          "line": 8,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `query` reaches `postgres` via processItems → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const id of ids) await query(id);",
+          "target": "postgres: processItems → query"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unused": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "entry.mts",
+          "import": "query",
+          "line": 8,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `query` reaches `postgres` via processItems → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const id of ids) await query(id);",
+          "target": "postgres: processItems → query"
+        },
+        {
+          "file": "hygiene.yml",
+          "import": "query-reached-per-item",
+          "line": 15,
+          "message": "stale query-reached-per-item allow entry `entry.mts#query@removedFunction` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- file: entry.mts",
+          "target": "entry.mts#query@removedFunction"
+        },
+        {
+          "file": "hygiene.yml",
+          "import": "query-reached-per-item",
+          "line": 18,
+          "message": "stale query-reached-per-item allow entry `entry.mts#otherQuery@processItems` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- file: entry.mts",
+          "target": "entry.mts#otherQuery@processItems"
+        },
+        {
+          "file": "hygiene.yml",
+          "import": "query-reached-per-item",
+          "line": 21,
+          "message": "stale query-reached-per-item allow entry `entry.mts:4@processItems` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- file: entry.mts",
+          "target": "entry.mts:4@processItems"
+        },
+        {
+          "file": "hygiene.yml",
+          "import": "query-reached-per-item",
+          "line": 24,
+          "message": "stale query-reached-per-item allow entry `clean.mts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- file: clean.mts",
+          "target": "clean.mts"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

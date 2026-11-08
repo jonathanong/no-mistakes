@@ -146,14 +146,12 @@ pub(crate) fn check_with_graph_and_session(
                     continue;
                 };
                 let file = relative_slash_path(root, &site.file);
-                if audit.usage.suppress(options.allow.iter().map(|allow| {
-                    allow.file == file
-                        && allow
-                            .callee
-                            .as_ref()
-                            .is_none_or(|callee| callee == &site.source_callee)
-                        && allow.line.is_none_or(|line| line == position.line)
-                })) {
+                if audit.usage.suppress(
+                    options
+                        .allow
+                        .iter()
+                        .map(|entry| allow::matches(entry, &file, site, position.line)),
+                ) {
                     continue;
                 }
                 let mut path = reach.path.clone();

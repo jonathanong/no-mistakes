@@ -9,6 +9,14 @@ pub(super) fn validate(options: &Options, config: &NoMistakesConfig) -> Result<(
     {
         bail!("{RULE_ID}: allow entries require a non-empty file and positive line when supplied");
     }
+    if options.allow.iter().any(|allow| {
+        allow
+            .function
+            .as_ref()
+            .is_some_and(|name| name.trim().is_empty())
+    }) {
+        bail!("{RULE_ID}: allow entries require a non-empty function when supplied");
+    }
     for kind in &options.effects {
         let Some(effect) = config.effects.get(kind) else {
             bail!("{RULE_ID}: unknown effects kind `{kind}`");

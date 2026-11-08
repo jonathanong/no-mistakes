@@ -211,6 +211,7 @@ test("per-item query configuration exports optional capped cursor exemption", ()
   assert.match(declarations, /exemptCappedCursorPageReads\?: boolean;/);
   assert.match(declarations, /export interface QueryReachedPerItemAllowEntry/);
   assert.match(declarations, /file: string;/);
+  assert.match(declarations, /function\?: string;/);
   assert.match(declarations, /callee\?: string;/);
   assert.match(declarations, /line\?: number;/);
   assert.ok(

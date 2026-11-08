@@ -1,4 +1,7 @@
-use super::{config::Options, CheckFactMap, TsFactLookup};
+use super::{
+    config::{Allowance, Options},
+    CheckFactMap, ResolvedCallSite, TsFactLookup,
+};
 use crate::codebase::rules::{
     allow_audit::{AllowAudit, CheckedScope},
     path_filter::RulePathFilter,
@@ -6,6 +9,19 @@ use crate::codebase::rules::{
 };
 use crate::codebase::ts_source::SourceStore;
 use std::path::Path;
+
+pub(super) fn matches(allow: &Allowance, file: &str, site: &ResolvedCallSite, line: u32) -> bool {
+    allow.file == file
+        && allow
+            .callee
+            .as_ref()
+            .is_none_or(|callee| callee == &site.source_callee)
+        && allow.line.is_none_or(|allowed| allowed == line)
+        && allow
+            .function
+            .as_deref()
+            .is_none_or(|name| site.caller.as_deref() == Some(name))
+}
 
 pub(super) fn finish(
     root: &Path,
@@ -48,6 +64,9 @@ pub(super) fn finish(
             }
             if let Some(callee) = &entry.callee {
                 selector.push_str(&format!("#{callee}"));
+            }
+            if let Some(function) = &entry.function {
+                selector.push_str(&format!("@{function}"));
             }
             selector
         },

@@ -1,0 +1,11 @@
+effects:
+  postgres:
+    functions: [query]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres]
+      allow:
+        - file: entry.mts
+          function: ' '

@@ -222,6 +222,14 @@ patterns, `package-json-required-fields` unscoped-name exceptions, and
 JSON-relation allowances require complete applicable catalog coverage;
 combined catalog/write checks remain silent when coverage is uncertain.
 
+For `query-reached-per-item`, prefer an allowance such as
+`{file: src/tasks.ts, function: backfillPage, callee: query}`.
+The optional `function` selects the exact enclosing caller name shown in the
+finding's call path; `callee` and one-based `line` further narrow it. All supplied
+selectors must match the same finding. A finding in another function cannot
+mark that entry used. Existing file-only allowances still suppress the whole
+file and are still reported when unused under `reportUnusedAllowEntries`.
+
 Existing PostgreSQL catalog allow lists use the shared usage accounting while
 keeping their established stale messages, locations, and severity. Existing
 workflow-timeout, Markdown-eval, Storybook, tsconfig, and SQL allow-list
