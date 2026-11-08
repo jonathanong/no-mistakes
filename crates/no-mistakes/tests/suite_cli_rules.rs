@@ -1,5 +1,8 @@
 //! Cli rules integration tests, linked in one harness.
 
+#[path = "cli_diagnostics_fallback.rs"]
+mod cli_diagnostics_fallback;
+
 #[path = "cli_check_partial.rs"]
 mod cli_check_partial;
 #[path = "cli_check_partial_input_scope.rs"]
