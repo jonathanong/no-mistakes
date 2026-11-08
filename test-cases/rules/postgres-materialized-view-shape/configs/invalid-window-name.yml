@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: postgres-materialized-view-shape
+    scope: repository
+    include: [schema.json]
+    options:
+      schemaCatalogPath: schema.json
+      windowFunctions: [""]
+      allowBaseTables:
+        - { table: countries, reason: catalogue-sized }

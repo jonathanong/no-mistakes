@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: postgres-materialized-view-shape
+    severity: advisory
+    scope: repository
+    include: [schema.json]
+    options:
+      schemaCatalogPath: schema.json
+      windowFunctions: [fn_min_uuidv7]
+      allowBaseTables:
+        - { table: countries, reason: catalogue-sized }
+      allow:
+        - { object: "materialized-view:bad_unbounded", reason: reviewed refresh budget }

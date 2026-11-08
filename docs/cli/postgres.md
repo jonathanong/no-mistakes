@@ -84,7 +84,11 @@ partitioned table in the schema:
 It also holds the schema's functions and procedures (`pg_get_functiondef`
 text and `returnsSet` from `pg_proc.proretset`, keyed by name and identity arguments so every overload has its own stable
 key, such as `over(a integer)` and `over(a text)`), enums with their values in
-sort order, and views and materialized views (`pg_get_viewdef` text and comment).
+sort order, and views and materialized views (`pg_get_viewdef` text, comment, and
+the same `indexes` map as tables). Older catalog snapshots without a view's
+`indexes` key retain unknown metadata, distinct from an explicitly empty map.
+Regenerate them with `no-mistakes postgres catalog --coverage complete` before
+checking materialized-view index shape.
 Enums directly used by scalar columns or as array elements are also included when
 defined in another schema, under their qualified type names. Domains remain
 distinct types; their underlying enums are not included unless directly used.

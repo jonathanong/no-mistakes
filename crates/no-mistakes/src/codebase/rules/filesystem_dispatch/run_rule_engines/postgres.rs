@@ -78,6 +78,9 @@ fn run_schema_rules(
             column_check_constraints(root, config, files, sources, facts)
         }
         POSTGRES_REQUIRED_COMMENTS => required_comments(root, config, files, sources, facts),
+        POSTGRES_MATERIALIZED_VIEW_SHAPE => {
+            schema::materialized_view_shape(root, config, files, sources, facts)
+        }
         POSTGRES_COLUMN_REQUIRES_TRIGGER => {
             column_requires_trigger(root, config, files, sources, facts)
         }

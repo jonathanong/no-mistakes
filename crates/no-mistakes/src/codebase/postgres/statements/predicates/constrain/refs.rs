@@ -2,7 +2,7 @@ use super::Ctx;
 use crate::codebase::postgres::idents::{unwrap_expr, visit_child_exprs};
 use sqlparser::ast::{Expr, Ident};
 
-pub(super) fn references(expr: &Expr, ctx: &Ctx<'_>) -> bool {
+pub(super) fn references(expr: &Expr, ctx: &Ctx<'_, impl super::super::Projection>) -> bool {
     let expr = unwrap_expr(expr);
     if node_references(expr, ctx) {
         return true;
@@ -24,7 +24,10 @@ pub(super) fn qualifier_and_column(parts: &[Ident]) -> Option<(String, String)> 
     Some((qualifier, column))
 }
 
-pub(super) fn qualifier_matches(qualifier: &str, ctx: &Ctx<'_>) -> bool {
+pub(super) fn qualifier_matches(
+    qualifier: &str,
+    ctx: &Ctx<'_, impl super::super::Projection>,
+) -> bool {
     let instance = &ctx.instances[ctx.index];
     if instance
         .alias
@@ -34,18 +37,18 @@ pub(super) fn qualifier_matches(qualifier: &str, ctx: &Ctx<'_>) -> bool {
         return true;
     }
     instance.alias.is_none()
-        && instance.table.rsplit('.').next() == Some(qualifier)
+        && ctx.projection.qualifier_matches(&instance.table, qualifier)
         && ctx
             .instances
             .iter()
             .filter(|other| {
-                other.alias.is_none() && other.table.rsplit('.').next() == Some(qualifier)
+                other.alias.is_none() && ctx.projection.qualifier_matches(&other.table, qualifier)
             })
             .count()
             == 1
 }
 
-fn node_references(expr: &Expr, ctx: &Ctx<'_>) -> bool {
+fn node_references(expr: &Expr, ctx: &Ctx<'_, impl super::super::Projection>) -> bool {
     match expr {
         Expr::Identifier(ident)
             if ctx.positions.is_some_and(|positions| {

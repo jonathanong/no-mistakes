@@ -60,6 +60,7 @@ pub use super::postgres_json_relation_ids::RULE_ID as POSTGRES_JSON_RELATION_IDS
 pub use super::postgres_key_column_types::RULE_ID as POSTGRES_KEY_COLUMN_TYPES;
 pub use super::postgres_lock_ordering::RULE_ID as POSTGRES_LOCK_ORDERING;
 pub use super::postgres_lock_written_rows_only::RULE_ID as POSTGRES_LOCK_WRITTEN_ROWS_ONLY;
+pub use super::postgres_materialized_view_shape::RULE_ID as POSTGRES_MATERIALIZED_VIEW_SHAPE;
 pub use super::postgres_no_add_column::RULE_ID as POSTGRES_NO_ADD_COLUMN;
 pub use super::postgres_no_generated_column_writes::RULE_ID as POSTGRES_NO_GENERATED_COLUMN_WRITES;
 pub use super::postgres_no_mutable_sql_registry::RULE_ID as POSTGRES_NO_MUTABLE_SQL_REGISTRY;

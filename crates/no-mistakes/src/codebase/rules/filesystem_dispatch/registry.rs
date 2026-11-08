@@ -65,6 +65,7 @@ macro_rules! filesystem_rules {
             POSTGRES_COLUMN_CHECK_CONSTRAINTS => postgres_column_check_constraints::check_with_files => "",
             POSTGRES_COLUMN_REQUIRES_TRIGGER => postgres_column_requires_trigger::check_with_files => "",
             POSTGRES_REQUIRED_COMMENTS => postgres_required_comments::check_with_files => "",
+            POSTGRES_MATERIALIZED_VIEW_SHAPE => postgres_materialized_view_shape::check_with_files => "",
             POSTGRES_DUPLICATE_FUNCTION_BODY => postgres_duplicate_function_body::check_with_files => "",
             POSTGRES_BOUNDED_STATEMENTS => postgres_bounded_statements::check_with_files => "",
             POSTGRES_EXPLICIT_COLUMNS => postgres_explicit_columns::check_with_files => "",

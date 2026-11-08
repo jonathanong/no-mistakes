@@ -40,6 +40,7 @@ pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
     "postgres-conflict-ordering",
     "postgres-lock-ordering",
     "postgres-required-comments",
+    "postgres-materialized-view-shape",
     "postgres-duplicate-function-body",
     "postgres-table-shape",
     "postgres-status-with-lifecycle-timestamps",

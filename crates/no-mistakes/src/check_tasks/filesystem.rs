@@ -3,7 +3,6 @@ use anyhow::Result;
 use no_mistakes::codebase::rules::{self, RuleFinding};
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
-
 const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::AGENTS_MD_MAX_SIZE,
     rules::BANNED_PATHS,
@@ -55,6 +54,7 @@ const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::POSTGRES_COLUMN_CHECK_CONSTRAINTS,
     rules::POSTGRES_COLUMN_REQUIRES_TRIGGER,
     rules::POSTGRES_REQUIRED_COMMENTS,
+    rules::POSTGRES_MATERIALIZED_VIEW_SHAPE,
     rules::POSTGRES_DUPLICATE_FUNCTION_BODY,
     rules::POSTGRES_TABLE_SHAPE,
     rules::POSTGRES_STATUS_WITH_LIFECYCLE_TIMESTAMPS,
@@ -156,7 +156,6 @@ pub(crate) fn run_filesystem_rules_check_with_facts(
         duration,
     })
 }
-
 mod download_integrity;
 mod finite_sets;
 mod github_actions;

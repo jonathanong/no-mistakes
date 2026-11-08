@@ -1,0 +1,191 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "records": {
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    }
+  },
+  "views": {
+    "some_view": {
+      "materialized": false,
+      "definition": "SELECT id AS record_id FROM records",
+      "indexes": {}
+    },
+    "wrapper_view": {
+      "materialized": false,
+      "definition": "SELECT record_id FROM some_view",
+      "indexes": {}
+    },
+    "nested_read": {
+      "materialized": true,
+      "definition": "SELECT r.id FROM records r JOIN some_view v ON v.record_id = r.id WHERE r.id >= fn_min_uuidv7(now() - interval '7 days')",
+      "indexes": {
+        "identity": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "read": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      },
+      "comment": null
+    },
+    "nested_chain": {
+      "materialized": true,
+      "definition": "SELECT r.id FROM records r JOIN wrapper_view v ON v.record_id = r.id WHERE r.id >= fn_min_uuidv7(now() - interval '7 days')",
+      "indexes": {
+        "identity": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "read": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      },
+      "comment": null
+    },
+    "direct_read": {
+      "materialized": true,
+      "definition": "SELECT id FROM records",
+      "indexes": {
+        "identity": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "read": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      },
+      "comment": null
+    },
+    "both_reads": {
+      "materialized": true,
+      "definition": "SELECT r.id FROM records r JOIN some_view v ON v.record_id = r.id",
+      "indexes": {
+        "identity": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "read": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      },
+      "comment": null
+    },
+    "bounded_direct": {
+      "materialized": true,
+      "definition": "SELECT r.id FROM records r WHERE r.id >= fn_min_uuidv7(now() - interval '7 days')",
+      "indexes": {
+        "identity": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "read": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      },
+      "comment": null
+    }
+  }
+}

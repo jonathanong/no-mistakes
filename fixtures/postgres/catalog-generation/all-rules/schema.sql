@@ -126,3 +126,12 @@ ALTER TABLE local_key_leaf ADD CONSTRAINT local_key_leaf_account_fkey
 
 CREATE VIEW open_orders AS SELECT id, account_id FROM orders WHERE state <> 'paid';
 COMMENT ON VIEW open_orders IS 'Orders that are not yet paid.';
+
+CREATE MATERIALIZED VIEW bounded_orders AS
+SELECT id, total_cents FROM orders
+WHERE id >= '018f0000-0000-7000-8000-000000000000'::uuid
+  AND id < '01900000-0000-7000-8000-000000000000'::uuid;
+CREATE UNIQUE INDEX bounded_orders_refresh ON bounded_orders (id);
+CREATE INDEX bounded_orders_ranking ON bounded_orders (total_cents DESC);
+
+CREATE MATERIALIZED VIEW unbounded_orders AS SELECT id, total_cents FROM orders;

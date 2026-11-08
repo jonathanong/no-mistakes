@@ -1,4 +1,6 @@
+use super::super::predicates::Projection;
 use super::super::SqlSelectFact;
+use super::projection::Policy;
 use sqlparser::ast::{Expr, JoinConstraint, Select, TableFactor, TableWithJoins};
 
 pub(super) fn table_names(from: &[TableWithJoins], ctes: &[String]) -> Vec<String> {
@@ -17,13 +19,13 @@ pub(super) fn collect_derived_queries(
     from: &[TableWithJoins],
     ctes: &[String],
     in_insert_select: bool,
-    positions: super::super::value::PlaceholderPositions<'_>,
+    policy: Policy<'_, impl Projection>,
     out: &mut Vec<SqlSelectFact>,
 ) {
     for table in from {
-        collect_derived_factor(sql, &table.relation, ctes, in_insert_select, positions, out);
+        collect_derived_factor(sql, &table.relation, ctes, in_insert_select, policy, out);
         for join in &table.joins {
-            collect_derived_factor(sql, &join.relation, ctes, in_insert_select, positions, out);
+            collect_derived_factor(sql, &join.relation, ctes, in_insert_select, policy, out);
         }
     }
 }
@@ -33,12 +35,20 @@ fn collect_derived_factor(
     table: &TableFactor,
     ctes: &[String],
     in_insert_select: bool,
-    positions: super::super::value::PlaceholderPositions<'_>,
+    policy: Policy<'_, impl Projection>,
     out: &mut Vec<SqlSelectFact>,
 ) {
     match table {
         TableFactor::Derived { subquery, .. } => {
-            super::collect_query_at(sql, subquery, ctes, in_insert_select, false, positions, out);
+            super::collector::collect_query_projected(
+                sql,
+                subquery,
+                ctes,
+                in_insert_select,
+                false,
+                policy,
+                out,
+            );
         }
         TableFactor::NestedJoin {
             table_with_joins, ..
@@ -47,7 +57,7 @@ fn collect_derived_factor(
             std::slice::from_ref(table_with_joins),
             ctes,
             in_insert_select,
-            positions,
+            policy,
             out,
         ),
         _ => {}

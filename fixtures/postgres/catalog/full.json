@@ -109,6 +109,18 @@
     "account_counts": {
       "materialized": true,
       "definition": "SELECT count(*) AS n FROM accounts",
+      "indexes": {
+        "counts_unique": {
+          "accessMethod": "btree", "unique": true, "valid": true, "ready": true,
+          "keys": [{ "column": "n", "expression": "n" }]
+        },
+        "dead_index": {
+          "valid": true, "ready": true, "live": false,
+          "keys": [{ "column": "n", "expression": "n" }]
+        },
+        "invalid_index": { "valid": false, "ready": true },
+        "not_ready_index": { "valid": true, "ready": false }
+      },
       "comment": null
     },
     "active_accounts": {
