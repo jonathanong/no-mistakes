@@ -1,2 +1,2 @@
-// Out-of-suite parse failures remain authoritative errors.
+// Unselected parse failures remain available as helper prerequisites.
 const broken = ;

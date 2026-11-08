@@ -214,6 +214,21 @@ The opt-in [declared-payload-compatibility](../rules/declared-payload-compatibil
 rule compares explicit directional HTTP request/response and queue payload schema
 declarations. Incompatible and unproven declarations fail this check.
 
+## Integration annotation discovery
+
+When every active `tests.vitest.projects` / `tests.playwright.projects`
+integration policy declares `include`, recursive test discovery uses the union
+of those includes minus each policy's own excludes. Projects without
+`integration_suites` add no discovery demand. Imported helper summaries and
+parse errors remain available outside that scope, so narrowing does not lose
+integration annotations reached from a selected test.
+
+Runner-derived includes and invalid glob configurations retain full discovery
+and the existing diagnostic order. Nested import containers and synthetic
+callback-name collisions also retain the historical walk. Disabling all
+integration policies requests no integration facts. Other enabled rules keep
+their independently declared fact demand.
+
 ## Declared runner config evidence
 
 Use `no-mistakes check --include-runner-config-deadlines --json` (or `--format yml`) to include `runnerConfigDeadlines`. This opt-in extends the existing prepared demand for explicit Vitest and Playwright config lists, including configs with no integration suites. It does not scan unrelated roots. Ordinary findings and failure behavior remain unchanged; the evidence does not affect the exit code by itself.

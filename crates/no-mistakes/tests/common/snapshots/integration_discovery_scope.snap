@@ -1,0 +1,471 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "all_files": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [
+        {
+          "describePath": [
+            "helper tests"
+          ],
+          "file": "helpers/bridge.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 9,
+          "message": "vitest suite all.external allows only integration=aws; found integration=openai",
+          "sourceLine": "test('unused', () => {",
+          "suite": "all.external",
+          "testName": "unused"
+        },
+        {
+          "describePath": [
+            "nested"
+          ],
+          "file": "selected/suite.test.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 12,
+          "message": "vitest suite all.external allows only integration=aws; found integration=openai",
+          "sourceLine": "test('bridge', () => { bridge(); arrow(); defaultBridge(); });",
+          "suite": "all.external",
+          "testName": "bridge"
+        },
+        {
+          "describePath": [
+            "nested"
+          ],
+          "file": "selected/suite.test.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 13,
+          "message": "vitest suite all.external allows only integration=aws; found integration=openai",
+          "sourceLine": "test('collision export', () => exportedSynthetic());",
+          "suite": "all.external",
+          "testName": "collision export"
+        },
+        {
+          "describePath": [
+            "nested"
+          ],
+          "file": "selected/suite.test.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 14,
+          "message": "vitest suite all.external allows only integration=aws; found integration=openai",
+          "sourceLine": "test('collision call unescaped', () => callSyntheticUnescaped());",
+          "suite": "all.external",
+          "testName": "collision call unescaped"
+        },
+        {
+          "describePath": [
+            "nested"
+          ],
+          "file": "selected/suite.test.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 15,
+          "message": "vitest suite all.external allows only integration=aws; found integration=openai",
+          "sourceLine": "test('collision call', () => callSynthetic());",
+          "suite": "all.external",
+          "testName": "collision call"
+        },
+        {
+          "describePath": [
+            "nested"
+          ],
+          "file": "selected/suite.test.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 16,
+          "message": "vitest suite all.external allows only integration=aws; found integration=openai",
+          "sourceLine": "test('collision before', () => before());",
+          "suite": "all.external",
+          "testName": "collision before"
+        },
+        {
+          "file": "helpers/collision-before.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 3,
+          "message": "vitest suite all.external allows only integration=aws; found integration=openai",
+          "sourceLine": "test('overwrites helper', /* no-mistakes: integration=openai */ () => {});",
+          "suite": "all.external",
+          "testName": "overwrites helper"
+        },
+        {
+          "file": "helpers/collision-call-unescaped.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 3,
+          "message": "vitest suite all.external allows only integration=aws; found integration=openai",
+          "sourceLine": "test('synthetic local target', /* no-mistakes: integration=openai */ () => {});",
+          "suite": "all.external",
+          "testName": "synthetic local target"
+        },
+        {
+          "file": "helpers/collision-call.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 4,
+          "message": "vitest suite all.external allows only integration=aws; found integration=openai",
+          "sourceLine": "test('synthetic target', /* no-mistakes: integration=openai */ () => {});",
+          "suite": "all.external",
+          "testName": "synthetic target"
+        },
+        {
+          "file": "helpers/collision-export.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 3,
+          "message": "vitest suite all.external allows only integration=aws; found integration=openai",
+          "sourceLine": "test('exported synthetic', /* no-mistakes: integration=openai */ () => {});",
+          "suite": "all.external",
+          "testName": "exported synthetic"
+        },
+        {
+          "file": "selected/browser.spec.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 1,
+          "message": "vitest suite all.external allows only integration=aws; found integration=openai",
+          "sourceLine": "test('browser', /* no-mistakes: integration=openai */ () => {});",
+          "suite": "all.external",
+          "testName": "browser"
+        },
+        {
+          "file": "selected/excluded.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 1,
+          "message": "vitest suite all.external allows only integration=aws; found integration=openai",
+          "sourceLine": "test('excluded', /* no-mistakes: integration=openai */ () => {});",
+          "suite": "all.external",
+          "testName": "excluded"
+        }
+      ],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty_scope": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid_exclude": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "integration",
+          "message": "error parsing glob '[': unclosed character class; missing ']'"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid_include": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "integration",
+          "message": "error parsing glob '[': unclosed character class; missing ']'"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "mixed_rules": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [
+        {
+          "exportKind": "value",
+          "exportName": "__test_1",
+          "file": "helpers/collision-before.ts",
+          "line": 2,
+          "message": "value export `__test_1` is already exported from helpers/collision-after.ts:3; rename or consolidate this exported API",
+          "rule": "unique-exports",
+          "sourceLine": "export function __test_1() {}"
+        }
+      ],
+      "integration": [
+        {
+          "describePath": [
+            "nested"
+          ],
+          "file": "selected/suite.test.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 12,
+          "message": "vitest suite selected.selected allows only integration=aws; found integration=openai",
+          "sourceLine": "test('bridge', () => { bridge(); arrow(); defaultBridge(); });",
+          "suite": "selected.selected",
+          "testName": "bridge"
+        },
+        {
+          "describePath": [
+            "nested"
+          ],
+          "file": "selected/suite.test.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 13,
+          "message": "vitest suite selected.selected allows only integration=aws; found integration=openai",
+          "sourceLine": "test('collision export', () => exportedSynthetic());",
+          "suite": "selected.selected",
+          "testName": "collision export"
+        },
+        {
+          "describePath": [
+            "nested"
+          ],
+          "file": "selected/suite.test.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 14,
+          "message": "vitest suite selected.selected allows only integration=aws; found integration=openai",
+          "sourceLine": "test('collision call unescaped', () => callSyntheticUnescaped());",
+          "suite": "selected.selected",
+          "testName": "collision call unescaped"
+        },
+        {
+          "describePath": [
+            "nested"
+          ],
+          "file": "selected/suite.test.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 15,
+          "message": "vitest suite selected.selected allows only integration=aws; found integration=openai",
+          "sourceLine": "test('collision call', () => callSynthetic());",
+          "suite": "selected.selected",
+          "testName": "collision call"
+        },
+        {
+          "describePath": [
+            "nested"
+          ],
+          "file": "selected/suite.test.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 16,
+          "message": "vitest suite selected.selected allows only integration=aws; found integration=openai",
+          "sourceLine": "test('collision before', () => before());",
+          "suite": "selected.selected",
+          "testName": "collision before"
+        },
+        {
+          "file": "selected/browser.spec.ts",
+          "framework": "playwright",
+          "integration": "openai",
+          "line": 1,
+          "message": "playwright suite selected.selected allows only integration=aws; found integration=openai",
+          "sourceLine": "test('browser', /* no-mistakes: integration=openai */ () => {});",
+          "suite": "selected.selected",
+          "testName": "browser"
+        },
+        {
+          "file": "selected/browser.spec.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 1,
+          "message": "vitest suite selected.selected allows only integration=aws; found integration=openai",
+          "sourceLine": "test('browser', /* no-mistakes: integration=openai */ () => {});",
+          "suite": "selected.selected",
+          "testName": "browser"
+        }
+      ],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "namespace_error": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "parse_error": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "integration-test-no-mocks",
+          "file": "selected/disabled.ts",
+          "message": "failed to parse integration file selected/disabled.ts: parsing selected/disabled.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 146, end: 147 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "runner_derived": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "integration",
+          "message": "vitest integration policy references unknown project selected"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "scoped": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [
+        {
+          "describePath": [
+            "nested"
+          ],
+          "file": "selected/suite.test.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 12,
+          "message": "vitest suite selected.selected allows only integration=aws; found integration=openai",
+          "sourceLine": "test('bridge', () => { bridge(); arrow(); defaultBridge(); });",
+          "suite": "selected.selected",
+          "testName": "bridge"
+        },
+        {
+          "describePath": [
+            "nested"
+          ],
+          "file": "selected/suite.test.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 13,
+          "message": "vitest suite selected.selected allows only integration=aws; found integration=openai",
+          "sourceLine": "test('collision export', () => exportedSynthetic());",
+          "suite": "selected.selected",
+          "testName": "collision export"
+        },
+        {
+          "describePath": [
+            "nested"
+          ],
+          "file": "selected/suite.test.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 14,
+          "message": "vitest suite selected.selected allows only integration=aws; found integration=openai",
+          "sourceLine": "test('collision call unescaped', () => callSyntheticUnescaped());",
+          "suite": "selected.selected",
+          "testName": "collision call unescaped"
+        },
+        {
+          "describePath": [
+            "nested"
+          ],
+          "file": "selected/suite.test.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 15,
+          "message": "vitest suite selected.selected allows only integration=aws; found integration=openai",
+          "sourceLine": "test('collision call', () => callSynthetic());",
+          "suite": "selected.selected",
+          "testName": "collision call"
+        },
+        {
+          "describePath": [
+            "nested"
+          ],
+          "file": "selected/suite.test.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 16,
+          "message": "vitest suite selected.selected allows only integration=aws; found integration=openai",
+          "sourceLine": "test('collision before', () => before());",
+          "suite": "selected.selected",
+          "testName": "collision before"
+        },
+        {
+          "file": "selected/browser.spec.ts",
+          "framework": "playwright",
+          "integration": "openai",
+          "line": 1,
+          "message": "playwright suite selected.selected allows only integration=aws; found integration=openai",
+          "sourceLine": "test('browser', /* no-mistakes: integration=openai */ () => {});",
+          "suite": "selected.selected",
+          "testName": "browser"
+        },
+        {
+          "file": "selected/browser.spec.ts",
+          "framework": "vitest",
+          "integration": "openai",
+          "line": 1,
+          "message": "vitest suite selected.selected allows only integration=aws; found integration=openai",
+          "sourceLine": "test('browser', /* no-mistakes: integration=openai */ () => {});",
+          "suite": "selected.selected",
+          "testName": "browser"
+        }
+      ],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

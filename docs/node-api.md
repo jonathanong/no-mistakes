@@ -3,6 +3,12 @@
 The `no-mistakes` npm package exposes async functions backed by the same Rust
 analysis as the CLI. Use it for repeated structured queries without subprocess overhead.
 
+`check()` and check reports in `analyzeProject()` share the CLI's
+[integration annotation discovery scope](cli/check.md#integration-annotation-discovery).
+Explicit integration-policy includes/excludes narrow test discovery while
+retaining imported helper summaries and parse diagnostics. This preparation
+change adds no invocation option, runtime export, or report field.
+
 Configured `workflow-topology-policy.options.forbiddenActivityTypes` runs through
 async `check({ root, config })` and `analyzeProject()` check reports with the same
 exact matching, event filtering, `types` key locations, custom messages, and

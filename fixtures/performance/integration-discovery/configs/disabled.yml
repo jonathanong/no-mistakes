@@ -1,0 +1,7 @@
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: ['selected/suite.test.ts']
+      forbiddenFiles: ['absent.ts']
+      relationships: [import]

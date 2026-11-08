@@ -3,6 +3,9 @@
 #[path = "cli_diagnostics_fallback.rs"]
 mod cli_diagnostics_fallback;
 
+#[path = "cli_check_integration_discovery.rs"]
+mod cli_check_integration_discovery;
+
 #[path = "cli_check_partial.rs"]
 mod cli_check_partial;
 #[path = "cli_check_partial_input_scope.rs"]

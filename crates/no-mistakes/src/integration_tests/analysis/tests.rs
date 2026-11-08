@@ -295,9 +295,14 @@ fn test_discovery_scope_keeps_out_of_suite_parse_error_facts() {
                 &session,
                 facts,
             )
-            .unwrap()
+            .map_err(|error| error.to_string())
         };
         assert_eq!(report(&scoped), report(&full));
+        if case == "discovery-scope-errors" {
+            assert!(report(&scoped)
+                .unwrap_err()
+                .contains("selected/disabled.ts"));
+        }
     }
 }
 
