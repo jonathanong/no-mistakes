@@ -199,8 +199,7 @@ unresolved dispatch.
 A built-in that invokes a callback keeps the proof: `map`, `filter`, `forEach`,
 `flatMap`, `reduce`, `some`, `every`, `find`, `findIndex`, `sort`, `then`,
 `catch`, `finally`, `Array.from` (second argument), `AsyncLocalStorage.run` /
-`exit`, and the timers `setTimeout`, `setInterval`, `setImmediate`, and
-`queueMicrotask`. The built-in executes the callback, so an inline function or a
+`exit`, and the timers `setTimeout`, `setInterval`, and `setImmediate`. The built-in executes the callback, so an inline function or a
 named function the call graph resolves in the same callable is traversed and can
 reach an assertion. An argument which is a parameter, a member read, a call
 result, or a function imported from another module (outside `map`-family

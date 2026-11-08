@@ -13,12 +13,7 @@ pub(super) const GLOBAL_FUNCTIONS: &[&str] = &[
     "encodeURIComponent", "decodeURIComponent", "structuredClone",
 ];
 /// Global functions which run their first argument later.
-pub(super) const TIMERS: &[&str] = &[
-    "setTimeout",
-    "setInterval",
-    "setImmediate",
-    "queueMicrotask",
-];
+pub(super) const TIMERS: &[&str] = &["setTimeout", "setInterval", "setImmediate"];
 /// String, RegExp, Date, Array, Map, Set, Error, console, and AsyncLocalStorage
 /// prototype methods matched by name when the receiver is not statically resolved.
 #[rustfmt::skip]
