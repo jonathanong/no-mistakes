@@ -161,7 +161,6 @@ mod finite_sets;
 mod github_actions;
 mod handled;
 mod manifests;
-mod materialized_views;
 mod partial;
 mod payload_compatibility;
 mod redirects;

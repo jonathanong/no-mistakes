@@ -5,6 +5,10 @@ fn catalog_advisory_docs_execute_both_examples_and_preserve_report_channels() {
     let rule = "postgres-materialized-view-shape";
     let page = docs_rule_snippets::load_page(&repo_root(), rule);
     let config = docs_rule_snippets::rule_config_yaml(&page.body, rule);
+    assert_eq!(
+        serde_yaml::from_str::<serde_yaml::Value>(&config).unwrap()["rules"][0]["severity"],
+        "advisory"
+    );
     for (heading, expected) in [("Valid example", 0), ("Counterexample", 3)] {
         let section = docs_rule_snippets::heading_section(&page.body, heading);
         let fences = docs_rule_snippets::fences(&section);

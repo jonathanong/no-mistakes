@@ -118,4 +118,3 @@ rules:
     scope: repository
     options:
       schemaCatalogPath: schema.json
-      mode: report

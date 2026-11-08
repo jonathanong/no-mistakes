@@ -9,4 +9,3 @@ rules:
       windowFunctions: [fn_min_uuidv7]
       allowBaseTables:
         - { table: countries, reason: catalogue-sized }
-      mode: report

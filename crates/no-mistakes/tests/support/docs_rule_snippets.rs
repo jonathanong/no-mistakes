@@ -140,13 +140,27 @@ pub fn rule_config_yaml(body: &str, rule_id: &str) -> String {
 
 fn synthesize_config(rule_id: &str, source: &str) -> String {
     let mut options = extract_options_block(source);
-    if options.trim().is_empty() {
-        return format!("rules:\n  - rule: {rule_id}\n    scope: repository\n");
+    let severity = serde_yaml::from_str::<serde_yaml::Value>(source)
+        .ok()
+        .and_then(|value| {
+            value
+                .get("rules")?
+                .as_sequence()?
+                .iter()
+                .find(|rule| rule.get("rule").and_then(serde_yaml::Value::as_str) == Some(rule_id))?
+                .get("severity")?
+                .as_str()
+                .map(|value| format!("    severity: {value}\n"))
+        })
+        .unwrap_or_default();
+    let mut config = format!("rules:\n  - rule: {rule_id}\n    scope: repository\n{severity}");
+    if !options.trim().is_empty() {
+        if !options.ends_with('\n') {
+            options.push('\n');
+        }
+        config.push_str(&format!("    options:\n{options}"));
     }
-    if !options.ends_with('\n') {
-        options.push('\n');
-    }
-    format!("rules:\n  - rule: {rule_id}\n    scope: repository\n    options:\n{options}")
+    config
 }
 
 fn extract_options_block(source: &str) -> String {

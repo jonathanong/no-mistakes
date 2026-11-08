@@ -107,9 +107,9 @@ Vitest config failures identify the config file and property (for example,
 
 [`postgres-materialized-view-shape`](rules/postgres-materialized-view-shape.md) runs through
 the existing async `check()` → `checkJson` binding and `analyzeProject()` check
-reports. Its catalog findings are advisory by default; `options.mode: report`
-opts into failing findings. The package exports
-`PostgresMaterializedViewShapeOptions`, `PostgresMaterializedViewShapeMode`,
+reports. The rule uses the shared application `severity`: the default `error`
+fails the check, while `severity: advisory` returns non-failing advisories.
+The package exports `PostgresMaterializedViewShapeOptions`,
 `PostgresMaterializedViewBaseTableAllowance`, and
 `PostgresMaterializedViewShapeAllowEntry`; configure them under rule `options`
 in the YAML selected by `config`. No separate runtime export is needed.

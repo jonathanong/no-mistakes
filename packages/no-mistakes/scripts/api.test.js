@@ -315,8 +315,7 @@ test("materialized-view shape options export their named allowance contracts", (
     "utf8",
   );
   assert.match(types, /export interface PostgresMaterializedViewShapeOptions/);
-  assert.match(types, /export type PostgresMaterializedViewShapeMode = "advise" \| "report";/);
-  assert.match(types, /mode\?: PostgresMaterializedViewShapeMode;/);
+  assert.doesNotMatch(types, /\bmode\??:/);
   assert.match(types, /schemaCatalogPath: string;/);
   assert.match(types, /minAdditionalIndexes\?: number;/);
   assert.match(types, /windowFunctions\?: string\[\];/);

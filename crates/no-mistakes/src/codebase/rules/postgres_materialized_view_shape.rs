@@ -6,10 +6,7 @@ use serde::Deserialize;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-mod diagnostics;
 mod scan;
-#[doc(hidden)]
-pub use diagnostics::diagnostics_with_sources_and_facts;
 pub const RULE_ID: &str = "postgres-materialized-view-shape";
 
 #[derive(Deserialize, Clone)]
@@ -23,7 +20,6 @@ struct BaseTable {
 #[serde(default, rename_all = "camelCase")]
 struct Options {
     schema_catalog_path: String,
-    mode: Option<String>,
     min_additional_indexes: Option<u64>,
     window_functions: Vec<String>,
     allow_base_tables: Vec<BaseTable>,
@@ -33,7 +29,6 @@ struct Options {
 struct Compiled {
     path: String,
     additional: u64,
-    report: bool,
     functions: Vec<String>,
     base_tables: Vec<BaseTable>,
     allow: AllowList,
@@ -50,7 +45,18 @@ pub(crate) fn check_with_files_sources_and_facts(
 ) -> Result<Vec<RuleFinding>> {
     super::run_rule_applications(config, RULE_ID, |rule| {
         let compiled = compile(&rule.try_rule_options()?)?;
-        diagnostics::scan_application(root, config, rule, compiled, facts)
+        let Some(catalog) =
+            super::selected_schema_catalog(root, config, rule, facts, &compiled.path)?
+        else {
+            return Ok(Vec::new());
+        };
+        let mut findings = scan::scan(compiled, catalog);
+        if let Some(message) = &rule.message {
+            for finding in &mut findings {
+                finding.message = format!("{message} {}", finding.message);
+            }
+        }
+        Ok(findings)
     })
 }
 
@@ -64,13 +70,6 @@ fn compile_applications(config: &NoMistakesConfig) -> Result<Vec<Compiled>> {
 
 fn compile(options: &Options) -> Result<Compiled> {
     require_catalog_path(RULE_ID, &options.schema_catalog_path)?;
-    if options
-        .mode
-        .as_deref()
-        .is_some_and(|mode| !matches!(mode, "advise" | "report"))
-    {
-        bail!("{RULE_ID} option mode: expected advise or report");
-    }
     let mut seen = BTreeSet::new();
     for entry in &options.allow_base_tables {
         if entry.table.trim().is_empty() || entry.reason.trim().is_empty() {
@@ -98,7 +97,6 @@ fn compile(options: &Options) -> Result<Compiled> {
     Ok(Compiled {
         path: options.schema_catalog_path.clone(),
         additional: options.min_additional_indexes.unwrap_or(1),
-        report: options.mode.as_deref() == Some("report"),
         functions,
         base_tables: options.allow_base_tables.clone(),
         allow: AllowList::compile(RULE_ID, options.allow.clone())?,

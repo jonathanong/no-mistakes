@@ -48,15 +48,15 @@ fn targets(report: &Value) -> BTreeSet<&str> {
 #[test]
 fn postgres_materialized_view_shape_check_json_snapshot() {
     let cases = [
-        ("default_advisories", "fail", "default.yml"),
-        ("report_errors", "fail", "report.yml"),
-        ("report_advisory_severity", "fail", "report-advisory.yml"),
+        ("default_errors", "fail", "default.yml"),
+        ("explicit_error_severity", "fail", "error.yml"),
+        ("advisory_severity", "fail", "advisory.yml"),
         ("index_and_identity_edges", "edges", "edges.yml"),
         ("compliant", "pass", "pass.yml"),
         ("ordering_catalog", "ordering", "default.yml"),
         ("table_view_identity", "collision", "collision.yml"),
-        ("mixed_modes", "mixed", "mixed.yml"),
-        ("excluded_report_mode", "mixed", "excluded-report.yml"),
+        ("mixed_severities", "mixed", "mixed.yml"),
+        ("excluded_error_application", "mixed", "excluded-error.yml"),
         ("zero_additional", "fail", "zero-additional.yml"),
         ("two_additional", "fail", "two-additional.yml"),
         (
@@ -75,7 +75,7 @@ fn postgres_materialized_view_shape_check_json_snapshot() {
 
 #[test]
 fn materialized_view_controls_cover_indexes_and_every_base_read() {
-    let checked = report("fail", "default.yml");
+    let checked = report("fail", "advisory.yml");
     assert_eq!(checked["rules"], serde_json::json!([]), "{checked}");
     assert_eq!(checked["warnings"], serde_json::json!([]), "{checked}");
     let expected: BTreeSet<_> = [
@@ -160,7 +160,6 @@ fn materialized_view_invalid_options_fail_with_actionable_errors() {
         ("invalid-reason.yml", "reason"),
         ("invalid-min.yml", "minAdditionalIndexes"),
         ("missing-catalog.yml", "schemaCatalogPath"),
-        ("invalid-mode.yml", "mode"),
         ("invalid-window-name.yml", "windowFunctions"),
         ("invalid-window-target.yml", "windowFunctions"),
         ("duplicate-base-allow.yml", "allowBaseTables"),
@@ -224,9 +223,12 @@ fn materialized_view_index_and_identity_edges_keep_valid_controls_clear() {
 }
 
 #[test]
-fn materialized_view_report_mode_fails_unless_shared_severity_is_advisory() {
-    let output = run("fail", "report.yml");
+fn materialized_view_default_severity_fails_unless_shared_severity_is_advisory() {
+    let output = run("fail", "default.yml");
     assert_eq!(output.status.code(), Some(1), "{output:?}");
+    let explicit = run("fail", "error.yml");
+    assert_eq!(explicit.status.code(), Some(1), "{explicit:?}");
+    assert_eq!(output.stdout, explicit.stdout);
     let checked: Value = serde_json::from_slice(&output.stdout).unwrap();
     assert!(
         checked["advisories"].as_array().unwrap().is_empty(),
@@ -238,7 +240,7 @@ fn materialized_view_report_mode_fails_unless_shared_severity_is_advisory() {
         }),
         "{checked}"
     );
-    let advisory = report("fail", "report-advisory.yml");
+    let advisory = report("fail", "advisory.yml");
     assert!(
         advisory["rules"].as_array().unwrap().is_empty(),
         "{advisory}"
@@ -264,33 +266,42 @@ fn materialized_view_shape_requires_complete_catalog_evidence() {
 }
 
 #[test]
-fn materialized_view_modes_stay_with_their_selected_application() {
+fn materialized_view_mixed_applications_follow_shared_rule_severity() {
     let output = run("mixed", "mixed.yml");
-    assert!(!output.status.success(), "{output:?}");
+    assert_eq!(output.status.code(), Some(1), "{output:?}");
     let checked: Value = serde_json::from_slice(&output.stdout).unwrap();
-    assert_eq!(
-        targets(&checked),
-        BTreeSet::from(["materialized-view:bad_advised"])
-    );
+    assert!(targets(&checked).is_empty(), "{checked}");
     let errors = checked["rules"].as_array().unwrap();
-    assert!(!errors.is_empty());
+    let error_targets: BTreeSet<_> = errors
+        .iter()
+        .filter_map(|finding| finding["target"].as_str())
+        .collect();
+    assert_eq!(
+        error_targets,
+        BTreeSet::from([
+            "materialized-view:bad_advised",
+            "materialized-view:bad_reported",
+        ])
+    );
     assert!(errors
         .iter()
-        .all(|finding| finding["target"] == "materialized-view:bad_reported"));
-    assert!(checked["advisories"]
+        .filter(|finding| finding["target"] == "materialized-view:bad_advised")
+        .all(|finding| finding["message"]
+            .as_str()
+            .unwrap()
+            .starts_with("Review the advised view")));
+    let excluded = run("mixed", "excluded-error.yml");
+    assert_eq!(excluded.status.code(), Some(1), "{excluded:?}");
+    let checked: Value = serde_json::from_slice(&excluded.stdout).unwrap();
+    assert!(targets(&checked).is_empty(), "{checked}");
+    let error_targets: BTreeSet<_> = checked["rules"]
         .as_array()
         .unwrap()
         .iter()
-        .all(|finding| {
-            finding["message"]
-                .as_str()
-                .unwrap()
-                .starts_with("Review the advised view")
-        }));
-    let excluded = report("mixed", "excluded-report.yml");
-    assert_eq!(excluded["rules"], serde_json::json!([]));
+        .filter_map(|finding| finding["target"].as_str())
+        .collect();
     assert_eq!(
-        targets(&excluded),
+        error_targets,
         BTreeSet::from(["materialized-view:bad_advised"])
     );
 }

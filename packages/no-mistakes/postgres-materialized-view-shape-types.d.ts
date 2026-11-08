@@ -12,14 +12,9 @@ export interface PostgresMaterializedViewShapeAllowEntry {
   reason: string;
 }
 
-/** Finding disposition for the materialized-view shape rule. */
-export type PostgresMaterializedViewShapeMode = "advise" | "report";
-
-/** Options for the advisory `postgres-materialized-view-shape` catalog rule. */
+/** Options for the `postgres-materialized-view-shape` catalog rule. */
 export interface PostgresMaterializedViewShapeOptions {
   schemaCatalogPath: string;
-  /** Default advise is non-failing; report opts into failing findings. */
-  mode?: PostgresMaterializedViewShapeMode;
   /** Number of indexes required in addition to the refresh index; default 1. */
   minAdditionalIndexes?: number;
   /** Functions accepted in predicates on indexed primary or unique keys, including equality. */

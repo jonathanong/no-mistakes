@@ -202,7 +202,6 @@
   "PostgresLockWrittenRowsWriteSet",
   "PostgresMaterializedViewBaseTableAllowance",
   "PostgresMaterializedViewShapeAllowEntry",
-  "PostgresMaterializedViewShapeMode",
   "PostgresMaterializedViewShapeOptions",
   "PostgresNoMutableSqlRegistryOptions",
   "PostgresNoTestStateMutationOptions",

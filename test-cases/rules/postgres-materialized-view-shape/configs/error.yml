@@ -1,6 +1,7 @@
 version: 2
 rules:
   - rule: postgres-materialized-view-shape
+    severity: error
     scope: repository
     include: [schema.json]
     options:
@@ -8,4 +9,3 @@ rules:
       windowFunctions: [fn_min_uuidv7]
       allowBaseTables:
         - { table: countries, reason: catalogue-sized }
-      mode: enforce

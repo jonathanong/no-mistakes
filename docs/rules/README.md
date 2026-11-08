@@ -122,7 +122,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`postgres-duplicate-function-body`](postgres-duplicate-function-body.md)         | Report Postgres functions whose bodies match after normalization.          |
 | [`postgres-table-shape`](postgres-table-shape.md)                                 | Require a configured column, key, and trigger shape for named tables.      |
 | [`postgres-status-with-lifecycle-timestamps`](postgres-status-with-lifecycle-timestamps.md) | Report a stored status column beside lifecycle timestamps.            |
-| [`postgres-materialized-view-shape`](postgres-materialized-view-shape.md) | Advise on materialized-view refresh/read indexes and growing-table windows. |
+| [`postgres-materialized-view-shape`](postgres-materialized-view-shape.md) | Require materialized-view refresh/read indexes and growing-table windows. |
 | [`postgres-required-comments`](postgres-required-comments.md)                     | Require COMMENT ON for tables and, when configured, columns and views.     |
 | [`postgres-conflict-ordering`](postgres-conflict-ordering.md)                     | Require catalog-canonical order for multi-row ON CONFLICT writers.          |
 | [`postgres-fk-index`](postgres-fk-index.md)                                       | Require a leading btree/hash index on each foreign key column.              |

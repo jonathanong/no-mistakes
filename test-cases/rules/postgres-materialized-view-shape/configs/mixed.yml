@@ -2,14 +2,13 @@ version: 2
 rules:
   - rule: postgres-materialized-view-shape
     scope: repository
+    severity: advisory
     include: [advised.json]
     message: Review the advised view
     options:
       schemaCatalogPath: advised.json
-      mode: advise
   - rule: postgres-materialized-view-shape
     scope: repository
     include: [reported.json]
     options:
       schemaCatalogPath: reported.json
-      mode: report

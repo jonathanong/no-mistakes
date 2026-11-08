@@ -218,11 +218,13 @@ unanalyzable policy and never proves a safe lock. See
 for limits and rewrites.
 
 For catalog review, opt into `postgres-materialized-view-shape` with
-`schemaCatalogPath`. Default `mode: advise` is non-failing; opt into failing
-findings with `mode: report`. It advises on missing concurrent-refresh unique indexes,
-additional read indexes (`minAdditionalIndexes`, default `1`), and unbounded
+`schemaCatalogPath`. The shared application `severity` defaults to `error`;
+set `severity: advisory` for non-failing findings. It checks for missing
+concurrent-refresh unique indexes, additional read indexes
+(`minAdditionalIndexes`, default `1`), and unbounded
 base-table reads in materialized-view definitions. Configure `windowFunctions`
 for key-window predicates or use a plain indexed range; reserve
 `allowBaseTables: [{table, reason}]` for bounded-size tables. Run
-`no-mistakes check --root <repo> --format json` and inspect `advisories`. See
+`no-mistakes check --root <repo> --format json` and inspect `rules` or
+`advisories` according to the configured severity. See
 the [rule contract](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-materialized-view-shape.md).
