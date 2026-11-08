@@ -41,7 +41,34 @@ fn mutation_table_arms_preserve_identity_locations_and_exists_star_policy() {
         .all(|select| !select.tables.iter().any(|table| table == "topics")));
     assert_eq!(facts.updates.len(), 4);
     assert_eq!(facts.deletes.len(), 4);
-    assert_eq!(facts.bounds.len(), 8);
+    let writes: Vec<_> = facts
+        .bounds
+        .iter()
+        .filter(|fact| fact.target.is_some())
+        .collect();
+    assert_eq!(writes.len(), 8);
+    let scalar_reads: Vec<_> = facts
+        .bounds
+        .iter()
+        .filter(|fact| fact.target.is_none())
+        .collect();
+    assert_eq!(
+        scalar_reads
+            .iter()
+            .map(|fact| fact.line)
+            .collect::<Vec<_>>(),
+        [4, 5]
+    );
+    use crate::codebase::postgres::SqlBoundItemKind;
+    for scalar in scalar_reads {
+        assert!(scalar.body.is_none());
+        let SqlBoundItemKind::Query(right) = &scalar.query.items[1].kind else {
+            panic!("scalar UNION must retain its TABLE arm");
+        };
+        assert!(
+            matches!(&right.items[0].kind, SqlBoundItemKind::Table(name) if name == "public.topics")
+        );
+    }
     assert!(facts.limit_uses.is_empty());
 }
 

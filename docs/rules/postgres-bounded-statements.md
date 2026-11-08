@@ -40,8 +40,8 @@ See [rationale](postgres-bounded-statements-rationale.md).
 
 ## Independent candidate bodies
 
-`materializedBodies` defaults to `ignore`, preserving existing findings and fact
-collection. Set it to `require-bound` (an alias of `advise`) to receive non-failing
+`materializedBodies` defaults to `ignore`; candidate-pool checks are opt-in.
+Set it to `require-bound` (an alias of `advise`) to receive non-failing
 advisories, or `report` to make violations findings. This option checks
 explicit `AS MATERIALIZED` CTEs and pool-building subquery bodies independently of the surrounding
 statement. Ordinary and `AS NOT MATERIALIZED` CTE declarations retain their
@@ -51,10 +51,15 @@ or DELETE also checks its CTE and subquery bodies, while unrelated SELECT bodies
 remain outside that selection. Separate bodies on one line retain separate advisories.
 
 `EXISTS` and `NOT EXISTS` bodies are existence probes, so they do not receive
-independent pool diagnostics. Known correlated scalar subqueries are also
-per-row probes. `IN`, `ANY`, array subqueries and derived tables retain their
+independent pool diagnostics. Scalar subqueries, including SELECT-list and
+`COALESCE((SELECT ...), ...)` expressions, also do not build candidate pools,
+regardless of correlation. Their ordinary relation-bound checks still apply: an
+unbounded uncorrelated scalar read remains a SELECT finding, including when
+`materializedBodies` is `ignore`. Known correlated probes keep their existing
+per-row treatment. `IN`, `ANY`, array subqueries and derived tables retain their
 body obligations. Materialized CTEs and pool-building bodies nested inside a
-probe are still checked.
+probe are still checked. Scalar reads inside UPDATE or DELETE retain the owning
+statement selection while reporting SELECT read bounds.
 
 A later body that consumes an already materialized CTE inherits that pool's
 obligation. Report the unbounded source CTE once rather than repeating its
@@ -79,7 +84,13 @@ SELECT id FROM (SELECT id FROM posts) candidates LIMIT 20;
 ```
 
 A body can instead restrict every relation by an existing primary/unique-key
-proof, or by equality / `= ANY` on a reviewed `columnBounds` key. For example,
+proof, or by equality / `= ANY` on a reviewed `columnBounds` key. A closed range
+with the same parameter or literal on both sides (`user_id >= $2 AND user_id <= $2`)
+counts as equality for key matching. For a unique key `(group_id, user_id)`,
+`group_id = $1 AND user_id >= $2 AND user_id <= $2` therefore proves a bounded
+lookup. Different bounds (`>= $2 AND <= $3`), open ranges, and halves separated
+by `OR` do not establish that equality; rewrite a lookup as `user_id = $2` or
+supply a separate finite-key proof. For example,
 `SELECT id FROM follows WHERE follower_id = $1` is bounded when
 `columnBounds` declares `follows.follower_id` with a finite fan-out reason.
 Outer predicates do not supply that body-local proof. Findings name the body

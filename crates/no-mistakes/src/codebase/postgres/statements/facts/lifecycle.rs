@@ -84,7 +84,8 @@ pub(crate) fn project_bounds<'a>(
                 let mut scope = bounds::Scope::with_scalar_functions(
                     inputs.table_tokens.clone(),
                     scalar_functions.clone(),
-                );
+                )
+                .with_bodies(false);
                 if bounds[step.first_bound..step.last_bound]
                     .iter()
                     .any(|fact| fact.body.is_some())

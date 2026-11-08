@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: ["*.sql"]
+      include: []
+      unanalyzableSql: fail
+      materializedBodies: ignore
+      statements: [delete]

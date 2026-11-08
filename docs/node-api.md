@@ -644,7 +644,8 @@ asynchronous `check()` →
 catalog validation and caller-bounded key proof. No separate runtime export is
 needed.
 
-`materializedBodies` excludes existence and known correlated scalar probes.
+`materializedBodies` excludes existence and scalar subquery probes. Unbounded
+uncorrelated scalar reads remain ordinary SELECT findings even with `ignore`.
 Pool-building IN/array/derived bodies and explicit MATERIALIZED CTEs remain
 independent obligations. A consumer of an existing materialized pool retains
 that source obligation without repeating it; new unbounded scans still report.

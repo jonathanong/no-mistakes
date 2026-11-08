@@ -1,0 +1,115 @@
+use crate::codebase::postgres::{extract_sql_statement_facts, SchemaCatalog};
+
+#[test]
+fn same_closed_range_bounds_complete_composite_keys_without_accepting_unsafe_ranges() {
+    let root = super::fixture_root().join("../issue-3151/fixture");
+    let sources = crate::codebase::rules::source_store_for_files(&[root.join("schema.json")]);
+    let catalog = SchemaCatalog::load(&root, "schema.json", &sources).unwrap();
+    for (name, count) in [
+        ("closed-parameter.sql", 0),
+        ("closed-literal.sql", 0),
+        ("closed-reversed.sql", 0),
+        ("closed-or-branches.sql", 0),
+        ("closed-parenthesized.sql", 0),
+        ("closed-negative.sql", 0),
+        ("closed-string.sql", 0),
+        ("cross-or-control.sql", 1),
+        ("cross-column-control.sql", 1),
+        ("different-parameters.sql", 1),
+        ("different-literals.sql", 1),
+        ("open-range.sql", 1),
+        ("or-range.sql", 1),
+        ("cast-mismatch.sql", 1),
+        ("volatile-range.sql", 1),
+    ] {
+        let sql = std::fs::read_to_string(root.join(name)).unwrap();
+        let facts = extract_sql_statement_facts(&sql);
+        assert!(!facts.parse_failed, "{name}");
+        assert_eq!(facts.bounds.len(), 1, "{name}");
+        assert_eq!(
+            super::super::evaluate::offenders(&facts.bounds[0], &catalog).len(),
+            count,
+            "{name}"
+        );
+    }
+}
+
+#[test]
+fn scalar_reads_are_ordinary_select_obligations_independent_of_pool_policy() {
+    use crate::codebase::postgres::statements::{
+        extract_sql_statement_facts_with_json_writes, SqlBoundKind, SqlLocationDemand,
+    };
+    let root = super::fixture_root().join("../issue-3151/fixture");
+    let sources = crate::codebase::rules::source_store_for_files(&[root.join("schema.json")]);
+    let catalog = SchemaCatalog::load(&root, "schema.json", &sources).unwrap();
+    for (name, expected) in [
+        ("scalar-select.sql", 0),
+        ("scalar-coalesce.sql", 0),
+        ("scalar-closed.sql", 0),
+        ("scalar-different-parameters.sql", 1),
+        ("unbounded-scalar.sql", 1),
+        ("unbounded-coalesce.sql", 1),
+    ] {
+        let sql = std::fs::read_to_string(root.join(name)).unwrap();
+        for materialized in [false, true] {
+            let facts = extract_sql_statement_facts_with_json_writes(
+                &sql,
+                true,
+                None,
+                SqlLocationDemand::None,
+                false,
+                false,
+                materialized,
+            );
+            assert!(!facts.parse_failed, "{name}");
+            assert_eq!(facts.bounds.len(), 2, "{name}");
+            assert!(facts
+                .bounds
+                .iter()
+                .all(|fact| fact.body.is_none() && fact.kind == SqlBoundKind::Select));
+            let count: usize = facts
+                .bounds
+                .iter()
+                .map(|fact| super::super::evaluate::offenders(fact, &catalog).len())
+                .sum();
+            assert_eq!(count, expected, "{name}, pools={materialized}");
+        }
+    }
+}
+
+#[test]
+fn dml_scalar_reads_keep_statement_selection_and_read_only_obligations() {
+    use crate::codebase::postgres::statements::{
+        extract_sql_statement_facts_with_json_writes, SqlBoundKind, SqlLocationDemand,
+    };
+    let root = super::fixture_root().join("../issue-3151/fixture");
+    let sources = crate::codebase::rules::source_store_for_files(&[root.join("schema.json")]);
+    let catalog = SchemaCatalog::load(&root, "schema.json", &sources).unwrap();
+    let sql = std::fs::read_to_string(root.join("dml-scalars.sql")).unwrap();
+    for materialized in [false, true] {
+        let facts = extract_sql_statement_facts_with_json_writes(
+            &sql,
+            true,
+            None,
+            SqlLocationDemand::None,
+            false,
+            false,
+            materialized,
+        );
+        assert!(!facts.parse_failed);
+        assert_eq!(facts.bounds.len(), 4);
+        for (kind, expected) in [(SqlBoundKind::Update, 2), (SqlBoundKind::Delete, 2)] {
+            let selected: Vec<_> = facts
+                .bounds
+                .iter()
+                .filter(|fact| fact.kind == kind)
+                .collect();
+            assert_eq!(selected.len(), expected);
+            assert!(selected.iter().all(|fact| fact.body.is_none()));
+            let scalar = selected.iter().find(|fact| fact.target.is_none()).unwrap();
+            assert_eq!(super::super::evaluate::offenders(scalar, &catalog).len(), 1);
+            let write = selected.iter().find(|fact| fact.target.is_some()).unwrap();
+            assert!(super::super::evaluate::offenders(write, &catalog).is_empty());
+        }
+    }
+}

@@ -8,7 +8,7 @@ fn stored_any_sources_are_retained_without_becoming_caller_arrays() {
         "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/stored-array-facts.sql"
     ));
     let facts = facts(sql);
-    assert_eq!(facts.len(), 8);
+    assert_eq!(facts.len(), 9);
     for (index, items) in [
         (0, vec![1]),
         (1, vec![1]),
@@ -31,6 +31,15 @@ fn stored_any_sources_are_retained_without_becoming_caller_arrays() {
             SqlPinSource::Value
         );
     }
+    assert_eq!(
+        facts[8].kind,
+        crate::codebase::postgres::statements::SqlBoundKind::Delete
+    );
+    assert!(facts[8].query.capped);
+    assert!(matches!(
+        facts[8].query.items[0].kind,
+        crate::codebase::postgres::statements::SqlBoundItemKind::Table(_)
+    ));
 }
 
 #[test]

@@ -1,0 +1,1 @@
+SELECT (SELECT role FROM members LIMIT 1);

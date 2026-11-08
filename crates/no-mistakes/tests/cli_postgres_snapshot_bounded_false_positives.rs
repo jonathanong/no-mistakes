@@ -100,3 +100,76 @@ fn issue_3116_off_check_json_snapshot() {
         &[("off", root.clone(), root.join("off.yml"))],
     );
 }
+
+#[test]
+fn issue_3151_check_json_snapshot() {
+    let root = repo_rel("test-cases/rules/postgres-bounded-statements/issue-3151/fixture");
+    let cases = [
+        "advise",
+        "report",
+        "ignore",
+        "off",
+        "dml-update",
+        "dml-delete",
+    ]
+    .map(|name| (name, root.clone(), root.join(format!("{name}.yml"))));
+    assert_saved_fixture("postgres_bounded_issue_3151", &cases);
+}
+
+#[test]
+fn issue_3151_retains_unbounded_controls_without_scalar_pool_advice() {
+    let root = repo_rel("test-cases/rules/postgres-bounded-statements/issue-3151/fixture");
+    for policy in ["advise", "report", "ignore"] {
+        let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+            .args(["check", "--root"])
+            .arg(&root)
+            .arg("--config")
+            .arg(root.join(format!("{policy}.yml")))
+            .args(["--format", "json"])
+            .output()
+            .unwrap();
+        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(output.status.code(), Some(1), "{report}");
+        let findings = report["rules"].as_array().unwrap();
+        for file in [
+            "different-parameters.sql",
+            "different-literals.sql",
+            "open-range.sql",
+            "or-range.sql",
+            "cross-or-control.sql",
+            "cross-column-control.sql",
+            "cast-mismatch.sql",
+            "volatile-range.sql",
+            "scalar-different-parameters.sql",
+            "unbounded-scalar.sql",
+            "unbounded-coalesce.sql",
+        ] {
+            assert!(
+                findings.iter().any(|finding| finding["file"] == file),
+                "{policy}: {file}: {report}"
+            );
+        }
+        for file in [
+            "closed-parameter.sql",
+            "closed-literal.sql",
+            "closed-or-branches.sql",
+            "scalar-select.sql",
+            "scalar-coalesce.sql",
+            "scalar-closed.sql",
+            "scalar-correlated.sql",
+        ] {
+            assert!(
+                !findings.iter().any(|finding| finding["file"] == file),
+                "{policy}: {file}: {report}"
+            );
+            assert!(
+                !report["advisories"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|finding| finding["file"] == file),
+                "{policy}: {file}: {report}"
+            );
+        }
+    }
+}

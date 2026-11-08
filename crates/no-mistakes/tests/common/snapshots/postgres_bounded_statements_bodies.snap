@@ -71,59 +71,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "materialized-body"
         },
         {
-          "file": "bodies.sql",
-          "line": 53,
-          "message": "bodies.sql:53: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT (SELECT id FROM orders) LIMIT 20;",
-          "target": "materialized-body"
-        },
-        {
-          "file": "bodies.sql",
-          "line": 58,
-          "message": "bodies.sql:58: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;",
-          "target": "materialized-body"
-        },
-        {
           "file": "catalog.sql",
           "line": 4,
           "message": "catalog.sql:4: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
           "rule": "postgres-bounded-statements",
           "sourceLine": "WITH candidates AS MATERIALIZED (SELECT unknown_id(id) AS value FROM orders LIMIT 20)",
-          "target": "materialized-body"
-        },
-        {
-          "file": "catalog.sql",
-          "line": 7,
-          "message": "catalog.sql:7: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT (SELECT (SELECT id FROM orders)) LIMIT 1;",
-          "target": "materialized-body"
-        },
-        {
-          "file": "clauses.sql",
-          "line": 3,
-          "message": "clauses.sql:3: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT id FROM orders ORDER BY (SELECT id FROM accounts) LIMIT 1;",
-          "target": "materialized-body"
-        },
-        {
-          "file": "clauses.sql",
-          "line": 5,
-          "message": "clauses.sql:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:27 from clauses.sql)",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
-          "target": "materialized-body"
-        },
-        {
-          "file": "clauses.sql",
-          "line": 5,
-          "message": "clauses.sql:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:9 from clauses.sql)",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
           "target": "materialized-body"
         },
         {
@@ -169,14 +121,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "table.sql",
           "line": 1,
-          "message": "table.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
-          "target": "materialized-body"
-        },
-        {
-          "file": "table.sql",
-          "line": 1,
           "message": "table.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
@@ -197,12 +141,60 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "table:orders"
         },
         {
+          "file": "bodies.sql",
+          "line": 53,
+          "message": "bodies.sql:53: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT id FROM orders) LIMIT 20;",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 58,
+          "message": "bodies.sql:58: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "catalog.sql",
+          "line": 7,
+          "message": "catalog.sql:7: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT (SELECT id FROM orders)) LIMIT 1;",
+          "target": "table:orders"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 3,
+          "message": "clauses.sql:3: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders ORDER BY (SELECT id FROM accounts) LIMIT 1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 5,
+          "message": "clauses.sql:5: SELECT can return every row of \"Orders\"; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
+          "target": "table:\"Orders\""
+        },
+        {
           "file": "recovered.sql",
           "line": 1,
           "message": "recovered.sql:1: SQL could not be analyzed for bounded statements",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT id FROM;",
           "target": "unanalyzable"
+        },
+        {
+          "file": "table.sql",
+          "line": 1,
+          "message": "table.sql:1: SELECT can return every row of \"Orders\"; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
+          "target": "table:\"Orders\""
         }
       ],
       "warnings": []
@@ -237,38 +229,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "materialized-body"
         },
         {
-          "file": "bodies.sql",
-          "line": 58,
-          "message": "bodies.sql:58: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;",
-          "target": "materialized-body"
-        },
-        {
-          "file": "clauses.sql",
-          "line": 3,
-          "message": "clauses.sql:3: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT id FROM orders ORDER BY (SELECT id FROM accounts) LIMIT 1;",
-          "target": "materialized-body"
-        },
-        {
-          "file": "clauses.sql",
-          "line": 5,
-          "message": "clauses.sql:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:27 from clauses.sql)",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
-          "target": "materialized-body"
-        },
-        {
-          "file": "clauses.sql",
-          "line": 5,
-          "message": "clauses.sql:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:9 from clauses.sql)",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
-          "target": "materialized-body"
-        },
-        {
           "file": "file-disabled.sql",
           "line": 1,
           "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
@@ -295,14 +255,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "table.sql",
           "line": 1,
-          "message": "table.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
-          "target": "materialized-body"
-        },
-        {
-          "file": "table.sql",
-          "line": 1,
           "message": "table.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
@@ -315,12 +267,44 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "file": "bodies.sql",
+          "line": 58,
+          "message": "bodies.sql:58: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 3,
+          "message": "clauses.sql:3: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders ORDER BY (SELECT id FROM accounts) LIMIT 1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 5,
+          "message": "clauses.sql:5: SELECT can return every row of \"Orders\"; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
+          "target": "table:\"Orders\""
+        },
+        {
           "file": "recovered.sql",
           "line": 1,
           "message": "recovered.sql:1: SQL could not be analyzed for bounded statements",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT id FROM;",
           "target": "unanalyzable"
+        },
+        {
+          "file": "table.sql",
+          "line": 1,
+          "message": "table.sql:1: SELECT can return every row of \"Orders\"; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
+          "target": "table:\"Orders\""
         }
       ],
       "warnings": []
@@ -608,12 +592,60 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "table:orders"
         },
         {
+          "file": "bodies.sql",
+          "line": 53,
+          "message": "bodies.sql:53: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT id FROM orders) LIMIT 20;",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 58,
+          "message": "bodies.sql:58: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "catalog.sql",
+          "line": 7,
+          "message": "catalog.sql:7: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT (SELECT id FROM orders)) LIMIT 1;",
+          "target": "table:orders"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 3,
+          "message": "clauses.sql:3: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders ORDER BY (SELECT id FROM accounts) LIMIT 1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 5,
+          "message": "clauses.sql:5: SELECT can return every row of \"Orders\"; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
+          "target": "table:\"Orders\""
+        },
+        {
           "file": "recovered.sql",
           "line": 1,
           "message": "recovered.sql:1: SQL could not be analyzed for bounded statements",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT id FROM;",
           "target": "unanalyzable"
+        },
+        {
+          "file": "table.sql",
+          "line": 1,
+          "message": "table.sql:1: SELECT can return every row of \"Orders\"; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
+          "target": "table:\"Orders\""
         }
       ],
       "warnings": []
@@ -774,7 +806,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "bodies.sql",
           "line": 53,
-          "message": "bodies.sql:53: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "message": "bodies.sql:53: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT (SELECT id FROM orders) LIMIT 20;",
           "target": "table:orders"
@@ -782,7 +814,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "bodies.sql",
           "line": 58,
-          "message": "bodies.sql:58: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "message": "bodies.sql:58: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;",
           "target": "table:accounts"
@@ -798,7 +830,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "catalog.sql",
           "line": 7,
-          "message": "catalog.sql:7: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "message": "catalog.sql:7: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT (SELECT (SELECT id FROM orders)) LIMIT 1;",
           "target": "table:orders"
@@ -806,7 +838,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "clauses.sql",
           "line": 3,
-          "message": "clauses.sql:3: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "message": "clauses.sql:3: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT id FROM orders ORDER BY (SELECT id FROM accounts) LIMIT 1;",
           "target": "table:accounts"
@@ -814,15 +846,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "clauses.sql",
           "line": 5,
-          "message": "clauses.sql:5: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:27 from clauses.sql)",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
-          "target": "table:\"Orders\""
-        },
-        {
-          "file": "clauses.sql",
-          "line": 5,
-          "message": "clauses.sql:5: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:9 from clauses.sql)",
+          "message": "clauses.sql:5: SELECT can return every row of \"Orders\"; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
           "target": "table:\"Orders\""
@@ -878,7 +902,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "table.sql",
           "line": 1,
-          "message": "table.sql:1: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "message": "table.sql:1: SELECT can return every row of \"Orders\"; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
           "target": "table:\"Orders\""
@@ -938,12 +962,60 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "table:orders"
         },
         {
+          "file": "bodies.sql",
+          "line": 53,
+          "message": "bodies.sql:53: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT id FROM orders) LIMIT 20;",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 58,
+          "message": "bodies.sql:58: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "catalog.sql",
+          "line": 7,
+          "message": "catalog.sql:7: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT (SELECT id FROM orders)) LIMIT 1;",
+          "target": "table:orders"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 3,
+          "message": "clauses.sql:3: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders ORDER BY (SELECT id FROM accounts) LIMIT 1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 5,
+          "message": "clauses.sql:5: SELECT can return every row of \"Orders\"; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
+          "target": "table:\"Orders\""
+        },
+        {
           "file": "recovered.sql",
           "line": 1,
           "message": "recovered.sql:1: SQL could not be analyzed for bounded statements",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT id FROM;",
           "target": "unanalyzable"
+        },
+        {
+          "file": "table.sql",
+          "line": 1,
+          "message": "table.sql:1: SELECT can return every row of \"Orders\"; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
+          "target": "table:\"Orders\""
         }
       ],
       "warnings": []
@@ -1355,7 +1427,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "bodies.sql",
           "line": 53,
-          "message": "bodies.sql:53: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "message": "bodies.sql:53: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT (SELECT id FROM orders) LIMIT 20;",
           "target": "table:orders"
@@ -1363,7 +1435,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "bodies.sql",
           "line": 58,
-          "message": "bodies.sql:58: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "message": "bodies.sql:58: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;",
           "target": "table:accounts"
@@ -1379,7 +1451,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "catalog.sql",
           "line": 7,
-          "message": "catalog.sql:7: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "message": "catalog.sql:7: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT (SELECT (SELECT id FROM orders)) LIMIT 1;",
           "target": "table:orders"
@@ -1387,7 +1459,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "clauses.sql",
           "line": 3,
-          "message": "clauses.sql:3: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "message": "clauses.sql:3: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT id FROM orders ORDER BY (SELECT id FROM accounts) LIMIT 1;",
           "target": "table:accounts"
@@ -1395,15 +1467,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "clauses.sql",
           "line": 5,
-          "message": "clauses.sql:5: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:27 from clauses.sql)",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
-          "target": "table:\"Orders\""
-        },
-        {
-          "file": "clauses.sql",
-          "line": 5,
-          "message": "clauses.sql:5: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:9 from clauses.sql)",
+          "message": "clauses.sql:5: SELECT can return every row of \"Orders\"; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
           "target": "table:\"Orders\""
@@ -1459,7 +1523,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "table.sql",
           "line": 1,
-          "message": "table.sql:1: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "message": "table.sql:1: SELECT can return every row of \"Orders\"; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
           "target": "table:\"Orders\""
@@ -1566,59 +1630,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "materialized-body"
         },
         {
-          "file": "bodies.sql",
-          "line": 53,
-          "message": "bodies.sql:53: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT (SELECT id FROM orders) LIMIT 20;",
-          "target": "materialized-body"
-        },
-        {
-          "file": "bodies.sql",
-          "line": 58,
-          "message": "bodies.sql:58: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;",
-          "target": "materialized-body"
-        },
-        {
           "file": "catalog.sql",
           "line": 4,
           "message": "catalog.sql:4: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
           "rule": "postgres-bounded-statements",
           "sourceLine": "WITH candidates AS MATERIALIZED (SELECT unknown_id(id) AS value FROM orders LIMIT 20)",
-          "target": "materialized-body"
-        },
-        {
-          "file": "catalog.sql",
-          "line": 7,
-          "message": "catalog.sql:7: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT (SELECT (SELECT id FROM orders)) LIMIT 1;",
-          "target": "materialized-body"
-        },
-        {
-          "file": "clauses.sql",
-          "line": 3,
-          "message": "clauses.sql:3: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT id FROM orders ORDER BY (SELECT id FROM accounts) LIMIT 1;",
-          "target": "materialized-body"
-        },
-        {
-          "file": "clauses.sql",
-          "line": 5,
-          "message": "clauses.sql:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:27 from clauses.sql)",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
-          "target": "materialized-body"
-        },
-        {
-          "file": "clauses.sql",
-          "line": 5,
-          "message": "clauses.sql:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:9 from clauses.sql)",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
           "target": "materialized-body"
         },
         {
@@ -1664,14 +1680,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "table.sql",
           "line": 1,
-          "message": "table.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
-          "target": "materialized-body"
-        },
-        {
-          "file": "table.sql",
-          "line": 1,
           "message": "table.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
@@ -1692,12 +1700,60 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "table:orders"
         },
         {
+          "file": "bodies.sql",
+          "line": 53,
+          "message": "bodies.sql:53: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT id FROM orders) LIMIT 20;",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 58,
+          "message": "bodies.sql:58: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "catalog.sql",
+          "line": 7,
+          "message": "catalog.sql:7: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT (SELECT id FROM orders)) LIMIT 1;",
+          "target": "table:orders"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 3,
+          "message": "clauses.sql:3: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders ORDER BY (SELECT id FROM accounts) LIMIT 1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 5,
+          "message": "clauses.sql:5: SELECT can return every row of \"Orders\"; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
+          "target": "table:\"Orders\""
+        },
+        {
           "file": "recovered.sql",
           "line": 1,
           "message": "recovered.sql:1: SQL could not be analyzed for bounded statements",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT id FROM;",
           "target": "unanalyzable"
+        },
+        {
+          "file": "table.sql",
+          "line": 1,
+          "message": "table.sql:1: SELECT can return every row of \"Orders\"; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
+          "target": "table:\"Orders\""
         }
       ],
       "warnings": []
@@ -1744,7 +1800,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "query.sql",
           "line": 5,
-          "message": "query.sql:5: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "message": "query.sql:5: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;",
           "target": "table:accounts"

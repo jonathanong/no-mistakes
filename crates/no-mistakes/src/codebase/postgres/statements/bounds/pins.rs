@@ -1,7 +1,9 @@
 mod any_source;
 mod array;
 mod candidate;
+mod closed_ranges;
 mod correlated;
+pub(super) use closed_ranges::{extract, extract_all};
 mod equality;
 mod evidence;
 mod expression;
@@ -24,7 +26,7 @@ pub(super) use evidence::collect as collect_evidence;
 pub(super) use resolver::Resolver;
 
 /// Collect the pins that the conjuncts of `expr` impose on the `restricted` items.
-pub(super) fn extract(
+fn extract_conjunct(
     expr: &Expr,
     resolver: &Resolver,
     restricted: &[usize],
@@ -70,8 +72,8 @@ pub(super) fn extract(
             op: BinaryOperator::And,
             right,
         } => {
-            extract(left, resolver, restricted, scope, positions, out);
-            extract(right, resolver, restricted, scope, positions, out);
+            extract_conjunct(left, resolver, restricted, scope, positions, out);
+            extract_conjunct(right, resolver, restricted, scope, positions, out);
         }
         Expr::BinaryOp {
             left,

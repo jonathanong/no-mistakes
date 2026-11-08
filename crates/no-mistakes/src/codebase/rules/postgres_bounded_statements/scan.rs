@@ -145,7 +145,12 @@ pub(super) fn scan(
                         &rel,
                         line,
                         &body_message.unwrap_or_else(|| {
-                            message(bound.kind, &offender.table, &offender.object)
+                            let kind = if bound.target.is_none() {
+                                SqlBoundKind::Select
+                            } else {
+                                bound.kind
+                            };
+                            message(kind, &offender.table, &offender.object)
                         }),
                         &offender.object.to_string(),
                     ),

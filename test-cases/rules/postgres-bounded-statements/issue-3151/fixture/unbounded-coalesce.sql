@@ -1,0 +1,1 @@
+SELECT COALESCE((SELECT role FROM members), 0);

@@ -80,7 +80,8 @@ impl Visitor for Expressions<'_> {
             let probe = context == Context::Probe
                 || (context == Context::Scalar && self.correlated(subquery));
             if !probe {
-                self.scope.record_subquery(&bound, subquery);
+                self.scope
+                    .record_subquery(&bound, subquery, context == Context::Scalar);
             }
         }
         self.depth += 1;

@@ -1,0 +1,443 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "nested-pool.sql",
+          "line": 1,
+          "message": "nested-pool.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE pool can build an unbounded candidate pool from members; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (WITH pool AS MATERIALIZED (SELECT role FROM members) SELECT role FROM pool LIMIT 1);",
+          "target": "materialized-body"
+        },
+        {
+          "file": "unbounded-pool.sql",
+          "line": 1,
+          "message": "unbounded-pool.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from members; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT 1 WHERE 1 IN (SELECT role FROM members);",
+          "target": "materialized-body"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "cast-mismatch.sql",
+          "line": 1,
+          "message": "cast-mismatch.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = 1 AND user_id >= $2::integer AND user_id <= $2::bigint;",
+          "target": "table:members"
+        },
+        {
+          "file": "cross-column-control.sql",
+          "line": 1,
+          "message": "cross-column-control.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id >= $1 AND user_id <= $1;",
+          "target": "table:members"
+        },
+        {
+          "file": "cross-or-control.sql",
+          "line": 1,
+          "message": "cross-or-control.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE (group_id = $1 AND user_id >= $2) OR (group_id = $1 AND user_id <= $2);",
+          "target": "table:members"
+        },
+        {
+          "file": "different-literals.sql",
+          "line": 1,
+          "message": "different-literals.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = 1 AND user_id >= 2 AND user_id <= 3;",
+          "target": "table:members"
+        },
+        {
+          "file": "different-parameters.sql",
+          "line": 1,
+          "message": "different-parameters.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = $1 AND user_id >= $2 AND user_id <= $3;",
+          "target": "table:members"
+        },
+        {
+          "file": "dml-scalars.sql",
+          "line": 1,
+          "message": "dml-scalars.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE members SET role = (SELECT role FROM members) WHERE group_id = 1 AND user_id = 1;",
+          "target": "table:members"
+        },
+        {
+          "file": "dml-scalars.sql",
+          "line": 2,
+          "message": "dml-scalars.sql:2: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM members WHERE group_id = 1 AND user_id = 1 AND role = (SELECT role FROM members);",
+          "target": "table:members"
+        },
+        {
+          "file": "open-range.sql",
+          "line": 1,
+          "message": "open-range.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = $1 AND user_id > $2 AND user_id <= $2;",
+          "target": "table:members"
+        },
+        {
+          "file": "or-range.sql",
+          "line": 1,
+          "message": "or-range.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = $1 AND (user_id >= $2 OR user_id <= $2);",
+          "target": "table:members"
+        },
+        {
+          "file": "scalar-different-parameters.sql",
+          "line": 1,
+          "message": "scalar-different-parameters.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT role FROM members WHERE group_id = $1 AND user_id >= $2 AND user_id <= $3), 0);",
+          "target": "table:members"
+        },
+        {
+          "file": "unbounded-coalesce.sql",
+          "line": 1,
+          "message": "unbounded-coalesce.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT role FROM members), 0);",
+          "target": "table:members"
+        },
+        {
+          "file": "unbounded-scalar.sql",
+          "line": 1,
+          "message": "unbounded-scalar.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT role FROM members);",
+          "target": "table:members"
+        },
+        {
+          "file": "volatile-range.sql",
+          "line": 1,
+          "message": "volatile-range.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = 1 AND user_id >= random() AND user_id <= random();",
+          "target": "table:members"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dml-delete": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "dml-scalars.sql",
+          "line": 2,
+          "message": "dml-scalars.sql:2: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM members WHERE group_id = 1 AND user_id = 1 AND role = (SELECT role FROM members);",
+          "target": "table:members"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dml-update": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "dml-scalars.sql",
+          "line": 1,
+          "message": "dml-scalars.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE members SET role = (SELECT role FROM members) WHERE group_id = 1 AND user_id = 1;",
+          "target": "table:members"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "cast-mismatch.sql",
+          "line": 1,
+          "message": "cast-mismatch.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = 1 AND user_id >= $2::integer AND user_id <= $2::bigint;",
+          "target": "table:members"
+        },
+        {
+          "file": "cross-column-control.sql",
+          "line": 1,
+          "message": "cross-column-control.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id >= $1 AND user_id <= $1;",
+          "target": "table:members"
+        },
+        {
+          "file": "cross-or-control.sql",
+          "line": 1,
+          "message": "cross-or-control.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE (group_id = $1 AND user_id >= $2) OR (group_id = $1 AND user_id <= $2);",
+          "target": "table:members"
+        },
+        {
+          "file": "different-literals.sql",
+          "line": 1,
+          "message": "different-literals.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = 1 AND user_id >= 2 AND user_id <= 3;",
+          "target": "table:members"
+        },
+        {
+          "file": "different-parameters.sql",
+          "line": 1,
+          "message": "different-parameters.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = $1 AND user_id >= $2 AND user_id <= $3;",
+          "target": "table:members"
+        },
+        {
+          "file": "dml-scalars.sql",
+          "line": 1,
+          "message": "dml-scalars.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE members SET role = (SELECT role FROM members) WHERE group_id = 1 AND user_id = 1;",
+          "target": "table:members"
+        },
+        {
+          "file": "dml-scalars.sql",
+          "line": 2,
+          "message": "dml-scalars.sql:2: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM members WHERE group_id = 1 AND user_id = 1 AND role = (SELECT role FROM members);",
+          "target": "table:members"
+        },
+        {
+          "file": "open-range.sql",
+          "line": 1,
+          "message": "open-range.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = $1 AND user_id > $2 AND user_id <= $2;",
+          "target": "table:members"
+        },
+        {
+          "file": "or-range.sql",
+          "line": 1,
+          "message": "or-range.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = $1 AND (user_id >= $2 OR user_id <= $2);",
+          "target": "table:members"
+        },
+        {
+          "file": "scalar-different-parameters.sql",
+          "line": 1,
+          "message": "scalar-different-parameters.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT role FROM members WHERE group_id = $1 AND user_id >= $2 AND user_id <= $3), 0);",
+          "target": "table:members"
+        },
+        {
+          "file": "unbounded-coalesce.sql",
+          "line": 1,
+          "message": "unbounded-coalesce.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT role FROM members), 0);",
+          "target": "table:members"
+        },
+        {
+          "file": "unbounded-scalar.sql",
+          "line": 1,
+          "message": "unbounded-scalar.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT role FROM members);",
+          "target": "table:members"
+        },
+        {
+          "file": "volatile-range.sql",
+          "line": 1,
+          "message": "volatile-range.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = 1 AND user_id >= random() AND user_id <= random();",
+          "target": "table:members"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "cast-mismatch.sql",
+          "line": 1,
+          "message": "cast-mismatch.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = 1 AND user_id >= $2::integer AND user_id <= $2::bigint;",
+          "target": "table:members"
+        },
+        {
+          "file": "cross-column-control.sql",
+          "line": 1,
+          "message": "cross-column-control.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id >= $1 AND user_id <= $1;",
+          "target": "table:members"
+        },
+        {
+          "file": "cross-or-control.sql",
+          "line": 1,
+          "message": "cross-or-control.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE (group_id = $1 AND user_id >= $2) OR (group_id = $1 AND user_id <= $2);",
+          "target": "table:members"
+        },
+        {
+          "file": "different-literals.sql",
+          "line": 1,
+          "message": "different-literals.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = 1 AND user_id >= 2 AND user_id <= 3;",
+          "target": "table:members"
+        },
+        {
+          "file": "different-parameters.sql",
+          "line": 1,
+          "message": "different-parameters.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = $1 AND user_id >= $2 AND user_id <= $3;",
+          "target": "table:members"
+        },
+        {
+          "file": "dml-scalars.sql",
+          "line": 1,
+          "message": "dml-scalars.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE members SET role = (SELECT role FROM members) WHERE group_id = 1 AND user_id = 1;",
+          "target": "table:members"
+        },
+        {
+          "file": "dml-scalars.sql",
+          "line": 2,
+          "message": "dml-scalars.sql:2: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM members WHERE group_id = 1 AND user_id = 1 AND role = (SELECT role FROM members);",
+          "target": "table:members"
+        },
+        {
+          "file": "nested-pool.sql",
+          "line": 1,
+          "message": "nested-pool.sql:1: MATERIALIZED CTE pool can build an unbounded candidate pool from members; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (WITH pool AS MATERIALIZED (SELECT role FROM members) SELECT role FROM pool LIMIT 1);",
+          "target": "table:members"
+        },
+        {
+          "file": "open-range.sql",
+          "line": 1,
+          "message": "open-range.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = $1 AND user_id > $2 AND user_id <= $2;",
+          "target": "table:members"
+        },
+        {
+          "file": "or-range.sql",
+          "line": 1,
+          "message": "or-range.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = $1 AND (user_id >= $2 OR user_id <= $2);",
+          "target": "table:members"
+        },
+        {
+          "file": "scalar-different-parameters.sql",
+          "line": 1,
+          "message": "scalar-different-parameters.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT role FROM members WHERE group_id = $1 AND user_id >= $2 AND user_id <= $3), 0);",
+          "target": "table:members"
+        },
+        {
+          "file": "unbounded-coalesce.sql",
+          "line": 1,
+          "message": "unbounded-coalesce.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT role FROM members), 0);",
+          "target": "table:members"
+        },
+        {
+          "file": "unbounded-pool.sql",
+          "line": 1,
+          "message": "unbounded-pool.sql:1: subquery can build an unbounded candidate pool from members; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT 1 WHERE 1 IN (SELECT role FROM members);",
+          "target": "table:members"
+        },
+        {
+          "file": "unbounded-scalar.sql",
+          "line": 1,
+          "message": "unbounded-scalar.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT role FROM members);",
+          "target": "table:members"
+        },
+        {
+          "file": "volatile-range.sql",
+          "line": 1,
+          "message": "volatile-range.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT role FROM members WHERE group_id = 1 AND user_id >= random() AND user_id <= random();",
+          "target": "table:members"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -1,0 +1,1 @@
+SELECT (WITH pool AS MATERIALIZED (SELECT role FROM members) SELECT role FROM pool LIMIT 1);

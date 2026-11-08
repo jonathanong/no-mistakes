@@ -26,16 +26,7 @@ pub(super) fn collect(
     }
     for (alternative, branch) in branches.into_iter().enumerate() {
         let mut found = Vec::new();
-        for conjunct in branch {
-            pins::extract(
-                conjunct,
-                resolver,
-                &restricted,
-                scope,
-                positions,
-                &mut found,
-            );
-        }
+        pins::extract_all(&branch, resolver, &restricted, scope, positions, &mut found);
         for (index, mut pin) in found {
             if !matches!(
                 &items[index].kind,
