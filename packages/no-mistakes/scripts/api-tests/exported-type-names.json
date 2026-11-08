@@ -200,6 +200,7 @@
   "PostgresLockWrittenRowsOnlyOptions",
   "PostgresLockWrittenRowsSeverity",
   "PostgresLockWrittenRowsWriteSet",
+  "PostgresMaterializedBodyPolicy",
   "PostgresNoMutableSqlRegistryOptions",
   "PostgresNoTestStateMutationOptions",
   "PostgresNoTransformedUuidPredicatesOptions",

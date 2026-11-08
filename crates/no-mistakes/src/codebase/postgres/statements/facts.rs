@@ -1,5 +1,4 @@
-use super::tokens::Tokens;
-use super::*;
+use super::{tokens::Tokens, *};
 mod collect;
 mod inserts;
 mod lifecycle;
@@ -87,6 +86,7 @@ fn extract_from_parsed_and_sources(
             .then(|| {
                 table_tokens.map(|index| {
                     bounds::Scope::with_table_tokens(index.cursor_at(source_statement.span().start))
+                        .with_bodies(sources.policy.collect_body_bounds)
                 })
             })
             .flatten();

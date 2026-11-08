@@ -10,9 +10,11 @@ pub enum SqlBoundKind {
 ///
 /// The fact is syntactic: whether a pinned column set is a unique key is decided later,
 /// against a schema catalog.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct SqlBoundFact {
     pub kind: SqlBoundKind,
+    /// Independent body obligation, present only when explicitly requested.
+    pub body: Option<String>,
     pub line: usize,
     pub column: usize,
     /// Original outer SQL statement position, including WITH or an executing wrapper.
@@ -195,4 +197,5 @@ mod input_mode;
 mod lines;
 pub use input_mode::SqlBoundInputMode;
 use sqlparser::ast::Expr;
+mod debug;
 mod row_inputs;

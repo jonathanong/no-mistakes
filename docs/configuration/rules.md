@@ -540,9 +540,14 @@ follows the unanalyzable policy and is never classified as autocommit.
 Configured factory bindings support `const`, `using`, and `await using` with
 block scope. See the rule page for helper summaries and supported proof limits.
 
-
 [`postgres-column-check-constraints`](../rules/postgres-column-check-constraints.md)
 uses an optional `schemaCatalogPath`, explicit `columns` entries with `pattern`,
 integer `types`, and `require: non-negative`, plus reasoned `allow` column
 exceptions. Use application-level `severity: advisory` for adoption; the default
 error severity enforces failures.
+
+`postgres-bounded-statements.options.materializedBodies` is `ignore` by default.
+`require-bound` / `advise` adds non-failing advisories for unbounded MATERIALIZED
+CTE and subquery bodies; `report` makes them findings. It uses the same scoped
+SQL inputs, catalog and `columnBounds` declarations as the parent rule. See the
+[rule examples](../rules/postgres-bounded-statements.md#independent-candidate-bodies).

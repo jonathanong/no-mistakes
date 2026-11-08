@@ -95,13 +95,18 @@ pub(crate) fn extract_sql_statement_facts_with_json_writes(
     demand: SqlLocationDemand,
     collect_json_writes: bool,
     collect_index_probes: bool,
+    collect_body_bounds: bool,
 ) -> SqlStatementFileFacts {
     extract_sql_statement_facts_with_placeholder_positions(
         sql,
         collect_bounds,
         positions,
         demand,
-        StatementProjection::Complete,
+        if collect_body_bounds {
+            StatementProjection::BodyBounds
+        } else {
+            StatementProjection::Complete
+        },
         collect_json_writes,
         collect_index_probes,
     )
@@ -114,13 +119,18 @@ pub(crate) fn extract_sql_lock_scope_facts(
     demand: SqlLocationDemand,
     collect_json_writes: bool,
     collect_index_probes: bool,
+    collect_body_bounds: bool,
 ) -> SqlStatementFileFacts {
     extract_sql_statement_facts_with_placeholder_positions(
         sql,
         collect_bounds,
         Some(positions),
         demand,
-        StatementProjection::LockScope,
+        if collect_body_bounds {
+            StatementProjection::BodyBoundsLockScope
+        } else {
+            StatementProjection::LockScope
+        },
         collect_json_writes,
         collect_index_probes,
     )

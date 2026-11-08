@@ -109,12 +109,14 @@ fn finding(
                 |name| format!(" application {name:?} (#{})", app.index),
             )
         });
-    let complete_lock_advice = verdict.rule
+    let complete_policy_advice = (verdict.rule
         == no_mistakes::codebase::rules::postgres_lock_written_rows_only::RULE_ID
+        || (verdict.rule == no_mistakes::codebase::rules::postgres_bounded_statements::RULE_ID
+            && rows.iter().all(|row| row.subcheck == "materialized-body")))
         && rows
             .iter()
             .all(|row| row.status == SqlVerdictStatus::Violation);
-    let outcome = if complete_lock_advice {
+    let outcome = if complete_policy_advice {
         "reports an advisory violation for"
     } else if rows
         .iter()

@@ -403,3 +403,22 @@ fn postgres_bounded_statements_more_check_json_snapshot() {
     });
     assert_saved_fixture("postgres_bounded_statements_more", &cases);
 }
+
+#[test]
+fn postgres_bounded_statements_bodies_check_json_snapshot() {
+    let root = repo_rel("test-cases/rules/postgres-bounded-statements/materialized-bodies/fixture");
+    let cases = [
+        "off",
+        "ignore",
+        "advise",
+        "report",
+        "embedded",
+        "allow",
+        "mixed",
+        "imported-report",
+        "imported-advise",
+        "lock",
+    ]
+    .map(|policy| (policy, root.clone(), root.join(format!("{policy}.yml"))));
+    assert_saved_fixture("postgres_bounded_statements_bodies", &cases);
+}

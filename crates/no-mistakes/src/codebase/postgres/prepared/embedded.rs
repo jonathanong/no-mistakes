@@ -68,6 +68,7 @@ pub(super) fn collect(
                             demand,
                             plan.postgres_json_writes,
                             plan.postgres_index_probes,
+                            plan.postgres_body_bounds,
                         );
                     if let Some(observer) = &observer {
                         observer.increment(

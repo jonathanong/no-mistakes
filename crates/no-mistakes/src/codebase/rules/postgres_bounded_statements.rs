@@ -8,6 +8,7 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 mod arrays;
+mod bodies;
 mod column_bounds;
 mod evaluate;
 mod scan;
@@ -36,6 +37,7 @@ pub(super) struct Options {
     allow: Vec<AllowEntry>,
     view_bounds: BTreeMap<String, ViewBoundMode>,
     column_bounds: BTreeMap<String, column_bounds::ColumnBound>,
+    materialized_bodies: bodies::Policy,
 }
 
 pub(crate) struct CompiledOptions {
@@ -48,6 +50,7 @@ pub(crate) struct CompiledOptions {
     allow: AllowList,
     view_bounds: BTreeMap<String, ViewBoundMode>,
     column_bounds: BTreeMap<String, column_bounds::ColumnBound>,
+    materialized_bodies: bodies::Policy,
 }
 
 super::prepared_rule_entrypoints!(super::check_prepared_sql_rule);
@@ -91,6 +94,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         allow: AllowList::compile(RULE_ID, opts.allow.clone())?,
         view_bounds: opts.view_bounds.clone(),
         column_bounds: opts.column_bounds.clone(),
+        materialized_bodies: opts.materialized_bodies,
     })
 }
 

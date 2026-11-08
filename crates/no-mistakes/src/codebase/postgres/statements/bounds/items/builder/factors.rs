@@ -51,6 +51,7 @@ impl<'a> Builder<'a> {
                     Default::default()
                 };
                 let bound = query::bound_query(subquery, &scope, self.positions);
+                scope.record_subquery(&bound, subquery);
                 let mut item = SqlBoundItem::new(
                     SqlBoundItemKind::Query(bound),
                     alias_key(alias),

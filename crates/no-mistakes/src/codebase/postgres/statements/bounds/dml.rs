@@ -9,6 +9,7 @@ pub(super) fn update(
     positions: super::super::value::PlaceholderPositions<'_>,
     out: &mut Vec<SqlBoundFact>,
 ) {
+    scope.expressions_at(update, || update.update_token.0.span.start, positions);
     let mut builder = Builder::new(scope, positions);
     builder.target_tables(std::slice::from_ref(&update.table));
     if let Some(UpdateTableFromKind::BeforeSet(tables) | UpdateTableFromKind::AfterSet(tables)) =
@@ -31,6 +32,7 @@ pub(super) fn delete(
     positions: super::super::value::PlaceholderPositions<'_>,
     out: &mut Vec<SqlBoundFact>,
 ) {
+    scope.expressions_at(delete, || delete.delete_token.0.span.start, positions);
     let mut builder = Builder::new(scope, positions);
     let (FromTable::WithFromKeyword(tables) | FromTable::WithoutKeyword(tables)) = &delete.from;
     builder.target_tables(tables);
@@ -54,6 +56,7 @@ fn push(
     out: &mut Vec<SqlBoundFact>,
 ) {
     out.push(SqlBoundFact {
+        body: None,
         kind,
         line,
         column,

@@ -21,6 +21,9 @@ test(
       ["column-policy", "../../configs/column-bounds.yml", 6],
       ["../issue-3114-exact/fixture", "r5.yml", 6],
       ["../issue-3114-exact/fixture", "r6.yml", 1],
+      ["../materialized-bodies/fixture", "embedded.yml", 2],
+      ["../materialized-bodies/fixture", "imported-report.yml", 1],
+      ["../materialized-bodies/fixture", "imported-advise.yml", 0],
       ["column-policy", "../../configs/column-bounds-composite-prefix.yml", 1],
       ["column-policy", "../../configs/recursive-depth.yml", 10],
       ["join-roots", "valid.yml", 22],
@@ -44,6 +47,12 @@ test(
       const options = { root, config, includeSqlVerdicts: true };
       const standalone = await cjs.check(options);
       assert.equal(standalone.rules.length, expected, config);
+      if (config === "imported-advise.yml") {
+        assert.equal(standalone.advisories.length, 1);
+        assert.equal(standalone.advisories[0].file, "imported.ts");
+        assert.equal(standalone.advisories[0].line, 5);
+        assert.match(standalone.advisories[0].message, /MATERIALIZED CTE shared_pool/);
+      }
       const relationTargets = {
         "key-resolution.yml": ["table:public.ambiguous_left", "table:public.ambiguous_right"],
         "key-operators.yml": ["table:public.customer_accounts", "table:public.owner_jobs"],

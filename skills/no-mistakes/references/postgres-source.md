@@ -216,3 +216,9 @@ narrow. Unknown SQL, helper execution, or transaction membership follows the
 unanalyzable policy and never proves a safe lock. See
 [the rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-lock-written-rows-only.md)
 for limits and rewrites.
+
+For independent candidate pools, configure
+`postgres-bounded-statements.options.materializedBodies`: `ignore` (default),
+`advise` / `require-bound` for advisory diagnostics, or `report` for findings.
+An outer LIMIT does not prove a MATERIALIZED CTE or subquery body bounded.
+Use a body-local LIMIT or primary/unique/`columnBounds` key predicate.

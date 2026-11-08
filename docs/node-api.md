@@ -622,10 +622,11 @@ It uses the same prepared source/effect projections and requires exact awaited
 report field or max-effort contract changes.
 
 Configured [`postgres-bounded-statements`](rules/postgres-bounded-statements.md)
-applications accept `columnBounds` through the existing asynchronous `check()` →
+applications accept `materializedBodies` and `columnBounds` through the existing
+asynchronous `check()` →
 `checkJson` binding and `analyzeProject()` check reports. Import
-`PostgresBoundedStatementsOptions`, `PostgresColumnBound`, and
-`PostgresViewBoundMode` for the rule options. `columnBounds` maps catalog
+`PostgresBoundedStatementsOptions`, `PostgresMaterializedBodyPolicy`,
+`PostgresColumnBound`, and `PostgresViewBoundMode` for the rule options. `columnBounds` maps catalog
 `table.column` names to a required nonempty `reason`; CLI and Node use the same
 catalog validation and caller-bounded key proof. No separate runtime export is
 needed.

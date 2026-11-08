@@ -96,6 +96,7 @@ pub(super) fn collect(
                                 functions,
                                 collect_json_writes: plan.postgres_json_writes,
                                 collect_index_probes: plan.postgres_index_probes,
+                                collect_body_bounds: plan.postgres_body_bounds,
                             },
                         );
                         value.parse_failures = failures.iter()

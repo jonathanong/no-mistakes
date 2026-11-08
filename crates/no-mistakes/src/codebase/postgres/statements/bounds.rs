@@ -5,6 +5,7 @@
 //! pure aggregate caps it. A rule decides, against a schema catalog, whether those pins make
 //! a relation single-row.
 mod aggregate;
+mod bodies;
 mod catalog_functions;
 pub(super) use catalog_functions::needs_catalog;
 mod compact_pins;
@@ -41,6 +42,7 @@ pub(super) fn is_aggregate(name: &sqlparser::ast::ObjectName) -> bool {
 #[derive(Clone, Default)]
 pub(super) struct Scope {
     frame: Rc<ScopeFrame>,
+    bodies: Option<Rc<RefCell<Vec<SqlBoundFact>>>>,
     table_tokens: Option<Rc<RefCell<TableTokenCursor>>>,
     limit_columns: limit_columns::Relations,
     scalar_functions: std::sync::Arc<BTreeSet<Vec<String>>>,
@@ -64,6 +66,7 @@ pub(super) fn collect(
     out: &mut Vec<SqlBoundFact>,
 ) {
     collect_in(statement, scope, positions, out);
+    scope.finish_bodies(out);
 }
 
 fn collect_in(
@@ -110,6 +113,7 @@ fn collect_query(
     }
     let (line, column) = start(query.span());
     out.push(SqlBoundFact {
+        body: None,
         kind: SqlBoundKind::Select,
         line,
         column,
