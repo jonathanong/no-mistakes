@@ -22,6 +22,7 @@ test(
       ["../issue-3114-exact/fixture", "r5.yml", 6],
       ["../issue-3114-exact/fixture", "r6.yml", 1],
       ["../materialized-bodies/fixture", "embedded.yml", 2],
+      ["../materialized-bodies/deep", ".no-mistakes.yml", 20],
       ["../materialized-bodies/fixture", "imported-report.yml", 1],
       ["../materialized-bodies/fixture", "imported-advise.yml", 0],
       ["column-policy", "../../configs/column-bounds-composite-prefix.yml", 1],

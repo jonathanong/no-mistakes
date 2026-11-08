@@ -95,3 +95,37 @@ fn table_bodies_keep_distinct_sites_and_quoted_relation_identity() {
         .collect::<Vec<_>>();
     assert_eq!(names, ["\"Orders\"", "accounts", "\"Orders\"", "accounts"]);
 }
+
+#[test]
+fn deeply_nested_derived_bodies_are_projected_once() {
+    let sql = std::fs::read_to_string(fixture_root().join("../materialized-bodies/deep/query.sql"))
+        .unwrap();
+    let facts = extract_sql_statement_facts_with_json_writes(
+        &sql,
+        true,
+        None,
+        SqlLocationDemand::None,
+        false,
+        false,
+        true,
+    );
+    assert!(!facts.parse_failed);
+    assert_eq!(
+        facts
+            .bounds
+            .iter()
+            .filter(|bound| bound.body.is_some())
+            .count(),
+        40
+    );
+    let catalog = catalog();
+    let views = ViewBounds::compile(&Default::default(), &catalog).unwrap();
+    let counts = facts
+        .bounds
+        .iter()
+        .filter(|bound| bound.body.is_some())
+        .map(|bound| evaluate::offenders_with_views(bound, &catalog, &views).len())
+        .collect::<Vec<_>>();
+    assert_eq!(&counts[..20], &[1; 20]);
+    assert_eq!(&counts[20..], &[0; 20]);
+}

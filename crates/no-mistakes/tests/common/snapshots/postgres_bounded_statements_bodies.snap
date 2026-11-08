@@ -326,6 +326,179 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "deep": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query.sql",
+          "line": 10,
+          "message": "query.sql:10: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 11,
+          "message": "query.sql:11: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 12,
+          "message": "query.sql:12: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 13,
+          "message": "query.sql:13: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 14,
+          "message": "query.sql:14: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 15,
+          "message": "query.sql:15: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 16,
+          "message": "query.sql:16: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 17,
+          "message": "query.sql:17: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 18,
+          "message": "query.sql:18: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 19,
+          "message": "query.sql:19: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 2,
+          "message": "query.sql:2: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 20,
+          "message": "query.sql:20: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 21,
+          "message": "query.sql:21: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM accounts",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 3,
+          "message": "query.sql:3: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 4,
+          "message": "query.sql:4: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 5,
+          "message": "query.sql:5: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 6,
+          "message": "query.sql:6: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 7,
+          "message": "query.sql:7: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 8,
+          "message": "query.sql:8: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 9,
+          "message": "query.sql:9: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "embedded": {
     "exitCode": 1,
     "report": {

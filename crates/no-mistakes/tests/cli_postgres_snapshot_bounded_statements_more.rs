@@ -407,7 +407,7 @@ fn postgres_bounded_statements_more_check_json_snapshot() {
 #[test]
 fn postgres_bounded_statements_bodies_check_json_snapshot() {
     let root = repo_rel("test-cases/rules/postgres-bounded-statements/materialized-bodies/fixture");
-    let cases = [
+    let mut cases = [
         "off",
         "ignore",
         "advise",
@@ -419,6 +419,9 @@ fn postgres_bounded_statements_bodies_check_json_snapshot() {
         "imported-advise",
         "lock",
     ]
-    .map(|policy| (policy, root.clone(), root.join(format!("{policy}.yml"))));
+    .map(|policy| (policy, root.clone(), root.join(format!("{policy}.yml"))))
+    .to_vec();
+    let deep = root.parent().unwrap().join("deep");
+    cases.push(("deep", deep.clone(), deep.join(".no-mistakes.yml")));
     assert_saved_fixture("postgres_bounded_statements_bodies", &cases);
 }

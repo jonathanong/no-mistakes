@@ -90,6 +90,7 @@ impl Scope {
             scope: &scope,
             positions,
             depth: 0,
+            derived: 0,
         };
         let _ = expressions.visit(&mut visitor);
     }
@@ -99,13 +100,15 @@ struct Expressions<'a> {
     scope: &'a Scope,
     positions: super::super::value::PlaceholderPositions<'a>,
     depth: usize,
+    derived: usize,
 }
 
 impl sqlparser::ast::Visitor for Expressions<'_> {
     type Break = ();
 
     fn pre_visit_query(&mut self, query: &sqlparser::ast::Query) -> std::ops::ControlFlow<()> {
-        if self.depth == 0 {
+        // Builder::factor owns derived bodies; this visitor binds only expression queries.
+        if self.depth == 0 && self.derived == 0 {
             let bound = super::query::bound_query(query, self.scope, self.positions);
             self.scope.record_subquery(&bound, query);
         }
@@ -115,6 +118,28 @@ impl sqlparser::ast::Visitor for Expressions<'_> {
 
     fn post_visit_query(&mut self, _: &sqlparser::ast::Query) -> std::ops::ControlFlow<()> {
         self.depth -= 1;
+        std::ops::ControlFlow::Continue(())
+    }
+
+    fn pre_visit_table_factor(
+        &mut self,
+        factor: &sqlparser::ast::TableFactor,
+    ) -> std::ops::ControlFlow<()> {
+        self.derived += usize::from(matches!(
+            factor,
+            sqlparser::ast::TableFactor::Derived { .. }
+        ));
+        std::ops::ControlFlow::Continue(())
+    }
+
+    fn post_visit_table_factor(
+        &mut self,
+        factor: &sqlparser::ast::TableFactor,
+    ) -> std::ops::ControlFlow<()> {
+        self.derived -= usize::from(matches!(
+            factor,
+            sqlparser::ast::TableFactor::Derived { .. }
+        ));
         std::ops::ControlFlow::Continue(())
     }
 }
