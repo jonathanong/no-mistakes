@@ -1,4 +1,6 @@
+use super::super::predicates::Projection;
 use super::super::SqlSelectFact;
+use super::projection::Policy;
 use sqlparser::ast::{Expr, GroupByExpr, Select, SelectItem};
 
 pub(super) fn collect_at(
@@ -6,7 +8,7 @@ pub(super) fn collect_at(
     select: &Select,
     ctes: &[String],
     in_insert_select: bool,
-    positions: super::super::value::PlaceholderPositions<'_>,
+    policy: Policy<'_, impl Projection>,
     out: &mut Vec<SqlSelectFact>,
 ) {
     walk_optional_at(
@@ -14,7 +16,7 @@ pub(super) fn collect_at(
         select.selection.as_ref(),
         ctes,
         in_insert_select,
-        positions,
+        policy,
         out,
     );
     walk_optional_at(
@@ -22,45 +24,45 @@ pub(super) fn collect_at(
         select.having.as_ref(),
         ctes,
         in_insert_select,
-        positions,
+        policy,
         out,
     );
     for item in &select.projection {
         if let SelectItem::UnnamedExpr(expr) | SelectItem::ExprWithAlias { expr, .. } = item {
-            walk_expr_at(sql, expr, ctes, in_insert_select, positions, out);
+            walk_expr_projected(sql, expr, ctes, in_insert_select, policy, out);
         }
     }
     if let GroupByExpr::Expressions(exprs, _) = &select.group_by {
         for expr in exprs {
-            walk_expr_at(sql, expr, ctes, in_insert_select, positions, out);
+            walk_expr_projected(sql, expr, ctes, in_insert_select, policy, out);
         }
     }
     for table in &select.from {
         for join in &table.joins {
             if let Some(expr) = super::join_expr(&join.join_operator) {
-                walk_expr_at(sql, expr, ctes, in_insert_select, positions, out);
+                walk_expr_projected(sql, expr, ctes, in_insert_select, policy, out);
             }
         }
     }
 }
 
-pub(in crate::codebase::postgres::statements) fn walk_expr_at(
+pub(in crate::codebase::postgres::statements) fn walk_expr_projected(
     sql: &str,
     expr: &Expr,
     ctes: &[String],
     in_insert_select: bool,
-    positions: super::super::value::PlaceholderPositions<'_>,
+    policy: Policy<'_, impl Projection>,
     out: &mut Vec<SqlSelectFact>,
 ) {
-    walk_node_at(sql, expr, ctes, in_insert_select, positions, out);
+    walk_node_projected(sql, expr, ctes, in_insert_select, policy, out);
 }
 
-pub(in crate::codebase::postgres::statements) fn walk_node_at<T: sqlparser::ast::Visit>(
+pub(in crate::codebase::postgres::statements) fn walk_node_projected<T: sqlparser::ast::Visit>(
     sql: &str,
     node: &T,
     ctes: &[String],
     in_insert_select: bool,
-    positions: super::super::value::PlaceholderPositions<'_>,
+    policy: Policy<'_, impl Projection>,
     out: &mut Vec<SqlSelectFact>,
 ) {
     let _ = node.visit(&mut Queries {
@@ -70,21 +72,21 @@ pub(in crate::codebase::postgres::statements) fn walk_node_at<T: sqlparser::ast:
         out,
         depth: 0,
         in_exists: false,
-        positions,
+        policy,
     });
 }
 
-struct Queries<'a> {
+struct Queries<'a, P> {
     sql: &'a str,
     ctes: &'a [String],
     in_insert_select: bool,
     out: &'a mut Vec<SqlSelectFact>,
     depth: usize,
     in_exists: bool,
-    positions: super::super::value::PlaceholderPositions<'a>,
+    policy: Policy<'a, P>,
 }
 
-impl sqlparser::ast::Visitor for Queries<'_> {
+impl<P: Projection> sqlparser::ast::Visitor for Queries<'_, P> {
     type Break = ();
     fn pre_visit_expr(&mut self, expr: &Expr) -> std::ops::ControlFlow<()> {
         if self.depth == 0 {
@@ -94,13 +96,13 @@ impl sqlparser::ast::Visitor for Queries<'_> {
     }
     fn pre_visit_query(&mut self, query: &sqlparser::ast::Query) -> std::ops::ControlFlow<()> {
         if self.depth == 0 {
-            super::collect_query_at(
+            super::collector::collect_query_projected(
                 self.sql,
                 query,
                 self.ctes,
                 self.in_insert_select,
                 self.in_exists,
-                self.positions,
+                self.policy,
                 self.out,
             );
         }
@@ -118,7 +120,7 @@ pub(super) fn collect_query_expressions_at(
     query: &sqlparser::ast::Query,
     ctes: &[String],
     in_insert_select: bool,
-    positions: super::super::value::PlaceholderPositions<'_>,
+    policy: Policy<'_, impl Projection>,
     out: &mut Vec<SqlSelectFact>,
 ) {
     use sqlparser::ast::Visit;
@@ -129,7 +131,7 @@ pub(super) fn collect_query_expressions_at(
         out,
         depth: 0,
         in_exists: false,
-        positions,
+        policy,
     };
     let _ = query.order_by.visit(&mut visitor);
     let _ = query.limit_clause.visit(&mut visitor);
@@ -141,10 +143,10 @@ fn walk_optional_at(
     expr: Option<&Expr>,
     ctes: &[String],
     in_insert_select: bool,
-    positions: super::super::value::PlaceholderPositions<'_>,
+    policy: Policy<'_, impl Projection>,
     out: &mut Vec<SqlSelectFact>,
 ) {
     if let Some(expr) = expr {
-        walk_expr_at(sql, expr, ctes, in_insert_select, positions, out);
+        walk_expr_projected(sql, expr, ctes, in_insert_select, policy, out);
     }
 }

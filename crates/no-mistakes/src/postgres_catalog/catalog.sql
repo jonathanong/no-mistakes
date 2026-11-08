@@ -51,28 +51,8 @@ WITH selected AS (
   FROM pg_constraint c JOIN relations r ON r.oid = c.conrelid
   WHERE (c.conparentid = 0 OR (r.relkind = 'p' AND r.relispartition))
     AND c.contype IN ('p', 'u', 'f', 'c')
-), tables AS (
-  SELECT quote_ident(r.relname) AS name, jsonb_build_object(
-    'relationKind', CASE r.relkind WHEN 'p' THEN 'partitioned table' ELSE 'table' END,
-    'columns', COALESCE((SELECT jsonb_object_agg(a.attname, jsonb_build_object(
-      'dataType', format_type(a.atttypid, a.atttypmod), 'nullable', NOT a.attnotnull,
-      'ordinalPosition', a.position,
-      'defaultExpression', CASE WHEN a.attgenerated = '' THEN pg_get_expr(d.adbin, d.adrelid) END,
-      'generated', CASE a.attgenerated WHEN 's' THEN 'stored' WHEN 'v' THEN 'virtual' END,
-      'generatedExpression', CASE WHEN a.attgenerated <> '' THEN pg_get_expr(d.adbin, d.adrelid) END,
-      'identity', NULLIF(a.attidentity, '')
-    ) || CASE WHEN __COMPLETE__ THEN jsonb_build_object('comment', col_description(r.oid, a.attnum))
-              ELSE '{}'::jsonb END)
-      FROM (SELECT attrelid, attnum, attname, atttypid, atttypmod, attnotnull, attgenerated,
-              attidentity, row_number() OVER (ORDER BY attnum) AS position
-            FROM pg_attribute WHERE attrelid = r.oid AND attnum > 0 AND NOT attisdropped) a
-      LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum), '{}'::jsonb),
-    'primaryKey', (SELECT jsonb_build_object('columns', c.columns) FROM constraints c
-                   WHERE c.conrelid = r.oid AND c.contype = 'p'),
-    'uniqueConstraints', COALESCE((SELECT jsonb_object_agg(c.name,
-      jsonb_build_object('columns', c.sql_columns)) FROM constraints c
-      WHERE c.conrelid = r.oid AND c.contype = 'u'), '{}'::jsonb),
-    'indexes', COALESCE((SELECT jsonb_object_agg(quote_ident(ic.relname), jsonb_build_object(
+), relation_indexes AS (
+  SELECT r.oid, COALESCE((SELECT jsonb_object_agg(quote_ident(ic.relname), jsonb_build_object(
       'accessMethod', am.amname, 'unique', i.indisunique, 'primary', i.indisprimary,
       'constraintBacked', EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conindid = i.indexrelid AND c.contype IN ('p', 'u', 'x')),
       'valid', i.indisvalid, 'ready', i.indisready, 'live', i.indislive, 'immediate', i.indimmediate,
@@ -94,7 +74,30 @@ WITH selected AS (
         LEFT JOIN pg_collation co ON co.oid = i.indcollation[k.n - 1]
         LEFT JOIN pg_namespace cons ON cons.oid = co.collnamespace)
     )) FROM pg_index i JOIN pg_class ic ON ic.oid = i.indexrelid JOIN pg_am am ON am.oid = ic.relam
-       WHERE i.indrelid = r.oid), '{}'::jsonb)
+       WHERE i.indrelid = r.oid), '{}'::jsonb) AS value
+  FROM relations r
+), tables AS (
+  SELECT quote_ident(r.relname) AS name, jsonb_build_object(
+    'relationKind', CASE r.relkind WHEN 'p' THEN 'partitioned table' ELSE 'table' END,
+    'columns', COALESCE((SELECT jsonb_object_agg(a.attname, jsonb_build_object(
+      'dataType', format_type(a.atttypid, a.atttypmod), 'nullable', NOT a.attnotnull,
+      'ordinalPosition', a.position,
+      'defaultExpression', CASE WHEN a.attgenerated = '' THEN pg_get_expr(d.adbin, d.adrelid) END,
+      'generated', CASE a.attgenerated WHEN 's' THEN 'stored' WHEN 'v' THEN 'virtual' END,
+      'generatedExpression', CASE WHEN a.attgenerated <> '' THEN pg_get_expr(d.adbin, d.adrelid) END,
+      'identity', NULLIF(a.attidentity, '')
+    ) || CASE WHEN __COMPLETE__ THEN jsonb_build_object('comment', col_description(r.oid, a.attnum))
+              ELSE '{}'::jsonb END)
+      FROM (SELECT attrelid, attnum, attname, atttypid, atttypmod, attnotnull, attgenerated,
+              attidentity, row_number() OVER (ORDER BY attnum) AS position
+            FROM pg_attribute WHERE attrelid = r.oid AND attnum > 0 AND NOT attisdropped) a
+      LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum), '{}'::jsonb),
+    'primaryKey', (SELECT jsonb_build_object('columns', c.columns) FROM constraints c
+                   WHERE c.conrelid = r.oid AND c.contype = 'p'),
+    'uniqueConstraints', COALESCE((SELECT jsonb_object_agg(c.name,
+      jsonb_build_object('columns', c.sql_columns)) FROM constraints c
+      WHERE c.conrelid = r.oid AND c.contype = 'u'), '{}'::jsonb),
+    'indexes', (SELECT value FROM relation_indexes WHERE oid = r.oid)
   ) || CASE WHEN __COMPLETE__ THEN jsonb_build_object(
     'comment', obj_description(r.oid, 'pg_class'),
     'physicalPartition', CASE WHEN r.relkind = 'p'
@@ -142,7 +145,8 @@ WITH selected AS (
                                         WHERE e.classid = 'pg_type'::regclass AND e.objid = t.oid)
 ), views AS (
   SELECT quote_ident(r.relname) AS key, jsonb_build_object('materialized', r.relkind = 'm',
-    'definition', pg_get_viewdef(r.oid, true), 'comment', obj_description(r.oid, 'pg_class')) AS value
+    'definition', pg_get_viewdef(r.oid, true), 'comment', obj_description(r.oid, 'pg_class'),
+    'indexes', (SELECT value FROM relation_indexes WHERE oid = r.oid)) AS value
   FROM relations r WHERE r.relkind IN ('v', 'm')
 )
 SELECT jsonb_build_object('formatVersion', 2, 'coverage', __COVERAGE__, 'schema', __SCHEMA__,

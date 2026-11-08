@@ -348,3 +348,8 @@ Use application-level `severity: advisory` for adoption; the default error
 severity enforces failures. Exceptions
 need an exact `table.column` and reason. See
 [the rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-column-check-constraints.md).
+
+Use `postgres-materialized-view-shape` to require refresh and read indexes and
+bounded base-table reads. Adopt with application-level `severity: advisory`;
+the default severity is `error`. See the catalog configuration and examples in
+[PostgreSQL source analysis](references/postgres-source.md).

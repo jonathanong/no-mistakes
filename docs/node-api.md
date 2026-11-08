@@ -105,6 +105,15 @@ Reverse-query diagnostics classify exhausted value flow as `operational-error`.
 Vitest config failures identify the config file and property (for example,
 `test.include`), with the source line in the message.
 
+[`postgres-materialized-view-shape`](rules/postgres-materialized-view-shape.md) runs through
+the existing async `check()` → `checkJson` binding and `analyzeProject()` check
+reports. The rule uses the shared application `severity`: the default `error`
+fails the check, while `severity: advisory` returns non-failing advisories.
+The package exports `PostgresMaterializedViewShapeOptions`,
+`PostgresMaterializedViewBaseTableAllowance`, and
+`PostgresMaterializedViewShapeAllowEntry`; configure them under rule `options`
+in the YAML selected by `config`. No separate runtime export is needed.
+
 A rule application with `severity: advisory` (see
 [rule applications](configuration/rules.md#severity)) moves that rule's
 findings from `CheckReport.rules` and `CheckReport.codebase` to

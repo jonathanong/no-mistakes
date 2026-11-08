@@ -97,3 +97,5 @@ fn reports_catalog_read_parse_and_version_failures() {
         .to_string()
         .contains("failed to read schemaCatalogPath"));
 }
+
+mod view_queries;

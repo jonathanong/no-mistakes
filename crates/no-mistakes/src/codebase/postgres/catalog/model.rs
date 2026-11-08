@@ -65,6 +65,7 @@ pub struct CatalogUnique {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CatalogIndexInfo {
+    pub immediate: bool,
     pub valid: bool,
     pub ready: bool,
     pub live: bool,
@@ -178,6 +179,7 @@ pub struct CatalogEnum {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CatalogView {
     pub name: String,
+    pub indexes: Option<Vec<CatalogIndexInfo>>,
     pub materialized: bool,
     pub definition: String,
     pub comment: Option<String>,

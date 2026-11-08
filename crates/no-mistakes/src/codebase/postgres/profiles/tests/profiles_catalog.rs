@@ -60,6 +60,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-conflict-ordering",
             "postgres-lock-ordering",
             "postgres-required-comments",
+            "postgres-materialized-view-shape",
             "postgres-duplicate-function-body",
             "postgres-table-shape",
             "postgres-status-with-lifecycle-timestamps",

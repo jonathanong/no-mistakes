@@ -39,7 +39,7 @@ than repeating their contents remains below both configured limits.
 ```md
 # AGENTS.md
 
-Follow [docs/why.md](docs/why.md) for analyzer policy.
+Follow [policy](docs/why.md).
 ```
 
 ## Counterexample
@@ -48,6 +48,7 @@ Adding a long local agent file that duplicates global policy.
 
 ```md
 # AGENTS.md
+
 line
 line
 line

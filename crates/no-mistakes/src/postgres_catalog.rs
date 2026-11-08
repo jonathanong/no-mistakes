@@ -101,3 +101,6 @@ pub fn generate(options: &PostgresCatalogOptions) -> Result<serde_json::Value> {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod materialized_index_tests;

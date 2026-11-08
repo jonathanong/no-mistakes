@@ -1038,10 +1038,70 @@
     }
   },
   "views": {
+    "bounded_orders": {
+      "comment": null,
+      "definition": " SELECT id,\n    total_cents\n   FROM orders\n  WHERE id >= '018f0000-0000-7000-8000-000000000000'::uuid AND id < '01900000-0000-7000-8000-000000000000'::uuid;",
+      "indexes": {
+        "bounded_orders_ranking": {
+          "accessMethod": "btree",
+          "constraintBacked": false,
+          "definition": "CREATE INDEX bounded_orders_ranking ON catalog_demo.bounded_orders USING btree (total_cents DESC)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "total_cents",
+              "descending": true,
+              "expression": "total_cents",
+              "nullsFirst": true,
+              "opclass": "pg_catalog.int4_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": false,
+          "ready": true,
+          "unique": false,
+          "valid": true
+        },
+        "bounded_orders_refresh": {
+          "accessMethod": "btree",
+          "constraintBacked": false,
+          "definition": "CREATE UNIQUE INDEX bounded_orders_refresh ON catalog_demo.bounded_orders USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": false,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "materialized": true
+    },
     "open_orders": {
       "comment": "Orders that are not yet paid.",
       "definition": " SELECT id,\n    account_id\n   FROM orders\n  WHERE state <> 'paid'::invoice_state;",
+      "indexes": {},
       "materialized": false
+    },
+    "unbounded_orders": {
+      "comment": null,
+      "definition": " SELECT id,\n    total_cents\n   FROM orders;",
+      "indexes": {},
+      "materialized": true
     }
   }
 }
