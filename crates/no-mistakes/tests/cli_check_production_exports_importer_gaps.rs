@@ -80,7 +80,6 @@ fn near_misses_keep_their_advisories() {
                 // The import-equals form is also its own unsupported form.
                 "src/body-import-equals.d.ts",
                 "src/body-import-equals.d.ts",
-                "src/body-import-type.d.ts",
                 "src/body-import.d.ts",
             ],
         ),

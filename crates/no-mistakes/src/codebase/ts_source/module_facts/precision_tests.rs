@@ -58,3 +58,27 @@ fn ambient_exceptions_preserve_public_module_completeness() {
         assert_eq!(module.facts.importer_safe.len(), count, "{file}");
     }
 }
+
+#[test]
+fn ambient_import_types_preserve_facts_without_blocking_the_rule_exception() {
+    for file in ["src/ambient.d.ts", "src/ambient.mts"] {
+        let module = module("ambient-import-type", file);
+        assert!(!module.complete, "{file}");
+        assert_eq!(module.facts.diagnostics.len(), 1, "{file}");
+        assert_eq!(module.facts.importer_safe.len(), 1, "{file}");
+        assert_eq!(module.facts.imports.len(), 1, "{file}");
+        assert!(module.facts.imports[0].type_only, "{file}");
+        assert_eq!(module.facts.imports[0].specifier, "./types.ts", "{file}");
+    }
+}
+
+#[test]
+fn runtime_imports_do_not_gain_the_ambient_exception() {
+    for file in ["src/ambient.d.ts", "src/runtime.mts"] {
+        let module = module("ambient-runtime-import", file);
+        assert!(!module.complete, "{file}");
+        assert_eq!(module.facts.diagnostics.len(), 1, "{file}");
+        assert!(module.facts.importer_safe.is_empty(), "{file}");
+        assert_eq!(module.facts.loads.len(), 1, "{file}");
+    }
+}

@@ -60,14 +60,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable"
         },
         {
-          "file": "src/body-import-type.d.ts",
-          "line": 2,
-          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "declare module \"*.css\" {",
-          "target": "unanalyzable"
-        },
-        {
           "file": "src/body-import.d.ts",
           "line": 2,
           "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",

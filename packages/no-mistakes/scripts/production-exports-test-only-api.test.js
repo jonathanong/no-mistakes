@@ -102,3 +102,40 @@ test(
     }
   },
 );
+
+test(
+  "ambient import types and runtime imports preserve async rule parity",
+  { skip: !addon?.endsWith(".node") },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const stable = ({ jobsPoolWarning: _warning, ...report }) => report;
+    for (const [scenario, advisories] of [
+      ["ambient-import-type", 0],
+      ["ambient-runtime-import", 2],
+    ]) {
+      const root = join(
+        __dirname,
+        "../../../test-cases/rules/production-exports-only-used-by-tests/fixture/precision",
+        scenario,
+      );
+      let expected;
+      for (const jobs of [1, 2]) {
+        const options = { root, config: join(root, ".no-mistakes.yml"), jobs };
+        const pending = cjs.check(options);
+        assert.ok(pending instanceof Promise);
+        const report = stable(await pending);
+        assert.deepEqual(report.rules, []);
+        assert.equal(report.advisories.length, advisories);
+        if (expected) assert.deepEqual(report, expected);
+        else expected = report;
+        assert.deepEqual(stable(await esm.check(options)), report);
+        const request = { ...options, reports: [{ type: "check" }] };
+        for (const api of [cjs, esm]) {
+          const batch = await api.analyzeProject(request);
+          assert.deepEqual(stable(batch.reports[0].result), report);
+        }
+      }
+    }
+  },
+);

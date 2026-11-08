@@ -14,6 +14,47 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "ambient-import-type": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ambient-runtime-import": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/ambient.d.ts",
+          "line": 1,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "declare module \"fixture-package\" {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/runtime.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "namespace Runtime {",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "augmentation": {
     "exitCode": 0,
     "report": {
