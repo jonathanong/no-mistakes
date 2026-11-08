@@ -1,10 +1,5 @@
-/// Which statement a bound fact judges.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SqlBoundKind {
-    Select,
-    Update,
-    Delete,
-}
+mod kind;
+pub use kind::SqlBoundKind;
 
 /// One executed `SELECT`, `UPDATE` or `DELETE`, reduced to what decides its row count.
 ///

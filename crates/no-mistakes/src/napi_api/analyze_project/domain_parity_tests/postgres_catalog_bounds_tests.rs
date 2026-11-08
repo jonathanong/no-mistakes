@@ -13,7 +13,7 @@ fn prepared_postgres_catalog_bounds_match_standalone() {
         ("column-policy", "../../configs/column-bounds.yml", 6),
         ("../materialized-bodies/probes", "off.yml", 0),
         ("../materialized-bodies/probes", "advise.yml", 0),
-        ("../materialized-bodies/probes", "report.yml", 15),
+        ("../materialized-bodies/probes", "report.yml", 17),
         (
             "column-policy",
             "../../configs/column-bounds-composite-prefix.yml",

@@ -34,7 +34,7 @@ test(
       ["../materialized-bodies/probes", "off.yml", 0],
       ["../materialized-bodies/probes", "ignore.yml", 0],
       ["../materialized-bodies/probes", "advise.yml", 0],
-      ["../materialized-bodies/probes", "report.yml", 15],
+      ["../materialized-bodies/probes", "report.yml", 17],
       ["column-policy", "../../configs/column-bounds-composite-prefix.yml", 1],
       ["column-policy", "../../configs/recursive-depth.yml", 10],
       ["join-roots", "valid.yml", 22],
@@ -84,7 +84,7 @@ test(
         assert.deepEqual((await cjs.check({ root, config })).advisories, standalone.advisories);
       }
       if (directory === "../materialized-bodies/probes" && config === "advise.yml") {
-        assert.equal(standalone.advisories.length, 15);
+        assert.equal(standalone.advisories.length, 17);
         assert.ok(standalone.advisories.every((row) => row.file !== "probes.sql"));
         assert.deepEqual((await cjs.check({ root, config })).advisories, standalone.advisories);
       }

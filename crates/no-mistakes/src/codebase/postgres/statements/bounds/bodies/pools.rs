@@ -1,5 +1,7 @@
 use super::super::Scope;
-use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundQuery, SqlPinSource};
+use crate::codebase::postgres::statements::{
+    SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
+};
 use std::{collections::BTreeSet, rc::Rc};
 
 impl Scope {
@@ -55,8 +57,8 @@ fn mask(query: &mut SqlBoundQuery, references: &BTreeSet<(usize, usize)>) {
     for item in &mut query.items {
         if let SqlBoundItemKind::Query(inner) = &mut item.kind {
             if references.contains(&(item.line, item.column)) {
-                inner.capped = true;
-                inner.items.clear();
+                // Skip this inherited read obligation while retaining its column provenance.
+                inner.input_mode = SqlBoundInputMode::Skipped;
             } else {
                 mask(inner, references);
             }

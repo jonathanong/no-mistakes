@@ -8,12 +8,7 @@ mod compact;
 mod distinct_on;
 mod outputs;
 
-pub(super) fn caller_value(
-    expr: &sqlparser::ast::Expr,
-    positions: super::super::value::PlaceholderPositions<'_>,
-) -> bool {
-    outputs::caller_value(expr, positions)
-}
+pub(super) use outputs::caller_value;
 mod recursive_depth;
 mod recursive_domain;
 mod recursive_order;

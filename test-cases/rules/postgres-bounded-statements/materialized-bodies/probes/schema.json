@@ -52,7 +52,26 @@
           "id"
         ]
       },
-      "indexes": {}
+      "indexes": {
+        "source_rows_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX source_rows_pkey ON source_rows USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
     },
     "edge_rows": {
       "relationKind": "table",
@@ -103,7 +122,26 @@
           "id"
         ]
       },
-      "indexes": {}
+      "indexes": {
+        "edge_rows_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX edge_rows_pkey ON edge_rows USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
     },
     "lookup_rows": {
       "relationKind": "table",
@@ -154,7 +192,26 @@
           "id"
         ]
       },
-      "indexes": {}
+      "indexes": {
+        "lookup_rows_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX lookup_rows_pkey ON lookup_rows USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
     },
     "label_rows": {
       "relationKind": "table",
@@ -205,7 +262,26 @@
           "id"
         ]
       },
-      "indexes": {}
+      "indexes": {
+        "label_rows_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX label_rows_pkey ON label_rows USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
     },
     "member_rows": {
       "relationKind": "table",
@@ -256,7 +332,26 @@
           "id"
         ]
       },
-      "indexes": {}
+      "indexes": {
+        "member_rows_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX member_rows_pkey ON member_rows USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
     }
   }
 }

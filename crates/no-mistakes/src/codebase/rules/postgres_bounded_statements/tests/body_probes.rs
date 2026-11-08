@@ -10,7 +10,9 @@ fn root() -> std::path::PathBuf {
 
 fn catalog() -> SchemaCatalog {
     let sources = crate::codebase::rules::source_store_for_files(&[root().join("schema.json")]);
-    SchemaCatalog::load(&root(), "schema.json", &sources).unwrap()
+    let catalog = SchemaCatalog::load(&root(), "schema.json", &sources).unwrap();
+    assert_eq!(catalog.unique_keys("lookup_rows"), [vec!["id".to_owned()]]);
+    catalog
 }
 
 #[test]
@@ -53,7 +55,7 @@ fn inherited_pools_keep_their_source_obligation_and_new_scans_stay_visible() {
         .iter()
         .filter(|fact| fact.body.is_some())
         .collect();
-    assert_eq!(bodies.len(), 13);
+    assert_eq!(bodies.len(), 19);
     let outcomes: Vec<_> = bodies
         .iter()
         .map(|fact| {
@@ -82,6 +84,12 @@ fn inherited_pools_keep_their_source_obligation_and_new_scans_stay_visible() {
             (24, vec!["edge_rows".to_owned()]),
             (28, vec!["source_rows".to_owned()]),
             (29, vec![]),
+            (32, vec!["source_rows".to_owned()]),
+            (33, vec![]),
+            (34, vec![]),
+            (37, vec!["source_rows".to_owned()]),
+            (38, vec![]),
+            (39, vec![]),
         ]
     );
 }
