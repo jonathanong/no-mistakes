@@ -1,11 +1,6 @@
 //! Name tables for built-in classification; see docs/rules/coverage-producer-assertion-owner.md.
 
-/// Global namespaces whose static methods never reach repository code on their own.
-#[rustfmt::skip]
-pub(super) const GLOBAL_OBJECTS: &[&str] = &[
-    "JSON", "Math", "Number", "String", "Boolean", "BigInt", "Symbol", "Date", "Object", "Array",
-    "Promise", "console", "Intl", "RegExp", "Buffer", "URL", "performance",
-];
+pub(super) use crate::codebase::ts_source::builtin_receivers::GLOBAL_OBJECTS;
 /// Global functions which never reach repository code on their own.
 #[rustfmt::skip]
 pub(super) const GLOBAL_FUNCTIONS: &[&str] = &[
@@ -34,7 +29,7 @@ pub(super) const CALLBACKS: &[(&str, &[usize])] = &[
     ("map", &[0]), ("filter", &[0]), ("forEach", &[0]), ("flatMap", &[0]), ("reduce", &[0]),
     ("reduceRight", &[0]), ("some", &[0]), ("every", &[0]), ("find", &[0]), ("findIndex", &[0]),
     ("findLast", &[0]), ("sort", &[0]), ("toSorted", &[0]), ("then", &[0, 1]), ("catch", &[0]),
-    ("finally", &[0]),
+    ("finally", &[0]), ("replace", &[1]), ("replaceAll", &[1]),
 ];
 /// Node modules whose exports are synchronous value computations.
 #[rustfmt::skip]

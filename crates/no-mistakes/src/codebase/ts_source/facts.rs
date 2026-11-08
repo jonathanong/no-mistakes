@@ -80,6 +80,8 @@ pub struct TsFactPlan {
 
 #[derive(Debug, Clone, Default)]
 pub struct TsFileFacts {
+    /// Call start offsets whose receiver is a provable built-in value.
+    pub builtin_receiver_calls: crate::fx::FxHashSet<u32>,
     pub module_bindings: Option<Arc<super::module_facts::TypeScriptModuleFacts>>,
     /// A source read or collector failure. Consumers that need a complete
     /// answer must surface this instead of treating the empty facts as a

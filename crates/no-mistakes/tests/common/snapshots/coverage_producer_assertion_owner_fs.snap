@@ -50,6 +50,32 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "causes": [
             {
+              "callee": "<unknown>.then",
+              "detail": "callee target is unknown",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 37,
+              "sourceLine": "export function callbackAsserted() { readFile('a', 'utf8').then((text) => { equal(text, 'x'); }); }"
+            },
+            {
+              "callee": "readFile",
+              "detail": "callback execution alongside fs I/O is not modeled",
+              "file": "src/fs-io.mts",
+              "kind": "unresolved-dispatch",
+              "line": 37,
+              "sourceLine": "export function callbackAsserted() { readFile('a', 'utf8').then((text) => { equal(text, 'x'); }); }"
+            }
+          ],
+          "file": "src/fs-io.mts",
+          "line": 37,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:37 callee `<unknown>.then` (callee target is unknown); unresolved dispatch at src/fs-io.mts:37 callee `readFile` (callback execution alongside fs I/O is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#callbackAsserted",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function callbackAsserted() { readFile('a', 'utf8').then((text) => { equal(text, 'x'); }); }",
+          "target": "callbackAsserted"
+        },
+        {
+          "causes": [
+            {
               "callee": "fsNs.createReadStream",
               "detail": "callback argument execution is not modeled",
               "file": "src/fs-io.mts",

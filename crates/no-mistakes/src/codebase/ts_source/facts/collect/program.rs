@@ -93,6 +93,11 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
         Default::default()
     };
     TsFileFacts {
+        builtin_receiver_calls: if plan.function_calls {
+            crate::codebase::ts_source::builtin_receivers::collect(program)
+        } else {
+            Default::default()
+        },
         ancestry,
         module_bindings: (plan.module_bindings || plan.call_arguments).then(|| {
             Arc::new(match semantic {

@@ -183,13 +183,20 @@ unresolved dispatch.
   `Symbol`, `Date`, `Object`, `Array`, `Promise`, `console`, `Intl`, `RegExp`,
   `Buffer`, `URL`, `performance`; plus `parseInt`, `parseFloat`, `isNaN`,
   `isFinite`, `encodeURIComponent`, `decodeURIComponent`, `structuredClone`.
-- Prototype methods on a receiver the call graph cannot resolve, matched by
-  name: string, `RegExp`, `Date`, array, `Map`/`Set`, `Promise`, and
-  `console` methods such as `trim`, `slice`, `split`, `join`, `push`, `has`,
-  `get`, `set`, `test`, `getTime`, `toISOString`, and `log`. A receiver which
-  resolves to a repository method is never classified by name. A repository
-  class whose method shares one of these names on an unresolved receiver is
-  treated as a built-in; call it through a resolvable receiver.
+- Prototype methods (`trim`, `slice`, `split`, `join`, `push`, `has`, `get`, `set`,
+  `test`, `getTime`, `log`, ...) only on a receiver which is provably built-in
+  in the same file: a string, number, regular expression, template, or array
+  literal; an object literal without a member of that name; `new` of a built-in
+  constructor (`Map`, `Set`, `Date`, `RegExp`, `Promise`, `AsyncLocalStorage`,
+  ...); a built-in factory such as `Array.from` or `Object.keys`; a chain of
+  result-preserving methods on such a receiver (`text.trim().split(',')`); or a
+  name whose every declaration is built-in, through an annotation (`string`,
+  `T[]`, `Map<...>`, ...) or a `const` initializer of the kinds above. A receiver
+  whose type is unknown stays `callee target is unknown`, even when the method
+  name matches a built-in: a repository `Sink.push` is never mistaken for
+  `Array.prototype.push`. A name collision can only keep a producer uncertain,
+  never make it a definitive no-owner error. Annotate the binding (`path: string`)
+  to make the proof explicit.
 - `AsyncLocalStorage` `getStore`, `enterWith`, `disable`, `run`, and `exit`,
   in files which import it from `async_hooks` or `node:async_hooks`.
 - Synchronous Node modules `path`, `url`, `os`, `querystring`, `buffer`, and
@@ -198,14 +205,14 @@ unresolved dispatch.
 
 A built-in that invokes a callback keeps the proof: `map`, `filter`, `forEach`,
 `flatMap`, `reduce`, `some`, `every`, `find`, `findIndex`, `sort`, `then`,
-`catch`, `finally`, `Array.from` (second argument), `AsyncLocalStorage.run` /
+`catch`, `finally`, `replace` / `replaceAll` (second argument), `Array.from` (second argument), `AsyncLocalStorage.run` /
 `exit`, and the timers `setTimeout`, `setInterval`, and `setImmediate`. The built-in executes the callback, so an inline function or a
 named function the call graph resolves in the same callable is traversed and can
 reach an assertion. An argument which is a parameter, a member read, a call
 result, or a function imported from another module (outside `map`-family
 iteration) is reported as `built-in callback `name` is not statically resolved`
 at the built-in call. Inline the callback or pass a function declared in the
-same file. `String.prototype.replace` callbacks are not tracked.
+same file.
 
 ```ts
 export function owned(items: number[]) { items.map((item) => assertItem(item)); } // reaches assertItem

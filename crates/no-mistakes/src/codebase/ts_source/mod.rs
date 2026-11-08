@@ -8,6 +8,8 @@ pub mod facts;
 pub mod jsx;
 pub mod module_facts;
 
+pub(crate) mod builtin_receivers;
+
 mod file_id_map;
 mod file_inventory;
 mod parser_diagnostic;

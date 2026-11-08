@@ -300,6 +300,123 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "push-sink": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "causes": [
+            {
+              "callee": "sink.push",
+              "detail": "callee target is unknown",
+              "file": "src/dispatch.mts",
+              "kind": "unresolved-dispatch",
+              "line": 10,
+              "sourceLine": "sink.push(1);"
+            }
+          ],
+          "file": "src/dispatch.mts",
+          "line": 7,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/dispatch.mts:10 callee `sink.push` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/dispatch.mts#pushSink",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function pushSink(): void {",
+          "target": "pushSink"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "record-sink": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "causes": [
+            {
+              "callee": "recorder.record",
+              "detail": "callee target is unknown",
+              "file": "src/dispatch.mts",
+              "kind": "unresolved-dispatch",
+              "line": 19,
+              "sourceLine": "recorder.record(1);"
+            }
+          ],
+          "file": "src/dispatch.mts",
+          "line": 16,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/dispatch.mts:19 callee `recorder.record` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/dispatch.mts#recordSink",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function recordSink(): void {",
+          "target": "recordSink"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "replace-inline": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "replace-string": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "replace-unresolved": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "firstPath.replace",
+              "detail": "built-in callback `fn` is not statically resolved",
+              "file": "src/dispatch.mts",
+              "kind": "unresolved-dispatch",
+              "line": 24,
+              "sourceLine": "export function replaceUnresolved(firstPath: string, fn: () => string) { firstPath.replace(/re/, fn); }"
+            }
+          ],
+          "file": "src/dispatch.mts",
+          "line": 24,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/dispatch.mts:24 callee `firstPath.replace` (built-in callback `fn` is not statically resolved); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/dispatch.mts#replaceUnresolved",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function replaceUnresolved(firstPath: string, fn: () => string) { firstPath.replace(/re/, fn); }",
+          "target": "replaceUnresolved"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "third-party": {
     "exitCode": 1,
     "report": {
@@ -326,6 +443,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function thirdParty(error: Error) { format([1], 'a'); Sentry.captureException(error); }",
           "target": "thirdParty"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "third-party-catch": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "Sentry.captureException",
+              "detail": "external call has no ownership model",
+              "file": "src/producer.mts",
+              "kind": "unresolved-dispatch",
+              "line": 15,
+              "sourceLine": "export function thirdPartyCatch() { format([1], 'a'); try { JSON.parse('1'); } catch (e) { Sentry.captureException(e); } }"
+            }
+          ],
+          "file": "src/producer.mts",
+          "line": 15,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producer.mts:15 callee `Sentry.captureException` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producer.mts#thirdPartyCatch",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function thirdPartyCatch() { format([1], 'a'); try { JSON.parse('1'); } catch (e) { Sentry.captureException(e); } }",
+          "target": "thirdPartyCatch"
         }
       ],
       "warnings": []

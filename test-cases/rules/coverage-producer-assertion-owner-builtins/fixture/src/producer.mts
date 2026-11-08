@@ -12,3 +12,4 @@ export function callbackStored(items: number[]) { format(items, 'a'); const stor
 export function callbackUnresolved(items: number[], fn: (value: number) => void) { format(items, 'a'); items.map(fn); }
 export function thirdParty(error: Error) { format([1], 'a'); Sentry.captureException(error); }
 export function many(a: () => void, b: () => void, c: () => void, d: () => void, e: () => void, f: () => void, g: () => void, h: () => void) { a(); b(); c(); d(); e(); f(); g(); h(); }
+export function thirdPartyCatch() { format([1], 'a'); try { JSON.parse('1'); } catch (e) { Sentry.captureException(e); } }

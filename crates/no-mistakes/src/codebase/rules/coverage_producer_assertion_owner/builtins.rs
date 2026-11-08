@@ -27,6 +27,12 @@ fn positions(site: &ResolvedCallSite, facts: &dyn TsFactLookup) -> Option<&'stat
             .then_some(&[][..])
             .or_else(|| TIMERS.contains(&callee).then_some(&[0][..]));
     };
+    let proven = facts
+        .get_ts_facts(&site.file)
+        .is_some_and(|file| file.builtin_receiver_calls.contains(&site.offset));
+    if !proven {
+        return None;
+    }
     if let Some((_, positions)) = CALLBACKS.iter().find(|(name, _)| *name == method) {
         return Some(positions);
     }
