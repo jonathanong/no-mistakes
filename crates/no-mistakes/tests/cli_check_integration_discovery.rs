@@ -26,3 +26,23 @@ fn check_json_snapshot_integration_discovery_scope() {
     }
     crate::check_json_snapshot::assert_saved_fixture("integration_discovery_scope", &cases);
 }
+
+#[test]
+fn check_json_snapshot_structural_sql_scope() {
+    let base = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/check-facts");
+    let root = base.join("sql-support-scope/fixture");
+    let mut cases = [
+        ("scoped", ".no-mistakes.yml"),
+        ("broad", "broad.yml"),
+        ("low_fallback", "low.yml"),
+        ("middle_exclusion", "middle-exclude.yml"),
+    ]
+    .into_iter()
+    .map(|(name, config)| (name, root.clone(), root.join(config)))
+    .collect::<Vec<_>>();
+    let root = base.join("sql-no-support/fixture");
+    cases.push(("no_support", root.clone(), root.join(".no-mistakes.yml")));
+    cases.push(("all_selected", root.clone(), root.join("all-selected.yml")));
+    cases.push(("empty_scope", root.clone(), root.join("empty.yml")));
+    crate::check_json_snapshot::assert_saved_fixture("structural_sql_scope", &cases);
+}

@@ -12,6 +12,9 @@ root.mkdir()
 shutil.copy(source / 'helper.ts', root / 'selected/helper.ts')
 shutil.copy(source / 'suite.test.ts', root / 'selected/suite.test.ts')
 shutil.copytree(source / 'configs', root / 'configs')
+shutil.copytree(source / 'sql-support', root / 'sql-support')
+shutil.copy(source / 'sql-query.mts', root / 'selected/sql-query.mts')
+shutil.copy(source / 'tsconfig.json', root / 'tsconfig.json')
 seed = (source / 'seed.tsx').read_text()
 for index in range(256):
     body = ["import { readBoundary } from '../selected/helper';\n"]

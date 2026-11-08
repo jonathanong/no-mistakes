@@ -12,6 +12,7 @@ corpus = pathlib.Path(sys.argv[1]).resolve()
 binaries = {'A': sys.argv[2], 'B': sys.argv[3]}
 output = pathlib.Path(sys.argv[4]).resolve()
 source_provenance = json.loads(pathlib.Path(sys.argv[5]).read_text())
+policies = source_provenance.get('policies', ['consuming', 'broad', 'disabled'])
 def executable_digest(path):
     with pathlib.Path(path).open('rb') as source:
         return hashlib.file_digest(source, 'sha256').hexdigest()
@@ -46,7 +47,7 @@ child_environment.pop('RAYON_NUM_THREADS', None)
 rows = []
 with output.with_suffix('.jsonl').open('w') as trace:
     for mode in ['off', 'on']:
-        for scope in ['consuming', 'broad', 'disabled']:
+        for scope in policies:
             for jobs in ['1', '4', 'default']:
                 orders = ['ABBA' if block % 2 == 0 else 'BAAB' for block in range(12)]
                 orders += ['AAAA', 'BBBB']
@@ -84,11 +85,14 @@ with output.with_suffix('.jsonl').open('w') as trace:
                         trace.write(json.dumps(row) + '\n')
                         trace.flush()
                         value = json.loads(report)
-                        assert process.returncode == int(scope != 'disabled'), row
-                        assert len(value['integration']) == int(scope != 'disabled'), row
-                        assert all(value[key] == [] for key in
-                                   ['advisories', 'codebase', 'queues', 'react', 'rules', 'warnings']), row
+                        expected = source_provenance['expectedFindings'][scope]
+                        assert process.returncode == int(sum(expected.values()) > 0), row
+                        assert all(len(value[key]) == expected.get(key, 0) for key in
+                                   ['integration', 'advisories', 'codebase', 'queues', 'react', 'rules', 'warnings']), row
                         assert not value.get('incomplete'), row
+                        if scope.startswith('sql-'):
+                            assert value['rules'][0]['rule'] == 'postgres-no-offset', row
+                            assert 'OFFSET' in value['rules'][0]['message'], row
                 cell = [r for r in rows if (r['mode'], r['scope'], r['jobs']) == (mode, scope, jobs)]
                 assert len({(r['exit'], r['sha256']) for r in cell}) == 1, (mode, scope, jobs)
                 assert len({r['authoritative_stderr_sha256'] for r in cell}) == 1, (mode, scope, jobs)
@@ -97,7 +101,7 @@ with output.with_suffix('.jsonl').open('w') as trace:
                 output.write_text(json.dumps(rows, indent=2) + '\n')
                 print(json.dumps(dict(mode=mode, scope=scope, jobs=jobs, samples=len(cell),
                                       identical_stdout_and_status=True)), flush=True)
-for scope in ['consuming', 'broad', 'disabled']:
+for scope in policies:
     for jobs in ['1', '4', 'default']:
         cell = [r for r in rows if (r['scope'], r['jobs']) == (scope, jobs)]
         assert len({(r['exit'], r['sha256']) for r in cell}) == 1, (scope, jobs, 'observer parity')

@@ -1,0 +1,174 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "all_selected": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "excluded/unrelated.mts",
+          "line": 2,
+          "message": "excluded/unrelated.mts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "export function unrelated() { return read('SELECT id FROM accounts OFFSET 40'); }",
+          "target": "offset"
+        },
+        {
+          "file": "src/direct.mts",
+          "line": 2,
+          "message": "src/direct.mts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "export function direct() { return read('SELECT id FROM accounts OFFSET 20'); }",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "broad": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-no-offset",
+          "file": "unrelated/broken.mts",
+          "message": "parsing unrelated/broken.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 22, end: 23 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "helpers/paging.mts",
+          "line": 3,
+          "message": "helpers/paging.mts:3: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return `LIMIT ${pageSize()} OFFSET 40`;",
+          "target": "offset"
+        },
+        {
+          "file": "unrelated/dense.mts",
+          "line": 5,
+          "message": "unrelated/dense.mts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "query.append(sql`OFFSET 30`);",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_scope": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "low_fallback": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/caller.mts",
+          "line": 7,
+          "message": "src/caller.mts:7: SQL is unanalyzable at effort low, so an OFFSET cannot be ruled out; pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return read(query);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "middle_exclusion": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "helpers/paging.mts",
+          "line": 3,
+          "message": "helpers/paging.mts:3: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return `LIMIT ${pageSize()} OFFSET 40`;",
+          "target": "offset"
+        },
+        {
+          "file": "unrelated/dense.mts",
+          "line": 5,
+          "message": "unrelated/dense.mts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "query.append(sql`OFFSET 30`);",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no_support": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/direct.mts",
+          "line": 2,
+          "message": "src/direct.mts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "export function direct() { return read('SELECT id FROM accounts OFFSET 20'); }",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scoped": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "helpers/paging.mts",
+          "line": 3,
+          "message": "helpers/paging.mts:3: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return `LIMIT ${pageSize()} OFFSET 40`;",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
