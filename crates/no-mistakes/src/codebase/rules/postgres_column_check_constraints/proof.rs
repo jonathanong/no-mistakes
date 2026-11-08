@@ -9,8 +9,13 @@ pub(super) fn proven_columns(definition: &str) -> BTreeSet<String> {
     let Some(expr) = check_expression(definition) else {
         return BTreeSet::new();
     };
+    expression_columns(&expr)
+}
+
+fn expression_columns(expr: &Expr) -> BTreeSet<String> {
+    // Sets name columns that force FALSE for negative non-null values; see the rule docs.
     let mut columns = BTreeSet::new();
-    collect(&expr, &mut columns);
+    collect(expr, &mut columns);
     columns
 }
 
@@ -26,12 +31,23 @@ fn check_expression(definition: &str) -> Option<Expr> {
 }
 
 fn collect(expr: &Expr, columns: &mut BTreeSet<String>) {
-    let Expr::BinaryOp { left, op, right } = peel(expr) else {
+    let expr = peel(expr);
+    if let Expr::IsNull(inner) = expr {
+        columns.extend(column(inner));
+        return;
+    }
+    let Expr::BinaryOp { left, op, right } = expr else {
         return;
     };
     if *op == BinaryOperator::And {
         collect(left, columns);
         collect(right, columns);
+        return;
+    }
+    if *op == BinaryOperator::Or {
+        let left = expression_columns(left);
+        let right = expression_columns(right);
+        columns.extend(left.intersection(&right).cloned());
         return;
     }
     let candidate = match op {

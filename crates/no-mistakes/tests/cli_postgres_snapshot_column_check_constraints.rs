@@ -8,6 +8,7 @@ fn postgres_column_check_constraints_check_json_snapshot() {
     let cases = [
         ("fail", "fail", "catalog.yml"),
         ("pass", "pass", "catalog.yml"),
+        ("disjunctions", "disjunctions", "catalog.yml"),
         ("report", "fail", "report.yml"),
         ("severity_advisory", "fail", "severity-advisory.yml"),
         ("mixed_severities", "fail", "mixed-severities.yml"),
@@ -86,6 +87,7 @@ fn postgres_column_check_constraints_keeps_safe_and_unsafe_controls() {
         "strict_count",
         "reverse_strict_count",
         "constant_count",
+        "null_count",
     ] {
         assert!(
             !targets.contains(format!("column:metrics.{column}").as_str()),
@@ -102,7 +104,6 @@ fn postgres_column_check_constraints_keeps_safe_and_unsafe_controls() {
         "cast_count",
         "case_count",
         "broken_count",
-        "null_count",
         "small_count",
         "big_count",
         "alias_count",
@@ -127,7 +128,7 @@ fn postgres_column_check_constraints_keeps_safe_and_unsafe_controls() {
             "{column}"
         );
     }
-    assert_eq!(targets.len(), 28);
+    assert_eq!(targets.len(), 27);
     let quoted = report["advisories"]
         .as_array()
         .unwrap()
@@ -138,4 +139,35 @@ fn postgres_column_check_constraints_keeps_safe_and_unsafe_controls() {
         .as_str()
         .unwrap()
         .contains(r#"CHECK ("Needs_count" >= 0)"#));
+}
+
+#[test]
+fn postgres_column_check_constraints_requires_every_disjunct_to_reject_negatives() {
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--root"])
+        .arg(rules_path(RULE, "fixture", "disjunctions"))
+        .arg("--config")
+        .arg(rules_path(RULE, "configs", "catalog.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{:?}", output.stderr);
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let targets: std::collections::BTreeSet<_> = report["advisories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| finding["target"].as_str().unwrap())
+        .collect();
+    let expected = [
+        "nested_unsafe_count",
+        "nonnull_count",
+        "unknown_count",
+        "unsafe_count",
+        "unvalidated_or_count",
+        "weak_or_count",
+        "wrong_null_count",
+    ]
+    .map(|name| format!("column:metrics.{name}"));
+    assert_eq!(targets, expected.iter().map(String::as_str).collect());
 }

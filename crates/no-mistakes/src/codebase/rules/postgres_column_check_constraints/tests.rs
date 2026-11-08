@@ -10,8 +10,8 @@ fn fixture() -> PathBuf {
 fn standalone_uses_the_same_saved_catalog_and_options() {
     let root = fixture().join("fixture/fail");
     for (name, count) in [
-        ("catalog", 28),
-        ("allow", 27),
+        ("catalog", 27),
+        ("allow", 26),
         ("no-catalog", 0),
         ("empty", 0),
         ("excluded", 0),

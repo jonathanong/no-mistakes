@@ -152,14 +152,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "schema.json",
-          "line": 52,
-          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
-          "rule": "postgres-column-check-constraints",
-          "sourceLine": "\"null_count\": {",
-          "target": "column:metrics.null_count"
-        },
-        {
-          "file": "schema.json",
           "line": 64,
           "message": "schema.json: column:metrics.small_count: metrics.small_count lacks a validated CHECK proving small_count >= 0; add and validate CHECK (\"small_count\" >= 0) to enforce non-negative values",
           "rule": "postgres-column-check-constraints",
@@ -378,14 +370,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-column-check-constraints",
           "sourceLine": "\"broken_count\": {",
           "target": "column:metrics.broken_count"
-        },
-        {
-          "file": "schema.json",
-          "line": 52,
-          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
-          "rule": "postgres-column-check-constraints",
-          "sourceLine": "\"null_count\": {",
-          "target": "column:metrics.null_count"
         },
         {
           "file": "schema.json",
@@ -708,14 +692,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "schema.json",
-          "line": 52,
-          "message": "schema.json: column:metrics.null_count: Add a schema lower bound.",
-          "rule": "postgres-column-check-constraints",
-          "sourceLine": "\"null_count\": {",
-          "target": "column:metrics.null_count"
-        },
-        {
-          "file": "schema.json",
           "line": 64,
           "message": "schema.json: column:metrics.small_count: Add a schema lower bound.",
           "rule": "postgres-column-check-constraints",
@@ -806,6 +782,75 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-column-check-constraints",
           "sourceLine": "\"ignored\": {",
           "target": "column:metrics.ignored"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disjunctions": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 34,
+          "message": "schema.json: column:metrics.unsafe_count: metrics.unsafe_count lacks a validated CHECK proving unsafe_count >= 0; add and validate CHECK (\"unsafe_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"unsafe_count\": {",
+          "target": "column:metrics.unsafe_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 37,
+          "message": "schema.json: column:metrics.wrong_null_count: metrics.wrong_null_count lacks a validated CHECK proving wrong_null_count >= 0; add and validate CHECK (\"wrong_null_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_null_count\": {",
+          "target": "column:metrics.wrong_null_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 40,
+          "message": "schema.json: column:metrics.unknown_count: metrics.unknown_count lacks a validated CHECK proving unknown_count >= 0; add and validate CHECK (\"unknown_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"unknown_count\": {",
+          "target": "column:metrics.unknown_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 43,
+          "message": "schema.json: column:metrics.weak_or_count: metrics.weak_or_count lacks a validated CHECK proving weak_or_count >= 0; add and validate CHECK (\"weak_or_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_or_count\": {",
+          "target": "column:metrics.weak_or_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 46,
+          "message": "schema.json: column:metrics.nested_unsafe_count: metrics.nested_unsafe_count lacks a validated CHECK proving nested_unsafe_count >= 0; add and validate CHECK (\"nested_unsafe_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"nested_unsafe_count\": {",
+          "target": "column:metrics.nested_unsafe_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 49,
+          "message": "schema.json: column:metrics.nonnull_count: metrics.nonnull_count lacks a validated CHECK proving nonnull_count >= 0; add and validate CHECK (\"nonnull_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"nonnull_count\": {",
+          "target": "column:metrics.nonnull_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 52,
+          "message": "schema.json: column:metrics.unvalidated_or_count: metrics.unvalidated_or_count lacks a validated CHECK proving unvalidated_or_count >= 0; add and validate CHECK (\"unvalidated_or_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"unvalidated_or_count\": {",
+          "target": "column:metrics.unvalidated_or_count"
         }
       ],
       "codebase": [],
@@ -1041,14 +1086,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-column-check-constraints",
           "sourceLine": "\"broken_count\": {",
           "target": "column:metrics.broken_count"
-        },
-        {
-          "file": "schema.json",
-          "line": 52,
-          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
-          "rule": "postgres-column-check-constraints",
-          "sourceLine": "\"null_count\": {",
-          "target": "column:metrics.null_count"
         },
         {
           "file": "schema.json",
@@ -1300,14 +1337,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-column-check-constraints",
           "sourceLine": "\"broken_count\": {",
           "target": "column:metrics.broken_count"
-        },
-        {
-          "file": "schema.json",
-          "line": 52,
-          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
-          "rule": "postgres-column-check-constraints",
-          "sourceLine": "\"null_count\": {",
-          "target": "column:metrics.null_count"
         },
         {
           "file": "schema.json",
@@ -1563,14 +1592,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "schema.json",
-          "line": 52,
-          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
-          "rule": "postgres-column-check-constraints",
-          "sourceLine": "\"null_count\": {",
-          "target": "column:metrics.null_count"
-        },
-        {
-          "file": "schema.json",
           "line": 64,
           "message": "schema.json: column:metrics.small_count: metrics.small_count lacks a validated CHECK proving small_count >= 0; add and validate CHECK (\"small_count\" >= 0) to enforce non-negative values",
           "rule": "postgres-column-check-constraints",
@@ -1784,14 +1805,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-column-check-constraints",
           "sourceLine": "\"broken_count\": {",
           "target": "column:metrics.broken_count"
-        },
-        {
-          "file": "schema.json",
-          "line": 53,
-          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
-          "rule": "postgres-column-check-constraints",
-          "sourceLine": "\"null_count\": {",
-          "target": "column:metrics.null_count"
         },
         {
           "file": "schema.json",
@@ -2060,14 +2073,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "schema.json",
-          "line": 52,
-          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
-          "rule": "postgres-column-check-constraints",
-          "sourceLine": "\"null_count\": {",
-          "target": "column:metrics.null_count"
-        },
-        {
-          "file": "schema.json",
           "line": 64,
           "message": "schema.json: column:metrics.small_count: metrics.small_count lacks a validated CHECK proving small_count >= 0; add and validate CHECK (\"small_count\" >= 0) to enforce non-negative values",
           "rule": "postgres-column-check-constraints",
@@ -2302,14 +2307,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "schema.json",
-          "line": 52,
-          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
-          "rule": "postgres-column-check-constraints",
-          "sourceLine": "\"null_count\": {",
-          "target": "column:metrics.null_count"
-        },
-        {
-          "file": "schema.json",
           "line": 64,
           "message": "schema.json: column:metrics.small_count: metrics.small_count lacks a validated CHECK proving small_count >= 0; add and validate CHECK (\"small_count\" >= 0) to enforce non-negative values",
           "rule": "postgres-column-check-constraints",
@@ -2531,14 +2528,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-column-check-constraints",
           "sourceLine": "\"broken_count\": {",
           "target": "column:metrics.broken_count"
-        },
-        {
-          "file": "schema.json",
-          "line": 52,
-          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
-          "rule": "postgres-column-check-constraints",
-          "sourceLine": "\"null_count\": {",
-          "target": "column:metrics.null_count"
         },
         {
           "file": "schema.json",
@@ -2776,14 +2765,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-column-check-constraints",
           "sourceLine": "\"broken_count\": {",
           "target": "column:metrics.broken_count"
-        },
-        {
-          "file": "schema.json",
-          "line": 52,
-          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
-          "rule": "postgres-column-check-constraints",
-          "sourceLine": "\"null_count\": {",
-          "target": "column:metrics.null_count"
         },
         {
           "file": "schema.json",

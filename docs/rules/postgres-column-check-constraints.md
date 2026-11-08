@@ -42,7 +42,8 @@ failures. Custom rule `message` is supported.
 
 ## Valid example
 
-The schema contains `CHECK (item_count >= 0)`. Its catalog records the proof:
+The schema permits NULL and enforces a non-negative bound for non-null values.
+Its catalog records nullable disjunctions and a stronger bound:
 
 ```json
 {
@@ -50,10 +51,23 @@ The schema contains `CHECK (item_count >= 0)`. Its catalog records the proof:
   "coverage": "complete",
   "tables": {
     "metrics": {
-      "columns": { "item_count": { "dataType": "integer" } },
+      "columns": {
+        "item_count": { "dataType": "integer" },
+        "paired_count": { "dataType": "integer" },
+        "strong_count": { "dataType": "integer" },
+        "other": { "dataType": "integer" }
+      },
       "checkConstraints": {
         "metrics_count_non_negative": {
-          "definition": "CHECK (item_count >= 0)",
+          "definition": "CHECK ((item_count IS NULL) OR (item_count >= 0))",
+          "validated": true
+        },
+        "metrics_paired_non_negative": {
+          "definition": "CHECK (((other IS NULL) AND (paired_count IS NULL)) OR ((other IS NOT NULL) AND (paired_count IS NOT NULL) AND (paired_count >= 0)))",
+          "validated": true
+        },
+        "metrics_strong_non_negative": {
+          "definition": "CHECK (strong_count > 1)",
           "validated": true
         }
       }
@@ -71,6 +85,17 @@ constraints count; `NOT VALID` does not establish the invariant for existing row
 Non-enforced constraints do not count.
 Nullable columns remain nullable: this rule proves a lower bound for non-null
 values and does not require `NOT NULL`.
+
+A disjunction proves the requirement when every branch either proves the same
+column's non-negative bound or implies that column is NULL. Both nullable
+forms in the catalog example above therefore pass, as does `CHECK (strong_count > 1)`.
+
+Proofs combine by union across `AND` and intersection across `OR`, separately
+for each column. `column IS NULL` also satisfies this non-null lower-bound
+requirement by permitting only NULL. PostgreSQL accepts a CHECK whose result is
+TRUE or UNKNOWN, so a proof must make the check FALSE for a negative, non-null
+column value. An unrelated nullable condition or `OR NULL` does not establish
+that proof.
 
 ## What it requires
 
@@ -102,9 +127,11 @@ when `archived` is true. The catalog preserves that conditional check:
 }
 ```
 
-An `OR`, negation, transformed column, or check on another column cannot prove
-the required bound. Unsupported expressions conservatively leave the proof
-missing. Findings identify `table.column` and the required `column >= 0` proof.
+A disjunct that permits a negative value, such as
+`CHECK ((item_count >= 0) OR (other > 0))`, cannot prove the required bound.
+Negation, transformed columns, and checks on another column remain unsupported
+proofs. Unsupported expressions conservatively leave the proof missing.
+Findings identify `table.column` and the required `column >= 0` proof.
 
 ## Fix
 

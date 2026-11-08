@@ -34,3 +34,34 @@ test(
     assert.deepEqual(reported.rules, report.advisories);
   },
 );
+
+test(
+  "compiled column CHECK proofs accept nullable OR branches and retain negative controls",
+  { skip: !compiled },
+  async () => {
+    const api = require("../index.js");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/postgres-column-check-constraints/fixture/disjunctions",
+    );
+    const config = join(root, "../../configs/catalog.yml");
+    const report = await api.check({ root, config });
+    const targets = report.advisories.map((finding) => finding.target).sort();
+    assert.deepEqual(
+      targets,
+      [
+        "nested_unsafe_count",
+        "nonnull_count",
+        "unknown_count",
+        "unsafe_count",
+        "unvalidated_or_count",
+        "weak_or_count",
+        "wrong_null_count",
+      ]
+        .map((column) => `column:metrics.${column}`)
+        .sort(),
+    );
+    const prepared = await api.analyzeProject({ root, reports: [{ type: "check", config }] });
+    assert.deepEqual(prepared.reports[0].result, report);
+  },
+);
