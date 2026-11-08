@@ -19,6 +19,12 @@
         "stdout": "",
         "stderr": "",
         "request": "publish"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": "",
+        "request": "version"
       }
     ],
     "tags": [
@@ -45,6 +51,12 @@
         "stdout": "",
         "stderr": "",
         "request": "publish"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": "",
+        "request": "version"
       }
     ],
     "tags": [
@@ -119,6 +131,12 @@
         "stdout": "",
         "stderr": "",
         "request": "publish"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": "",
+        "request": "version"
       }
     ],
     "tags": [
@@ -246,6 +264,12 @@
         "stdout": "",
         "stderr": "",
         "request": "publish"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": "",
+        "request": "version"
       }
     ],
     "tags": [
@@ -428,6 +452,12 @@
         "stdout": "",
         "stderr": "",
         "request": "publish"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": "",
+        "request": "version"
       }
     ],
     "tags": [
@@ -479,6 +509,12 @@
         "stdout": "",
         "stderr": "",
         "request": "publish"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": "",
+        "request": "version"
       }
     ],
     "tags": [
@@ -608,6 +644,12 @@
         "stdout": "",
         "stderr": "",
         "request": "publish"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": "",
+        "request": "version"
       }
     ],
     "tags": [
@@ -617,5 +659,140 @@
     "delays": [
       10000
     ]
+  },
+  {
+    "name": "successful upload missing from packument fails without retry",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "request": "publish"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "error": "missing from the packument.*possibly staged but unpromoted",
+    "packageName": "no-mistakes-darwin-arm64"
+  },
+  {
+    "name": "previously staged E409 fails distinctly without retry",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "npm error 409 Conflict - Cannot publish over previously staged version \"0.109.8\".",
+        "request": "publish"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "error": "previously staged.*not visible",
+    "packageName": "no-mistakes-darwin-arm64"
+  },
+  {
+    "name": "previously staged response with visible version is accepted",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "E409 Cannot publish over previously staged version \"0.109.8\".",
+        "request": "publish"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": "",
+        "request": "version"
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "packageName": "no-mistakes-darwin-arm64"
+  },
+  {
+    "name": "successful upload metadata outage fails closed",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "request": "publish"
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "E503",
+        "request": "version"
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "error": "npm view",
+    "packageName": "no-mistakes-darwin-arm64"
   }
 ]

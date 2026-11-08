@@ -55,10 +55,15 @@ async function publish(packageName, version, { run = npm, sleep = delay } = {}) 
       if (error.code !== "ETIMEDOUT") throw error;
       result = { status: 1, stdout: "", stderr: `${error.code}: ${error.message}` };
     }
-    if (result.status === 0) return;
     // A failed response can follow a successful registry write.
     if (view(run, `${packageName}@${version}`, "version") === version) return;
+    if (result.status === 0) {
+      throw new Error(`npm publish ${packageName}@${version} succeeded but the version is missing from the packument; possibly staged but unpromoted. Stop this release and inspect npm publication status before resuming the same tag. See docs/development/release.md.`);
+    }
     const output = `${result.stdout}\n${result.stderr}`;
+    if (/previously staged version/i.test(output)) {
+      throw new Error(`npm publish ${packageName}@${version} was previously staged but is not visible in the packument. Stop this release and inspect npm publication status before resuming the same tag. See docs/development/release.md. Registry response: ${output}`);
+    }
     const transient = /TLOG_CREATE_ENTRY_ERROR|\b(?:E429|E5\d\d|ECONNRESET|EPIPE|ETIMEDOUT|EAI_AGAIN|ECONNREFUSED)\b/.test(output);
     if (!transient || attempt === 3) throw new Error(`npm publish ${packageName}@${version} failed: ${output}`);
     console.log(`Transient publish failure for ${packageName}@${version}; retry ${attempt}/2`);

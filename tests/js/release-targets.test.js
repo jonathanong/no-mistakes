@@ -133,7 +133,7 @@ test("Cargo publication overlaps the native and npm path after validation", () =
   assert.match(npm, /^ {4}needs:\n {6}- prepare\n {6}- validate\n {6}- build-native$/m);
 });
 
-test("ESLint publication overlaps native builds and gates root publication", () => {
+test("ESLint publication waits for native and root package verification", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
   const eslint = workflow.match(/^ {2}publish-eslint:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
   const root = workflow.match(/^ {2}publish-js:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
@@ -141,7 +141,7 @@ test("ESLint publication overlaps native builds and gates root publication", () 
   assert.ok(eslint, "source-only ESLint publication must have its own job");
   assert.ok(root);
   assert.ok(verifyRoot);
-  assert.match(eslint, /^ {4}needs:\n {6}- prepare\n {6}- validate$/m);
+  assert.match(eslint, /^ {4}needs:\n {6}- prepare\n {6}- verify-npm-root$/m);
   assert.match(eslint, /ref: \$\{\{ needs\.prepare\.outputs\.release-sha \}\}/);
   assert.match(eslint, /^ {6}contents: read$/m);
   assert.match(eslint, /^ {6}id-token: write$/m);
@@ -150,7 +150,9 @@ test("ESLint publication overlaps native builds and gates root publication", () 
   assert.match(eslint, /^ {12}eslint-plugin-no-mistakes$/m);
   assert.doesNotMatch(eslint, /^ {12}no-mistakes$/m);
   assert.match(eslint, /publish-npm\.cjs" "\$pkg" "\$version"/);
-  assert.match(root, /^ {6}- publish-eslint$/m);
+  assert.match(root, /^ {6}- verify-npm-platform$/m);
+  assert.match(verifyRoot, /^ {6}- publish-js$/m);
+  assert.doesNotMatch(root, /^ {6}- publish-eslint$/m);
   assert.match(eslint, /--timeout-ms 1800000/);
   assert.doesNotMatch(root, /eslint-plugin-no-mistakes/);
   assert.doesNotMatch(verifyRoot, /publish-eslint/);
@@ -353,7 +355,8 @@ test("release publication requires both parallel validation suites", () => {
     "pnpm run fmt:js:check",
     "pnpm run lint:js",
     "pnpm run lint:spell",
-    "pnpm test",
+    "pnpm run test:ci",
+    "pnpm run test:timeout-policy-browser",
   ]) {
     assert.ok(js.includes(`run: ${command}\n`), command);
   }
@@ -379,7 +382,7 @@ test("release publication requires both parallel validation suites", () => {
       assert.equal(result.status === 0, rustResult === "success" && jsResult === "success");
     }
   }
-  for (const publisher of ["publish", "publish-cargo", "publish-eslint"]) {
+  for (const publisher of ["publish", "publish-cargo"]) {
     assert.match(job(publisher), /^ {6}- validate$/m);
   }
 });

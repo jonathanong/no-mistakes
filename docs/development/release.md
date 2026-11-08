@@ -1,4 +1,4 @@
-<!-- cspell:ignore Sigstore TLOG -->
+<!-- cspell:ignore Sigstore TLOG packument unpromoted -->
 
 # Release stages
 
@@ -10,14 +10,12 @@ Cargo publication depends on validation, but does not consume native artifacts.
 It therefore runs independently of the native builds and npm publication. It
 retains Cargo's package verification and the existing version-resume checks.
 The native npm path waits for validation and every native build. The root npm
-package still waits for installation and addon-loading verification of all four
-platform packages and successful ESLint plugin publication. The release workflow
-succeeds only when every job succeeds.
-The source-only ESLint package also publishes after validation, independently
-of native builds. The root publish waits for the plugin job, including its
-tarball verification, so a failed plugin publish blocks the root package. Each
-channel still checks tarball availability and retains its resume checks. A failed
-channel can leave another channel published;
+package waits for installation and addon-loading verification of all four
+platform packages. ESLint plugin publication then waits for the root package's
+tarball verification, installation, and addon-loading checks on every platform.
+A native or root failure therefore prevents publishing a plugin whose matching
+`no-mistakes` peer is unavailable. The release workflow succeeds only when every
+job succeeds. A failed channel can still leave an earlier channel published;
 resume the same tagged version to complete the release instead of bumping again.
 
 ## npm retry and backfill safety
@@ -32,7 +30,32 @@ three publish attempts
 with 10 and 20 second delays. Other failures stop the job. Registry lookup errors
 other than a missing version fail closed. Each npm command has a two minute
 process deadline and a one minute fetch timeout with npm fetch retries disabled.
-Existing tarball checks still verify availability after publication.
+After every upload response, including success, the helper makes one bounded
+version lookup before entering the tarball wait. A successful upload with a
+missing version fails immediately with a possibly staged-but-unpromoted error.
+A registry response saying `previously staged version` with no visible version
+fails distinctly without retrying the upload. The post-upload lookup has the
+same two minute process deadline; missing metadata cannot consume the subsequent
+30 minute tarball wait. Visible versions retain that wait and checksum
+verification because tarball propagation can legitimately take longer.
+
+### Staged publication recovery
+
+The 0.109.27 incident returned `Cannot publish over previously staged version`
+for `no-mistakes-darwin-arm64` while the version remained absent from the
+packument. That establishes a staged upload without a publicly visible version;
+it does not establish whether npm processing, provenance, or package settings
+prevented promotion. A missing post-upload version can also reflect propagation,
+so the helper reports it as a possible staging problem and stops conservatively.
+
+On either error, inspect npm publication status and package settings, and retain
+the registry response in the release logs. Check the exact version's metadata
+with `npm view <package>@<version> version --json`. Do not repeatedly republish a
+staged version or move dist-tags to hide the failure. Resolve the staging state
+with npm support if necessary, then resume the same release tag once the version
+is visible. If npm cannot recover that version, explicitly retire the partial
+release before preparing a new version; already published immutable packages
+cannot be overwritten. No release is triggered automatically by these checks.
 
 The helper reads each package's current `dist-tags.latest` before publishing.
 An older version uses `--tag backfill`; a stable version at least as new as the
@@ -68,11 +91,11 @@ waits would not remove the slowest package's availability deadline.
 
 The root npm tarball became fetchable at 01:43:30 UTC, but the same job waited
 until 01:46:54 UTC for the unrelated ESLint tarball before starting root
-installation checks. Independent ESLint publication moves that upload and
-registry wait earlier, after validation. In the previous `0.87.3` run the gap
-was only ten seconds. The plugin upload still starts early, but root publication
-now waits for its success to keep package versions aligned. These observations
-do not establish the end-to-end duration of a future release.
+installation checks. The earlier independent ESLint publication moved that upload
+and registry wait ahead of root publication. In the previous `0.87.3` run the gap was only ten
+seconds. Publication now prioritizes peer availability: ESLint waits for root
+verification. These historical observations do not establish the end-to-end
+duration of the current release graph.
 
 ## Parallel validation
 
@@ -81,7 +104,10 @@ independent jobs. The Rust job retains formatting, Rust linting, the full Rust s
 with PostgreSQL 18 fixtures, and Cargo package verification. It still installs
 and builds the JavaScript fixtures used by Rust tests. The JavaScript job retains
 formatting, lint, spelling, Chromium browser tests, the full coverage-gated test
-suite, and npm package dry runs.
+suite, and npm package dry runs. Like CI, release runs `pnpm run test:ci` with
+a five minute step deadline, followed by `pnpm run test:timeout-policy-browser`
+under its own five minute deadline. Together these cover the full JavaScript
+suite without adding the browser suites to the coverage step's deadline.
 
 The `Validate` join succeeds only when both jobs succeed. A failed, cancelled,
 or skipped suite blocks all publication channels. Native compilation continues
