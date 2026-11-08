@@ -38,6 +38,20 @@ reports with the sibling compiled CLI, including SQL advisory aggregation.
 The Linux JavaScript job builds the CLI before the addon so both artifacts are
 available to these parity tests, as in the native platform matrix.
 
+When a Rust rule changes findings or advisories, run its compiled API parity
+tests alongside its Rust snapshots before pushing. The declaration checks and
+ordinary JavaScript discovery do not execute the native rule implementation.
+For PostgreSQL catalog bounds, build the CLI and addon as above, copy the shared
+library to a `.node` file, then run the focused CJS/ESM/project-report replay:
+
+```sh
+NO_MISTAKES_TEST_NAPI_ADDON_PATH=/absolute/path/to/no-mistakes.node \
+  node --test packages/no-mistakes/scripts/postgres-catalog-bounds-api.test.js
+```
+
+Keep the compiled CLI beside the addon when running the broader SQL verdict
+parity suite.
+
 <!-- cspell:ignore libtest pkgcfg RUSTC -->
 
 The native macOS and Windows jobs also run `suite_cli_postgres` tests matching

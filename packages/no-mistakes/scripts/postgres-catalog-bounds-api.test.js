@@ -26,8 +26,14 @@ test(
       ["../materialized-bodies/fixture", "imported-report.yml", 1],
       ["../materialized-bodies/fixture", "imported-advise.yml", 0],
       ["../materialized-bodies/fixture", "tagged-imported-advise.yml", 0],
-      ["../materialized-bodies/fixture", "advise.yml", 2],
-      ["../materialized-bodies/fixture", "tagged-advise.yml", 2],
+      ["../materialized-bodies/fixture", "advise.yml", 8],
+      ["../materialized-bodies/fixture", "tagged-advise.yml", 8],
+      ["../issue-3151/fixture", "advise.yml", 13],
+      ["../issue-3151/fixture", "report.yml", 15],
+      ["../issue-3151/fixture", "ignore.yml", 13],
+      ["../issue-3151/fixture", "off.yml", 0],
+      ["../issue-3151/fixture", "dml-update.yml", 1],
+      ["../issue-3151/fixture", "dml-delete.yml", 1],
       ["../materialized-bodies/owners", "updates.yml", 3],
       ["../materialized-bodies/owners", "deletes.yml", 3],
       ["../materialized-bodies/owners", "selects.yml", 1],
@@ -71,17 +77,99 @@ test(
         directory === "../materialized-bodies/fixture" &&
         (config === "advise.yml" || config === "tagged-advise.yml")
       ) {
-        assert.equal(standalone.advisories.length, 22);
+        assert.equal(standalone.advisories.length, 15);
         assert.equal(
           standalone.advisories.filter((row) => row.file === "table.sql" && row.line === 1).length,
-          2,
+          1,
         );
         assert.equal(
           standalone.advisories.filter((row) => row.file === "clauses.sql" && row.line === 5)
             .length,
-          2,
+          0,
         );
+        for (const [file, line] of [
+          ["bodies.sql", 53],
+          ["bodies.sql", 58],
+          ["catalog.sql", 7],
+          ["clauses.sql", 3],
+          ["clauses.sql", 5],
+          ["table.sql", 1],
+        ]) {
+          assert.ok(
+            standalone.rules.some(
+              (row) =>
+                row.file === file &&
+                row.line === line &&
+                row.message.includes("SELECT can return every row"),
+            ),
+            `${config}: ${file}:${line}`,
+          );
+        }
+        assert.ok(standalone.advisories.every((row) => row.target === "materialized-body"));
         assert.deepEqual((await cjs.check({ root, config })).advisories, standalone.advisories);
+      }
+      if (directory === "../issue-3151/fixture") {
+        const ordinarySites = [
+          "cast-mismatch.sql:1",
+          "cross-column-control.sql:1",
+          "cross-or-control.sql:1",
+          "different-literals.sql:1",
+          "different-parameters.sql:1",
+          "dml-scalars.sql:1",
+          "dml-scalars.sql:2",
+          "open-range.sql:1",
+          "or-range.sql:1",
+          "scalar-different-parameters.sql:1",
+          "unbounded-coalesce.sql:1",
+          "unbounded-scalar.sql:1",
+          "volatile-range.sql:1",
+        ];
+        const poolSites = ["nested-pool.sql:1", "unbounded-pool.sql:1"];
+        let expectedSites = ordinarySites;
+        if (config === "report.yml") expectedSites = [...ordinarySites, ...poolSites];
+        if (config === "off.yml") expectedSites = [];
+        if (config === "dml-update.yml") expectedSites = ["dml-scalars.sql:1"];
+        if (config === "dml-delete.yml") expectedSites = ["dml-scalars.sql:2"];
+        const site = (row) => `${row.file}:${row.line}`;
+        assert.deepEqual(standalone.rules.map(site).sort(), expectedSites.toSorted(), config);
+        assert.ok(standalone.rules.every((row) => row.target === "table:members"));
+        assert.deepEqual(
+          standalone.advisories.map(site).sort(),
+          config === "advise.yml" ? poolSites : [],
+          config,
+        );
+        assert.ok(standalone.advisories.every((row) => row.target === "materialized-body"));
+        for (const file of [
+          "closed-parameter.sql",
+          "closed-literal.sql",
+          "closed-reversed.sql",
+          "closed-or-branches.sql",
+          "closed-parenthesized.sql",
+          "closed-negative.sql",
+          "closed-string.sql",
+          "scalar-select.sql",
+          "scalar-coalesce.sql",
+          "scalar-closed.sql",
+        ]) {
+          assert.ok(
+            ![...standalone.rules, ...standalone.advisories].some((row) => row.file === file),
+            `${config}: bounded lookup ${file}`,
+          );
+        }
+        if (["advise.yml", "report.yml", "ignore.yml"].includes(config)) {
+          for (const file of [
+            "unbounded-scalar.sql",
+            "unbounded-coalesce.sql",
+            "scalar-different-parameters.sql",
+          ]) {
+            assert.ok(
+              standalone.rules.some(
+                (row) => row.file === file && row.message.includes("SELECT can return every row"),
+              ),
+              `${config}: ${file}`,
+            );
+          }
+        }
       }
       if (directory === "../materialized-bodies/probes" && config === "advise.yml") {
         assert.equal(standalone.advisories.length, 17);
