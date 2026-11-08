@@ -19,14 +19,14 @@ Inputs: `test-cases/rules/postgres-bounded-statements/issue-3114-exact/fixture`.
 All four exact classes fail on main. Their already-passing one-detail variants
 remain regression coverage and are not claimed as newly fixed.
 
-| Configuration | Main statements | Candidate statements | Retained control |
-| --- | ---: | ---: | --- |
-| R1 nested modifying UPDATE FROM CTE | 2 | 1 | Non-key write driver |
-| R2 typed UNNEST through ARRAY subquery | 3 | 2 | Unbounded table / opaque function |
-| R3 recursive DELETE USING | 6 | 4 | Physical walk, capped anchor, SELECT, unsupported donor |
-| R4 unqualified bounded column beside view | 4 | 2 | Ambiguous name / unknown wildcard projection |
-| No configured rules | 0 | 0 | Whole report unchanged |
-| SQL rule only, bounded rule off | 1 | 1 | Offset finding unchanged |
+| Configuration                             | Main statements | Candidate statements | Retained control                                        |
+| ----------------------------------------- | --------------: | -------------------: | ------------------------------------------------------- |
+| R1 nested modifying UPDATE FROM CTE       |               2 |                    1 | Non-key write driver                                    |
+| R2 typed UNNEST through ARRAY subquery    |               3 |                    2 | Unbounded table / opaque function                       |
+| R3 recursive DELETE USING                 |               6 |                    4 | Physical walk, capped anchor, SELECT, unsupported donor |
+| R4 unqualified bounded column beside view |               4 |                    2 | Ambiguous name / unknown wildcard projection            |
+| No configured rules                       |               0 |                    0 | Whole report unchanged                                  |
+| SQL rule only, bounded rule off           |               1 |                    1 | Offset finding unchanged                                |
 
 Six statement findings are fixed and nine negative statements remain reported.
 Recursive finite changed-key domains do not certify finite recursive rows or
@@ -64,19 +64,19 @@ fixture findings: 1,056 → 1,053), so timings are end-to-end observations.
 
 Mean times in milliseconds, A baseline → B candidate:
 
-| Run / configuration | User CPU | Wall |
-| --- | ---: | ---: |
-| balanced: r1 | 9.125 → 8.632 | 13.252 → 14.061 |
-| balanced: r2 | 8.641 → 8.920 | 12.969 → 14.235 |
-| balanced: r3 | 9.751 → 10.666 | 14.688 → 15.767 |
-| balanced: r4 | 9.480 → 9.801 | 13.842 → 14.901 |
-| balanced: off | 5.107 → 5.023 | 10.584 → 11.208 |
-| balanced: off-sql | 11.588 → 11.067 | 13.318 → 13.852 |
-| reverse: off | 5.043 → 4.876 | 10.546 → 10.788 |
-| reverse: off-sql | 11.540 → 11.432 | 13.348 → 13.566 |
-| wide-balanced: on | 462.182 → 458.742 | 250.518 → 246.869 |
-| wide-balanced: off | 177.955 → 175.413 | 41.130 → 41.303 |
-| wide-reverse: off | 171.825 → 172.059 | 38.912 → 39.127 |
+| Run / configuration |          User CPU |              Wall |
+| ------------------- | ----------------: | ----------------: |
+| balanced: r1        |     9.125 → 8.632 |   13.252 → 14.061 |
+| balanced: r2        |     8.641 → 8.920 |   12.969 → 14.235 |
+| balanced: r3        |    9.751 → 10.666 |   14.688 → 15.767 |
+| balanced: r4        |     9.480 → 9.801 |   13.842 → 14.901 |
+| balanced: off       |     5.107 → 5.023 |   10.584 → 11.208 |
+| balanced: off-sql   |   11.588 → 11.067 |   13.318 → 13.852 |
+| reverse: off        |     5.043 → 4.876 |   10.546 → 10.788 |
+| reverse: off-sql    |   11.540 → 11.432 |   13.348 → 13.566 |
+| wide-balanced: on   | 462.182 → 458.742 | 250.518 → 246.869 |
+| wide-balanced: off  | 177.955 → 175.413 |   41.130 → 41.303 |
+| wide-reverse: off   | 171.825 → 172.059 |   38.912 → 39.127 |
 
 The strengthened harness also passes a [recheck](harness-recheck.json) with
 explicit binary identities, rule-off byte comparisons and validated RSS reports.
@@ -133,3 +133,27 @@ physical lines and tests within 500. No inline fixture writes were added.
 Tests use isolated temporary directories because an existing `/tmp/.git`
 changes an unrelated ancestor-ignore fixture. Cargo artifacts remain under
 `/tmp`; the main workspace target is never cleaned.
+
+## Output-label follow-up
+
+The rejected head was `62f2a4fac9973cd07490133f812d0fb234e7bd28`; the corrected
+production source is `027df26cf1b07a4dbb2a11bfe75769a6968a1d19`, rebased on
+`ffdd24de80a8e002f40633dbf8f219e5c5ffb54f`. This comparison includes that rebase.
+Matching locked default-feature **dev** builds use rustc 1.99.1 and six Cargo
+build jobs in separate task-owned targets. CLI effort is default with `--jobs 1`.
+Instruction counters remain unavailable, so these are user-CPU observations.
+
+[Raw samples](follow-up.csv) use fresh processes, warmed OS cache, and balanced
+A/B/B/A order: ten samples per binary for each SQL workload, four for the
+repository check. User CPU is 30.451→31.065 ms for the follow-up fixture,
+26.083→24.625 ms for rule-off SQL, and 3.172073→3.158721 s for the repository.
+The new fixture changes 11 grouped findings to six retained controls. R1–R4,
+empty/off SQL controls and repository JSON remain byte-identical, including
+stderr and exit status for the exact controls. No speedup or equivalence claim
+is made. [Summary and binary hashes](follow-up-summary.json) retain provenance.
+
+From the corrected checkout, reproduce with `python3
+ docs/work-evidence/postgres-bounded-3114-exact/measure_follow_up.py --before
+ <rejected-cli> --after <corrected-cli> --output <empty-output-directory>`.
+Build the two executables in separate targets under `/tmp` with the shared
+Cargo lock and remove those targets after measurement.
