@@ -47,6 +47,25 @@ on an outer CTE or referenced view are not pushed into its definition. Flatten
 parenthesized joins into explicit joins with base-table WHERE bounds when a
 definition needs review.
 
+Supported `FROM` sources are plain tables, catalog views, CTE references,
+and derived `SELECT` subqueries, with ordinary alias names and explicit joins.
+Sampling, version clauses, hints, and other source extensions require review.
+Column-list aliases on named tables, catalog views, or CTE references also
+require review because they can change which catalog column a predicate names.
+Derived `SELECT` column-list aliases remain supported: they do not change the
+inner base-table proof. Function calls in `FROM`, `UNNEST`, and other unsupported
+`FROM` factors produce a definition-review finding, even when their arguments
+are constants.
+Subqueries inside function arguments may read growing tables that the source
+collector cannot establish as bounded. `windowFunctions` configures predicate
+functions; it does not exempt a function used as a `FROM` source.
+
+Every nested query must be visited by the shared source collector. A subquery
+hidden in a location such as `DISTINCT ON` or a named `WINDOW` clause requires
+review; ordinary expressions in those clauses remain supported. Move such a
+subquery into an explicit CTE or derived `SELECT`, with bounds at its base-table
+reads, when that rewrite preserves the query's semantics.
+
 Findings identify the materialized view and the missing index or unbounded
 base table. Catalog scope filters apply to `schemaCatalogPath`.
 
@@ -156,6 +175,18 @@ or a configured key-window function to every growing base-table read. Use a
 reasoned base-table allowance only for tables whose size is bounded by their
 domain contract, then regenerate the catalog.
 
+For an unsupported `FROM` function, expose its base-table reads in a bounded
+CTE or derived `SELECT`, with the window at each actual read. Move a
+set-returning call into the `SELECT` projection only when that rewrite
+preserves the query's results, row multiplicity, and correlation. If no
+supported equivalent preserves the semantics, allow the materialized view
+under `options.allow` with a reason. A base-table allowance does not suppress
+an unsupported `FROM` factor. For a named-table or CTE column-list alias,
+move column renaming into the `SELECT` projection and use catalog column names
+in predicates. Replace sampling or source extensions with an equivalent
+supported query only when its semantics are preserved; otherwise record a
+reasoned whole-view allowance.
+
 ## Analysis
 
 ### Effort
@@ -167,8 +198,9 @@ not collect executor facts from TS/JS.
 ### Unanalyzable inputs
 
 A missing, unreadable, or invalid catalog is a configuration error. An ordering-only catalog produces an incomplete-input error; regenerate it with `postgres catalog --coverage complete`. A definition
-that the shared SQL parser cannot analyze, an unsupported `TABLE` set-operation arm, or a parenthesized join is reported for review; it does not
-establish that its base tables are bounded. The rule does not infer application
+that the shared SQL parser cannot analyze, an unsupported `TABLE` set-operation
+arm, a parenthesized join, or an unsupported `FROM` factor is reported for
+review; it does not establish that its base tables are bounded. The rule does not infer application
 growth rates or inspect refresh scheduling.
 
 ## Suppression

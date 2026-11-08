@@ -23,6 +23,7 @@ pub(super) fn walk_relation<'a>(
     gathered: &mut Gather<'a>,
     projection: &impl Projection,
 ) {
+    projection.inspect_factor(factor);
     match factor {
         TableFactor::Table {
             name, alias, args, ..
@@ -48,7 +49,6 @@ pub(super) fn walk_relation<'a>(
         TableFactor::NestedJoin {
             table_with_joins, ..
         } => {
-            projection.nested_join();
             walk_relation(
                 &table_with_joins.relation,
                 joined,

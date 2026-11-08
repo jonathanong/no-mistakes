@@ -1931,6 +1931,294 @@
           ]
         }
       }
+    },
+    "bad_from_function_subquery": {
+      "materialized": true,
+      "definition": "SELECT * FROM generate_series(1, (SELECT max(id) FROM events)) AS g(id)",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "bad_lateral_function_subquery": {
+      "materialized": true,
+      "definition": "SELECT * FROM LATERAL generate_series(1, (SELECT max(id) FROM events)) AS g(id)",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "bad_unnest_subquery": {
+      "materialized": true,
+      "definition": "SELECT * FROM UNNEST(ARRAY[(SELECT max(id) FROM events)]) AS g(id)",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "good_from_function_rewrite": {
+      "materialized": true,
+      "definition": "SELECT generate_series(1, (SELECT count(*) FROM events WHERE id BETWEEN 100 AND 200)) AS id",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "bad_renamed_table_columns": {
+      "materialized": true,
+      "definition": "SELECT * FROM events AS e(payload, created_at, id) WHERE e.id >= '100'",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "payload",
+              "expression": "payload"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "bad_distinct_subquery": {
+      "materialized": true,
+      "definition": "SELECT DISTINCT ON ((SELECT max(id) FROM events)) * FROM events WHERE id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_named_window_subquery": {
+      "materialized": true,
+      "definition": "SELECT *, row_number() OVER w AS pos FROM events WHERE id >= 100 WINDOW w AS (ORDER BY (SELECT max(id) FROM events))",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_named_window": {
+      "materialized": true,
+      "definition": "SELECT *, row_number() OVER w AS pos FROM events WHERE id BETWEEN 100 AND 200 WINDOW w AS (ORDER BY created_at)",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_derived_column_alias": {
+      "materialized": true,
+      "definition": "SELECT * FROM (SELECT * FROM events WHERE id BETWEEN 100 AND 200) AS bounded(event_id, occurred_at, event_payload)",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "event_id",
+              "expression": "event_id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "occurred_at",
+              "expression": "occurred_at"
+            }
+          ]
+        }
+      }
     }
   }
 }

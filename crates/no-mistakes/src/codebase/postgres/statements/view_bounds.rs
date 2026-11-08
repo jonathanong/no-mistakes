@@ -1,9 +1,11 @@
 use super::{predicates::Projection, SqlSelectFact};
 use crate::codebase::postgres::{CatalogView, PostgresParseError, SchemaCatalog};
-use sqlparser::ast::{BinaryOperator, Expr};
-use std::cell::Cell;
+use sqlparser::ast::{BinaryOperator, Expr, Query, TableFactor};
+use std::cell::{Cell, RefCell};
+use std::collections::HashSet;
 
 mod keys;
+mod queries;
 mod scalar;
 
 pub(crate) const BOUNDED_VIEW_MARKER: &str = "__no_mistakes_bounded_view__";
@@ -18,7 +20,8 @@ pub(crate) fn bounded_view_selects(
     let projection = Bounds {
         functions,
         catalog,
-        table_arm: Cell::new(false),
+        unsupported: Cell::new(false),
+        queries: RefCell::new(HashSet::new()),
     };
     let mut selects = Vec::new();
     super::select::collect_query_projected(
@@ -30,7 +33,7 @@ pub(crate) fn bounded_view_selects(
         super::select::policy(None, &projection),
         &mut selects,
     );
-    if projection.table_arm.get() {
+    if projection.unsupported.get() || !queries::complete(&query, &projection.queries.borrow()) {
         return Err(unsupported());
     }
     Ok(selects)
@@ -39,7 +42,7 @@ pub(crate) fn bounded_view_selects(
 fn unsupported() -> PostgresParseError {
     PostgresParseError {
         message:
-            "expected a static SELECT definition without TABLE query arms or parenthesized joins"
+            "expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses"
                 .into(),
     }
 }
@@ -47,7 +50,8 @@ fn unsupported() -> PostgresParseError {
 struct Bounds<'a> {
     functions: &'a [String],
     catalog: &'a SchemaCatalog,
-    table_arm: Cell<bool>,
+    unsupported: Cell<bool>,
+    queries: RefCell<HashSet<*const Query>>,
 }
 
 impl Projection for Bounds<'_> {
@@ -59,12 +63,44 @@ impl Projection for Bounds<'_> {
         crate::codebase::postgres::idents::relation_suffix_name(table) == qualifier
     }
 
-    fn nested_join(&self) {
-        self.table_arm.set(true);
+    fn table_arm(&self) {
+        self.unsupported.set(true);
     }
 
-    fn table_arm(&self) {
-        self.table_arm.set(true);
+    fn inspect_query(&self, query: &Query) {
+        self.queries.borrow_mut().insert(std::ptr::from_ref(query));
+    }
+
+    fn inspect_factor(&self, factor: &TableFactor) {
+        let supported = match factor {
+            TableFactor::Table {
+                name: _,
+                args: None,
+                sample: None,
+                version: None,
+                json_path: None,
+                with_ordinality: false,
+                with_hints,
+                partitions,
+                index_hints,
+                alias,
+            } => {
+                with_hints.is_empty()
+                    && partitions.is_empty()
+                    && index_hints.is_empty()
+                    && alias.as_ref().is_none_or(|alias| alias.columns.is_empty())
+            }
+            TableFactor::Derived {
+                lateral: _,
+                subquery: _,
+                alias: _,
+                sample: None,
+            } => true,
+            _ => false,
+        };
+        if !supported {
+            self.unsupported.set(true);
+        }
     }
 
     fn map<'a>(

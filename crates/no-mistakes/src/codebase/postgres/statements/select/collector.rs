@@ -19,6 +19,7 @@ pub(in crate::codebase::postgres::statements) fn collect_query_projected(
     policy: Policy<'_, impl Projection>,
     out: &mut Vec<SqlSelectFact>,
 ) {
+    policy.projection.inspect_query(query);
     let mut ctes = outer_ctes.to_vec();
     if let Some(with) = &query.with {
         if with.recursive {

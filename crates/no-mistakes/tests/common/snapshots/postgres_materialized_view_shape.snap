@@ -468,6 +468,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
+          "message": "schema.json: materialized-view:bad_distinct_subquery: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_distinct_subquery"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
           "message": "schema.json: materialized-view:bad_empty_unique: missing a usable, nonpartial unique index on plain columns; add one to support REFRESH MATERIALIZED VIEW CONCURRENTLY",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
@@ -480,6 +488,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
           "target": "materialized-view:bad_foreign_schema"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_from_function_subquery: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_from_function_subquery"
         },
         {
           "file": "schema.json",
@@ -524,6 +540,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
+          "message": "schema.json: materialized-view:bad_lateral_function_subquery: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_lateral_function_subquery"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
           "message": "schema.json: materialized-view:bad_multiple_statements: cannot analyze definition: expected one static SELECT view definition; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
@@ -532,7 +556,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
-          "message": "schema.json: materialized-view:bad_nested_full_on: cannot analyze definition: expected a static SELECT definition without TABLE query arms or parenthesized joins; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "message": "schema.json: materialized-view:bad_named_window_subquery: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_named_window_subquery"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_nested_full_on: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
           "target": "materialized-view:bad_nested_full_on"
@@ -540,7 +572,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
-          "message": "schema.json: materialized-view:bad_nested_outer_on: cannot analyze definition: expected a static SELECT definition without TABLE query arms or parenthesized joins; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "message": "schema.json: materialized-view:bad_nested_outer_on: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
           "target": "materialized-view:bad_nested_outer_on"
@@ -644,6 +676,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
+          "message": "schema.json: materialized-view:bad_renamed_table_columns: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_renamed_table_columns"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
           "message": "schema.json: materialized-view:bad_table_arm: unbounded base table events; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
@@ -652,10 +692,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
-          "message": "schema.json: materialized-view:bad_union_table_arm: cannot analyze definition: expected a static SELECT definition without TABLE query arms or parenthesized joins; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "message": "schema.json: materialized-view:bad_union_table_arm: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
           "target": "materialized-view:bad_union_table_arm"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:bad_unnest_subquery: cannot analyze definition: expected a static SELECT definition without TABLE query arms, parenthesized joins, unsupported FROM factors (functions, sampling, renamed table columns), or unsupported subquery clauses; rewrite it as a supported static SELECT so refresh work is bounded, or allow this materialized view with a reason",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_unnest_subquery"
         }
       ],
       "codebase": [],

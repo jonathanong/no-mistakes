@@ -1,9 +1,13 @@
-use sqlparser::ast::{Expr, ObjectName};
+use sqlparser::ast::{Expr, ObjectName, Query, TableFactor};
 
 pub(crate) trait Projection {
     fn table_arm(&self) {}
 
-    fn nested_join(&self) {}
+    #[inline(always)]
+    fn inspect_factor(&self, _: &TableFactor) {}
+
+    #[inline(always)]
+    fn inspect_query(&self, _: &Query) {}
 
     #[inline(always)]
     fn relation_name(&self, _: &ObjectName, original: String) -> String {

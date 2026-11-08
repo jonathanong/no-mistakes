@@ -183,6 +183,12 @@ fn materialized_view_index_and_identity_edges_keep_valid_controls_clear() {
     let checked = report("edges", "edges.yml");
     let expected: BTreeSet<_> = [
         "bad_nonkey_function_equality",
+        "bad_distinct_subquery",
+        "bad_named_window_subquery",
+        "bad_renamed_table_columns",
+        "bad_from_function_subquery",
+        "bad_lateral_function_subquery",
+        "bad_unnest_subquery",
         "bad_in_list",
         "bad_function_range_nonkey",
         "bad_function_between_nonkey",
