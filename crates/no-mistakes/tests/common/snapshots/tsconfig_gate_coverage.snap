@@ -32,7 +32,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "allowlist_errors": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": ".no-mistakes.yml",
+          "import": "tsconfig-gate-coverage",
+          "line": 14,
+          "message": "stale tsconfig-gate-coverage allowProjects entry `gone/tsconfig.json` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "gone/tsconfig.json: stale entry",
+          "target": "gone/tsconfig.json"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "import": "tsconfig-gate-coverage",
+          "line": 16,
+          "message": "stale tsconfig-gate-coverage allowProjects entry `docs/readme.json` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "docs/readme.json: not a tsconfig",
+          "target": "docs/readme.json"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
