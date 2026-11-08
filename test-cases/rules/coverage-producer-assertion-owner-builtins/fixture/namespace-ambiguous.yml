@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers: [{ file: src/reexports.mts, symbol: ambiguousNamespace }]
+      assertions: [{ module: "node:assert/strict", export: ok }]

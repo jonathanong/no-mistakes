@@ -53,6 +53,20 @@ fn coverage_producer_assertion_owner_builtins_json_matches_snapshot() {
         "globals",
         "imported-callback",
         "member-callback",
+        "namespace-all",
+        "namespace-default",
+        "namespace-named",
+        "namespace-export",
+        "namespace-shadowed",
+        "map-get",
+        "array-callback",
+        "namespace-nested",
+        "namespace-ambiguous",
+        "namespace-cycle",
+        "namespace-bare",
+        "namespace-value",
+        "builtin-name-only",
+        "disabled",
     ];
     let cases: Vec<Case> = names
         .iter()
