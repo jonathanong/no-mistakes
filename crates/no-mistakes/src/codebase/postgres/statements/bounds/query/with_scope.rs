@@ -104,6 +104,9 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope_visiting_wri
         let counts =
             super::super::scalar_limit::outputs(&cte.query, &scope, positions, &cte.alias.columns);
         scope.insert(name.clone(), bound);
+        if cte.materialized == Some(sqlparser::ast::CteAsMaterialized::Materialized) {
+            scope.mark_pool(&name);
+        }
         if let Some(counts) = counts {
             scope.insert_counts(name, counts);
         }

@@ -43,7 +43,7 @@ pub(super) fn is_aggregate(name: &sqlparser::ast::ObjectName) -> bool {
 #[derive(Clone, Default)]
 pub(super) struct Scope {
     frame: Rc<ScopeFrame>,
-    bodies: Option<Rc<RefCell<Vec<SqlBoundFact>>>>,
+    bodies: Option<Rc<RefCell<bodies::Collected>>>,
     body_owner: Option<SqlBoundKind>,
     table_tokens: Option<Rc<RefCell<TableTokenCursor>>>,
     limit_columns: limit_columns::Relations,

@@ -30,7 +30,7 @@ export interface PostgresBoundedStatementsOptions {
   viewBounds?: Record<string, PostgresViewBoundMode>;
   /** Catalog `table.column` names, each with a nonempty reason. */
   columnBounds?: Record<string, PostgresColumnBound>;
-  /** Independent MATERIALIZED CTE and subquery bounds; defaults to ignore. require-bound advises. */
+  /** Independent pool-body bounds, excluding existence/correlated scalar probes. Defaults to ignore. */
   materializedBodies?: PostgresMaterializedBodyPolicy;
   effort?: Effort;
   unanalyzable?: Unanalyzable;

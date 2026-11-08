@@ -1,5 +1,20 @@
 use super::{Scope, SqlBoundFact, SqlBoundKind, SqlBoundQuery};
-use std::{cell::RefCell, rc::Rc};
+use crate::codebase::postgres::statements::SqlBoundItem;
+use std::{
+    cell::RefCell,
+    collections::{BTreeMap, BTreeSet},
+    rc::Rc,
+};
+mod expressions;
+mod pools;
+
+#[derive(Default)]
+pub(super) struct Collected {
+    facts: Vec<SqlBoundFact>,
+    references: BTreeSet<(usize, usize)>,
+    // Retained canonical CTEs prevent address reuse in request-local identity keys.
+    pools: BTreeMap<usize, Rc<SqlBoundQuery>>,
+}
 
 impl Scope {
     pub(super) fn record_subquery(&self, bound: &SqlBoundQuery, query: &sqlparser::ast::Query) {
@@ -29,7 +44,7 @@ impl Scope {
     }
 
     pub(in crate::codebase::postgres) fn enable_bodies(&mut self) {
-        self.bodies = Some(Rc::new(RefCell::new(Vec::new())));
+        self.bodies = Some(Rc::default());
     }
 
     pub(super) fn record_body(
@@ -40,13 +55,15 @@ impl Scope {
     ) {
         if let Some(bodies) = &self.bodies {
             let at = at();
-            bodies.borrow_mut().push(SqlBoundFact {
+            let mut bodies = bodies.borrow_mut();
+            let query = pools::project(query, &bodies.references);
+            bodies.facts.push(SqlBoundFact {
                 kind: self.body_owner.unwrap_or(SqlBoundKind::Select),
                 body: Some(name()),
                 line: at.0,
                 column: at.1,
                 statement_start: None,
-                query: query.clone(),
+                query,
                 target: None,
             });
         }
@@ -54,10 +71,11 @@ impl Scope {
 
     pub(super) fn finish_bodies(&self, out: &mut Vec<SqlBoundFact>) {
         if let Some(bodies) = &self.bodies {
-            let mut bodies = bodies.borrow_mut();
+            let mut collected = bodies.borrow_mut();
+            let bodies = &mut collected.facts;
             bodies.sort_by_key(|body| (body.line, body.column));
             bodies.dedup_by_key(|body| (body.line, body.column));
-            out.append(&mut bodies);
+            out.append(bodies);
         }
     }
 }
@@ -66,14 +84,21 @@ impl Scope {
     pub(super) fn expression_bodies(
         &self,
         select: &sqlparser::ast::Select,
+        items: &[SqlBoundItem],
         positions: super::super::value::PlaceholderPositions<'_>,
     ) {
-        self.expressions_at(select, || select.select_token.0.span.start, positions);
+        self.expressions_at(
+            select,
+            items,
+            || select.select_token.0.span.start,
+            positions,
+        );
     }
 
     pub(super) fn expressions_at<T: sqlparser::ast::Visit>(
         &self,
         expressions: &T,
+        items: &[SqlBoundItem],
         at: impl FnOnce() -> sqlparser::tokenizer::Location,
         positions: super::super::value::PlaceholderPositions<'_>,
     ) {
@@ -86,60 +111,6 @@ impl Scope {
             .table_tokens
             .as_ref()
             .map(|tokens| Rc::new(RefCell::new(tokens.borrow().for_body(at))));
-        let mut visitor = Expressions {
-            scope: &scope,
-            positions,
-            depth: 0,
-            derived: 0,
-        };
-        let _ = expressions.visit(&mut visitor);
-    }
-}
-
-struct Expressions<'a> {
-    scope: &'a Scope,
-    positions: super::super::value::PlaceholderPositions<'a>,
-    depth: usize,
-    derived: usize,
-}
-
-impl sqlparser::ast::Visitor for Expressions<'_> {
-    type Break = ();
-
-    fn pre_visit_query(&mut self, query: &sqlparser::ast::Query) -> std::ops::ControlFlow<()> {
-        // Builder::factor owns derived bodies; this visitor binds only expression queries.
-        if self.depth == 0 && self.derived == 0 {
-            let bound = super::query::bound_query(query, self.scope, self.positions);
-            self.scope.record_subquery(&bound, query);
-        }
-        self.depth += 1;
-        std::ops::ControlFlow::Continue(())
-    }
-
-    fn post_visit_query(&mut self, _: &sqlparser::ast::Query) -> std::ops::ControlFlow<()> {
-        self.depth -= 1;
-        std::ops::ControlFlow::Continue(())
-    }
-
-    fn pre_visit_table_factor(
-        &mut self,
-        factor: &sqlparser::ast::TableFactor,
-    ) -> std::ops::ControlFlow<()> {
-        self.derived += usize::from(matches!(
-            factor,
-            sqlparser::ast::TableFactor::Derived { .. }
-        ));
-        std::ops::ControlFlow::Continue(())
-    }
-
-    fn post_visit_table_factor(
-        &mut self,
-        factor: &sqlparser::ast::TableFactor,
-    ) -> std::ops::ControlFlow<()> {
-        self.derived -= usize::from(matches!(
-            factor,
-            sqlparser::ast::TableFactor::Derived { .. }
-        ));
-        std::ops::ControlFlow::Continue(())
+        expressions::collect(expressions, &scope, items, positions);
     }
 }

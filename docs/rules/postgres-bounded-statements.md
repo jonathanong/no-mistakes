@@ -42,13 +42,26 @@ See [rationale](postgres-bounded-statements-rationale.md).
 
 `materializedBodies` defaults to `ignore`, preserving existing findings and fact
 collection. Set it to `require-bound` (an alias of `advise`) to receive non-failing
-advisories, or `report` to make violations findings. This option checks every
-explicit `AS MATERIALIZED` CTE and subquery body independently of the surrounding
+advisories, or `report` to make violations findings. This option checks
+explicit `AS MATERIALIZED` CTEs and pool-building subquery bodies independently of the surrounding
 statement. Ordinary and `AS NOT MATERIALIZED` CTE declarations retain their
 existing behavior. Recursive bodies keep the existing depth-predicate proof.
 The `statements` filter selects the owning executed statement: selecting UPDATE
 or DELETE also checks its CTE and subquery bodies, while unrelated SELECT bodies
 remain outside that selection. Separate bodies on one line retain separate advisories.
+
+`EXISTS` and `NOT EXISTS` bodies are existence probes, so they do not receive
+independent pool diagnostics. Known correlated scalar subqueries are also
+per-row probes. `IN`, `ANY`, array subqueries and derived tables retain their
+body obligations. Materialized CTEs and pool-building bodies nested inside a
+probe are still checked.
+
+A later body that consumes an already materialized CTE inherits that pool's
+obligation. Report the unbounded source CTE once rather than repeating its
+underlying relations at every consumer. A consumer that adds a new unbounded
+scan still reports that scan; separate consumers of an ordinary inline CTE
+retain separate obligations. These body-only projections do not change the
+parent statement's cardinality or key proofs.
 
 An outer cap cannot establish a bounded candidate pool inside a body:
 

@@ -1,5 +1,6 @@
 mod blocking_query_wrappers;
 mod bodies;
+mod body_probes;
 mod caller_array_provenance;
 mod cardinality_basics;
 mod catalog_identity_edges;

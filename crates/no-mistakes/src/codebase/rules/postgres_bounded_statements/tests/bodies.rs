@@ -35,7 +35,7 @@ fn independent_bodies_do_not_borrow_outer_caps_or_predicates() {
         .iter()
         .filter(|bound| bound.body.is_some())
         .collect::<Vec<_>>();
-    assert_eq!(bodies.len(), 24);
+    assert_eq!(bodies.len(), 20);
     assert!(format!("{:?}", bodies[0]).contains("MATERIALIZED CTE candidates"));
     let counts = bodies
         .iter()
@@ -43,7 +43,7 @@ fn independent_bodies_do_not_borrow_outer_caps_or_predicates() {
         .collect::<Vec<_>>();
     assert_eq!(
         counts,
-        [1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0]
+        [1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0]
     );
     on.bounds.retain(|bound| bound.body.is_none());
     assert_eq!(on, off);

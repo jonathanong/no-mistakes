@@ -6,26 +6,26 @@ UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;
 UPDATE orders SET account_id = (SELECT id FROM accounts LIMIT 1) WHERE id = $1;
 WITH changed AS (
   UPDATE orders SET account_id = $1 WHERE id = $2
-  AND EXISTS (SELECT id FROM accounts) RETURNING id
+  AND id IN (SELECT id FROM accounts) RETURNING id
 ) SELECT id FROM changed LIMIT 1;
 WITH changed AS (
   UPDATE orders SET account_id = $1 WHERE id = $2
-  AND EXISTS (SELECT id FROM accounts LIMIT 1) RETURNING id
+  AND id IN (SELECT id FROM accounts LIMIT 1) RETURNING id
 ) SELECT id FROM changed LIMIT 1;
 
 WITH pool AS MATERIALIZED (SELECT id FROM accounts)
 DELETE FROM orders WHERE id = $1;
 WITH pool AS MATERIALIZED (SELECT id FROM accounts LIMIT 1)
 DELETE FROM orders WHERE id = $1;
-DELETE FROM orders WHERE id = $1 AND EXISTS (SELECT id FROM accounts);
-DELETE FROM orders WHERE id = $1 AND EXISTS (SELECT id FROM accounts LIMIT 1);
+DELETE FROM orders WHERE id = $1 AND id IN (SELECT id FROM accounts);
+DELETE FROM orders WHERE id = $1 AND id IN (SELECT id FROM accounts LIMIT 1);
 WITH changed AS (
   DELETE FROM orders WHERE id = $1
-  AND EXISTS (SELECT id FROM accounts) RETURNING id
+  AND id IN (SELECT id FROM accounts) RETURNING id
 ) SELECT id FROM changed LIMIT 1;
 WITH changed AS (
   DELETE FROM orders WHERE id = $1
-  AND EXISTS (SELECT id FROM accounts LIMIT 1) RETURNING id
+  AND id IN (SELECT id FROM accounts LIMIT 1) RETURNING id
 ) SELECT id FROM changed LIMIT 1;
 
 WITH pool AS MATERIALIZED (SELECT id FROM accounts)

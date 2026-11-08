@@ -429,5 +429,14 @@ fn postgres_bounded_statements_bodies_check_json_snapshot() {
     for kind in ["updates", "deletes", "selects"] {
         cases.push((kind, owners.clone(), owners.join(format!("{kind}.yml"))));
     }
+    let probes = root.parent().unwrap().join("probes");
+    for (label, policy) in [
+        ("probes-off", "off"),
+        ("probes-ignore", "ignore"),
+        ("probes-advise", "advise"),
+        ("probes-report", "report"),
+    ] {
+        cases.push((label, probes.clone(), probes.join(format!("{policy}.yml"))));
+    }
     assert_saved_fixture("postgres_bounded_statements_bodies", &cases);
 }

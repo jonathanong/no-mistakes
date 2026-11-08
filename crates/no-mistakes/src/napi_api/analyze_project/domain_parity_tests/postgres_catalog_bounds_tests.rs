@@ -11,6 +11,9 @@ fn prepared_postgres_catalog_bounds_match_standalone() {
         ("catalog-resolution-identity", "view-identity.yml", 1),
         ("schemaless-key-resolution", "qualified-bare-tables.yml", 3),
         ("column-policy", "../../configs/column-bounds.yml", 6),
+        ("../materialized-bodies/probes", "off.yml", 0),
+        ("../materialized-bodies/probes", "advise.yml", 0),
+        ("../materialized-bodies/probes", "report.yml", 15),
         (
             "column-policy",
             "../../configs/column-bounds-composite-prefix.yml",

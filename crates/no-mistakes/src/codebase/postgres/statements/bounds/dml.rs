@@ -9,7 +9,6 @@ pub(super) fn update(
     positions: super::super::value::PlaceholderPositions<'_>,
     out: &mut Vec<SqlBoundFact>,
 ) {
-    scope.expressions_at(update, || update.update_token.0.span.start, positions);
     let mut builder = Builder::new(scope, positions);
     builder.target_tables(std::slice::from_ref(&update.table));
     if let Some(UpdateTableFromKind::BeforeSet(tables) | UpdateTableFromKind::AfterSet(tables)) =
@@ -17,10 +16,17 @@ pub(super) fn update(
     {
         builder.tables(tables);
     }
+    let items = builder.finish(update.selection.as_ref());
+    scope.expressions_at(
+        update,
+        &items,
+        || update.update_token.0.span.start,
+        positions,
+    );
     push(
         SqlBoundKind::Update,
         super::start(update.update_token.0.span),
-        builder.finish(update.selection.as_ref()),
+        items,
         update.limit.is_some() || super::predicate::rejects_all(update.selection.as_ref()),
         out,
     );
@@ -32,17 +38,23 @@ pub(super) fn delete(
     positions: super::super::value::PlaceholderPositions<'_>,
     out: &mut Vec<SqlBoundFact>,
 ) {
-    scope.expressions_at(delete, || delete.delete_token.0.span.start, positions);
     let mut builder = Builder::new(scope, positions);
     let (FromTable::WithFromKeyword(tables) | FromTable::WithoutKeyword(tables)) = &delete.from;
     builder.target_tables(tables);
     if let Some(using) = &delete.using {
         builder.tables(using);
     }
+    let items = builder.finish(delete.selection.as_ref());
+    scope.expressions_at(
+        delete,
+        &items,
+        || delete.delete_token.0.span.start,
+        positions,
+    );
     push(
         SqlBoundKind::Delete,
         super::start(delete.delete_token.0.span),
-        builder.finish(delete.selection.as_ref()),
+        items,
         delete.limit.is_some() || super::predicate::rejects_all(delete.selection.as_ref()),
         out,
     );

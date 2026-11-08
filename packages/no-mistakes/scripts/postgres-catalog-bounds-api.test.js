@@ -31,6 +31,10 @@ test(
       ["../materialized-bodies/owners", "updates.yml", 3],
       ["../materialized-bodies/owners", "deletes.yml", 3],
       ["../materialized-bodies/owners", "selects.yml", 1],
+      ["../materialized-bodies/probes", "off.yml", 0],
+      ["../materialized-bodies/probes", "ignore.yml", 0],
+      ["../materialized-bodies/probes", "advise.yml", 0],
+      ["../materialized-bodies/probes", "report.yml", 15],
       ["column-policy", "../../configs/column-bounds-composite-prefix.yml", 1],
       ["column-policy", "../../configs/recursive-depth.yml", 10],
       ["join-roots", "valid.yml", 22],
@@ -67,7 +71,7 @@ test(
         directory === "../materialized-bodies/fixture" &&
         (config === "advise.yml" || config === "tagged-advise.yml")
       ) {
-        assert.equal(standalone.advisories.length, 25);
+        assert.equal(standalone.advisories.length, 22);
         assert.equal(
           standalone.advisories.filter((row) => row.file === "table.sql" && row.line === 1).length,
           2,
@@ -77,6 +81,11 @@ test(
             .length,
           2,
         );
+        assert.deepEqual((await cjs.check({ root, config })).advisories, standalone.advisories);
+      }
+      if (directory === "../materialized-bodies/probes" && config === "advise.yml") {
+        assert.equal(standalone.advisories.length, 15);
+        assert.ok(standalone.advisories.every((row) => row.file !== "probes.sql"));
         assert.deepEqual((await cjs.check({ root, config })).advisories, standalone.advisories);
       }
       const relationTargets = {

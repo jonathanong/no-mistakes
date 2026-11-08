@@ -1,0 +1,262 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "source_rows": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "group_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 3
+        },
+        "label_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 4
+        },
+        "key_hash": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 5
+        },
+        "slug": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 6
+        },
+        "active": {
+          "dataType": "boolean",
+          "nullable": true,
+          "ordinalPosition": 7
+        },
+        "inactive_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true,
+          "ordinalPosition": 8
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {}
+    },
+    "edge_rows": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "group_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 3
+        },
+        "label_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 4
+        },
+        "key_hash": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 5
+        },
+        "slug": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 6
+        },
+        "active": {
+          "dataType": "boolean",
+          "nullable": true,
+          "ordinalPosition": 7
+        },
+        "inactive_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true,
+          "ordinalPosition": 8
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {}
+    },
+    "lookup_rows": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "group_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 3
+        },
+        "label_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 4
+        },
+        "key_hash": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 5
+        },
+        "slug": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 6
+        },
+        "active": {
+          "dataType": "boolean",
+          "nullable": true,
+          "ordinalPosition": 7
+        },
+        "inactive_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true,
+          "ordinalPosition": 8
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {}
+    },
+    "label_rows": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "group_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 3
+        },
+        "label_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 4
+        },
+        "key_hash": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 5
+        },
+        "slug": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 6
+        },
+        "active": {
+          "dataType": "boolean",
+          "nullable": true,
+          "ordinalPosition": 7
+        },
+        "inactive_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true,
+          "ordinalPosition": 8
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {}
+    },
+    "member_rows": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "group_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 3
+        },
+        "label_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 4
+        },
+        "key_hash": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 5
+        },
+        "slug": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 6
+        },
+        "active": {
+          "dataType": "boolean",
+          "nullable": true,
+          "ordinalPosition": 7
+        },
+        "inactive_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true,
+          "ordinalPosition": 8
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {}
+    }
+  }
+}
