@@ -163,6 +163,7 @@ fn report_difference(
 
 fn finding(file: &str, line: usize, message: String) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

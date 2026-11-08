@@ -137,6 +137,7 @@ fn is_embedded_source(path: &Path) -> bool {
 
 fn finding(file: &str, line: usize, message: &str) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

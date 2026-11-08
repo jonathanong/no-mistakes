@@ -42,6 +42,7 @@ pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFindi
     let mut findings = compiled.allow.apply(&compiled.path, findings);
     if views.iter().any(|view| view.indexes.is_none()) {
         findings.push(RuleFinding {
+            causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file: compiled.path.clone(),
             line: 1,

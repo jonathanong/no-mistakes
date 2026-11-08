@@ -108,6 +108,7 @@ fn note(
     let line = spec_line(source, job, spec, skip);
     placed.push(spec.to_string());
     findings.push(RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line,

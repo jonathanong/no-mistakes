@@ -41,6 +41,7 @@ pub(super) fn check_source(
         return None;
     }
     Some(RuleFinding {
+        causes: Vec::new(),
         rule: super::RULE_ID.to_string(),
         file: relative_slash_path(root, path),
         line: 1,

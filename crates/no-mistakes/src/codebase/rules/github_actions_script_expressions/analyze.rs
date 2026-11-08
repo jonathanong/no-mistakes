@@ -99,6 +99,7 @@ fn script_message(rel: &str, line: usize, hit: &Hit) -> String {
 
 fn finding(rel: &str, line: usize, message: String, target: Option<String>) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line,

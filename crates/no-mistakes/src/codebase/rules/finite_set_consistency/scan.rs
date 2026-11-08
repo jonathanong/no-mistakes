@@ -73,6 +73,7 @@ pub(super) fn scan(
     for set in sets.values() {
         for issue in &set.issues {
             findings.push(RuleFinding {
+                causes: Vec::new(),
                 rule: RULE_ID.to_string(),
                 file: issue.file.clone(),
                 line: issue.line,

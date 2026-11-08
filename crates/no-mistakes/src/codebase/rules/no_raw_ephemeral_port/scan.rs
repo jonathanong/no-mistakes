@@ -105,6 +105,7 @@ fn push_finding(
         return;
     }
     findings.push(RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line,

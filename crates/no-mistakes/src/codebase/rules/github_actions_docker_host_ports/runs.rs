@@ -113,6 +113,7 @@ fn judge(rel: &str, body: &Body, located: Option<&StepRun>) -> Vec<RuleFinding> 
         .map(|hit| {
             let line = source_line(located, &body.script, hit.line, &hit.spec);
             RuleFinding {
+                causes: Vec::new(),
                 rule: RULE_ID.to_string(),
                 file: rel.to_string(),
                 line,

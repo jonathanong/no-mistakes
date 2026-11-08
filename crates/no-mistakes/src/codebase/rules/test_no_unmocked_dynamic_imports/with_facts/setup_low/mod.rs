@@ -115,6 +115,7 @@ pub(super) fn from_group(group: Group<'_>) -> Result<Outcome> {
 fn finding(root: &Path, file: &Path, shape: &classify::Rejected) -> RuleFinding {
     let rel = crate::codebase::ts_source::relative_slash_path(root, file);
     RuleFinding {
+        causes: Vec::new(),
         rule: super::super::RULE_ID.to_string(),
         file: rel.clone(),
         line: shape.line,

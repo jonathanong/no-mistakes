@@ -98,6 +98,7 @@ pub(super) fn unpinned_finding(
         format!("trailing comment must be `# v1.2.3` or `# 1.87.0`, got `{comment}`")
     };
     Some(RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: line_num,

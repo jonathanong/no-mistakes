@@ -155,7 +155,7 @@ fn scan_sha_lines(
             }
             matches
                 .into_iter()
-                .map(|_| RuleFinding {
+                .map(|_| RuleFinding { causes: Vec::new(),
                     rule: RULE_ID.to_string(),
                     file: file.clone(),
                     line,

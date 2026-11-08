@@ -20,6 +20,7 @@ pub(super) fn finding(
         )
     };
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: 1,
@@ -31,6 +32,7 @@ pub(super) fn finding(
 
 pub(super) fn stale(file: &str, message: &str) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: 1,

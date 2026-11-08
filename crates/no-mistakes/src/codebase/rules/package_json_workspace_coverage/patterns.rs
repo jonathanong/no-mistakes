@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 
 pub(super) fn config_finding(file: &str, detail: &str) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: 1,

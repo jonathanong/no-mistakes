@@ -25,6 +25,7 @@ pub(super) fn record_unsupported(
     if spec.kind == TS_CALL_FIRST_STRING_ARGUMENT && spec.target.is_empty() {
         for path in &paths {
             output.findings.push(RuleFinding {
+                causes: Vec::new(),
                 rule: RULE_ID.into(),
                 file: relative_slash_path(root, path),
                 line: 1,
@@ -49,7 +50,7 @@ pub(super) fn record_unsupported(
         })?;
     }
     let file = relative_slash_path(root, &paths[0]);
-    output.unanalyzable(policy.unanalyzable, RuleFinding {
+    output.unanalyzable(policy.unanalyzable, RuleFinding { causes: Vec::new(),
         rule: RULE_ID.into(),
         file: file.clone(),
         line: 1,

@@ -54,7 +54,7 @@ pub(super) fn check(
                 LiteralKind::String => matches!(value, Literal::Other(serde_json::Value::String(_))),
                 LiteralKind::Boolean => matches!(value, Literal::Other(serde_json::Value::Bool(_))),
             }));
-        (forbidden || kind).then(|| RuleFinding {
+        (forbidden || kind).then(|| RuleFinding { causes: Vec::new(),
             rule: RULE_ID.into(), file: relative_slash_path(root, &declaration.path), line: declaration.line,
             message: format!("Vitest declaration {key}: literal {value} is forbidden by {}; use an allowed literal or a computed expression to keep configuration policy explicit",
                 if forbidden { "declared.forbiddenValues" } else { "declared.forbidLiteralKinds" }),

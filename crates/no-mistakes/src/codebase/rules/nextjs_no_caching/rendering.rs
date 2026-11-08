@@ -22,6 +22,7 @@ pub(super) fn findings_for_file(
 
 pub(super) fn project_finding(file: &str, finding: &NextjsCachingFinding) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: finding.line,

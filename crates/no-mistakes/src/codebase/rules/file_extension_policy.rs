@@ -120,6 +120,7 @@ fn escaping_scope_findings(opts: &Options, config_file: &str) -> Vec<RuleFinding
         .map(|scope| {
             let display = scope.path.replace('\\', "/");
             RuleFinding {
+                causes: Vec::new(),
                 rule: RULE_ID.to_string(),
                 file: config_file.to_string(),
                 line: 1,
@@ -167,6 +168,7 @@ pub(crate) fn check_file(
             .any(|banned| banned.as_str() == ext)
         {
             return vec![RuleFinding {
+                causes: Vec::new(),
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
                 line: 1,

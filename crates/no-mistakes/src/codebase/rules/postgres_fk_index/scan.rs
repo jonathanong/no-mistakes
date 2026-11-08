@@ -88,7 +88,7 @@ pub(super) fn scan_fk(
         used_columns.insert(key);
         return Vec::new();
     }
-    vec![RuleFinding {
+    vec![RuleFinding { causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line: fk.line.max(1),
@@ -168,6 +168,7 @@ fn stale_allowlist(
 
 fn stale(kind: &str, entry: &str) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: entry.to_string(),
         line: 1,

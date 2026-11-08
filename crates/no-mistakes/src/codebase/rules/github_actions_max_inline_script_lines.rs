@@ -65,6 +65,7 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
 
 fn finding(file: &str, line: usize, message: String) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.into(),
         file: file.into(),
         line,

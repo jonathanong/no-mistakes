@@ -69,7 +69,7 @@ fn missing_link(root: &Path, child: &Path, require_whole_file: bool, source: &st
     } else {
         "markdown link"
     };
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.clone(),
         line: first_content_line(source),

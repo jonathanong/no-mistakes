@@ -100,3 +100,129 @@ fn cli_reports_generator_uncertainty_without_assertion_proof() {
         );
     }
 }
+
+#[test]
+fn cli_names_coverage_owner_uncertainty_in_human_and_json_output() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/coverage-producer-assertion-owner-uncertainty/fixture");
+    for (config, expected) in [
+        (
+            "dispatch",
+            vec!["unresolved dispatch", "src/producer.mts:2", "`dispatch`"],
+        ),
+        (
+            "depth",
+            vec!["traversal limit maxDepth=1", "last module src/helper.mts"],
+        ),
+        (
+            "nodes",
+            vec!["traversal limit maxNodes=1", "last module src/producer.mts"],
+        ),
+        (
+            "mixed",
+            vec![
+                "unresolved dispatch",
+                "`dispatch`",
+                "traversal limit maxDepth=1",
+            ],
+        ),
+        (
+            "both",
+            vec![
+                "traversal limit maxDepth=1",
+                "traversal limit maxNodes=2",
+                "last module src/helper.mts",
+            ],
+        ),
+        (
+            "custom",
+            vec![
+                "Assert the dispatch result",
+                "unresolved dispatch",
+                "`dispatch`",
+            ],
+        ),
+        (
+            "source",
+            vec!["source failure", "src/broken.mts", "Unexpected token"],
+        ),
+    ] {
+        for format in ["human", "json"] {
+            let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+                .args(["check", "--root"])
+                .arg(&root)
+                .arg("--config")
+                .arg(root.join(format!("{config}.yml")))
+                .args(["--format", format])
+                .output()
+                .unwrap();
+            assert!(!output.status.success());
+            let text = if format == "json" {
+                let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+                let field = if config == "source" {
+                    "incomplete"
+                } else {
+                    "rules"
+                };
+                report[field][0]["message"].as_str().unwrap().to_string()
+            } else {
+                format!(
+                    "{}{}",
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr)
+                )
+            };
+            for part in &expected {
+                assert!(
+                    text.contains(part),
+                    "{config}/{format}: missing {part}: {text}"
+                );
+            }
+            assert!(!text.contains("unresolved dispatch, source failure, or traversal limit"));
+        }
+    }
+}
+
+fn check_json(root: &std::path::Path, config: &str) -> serde_json::Value {
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--format", "json", "--root"])
+        .arg(root)
+        .arg("--config")
+        .arg(root.join(format!("{config}.yml")))
+        .output()
+        .unwrap();
+    serde_json::from_slice(&output.stdout).unwrap()
+}
+
+#[test]
+fn cli_reports_only_blocking_sites_with_structured_causes() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/coverage-producer-assertion-owner-builtins/fixture");
+    for (config, callee, expected_causes, more) in [
+        ("many", "a", 8, true),
+        ("third-party", "Sentry.captureException", 1, false),
+        ("callback-unresolved", "items.map", 1, false),
+    ] {
+        let report = check_json(&root, config);
+        let finding = &report["rules"][0];
+        let causes = finding["causes"].as_array().unwrap();
+        assert_eq!(causes.len(), expected_causes, "{config}: {report}");
+        assert_eq!(causes[0]["kind"], "unresolved-dispatch");
+        assert_eq!(causes[0]["callee"], callee);
+        assert_eq!(causes[0]["file"], "src/producer.mts");
+        assert!(causes[0]["line"].as_u64().unwrap() > 0);
+        let message = finding["message"].as_str().unwrap();
+        assert_eq!(message.contains("+3 more"), more, "{message}");
+        assert!(!message.contains("JSON.stringify"), "{message}");
+    }
+    for config in ["pass", "no-owner"] {
+        let report = check_json(&root, config);
+        for finding in report["rules"].as_array().unwrap() {
+            assert!(finding.get("causes").is_none(), "{report}");
+            assert!(!finding["message"]
+                .as_str()
+                .unwrap()
+                .contains("unanalyzable"));
+        }
+    }
+}

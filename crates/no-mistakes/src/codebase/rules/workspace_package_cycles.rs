@@ -134,6 +134,7 @@ fn scan_workspace(
             .expect("cycle packages are collected from the workspace graph");
         let file = relative_slash_path(root, &dir.join("package.json"));
         findings.push(RuleFinding {
+            causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file: file.clone(),
             line: 1,

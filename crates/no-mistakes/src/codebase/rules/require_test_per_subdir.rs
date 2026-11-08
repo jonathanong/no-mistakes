@@ -93,6 +93,7 @@ fn scan(
             if !has_test {
                 let rel = relative_slash_path(root, &subdir);
                 findings.push(RuleFinding {
+                    causes: Vec::new(),
                     rule: RULE_ID.to_string(),
                     file: rel.clone(),
                     line: 1,

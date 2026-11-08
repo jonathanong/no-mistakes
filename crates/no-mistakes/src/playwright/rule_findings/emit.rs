@@ -21,6 +21,7 @@ pub(super) fn coverage(
     if options.routes {
         for route in report.routes.iter().filter(|route| !route.covered) {
             findings.push(RuleFinding {
+                causes: Vec::new(),
                 rule: PLAYWRIGHT_COVERAGE.to_string(),
                 file: route.file.clone(),
                 line: 1,
@@ -42,6 +43,7 @@ pub(super) fn coverage(
             && !(literal_selectors_only && !selector.literal_exact)
     }) {
         findings.push(RuleFinding {
+            causes: Vec::new(),
             rule: PLAYWRIGHT_COVERAGE.to_string(),
             file: selector.file.clone(),
             line: 1,
@@ -85,6 +87,7 @@ pub(super) fn unique(
                 unique_test_ids.then_some(PLAYWRIGHT_UNIQUE_TEST_IDS)
             }?;
             Some(RuleFinding {
+                causes: Vec::new(),
                 rule: rule.to_string(),
                 file: selector.file.clone(),
                 line: selector.line,
@@ -123,7 +126,7 @@ pub(super) fn prefer_test_id_locators(analysis: &Analysis) -> Vec<RuleFinding> {
         by_locator
             .entry((test_file.as_ref().clone(), *line as usize, locator.clone()))
             .or_insert_with(|| {
-                RuleFinding {
+                RuleFinding { causes: Vec::new(),
                     rule: PLAYWRIGHT_PREFER_TEST_ID_LOCATORS.to_string(),
                     file: test_file.as_ref().clone(),
                     line: *line as usize,

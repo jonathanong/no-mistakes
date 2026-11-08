@@ -138,6 +138,7 @@ pub(super) fn findings_in_file(
         }
         for line in match_start_lines(&pattern.regex, content) {
             findings.push(RuleFinding {
+                causes: Vec::new(),
                 rule: RULE_ID.to_string(),
                 file: rel.to_string(),
                 line,

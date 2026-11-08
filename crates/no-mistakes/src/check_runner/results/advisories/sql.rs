@@ -128,6 +128,7 @@ fn finding(
         "has unresolved SQL for"
     };
     RuleFinding {
+        causes: Vec::new(),
         rule: verdict.rule.clone(),
         file: verdict.file.clone(),
         line,

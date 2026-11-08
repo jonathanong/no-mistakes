@@ -41,7 +41,7 @@ pub(crate) use super::suppression::{
 };
 
 pub(crate) use super::finding::rule_enabled;
-pub use super::finding::RuleFinding;
+pub use super::finding::{FindingCause, RuleFinding};
 
 pub(crate) use super::entrypoints::{
     borrowed_source_rule_entrypoints, diagnostic_source_rule_entrypoints,

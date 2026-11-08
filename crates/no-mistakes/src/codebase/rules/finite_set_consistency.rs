@@ -120,6 +120,7 @@ fn finding(
     value: &str,
 ) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: set.file.clone(),
         line: set.line,

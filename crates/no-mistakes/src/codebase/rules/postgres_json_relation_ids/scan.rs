@@ -109,7 +109,7 @@ fn json_finding(
         || format!("table:{table_name}"),
         |column| format!("column:{table_name}.{column}"),
     );
-    Some(RuleFinding {
+    Some(RuleFinding { causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

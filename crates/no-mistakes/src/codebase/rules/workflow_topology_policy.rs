@@ -144,6 +144,7 @@ pub(super) fn finding(owner: FindingOwner<'_>, message: String) -> LocatedFindin
     };
     LocatedFinding {
         finding: RuleFinding {
+            causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file: file.to_string(),
             line: 1,

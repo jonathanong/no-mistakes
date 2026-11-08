@@ -32,6 +32,7 @@ pub(in crate::check_runner::results) fn demote(
     advisories.extend(advisory.into_iter().map(|prepared| {
         let finding = prepared.finding;
         RuleFinding {
+            causes: Vec::new(),
             rule: finding.rule,
             file: finding.file,
             line: finding.line as usize,

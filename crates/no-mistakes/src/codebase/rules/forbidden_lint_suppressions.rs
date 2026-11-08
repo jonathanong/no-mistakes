@@ -101,7 +101,7 @@ pub(crate) fn check_prepared(
                     else { comment.rules.iter().filter(|v| options.banned(v)).map(String::as_str).collect() };
                 for target in targets {
                     let explanation = options.message.as_deref().unwrap_or("These lint rules must remain enforced; remove the suppression and fix the underlying code.");
-                    findings.push(RuleFinding { rule: RULE_ID.into(), file: file.clone(), line: comment.line,
+                    findings.push(RuleFinding { causes: Vec::new(), rule: RULE_ID.into(), file: file.clone(), line: comment.line,
                         message: format!("{file}:{}: `{}` disables forbidden rule `{target}`. {explanation}", comment.line, comment.directive),
                         import: None, target: Some(target.into()) });
                 }

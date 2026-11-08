@@ -166,6 +166,7 @@ pub(super) fn normalize_rel(path: &str) -> Option<String> {
 
 pub(super) fn finding(file: &str, message: String) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: 1,

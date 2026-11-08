@@ -7,20 +7,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [
         {
+          "causes": [
+            {
+              "callee": "dispatch",
+              "detail": "callee target is unknown",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 18,
+              "sourceLine": "export function dynamic(dispatch: () => void) { dispatch(); }"
+            }
+          ],
+          "file": "src/producers.mts",
+          "line": 18,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:18 callee `dispatch` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#dynamic",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function dynamic(dispatch: () => void) { dispatch(); }",
+          "target": "dynamic"
+        },
+        {
           "file": "src/file-suppressed.mts",
           "line": 1,
           "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
           "sourceLine": "// no-mistakes-disable-file coverage-producer-assertion-owner -- deliberate coverage-only fixture",
           "target": "coverage-producer-assertion-owner"
-        },
-        {
-          "file": "src/producers.mts",
-          "line": 18,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#dynamic",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function dynamic(dispatch: () => void) { dispatch(); }",
-          "target": "dynamic"
         },
         {
           "file": "src/suppressed.mts",
@@ -82,17 +92,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "causes": [
+            {
+              "callee": "callback",
+              "detail": "callee target is unknown",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 76,
+              "sourceLine": "function ambiguousOwner(callback: () => void) { callback(); }"
+            }
+          ],
           "file": "src/producers.mts",
           "line": 77,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#ambiguousCallbackA",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:76 callee `callback` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#ambiguousCallbackA",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function ambiguousCallbackA() { ambiguousOwner(assertResult); }",
           "target": "ambiguousCallbackA"
         },
         {
+          "causes": [
+            {
+              "callee": "callback",
+              "detail": "callee target is unknown",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 76,
+              "sourceLine": "function ambiguousOwner(callback: () => void) { callback(); }"
+            }
+          ],
           "file": "src/producers.mts",
           "line": 78,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#ambiguousCallbackB",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:76 callee `callback` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#ambiguousCallbackB",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function ambiguousCallbackB() { ambiguousOwner(localAssertionOwner); }",
           "target": "ambiguousCallbackB"
@@ -136,9 +166,19 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "causes": [
+            {
+              "callee": "spawn",
+              "detail": "external call has no ownership model",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 19,
+              "sourceLine": "export function crossProcess() { spawn('worker'); }"
+            }
+          ],
           "file": "src/producers.mts",
           "line": 19,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#crossProcess",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:19 callee `spawn` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#crossProcess",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function crossProcess() { spawn('worker'); }",
           "target": "crossProcess"
@@ -228,6 +268,104 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "causes": [
+            {
+              "callee": "<unknown>.next",
+              "detail": "callee target is unknown",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 89,
+              "sourceLine": "export function consumedGenerator() { generatorRoot().next(); }"
+            },
+            {
+              "callee": "generatorRoot",
+              "detail": "generator body execution is not modeled",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 89,
+              "sourceLine": "export function consumedGenerator() { generatorRoot().next(); }"
+            }
+          ],
+          "file": "src/producers.mts",
+          "line": 89,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:89 callee `<unknown>.next` (callee target is unknown); unresolved dispatch at src/producers.mts:89 callee `generatorRoot` (generator body execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#consumedGenerator",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function consumedGenerator() { generatorRoot().next(); }",
+          "target": "consumedGenerator"
+        },
+        {
+          "causes": [
+            {
+              "callee": "asyncOwner",
+              "detail": "generator body execution is not modeled",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 91,
+              "sourceLine": "export function asyncGenerator() { asyncOwner(); }"
+            }
+          ],
+          "file": "src/producers.mts",
+          "line": 91,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:91 callee `asyncOwner` (generator body execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#asyncGenerator",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function asyncGenerator() { asyncOwner(); }",
+          "target": "asyncGenerator"
+        },
+        {
+          "causes": [
+            {
+              "callee": "dispatch",
+              "detail": "callee target is unknown",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 18,
+              "sourceLine": "export function dynamic(dispatch: () => void) { dispatch(); }"
+            }
+          ],
+          "file": "src/producers.mts",
+          "line": 18,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:18 callee `dispatch` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#dynamic",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function dynamic(dispatch: () => void) { dispatch(); }",
+          "target": "dynamic"
+        },
+        {
+          "causes": [
+            {
+              "callee": "generatorRoot",
+              "detail": "generator body execution is not modeled",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 88,
+              "sourceLine": "export function unconsumedGenerator() { execute(); generatorRoot(); }"
+            }
+          ],
+          "file": "src/producers.mts",
+          "line": 88,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:88 callee `generatorRoot` (generator body execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#unconsumedGenerator",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function unconsumedGenerator() { execute(); generatorRoot(); }",
+          "target": "unconsumedGenerator"
+        },
+        {
+          "causes": [
+            {
+              "callee": "spawn",
+              "detail": "external call has no ownership model",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 20,
+              "sourceLine": "export function unmodeledProcess() { spawn('worker'); }"
+            }
+          ],
+          "file": "src/producers.mts",
+          "line": 20,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:20 callee `spawn` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#unmodeledProcess",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function unmodeledProcess() { spawn('worker'); }",
+          "target": "unmodeledProcess"
+        },
+        {
           "file": "src/producers.mts",
           "line": 10,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#productionOnly",
@@ -242,22 +380,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function unreachable() {",
           "target": "unreachable"
-        },
-        {
-          "file": "src/producers.mts",
-          "line": 18,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#dynamic",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function dynamic(dispatch: () => void) { dispatch(); }",
-          "target": "dynamic"
-        },
-        {
-          "file": "src/producers.mts",
-          "line": 20,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#unmodeledProcess",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function unmodeledProcess() { spawn('worker'); }",
-          "target": "unmodeledProcess"
         },
         {
           "file": "src/producers.mts",
@@ -418,30 +540,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function unusedConstructorMethod() { new UnusedMethod(); }",
           "target": "unusedConstructorMethod"
-        },
-        {
-          "file": "src/producers.mts",
-          "line": 88,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#unconsumedGenerator",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function unconsumedGenerator() { execute(); generatorRoot(); }",
-          "target": "unconsumedGenerator"
-        },
-        {
-          "file": "src/producers.mts",
-          "line": 89,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#consumedGenerator",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function consumedGenerator() { generatorRoot().next(); }",
-          "target": "consumedGenerator"
-        },
-        {
-          "file": "src/producers.mts",
-          "line": 91,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#asyncGenerator",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function asyncGenerator() { asyncOwner(); }",
-          "target": "asyncGenerator"
         }
       ],
       "warnings": []
@@ -482,17 +580,31 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "causes": [
+            {
+              "detail": "maxDepth=1; last module src/producers.mts#callbackOwner",
+              "file": "src/producers.mts",
+              "kind": "traversal-limit"
+            }
+          ],
           "file": "src/producers.mts",
           "line": 9,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#callback",
+          "message": "unanalyzable coverage producer: traversal limit maxDepth=1; last module src/producers.mts#callbackOwner; model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#callback",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function callback() { callbackOwner(assertResult); }",
           "target": "callback"
         },
         {
+          "causes": [
+            {
+              "detail": "maxDepth=1; last module src/producers.mts#deepA",
+              "file": "src/producers.mts",
+              "kind": "traversal-limit"
+            }
+          ],
           "file": "src/producers.mts",
           "line": 98,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#deepChainOnly",
+          "message": "unanalyzable coverage producer: traversal limit maxDepth=1; last module src/producers.mts#deepA; model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#deepChainOnly",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function deepChainOnly() { deepA(); }",
           "target": "deepChainOnly"
@@ -560,57 +672,129 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": "src/producers.mts",
-          "line": 87,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#generatorRoot",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function* generatorRoot() { strictEqual(1, 1); }",
-          "target": "generatorRoot"
-        },
-        {
-          "file": "src/producers.mts",
-          "line": 88,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#unconsumedGenerator",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function unconsumedGenerator() { execute(); generatorRoot(); }",
-          "target": "unconsumedGenerator"
-        },
-        {
+          "causes": [
+            {
+              "callee": "<unknown>.next",
+              "detail": "callee target is unknown",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 89,
+              "sourceLine": "export function consumedGenerator() { generatorRoot().next(); }"
+            },
+            {
+              "callee": "generatorRoot",
+              "detail": "generator body execution is not modeled",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 89,
+              "sourceLine": "export function consumedGenerator() { generatorRoot().next(); }"
+            }
+          ],
           "file": "src/producers.mts",
           "line": 89,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#consumedGenerator",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:89 callee `<unknown>.next` (callee target is unknown); unresolved dispatch at src/producers.mts:89 callee `generatorRoot` (generator body execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#consumedGenerator",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function consumedGenerator() { generatorRoot().next(); }",
           "target": "consumedGenerator"
         },
         {
-          "file": "src/producers.mts",
-          "line": 91,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#asyncGenerator",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function asyncGenerator() { asyncOwner(); }",
-          "target": "asyncGenerator"
-        },
-        {
+          "causes": [
+            {
+              "callee": "aliasedGenerator",
+              "detail": "generator body execution is not modeled",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 92,
+              "sourceLine": "export function selectedGenerator() { aliasedGenerator(); }"
+            }
+          ],
           "file": "src/producers.mts",
           "line": 92,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#selectedGenerator",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:92 callee `aliasedGenerator` (generator body execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#selectedGenerator",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function selectedGenerator() { aliasedGenerator(); }",
           "target": "selectedGenerator"
         },
         {
+          "causes": [
+            {
+              "callee": "asyncOwner",
+              "detail": "generator body execution is not modeled",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 91,
+              "sourceLine": "export function asyncGenerator() { asyncOwner(); }"
+            }
+          ],
+          "file": "src/producers.mts",
+          "line": 91,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:91 callee `asyncOwner` (generator body execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#asyncGenerator",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function asyncGenerator() { asyncOwner(); }",
+          "target": "asyncGenerator"
+        },
+        {
+          "causes": [
+            {
+              "callee": "generatorAssertion",
+              "detail": "generator body execution is not modeled",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 93,
+              "sourceLine": "export function generatorContract() { generatorAssertion(); }"
+            }
+          ],
           "file": "src/producers.mts",
           "line": 93,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#generatorContract",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:93 callee `generatorAssertion` (generator body execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#generatorContract",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function generatorContract() { generatorAssertion(); }",
           "target": "generatorContract"
         },
         {
+          "causes": [
+            {
+              "callee": "generatorRoot",
+              "detail": "generator body execution is not modeled",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 88,
+              "sourceLine": "export function unconsumedGenerator() { execute(); generatorRoot(); }"
+            }
+          ],
+          "file": "src/producers.mts",
+          "line": 88,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:88 callee `generatorRoot` (generator body execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#unconsumedGenerator",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function unconsumedGenerator() { execute(); generatorRoot(); }",
+          "target": "unconsumedGenerator"
+        },
+        {
+          "causes": [
+            {
+              "detail": "src/producers.mts#generatorRoot",
+              "file": "src/producers.mts",
+              "kind": "unmodeled-generator"
+            }
+          ],
+          "file": "src/producers.mts",
+          "line": 87,
+          "message": "unanalyzable coverage producer: generator body execution is not modeled in src/producers.mts#generatorRoot; model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#generatorRoot",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function* generatorRoot() { strictEqual(1, 1); }",
+          "target": "generatorRoot"
+        },
+        {
+          "causes": [
+            {
+              "detail": "src/producers.mts#generatorRoot",
+              "file": "src/producers.mts",
+              "kind": "unmodeled-generator"
+            }
+          ],
           "file": "src/producers.mts",
           "line": 94,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#generatorContractOwner",
+          "message": "unanalyzable coverage producer: generator body execution is not modeled in src/producers.mts#generatorRoot; model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#generatorContractOwner",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function generatorContractOwner() { spawn('worker'); }",
           "target": "generatorContractOwner"
@@ -691,28 +875,58 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": "src/import-forms.mts",
-          "line": 16,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/import-forms.mts#externalOnly",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function externalOnly() { hostname(); query('select 1'); }",
-          "target": "externalOnly"
-        },
-        {
+          "causes": [
+            {
+              "callee": "assert",
+              "detail": "external call has no ownership model",
+              "file": "src/import-forms.mts",
+              "kind": "unresolved-dispatch",
+              "line": 22,
+              "sourceLine": "export function bareNodeAssert() { assert(1); }"
+            }
+          ],
           "file": "src/import-forms.mts",
           "line": 22,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/import-forms.mts#bareNodeAssert",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/import-forms.mts:22 callee `assert` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/import-forms.mts#bareNodeAssert",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function bareNodeAssert() { assert(1); }",
           "target": "bareNodeAssert"
         },
         {
+          "causes": [
+            {
+              "callee": "execFile",
+              "detail": "external call has no ownership model",
+              "file": "src/import-forms.mts",
+              "kind": "unresolved-dispatch",
+              "line": 23,
+              "sourceLine": "export function otherChildExport() { execFile('true'); }"
+            }
+          ],
           "file": "src/import-forms.mts",
           "line": 23,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/import-forms.mts#otherChildExport",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/import-forms.mts:23 callee `execFile` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/import-forms.mts#otherChildExport",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function otherChildExport() { execFile('true'); }",
           "target": "otherChildExport"
+        },
+        {
+          "causes": [
+            {
+              "callee": "query",
+              "detail": "external call has no ownership model",
+              "file": "src/import-forms.mts",
+              "kind": "unresolved-dispatch",
+              "line": 16,
+              "sourceLine": "export function externalOnly() { hostname(); query('select 1'); }"
+            }
+          ],
+          "file": "src/import-forms.mts",
+          "line": 16,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/import-forms.mts:16 callee `query` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/import-forms.mts#externalOnly",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function externalOnly() { hostname(); query('select 1'); }",
+          "target": "externalOnly"
         }
       ],
       "warnings": []
@@ -796,17 +1010,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "causes": [
+            {
+              "callee": "assertion",
+              "detail": "callee target is unknown",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 37,
+              "sourceLine": "assertion(1, 1);"
+            }
+          ],
           "file": "src/producers.mts",
           "line": 35,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#mixedTarget",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:37 callee `assertion` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#mixedTarget",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function mixedTarget(dispatch: typeof strictEqual | undefined) {",
           "target": "mixedTarget"
         },
         {
+          "causes": [
+            {
+              "callee": "dispatch",
+              "detail": "callee target is unknown",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 96,
+              "sourceLine": "export function dynamicOnlyAfterExecute(dispatch: () => void) { execute(); dispatch(); }"
+            }
+          ],
           "file": "src/producers.mts",
           "line": 96,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#dynamicOnlyAfterExecute",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:96 callee `dispatch` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#dynamicOnlyAfterExecute",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function dynamicOnlyAfterExecute(dispatch: () => void) { execute(); dispatch(); }",
           "target": "dynamicOnlyAfterExecute"
@@ -850,9 +1084,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "causes": [
+            {
+              "detail": "maxNodes=1; last module src/producers.mts#callback",
+              "file": "src/producers.mts",
+              "kind": "traversal-limit"
+            }
+          ],
           "file": "src/producers.mts",
           "line": 9,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#callback",
+          "message": "unanalyzable coverage producer: traversal limit maxNodes=1; last module src/producers.mts#callback; model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#callback",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function callback() { callbackOwner(assertResult); }",
           "target": "callback"
@@ -895,7 +1136,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "coverage-producer-assertion-owner",
           "file": "src/broken.mts",
-          "message": "parsing src/broken.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 123, end: 124 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+          "message": "source failure in src/broken.mts: parsing src/broken.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 123, end: 124 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
         }
       ],
       "integration": [],

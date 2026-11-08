@@ -73,7 +73,11 @@ pub(super) fn assert_policies(
                     .downcast_ref::<crate::codebase::check_outcome::CheckInputFailure>()
                     .expect("typed source failure");
                 assert_eq!(input.file.as_ref(), Some(&failed.path));
-                assert!(!input.message.is_empty());
+                assert!(input.message.contains("source failure in"));
+                assert!(input.message.contains(path));
+                if !fatal_only {
+                    assert!(input.message.contains("saved fixture source read failed"));
+                }
             }
             assert_eq!(
                 sources.physical_read_count(),

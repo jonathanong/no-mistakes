@@ -188,18 +188,15 @@ fn stale_allowlist(opts: &CompiledOptions, used: &BTreeSet<String>) -> Vec<RuleF
         .iter()
         .filter(|entry| !used.contains(*entry))
         .map(|entry| {
-            finding(
-                entry,
-                1,
-                format!("stale postgres-redundant-index allowedIndexes entry: {entry}"),
-                entry,
-            )
+            let message = format!("stale postgres-redundant-index allowedIndexes entry: {entry}");
+            finding(entry, 1, message, entry)
         })
         .collect()
 }
 
 fn finding(file: &str, line: usize, message: String, target: &str) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

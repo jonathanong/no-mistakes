@@ -2,6 +2,7 @@ use super::*;
 
 fn finding(rule: &str) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: rule.into(),
         file: "query.sql".into(),
         line: 1,

@@ -126,6 +126,7 @@ fn issue_finding(
 
 fn finding(file: String, message: String, target: &str) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file,
         line: 1,

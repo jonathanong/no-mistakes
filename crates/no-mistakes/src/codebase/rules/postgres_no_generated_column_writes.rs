@@ -155,7 +155,7 @@ fn is_default_dml_path(path: &Path) -> bool {
 }
 
 fn finding(file: &str, line: usize, table: &str, column: &str) -> RuleFinding {
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,
@@ -169,7 +169,7 @@ PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and 
 }
 
 fn trigger_finding(file: &str, line: usize, table: &str, column: &str) -> RuleFinding {
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,
@@ -183,7 +183,7 @@ it is listed in triggerMaintainedColumns, so the database sets it — remove it 
 }
 
 fn unanalyzable_finding(file: &str, line: usize) -> RuleFinding {
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

@@ -56,7 +56,7 @@ pub(super) fn malformed_finding(root: &Path, path: &Path, error: &str, kind: &st
     } else {
         format!(" ({cause})")
     };
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: super::RULE_ID.to_string(),
         file,
         line: 1,
@@ -117,7 +117,7 @@ pub(super) fn visible_story_error(
 }
 
 pub(super) fn incomplete_component(component: super::types::Component) -> RuleFinding {
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: super::RULE_ID.to_string(),
         file: component.repo_file,
         line: component.line,

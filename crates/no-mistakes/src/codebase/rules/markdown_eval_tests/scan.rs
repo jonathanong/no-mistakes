@@ -25,7 +25,7 @@ pub(super) fn scan(
         if usage.suppress(allowed.iter().map(|allowed| *allowed == &rel)) {
             continue;
         }
-        findings.push(RuleFinding {
+        findings.push(RuleFinding { causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file: rel.clone(),
             line: 1,
@@ -41,7 +41,7 @@ pub(super) fn scan(
         if !checked.contains(allowed) {
             continue;
         }
-        findings.push(RuleFinding {
+        findings.push(RuleFinding { causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file: allowed.clone(),
             line: 1,

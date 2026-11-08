@@ -21,7 +21,7 @@ pub(super) fn findings(
             let argument = if load.computed { load.specifier.clone() }
                 else { format!("{:?}", load.specifier) };
             let expression = format!("{}({argument})", load.callee);
-            RuleFinding {
+            RuleFinding { causes: Vec::new(),
                 rule: super::RULE_ID.into(),
                 file: relative_slash_path(root, &site.file),
                 line: site.line as usize,

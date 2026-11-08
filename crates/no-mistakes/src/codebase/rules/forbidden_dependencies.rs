@@ -167,6 +167,7 @@ fn check_rule_application(
             };
             let repro = repro_command(&file, &target_name, &entry.node, &opts.relationships);
             findings.push(RuleFinding {
+                causes: Vec::new(),
                 rule: RULE_ID.to_string(),
                 file: file.clone(),
                 line: 1,

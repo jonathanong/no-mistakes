@@ -2,7 +2,7 @@ use super::RULE_ID;
 use crate::codebase::rules::RuleFinding;
 
 pub(super) fn inherited(rel: &str, line: usize, job: &str, grants: &[String]) -> RuleFinding {
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: RULE_ID.to_owned(),
         file: rel.to_owned(),
         line,
@@ -16,7 +16,7 @@ pub(super) fn inherited(rel: &str, line: usize, job: &str, grants: &[String]) ->
 }
 
 pub(super) fn unresolved(rel: &str, line: usize, job: &str, reason: &str) -> RuleFinding {
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: RULE_ID.to_owned(),
         file: rel.to_owned(),
         line,

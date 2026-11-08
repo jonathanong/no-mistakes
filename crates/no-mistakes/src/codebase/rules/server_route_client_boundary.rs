@@ -94,7 +94,7 @@ fn client_findings_for_file(root: &Path, path: &Path, facts: &FileFacts) -> Vec<
         .client_call_lines
         .iter()
         .copied()
-        .map(|line| RuleFinding {
+        .map(|line| RuleFinding { causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file: file.clone(),
             line,

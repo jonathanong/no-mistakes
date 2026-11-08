@@ -7,6 +7,7 @@ use std::path::Path;
 
 pub(super) fn finding(path: &str, line: usize, message: String) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         file: path.to_owned(),
         line,
         message,

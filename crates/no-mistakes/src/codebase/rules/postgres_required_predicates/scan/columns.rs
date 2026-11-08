@@ -129,6 +129,7 @@ pub(super) fn sql_finding(
     import: Option<String>,
 ) -> RuleFinding {
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

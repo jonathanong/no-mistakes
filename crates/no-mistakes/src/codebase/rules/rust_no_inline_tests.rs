@@ -20,7 +20,7 @@ pub(crate) fn findings_from_parsed(
     let file = relative_slash_path(root, path);
     ast::cfg_test_lines(parsed)
         .into_iter()
-        .map(|line| RuleFinding {
+        .map(|line| RuleFinding { causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file: file.clone(),
             line,

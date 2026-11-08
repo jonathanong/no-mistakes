@@ -43,6 +43,7 @@ fn run(config: &mut NoMistakesConfig) -> (AnalysisDiagnostics, usize) {
             None => "pass a literal directly instead of calling a helper",
         };
         let finding = RuleFinding {
+            causes: Vec::new(),
             rule: "test-effort-adopter".into(),
             file: "src/adopter.ts".into(),
             line: call.line as usize,

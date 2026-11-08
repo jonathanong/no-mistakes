@@ -110,6 +110,7 @@
   "FetchSourceType",
   "FetchSummary",
   "FetchesOptions",
+  "FindingCause",
   "FlowEdge",
   "FlowNode",
   "FlowOptions",

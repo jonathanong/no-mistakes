@@ -131,9 +131,93 @@ deferred: the rule asks whether some owner is reached, so once any owner is
 reached the producer passes even when another call is dynamic, hits a bound, or
 is an unmodeled external module call such as a PostgreSQL client or another
 Node builtin. With no owner reached, any such uncertainty is reported with
-the shared `unanalyzable` message. Known globals retain the call graph's
-classification; external process
-calls need contracts.
+a cause-specific `unanalyzable` message. Standard built-ins are not uncertainty
+(see [Built-in calls](#built-in-calls)); external process calls need contracts.
+
+## Uncertainty diagnostics
+
+Human output and JSON `rules[].message` / `advisories[].message` identify each
+applicable cause in deterministic order:
+
+- Unresolved dispatch includes the call file, line, exact callee expression,
+  and the reason the call is opaque. For example:
+  ``unresolved dispatch at src/producer.mts:2 callee `dispatch` (callee target is unknown)``.
+  Rewrite dynamic dispatch as a statically resolved call or configure a genuine
+  ownership contract. External calls and unmodeled callback execution name the
+  corresponding call site too; unmodeled generator bodies name their module and symbol.
+- Traversal limits name the option and configured or default value, plus the
+  last module and callable reached on the blocked path. For example:
+  `traversal limit maxDepth=1; last module src/helper.mts#helper`.
+  Inspect that path and raise the named bound when more traversal is intended.
+  Both `maxDepth` and `maxNodes` are reported if both block the same step.
+- Source failures remain incomplete checks, with the failing file in
+  `incomplete[].file` and `source failure in <file>: <error>` in
+  `incomplete[].message`. Human output carries the same file and error. Fix the
+  source read or parse failure; changing traversal bounds cannot resolve it.
+
+A message names the first five causes in sorted order (file, line, then
+position; traversal limits and generators after calls) and ends with `+N more`
+when others exist. JSON `rules[]` / `advisories[]` findings also carry
+`causes`: up to 25 entries of `{ kind, file, line?, callee?, detail }`, where
+`kind` is `unresolved-dispatch`, `traversal-limit`, or `unmodeled-generator`.
+Ordinary no-owner findings omit `causes`. A custom `message` is followed by the
+same text. Only sites which block the proof are listed.
+
+A producer with multiple uncertain paths reports their causes together. A reached
+assertion still passes despite dispatch or traversal uncertainty. Source failures
+remain errors even when an assertion is reached. Disabling this rule retains the
+same output and does not collect its uncertainty details.
+
+## Built-in calls
+
+Standard ECMAScript built-ins and a small set of Node modules cannot reach a
+repository assertion, so calling them is neither evidence nor uncertainty.
+Without this model a producer whose closure is ordinary utility code would be
+reported as `unanalyzable` for every `JSON.stringify`, `items.map`, or
+`join` call even though none can hide an assertion. A reached assertion already
+passed regardless; the model changes only which result a producer with no
+reached owner receives: the definitive no-owner finding instead of a long list of
+unresolved dispatch.
+
+- Global namespaces: `JSON`, `Math`, `Number`, `String`, `Boolean`, `BigInt`,
+  `Symbol`, `Date`, `Object`, `Array`, `Promise`, `console`, `Intl`, `RegExp`,
+  `Buffer`, `URL`, `performance`; plus `parseInt`, `parseFloat`, `isNaN`,
+  `isFinite`, `encodeURIComponent`, `decodeURIComponent`, `structuredClone`.
+- Prototype methods (`trim`, `slice`, `split`, `join`, `push`, `has`, `get`, `set`,
+  `test`, `getTime`, `log`, ...) only on a receiver which is provably built-in
+  in the same file: a string, number, regular expression, template, or array
+  literal; an object literal without a member of that name; `new` of a built-in
+  constructor (`Map`, `Set`, `Date`, `RegExp`, `Promise`, `AsyncLocalStorage`,
+  ...); a built-in factory such as `Array.from` or `Object.keys`; a chain of
+  result-preserving methods on such a receiver (`text.trim().split(',')`); or a
+  name whose every declaration is built-in, through an annotation (`string`,
+  `T[]`, `Map<...>`, ...) or a `const` initializer of the kinds above. A receiver
+  whose type is unknown stays `callee target is unknown`, even when the method
+  name matches a built-in: a repository `Sink.push` is never mistaken for
+  `Array.prototype.push`. A name collision can only keep a producer uncertain,
+  never make it a definitive no-owner error. Annotate the binding (`path: string`)
+  to make the proof explicit.
+- `AsyncLocalStorage` `getStore`, `enterWith`, `disable`, `run`, and `exit`,
+  in files which import it from `async_hooks` or `node:async_hooks`.
+- Synchronous Node modules `path`, `url`, `os`, `querystring`, `buffer`, and
+  `string_decoder` (with or without the `node:` prefix). Other external modules,
+  such as an error reporter, remain `external call has no ownership model`.
+
+A built-in that invokes a callback keeps the proof: `map`, `filter`, `forEach`,
+`flatMap`, `reduce`, `some`, `every`, `find`, `findIndex`, `sort`, `then`,
+`catch`, `finally`, `replace` / `replaceAll` (second argument), `Array.from` (second argument), `AsyncLocalStorage.run` /
+`exit`, and the timers `setTimeout`, `setInterval`, and `setImmediate`. The built-in executes the callback, so an inline function or a
+named function the call graph resolves in the same callable is traversed and can
+reach an assertion. An argument which is a parameter, a member read, a call
+result, or a function imported from another module (outside `map`-family
+iteration) is reported as `built-in callback `name` is not statically resolved`
+at the built-in call. Inline the callback or pass a function declared in the
+same file.
+
+```ts
+export function owned(items: number[]) { items.map((item) => assertItem(item)); } // reaches assertItem
+export function opaque(items: number[], fn: (item: number) => void) { items.map(fn); } // unanalyzable: `fn`
+```
 
 ## Node `fs` is modeled I/O
 
@@ -187,7 +271,7 @@ without failing the check.
 
 Rule `include`/`exclude` and project targeting select producers. Dependency
 traversal may cross those producer locations to reach actual owners. `message`
-customizes diagnostics. Suppress with `no-mistakes-disable-file
+customizes diagnostics; uncertainty causes are appended to that custom message. Suppress with `no-mistakes-disable-file
 coverage-producer-assertion-owner`, or `no-mistakes-disable-line` /
 `no-mistakes-disable-next-line` on the reported producer declaration line.
 

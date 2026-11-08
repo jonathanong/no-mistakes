@@ -23,6 +23,7 @@ fn fs_export<'a>(candidate: &KnownCallTargetRef<'a>) -> Option<(&'a str, &'a str
 pub(super) fn unmodeled_external(site: &ResolvedCallSite) -> bool {
     site.targets().any(|candidate| {
         fs_export(&candidate.target).is_none()
+            && !builtins::node_module(&candidate.target)
             && matches!(
                 candidate.target,
                 KnownCallTargetRef::ModuleExport {

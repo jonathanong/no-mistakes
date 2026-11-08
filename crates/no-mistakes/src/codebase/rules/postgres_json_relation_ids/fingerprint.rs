@@ -28,7 +28,7 @@ pub(super) fn scan(
                     continue;
                 }
                 let line = catalog.column_line(&table.name, &column.name);
-                findings.push(RuleFinding {
+                findings.push(RuleFinding { causes: Vec::new(),
                     rule: RULE_ID.to_string(),
                     file: file.clone(),
                     line,

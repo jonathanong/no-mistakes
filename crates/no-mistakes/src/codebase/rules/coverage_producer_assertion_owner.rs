@@ -8,11 +8,14 @@ use crate::config::v2::{schema::RuleDef, NoMistakesConfig};
 use crate::fx::{FxHashMap, FxHashSet};
 use anyhow::Result;
 use std::path::Path;
+mod builtin_tables;
+mod builtins;
 mod config;
 mod external;
 mod ownership;
 mod source_failures;
 mod traversal;
+mod uncertainty;
 use config::Options;
 pub(crate) use ownership::ownership_edges;
 pub const RULE_ID: &str = "coverage-producer-assertion-owner";
@@ -43,28 +46,33 @@ pub(crate) fn check(
                 continue;
             }
             let outcome = traversal::analyze(&node, &options, graph, facts, &sites, &contracts);
-            source_failures::require_sources(&outcome)?;
-            let reason = if outcome.uncertain {
-                "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically"
+            source_failures::require_sources(&root, &outcome)?;
+            let reason = if outcome.uncertain() {
+                outcome.reason(&root)
             } else if !outcome.assertion {
-                "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract"
+                "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract".to_string()
             } else {
                 continue;
+            };
+            let reason = match application.message.as_deref() {
+                Some(message) if outcome.uncertain() => format!("{message}; {reason}"),
+                Some(message) => message.to_string(),
+                None => reason,
             };
             let finding = RuleFinding {
                 rule: RULE_ID.to_string(),
                 file: relative_slash_path(&root, node.as_file().expect("callable file")),
                 line: declaration_line(&node, sources),
-                message: format!(
-                    "{}: {}#{}",
-                    application.message.as_deref().unwrap_or(reason),
-                    producer.file,
-                    producer.symbol
-                ),
+                message: format!("{}: {}#{}", reason, producer.file, producer.symbol),
                 import: None,
                 target: Some(producer.symbol.clone()),
+                causes: if outcome.uncertain() {
+                    outcome.finding_causes(&root)
+                } else {
+                    Vec::new()
+                },
             };
-            if outcome.uncertain {
+            if outcome.uncertain() {
                 diagnostics.unanalyzable(policy, finding);
             } else {
                 diagnostics.findings.push(finding);

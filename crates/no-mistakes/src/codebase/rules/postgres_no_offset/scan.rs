@@ -134,7 +134,7 @@ fn dynamic_select_prefix(call: &EmbeddedSqlCall) -> bool {
 
 fn unanalyzable(file: &str, call: &EmbeddedSqlCall) -> RuleFinding {
     let line = call.line.max(1) as usize;
-    RuleFinding {
+    RuleFinding { causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,
@@ -153,6 +153,7 @@ pub(super) fn finding(file: &str, offset: &SqlOffsetFact, ordinal: usize) -> Rul
         OffsetUse::Other => "do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
     };
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,

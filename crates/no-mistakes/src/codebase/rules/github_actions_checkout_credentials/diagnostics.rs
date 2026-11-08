@@ -82,6 +82,7 @@ fn check_file(
                          false so later steps cannot reuse write credentials."
                     );
                     RuleFinding {
+                        causes: Vec::new(),
                         rule: RULE_ID.to_string(),
                         file: rel.clone(),
                         line,

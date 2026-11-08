@@ -69,6 +69,7 @@ pub(super) fn findings(
                 "companion files do not import"
             };
             Some(RuleFinding {
+                causes: Vec::new(),
                 rule: RULE_ID.to_string(),
                 file: check.rel.clone(),
                 line: 1,

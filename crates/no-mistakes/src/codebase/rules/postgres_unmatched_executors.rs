@@ -166,6 +166,7 @@ fn unmatched(
         .iter()
         .filter(|name| !matched.contains(*name))
         .map(|name| RuleFinding {
+            causes: Vec::new(),
             rule: ctx.rule_id.to_string(),
             file: ctx.config_file.to_string(),
             line: 1,

@@ -22,6 +22,7 @@ pub(super) fn check_file(
     let mut findings = match serde_yaml::from_str::<Value>(&source) {
         Ok(value) => check_parsed(&rel, &source, &value, opts),
         Err(err) => vec![RuleFinding {
+            causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file: rel.clone(),
             line: err.location().map_or(1, |location| location.line()),

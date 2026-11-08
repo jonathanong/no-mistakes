@@ -54,6 +54,7 @@ pub(super) fn scan_email_lines(
                 continue;
             }
             findings.push(RuleFinding {
+                causes: Vec::new(),
                 rule: RULE_ID.to_string(),
                 file: rel.to_string(),
                 line: index + 1,

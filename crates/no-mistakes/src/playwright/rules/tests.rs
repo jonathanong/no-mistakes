@@ -493,6 +493,7 @@ fn filter_rule_findings_applies_path_filters_per_playwright_rule() {
     };
     let findings = vec![
         RuleFinding {
+            causes: Vec::new(),
             rule: PLAYWRIGHT_UNIQUE_TEST_IDS.to_string(),
             file: "tests/login.spec.ts".to_string(),
             line: 1,
@@ -501,6 +502,7 @@ fn filter_rule_findings_applies_path_filters_per_playwright_rule() {
             target: None,
         },
         RuleFinding {
+            causes: Vec::new(),
             rule: PLAYWRIGHT_UNIQUE_TEST_IDS.to_string(),
             file: "tests/generated/login.spec.ts".to_string(),
             line: 1,
@@ -509,6 +511,7 @@ fn filter_rule_findings_applies_path_filters_per_playwright_rule() {
             target: None,
         },
         RuleFinding {
+            causes: Vec::new(),
             rule: PLAYWRIGHT_UNIQUE_HTML_IDS.to_string(),
             file: "tests/pages/home.spec.ts".to_string(),
             line: 1,
@@ -517,6 +520,7 @@ fn filter_rule_findings_applies_path_filters_per_playwright_rule() {
             target: None,
         },
         RuleFinding {
+            causes: Vec::new(),
             rule: PLAYWRIGHT_UNIQUE_HTML_IDS.to_string(),
             file: "tests/components/button.spec.ts".to_string(),
             line: 1,

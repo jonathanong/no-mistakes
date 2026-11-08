@@ -57,7 +57,7 @@ fn check_file(
                 &error,
                 defer_suppression,
                 |line| {
-                    RuleFinding {
+                    RuleFinding { causes: Vec::new(),
                 rule: RULE_ID.to_string(), file: rel.clone(), line,
                 message: format!("{rel}: cannot read GitHub Actions source as UTF-8 ({error}); script expressions could not be checked. Restore a readable UTF-8 file so interpolated input cannot bypass script-injection checks."),
                 import: None, target: Some("unanalyzable".to_string()),

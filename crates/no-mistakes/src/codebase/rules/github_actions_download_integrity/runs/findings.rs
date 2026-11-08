@@ -7,6 +7,7 @@ pub(super) fn finding(rel: &str, body: &Body, place: Option<&StepRun>, hit: Hit)
         .or_else(|| place.and_then(|place| place.lines.first().map(|(line, _)| *line)))
         .unwrap_or(1);
     RuleFinding {
+        causes: Vec::new(),
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line,

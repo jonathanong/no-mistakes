@@ -25,6 +25,7 @@ pub(in crate::playwright::rule_findings) fn unanalyzable(
         diagnostics.unanalyzable(
             policy,
             RuleFinding {
+                causes: Vec::new(),
                 rule: rule.to_string(),
                 file: selector.file.clone(),
                 line: selector.line,
@@ -54,6 +55,7 @@ pub(in crate::playwright::rule_findings) fn unanalyzable_html_ids(
         diagnostics.unanalyzable(
             policy,
             RuleFinding {
+                causes: Vec::new(),
                 rule: PLAYWRIGHT_UNIQUE_HTML_IDS.to_string(),
                 file: selector.file.to_string_lossy().into_owned(),
                 line: selector.line,

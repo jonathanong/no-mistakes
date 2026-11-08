@@ -30,6 +30,7 @@ pub(crate) fn escapes_repository(repo: &Path, candidate: &Path) -> bool {
 pub(crate) fn escape_finding(rule: &str, configured: &Path, config_file: &str) -> RuleFinding {
     let display = configured.to_string_lossy().replace('\\', "/");
     RuleFinding {
+        causes: Vec::new(),
         rule: rule.to_string(),
         file: config_file.to_string(),
         line: 1,

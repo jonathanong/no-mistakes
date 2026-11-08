@@ -36,6 +36,7 @@ impl AllowList {
         for index in used.unused() {
             let entry = &self.entries[index];
             findings.push(wrap(RuleFinding {
+                causes: Vec::new(),
                 rule: self.rule_id.clone(),
                 file: path.clone(),
                 line: 1,
