@@ -166,3 +166,6 @@ fn exact_project<'a>(
         )),
     }
 }
+
+mod discovery_scope;
+pub(crate) use discovery_scope::test_discovery_scope;

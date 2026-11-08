@@ -43,6 +43,9 @@ pub struct CheckFactPlan {
     pub integration: bool,
     #[doc(hidden)]
     pub integration_paths: super::FamilyPathScope,
+    /// Test discovery only; imported helper summaries retain global demand.
+    #[doc(hidden)]
+    pub integration_test_paths: super::FamilyPathScope,
     pub integration_runner_configs:
         Option<Arc<crate::integration_tests::PreparedIntegrationRunnerConfigs>>,
     pub dynamic_imports: bool,
