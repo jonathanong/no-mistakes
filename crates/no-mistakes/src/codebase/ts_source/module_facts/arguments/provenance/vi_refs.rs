@@ -7,7 +7,7 @@ use oxc_syntax::node::NodeId;
 
 pub(super) const RUNNER_MODULES: [&str; 2] = ["vitest", "@jest/globals"];
 
-const HELPERS: [&str; 34] = [
+const HELPERS: [&str; 35] = [
     "fn",
     "spyOn",
     "mock",
@@ -42,6 +42,7 @@ const HELPERS: [&str; 34] = [
     "waitUntil",
     "isFakeTimers",
     "stubEnv",
+    "unstubAllEnvs",
 ];
 
 pub(super) fn local_names(
@@ -53,7 +54,7 @@ pub(super) fn local_names(
         let runner = RUNNER_MODULES.contains(&import.specifier.as_str());
         for binding in &import.bindings {
             if runner && binding.kind != "named" {
-                out.env_unknown_write = true;
+                out.poison_env();
             }
             if matches!(binding.imported.as_str(), "vi" | "jest") {
                 names.insert(binding.local.clone());
@@ -83,7 +84,7 @@ pub(super) fn check(
         _ => false,
     };
     if !safe {
-        out.env_unknown_write = true;
+        out.poison_env();
     }
 }
 

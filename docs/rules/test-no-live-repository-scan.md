@@ -1,4 +1,5 @@
 # `test-no-live-repository-scan`
+
 <!-- cspell:ignore fdir -->
 
 Rejects directory enumeration of the live repository that a Vitest root runs.
@@ -255,8 +256,59 @@ around it carry the variable through. The enumeration is accepted when:
   `process.env["X"] = ...`, `vi.stubEnv("X", ...)`) assigns an owned root, and
 - an unconditional owned write dominates every call chain that reaches the
   enumeration: a module top-level statement before the call, a statement earlier
-  in the same function body, or one in a `beforeAll`/`beforeEach` callback that
-  covers an `it`/`test` callback calling it.
+  in the same function body, or one in a same-file `beforeAll`/`beforeEach`
+  callback that covers an `it`/`test` callback calling it. An unconditional
+  module-level write in an eagerly imported setup module also dominates the
+  importing module body, including through a chain of static imports.
+
+A same-test `vi.stubEnv` can prove a smaller synchronous interval even when
+teardown restores env or another test writes the same key:
+
+```typescript
+it("scans an owned environment", () => {
+  const root = mkdtempSync(join(tmpdir(), "x-"));
+  vi.stubEnv("OWNED_SCAN_ROOT", root);
+  scanOwnedEnvironment();
+});
+
+export function scanOwnedEnvironment() {
+  return readdirSync(process.env.OWNED_SCAN_ROOT ?? "");
+}
+```
+
+This proof requires a named `vi` import from `vitest`, an unconditional stub,
+and the immediately following statement calling a named helper without
+arguments. The helper must have no parameters and a single return statement
+whose root reads `process.env` directly. Every caller must satisfy that proof.
+No other call or `await` can run between the stub and the read, so an
+`afterEach` reset, `unstubEnvs`, or another test's env value cannot interrupt it.
+Conditional stubs and `vi.stubEnv("OWNED_SCAN_ROOT", process.cwd())` retain
+advisories. Resetting in an argument, helper, or getter, passing an unknown
+`vi` alias, and methods merely named `stubEnv` do not establish this proof.
+
+Otherwise, the whole-run proof above applies. Both direct assignment and `vi.stubEnv` carry owned provenance across these
+static setup imports:
+
+```typescript
+// setup.mts
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { vi } from "vitest";
+vi.stubEnv("OWNED_SCAN_ROOT", mkdtempSync(join(tmpdir(), "scan-")));
+// Equivalently: process.env.OWNED_SCAN_ROOT = mkdtempSync(join(tmpdir(), "scan-"));
+```
+
+A test can import that setup before calling a named source helper that reads
+`process.env.OWNED_SCAN_ROOT ?? ""`. A statically configured Vitest `setupFiles`
+module also supplies this proof when every matching project supplies an owned
+write. The existing prepared project catalog supplies setup ownership; configs
+are not parsed again. Only unconditional module-level writes in setup files or their
+static imports qualify. `globalSetup`, unknown setup paths, imported hooks,
+mocked setup modules, unexecuted functions, conditional or dynamic imports, and import cycles that
+can reach the caller before the write retain the advisory. A write after an
+earlier call in the setup file does not cover that call. An env value without a stub
+or any write naming a repository path also retains the advisory.
 
 An owned root is only owned below itself: a path that climbs out of it with
 `..` (`join(dir, "..", "src")`) keeps the finding for both parameters and env
@@ -268,16 +320,18 @@ The env read must happen at the call: a value captured into a module- or
 function-level `const` (`const dir = process.env.X ?? "."`) keeps the finding, as
 does a `beforeAll`/`beforeEach` registered inside a branch.
 
-A setup-and-restore pair remains unresolved: assigning an owned root in
+A hook setup-and-restore pair remains unresolved: assigning an owned root in
 `beforeAll` and restoring the prior value (or deleting the variable) in
 `afterAll` does not establish that every write is owned. The analysis does not
 prove a lifecycle interval for every imported caller, concurrent test, and hook;
 it cannot discard the restore write merely because a visible caller is in an
 `it` callback. Pass the owned root as an argument to a statically named helper
-instead, or keep the advisory with a reasoned suppression.
+instead. The unresolved-root hint leads with passing a temporary root the test
+owns (mkdtemp) as a parameter or via `vi.stubEnv`, or using a constant fixture
+path. A reasoned suppression is the last option.
 
 The finding is kept when the write comes after the call, sits in an `if`, loop,
-or `try`, or is overwritten with a live value elsewhere. Writes are read from
+or `try`, or the whole-run proof encounters a live write elsewhere. Writes are read from
 every file in the run, including Vitest setup files that the rule's `include`/
 `exclude` filters remove from reporting, because a setup `beforeEach` runs after
 a test file's `beforeAll`.
@@ -325,7 +379,7 @@ poison wherever they appear, because they restore the default between tests.
 `stubGlobal("process", ...)` poisons too, including a named import, a member, a
 string computed member, and an optional call, even when the receiver is not
 named `vi`. `stubGlobal` with a first argument that is not a string literal
-poisons. `stubGlobal("fetch", ...)` and `` stubGlobal(`location`, ...) `` do not,
+poisons. `stubGlobal("fetch", ...)` and ``stubGlobal(`location`, ...)`` do not,
 by themselves.
 
 A computed object key poisons when its text is the literal `unstubEnvs` or
@@ -465,9 +519,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const workflows = join(import.meta.dirname, "..", ".github", "workflows");
-const entries = readdirSync(workflows).map((name) =>
-  readFileSync(join(workflows, name), "utf8"),
-);
+const entries = readdirSync(workflows).map((name) => readFileSync(join(workflows, name), "utf8"));
 ```
 
 Reported at the `readdirSync` call: it enumerates a path under the test

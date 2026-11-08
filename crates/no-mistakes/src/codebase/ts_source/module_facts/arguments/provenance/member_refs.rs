@@ -54,7 +54,7 @@ fn reaches_constructor(name: &str) -> bool {
 /// `const k = "constructor"; f[k]` carry it without a member access.
 pub(super) fn from_literal(text: &str, out: &mut PathProvenance) {
     if reaches_constructor(text) {
-        out.env_unknown_write = true;
+        out.poison_env();
     }
 }
 
@@ -67,7 +67,7 @@ pub(super) fn from_name(
 ) {
     if reaches_constructor(name) && !matches!(nodes.parent_kind(node), AstKind::MethodDefinition(_))
     {
-        out.env_unknown_write = true;
+        out.poison_env();
     }
 }
 
@@ -93,6 +93,6 @@ pub(super) fn from_computed(member: &ComputedMemberExpression<'_>, out: &mut Pat
         _ => false,
     };
     if unsafe_key {
-        out.env_unknown_write = true;
+        out.poison_env();
     }
 }
