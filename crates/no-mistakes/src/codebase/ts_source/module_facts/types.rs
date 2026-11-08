@@ -130,7 +130,7 @@ pub struct TypeScriptModuleFacts {
     #[serde(skip)]
     pub(crate) mock_import_spans: Vec<ModuleSpan>,
     /// Byte ranges of `unsupported` diagnostics that cannot hide an importer
-    /// (ambient wildcard modules, whole-file CommonJS export assignments).
+    /// (overloads, ambient declarations, whole-file CommonJS export assignments).
     /// They stay in `diagnostics` so module completeness is unchanged.
     #[serde(skip)]
     pub(crate) importer_safe: Vec<(u32, u32)>,

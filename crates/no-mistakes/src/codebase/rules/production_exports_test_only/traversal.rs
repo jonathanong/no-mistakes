@@ -128,7 +128,11 @@ pub(super) fn incomplete_sources(
             continue;
         }
         super::selector_gaps::push_binding_gaps(file, ts, &mut incomplete);
-        for import in ts.imports.iter().filter(|import| import.computed) {
+        for import in ts.imports.iter().filter(|import| {
+            import.computed
+                && !(ts.module_bindings.is_some()
+                    && import.kind == crate::codebase::dependencies::extract::ImportKind::Dynamic)
+        }) {
             incomplete.push((file.clone(), import.line as usize,
                 "computed import target prevents complete per-symbol analysis; use a literal named import".to_owned()));
         }
