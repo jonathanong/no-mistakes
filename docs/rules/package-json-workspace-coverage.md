@@ -118,3 +118,10 @@ Unused explicit exception entries produce non-failing `unused-allow-entry` advis
 
 Repository `reportUnusedAllowEntries: report` makes these diagnostics fail;
 `ignore` omits them. See [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
+
+With `reportUnusedAllowEntries: report` or `advise`, literal `allowlist` paths also
+produce `unused-allow-entry` when the literal path is absent from both the
+request inventory and disk, within the application's configured scope. Remove
+the entry or fix its path. Existing excluded or ignored files and empty glob
+matches stay silent; narrowed runs do not audit paths outside their scope.
+See [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

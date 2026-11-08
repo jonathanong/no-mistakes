@@ -1,0 +1,11 @@
+reportUnusedAllowEntries: report
+rules:
+  - rule: tsconfig-file-coverage
+    scope: repository
+    include: [src/**]
+    exclude: [src/excluded.mts]
+    options:
+      allow:
+        - {path: 'src\deleted.mts', reason: retired}
+        - {path: 'src\excluded.mts', reason: excluded}
+        - {path: src/unmatched-*.mts, reason: pattern}

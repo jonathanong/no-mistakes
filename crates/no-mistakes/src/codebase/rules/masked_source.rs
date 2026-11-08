@@ -111,7 +111,7 @@ impl FileAllow {
         if self.patterns.is_empty() {
             return;
         }
-        self.audit = Some(AllowAudit::new(
+        self.audit = Some(AllowAudit::new_files(
             root,
             config,
             rule,
@@ -148,8 +148,9 @@ impl FileAllow {
         };
         let checked: Vec<_> = self.checked.iter().map(|path| path.key().clone()).collect();
         let scope = CheckedScope::new(root, Some(sources), &checked);
-        audit.finish(
+        audit.finish_files(
             |index| scope.glob(&self.patterns[index]),
+            |index| self.patterns[index].clone(),
             |index| self.patterns[index].clone(),
         )
     }

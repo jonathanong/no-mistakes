@@ -1,0 +1,11 @@
+reportUnusedAllowEntries: report
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository
+    include: [src/**]
+    exclude: [src/tsconfig.excluded.json]
+    options:
+      allowProjects:
+        src/tsconfig.deleted.json: retired
+        src/tsconfig.excluded.json: excluded
+        'src/tsconfig.unmatched-*.json': pattern

@@ -1,0 +1,12 @@
+reportUnusedAllowEntries: report
+rules:
+  - rule: postgres-no-add-column
+    scope: repository
+    include: [src/**]
+    exclude: [src/excluded.mts]
+    options:
+      sqlInclude: [src/*.sql]
+      allowedMigrations:
+        - {path: src/deleted.sql, table: items, column: id, type: uuid, nullable: false}
+        - {path: src/excluded.mts, table: items, column: id, type: uuid, nullable: false}
+        - {path: src/unmatched-*.sql, table: items, column: id, type: uuid, nullable: false}

@@ -184,13 +184,14 @@ fn check_rule_application(
             });
         }
     }
+    let missing = super::allow_audit::MissingFiles::new(root, config, rule, scope.sources);
     findings.extend(selectors.audit(
         &anchor,
         opts,
         graph,
         scope.sources,
         scope.file_universe,
-        &checked,
+        (&checked, missing.as_ref()),
     ));
     Ok(findings)
 }

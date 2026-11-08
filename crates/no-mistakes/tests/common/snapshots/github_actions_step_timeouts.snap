@@ -555,7 +555,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "deleted_allow": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "<repo>/test-cases/rules/github-actions-step-timeouts/configs/deleted-allow.yml",
+          "import": "github-actions-step-timeouts",
+          "line": 6,
+          "message": "stale github-actions-step-timeouts allow entry `.github/workflows/deleted.yml#build#checkout` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- step: \".github/workflows/deleted.yml#build#checkout\"",
+          "target": ".github/workflows/deleted.yml#build#checkout"
+        },
+        {
+          "file": "<repo>/test-cases/rules/github-actions-step-timeouts/configs/deleted-allow.yml",
+          "import": "github-actions-step-timeouts",
+          "line": 8,
+          "message": "stale github-actions-step-timeouts allow entry `.github/workflows/deleted.yml#build#checkout` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- step: \".github/workflows/deleted.yml#build#checkout\"",
+          "target": ".github/workflows/deleted.yml#build#checkout"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],

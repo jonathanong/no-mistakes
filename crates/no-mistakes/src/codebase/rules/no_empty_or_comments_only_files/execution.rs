@@ -15,7 +15,8 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
         .collect();
     files.sort();
     files.dedup();
-    check_with_files(root, config, &files)
+    let sources = super::super::source_access::complete_source_store_for_files(&files);
+    check_with_files_and_sources(root, config, &files, &sources)
 }
 
 #[doc(hidden)]
@@ -32,7 +33,7 @@ pub fn diagnostics_with_files_and_sources(
         .map(|rule| {
             let options: Options = rule.try_rule_options()?;
             let files = super::super::selected_rule_files(root, config, rule, all_files)?;
-            let audit = super::super::allow_audit::AllowAudit::new(
+            let audit = super::super::allow_audit::AllowAudit::new_files(
                 root,
                 config,
                 rule,

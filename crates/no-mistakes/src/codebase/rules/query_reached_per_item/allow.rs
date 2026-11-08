@@ -54,8 +54,29 @@ pub(super) fn finish(
         .cloned()
         .collect::<Vec<_>>();
     let scope = CheckedScope::new(root, sources, &checked);
-    audit.finish(
+    let complete = audit.audits_missing_files()
+        && sources.is_some_and(|sources| {
+            sources
+                .inventory()
+                .paths()
+                .iter()
+                .filter(|file| {
+                    crate::codebase::dependencies::extract::is_indexable(file)
+                        && filter.is_match(file)
+                })
+                .all(|file| {
+                    scope.exact(&crate::codebase::ts_source::relative_slash_path(root, file))
+                })
+        });
+    audit.finish_files(
         |index| scope.exact(&options.allow[index].file),
+        |index| {
+            if complete {
+                options.allow[index].file.clone()
+            } else {
+                String::new()
+            }
+        },
         |index| {
             let entry = &options.allow[index];
             let mut selector = entry.file.clone();

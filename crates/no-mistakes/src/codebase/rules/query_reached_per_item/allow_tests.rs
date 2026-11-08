@@ -28,7 +28,7 @@ fn assert_audit_silent(scenario: Scenario) {
             root.join("src/query.mts")
         },
     ];
-    let sources = super::super::source_store_for_files(&files);
+    let sources = super::super::source_access::complete_source_store_for_files(&files);
     let mut facts = collect_check_facts_with_graph_files_playwright_and_sources(
         &root,
         files.to_vec(),
@@ -50,7 +50,7 @@ fn assert_audit_silent(scenario: Scenario) {
     }
     let filter =
         super::super::path_filter::RulePathFilter::new(&root, &config, application).unwrap();
-    let audit = AllowAudit::new(
+    let audit = AllowAudit::new_files(
         &root,
         &config,
         application,

@@ -1,0 +1,59 @@
+reportUnusedAllowEntries: report
+projects:
+  web: {type: nextjs, root: src}
+rules:
+  - rule: github-actions-job-timeouts
+    scope: repository
+    options:
+      include: [src/live.mts]
+      allow: [{job: 'src/deleted.yml#build'}]
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      include: [src/live.mts]
+      allow: [{step: 'src/deleted.yml#build#run', reason: retired}]
+  - rule: github-actions-test-timeout-literals
+    scope: repository
+    options:
+      include: [src/live.mts]
+      allow: [{file: src/deleted.test.mts, text: retired, reason: retired}]
+  - rule: markdown-eval-tests
+    scope: repository
+    options:
+      include: [src/live.mts]
+      allow: [src/deleted.mts]
+  - rule: no-git-identity-mutation
+    scope: repository
+    options:
+      excludePaths: [src/deleted.mts]
+      conditionallyAllowedWorkflows: [src/deleted.mts]
+  - rule: file-extension-policy
+    scope: repository
+    options:
+      scopes: [{path: elsewhere, bannedExtensions: [.js]}]
+      allowlist: [src/deleted.mts]
+  - rule: package-json-workspace-coverage
+    scope: repository
+    include: [packages/**]
+    exclude: [packages/excluded/package.json]
+    options:
+      packageRoots: [elsewhere]
+      allowlist: [packages/deleted/package.json]
+  - rule: postgres-no-add-column
+    scope: repository
+    options:
+      sqlInclude: [src/selected.sql]
+      allowedMigrations:
+        - {path: src/deleted.sql, table: items, column: id, type: uuid, nullable: false}
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      include: ['*.tsx']
+      exclude: [deleted.tsx]
+      allowFiles:
+        deleted.tsx: excluded
+        deleted.mts: outside-include
+        './deleted.tsx': excluded-normalized
+        './deleted.mts': outside-normalized-include
+        'gone*/../deleted.tsx': glob
+      allowComponents: {'deleted.tsx#Retired': excluded, 'deleted.mts#Retired': outside-include}

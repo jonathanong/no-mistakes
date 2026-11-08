@@ -47,7 +47,13 @@ impl VisiblePathSnapshot {
         let paths = projection.get_or_init(|| {
             increment(&self.observer, "discovery.projections", 1);
             let filter = |paths: &[PathBuf]| {
-                Arc::new(paths.iter().filter(|path| path.starts_with(&root)).cloned().collect())
+                Arc::new(
+                    paths
+                        .iter()
+                        .filter(|path| path.starts_with(&root))
+                        .cloned()
+                        .collect(),
+                )
             };
             ProjectedSnapshotPaths {
                 visible: filter(&view.sources.inventory().paths()),
@@ -64,8 +70,21 @@ impl VisiblePathSnapshot {
 }
 
 fn normalized_index_paths(paths: &[PathBuf]) -> Arc<Vec<PathBuf>> {
-    let mut paths = paths.iter().map(|path| normalize_discovery_path(path)).collect::<Vec<_>>();
+    let mut paths = paths
+        .iter()
+        .map(|path| normalize_discovery_path(path))
+        .collect::<Vec<_>>();
     sort_os_str_paths(&mut paths);
     paths.dedup();
     Arc::new(paths)
+}
+
+fn increment(
+    observer: &Option<Arc<crate::diagnostics::InvocationObserver>>,
+    metric: &'static str,
+    amount: u64,
+) {
+    if let Some(observer) = observer {
+        observer.increment(metric, amount);
+    }
 }

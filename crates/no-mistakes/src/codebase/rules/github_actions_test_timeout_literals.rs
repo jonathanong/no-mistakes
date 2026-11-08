@@ -31,7 +31,6 @@ pub(crate) struct AllowEntry {
 }
 
 struct CompiledOptions {
-    include: Vec<String>,
     allow: BTreeMap<String, String>,
 }
 
@@ -53,42 +52,62 @@ pub(crate) fn check_with_files_and_sources(
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let opts = compile_options(rule.try_rule_options()?)?;
-        let target_roots = super::target_roots(root, config, rule);
-        let skip = super::skip_dir_set(config);
-        let files: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots))
-            .cloned()
-            .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        if files.is_empty() {
-            continue;
-        }
-        let files = super::matching_files(root, &opts.include, &files, &target_roots)?;
+        let raw: Options = rule.try_rule_options()?;
+        validate_options(&raw)?;
+        let (selected, roots) =
+            super::selected_rule_files_with_roots(root, config, rule, all_files)?;
+        let defaults = raw.include.is_empty();
+        let matcher = super::file_matching::FileMatcher::new(
+            root,
+            &roots,
+            raw.include
+                .iter()
+                .map(String::as_str)
+                .chain(DEFAULT_INCLUDE.iter().copied().filter(|_| defaults)),
+        )?;
+        let missing = super::allow_audit::missing_file_findings(
+            root,
+            config,
+            rule,
+            sources,
+            "allow",
+            raw.allow.iter().map(|entry| {
+                let file = entry.file.trim();
+                let selected = matcher.is_match(&crate::codebase::ts_resolver::normalize_path(
+                    &root.join(file),
+                ));
+                (
+                    if selected {
+                        file.to_string()
+                    } else {
+                        String::new()
+                    },
+                    format!("{}#{}", file, entry.text.trim()),
+                )
+            }),
+        );
+        let opts = compile_options(raw)?;
+        findings.extend(missing);
+        let files = matcher.select(&selected);
         findings.extend(scan_files(root, &opts, &files, sources, defer_suppression));
     }
     super::sort_findings(&mut findings);
     Ok(findings)
 }
 
-fn compile_options(opts: Options) -> Result<CompiledOptions> {
+fn validate_options(opts: &Options) -> Result<()> {
     for (index, entry) in opts.allow.iter().enumerate() {
         anyhow::ensure!(
             !entry.file.trim().is_empty(),
             "{RULE_ID}: allow[{index}].file is required and must not be empty"
         );
     }
-    let include = if opts.include.is_empty() {
-        DEFAULT_INCLUDE
-            .iter()
-            .map(|pattern| (*pattern).to_string())
-            .collect()
-    } else {
-        opts.include
-    };
+    Ok(())
+}
+
+fn compile_options(opts: Options) -> Result<CompiledOptions> {
+    validate_options(&opts)?;
     Ok(CompiledOptions {
-        include,
         allow: opts
             .allow
             .into_iter()

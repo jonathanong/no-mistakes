@@ -14,6 +14,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "unused-allow-entry",
           "sourceLine": "- {file: src/entry.mts, callee: read, line: 900}",
           "target": "src/entry.mts:900#read"
+        },
+        {
+          "file": "advise.yml",
+          "import": "query-reached-per-item",
+          "line": 16,
+          "message": "stale query-reached-per-item allow entry `src/missing.mts#retired` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {file: src/missing.mts, callee: retired}",
+          "target": "src/missing.mts#retired"
         }
       ],
       "codebase": [],
@@ -36,6 +45,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "unused-allow-entry",
           "sourceLine": "- {file: src/entry.mts, callee: read, line: 900}",
           "target": "src/entry.mts:900#read"
+        },
+        {
+          "file": "advise-violation.yml",
+          "import": "query-reached-per-item",
+          "line": 14,
+          "message": "stale query-reached-per-item allow entry `src/missing.mts#retired` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {file: src/missing.mts, callee: retired}",
+          "target": "src/missing.mts#retired"
         }
       ],
       "codebase": [],
@@ -107,6 +125,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "unused-allow-entry",
           "sourceLine": "- {file: src/entry.mts, callee: read, line: 900}",
           "target": "src/entry.mts:900#read"
+        },
+        {
+          "file": "report.yml",
+          "import": "query-reached-per-item",
+          "line": 16,
+          "message": "stale query-reached-per-item allow entry `src/missing.mts#retired` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {file: src/missing.mts, callee: retired}",
+          "target": "src/missing.mts#retired"
         }
       ],
       "warnings": []
@@ -129,6 +156,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "unused-allow-entry",
           "sourceLine": "- {file: src/entry.mts, callee: read, line: 900}",
           "target": "src/entry.mts:900#read"
+        },
+        {
+          "file": "report-advisory.yml",
+          "import": "query-reached-per-item",
+          "line": 17,
+          "message": "stale query-reached-per-item allow entry `src/missing.mts#retired` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {file: src/missing.mts, callee: retired}",
+          "target": "src/missing.mts#retired"
         }
       ],
       "warnings": []
@@ -163,6 +199,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "unused-allow-entry",
           "sourceLine": "- {file: src/entry.mts, callee: read, line: 900}",
           "target": "src/entry.mts:900#read"
+        },
+        {
+          "file": "report-violation.yml",
+          "import": "query-reached-per-item",
+          "line": 14,
+          "message": "stale query-reached-per-item allow entry `src/missing.mts#retired` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {file: src/missing.mts, callee: retired}",
+          "target": "src/missing.mts#retired"
         },
         {
           "file": "src/entry.mts",

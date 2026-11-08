@@ -32,16 +32,63 @@ pub(crate) struct AllowedMigration {
 struct CompiledOptions {
     schema: PostgresSchemaOptions,
     allowed_migrations: Vec<AllowedMigration>,
+    missing: Vec<RuleFinding>,
 }
 
 super::prepared_rule_entrypoints!(super::check_prepared_sql_rule);
 
-super::prepared_file_rule_facts!();
+pub(crate) fn check_with_files_sources_and_facts(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    all_files: &[std::path::PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    facts: &crate::codebase::check_facts::CheckFactMap,
+) -> anyhow::Result<Vec<RuleFinding>> {
+    super::run_prepared_file_rule(
+        super::PreparedRuleContext::new(root, config, all_files, sources, facts),
+        RULE_ID,
+        |rule| {
+            let opts: Options = rule.try_rule_options()?;
+            let mut compiled = compile_options(&opts);
+            let selection = std::sync::OnceLock::new();
+            compiled.missing = super::allow_audit::missing_file_findings(
+                root,
+                config,
+                rule,
+                sources,
+                "allowedMigrations",
+                opts.allowed_migrations.iter().map(|entry| {
+                    let globs = selection.get_or_init(|| {
+                        crate::codebase::postgres::compile_sql_include(&compiled.schema.sql_include)
+                    });
+                    let selected = globs.as_ref().is_ok_and(|globs| {
+                        crate::codebase::postgres::matches_sql_include(
+                            root,
+                            &root.join(&entry.path),
+                            globs,
+                        )
+                    });
+                    (
+                        if selected {
+                            entry.path.clone()
+                        } else {
+                            String::new()
+                        },
+                        entry.path.clone(),
+                    )
+                }),
+            );
+            Ok(compiled)
+        },
+        scan::scan,
+    )
+}
 
 fn compile_options(opts: &Options) -> CompiledOptions {
     CompiledOptions {
         schema: super::schema_options(&opts.sql_include, opts.sql_include_locked),
         allowed_migrations: opts.allowed_migrations.clone(),
+        missing: Vec::new(),
     }
 }
 

@@ -1,0 +1,9 @@
+reportUnusedAllowEntries: report
+rules:
+  - rule: github-actions-test-timeout-literals
+    scope: repository
+    exclude: [src/excluded.mts]
+    options:
+      include: [src/**]
+      allow:
+        - {file: ' src/excluded.mts ', text: retired, reason: excluded}

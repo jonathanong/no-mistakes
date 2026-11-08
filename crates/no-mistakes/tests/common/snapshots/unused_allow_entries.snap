@@ -194,6 +194,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "unused-allow-entry",
           "sourceLine": "- {file: src/entry.mts, callee: read, line: 900}",
           "target": "src/entry.mts:900#read"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "import": "query-reached-per-item",
+          "line": 15,
+          "message": "stale query-reached-per-item allow entry `src/missing.mts#retired` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- {file: src/missing.mts, callee: retired}",
+          "target": "src/missing.mts#retired"
         }
       ],
       "codebase": [],

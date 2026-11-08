@@ -200,10 +200,20 @@ scope and none of those checks produced a matching finding. For a file glob,
 every matching file in the request's visible inventory must have been checked
 successfully by that rule application. A partially checked glob stays silent,
 even when no finding matched the checked subset. Excluded files, changed-file
-restrictions, disabled applications, missing files, read/parse failures, and
+restrictions, disabled applications, read/parse failures, and
 uncertain coverage cannot establish staleness. An empty match set is not proof
 of a checked scope. Graph-dependent checks also require usable supporting facts.
 The audit never widens a run or parses files again to establish coverage.
+A literal file selector within the application's configured scope is also proven
+stale when its path is absent from both the request's visible inventory and disk.
+Remove the entry or correct its path. Existing excluded or ignored files stay
+silent. Globs matching nothing do not prove staleness, and narrowed runs do not
+audit paths outside their selected scope. This applies to file selectors in all
+finding exception lists, including reasoned paths, workflow job selectors, and
+Storybook component keys and `tsconfig-gate-coverage.allowProjects`. Rule-specific
+include/exclude patterns and configured location scopes also bound this proof.
+Explicit partial work lists stay silent for missing paths even when they borrow
+a complete shared inventory. No additional discovery or parsing is performed.
 Regex and package-name entries have no file selector, so the audit requires
 complete coverage of their visible file domain; otherwise it stays silent.
 
@@ -252,7 +262,7 @@ use the same finding-based accounting:
 
 | Rule | Option | Complete-scope requirement |
 | --- | --- | --- |
-| `no-empty-or-comments-only-files` | `intentionallyEmpty` | The exact selected file was read successfully with a supported extension. Only empty or comment-only content uses the exception; missing, excluded, unreadable, or unsupported files cannot prove staleness. |
+| `no-empty-or-comments-only-files` | `intentionallyEmpty` | The exact selected file was read successfully with a supported extension. Only empty or comment-only content uses the exception; existing excluded, unreadable, or unsupported files cannot prove staleness; absent literal paths use the missing-file proof above. |
 | `postgres-required-comments` | `exemptColumnNamePatterns` | Column checks are enabled and the applicable catalog is complete. Only otherwise reportable missing or short comments use each overlapping pattern. |
 | `postgres-column-naming` | `ignoreTablePatterns` | The applicable catalog is complete. Only otherwise reportable column-policy findings use each overlapping table pattern. |
 | `postgres-finite-text-columns` | `ignoreTablePatterns` | The applicable catalog is complete. Only otherwise reportable finite-text findings use each overlapping table pattern. |
@@ -271,7 +281,8 @@ Several other exception lists already have their own stale diagnostics:
 `postgres-required-predicates.partitionKeyExemptions`, and
 `postgres-column-naming.foreignKeys.requireForeignKey.exempt`. These retain
 their rule IDs, messages, locations, severity, and existing matching semantics;
-they do not also emit `unused-allow-entry`. Workflow topology's
+they do not also emit `unused-allow-entry` for checked files. Missing literal
+`allowedMigrations.path` selectors use the shared hygiene policy. Workflow topology's
 `unlockedWorkflowReasons` likewise has its own stale-reason check.
 
 Policy vocabularies are deliberately outside this audit. This includes

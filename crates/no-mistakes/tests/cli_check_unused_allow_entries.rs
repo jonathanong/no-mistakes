@@ -153,3 +153,31 @@ fn unused_allow_postgres_names_and_sweeps_check_json_snapshot() {
         .collect();
     assert_saved_fixture("unused_allow_postgres_names_and_sweeps", &cases);
 }
+
+#[test]
+fn unused_allow_missing_files_check_json_snapshot() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/check/unused-allow-missing/fixture");
+    let cases: Vec<_> = [
+        ".no-mistakes.yml",
+        "ignore.yml",
+        "narrowed.yml",
+        "advise.yml",
+        "migrations.yml",
+        "storybook.yml",
+        "storybook-alias.yml",
+        "steps.yml",
+        "disabled.yml",
+        "trimmed.yml",
+        "hash-selectors.yml",
+        "windows.yml",
+        "gates.yml",
+        "options-narrowed.yml",
+        "indices.yml",
+        "storybook-dotted.yml",
+    ]
+    .into_iter()
+    .map(|name| (name, root.clone(), root.join(name)))
+    .collect();
+    assert_saved_fixture("unused_allow_missing_files", &cases);
+}

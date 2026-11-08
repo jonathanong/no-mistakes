@@ -14,7 +14,7 @@ pub(crate) fn check_with_files_and_sources(
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
         let files = super::super::selected_rule_files(root, config, rule, all_files)?;
-        let audit = AllowAudit::new(
+        let audit = AllowAudit::new_files(
             root,
             config,
             rule,
@@ -73,8 +73,18 @@ pub(crate) fn check_with_files_and_sources(
         findings.extend(raw);
         let checked: Vec<_> = checked.iter().map(|path| path.key().clone()).collect();
         let scope = CheckedScope::new(root, Some(sources), &checked);
-        findings.extend(audit.finish(
+        findings.extend(audit.finish_files(
             |index| scope.glob(&opts.conditionally_allowed_workflows[index]),
+            |index| {
+                let file = &opts.conditionally_allowed_workflows[index];
+                let path = crate::codebase::ts_resolver::normalize_path(&root.join(file));
+                let rel = relative_slash_path(root, &path);
+                if exclusions.is_match(&rel) {
+                    String::new()
+                } else {
+                    file.clone()
+                }
+            },
             |index| opts.conditionally_allowed_workflows[index].clone(),
         ));
     }

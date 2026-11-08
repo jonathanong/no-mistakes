@@ -6,8 +6,10 @@ use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 mod exceptions;
+mod missing;
 mod scope;
 pub(crate) use exceptions::ExceptionAudit;
+pub(crate) use missing::{findings as missing_file_findings, is_literal_file, MissingFiles};
 pub(crate) use scope::CheckedScope;
 
 pub(crate) const RULE_ID: &str = "unused-allow-entry";
@@ -43,6 +45,8 @@ pub(crate) struct AllowAudit {
     anchor: ConfigAnchor,
     rule: String,
     option: String,
+    missing: Option<MissingFiles>,
+    mapping: bool,
 }
 
 impl AllowAudit {
@@ -56,6 +60,11 @@ impl AllowAudit {
     ) -> Self {
         Self {
             usage: AllowUsage::new(count),
+            missing: None,
+            mapping: rule
+                .options
+                .get(option)
+                .is_some_and(serde_yaml::Value::is_mapping),
             anchor: if count == 0 {
                 ConfigAnchor::fallback()
             } else {
@@ -64,6 +73,43 @@ impl AllowAudit {
             rule: rule.rule.clone(),
             option: option.to_string(),
         }
+    }
+
+    pub(crate) fn new_files(
+        root: &Path,
+        config: &NoMistakesConfig,
+        rule: &RuleDef,
+        sources: Option<&SourceStore>,
+        option: &str,
+        count: usize,
+    ) -> Self {
+        let mut audit = Self::new(root, config, rule, sources, option, count);
+        if count > 0 {
+            audit.missing = MissingFiles::new(root, config, rule, sources);
+        }
+        audit
+    }
+
+    pub(crate) fn audits_missing_files(&self) -> bool {
+        self.missing.is_some()
+    }
+
+    pub(crate) fn finish_files(
+        &self,
+        eligible: impl Fn(usize) -> bool,
+        file: impl Fn(usize) -> String,
+        selector: impl Fn(usize) -> String,
+    ) -> Vec<RuleFinding> {
+        self.finish(
+            |index| {
+                eligible(index)
+                    || self
+                        .missing
+                        .as_ref()
+                        .is_some_and(|scope| scope.contains(&file(index)))
+            },
+            selector,
+        )
     }
 
     pub(crate) fn finish(
@@ -76,13 +122,12 @@ impl AllowAudit {
             .filter(|index| eligible(*index))
             .map(|index| {
                 let selector = selector(index);
-                stale_finding(
-                    &self.anchor,
-                    &self.rule,
-                    &self.option,
-                    selector,
-                    self.anchor.option_item_line(&self.option, index),
-                )
+                let line = if self.mapping {
+                    self.anchor.option_key_line(&self.option, &selector)
+                } else {
+                    self.anchor.option_item_line(&self.option, index)
+                };
+                stale_finding(&self.anchor, &self.rule, &self.option, selector, line)
             })
             .collect()
     }
