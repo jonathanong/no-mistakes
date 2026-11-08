@@ -1,0 +1,11 @@
+version: 2
+effort: low
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    include: [anchored-indexes.sql, anchored-schema.json]
+    options:
+      schemaCatalogPath: anchored-schema.json
+      sqlInclude: ["*.sql"]
+      importSpecifier: db
+      executorNames: [query]

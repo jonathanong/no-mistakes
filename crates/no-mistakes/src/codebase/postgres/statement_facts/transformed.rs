@@ -18,6 +18,7 @@ pub struct SqlTransformedColumnUseFact {
     pub column_position: usize,
     pub transformation: String,
     pub expression_site: (usize, usize),
+    pub bare_anchors: Vec<SqlTransformedColumnProbeFact>,
     pub driving_probe: Option<SqlTransformedColumnProbeFact>,
 }
 

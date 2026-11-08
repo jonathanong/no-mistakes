@@ -43,6 +43,43 @@ function changes the predicate operand, so it may no longer match an
 ordinary UUID index expression. For UUIDv7 timestamps, compute a UUID range bound
 before the query and compare the indexed column directly.
 
+A scalar transform can be a residual filter after the same relation is already
+anchored by an indexable key predicate. The rule allows this when a mandatory
+`WHERE` or supported `JOIN ON` conjunct compares a bare leading primary-key,
+unique-key, or valid non-partial B-tree index column with an independent value.
+Equality, `= ANY(...)`, and range comparisons (including `BETWEEN`) qualify.
+The anchor can use a different key column from the transformed UUID column.
+For example:
+
+```sql
+SELECT * FROM accounts a
+WHERE a.id = $1 AND fn_remaining_duration(a.token) > interval '0';
+
+SELECT * FROM accounts
+WHERE id >= $1 AND id < $2 AND uuid_extract_timestamp(id) >= $3;
+```
+
+A bare key on the newly joined side of an inner or left join also anchors that
+relation for a later residual filter:
+
+```sql
+SELECT * FROM accounts e
+LEFT JOIN accounts a ON a.id = e.token
+LEFT JOIN accounts b ON b.id = e.token
+WHERE num_nonnulls(a.id, b.id) = 1;
+```
+
+The anchor must belong to the same relation occurrence in the same query scope;
+a different self-join alias, nested query, or separate statement cannot exempt
+it. Unqualified references require a single known relation for this exemption.
+Disjunctions, negations, self-dependent bounds, unindexed columns, partial
+indexes, and non-leading index columns do not establish an anchor. An outer
+join's key anchors only the newly joined relation. A cast on that key, such as
+`LEFT JOIN accounts a ON a.id::text = e.email`, still reports. Without a bare
+anchor, `WHERE uuid_extract_timestamp(id) >= $1` still reports: fix it by
+computing UUID bounds and comparing the bare indexed key, then retain any
+necessary timestamp check as a residual filter.
+
 Enable this rule on application SQL when key lookups and range scans should use
 their UUID indexes.
 

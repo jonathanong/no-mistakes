@@ -31,6 +31,7 @@ impl Inputs<'_, '_, '_> {
             line: expr.span().start.line.max(1) as usize,
             column_position: expr.span().start.column.max(1) as usize,
             transformation: transformation.into(),
+            bare_anchors: super::super::anchors::for_column(self.anchors, self.relations, expr),
             driving_probe,
             expression_site,
         });

@@ -1,0 +1,47 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "anchored-residual.sql",
+          "line": 3,
+          "message": "anchored-residual.sql:3: WHERE applies fn_remaining_duration to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a WHERE fn_remaining_duration(a.token) > interval '0';",
+          "target": "accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "anchored-residual.sql",
+          "line": 3,
+          "message": "anchored-residual.sql:3: WHERE applies fn_remaining_duration to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts a WHERE fn_remaining_duration(a.token) > interval '0';",
+          "target": "accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

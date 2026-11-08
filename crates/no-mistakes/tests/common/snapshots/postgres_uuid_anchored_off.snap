@@ -1,0 +1,178 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "off": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "anchored-indexes.sql",
+          "line": 1,
+          "message": "anchored-indexes.sql:1: SELECT can return every row of keyed; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM keyed WHERE key = $1 AND fn(id) = $2;",
+          "target": "table:keyed"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 10,
+          "message": "anchored-indexes.sql:10: SELECT can return every row of keyed; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM keyed WHERE fn(id) = $1;",
+          "target": "table:keyed"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 11,
+          "message": "anchored-indexes.sql:11: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM accounts WHERE id BETWEEN $1 AND $2 AND fn(token) = $3;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 12,
+          "message": "anchored-indexes.sql:12: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM accounts WHERE id BETWEEN token AND $2 AND fn(token) = $3;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 13,
+          "message": "anchored-indexes.sql:13: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE accounts SET email = $1 WHERE id = $2 AND fn(token) = $3;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 14,
+          "message": "anchored-indexes.sql:14: DELETE can remove every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM accounts WHERE id = $1 AND fn(token) = $2;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 15,
+          "message": "anchored-indexes.sql:15: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM accounts a RIGHT JOIN accounts b ON b.id = a.token WHERE fn(b.token) = $1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 16,
+          "message": "anchored-indexes.sql:16: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM accounts a FULL JOIN accounts b ON b.id = a.token WHERE fn(b.token) = $1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 17,
+          "message": "anchored-indexes.sql:17: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM accounts a LEFT JOIN accounts b ON b.id = a.token WHERE fn(a.token) = $1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 18,
+          "message": "anchored-indexes.sql:18: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM accounts a JOIN accounts b ON b.id = a.token AND fn(b.token) = $1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 19,
+          "message": "anchored-indexes.sql:19: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM accounts a JOIN accounts b ON b.id = a.token OR fn(b.token) = $1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 2,
+          "message": "anchored-indexes.sql:2: SELECT can return every row of uniqued; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM uniqued WHERE key = $1 AND fn(id) = $2;",
+          "target": "table:uniqued"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 20,
+          "message": "anchored-indexes.sql:20: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM accounts WHERE id = $1 AND EXISTS (SELECT * FROM accounts WHERE fn(token) = $2);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 3,
+          "message": "anchored-indexes.sql:3: SELECT can return every row of keyed; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM keyed WHERE tail = $1 AND fn(id) = $2;",
+          "target": "table:keyed"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 4,
+          "message": "anchored-indexes.sql:4: SELECT can return every row of partial; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM partial WHERE key = $1 AND fn(id) = $2;",
+          "target": "table:partial"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 5,
+          "message": "anchored-indexes.sql:5: SELECT can return every row of invalid; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM invalid WHERE key = $1 AND fn(id) = $2;",
+          "target": "table:invalid"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 6,
+          "message": "anchored-indexes.sql:6: SELECT can return every row of unready; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM unready WHERE key = $1 AND fn(id) = $2;",
+          "target": "table:unready"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 7,
+          "message": "anchored-indexes.sql:7: SELECT can return every row of dead; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM dead WHERE key = $1 AND fn(id) = $2;",
+          "target": "table:dead"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 8,
+          "message": "anchored-indexes.sql:8: SELECT can return every row of hash; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM hash WHERE key = $1 AND fn(id) = $2;",
+          "target": "table:hash"
+        },
+        {
+          "file": "anchored-indexes.sql",
+          "line": 9,
+          "message": "anchored-indexes.sql:9: SELECT can return every row of expression; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM expression WHERE key = $1 AND fn(id) = $2;",
+          "target": "table:expression"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

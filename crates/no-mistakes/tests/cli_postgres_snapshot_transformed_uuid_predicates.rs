@@ -237,3 +237,26 @@ fn postgres_no_transformed_uuid_predicates_check_json_snapshot() {
         rows.map(|(label, config)| (label, root.clone(), rules_path(rule, "configs", config)));
     assert_saved_fixture("postgres_no_transformed_uuid_predicates", &cases);
 }
+
+#[test]
+fn postgres_anchored_transformed_uuid_predicates_check_json_snapshot() {
+    let rule = "postgres-no-transformed-uuid-predicates";
+    let root = rules_path(rule, "fixture", ".");
+    for shape in ["residual", "left-join", "range", "indexes", "embedded"] {
+        let cases = ["", "-low"].map(|effort| {
+            (
+                if effort.is_empty() { "max" } else { "low" },
+                root.clone(),
+                rules_path(rule, "configs", &format!("anchored-{shape}{effort}.yml")),
+            )
+        });
+        assert_saved_fixture(
+            &format!("postgres_uuid_anchored_{}", shape.replace('-', "_")),
+            &cases,
+        );
+    }
+    assert_saved_fixture(
+        "postgres_uuid_anchored_off",
+        &[("off", root, rules_path(rule, "configs", "anchored-off.yml"))],
+    );
+}

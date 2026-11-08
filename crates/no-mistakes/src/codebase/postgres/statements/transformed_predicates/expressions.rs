@@ -12,7 +12,7 @@ use sqlparser::ast::{BinaryOperator as Op, Expr, FunctionArguments, Spanned};
 pub(super) fn collect(
     expression: &Expr,
     clause: Clause,
-    relations: &[BaseRel],
+    (relations, anchors): (&[BaseRel], &[super::anchors::Anchor]),
     probed: Option<&[BaseRel]>,
     positions: PlaceholderPositions<'_>,
     tokens: &[sqlparser::tokenizer::TokenWithSpan],
@@ -21,6 +21,7 @@ pub(super) fn collect(
     Inputs {
         clause,
         relations,
+        anchors,
         positions,
         tokens,
         probed,
@@ -35,6 +36,7 @@ pub(super) fn collect(
 struct Inputs<'a, 'b, 'c> {
     clause: Clause,
     relations: &'a [BaseRel],
+    anchors: &'a [super::anchors::Anchor],
     probed: Option<&'a [BaseRel]>,
     probe_value: Option<usize>,
     probes: Vec<Probe>,
