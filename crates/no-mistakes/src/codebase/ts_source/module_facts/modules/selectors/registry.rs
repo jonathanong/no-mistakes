@@ -18,6 +18,13 @@ pub(super) fn selected(
     };
     let key = crate::ast::property_key_name(&property.key)?;
     let (symbol, keys) = local_registry(property_id, semantic)?;
+    if semantic
+        .scoping()
+        .get_resolved_reference_ids(symbol)
+        .is_empty()
+    {
+        return Some(Vec::new());
+    }
     let members =
         super::super::imports_namespace::runtime_members(semantic, symbol, &mut Vec::new())?;
     if members.iter().any(|name| !keys.contains(name.as_str())) {
@@ -47,7 +54,7 @@ pub(super) fn selected(
         };
         names.extend(awaited(await_id, semantic, calls)?);
     }
-    (!names.is_empty()).then_some(names)
+    Some(names)
 }
 
 fn local_registry(

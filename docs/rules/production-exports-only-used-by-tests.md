@@ -127,7 +127,19 @@ value must be an arrow: another function-valued member could expose the map
 through its `this` receiver and conceal further loader calls. Rewrite such
 members as arrows or keep them outside the loader map. Every call must name a
 declared loader key; inherited members such as `valueOf()` stay uncertain. Mixed proven
-and escaping uses of a loader result also stay uncertain.
+and escaping uses of a loader result also stay uncertain. A literal key that is
+never called selects no exports when the entire registry satisfies these
+non-escaping, never-written constraints. A wholly unused local registry likewise
+selects no exports. For example:
+
+```ts
+const registry = { x: () => import("./x"), y: () => import("./y") };
+const { work } = await registry.y();
+```
+
+Only `work` from `./y` is consumed here. Test imports of exports from `./x`
+remain eligible for findings. Passing `registry` to another function, writing
+`registry.x`, or accessing `registry[key]` preserves uncertainty for the map.
 
 A `.then` callback parameter uses the same static member and escape rules as a
 runtime namespace import. Every reference must read a static member; passing,
@@ -141,7 +153,11 @@ member read does not pass a receiver.
 array without spreads, and be awaited directly into an array pattern. Each
 selected element maps by position to its own literal import and an object
 pattern with static keys and no rest. Multiple imports and array holes preserve
-that position. A whole-module element binding, rest pattern, computed key,
+that position. An explicit array hole selects no exports from the import at
+that position: `const [, { work }] = await Promise.all([import("./x"),
+import("./y")])` consumes only `work` from `./y`. Test imports of exports from
+`./x` remain eligible for findings. A missing element beyond the end of the
+pattern stays uncertain. A whole-module element binding, rest pattern, computed key,
 shadowed `Promise`, or stored result keeps uncertainty for that import.
 
 Other forms keep the "unknown import selector" advisory: computed nonliteral
