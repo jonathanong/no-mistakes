@@ -13,3 +13,7 @@ SELECT id FROM topic_posts WHERE topic_id = $1 LIMIT 2
 `, []);
 query('SELECT id FROM topic_posts WHERE topic_id = $1 LIMIT 1', []);
 query(unknownSql, []);
+query(`
+-- no-mistakes-disable-file postgres-required-predicates: not a host file directive
+SELECT id FROM topic_posts WHERE topic_id = $1 LIMIT 1 -- no-mistakes-disable-line postgres-required-predicates
+`, []);
