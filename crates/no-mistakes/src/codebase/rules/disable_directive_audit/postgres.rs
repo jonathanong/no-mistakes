@@ -112,3 +112,6 @@ impl PreparedDisableDirectives {
 fn has_directive(sql: &str) -> bool {
     sql.contains("no-mistakes-disable-")
 }
+
+#[cfg(test)]
+mod tests;
