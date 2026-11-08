@@ -18,6 +18,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "WITH updated_row AS (UPDATE input_rows SET error_message = NULL WHERE error_message = $1 RETURNING batch_id),",
           "target": "table:input_rows, table:work_batches"
+        },
+        {
+          "file": "r1.sql",
+          "line": 30,
+          "message": "r1.sql:30: SELECT can return every row of work_batches; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE work_batches SET completed_rows = work_batches.completed_rows + 1",
+          "target": "table:work_batches"
         }
       ],
       "warnings": []

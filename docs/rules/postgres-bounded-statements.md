@@ -498,6 +498,10 @@ conservative; qualify the column with its intended relation alias.
 
 The [exact key-projection fixtures](../../test-cases/rules/postgres-bounded-statements/issue-3114-exact/fixture/)
 include each reported form, a passing variant and a still-reported control.
+Additional controls retain findings for a non-unique target join, a custom
+`app.unnest` call, an unrestricted extra recursive arm, and view column aliases
+that make a bare name ambiguous. Keep the complete target key, use the builtin
+caller-sized source, constrain every recursive arm, and qualify ambiguous names.
 
 A capped CTE keeps its bound for a later statement. That includes a join on a non-`id` unique key, a one-row candidate, and a derived `LIMIT 1` subquery:
 

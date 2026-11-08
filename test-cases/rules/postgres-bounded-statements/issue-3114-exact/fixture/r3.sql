@@ -71,3 +71,16 @@ eligible AS (
   FROM eligible AS predecessor JOIN available AS successor ON successor.id = predecessor.replaced_by_id
 )
 DELETE FROM token_rows AS target USING eligible WHERE target.id = eligible.id;
+
+WITH RECURSIVE locked AS MATERIALIZED (
+  SELECT token.id, token.replaced_by_id FROM token_rows AS token WHERE token.id = ANY($1::uuid[])
+),
+eligible AS (
+  SELECT token.id, token.replaced_by_id FROM locked AS token
+  UNION ALL
+  SELECT token.id, token.replaced_by_id FROM token_rows AS token
+  UNION ALL
+  SELECT successor.id, successor.replaced_by_id
+  FROM eligible AS predecessor JOIN locked AS successor ON successor.id = predecessor.replaced_by_id
+)
+DELETE FROM token_rows AS target USING eligible WHERE target.id = eligible.id;
