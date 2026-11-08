@@ -176,6 +176,8 @@ cannot prove sink reachability. Use configured batch exemptions and reviewed
 callsite allowlists for rollout. For proven sequential page reads in counted,
 capped cursor loops, opt in to `options.exemptCappedCursorPageReads: true`;
 other calls and unproven dependencies remain reportable. It defaults to false.
+For a reviewed function-specific allowance, combine `file`, `function`, and
+`callee` so other functions in the same file continue reporting.
 CLI and async `check()` share the rule.
 Receiver targets retained as possible still participate when a newly recovered
 escape adds unknown evidence; a match does not prove one runtime callee.

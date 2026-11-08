@@ -80,3 +80,62 @@ fn missing_supporting_facts_cannot_prove_an_allowance_stale() {
 fn primary_facts_outside_the_query_graph_are_not_audited() {
     assert_audit_silent(Scenario::NarrowedGraph);
 }
+
+fn selector_root() -> std::path::PathBuf {
+    crate::test_support::rule_fixture_root("query-reached-per-item")
+        .with_file_name("allow-function")
+}
+
+#[test]
+fn function_allowance_leaves_other_callers_visible() {
+    let root = selector_root();
+    let unallowed =
+        crate::codebase::rules::run_check(&root, Some(&root.join("no-allow.yml")), None).unwrap();
+    assert_eq!(
+        unallowed
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [4, 8]
+    );
+    let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].file, "entry.mts");
+    assert_eq!(findings[0].line, 8);
+    assert!(findings[0].message.contains("processItems"));
+    let file_only =
+        crate::codebase::rules::run_check(&root, Some(&root.join("file-only.yml")), None).unwrap();
+    assert!(file_only.is_empty(), "{file_only:#?}");
+}
+
+#[test]
+fn unused_function_and_legacy_file_allowances_are_reported() {
+    let root = selector_root();
+    let findings =
+        crate::codebase::rules::run_check(&root, Some(&root.join("hygiene.yml")), None).unwrap();
+    let unused = findings
+        .iter()
+        .filter(|finding| finding.rule == "unused-allow-entry")
+        .collect::<Vec<_>>();
+    assert_eq!(unused.len(), 4, "{findings:#?}");
+    for selector in ["removedFunction", "otherQuery", "entry.mts:4", "clean.mts"] {
+        assert!(
+            unused
+                .iter()
+                .any(|finding| finding.message.contains(selector)),
+            "{unused:#?}"
+        );
+    }
+    assert!(findings
+        .iter()
+        .any(|finding| finding.rule == RULE_ID && finding.line == 8));
+}
+
+#[test]
+fn function_selectors_require_a_nonempty_name() {
+    let root = selector_root();
+    let error =
+        crate::codebase::rules::run_check(&root, Some(&root.join("empty-function.yml")), None)
+            .unwrap_err();
+    assert!(error.to_string().contains("non-empty function"), "{error}");
+}

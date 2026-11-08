@@ -68,7 +68,7 @@ rules:
 | Option | Default | Behavior |
 | --- | --- | --- |
 | `effects` | Empty | Required non-empty list of configured effect family names. |
-| `allow` | Empty | Existing callsites to exempt by repository-relative `file`, optional `callee`, and optional one-based `line`. |
+| `allow` | Empty | Existing callsites to exempt by repository-relative `file`, optional `function`, optional `callee`, and optional one-based `line`. All supplied selectors must match. |
 | `exemptCappedCursorPageReads` | `false` | Exempt only proven sequential page reads in counted cursor loops. |
 
 Effect `targets` match resolved module/export bindings, including aliased
@@ -325,6 +325,25 @@ Following recall over precision, nothing is silently treated as clean ([how anal
 
 ## Suppression
 
+Prefer a function-scoped allowance for a reviewed exception:
+
+```yaml
+allow:
+  - file: src/tasks.ts
+    function: backfillPage
+    callee: query
+```
+
+`function` matches the exact enclosing caller name from the canonical call
+graph, as shown at the start of the finding's call path. It must be non-empty.
+It selects the per-item call being reported, rather than a helper or effect sink
+later in the path. Calls in another function in the same file still report.
+Callers without a name cannot match this selector. If multiple callers have
+the same reported name, also supply `line` to disambiguate them.
+Adding or removing lines before a named function does not change its selector.
+An optional `line` further narrows the allowance to that one-based call line.
+Existing file-only entries keep exempting every matching call in the file.
+
 Use `no-mistakes-disable-next-line query-reached-per-item` or
 `no-mistakes-disable-line query-reached-per-item` at the reported callsite, or
 `no-mistakes-disable-file query-reached-per-item` for a justified file exception.
@@ -342,7 +361,9 @@ Unused `allow` entries are non-failing `unused-allow-entry` advisories by defaul
 configuration entry's file and line. An entry must name a file actually checked
 by this application, and supporting graph facts must be usable. Entries for
 excluded, missing, or unchecked files stay silent. Overlapping selectors that
-match a finding all count as used. Remove obsolete entries or correct their
+match a finding all count as used. A function selector that matches no finding
+is unused even when another function in that file has a finding. File-only
+entries are also reported when unused. Remove obsolete entries or correct their
 selectors; see [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
 
 Repository `reportUnusedAllowEntries: report` makes these diagnostics fail;

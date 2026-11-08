@@ -1,0 +1,4 @@
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    enabled: false

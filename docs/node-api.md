@@ -48,6 +48,9 @@ YAML `options`, selected by `check({ root, config })` or an `analyzeProject()`
 check report. It defaults to `false` and shares CLI behavior. The exported
 `QueryReachedPerItemOptions` and `QueryReachedPerItemAllowEntry` describe that
 configuration; the async runtime entrypoints and report fields are unchanged.
+Allow entries accept an optional `function` string to match the exact enclosing
+caller name, combined with any `callee` and `line` selectors. File-only entries
+retain their behavior, including unused-entry reporting.
 See the [cursor exemption contract](rules/query-reached-per-item.md#capped-sequential-page-reads).
 
 ```js
