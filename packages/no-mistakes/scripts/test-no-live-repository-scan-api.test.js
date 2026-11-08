@@ -118,21 +118,23 @@ for (const [label, config] of [
   );
 }
 
-test(
-  "compiled Node loader scans preserve check and prepared analysis parity",
-  { skip: !compiled },
-  async () => {
-    await assertParity(
-      [
-        ["node_default", nodeRoot, ".no-mistakes.yml"],
-        ["node_report", nodeRoot, "report.yml"],
-        ["node_custom", nodeRoot, "custom.yml"],
-        ["node_advisory", nodeRoot, "advisory.yml"],
-      ],
-      "snapshots/test-no-live-repository-scan-node-loaders-api.snap",
-    );
-  },
-);
+for (const [policy, config] of [
+  ["default", ".no-mistakes.yml"],
+  ["report", "report.yml"],
+  ["custom", "custom.yml"],
+  ["advisory", "advisory.yml"],
+]) {
+  test(
+    `compiled Node loader ${policy} scans preserve check and prepared analysis parity`,
+    { skip: !compiled },
+    async () => {
+      await assertParity(
+        [[`node_${policy}`, nodeRoot, config]],
+        `snapshots/test-no-live-repository-scan-node-loaders-${policy}-api.snap`,
+      );
+    },
+  );
+}
 
 for (const name of [
   "const-load",

@@ -1,0 +1,25 @@
+{
+  "node_custom": {
+    "rules": [],
+    "advisories": [
+      {
+        "file": "tests/extra.test.ts",
+        "import": "load(\"walker\")",
+        "line": 4,
+        "message": "Use a declared fixture directory.",
+        "rule": "test-no-live-repository-scan",
+        "target": "unresolved root",
+        "sourceLine": "load(\"walker\");"
+      },
+      {
+        "file": "tests/extra.test.ts",
+        "import": "module.require(\"walker\")",
+        "line": 2,
+        "message": "Use a declared fixture directory.",
+        "rule": "test-no-live-repository-scan",
+        "target": "unresolved root",
+        "sourceLine": "module.require(\"walker\");"
+      }
+    ]
+  }
+}
