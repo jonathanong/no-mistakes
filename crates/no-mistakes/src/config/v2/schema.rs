@@ -9,6 +9,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 mod applications;
+mod postgres_column_checks;
+pub use postgres_column_checks::*;
 mod ci_checks;
 mod effects;
 mod infra_config;

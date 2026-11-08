@@ -1,0 +1,2869 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "aliases": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 100,
+          "message": "schema.json: column:metrics.not_check_count: metrics.not_check_count lacks a validated CHECK proving not_check_count >= 0; add and validate CHECK (\"not_check_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_check_count\": {",
+          "target": "column:metrics.not_check_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 103,
+          "message": "schema.json: column:metrics.string_count: metrics.string_count lacks a validated CHECK proving string_count >= 0; add and validate CHECK (\"string_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"string_count\": {",
+          "target": "column:metrics.string_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 106,
+          "message": "schema.json: column:metrics.function_count: metrics.function_count lacks a validated CHECK proving function_count >= 0; add and validate CHECK (\"function_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"function_count\": {",
+          "target": "column:metrics.function_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 109,
+          "message": "schema.json: column:metrics.overflow_count: metrics.overflow_count lacks a validated CHECK proving overflow_count >= 0; add and validate CHECK (\"overflow_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"overflow_count\": {",
+          "target": "column:metrics.overflow_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 121,
+          "message": "schema.json: column:metrics.text_cast_count: metrics.text_cast_count lacks a validated CHECK proving text_cast_count >= 0; add and validate CHECK (\"text_cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"text_cast_count\": {",
+          "target": "column:metrics.text_cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 136,
+          "message": "schema.json: column:metrics.negative_equal_count: metrics.negative_equal_count lacks a validated CHECK proving negative_equal_count >= 0; add and validate CHECK (\"negative_equal_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_equal_count\": {",
+          "target": "column:metrics.negative_equal_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 139,
+          "message": "schema.json: column:metrics.weak_strict_count: metrics.weak_strict_count lacks a validated CHECK proving weak_strict_count >= 0; add and validate CHECK (\"weak_strict_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_strict_count\": {",
+          "target": "column:metrics.weak_strict_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 142,
+          "message": "schema.json: column:metrics.weak_reverse_count: metrics.weak_reverse_count lacks a validated CHECK proving weak_reverse_count >= 0; add and validate CHECK (\"weak_reverse_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_reverse_count\": {",
+          "target": "column:metrics.weak_reverse_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 145,
+          "message": "schema.json: column:metrics.Needs_count: metrics.Needs_count lacks a validated CHECK proving Needs_count >= 0; add and validate CHECK (\"Needs_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"Needs_count\": {",
+          "target": "column:metrics.Needs_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 22,
+          "message": "schema.json: column:metrics.or_count: metrics.or_count lacks a validated CHECK proving or_count >= 0; add and validate CHECK (\"or_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"or_count\": {",
+          "target": "column:metrics.or_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 25,
+          "message": "schema.json: column:metrics.not_count: metrics.not_count lacks a validated CHECK proving not_count >= 0; add and validate CHECK (\"not_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_count\": {",
+          "target": "column:metrics.not_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 28,
+          "message": "schema.json: column:metrics.wrong_count: metrics.wrong_count lacks a validated CHECK proving wrong_count >= 0; add and validate CHECK (\"wrong_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_count\": {",
+          "target": "column:metrics.wrong_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 31,
+          "message": "schema.json: column:metrics.negative_count: metrics.negative_count lacks a validated CHECK proving negative_count >= 0; add and validate CHECK (\"negative_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_count\": {",
+          "target": "column:metrics.negative_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 34,
+          "message": "schema.json: column:metrics.missing_count: metrics.missing_count lacks a validated CHECK proving missing_count >= 0; add and validate CHECK (\"missing_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"missing_count\": {",
+          "target": "column:metrics.missing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 37,
+          "message": "schema.json: column:metrics.unvalidated_count: metrics.unvalidated_count lacks a validated CHECK proving unvalidated_count >= 0; add and validate CHECK (\"unvalidated_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"unvalidated_count\": {",
+          "target": "column:metrics.unvalidated_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 40,
+          "message": "schema.json: column:metrics.cast_count: metrics.cast_count lacks a validated CHECK proving cast_count >= 0; add and validate CHECK (\"cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"cast_count\": {",
+          "target": "column:metrics.cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 46,
+          "message": "schema.json: column:metrics.case_count: metrics.case_count lacks a validated CHECK proving case_count >= 0; add and validate CHECK (\"case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"case_count\": {",
+          "target": "column:metrics.case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 49,
+          "message": "schema.json: column:metrics.broken_count: metrics.broken_count lacks a validated CHECK proving broken_count >= 0; add and validate CHECK (\"broken_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"broken_count\": {",
+          "target": "column:metrics.broken_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 52,
+          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"null_count\": {",
+          "target": "column:metrics.null_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 64,
+          "message": "schema.json: column:metrics.small_count: metrics.small_count lacks a validated CHECK proving small_count >= 0; add and validate CHECK (\"small_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"small_count\": {",
+          "target": "column:metrics.small_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 67,
+          "message": "schema.json: column:metrics.big_count: metrics.big_count lacks a validated CHECK proving big_count >= 0; add and validate CHECK (\"big_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"big_count\": {",
+          "target": "column:metrics.big_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 70,
+          "message": "schema.json: column:metrics.alias_count: metrics.alias_count lacks a validated CHECK proving alias_count >= 0; add and validate CHECK (\"alias_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"alias_count\": {",
+          "target": "column:metrics.alias_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 73,
+          "message": "schema.json: column:metrics.int_count: metrics.int_count lacks a validated CHECK proving int_count >= 0; add and validate CHECK (\"int_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"int_count\": {",
+          "target": "column:metrics.int_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 82,
+          "message": "schema.json: column:metrics.wrong_case_count: metrics.wrong_case_count lacks a validated CHECK proving wrong_case_count >= 0; add and validate CHECK (\"wrong_case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_case_count\": {",
+          "target": "column:metrics.wrong_case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 85,
+          "message": "schema.json: column:metrics.malformed_count: metrics.malformed_count lacks a validated CHECK proving malformed_count >= 0; add and validate CHECK (\"malformed_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"malformed_count\": {",
+          "target": "column:metrics.malformed_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 88,
+          "message": "schema.json: column:metrics.trailing_count: metrics.trailing_count lacks a validated CHECK proving trailing_count >= 0; add and validate CHECK (\"trailing_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"trailing_count\": {",
+          "target": "column:metrics.trailing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 94,
+          "message": "schema.json: column:metrics.not_enforced_count: metrics.not_enforced_count lacks a validated CHECK proving not_enforced_count >= 0; add and validate CHECK (\"not_enforced_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_enforced_count\": {",
+          "target": "column:metrics.not_enforced_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 97,
+          "message": "schema.json: column:metrics.invalid_token_count: metrics.invalid_token_count lacks a validated CHECK proving invalid_token_count >= 0; add and validate CHECK (\"invalid_token_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"invalid_token_count\": {",
+          "target": "column:metrics.invalid_token_count"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "allow": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 100,
+          "message": "schema.json: column:metrics.not_check_count: metrics.not_check_count lacks a validated CHECK proving not_check_count >= 0; add and validate CHECK (\"not_check_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_check_count\": {",
+          "target": "column:metrics.not_check_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 103,
+          "message": "schema.json: column:metrics.string_count: metrics.string_count lacks a validated CHECK proving string_count >= 0; add and validate CHECK (\"string_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"string_count\": {",
+          "target": "column:metrics.string_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 106,
+          "message": "schema.json: column:metrics.function_count: metrics.function_count lacks a validated CHECK proving function_count >= 0; add and validate CHECK (\"function_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"function_count\": {",
+          "target": "column:metrics.function_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 109,
+          "message": "schema.json: column:metrics.overflow_count: metrics.overflow_count lacks a validated CHECK proving overflow_count >= 0; add and validate CHECK (\"overflow_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"overflow_count\": {",
+          "target": "column:metrics.overflow_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 121,
+          "message": "schema.json: column:metrics.text_cast_count: metrics.text_cast_count lacks a validated CHECK proving text_cast_count >= 0; add and validate CHECK (\"text_cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"text_cast_count\": {",
+          "target": "column:metrics.text_cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 136,
+          "message": "schema.json: column:metrics.negative_equal_count: metrics.negative_equal_count lacks a validated CHECK proving negative_equal_count >= 0; add and validate CHECK (\"negative_equal_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_equal_count\": {",
+          "target": "column:metrics.negative_equal_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 139,
+          "message": "schema.json: column:metrics.weak_strict_count: metrics.weak_strict_count lacks a validated CHECK proving weak_strict_count >= 0; add and validate CHECK (\"weak_strict_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_strict_count\": {",
+          "target": "column:metrics.weak_strict_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 142,
+          "message": "schema.json: column:metrics.weak_reverse_count: metrics.weak_reverse_count lacks a validated CHECK proving weak_reverse_count >= 0; add and validate CHECK (\"weak_reverse_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_reverse_count\": {",
+          "target": "column:metrics.weak_reverse_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 145,
+          "message": "schema.json: column:metrics.Needs_count: metrics.Needs_count lacks a validated CHECK proving Needs_count >= 0; add and validate CHECK (\"Needs_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"Needs_count\": {",
+          "target": "column:metrics.Needs_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 22,
+          "message": "schema.json: column:metrics.or_count: metrics.or_count lacks a validated CHECK proving or_count >= 0; add and validate CHECK (\"or_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"or_count\": {",
+          "target": "column:metrics.or_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 25,
+          "message": "schema.json: column:metrics.not_count: metrics.not_count lacks a validated CHECK proving not_count >= 0; add and validate CHECK (\"not_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_count\": {",
+          "target": "column:metrics.not_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 28,
+          "message": "schema.json: column:metrics.wrong_count: metrics.wrong_count lacks a validated CHECK proving wrong_count >= 0; add and validate CHECK (\"wrong_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_count\": {",
+          "target": "column:metrics.wrong_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 31,
+          "message": "schema.json: column:metrics.negative_count: metrics.negative_count lacks a validated CHECK proving negative_count >= 0; add and validate CHECK (\"negative_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_count\": {",
+          "target": "column:metrics.negative_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 37,
+          "message": "schema.json: column:metrics.unvalidated_count: metrics.unvalidated_count lacks a validated CHECK proving unvalidated_count >= 0; add and validate CHECK (\"unvalidated_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"unvalidated_count\": {",
+          "target": "column:metrics.unvalidated_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 40,
+          "message": "schema.json: column:metrics.cast_count: metrics.cast_count lacks a validated CHECK proving cast_count >= 0; add and validate CHECK (\"cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"cast_count\": {",
+          "target": "column:metrics.cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 46,
+          "message": "schema.json: column:metrics.case_count: metrics.case_count lacks a validated CHECK proving case_count >= 0; add and validate CHECK (\"case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"case_count\": {",
+          "target": "column:metrics.case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 49,
+          "message": "schema.json: column:metrics.broken_count: metrics.broken_count lacks a validated CHECK proving broken_count >= 0; add and validate CHECK (\"broken_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"broken_count\": {",
+          "target": "column:metrics.broken_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 52,
+          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"null_count\": {",
+          "target": "column:metrics.null_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 64,
+          "message": "schema.json: column:metrics.small_count: metrics.small_count lacks a validated CHECK proving small_count >= 0; add and validate CHECK (\"small_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"small_count\": {",
+          "target": "column:metrics.small_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 67,
+          "message": "schema.json: column:metrics.big_count: metrics.big_count lacks a validated CHECK proving big_count >= 0; add and validate CHECK (\"big_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"big_count\": {",
+          "target": "column:metrics.big_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 70,
+          "message": "schema.json: column:metrics.alias_count: metrics.alias_count lacks a validated CHECK proving alias_count >= 0; add and validate CHECK (\"alias_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"alias_count\": {",
+          "target": "column:metrics.alias_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 73,
+          "message": "schema.json: column:metrics.int_count: metrics.int_count lacks a validated CHECK proving int_count >= 0; add and validate CHECK (\"int_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"int_count\": {",
+          "target": "column:metrics.int_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 82,
+          "message": "schema.json: column:metrics.wrong_case_count: metrics.wrong_case_count lacks a validated CHECK proving wrong_case_count >= 0; add and validate CHECK (\"wrong_case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_case_count\": {",
+          "target": "column:metrics.wrong_case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 85,
+          "message": "schema.json: column:metrics.malformed_count: metrics.malformed_count lacks a validated CHECK proving malformed_count >= 0; add and validate CHECK (\"malformed_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"malformed_count\": {",
+          "target": "column:metrics.malformed_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 88,
+          "message": "schema.json: column:metrics.trailing_count: metrics.trailing_count lacks a validated CHECK proving trailing_count >= 0; add and validate CHECK (\"trailing_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"trailing_count\": {",
+          "target": "column:metrics.trailing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 94,
+          "message": "schema.json: column:metrics.not_enforced_count: metrics.not_enforced_count lacks a validated CHECK proving not_enforced_count >= 0; add and validate CHECK (\"not_enforced_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_enforced_count\": {",
+          "target": "column:metrics.not_enforced_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 97,
+          "message": "schema.json: column:metrics.invalid_token_count: metrics.invalid_token_count lacks a validated CHECK proving invalid_token_count >= 0; add and validate CHECK (\"invalid_token_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"invalid_token_count\": {",
+          "target": "column:metrics.invalid_token_count"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "bad_glob": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-column-check-constraints",
+          "message": "postgres-column-check-constraints contains invalid glob `[`: error parsing glob '[': unclosed character class; missing ']'"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "bad_mode": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-column-check-constraints",
+          "message": "invalid options for rule `postgres-column-check-constraints` at options.mode: unknown field `mode`, expected one of `schemaCatalogPath`, `columns`, `allow`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "bad_predicate": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-column-check-constraints",
+          "message": "invalid options for rule `postgres-column-check-constraints` at options.columns[0].require: unknown variant `positive`, expected `non-negative`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "bad_reason": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-column-check-constraints",
+          "message": "postgres-column-check-constraints option allow: entry column:metrics.missing_count needs a reason"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "bad_type": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-column-check-constraints",
+          "message": "postgres-column-check-constraints options.columns.types: unsupported integer type text; use smallint, integer, or bigint"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "custom": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 100,
+          "message": "schema.json: column:metrics.not_check_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_check_count\": {",
+          "target": "column:metrics.not_check_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 103,
+          "message": "schema.json: column:metrics.string_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"string_count\": {",
+          "target": "column:metrics.string_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 106,
+          "message": "schema.json: column:metrics.function_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"function_count\": {",
+          "target": "column:metrics.function_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 109,
+          "message": "schema.json: column:metrics.overflow_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"overflow_count\": {",
+          "target": "column:metrics.overflow_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 121,
+          "message": "schema.json: column:metrics.text_cast_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"text_cast_count\": {",
+          "target": "column:metrics.text_cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 136,
+          "message": "schema.json: column:metrics.negative_equal_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_equal_count\": {",
+          "target": "column:metrics.negative_equal_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 139,
+          "message": "schema.json: column:metrics.weak_strict_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_strict_count\": {",
+          "target": "column:metrics.weak_strict_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 142,
+          "message": "schema.json: column:metrics.weak_reverse_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_reverse_count\": {",
+          "target": "column:metrics.weak_reverse_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 145,
+          "message": "schema.json: column:metrics.Needs_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"Needs_count\": {",
+          "target": "column:metrics.Needs_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 22,
+          "message": "schema.json: column:metrics.or_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"or_count\": {",
+          "target": "column:metrics.or_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 25,
+          "message": "schema.json: column:metrics.not_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_count\": {",
+          "target": "column:metrics.not_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 28,
+          "message": "schema.json: column:metrics.wrong_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_count\": {",
+          "target": "column:metrics.wrong_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 31,
+          "message": "schema.json: column:metrics.negative_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_count\": {",
+          "target": "column:metrics.negative_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 34,
+          "message": "schema.json: column:metrics.missing_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"missing_count\": {",
+          "target": "column:metrics.missing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 37,
+          "message": "schema.json: column:metrics.unvalidated_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"unvalidated_count\": {",
+          "target": "column:metrics.unvalidated_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 40,
+          "message": "schema.json: column:metrics.cast_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"cast_count\": {",
+          "target": "column:metrics.cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 46,
+          "message": "schema.json: column:metrics.case_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"case_count\": {",
+          "target": "column:metrics.case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 49,
+          "message": "schema.json: column:metrics.broken_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"broken_count\": {",
+          "target": "column:metrics.broken_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 52,
+          "message": "schema.json: column:metrics.null_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"null_count\": {",
+          "target": "column:metrics.null_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 64,
+          "message": "schema.json: column:metrics.small_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"small_count\": {",
+          "target": "column:metrics.small_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 67,
+          "message": "schema.json: column:metrics.big_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"big_count\": {",
+          "target": "column:metrics.big_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 70,
+          "message": "schema.json: column:metrics.alias_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"alias_count\": {",
+          "target": "column:metrics.alias_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 73,
+          "message": "schema.json: column:metrics.int_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"int_count\": {",
+          "target": "column:metrics.int_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 82,
+          "message": "schema.json: column:metrics.wrong_case_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_case_count\": {",
+          "target": "column:metrics.wrong_case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 85,
+          "message": "schema.json: column:metrics.malformed_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"malformed_count\": {",
+          "target": "column:metrics.malformed_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 88,
+          "message": "schema.json: column:metrics.trailing_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"trailing_count\": {",
+          "target": "column:metrics.trailing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 94,
+          "message": "schema.json: column:metrics.not_enforced_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_enforced_count\": {",
+          "target": "column:metrics.not_enforced_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 97,
+          "message": "schema.json: column:metrics.invalid_token_count: Add a schema lower bound.",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"invalid_token_count\": {",
+          "target": "column:metrics.invalid_token_count"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "different_pattern": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 61,
+          "message": "schema.json: column:metrics.ignored: metrics.ignored lacks a validated CHECK proving ignored >= 0; add and validate CHECK (\"ignored\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"ignored\": {",
+          "target": "column:metrics.ignored"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "duplicate_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-column-check-constraints",
+          "message": "postgres-column-check-constraints option allow: duplicate entry column:metrics.missing_count"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty_options": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty_pattern": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-column-check-constraints",
+          "message": "postgres-column-check-constraints options.columns: pattern and types must be nonempty"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty_types": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-column-check-constraints",
+          "message": "postgres-column-check-constraints options.columns: pattern and types must be nonempty"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "excluded": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 100,
+          "message": "schema.json: column:metrics.not_check_count: metrics.not_check_count lacks a validated CHECK proving not_check_count >= 0; add and validate CHECK (\"not_check_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_check_count\": {",
+          "target": "column:metrics.not_check_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 103,
+          "message": "schema.json: column:metrics.string_count: metrics.string_count lacks a validated CHECK proving string_count >= 0; add and validate CHECK (\"string_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"string_count\": {",
+          "target": "column:metrics.string_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 106,
+          "message": "schema.json: column:metrics.function_count: metrics.function_count lacks a validated CHECK proving function_count >= 0; add and validate CHECK (\"function_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"function_count\": {",
+          "target": "column:metrics.function_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 109,
+          "message": "schema.json: column:metrics.overflow_count: metrics.overflow_count lacks a validated CHECK proving overflow_count >= 0; add and validate CHECK (\"overflow_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"overflow_count\": {",
+          "target": "column:metrics.overflow_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 121,
+          "message": "schema.json: column:metrics.text_cast_count: metrics.text_cast_count lacks a validated CHECK proving text_cast_count >= 0; add and validate CHECK (\"text_cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"text_cast_count\": {",
+          "target": "column:metrics.text_cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 136,
+          "message": "schema.json: column:metrics.negative_equal_count: metrics.negative_equal_count lacks a validated CHECK proving negative_equal_count >= 0; add and validate CHECK (\"negative_equal_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_equal_count\": {",
+          "target": "column:metrics.negative_equal_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 139,
+          "message": "schema.json: column:metrics.weak_strict_count: metrics.weak_strict_count lacks a validated CHECK proving weak_strict_count >= 0; add and validate CHECK (\"weak_strict_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_strict_count\": {",
+          "target": "column:metrics.weak_strict_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 142,
+          "message": "schema.json: column:metrics.weak_reverse_count: metrics.weak_reverse_count lacks a validated CHECK proving weak_reverse_count >= 0; add and validate CHECK (\"weak_reverse_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_reverse_count\": {",
+          "target": "column:metrics.weak_reverse_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 145,
+          "message": "schema.json: column:metrics.Needs_count: metrics.Needs_count lacks a validated CHECK proving Needs_count >= 0; add and validate CHECK (\"Needs_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"Needs_count\": {",
+          "target": "column:metrics.Needs_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 22,
+          "message": "schema.json: column:metrics.or_count: metrics.or_count lacks a validated CHECK proving or_count >= 0; add and validate CHECK (\"or_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"or_count\": {",
+          "target": "column:metrics.or_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 25,
+          "message": "schema.json: column:metrics.not_count: metrics.not_count lacks a validated CHECK proving not_count >= 0; add and validate CHECK (\"not_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_count\": {",
+          "target": "column:metrics.not_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 28,
+          "message": "schema.json: column:metrics.wrong_count: metrics.wrong_count lacks a validated CHECK proving wrong_count >= 0; add and validate CHECK (\"wrong_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_count\": {",
+          "target": "column:metrics.wrong_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 31,
+          "message": "schema.json: column:metrics.negative_count: metrics.negative_count lacks a validated CHECK proving negative_count >= 0; add and validate CHECK (\"negative_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_count\": {",
+          "target": "column:metrics.negative_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 34,
+          "message": "schema.json: column:metrics.missing_count: metrics.missing_count lacks a validated CHECK proving missing_count >= 0; add and validate CHECK (\"missing_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"missing_count\": {",
+          "target": "column:metrics.missing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 37,
+          "message": "schema.json: column:metrics.unvalidated_count: metrics.unvalidated_count lacks a validated CHECK proving unvalidated_count >= 0; add and validate CHECK (\"unvalidated_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"unvalidated_count\": {",
+          "target": "column:metrics.unvalidated_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 40,
+          "message": "schema.json: column:metrics.cast_count: metrics.cast_count lacks a validated CHECK proving cast_count >= 0; add and validate CHECK (\"cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"cast_count\": {",
+          "target": "column:metrics.cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 46,
+          "message": "schema.json: column:metrics.case_count: metrics.case_count lacks a validated CHECK proving case_count >= 0; add and validate CHECK (\"case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"case_count\": {",
+          "target": "column:metrics.case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 49,
+          "message": "schema.json: column:metrics.broken_count: metrics.broken_count lacks a validated CHECK proving broken_count >= 0; add and validate CHECK (\"broken_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"broken_count\": {",
+          "target": "column:metrics.broken_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 52,
+          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"null_count\": {",
+          "target": "column:metrics.null_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 64,
+          "message": "schema.json: column:metrics.small_count: metrics.small_count lacks a validated CHECK proving small_count >= 0; add and validate CHECK (\"small_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"small_count\": {",
+          "target": "column:metrics.small_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 67,
+          "message": "schema.json: column:metrics.big_count: metrics.big_count lacks a validated CHECK proving big_count >= 0; add and validate CHECK (\"big_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"big_count\": {",
+          "target": "column:metrics.big_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 70,
+          "message": "schema.json: column:metrics.alias_count: metrics.alias_count lacks a validated CHECK proving alias_count >= 0; add and validate CHECK (\"alias_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"alias_count\": {",
+          "target": "column:metrics.alias_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 73,
+          "message": "schema.json: column:metrics.int_count: metrics.int_count lacks a validated CHECK proving int_count >= 0; add and validate CHECK (\"int_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"int_count\": {",
+          "target": "column:metrics.int_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 82,
+          "message": "schema.json: column:metrics.wrong_case_count: metrics.wrong_case_count lacks a validated CHECK proving wrong_case_count >= 0; add and validate CHECK (\"wrong_case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_case_count\": {",
+          "target": "column:metrics.wrong_case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 85,
+          "message": "schema.json: column:metrics.malformed_count: metrics.malformed_count lacks a validated CHECK proving malformed_count >= 0; add and validate CHECK (\"malformed_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"malformed_count\": {",
+          "target": "column:metrics.malformed_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 88,
+          "message": "schema.json: column:metrics.trailing_count: metrics.trailing_count lacks a validated CHECK proving trailing_count >= 0; add and validate CHECK (\"trailing_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"trailing_count\": {",
+          "target": "column:metrics.trailing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 94,
+          "message": "schema.json: column:metrics.not_enforced_count: metrics.not_enforced_count lacks a validated CHECK proving not_enforced_count >= 0; add and validate CHECK (\"not_enforced_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_enforced_count\": {",
+          "target": "column:metrics.not_enforced_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 97,
+          "message": "schema.json: column:metrics.invalid_token_count: metrics.invalid_token_count lacks a validated CHECK proving invalid_token_count >= 0; add and validate CHECK (\"invalid_token_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"invalid_token_count\": {",
+          "target": "column:metrics.invalid_token_count"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file_disable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-column-check-constraints",
+          "message": "postgres-column-check-constraints options.allow.column: expected table.column, got missing"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line_disable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 100,
+          "message": "schema.json: column:metrics.not_check_count: metrics.not_check_count lacks a validated CHECK proving not_check_count >= 0; add and validate CHECK (\"not_check_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_check_count\": {",
+          "target": "column:metrics.not_check_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 103,
+          "message": "schema.json: column:metrics.string_count: metrics.string_count lacks a validated CHECK proving string_count >= 0; add and validate CHECK (\"string_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"string_count\": {",
+          "target": "column:metrics.string_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 106,
+          "message": "schema.json: column:metrics.function_count: metrics.function_count lacks a validated CHECK proving function_count >= 0; add and validate CHECK (\"function_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"function_count\": {",
+          "target": "column:metrics.function_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 109,
+          "message": "schema.json: column:metrics.overflow_count: metrics.overflow_count lacks a validated CHECK proving overflow_count >= 0; add and validate CHECK (\"overflow_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"overflow_count\": {",
+          "target": "column:metrics.overflow_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 121,
+          "message": "schema.json: column:metrics.text_cast_count: metrics.text_cast_count lacks a validated CHECK proving text_cast_count >= 0; add and validate CHECK (\"text_cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"text_cast_count\": {",
+          "target": "column:metrics.text_cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 136,
+          "message": "schema.json: column:metrics.negative_equal_count: metrics.negative_equal_count lacks a validated CHECK proving negative_equal_count >= 0; add and validate CHECK (\"negative_equal_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_equal_count\": {",
+          "target": "column:metrics.negative_equal_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 139,
+          "message": "schema.json: column:metrics.weak_strict_count: metrics.weak_strict_count lacks a validated CHECK proving weak_strict_count >= 0; add and validate CHECK (\"weak_strict_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_strict_count\": {",
+          "target": "column:metrics.weak_strict_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 142,
+          "message": "schema.json: column:metrics.weak_reverse_count: metrics.weak_reverse_count lacks a validated CHECK proving weak_reverse_count >= 0; add and validate CHECK (\"weak_reverse_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_reverse_count\": {",
+          "target": "column:metrics.weak_reverse_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 145,
+          "message": "schema.json: column:metrics.Needs_count: metrics.Needs_count lacks a validated CHECK proving Needs_count >= 0; add and validate CHECK (\"Needs_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"Needs_count\": {",
+          "target": "column:metrics.Needs_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 22,
+          "message": "schema.json: column:metrics.or_count: metrics.or_count lacks a validated CHECK proving or_count >= 0; add and validate CHECK (\"or_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"or_count\": {",
+          "target": "column:metrics.or_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 25,
+          "message": "schema.json: column:metrics.not_count: metrics.not_count lacks a validated CHECK proving not_count >= 0; add and validate CHECK (\"not_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_count\": {",
+          "target": "column:metrics.not_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 28,
+          "message": "schema.json: column:metrics.wrong_count: metrics.wrong_count lacks a validated CHECK proving wrong_count >= 0; add and validate CHECK (\"wrong_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_count\": {",
+          "target": "column:metrics.wrong_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 31,
+          "message": "schema.json: column:metrics.negative_count: metrics.negative_count lacks a validated CHECK proving negative_count >= 0; add and validate CHECK (\"negative_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_count\": {",
+          "target": "column:metrics.negative_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 37,
+          "message": "schema.json: column:metrics.unvalidated_count: metrics.unvalidated_count lacks a validated CHECK proving unvalidated_count >= 0; add and validate CHECK (\"unvalidated_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"unvalidated_count\": {",
+          "target": "column:metrics.unvalidated_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 40,
+          "message": "schema.json: column:metrics.cast_count: metrics.cast_count lacks a validated CHECK proving cast_count >= 0; add and validate CHECK (\"cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"cast_count\": {",
+          "target": "column:metrics.cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 46,
+          "message": "schema.json: column:metrics.case_count: metrics.case_count lacks a validated CHECK proving case_count >= 0; add and validate CHECK (\"case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"case_count\": {",
+          "target": "column:metrics.case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 49,
+          "message": "schema.json: column:metrics.broken_count: metrics.broken_count lacks a validated CHECK proving broken_count >= 0; add and validate CHECK (\"broken_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"broken_count\": {",
+          "target": "column:metrics.broken_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 52,
+          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"null_count\": {",
+          "target": "column:metrics.null_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 64,
+          "message": "schema.json: column:metrics.small_count: metrics.small_count lacks a validated CHECK proving small_count >= 0; add and validate CHECK (\"small_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"small_count\": {",
+          "target": "column:metrics.small_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 67,
+          "message": "schema.json: column:metrics.big_count: metrics.big_count lacks a validated CHECK proving big_count >= 0; add and validate CHECK (\"big_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"big_count\": {",
+          "target": "column:metrics.big_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 70,
+          "message": "schema.json: column:metrics.alias_count: metrics.alias_count lacks a validated CHECK proving alias_count >= 0; add and validate CHECK (\"alias_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"alias_count\": {",
+          "target": "column:metrics.alias_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 73,
+          "message": "schema.json: column:metrics.int_count: metrics.int_count lacks a validated CHECK proving int_count >= 0; add and validate CHECK (\"int_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"int_count\": {",
+          "target": "column:metrics.int_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 82,
+          "message": "schema.json: column:metrics.wrong_case_count: metrics.wrong_case_count lacks a validated CHECK proving wrong_case_count >= 0; add and validate CHECK (\"wrong_case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_case_count\": {",
+          "target": "column:metrics.wrong_case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 85,
+          "message": "schema.json: column:metrics.malformed_count: metrics.malformed_count lacks a validated CHECK proving malformed_count >= 0; add and validate CHECK (\"malformed_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"malformed_count\": {",
+          "target": "column:metrics.malformed_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 88,
+          "message": "schema.json: column:metrics.trailing_count: metrics.trailing_count lacks a validated CHECK proving trailing_count >= 0; add and validate CHECK (\"trailing_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"trailing_count\": {",
+          "target": "column:metrics.trailing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 94,
+          "message": "schema.json: column:metrics.not_enforced_count: metrics.not_enforced_count lacks a validated CHECK proving not_enforced_count >= 0; add and validate CHECK (\"not_enforced_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_enforced_count\": {",
+          "target": "column:metrics.not_enforced_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 97,
+          "message": "schema.json: column:metrics.invalid_token_count: metrics.invalid_token_count lacks a validated CHECK proving invalid_token_count >= 0; add and validate CHECK (\"invalid_token_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"invalid_token_count\": {",
+          "target": "column:metrics.invalid_token_count"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "missing_catalog": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-column-check-constraints",
+          "message": "failed to read schemaCatalogPath schema.json: <io-error>"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "mixed_severities": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 100,
+          "message": "schema.json: column:metrics.not_check_count: metrics.not_check_count lacks a validated CHECK proving not_check_count >= 0; add and validate CHECK (\"not_check_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_check_count\": {",
+          "target": "column:metrics.not_check_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 103,
+          "message": "schema.json: column:metrics.string_count: metrics.string_count lacks a validated CHECK proving string_count >= 0; add and validate CHECK (\"string_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"string_count\": {",
+          "target": "column:metrics.string_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 106,
+          "message": "schema.json: column:metrics.function_count: metrics.function_count lacks a validated CHECK proving function_count >= 0; add and validate CHECK (\"function_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"function_count\": {",
+          "target": "column:metrics.function_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 109,
+          "message": "schema.json: column:metrics.overflow_count: metrics.overflow_count lacks a validated CHECK proving overflow_count >= 0; add and validate CHECK (\"overflow_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"overflow_count\": {",
+          "target": "column:metrics.overflow_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 121,
+          "message": "schema.json: column:metrics.text_cast_count: metrics.text_cast_count lacks a validated CHECK proving text_cast_count >= 0; add and validate CHECK (\"text_cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"text_cast_count\": {",
+          "target": "column:metrics.text_cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 136,
+          "message": "schema.json: column:metrics.negative_equal_count: metrics.negative_equal_count lacks a validated CHECK proving negative_equal_count >= 0; add and validate CHECK (\"negative_equal_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_equal_count\": {",
+          "target": "column:metrics.negative_equal_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 139,
+          "message": "schema.json: column:metrics.weak_strict_count: metrics.weak_strict_count lacks a validated CHECK proving weak_strict_count >= 0; add and validate CHECK (\"weak_strict_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_strict_count\": {",
+          "target": "column:metrics.weak_strict_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 142,
+          "message": "schema.json: column:metrics.weak_reverse_count: metrics.weak_reverse_count lacks a validated CHECK proving weak_reverse_count >= 0; add and validate CHECK (\"weak_reverse_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_reverse_count\": {",
+          "target": "column:metrics.weak_reverse_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 145,
+          "message": "schema.json: column:metrics.Needs_count: metrics.Needs_count lacks a validated CHECK proving Needs_count >= 0; add and validate CHECK (\"Needs_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"Needs_count\": {",
+          "target": "column:metrics.Needs_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 22,
+          "message": "schema.json: column:metrics.or_count: metrics.or_count lacks a validated CHECK proving or_count >= 0; add and validate CHECK (\"or_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"or_count\": {",
+          "target": "column:metrics.or_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 25,
+          "message": "schema.json: column:metrics.not_count: metrics.not_count lacks a validated CHECK proving not_count >= 0; add and validate CHECK (\"not_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_count\": {",
+          "target": "column:metrics.not_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 28,
+          "message": "schema.json: column:metrics.wrong_count: metrics.wrong_count lacks a validated CHECK proving wrong_count >= 0; add and validate CHECK (\"wrong_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_count\": {",
+          "target": "column:metrics.wrong_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 31,
+          "message": "schema.json: column:metrics.negative_count: metrics.negative_count lacks a validated CHECK proving negative_count >= 0; add and validate CHECK (\"negative_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_count\": {",
+          "target": "column:metrics.negative_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 34,
+          "message": "schema.json: column:metrics.missing_count: metrics.missing_count lacks a validated CHECK proving missing_count >= 0; add and validate CHECK (\"missing_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"missing_count\": {",
+          "target": "column:metrics.missing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 37,
+          "message": "schema.json: column:metrics.unvalidated_count: metrics.unvalidated_count lacks a validated CHECK proving unvalidated_count >= 0; add and validate CHECK (\"unvalidated_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"unvalidated_count\": {",
+          "target": "column:metrics.unvalidated_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 40,
+          "message": "schema.json: column:metrics.cast_count: metrics.cast_count lacks a validated CHECK proving cast_count >= 0; add and validate CHECK (\"cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"cast_count\": {",
+          "target": "column:metrics.cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 46,
+          "message": "schema.json: column:metrics.case_count: metrics.case_count lacks a validated CHECK proving case_count >= 0; add and validate CHECK (\"case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"case_count\": {",
+          "target": "column:metrics.case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 49,
+          "message": "schema.json: column:metrics.broken_count: metrics.broken_count lacks a validated CHECK proving broken_count >= 0; add and validate CHECK (\"broken_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"broken_count\": {",
+          "target": "column:metrics.broken_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 52,
+          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"null_count\": {",
+          "target": "column:metrics.null_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 64,
+          "message": "schema.json: column:metrics.small_count: metrics.small_count lacks a validated CHECK proving small_count >= 0; add and validate CHECK (\"small_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"small_count\": {",
+          "target": "column:metrics.small_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 67,
+          "message": "schema.json: column:metrics.big_count: metrics.big_count lacks a validated CHECK proving big_count >= 0; add and validate CHECK (\"big_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"big_count\": {",
+          "target": "column:metrics.big_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 70,
+          "message": "schema.json: column:metrics.alias_count: metrics.alias_count lacks a validated CHECK proving alias_count >= 0; add and validate CHECK (\"alias_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"alias_count\": {",
+          "target": "column:metrics.alias_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 73,
+          "message": "schema.json: column:metrics.int_count: metrics.int_count lacks a validated CHECK proving int_count >= 0; add and validate CHECK (\"int_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"int_count\": {",
+          "target": "column:metrics.int_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 82,
+          "message": "schema.json: column:metrics.wrong_case_count: metrics.wrong_case_count lacks a validated CHECK proving wrong_case_count >= 0; add and validate CHECK (\"wrong_case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_case_count\": {",
+          "target": "column:metrics.wrong_case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 85,
+          "message": "schema.json: column:metrics.malformed_count: metrics.malformed_count lacks a validated CHECK proving malformed_count >= 0; add and validate CHECK (\"malformed_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"malformed_count\": {",
+          "target": "column:metrics.malformed_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 88,
+          "message": "schema.json: column:metrics.trailing_count: metrics.trailing_count lacks a validated CHECK proving trailing_count >= 0; add and validate CHECK (\"trailing_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"trailing_count\": {",
+          "target": "column:metrics.trailing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 94,
+          "message": "schema.json: column:metrics.not_enforced_count: metrics.not_enforced_count lacks a validated CHECK proving not_enforced_count >= 0; add and validate CHECK (\"not_enforced_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_enforced_count\": {",
+          "target": "column:metrics.not_enforced_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 97,
+          "message": "schema.json: column:metrics.invalid_token_count: metrics.invalid_token_count lacks a validated CHECK proving invalid_token_count >= 0; add and validate CHECK (\"invalid_token_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"invalid_token_count\": {",
+          "target": "column:metrics.invalid_token_count"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "next_line_disable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 101,
+          "message": "schema.json: column:metrics.not_check_count: metrics.not_check_count lacks a validated CHECK proving not_check_count >= 0; add and validate CHECK (\"not_check_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_check_count\": {",
+          "target": "column:metrics.not_check_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 104,
+          "message": "schema.json: column:metrics.string_count: metrics.string_count lacks a validated CHECK proving string_count >= 0; add and validate CHECK (\"string_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"string_count\": {",
+          "target": "column:metrics.string_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 107,
+          "message": "schema.json: column:metrics.function_count: metrics.function_count lacks a validated CHECK proving function_count >= 0; add and validate CHECK (\"function_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"function_count\": {",
+          "target": "column:metrics.function_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 110,
+          "message": "schema.json: column:metrics.overflow_count: metrics.overflow_count lacks a validated CHECK proving overflow_count >= 0; add and validate CHECK (\"overflow_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"overflow_count\": {",
+          "target": "column:metrics.overflow_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 122,
+          "message": "schema.json: column:metrics.text_cast_count: metrics.text_cast_count lacks a validated CHECK proving text_cast_count >= 0; add and validate CHECK (\"text_cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"text_cast_count\": {",
+          "target": "column:metrics.text_cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 137,
+          "message": "schema.json: column:metrics.negative_equal_count: metrics.negative_equal_count lacks a validated CHECK proving negative_equal_count >= 0; add and validate CHECK (\"negative_equal_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_equal_count\": {",
+          "target": "column:metrics.negative_equal_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 140,
+          "message": "schema.json: column:metrics.weak_strict_count: metrics.weak_strict_count lacks a validated CHECK proving weak_strict_count >= 0; add and validate CHECK (\"weak_strict_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_strict_count\": {",
+          "target": "column:metrics.weak_strict_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 143,
+          "message": "schema.json: column:metrics.weak_reverse_count: metrics.weak_reverse_count lacks a validated CHECK proving weak_reverse_count >= 0; add and validate CHECK (\"weak_reverse_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_reverse_count\": {",
+          "target": "column:metrics.weak_reverse_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 146,
+          "message": "schema.json: column:metrics.Needs_count: metrics.Needs_count lacks a validated CHECK proving Needs_count >= 0; add and validate CHECK (\"Needs_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"Needs_count\": {",
+          "target": "column:metrics.Needs_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 22,
+          "message": "schema.json: column:metrics.or_count: metrics.or_count lacks a validated CHECK proving or_count >= 0; add and validate CHECK (\"or_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"or_count\": {",
+          "target": "column:metrics.or_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 25,
+          "message": "schema.json: column:metrics.not_count: metrics.not_count lacks a validated CHECK proving not_count >= 0; add and validate CHECK (\"not_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_count\": {",
+          "target": "column:metrics.not_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 28,
+          "message": "schema.json: column:metrics.wrong_count: metrics.wrong_count lacks a validated CHECK proving wrong_count >= 0; add and validate CHECK (\"wrong_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_count\": {",
+          "target": "column:metrics.wrong_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 31,
+          "message": "schema.json: column:metrics.negative_count: metrics.negative_count lacks a validated CHECK proving negative_count >= 0; add and validate CHECK (\"negative_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_count\": {",
+          "target": "column:metrics.negative_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 38,
+          "message": "schema.json: column:metrics.unvalidated_count: metrics.unvalidated_count lacks a validated CHECK proving unvalidated_count >= 0; add and validate CHECK (\"unvalidated_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"unvalidated_count\": {",
+          "target": "column:metrics.unvalidated_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 41,
+          "message": "schema.json: column:metrics.cast_count: metrics.cast_count lacks a validated CHECK proving cast_count >= 0; add and validate CHECK (\"cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"cast_count\": {",
+          "target": "column:metrics.cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 47,
+          "message": "schema.json: column:metrics.case_count: metrics.case_count lacks a validated CHECK proving case_count >= 0; add and validate CHECK (\"case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"case_count\": {",
+          "target": "column:metrics.case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 50,
+          "message": "schema.json: column:metrics.broken_count: metrics.broken_count lacks a validated CHECK proving broken_count >= 0; add and validate CHECK (\"broken_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"broken_count\": {",
+          "target": "column:metrics.broken_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 53,
+          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"null_count\": {",
+          "target": "column:metrics.null_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 65,
+          "message": "schema.json: column:metrics.small_count: metrics.small_count lacks a validated CHECK proving small_count >= 0; add and validate CHECK (\"small_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"small_count\": {",
+          "target": "column:metrics.small_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 68,
+          "message": "schema.json: column:metrics.big_count: metrics.big_count lacks a validated CHECK proving big_count >= 0; add and validate CHECK (\"big_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"big_count\": {",
+          "target": "column:metrics.big_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 71,
+          "message": "schema.json: column:metrics.alias_count: metrics.alias_count lacks a validated CHECK proving alias_count >= 0; add and validate CHECK (\"alias_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"alias_count\": {",
+          "target": "column:metrics.alias_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 74,
+          "message": "schema.json: column:metrics.int_count: metrics.int_count lacks a validated CHECK proving int_count >= 0; add and validate CHECK (\"int_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"int_count\": {",
+          "target": "column:metrics.int_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 83,
+          "message": "schema.json: column:metrics.wrong_case_count: metrics.wrong_case_count lacks a validated CHECK proving wrong_case_count >= 0; add and validate CHECK (\"wrong_case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_case_count\": {",
+          "target": "column:metrics.wrong_case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 86,
+          "message": "schema.json: column:metrics.malformed_count: metrics.malformed_count lacks a validated CHECK proving malformed_count >= 0; add and validate CHECK (\"malformed_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"malformed_count\": {",
+          "target": "column:metrics.malformed_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 89,
+          "message": "schema.json: column:metrics.trailing_count: metrics.trailing_count lacks a validated CHECK proving trailing_count >= 0; add and validate CHECK (\"trailing_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"trailing_count\": {",
+          "target": "column:metrics.trailing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 95,
+          "message": "schema.json: column:metrics.not_enforced_count: metrics.not_enforced_count lacks a validated CHECK proving not_enforced_count >= 0; add and validate CHECK (\"not_enforced_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_enforced_count\": {",
+          "target": "column:metrics.not_enforced_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 98,
+          "message": "schema.json: column:metrics.invalid_token_count: metrics.invalid_token_count lacks a validated CHECK proving invalid_token_count >= 0; add and validate CHECK (\"invalid_token_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"invalid_token_count\": {",
+          "target": "column:metrics.invalid_token_count"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "project": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 100,
+          "message": "schema.json: column:metrics.not_check_count: metrics.not_check_count lacks a validated CHECK proving not_check_count >= 0; add and validate CHECK (\"not_check_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_check_count\": {",
+          "target": "column:metrics.not_check_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 103,
+          "message": "schema.json: column:metrics.string_count: metrics.string_count lacks a validated CHECK proving string_count >= 0; add and validate CHECK (\"string_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"string_count\": {",
+          "target": "column:metrics.string_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 106,
+          "message": "schema.json: column:metrics.function_count: metrics.function_count lacks a validated CHECK proving function_count >= 0; add and validate CHECK (\"function_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"function_count\": {",
+          "target": "column:metrics.function_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 109,
+          "message": "schema.json: column:metrics.overflow_count: metrics.overflow_count lacks a validated CHECK proving overflow_count >= 0; add and validate CHECK (\"overflow_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"overflow_count\": {",
+          "target": "column:metrics.overflow_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 121,
+          "message": "schema.json: column:metrics.text_cast_count: metrics.text_cast_count lacks a validated CHECK proving text_cast_count >= 0; add and validate CHECK (\"text_cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"text_cast_count\": {",
+          "target": "column:metrics.text_cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 136,
+          "message": "schema.json: column:metrics.negative_equal_count: metrics.negative_equal_count lacks a validated CHECK proving negative_equal_count >= 0; add and validate CHECK (\"negative_equal_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_equal_count\": {",
+          "target": "column:metrics.negative_equal_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 139,
+          "message": "schema.json: column:metrics.weak_strict_count: metrics.weak_strict_count lacks a validated CHECK proving weak_strict_count >= 0; add and validate CHECK (\"weak_strict_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_strict_count\": {",
+          "target": "column:metrics.weak_strict_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 142,
+          "message": "schema.json: column:metrics.weak_reverse_count: metrics.weak_reverse_count lacks a validated CHECK proving weak_reverse_count >= 0; add and validate CHECK (\"weak_reverse_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_reverse_count\": {",
+          "target": "column:metrics.weak_reverse_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 145,
+          "message": "schema.json: column:metrics.Needs_count: metrics.Needs_count lacks a validated CHECK proving Needs_count >= 0; add and validate CHECK (\"Needs_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"Needs_count\": {",
+          "target": "column:metrics.Needs_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 22,
+          "message": "schema.json: column:metrics.or_count: metrics.or_count lacks a validated CHECK proving or_count >= 0; add and validate CHECK (\"or_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"or_count\": {",
+          "target": "column:metrics.or_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 25,
+          "message": "schema.json: column:metrics.not_count: metrics.not_count lacks a validated CHECK proving not_count >= 0; add and validate CHECK (\"not_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_count\": {",
+          "target": "column:metrics.not_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 28,
+          "message": "schema.json: column:metrics.wrong_count: metrics.wrong_count lacks a validated CHECK proving wrong_count >= 0; add and validate CHECK (\"wrong_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_count\": {",
+          "target": "column:metrics.wrong_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 31,
+          "message": "schema.json: column:metrics.negative_count: metrics.negative_count lacks a validated CHECK proving negative_count >= 0; add and validate CHECK (\"negative_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_count\": {",
+          "target": "column:metrics.negative_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 34,
+          "message": "schema.json: column:metrics.missing_count: metrics.missing_count lacks a validated CHECK proving missing_count >= 0; add and validate CHECK (\"missing_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"missing_count\": {",
+          "target": "column:metrics.missing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 37,
+          "message": "schema.json: column:metrics.unvalidated_count: metrics.unvalidated_count lacks a validated CHECK proving unvalidated_count >= 0; add and validate CHECK (\"unvalidated_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"unvalidated_count\": {",
+          "target": "column:metrics.unvalidated_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 40,
+          "message": "schema.json: column:metrics.cast_count: metrics.cast_count lacks a validated CHECK proving cast_count >= 0; add and validate CHECK (\"cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"cast_count\": {",
+          "target": "column:metrics.cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 46,
+          "message": "schema.json: column:metrics.case_count: metrics.case_count lacks a validated CHECK proving case_count >= 0; add and validate CHECK (\"case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"case_count\": {",
+          "target": "column:metrics.case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 49,
+          "message": "schema.json: column:metrics.broken_count: metrics.broken_count lacks a validated CHECK proving broken_count >= 0; add and validate CHECK (\"broken_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"broken_count\": {",
+          "target": "column:metrics.broken_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 52,
+          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"null_count\": {",
+          "target": "column:metrics.null_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 64,
+          "message": "schema.json: column:metrics.small_count: metrics.small_count lacks a validated CHECK proving small_count >= 0; add and validate CHECK (\"small_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"small_count\": {",
+          "target": "column:metrics.small_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 67,
+          "message": "schema.json: column:metrics.big_count: metrics.big_count lacks a validated CHECK proving big_count >= 0; add and validate CHECK (\"big_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"big_count\": {",
+          "target": "column:metrics.big_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 70,
+          "message": "schema.json: column:metrics.alias_count: metrics.alias_count lacks a validated CHECK proving alias_count >= 0; add and validate CHECK (\"alias_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"alias_count\": {",
+          "target": "column:metrics.alias_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 73,
+          "message": "schema.json: column:metrics.int_count: metrics.int_count lacks a validated CHECK proving int_count >= 0; add and validate CHECK (\"int_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"int_count\": {",
+          "target": "column:metrics.int_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 82,
+          "message": "schema.json: column:metrics.wrong_case_count: metrics.wrong_case_count lacks a validated CHECK proving wrong_case_count >= 0; add and validate CHECK (\"wrong_case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_case_count\": {",
+          "target": "column:metrics.wrong_case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 85,
+          "message": "schema.json: column:metrics.malformed_count: metrics.malformed_count lacks a validated CHECK proving malformed_count >= 0; add and validate CHECK (\"malformed_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"malformed_count\": {",
+          "target": "column:metrics.malformed_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 88,
+          "message": "schema.json: column:metrics.trailing_count: metrics.trailing_count lacks a validated CHECK proving trailing_count >= 0; add and validate CHECK (\"trailing_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"trailing_count\": {",
+          "target": "column:metrics.trailing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 94,
+          "message": "schema.json: column:metrics.not_enforced_count: metrics.not_enforced_count lacks a validated CHECK proving not_enforced_count >= 0; add and validate CHECK (\"not_enforced_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_enforced_count\": {",
+          "target": "column:metrics.not_enforced_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 97,
+          "message": "schema.json: column:metrics.invalid_token_count: metrics.invalid_token_count lacks a validated CHECK proving invalid_token_count >= 0; add and validate CHECK (\"invalid_token_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"invalid_token_count\": {",
+          "target": "column:metrics.invalid_token_count"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 100,
+          "message": "schema.json: column:metrics.not_check_count: metrics.not_check_count lacks a validated CHECK proving not_check_count >= 0; add and validate CHECK (\"not_check_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_check_count\": {",
+          "target": "column:metrics.not_check_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 103,
+          "message": "schema.json: column:metrics.string_count: metrics.string_count lacks a validated CHECK proving string_count >= 0; add and validate CHECK (\"string_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"string_count\": {",
+          "target": "column:metrics.string_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 106,
+          "message": "schema.json: column:metrics.function_count: metrics.function_count lacks a validated CHECK proving function_count >= 0; add and validate CHECK (\"function_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"function_count\": {",
+          "target": "column:metrics.function_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 109,
+          "message": "schema.json: column:metrics.overflow_count: metrics.overflow_count lacks a validated CHECK proving overflow_count >= 0; add and validate CHECK (\"overflow_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"overflow_count\": {",
+          "target": "column:metrics.overflow_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 121,
+          "message": "schema.json: column:metrics.text_cast_count: metrics.text_cast_count lacks a validated CHECK proving text_cast_count >= 0; add and validate CHECK (\"text_cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"text_cast_count\": {",
+          "target": "column:metrics.text_cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 136,
+          "message": "schema.json: column:metrics.negative_equal_count: metrics.negative_equal_count lacks a validated CHECK proving negative_equal_count >= 0; add and validate CHECK (\"negative_equal_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_equal_count\": {",
+          "target": "column:metrics.negative_equal_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 139,
+          "message": "schema.json: column:metrics.weak_strict_count: metrics.weak_strict_count lacks a validated CHECK proving weak_strict_count >= 0; add and validate CHECK (\"weak_strict_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_strict_count\": {",
+          "target": "column:metrics.weak_strict_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 142,
+          "message": "schema.json: column:metrics.weak_reverse_count: metrics.weak_reverse_count lacks a validated CHECK proving weak_reverse_count >= 0; add and validate CHECK (\"weak_reverse_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_reverse_count\": {",
+          "target": "column:metrics.weak_reverse_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 145,
+          "message": "schema.json: column:metrics.Needs_count: metrics.Needs_count lacks a validated CHECK proving Needs_count >= 0; add and validate CHECK (\"Needs_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"Needs_count\": {",
+          "target": "column:metrics.Needs_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 22,
+          "message": "schema.json: column:metrics.or_count: metrics.or_count lacks a validated CHECK proving or_count >= 0; add and validate CHECK (\"or_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"or_count\": {",
+          "target": "column:metrics.or_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 25,
+          "message": "schema.json: column:metrics.not_count: metrics.not_count lacks a validated CHECK proving not_count >= 0; add and validate CHECK (\"not_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_count\": {",
+          "target": "column:metrics.not_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 28,
+          "message": "schema.json: column:metrics.wrong_count: metrics.wrong_count lacks a validated CHECK proving wrong_count >= 0; add and validate CHECK (\"wrong_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_count\": {",
+          "target": "column:metrics.wrong_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 31,
+          "message": "schema.json: column:metrics.negative_count: metrics.negative_count lacks a validated CHECK proving negative_count >= 0; add and validate CHECK (\"negative_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_count\": {",
+          "target": "column:metrics.negative_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 34,
+          "message": "schema.json: column:metrics.missing_count: metrics.missing_count lacks a validated CHECK proving missing_count >= 0; add and validate CHECK (\"missing_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"missing_count\": {",
+          "target": "column:metrics.missing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 37,
+          "message": "schema.json: column:metrics.unvalidated_count: metrics.unvalidated_count lacks a validated CHECK proving unvalidated_count >= 0; add and validate CHECK (\"unvalidated_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"unvalidated_count\": {",
+          "target": "column:metrics.unvalidated_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 40,
+          "message": "schema.json: column:metrics.cast_count: metrics.cast_count lacks a validated CHECK proving cast_count >= 0; add and validate CHECK (\"cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"cast_count\": {",
+          "target": "column:metrics.cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 46,
+          "message": "schema.json: column:metrics.case_count: metrics.case_count lacks a validated CHECK proving case_count >= 0; add and validate CHECK (\"case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"case_count\": {",
+          "target": "column:metrics.case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 49,
+          "message": "schema.json: column:metrics.broken_count: metrics.broken_count lacks a validated CHECK proving broken_count >= 0; add and validate CHECK (\"broken_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"broken_count\": {",
+          "target": "column:metrics.broken_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 52,
+          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"null_count\": {",
+          "target": "column:metrics.null_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 64,
+          "message": "schema.json: column:metrics.small_count: metrics.small_count lacks a validated CHECK proving small_count >= 0; add and validate CHECK (\"small_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"small_count\": {",
+          "target": "column:metrics.small_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 67,
+          "message": "schema.json: column:metrics.big_count: metrics.big_count lacks a validated CHECK proving big_count >= 0; add and validate CHECK (\"big_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"big_count\": {",
+          "target": "column:metrics.big_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 70,
+          "message": "schema.json: column:metrics.alias_count: metrics.alias_count lacks a validated CHECK proving alias_count >= 0; add and validate CHECK (\"alias_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"alias_count\": {",
+          "target": "column:metrics.alias_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 73,
+          "message": "schema.json: column:metrics.int_count: metrics.int_count lacks a validated CHECK proving int_count >= 0; add and validate CHECK (\"int_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"int_count\": {",
+          "target": "column:metrics.int_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 82,
+          "message": "schema.json: column:metrics.wrong_case_count: metrics.wrong_case_count lacks a validated CHECK proving wrong_case_count >= 0; add and validate CHECK (\"wrong_case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_case_count\": {",
+          "target": "column:metrics.wrong_case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 85,
+          "message": "schema.json: column:metrics.malformed_count: metrics.malformed_count lacks a validated CHECK proving malformed_count >= 0; add and validate CHECK (\"malformed_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"malformed_count\": {",
+          "target": "column:metrics.malformed_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 88,
+          "message": "schema.json: column:metrics.trailing_count: metrics.trailing_count lacks a validated CHECK proving trailing_count >= 0; add and validate CHECK (\"trailing_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"trailing_count\": {",
+          "target": "column:metrics.trailing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 94,
+          "message": "schema.json: column:metrics.not_enforced_count: metrics.not_enforced_count lacks a validated CHECK proving not_enforced_count >= 0; add and validate CHECK (\"not_enforced_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_enforced_count\": {",
+          "target": "column:metrics.not_enforced_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 97,
+          "message": "schema.json: column:metrics.invalid_token_count: metrics.invalid_token_count lacks a validated CHECK proving invalid_token_count >= 0; add and validate CHECK (\"invalid_token_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"invalid_token_count\": {",
+          "target": "column:metrics.invalid_token_count"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "severity_advisory": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 100,
+          "message": "schema.json: column:metrics.not_check_count: metrics.not_check_count lacks a validated CHECK proving not_check_count >= 0; add and validate CHECK (\"not_check_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_check_count\": {",
+          "target": "column:metrics.not_check_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 103,
+          "message": "schema.json: column:metrics.string_count: metrics.string_count lacks a validated CHECK proving string_count >= 0; add and validate CHECK (\"string_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"string_count\": {",
+          "target": "column:metrics.string_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 106,
+          "message": "schema.json: column:metrics.function_count: metrics.function_count lacks a validated CHECK proving function_count >= 0; add and validate CHECK (\"function_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"function_count\": {",
+          "target": "column:metrics.function_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 109,
+          "message": "schema.json: column:metrics.overflow_count: metrics.overflow_count lacks a validated CHECK proving overflow_count >= 0; add and validate CHECK (\"overflow_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"overflow_count\": {",
+          "target": "column:metrics.overflow_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 121,
+          "message": "schema.json: column:metrics.text_cast_count: metrics.text_cast_count lacks a validated CHECK proving text_cast_count >= 0; add and validate CHECK (\"text_cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"text_cast_count\": {",
+          "target": "column:metrics.text_cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 136,
+          "message": "schema.json: column:metrics.negative_equal_count: metrics.negative_equal_count lacks a validated CHECK proving negative_equal_count >= 0; add and validate CHECK (\"negative_equal_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_equal_count\": {",
+          "target": "column:metrics.negative_equal_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 139,
+          "message": "schema.json: column:metrics.weak_strict_count: metrics.weak_strict_count lacks a validated CHECK proving weak_strict_count >= 0; add and validate CHECK (\"weak_strict_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_strict_count\": {",
+          "target": "column:metrics.weak_strict_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 142,
+          "message": "schema.json: column:metrics.weak_reverse_count: metrics.weak_reverse_count lacks a validated CHECK proving weak_reverse_count >= 0; add and validate CHECK (\"weak_reverse_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_reverse_count\": {",
+          "target": "column:metrics.weak_reverse_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 145,
+          "message": "schema.json: column:metrics.Needs_count: metrics.Needs_count lacks a validated CHECK proving Needs_count >= 0; add and validate CHECK (\"Needs_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"Needs_count\": {",
+          "target": "column:metrics.Needs_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 22,
+          "message": "schema.json: column:metrics.or_count: metrics.or_count lacks a validated CHECK proving or_count >= 0; add and validate CHECK (\"or_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"or_count\": {",
+          "target": "column:metrics.or_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 25,
+          "message": "schema.json: column:metrics.not_count: metrics.not_count lacks a validated CHECK proving not_count >= 0; add and validate CHECK (\"not_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_count\": {",
+          "target": "column:metrics.not_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 28,
+          "message": "schema.json: column:metrics.wrong_count: metrics.wrong_count lacks a validated CHECK proving wrong_count >= 0; add and validate CHECK (\"wrong_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_count\": {",
+          "target": "column:metrics.wrong_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 31,
+          "message": "schema.json: column:metrics.negative_count: metrics.negative_count lacks a validated CHECK proving negative_count >= 0; add and validate CHECK (\"negative_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_count\": {",
+          "target": "column:metrics.negative_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 34,
+          "message": "schema.json: column:metrics.missing_count: metrics.missing_count lacks a validated CHECK proving missing_count >= 0; add and validate CHECK (\"missing_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"missing_count\": {",
+          "target": "column:metrics.missing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 37,
+          "message": "schema.json: column:metrics.unvalidated_count: metrics.unvalidated_count lacks a validated CHECK proving unvalidated_count >= 0; add and validate CHECK (\"unvalidated_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"unvalidated_count\": {",
+          "target": "column:metrics.unvalidated_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 40,
+          "message": "schema.json: column:metrics.cast_count: metrics.cast_count lacks a validated CHECK proving cast_count >= 0; add and validate CHECK (\"cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"cast_count\": {",
+          "target": "column:metrics.cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 46,
+          "message": "schema.json: column:metrics.case_count: metrics.case_count lacks a validated CHECK proving case_count >= 0; add and validate CHECK (\"case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"case_count\": {",
+          "target": "column:metrics.case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 49,
+          "message": "schema.json: column:metrics.broken_count: metrics.broken_count lacks a validated CHECK proving broken_count >= 0; add and validate CHECK (\"broken_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"broken_count\": {",
+          "target": "column:metrics.broken_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 52,
+          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"null_count\": {",
+          "target": "column:metrics.null_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 64,
+          "message": "schema.json: column:metrics.small_count: metrics.small_count lacks a validated CHECK proving small_count >= 0; add and validate CHECK (\"small_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"small_count\": {",
+          "target": "column:metrics.small_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 67,
+          "message": "schema.json: column:metrics.big_count: metrics.big_count lacks a validated CHECK proving big_count >= 0; add and validate CHECK (\"big_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"big_count\": {",
+          "target": "column:metrics.big_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 70,
+          "message": "schema.json: column:metrics.alias_count: metrics.alias_count lacks a validated CHECK proving alias_count >= 0; add and validate CHECK (\"alias_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"alias_count\": {",
+          "target": "column:metrics.alias_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 73,
+          "message": "schema.json: column:metrics.int_count: metrics.int_count lacks a validated CHECK proving int_count >= 0; add and validate CHECK (\"int_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"int_count\": {",
+          "target": "column:metrics.int_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 82,
+          "message": "schema.json: column:metrics.wrong_case_count: metrics.wrong_case_count lacks a validated CHECK proving wrong_case_count >= 0; add and validate CHECK (\"wrong_case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_case_count\": {",
+          "target": "column:metrics.wrong_case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 85,
+          "message": "schema.json: column:metrics.malformed_count: metrics.malformed_count lacks a validated CHECK proving malformed_count >= 0; add and validate CHECK (\"malformed_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"malformed_count\": {",
+          "target": "column:metrics.malformed_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 88,
+          "message": "schema.json: column:metrics.trailing_count: metrics.trailing_count lacks a validated CHECK proving trailing_count >= 0; add and validate CHECK (\"trailing_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"trailing_count\": {",
+          "target": "column:metrics.trailing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 94,
+          "message": "schema.json: column:metrics.not_enforced_count: metrics.not_enforced_count lacks a validated CHECK proving not_enforced_count >= 0; add and validate CHECK (\"not_enforced_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_enforced_count\": {",
+          "target": "column:metrics.not_enforced_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 97,
+          "message": "schema.json: column:metrics.invalid_token_count: metrics.invalid_token_count lacks a validated CHECK proving invalid_token_count >= 0; add and validate CHECK (\"invalid_token_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"invalid_token_count\": {",
+          "target": "column:metrics.invalid_token_count"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "stale_allow": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: stale postgres-column-check-constraints allow entry: column:metrics.ge_count",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "{",
+          "target": "column:metrics.ge_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 100,
+          "message": "schema.json: column:metrics.not_check_count: metrics.not_check_count lacks a validated CHECK proving not_check_count >= 0; add and validate CHECK (\"not_check_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_check_count\": {",
+          "target": "column:metrics.not_check_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 103,
+          "message": "schema.json: column:metrics.string_count: metrics.string_count lacks a validated CHECK proving string_count >= 0; add and validate CHECK (\"string_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"string_count\": {",
+          "target": "column:metrics.string_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 106,
+          "message": "schema.json: column:metrics.function_count: metrics.function_count lacks a validated CHECK proving function_count >= 0; add and validate CHECK (\"function_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"function_count\": {",
+          "target": "column:metrics.function_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 109,
+          "message": "schema.json: column:metrics.overflow_count: metrics.overflow_count lacks a validated CHECK proving overflow_count >= 0; add and validate CHECK (\"overflow_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"overflow_count\": {",
+          "target": "column:metrics.overflow_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 121,
+          "message": "schema.json: column:metrics.text_cast_count: metrics.text_cast_count lacks a validated CHECK proving text_cast_count >= 0; add and validate CHECK (\"text_cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"text_cast_count\": {",
+          "target": "column:metrics.text_cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 136,
+          "message": "schema.json: column:metrics.negative_equal_count: metrics.negative_equal_count lacks a validated CHECK proving negative_equal_count >= 0; add and validate CHECK (\"negative_equal_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_equal_count\": {",
+          "target": "column:metrics.negative_equal_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 139,
+          "message": "schema.json: column:metrics.weak_strict_count: metrics.weak_strict_count lacks a validated CHECK proving weak_strict_count >= 0; add and validate CHECK (\"weak_strict_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_strict_count\": {",
+          "target": "column:metrics.weak_strict_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 142,
+          "message": "schema.json: column:metrics.weak_reverse_count: metrics.weak_reverse_count lacks a validated CHECK proving weak_reverse_count >= 0; add and validate CHECK (\"weak_reverse_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"weak_reverse_count\": {",
+          "target": "column:metrics.weak_reverse_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 145,
+          "message": "schema.json: column:metrics.Needs_count: metrics.Needs_count lacks a validated CHECK proving Needs_count >= 0; add and validate CHECK (\"Needs_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"Needs_count\": {",
+          "target": "column:metrics.Needs_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 22,
+          "message": "schema.json: column:metrics.or_count: metrics.or_count lacks a validated CHECK proving or_count >= 0; add and validate CHECK (\"or_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"or_count\": {",
+          "target": "column:metrics.or_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 25,
+          "message": "schema.json: column:metrics.not_count: metrics.not_count lacks a validated CHECK proving not_count >= 0; add and validate CHECK (\"not_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_count\": {",
+          "target": "column:metrics.not_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 28,
+          "message": "schema.json: column:metrics.wrong_count: metrics.wrong_count lacks a validated CHECK proving wrong_count >= 0; add and validate CHECK (\"wrong_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_count\": {",
+          "target": "column:metrics.wrong_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 31,
+          "message": "schema.json: column:metrics.negative_count: metrics.negative_count lacks a validated CHECK proving negative_count >= 0; add and validate CHECK (\"negative_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"negative_count\": {",
+          "target": "column:metrics.negative_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 34,
+          "message": "schema.json: column:metrics.missing_count: metrics.missing_count lacks a validated CHECK proving missing_count >= 0; add and validate CHECK (\"missing_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"missing_count\": {",
+          "target": "column:metrics.missing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 37,
+          "message": "schema.json: column:metrics.unvalidated_count: metrics.unvalidated_count lacks a validated CHECK proving unvalidated_count >= 0; add and validate CHECK (\"unvalidated_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"unvalidated_count\": {",
+          "target": "column:metrics.unvalidated_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 40,
+          "message": "schema.json: column:metrics.cast_count: metrics.cast_count lacks a validated CHECK proving cast_count >= 0; add and validate CHECK (\"cast_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"cast_count\": {",
+          "target": "column:metrics.cast_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 46,
+          "message": "schema.json: column:metrics.case_count: metrics.case_count lacks a validated CHECK proving case_count >= 0; add and validate CHECK (\"case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"case_count\": {",
+          "target": "column:metrics.case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 49,
+          "message": "schema.json: column:metrics.broken_count: metrics.broken_count lacks a validated CHECK proving broken_count >= 0; add and validate CHECK (\"broken_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"broken_count\": {",
+          "target": "column:metrics.broken_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 52,
+          "message": "schema.json: column:metrics.null_count: metrics.null_count lacks a validated CHECK proving null_count >= 0; add and validate CHECK (\"null_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"null_count\": {",
+          "target": "column:metrics.null_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 64,
+          "message": "schema.json: column:metrics.small_count: metrics.small_count lacks a validated CHECK proving small_count >= 0; add and validate CHECK (\"small_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"small_count\": {",
+          "target": "column:metrics.small_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 67,
+          "message": "schema.json: column:metrics.big_count: metrics.big_count lacks a validated CHECK proving big_count >= 0; add and validate CHECK (\"big_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"big_count\": {",
+          "target": "column:metrics.big_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 70,
+          "message": "schema.json: column:metrics.alias_count: metrics.alias_count lacks a validated CHECK proving alias_count >= 0; add and validate CHECK (\"alias_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"alias_count\": {",
+          "target": "column:metrics.alias_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 73,
+          "message": "schema.json: column:metrics.int_count: metrics.int_count lacks a validated CHECK proving int_count >= 0; add and validate CHECK (\"int_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"int_count\": {",
+          "target": "column:metrics.int_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 82,
+          "message": "schema.json: column:metrics.wrong_case_count: metrics.wrong_case_count lacks a validated CHECK proving wrong_case_count >= 0; add and validate CHECK (\"wrong_case_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"wrong_case_count\": {",
+          "target": "column:metrics.wrong_case_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 85,
+          "message": "schema.json: column:metrics.malformed_count: metrics.malformed_count lacks a validated CHECK proving malformed_count >= 0; add and validate CHECK (\"malformed_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"malformed_count\": {",
+          "target": "column:metrics.malformed_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 88,
+          "message": "schema.json: column:metrics.trailing_count: metrics.trailing_count lacks a validated CHECK proving trailing_count >= 0; add and validate CHECK (\"trailing_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"trailing_count\": {",
+          "target": "column:metrics.trailing_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 94,
+          "message": "schema.json: column:metrics.not_enforced_count: metrics.not_enforced_count lacks a validated CHECK proving not_enforced_count >= 0; add and validate CHECK (\"not_enforced_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"not_enforced_count\": {",
+          "target": "column:metrics.not_enforced_count"
+        },
+        {
+          "file": "schema.json",
+          "line": 97,
+          "message": "schema.json: column:metrics.invalid_token_count: metrics.invalid_token_count lacks a validated CHECK proving invalid_token_count >= 0; add and validate CHECK (\"invalid_token_count\" >= 0) to enforce non-negative values",
+          "rule": "postgres-column-check-constraints",
+          "sourceLine": "\"invalid_token_count\": {",
+          "target": "column:metrics.invalid_token_count"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

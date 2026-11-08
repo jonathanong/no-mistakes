@@ -8,6 +8,17 @@ available there. Suppress an intentional exception with a reasoned `allow`
 entry targeting the exact `constraint:<table>.<constraint>` identity. The
 catalog schema types are exported from `no-mistakes` for typed callers.
 
+The [`postgres-column-check-constraints`](../rules/postgres-column-check-constraints.md)
+rule also runs through async `check()` and prepared `analyzeProject()` check
+reports. Import `PostgresColumnCheckConstraintsOptions`,
+`PostgresColumnCheckRequirement`, `PostgresColumnCheckPredicate`,
+`PostgresColumnCheckIntegerType`, and
+`PostgresColumnCheckAllowEntry` for typed options. Configure column globs, integer
+types, and `require: "non-negative"`. Use application-level `severity: advisory`
+for adoption; the default error severity enforces failures.
+No catalog path means no findings. Existing runtime exports and report channels
+are reused.
+
 For SQL text without a database or repository, use async
 [`parsePostgresSql(source)`](../postgres-source-api.md), including typed INSERT/ON CONFLICT
 expression arbiters (including operator classes and typed parameters), mixed array/composite assignment

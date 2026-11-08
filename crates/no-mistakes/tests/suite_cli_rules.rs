@@ -31,6 +31,8 @@ mod cli_shellcheck_policy;
 mod check_json_case;
 #[path = "common/check_json_snapshot.rs"]
 mod check_json_snapshot;
+#[path = "cli_postgres_snapshot_column_check_constraints.rs"]
+mod cli_postgres_snapshot_column_check_constraints;
 #[path = "common/git_tracked_rule.rs"]
 mod git_tracked_rule;
 #[path = "common/gitignore_fixture.rs"]

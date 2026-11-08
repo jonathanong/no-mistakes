@@ -494,3 +494,5 @@ test(
 require("./real-napi-progress.test.js");
 
 require("./production-exports-test-only-api.test.js");
+
+require("./postgres-column-check-constraints-api.test.js");

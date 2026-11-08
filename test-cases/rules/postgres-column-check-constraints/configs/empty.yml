@@ -1,0 +1,3 @@
+rules:
+  - rule: postgres-column-check-constraints
+    scope: repository

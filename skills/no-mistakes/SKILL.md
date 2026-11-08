@@ -340,3 +340,11 @@ For `github-actions-max-inline-script-lines`, `maxLines` (default 10) counts non
 body lines, joining backslash continuations, in workflow/composite `run` and `actions/github-script` scripts.
 Move oversized scripts into files and invoke them; see the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-max-inline-script-lines.md).
+
+
+Use `postgres-column-check-constraints` with a catalog path and explicit column
+globs, integer types, and `require: non-negative` to check schema lower bounds.
+Use application-level `severity: advisory` for adoption; the default error
+severity enforces failures. Exceptions
+need an exact `table.column` and reason. See
+[the rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-column-check-constraints.md).

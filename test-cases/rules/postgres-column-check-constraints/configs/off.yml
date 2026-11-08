@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-column-check-constraints
+    enabled: false
+    scope: repository
+    options:
+      schemaCatalogPath: missing.json
+      columns:
+        - pattern: '*_count'
+          types: [smallint, integer, bigint]
+          require: non-negative

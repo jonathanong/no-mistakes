@@ -34,6 +34,23 @@ pub(super) fn required_comments(
     }
 }
 
+pub(super) fn column_check_constraints(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &Arc<SourceStore>,
+    facts: Option<&CheckFactMap>,
+) -> Result<Vec<RuleFinding>> {
+    match facts {
+        Some(facts) => postgres_column_check_constraints::check_with_files_sources_and_facts(
+            root, config, files, sources, facts,
+        ),
+        None => postgres_column_check_constraints::check_with_files_and_sources(
+            root, config, files, sources,
+        ),
+    }
+}
+
 pub(super) fn column_requires_trigger(
     root: &Path,
     config: &NoMistakesConfig,

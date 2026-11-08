@@ -134,6 +134,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`postgres-no-test-state-mutation`](postgres-no-test-state-mutation.md) | Ban schema, server-setting, and sleep mutations executed by selected tests. |
 | [`postgres-no-unbounded-sql-identifier`](postgres-no-unbounded-sql-identifier.md) | Ban unbounded env/config/parameter/row values interpolated as SQL identifiers. |
 | [`postgres-array-columns`](postgres-array-columns.md)                        | Flag PostgreSQL array columns unless an allow entry or element type excuses them. |
+| [`postgres-column-check-constraints`](postgres-column-check-constraints.md) | Require CHECK proofs for configured integer column patterns. |
 | [`postgres-key-column-types`](postgres-key-column-types.md) | Require configured types for primary-key and foreign-key columns. |
 | [`postgres-column-naming`](postgres-column-naming.md)                        | Check PostgreSQL column names against configured types, targets, and foreign keys. |
 | [`postgres-finite-text-columns`](postgres-finite-text-columns.md)             | Flag text columns that store a fixed set of values instead of an enum or lookup foreign key. |
