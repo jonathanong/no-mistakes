@@ -66,6 +66,7 @@ pub(crate) fn splice(template: &EmbeddedSqlCall, holes: &Holes) -> Option<Embedd
     };
     let sql = unpublish(published, &template.recovered_placeholder_positions)?;
     let caller = RecoveredSql {
+        invocations: Default::default(),
         origins: if template.sql_source_offsets.is_empty() {
             vec![0; sql.len()]
         } else {
@@ -113,6 +114,11 @@ pub(crate) fn splice(template: &EmbeddedSqlCall, holes: &Holes) -> Option<Embedd
 fn splice_variant(variant: &EmbeddedSqlVariant, holes: &Holes) -> Option<Vec<EmbeddedSqlVariant>> {
     let positions = &variant.recovered_placeholder_positions;
     let caller = RecoveredSql {
+        invocations: super::unpublish::unpublish_invocations(
+            &variant.sql_text,
+            &variant.recovered_placeholder_positions,
+            variant.invocations.clone(),
+        )?,
         sql: unpublish(&variant.sql_text, positions)?,
         origins: unpublish_origins(&variant.sql_text, positions, &variant.sql_source_offsets)?,
         line: variant.line,
@@ -132,10 +138,12 @@ fn splice_variant(variant: &EmbeddedSqlVariant, holes: &Holes) -> Option<Vec<Emb
 }
 
 fn publish_variant(joined: RecoveredSql, append_sites: Vec<u32>) -> EmbeddedSqlVariant {
+    let invocations = joined.invocations.publish(&joined.sql);
     let sql_source_offsets = rewrite_origins(&joined.sql, &joined.origins, 0, true);
     let (sql_text, recovered_placeholder_positions) =
         publish_placeholders_with_positions(joined.sql);
     EmbeddedSqlVariant {
+        invocations,
         sql_text,
         sql_source_offsets,
         line: joined.line,

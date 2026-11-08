@@ -22,6 +22,7 @@ pub use undeclared::{
 };
 pub(crate) use unproven::retain_unproven_spans;
 pub(super) mod scoped_bindings;
+pub(crate) mod site_identity;
 mod source_positions;
 pub use source_positions::EmbeddedSqlSourcePosition;
 mod tags;

@@ -97,6 +97,7 @@ impl Scope<'_> {
         Expr::Call(
             format!("operation:throw:{}:{}", at.start, at.end),
             vec![self.expression(argument)],
+            at.start,
         )
     }
     fn mark(&self, at: oxc_span::Span) -> Mark {

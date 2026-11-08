@@ -32,6 +32,7 @@ pub(super) fn lower(scope: &mut Scope<'_>, call: &CallExpression<'_>) -> Expr {
                             .filter_map(Argument::as_expression)
                             .map(|arg| scope.expression(arg))
                             .collect(),
+                        call.span.start,
                     );
                 }
             }
@@ -42,7 +43,11 @@ pub(super) fn lower(scope: &mut Scope<'_>, call: &CallExpression<'_>) -> Expr {
                 .iter()
                 .map(|arg| arguments::method_argument(scope, arg)),
         );
-        return Expr::Call(format!("operation:method@{}", call.span.start), args);
+        return Expr::Call(
+            format!("operation:method@{}", call.span.start),
+            args,
+            call.span.start,
+        );
     }
     let Expression::Identifier(callee) = unwrap_ts_wrappers(&call.callee) else {
         return Expr::Opaque;
@@ -56,6 +61,7 @@ pub(super) fn lower(scope: &mut Scope<'_>, call: &CallExpression<'_>) -> Expr {
                 .iter()
                 .map(|arg| arguments::method_argument(scope, arg))
                 .collect(),
+            call.span.start,
         );
     }
     let Some(id) = scope.ctx.bindings.id(callee.span) else {
@@ -68,5 +74,6 @@ pub(super) fn lower(scope: &mut Scope<'_>, call: &CallExpression<'_>) -> Expr {
             .filter_map(Argument::as_expression)
             .map(|arg| scope.expression(arg))
             .collect(),
+        call.span.start,
     )
 }

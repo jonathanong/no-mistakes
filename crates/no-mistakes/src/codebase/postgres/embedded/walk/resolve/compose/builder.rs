@@ -101,6 +101,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn builder_binding_recovered(
     }
     let sql = binding.sql?;
     Some(super::super::functions::provenance::RecoveredSql {
+        invocations: Default::default(),
         origins: vec![0; sql.len()],
         sql,
         line: binding.line,

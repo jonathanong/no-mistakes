@@ -47,6 +47,7 @@ impl LocalFunctions {
         }
         for (name, builder) in &self.parameter_builders {
             let suffix = compose(builder.fragments.iter().map(|fragment| RecoveredSql {
+                invocations: Default::default(),
                 sql: fragment.sql.clone(),
                 line: fragment.line,
                 positions: fragment.positions.clone(),
@@ -58,6 +59,7 @@ impl LocalFunctions {
                     parameter_index: builder.parameter_index,
                     parameter_count: builder.parameter_count,
                     suffix: suffix.unwrap_or_else(|| RecoveredSql {
+                        invocations: Default::default(),
                         sql: String::new(),
                         line: 1,
                         positions: Vec::new(),

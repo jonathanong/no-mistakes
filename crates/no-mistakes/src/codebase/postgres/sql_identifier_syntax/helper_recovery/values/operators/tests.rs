@@ -212,6 +212,7 @@ fn strict_refinement_exhaustion_never_publishes_a_partial_branch() {
     };
     let text = |sql: &str| {
         Value::Text(SqlText::literal(RecoveredSql {
+            invocations: Default::default(),
             sql: sql.into(),
             line: 1,
             positions: Vec::new(),

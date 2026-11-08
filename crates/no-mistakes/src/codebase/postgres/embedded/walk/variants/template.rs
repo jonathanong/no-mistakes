@@ -37,6 +37,7 @@ pub(super) fn recover(
                         if !value.fragment {
                             value.sql = placeholders::internal_placeholder(1);
                             value.origins = vec![expr.span().start; value.sql.len()];
+                            value.invocations = Default::default();
                             value.positions.clear();
                             value.append_sites.clear();
                             value.first_append_offset = None;

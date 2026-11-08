@@ -1,13 +1,28 @@
 use super::RULE_ID;
+use crate::codebase::rules::postgres_findings::site_identity::SiteIdentities;
 use crate::codebase::rules::{LocatedRuleFinding, PostgresFindings};
 use crate::codebase::ts_source::{matching_disable_directive, SourceStore};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-pub(super) type Site = (String, Option<usize>, (usize, usize), Option<(bool, usize)>);
+type Coordinates = (usize, usize);
+type Physical = (String, usize);
+type Execution = (String, bool, usize);
+pub(super) type Site = (
+    String,
+    Option<usize>,
+    Coordinates,
+    Option<Execution>,
+    Vec<u32>,
+);
 
 #[derive(Default)]
-pub(super) struct Groups(BTreeMap<Site, Group>);
+pub(super) struct Groups {
+    sites: BTreeMap<Site, Group>,
+    occurrences: BTreeMap<(Physical, Vec<u32>), BTreeMap<Coordinates, usize>>,
+    identities: SiteIdentities<(Physical, Option<Execution>)>,
+    projection: usize,
+}
 
 struct Group {
     position: (usize, usize),
@@ -15,13 +30,29 @@ struct Group {
 }
 
 impl Groups {
+    pub(super) fn begin_projection(&mut self) {
+        self.occurrences.clear();
+        self.projection += 1;
+    }
+
     pub(super) fn push(&mut self, mut site: Site, finding: LocatedRuleFinding) {
         let position = site.2;
-        if site.1.is_some() {
-            site.2 = (0, 0);
-            site.3 = None;
+        if let Some(offset) = site.1 {
+            let physical = (site.0.clone(), offset);
+            let occurrences = self
+                .occurrences
+                .entry((physical.clone(), site.4.clone()))
+                .or_default();
+            let next = occurrences.len();
+            let occurrence = *occurrences.entry(position).or_insert(next);
+            self.identities.record(
+                (physical, site.3.clone()),
+                self.projection,
+                (site.4.clone(), occurrence),
+            );
+            site.2 = (0, occurrence);
         }
-        let group = self.0.entry(site).or_insert_with(|| Group {
+        let group = self.sites.entry(site).or_insert_with(|| Group {
             position,
             members: Vec::new(),
         });
@@ -32,7 +63,22 @@ impl Groups {
     pub(super) fn finish(self, root: &Path, sources: &SourceStore) -> PostgresFindings {
         let mut output = PostgresFindings::default();
         let mut grouped = Vec::new();
-        for ((file, _, _, _), group) in self.0 {
+        let colors = self.identities.finish();
+        let mut sites = BTreeMap::<Site, Group>::new();
+        for (mut site, group) in self.sites {
+            if let Some(offset) = site.1 {
+                let scope = ((site.0.clone(), offset), site.3.clone());
+                site.2 = (0, colors[&scope][&(std::mem::take(&mut site.4), site.2 .1)]);
+                site.3 = None;
+            }
+            let merged = sites.entry(site).or_insert_with(|| Group {
+                position: group.position,
+                members: Vec::new(),
+            });
+            merged.position = merged.position.min(group.position);
+            merged.members.extend(group.members);
+        }
+        for ((file, _, _, _, _), group) in sites {
             if let Some(finding) = merge(group.members, root, sources, &mut output) {
                 grouped.push((file, group.position, finding));
             }

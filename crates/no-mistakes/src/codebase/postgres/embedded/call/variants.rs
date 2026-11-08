@@ -10,6 +10,7 @@ pub struct EmbeddedSqlVariant {
     pub sql_text: String,
     /// Physical source byte origin for each byte of `sql_text`.
     pub sql_source_offsets: Vec<u32>,
+    pub(crate) invocations: super::super::site_identity::Invocations,
     pub line: u32,
     pub sql_source_positions: Vec<EmbeddedSqlSourcePosition>,
     pub recovered_placeholder_positions: Vec<(u32, u32)>,

@@ -53,6 +53,7 @@ pub(super) fn lower(scope: &mut Scope<'_>, template: &TemplateLiteral<'_>, binds
             }
         }
         pieces.push(RecoveredSql {
+            invocations: Default::default(),
             sql: cooked.to_string(),
             line,
             positions,

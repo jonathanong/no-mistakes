@@ -16,6 +16,7 @@ fn piece(scope: &Scope<'_, '_>, quasi: &TemplateElement<'_>, raw_mode: bool) -> 
     let decoded = quasi_text(quasi, raw_mode);
     let broken = quasi.value.cooked.is_none();
     with_origin_entry(RecoveredSql {
+        invocations: Default::default(),
         sql: decoded.to_string(),
         line,
         positions: source_positions::piece(raw, &decoded, line, broken || raw_mode),

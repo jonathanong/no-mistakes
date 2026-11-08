@@ -39,11 +39,12 @@ pub(super) fn recover(
             return None;
         }
         for fragment in &builder.fragments {
-            let suffix = Recovered {
+            let mut suffix = Recovered {
                 value: ValueKind::Sql,
                 sql: fragment.sql.clone(),
                 line: fragment.line,
                 origins: fragment.origins.clone(),
+                invocations: Default::default(),
                 positions: fragment.positions.clone(),
                 fragment: true,
                 enumerated: false,
@@ -54,6 +55,7 @@ pub(super) fn recover(
                 decision_offs: Vec::new(),
                 variants_truncated: false,
             };
+            suffix.invocations.record(suffix.sql.len(), call.span.start);
             // A prepared suffix has no branch choices, so appending it to
             // each already-capped SQL version cannot increase the count.
             for version in &mut versions {

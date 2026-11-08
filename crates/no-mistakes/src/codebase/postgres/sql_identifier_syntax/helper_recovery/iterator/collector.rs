@@ -98,6 +98,7 @@ impl Collector<'_> {
                     literal.span.start as usize,
                 );
                 Some(RecoveredSql {
+                    invocations: Default::default(),
                     sql: sql.to_owned(),
                     line,
                     positions: vec![

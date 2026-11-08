@@ -9,6 +9,7 @@ pub(super) fn quasi(visitor: &ScopeVisitor<'_>, quasi: &TemplateElement<'_>) -> 
     let raw = &visitor.source[quasi.span.start as usize..quasi.span.end as usize];
     let decoded = tags::quasi_text(quasi, false);
     Recovered {
+        invocations: Default::default(),
         value: ValueKind::Sql,
         sql: decoded.to_string(),
         origins: source_positions::origins::piece(
