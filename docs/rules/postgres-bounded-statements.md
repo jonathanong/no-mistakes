@@ -349,6 +349,38 @@ If the table is small and fixed, add an `allow` entry with a reason.
 
 ## Shapes that stay bounded
 
+### Key proofs through bounded drivers
+
+A driver restricted by `a.id = $1` or `a.id = ANY($1::uuid[])` can bound a
+joined relation when the join fixes its complete primary or unique key.
+For example, `JOIN profiles p ON p.account_id = a.id` stays bounded when
+`profiles.account_id` is unique. Joining on a non-unique column or leaving
+the driver unbounded still reports; pin the driver or select a capped batch.
+
+The same proof applies to `UPDATE accounts t SET name = 'x' FROM picked
+WHERE t.id = picked.id` and `DELETE FROM accounts t USING picked
+WHERE t.id = picked.id` when `picked` is a bounded CTE. A primary-key lookup
+or caller-array lookup inside the CTE supplies that bound, as can bounded
+`RETURNING` rows. An unrestricted `SELECT id FROM accounts` CTE supplies no
+bound; add a key restriction or a batch `LIMIT` inside it.
+
+`JOIN unnest($1::uuid[]) AS req(id) ON t.id = req.id` also bounds a primary-key
+lookup on `t.id`. The parameter array sizes the driver, while the target key
+limits its fan-out. Using a non-unique target column still reports.
+
+A bare column such as `WHERE aside_type = $1` can pin a key in a multi-table
+query when the complete catalog identifies exactly one visible owner.
+An ambiguous bare column supplies no proof; qualify it with the intended
+relation alias. Catalog indexes include plain unique keys such as
+`receipt_id`, partial unique keys whose predicates the query establishes,
+and matching functional keys such as `LOWER(username) = LOWER($1)`.
+A missing partial predicate or a different expression still reports;
+repeat the predicate and match the indexed expression, or cap the query.
+
+The [saved key-proof cases](../../test-cases/rules/postgres-bounded-statements/issue-3114/)
+pair these accepted forms with still-reported controls. Each shape has a
+normalized CLI snapshot checked at one and two jobs.
+
 A capped CTE keeps its bound for a later statement. That includes a join on a non-`id` unique key, a one-row candidate, and a derived `LIMIT 1` subquery:
 
 ```sql

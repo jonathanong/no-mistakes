@@ -1,0 +1,328 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "accounts": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "email": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "name": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "accounts_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX accounts_pkey ON public.accounts USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "accounts_email_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX accounts_email_key ON public.accounts USING btree (email)",
+          "keys": [
+            {
+              "column": "email",
+              "expression": "email"
+            }
+          ]
+        }
+      }
+    },
+    "profiles": {
+      "relationKind": "table",
+      "columns": {
+        "account_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "bio": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "account_id"
+        ]
+      },
+      "indexes": {
+        "profiles_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX profiles_pkey ON public.profiles USING btree (account_id)",
+          "keys": [
+            {
+              "column": "account_id",
+              "expression": "account_id"
+            }
+          ]
+        }
+      }
+    },
+    "contacts": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "email": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "contacts_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX contacts_pkey ON public.contacts USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "contacts_email_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX contacts_email_key ON public.contacts USING btree (email)",
+          "keys": [
+            {
+              "column": "email",
+              "expression": "email"
+            }
+          ]
+        }
+      }
+    },
+    "partial_keys": {
+      "relationKind": "table",
+      "columns": {
+        "slug": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "deleted_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "partial_keys_slug_idx": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX partial_keys_slug_idx ON public.partial_keys USING btree (slug) WHERE (deleted_at IS NULL)",
+          "keys": [
+            {
+              "column": "slug",
+              "expression": "slug"
+            }
+          ]
+        }
+      }
+    },
+    "expr_keys": {
+      "relationKind": "table",
+      "columns": {
+        "slug": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "expr_keys_slug_idx": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX expr_keys_slug_idx ON public.expr_keys USING btree (lower(slug))",
+          "keys": [
+            {
+              "column": null,
+              "expression": "lower(slug)"
+            }
+          ]
+        }
+      }
+    },
+    "receipts": {
+      "relationKind": "table",
+      "columns": {
+        "receipt_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "aside_type": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "receipt_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX receipt_id_key ON public.receipts USING btree (receipt_id)",
+          "keys": [
+            {
+              "column": "receipt_id",
+              "expression": "receipt_id"
+            }
+          ]
+        },
+        "aside_type_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX aside_type_key ON public.receipts USING btree (aside_type)",
+          "keys": [
+            {
+              "column": "aside_type",
+              "expression": "aside_type"
+            }
+          ]
+        }
+      }
+    },
+    "usernames": {
+      "relationKind": "table",
+      "columns": {
+        "username": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "kind": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "username_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "kind = 'active'",
+          "definition": "CREATE UNIQUE INDEX username_key ON public.usernames USING btree (lower(username)) WHERE kind = 'active'",
+          "keys": [
+            {
+              "column": null,
+              "expression": "lower(username)"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "functions": {},
+  "enums": {},
+  "views": {}
+}

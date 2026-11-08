@@ -1,0 +1,26 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "unqualified": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "unqualified.sql",
+          "line": 2,
+          "message": "unqualified.sql:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of contacts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id FROM accounts a JOIN contacts c ON c.id = a.id WHERE email = $1;",
+          "target": "table:accounts, table:contacts"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
