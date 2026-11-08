@@ -2075,6 +2075,38 @@
           ]
         }
       }
+    },
+    "bad_qualified_cte_collision": {
+      "materialized": true,
+      "definition": "WITH bounds(cutoff) AS (VALUES (100)) SELECT p.id FROM posts p JOIN public.bounds b ON p.id >= b.cutoff WHERE b.id >= 100",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
     }
   }
 }

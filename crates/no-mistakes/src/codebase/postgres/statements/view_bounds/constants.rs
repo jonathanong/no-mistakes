@@ -1,6 +1,8 @@
 use super::scalar;
-use crate::codebase::postgres::idents::{ident_key, object_name_ident};
-use sqlparser::ast::{Expr, Query, SelectItem, SetExpr, TableFactor, VisitMut, VisitorMut};
+use crate::codebase::postgres::idents::ident_key;
+use sqlparser::ast::{
+    Expr, ObjectNamePart, Query, SelectItem, SetExpr, TableFactor, VisitMut, VisitorMut,
+};
 use std::collections::BTreeMap;
 use std::ops::ControlFlow;
 
@@ -67,7 +69,7 @@ impl VisitorMut for Inline<'_> {
                     ..
                 } = factor
                 {
-                    let Some(name) = object_name_ident(name) else {
+                    let [ObjectNamePart::Identifier(name)] = name.0.as_slice() else {
                         continue;
                     };
                     let name = ident_key(name);

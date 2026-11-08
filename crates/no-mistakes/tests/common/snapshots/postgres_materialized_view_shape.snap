@@ -1380,6 +1380,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "schema.json",
           "line": 1,
+          "message": "schema.json: materialized-view:bad_qualified_cte_collision: unbounded base table posts; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
+          "rule": "postgres-materialized-view-shape",
+          "sourceLine": "{",
+          "target": "materialized-view:bad_qualified_cte_collision"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
           "message": "schema.json: materialized-view:bad_quoted_window_case: unbounded base table posts; add a configured window-function predicate on a key or a scalar range on an indexed column, or allowBaseTables with a reason to bound refresh work",
           "rule": "postgres-materialized-view-shape",
           "sourceLine": "{",
