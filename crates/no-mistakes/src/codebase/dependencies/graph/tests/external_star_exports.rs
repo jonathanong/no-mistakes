@@ -57,7 +57,7 @@ fn graph(name: &str) -> (tempfile::TempDir, DepGraph) {
         dir: dir.path().to_path_buf(),
         paths: vec![("@blocked/*".to_owned(), vec!["./missing/*".to_owned()])],
         paths_dir: dir.path().to_path_buf(),
-        base_url: None,
+        base_url: Some(dir.path().to_path_buf()),
     };
     let graph = DepGraph::build_with_plan(
         dir.path(),
@@ -93,6 +93,7 @@ fn external_star_projection_keeps_cycles_conditions_and_collisions_unknown() {
         "named-type",
         "single-collision",
         "nested-collision",
+        "baseurl-owned",
     ] {
         let suffix = format!("{barrel}.mts#Queue");
         assert!(

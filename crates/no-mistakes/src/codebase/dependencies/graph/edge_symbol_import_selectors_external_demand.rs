@@ -38,8 +38,12 @@ impl ExternalStarProjection<'_> {
                     }
                     !source.starts_with(['.', '/', '#'])
                         && !self.workspace.recognizes_specifier_from(source, path)
-                        && !self.resolver.matches_paths_alias(source, path)
-                        && self.resolver.resolution_candidates(source, path).is_empty()
+                        && !selector_has_local_candidate(
+                            self.resolver,
+                            self.input.graph_files,
+                            source,
+                            path,
+                        )
                 })
             });
         active.remove(path);
@@ -100,8 +104,7 @@ impl ExternalStarProjection<'_> {
         }
         if source.starts_with(['.', '/', '#'])
             || self.workspace.recognizes_specifier_from(source, from)
-            || self.resolver.matches_paths_alias(source, from)
-            || !self.resolver.resolution_candidates(source, from).is_empty()
+            || selector_has_local_candidate(self.resolver, self.input.graph_files, source, from)
         {
             return None;
         }

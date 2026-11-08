@@ -517,6 +517,8 @@ remain separate diagnostics in deterministic order.
 External package star re-exports use the package's exact public `exports` entry
 when a concrete declaration or runtime source establishes its exported names.
 Those external definitions remain outside the configured production candidates.
+Nonexistent `baseUrl` candidates do not shadow an installed package; declared
+paths aliases and existing local files retain ownership.
 Missing or blocked entries, ambiguous or unsupported condition maps, unresolved
 forwarded members, cycles, and external hops back into visible project sources
 retain uncertainty advisories. This does not guess

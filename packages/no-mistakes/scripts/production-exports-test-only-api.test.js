@@ -141,22 +141,26 @@ test(
 );
 
 test(
-  "platform consumption and namespace sites preserve async CLI parity",
+  "platform consumers, namespace sites and external maps preserve async CLI parity",
   { skip: !addon?.endsWith(".node") },
   async () => {
     const stable = ({ jobsPoolWarning: _warning, ...report }) => report;
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
     const cli = process.env.NO_MISTAKES_TEST_CLI_PATH || join(dirname(addon), "no-mistakes");
-    for (const [scenario, config, targets, count] of [
-      ["platform-consumed", "enabled.yml", ["stillTestOnly", "Worker"], 1],
-      ["namespace-keyof-helper", ".no-mistakes.yml", ["onlyTests"], 2],
+    const rules = join(
+      __dirname,
+      "../../../test-cases/rules/production-exports-only-used-by-tests/fixture",
+    );
+    const external = join(
+      __dirname,
+      "../../../test-cases/codebase-analysis/external-star-exports/fixture",
+    );
+    for (const [root, config, targets, count] of [
+      [join(rules, "platform-consumed"), "enabled.yml", ["stillTestOnly", "Worker"], 1],
+      [join(rules, "namespace-keyof-helper"), ".no-mistakes.yml", ["onlyTests"], 2],
+      [external, ".no-mistakes.yml", ["testOnly"], 7],
     ]) {
-      const root = join(
-        __dirname,
-        "../../../test-cases/rules/production-exports-only-used-by-tests/fixture",
-        scenario,
-      );
       const options = { root, config: join(root, config), jobs: 1 };
       const pending = cjs.check(options);
       assert.ok(pending instanceof Promise);

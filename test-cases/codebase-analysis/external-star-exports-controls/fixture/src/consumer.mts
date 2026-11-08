@@ -34,3 +34,5 @@ import { Queue as SingleCollision } from './single-collision.mts';
 import { Queue as NestedCollision } from './nested-collision.mts';
 import { shared } from './diamond.mts';
 console.log(SingleCollision, NestedCollision, shared);
+import { Queue as BaseUrlOwned } from './baseurl-owned.mts';
+console.log(BaseUrlOwned);

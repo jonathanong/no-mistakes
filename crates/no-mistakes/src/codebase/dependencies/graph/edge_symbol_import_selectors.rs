@@ -9,7 +9,8 @@ fn collect_symbol_import_selectors(
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> (Vec<Edge>, SelectorImportSites) {
     let sources = graph_edge_sources(session, input);
-    let external = ExternalStarProjection::new(input, facts, resolver, workspace, session, &sources);
+    let external =
+        ExternalStarProjection::new(input, facts, resolver, workspace, session, &sources);
     let export_edges: FxHashMap<_, _> = input
         .graph_files
         .indexable()
@@ -77,7 +78,10 @@ fn collect_symbol_import_selectors(
         sites.extend(file_sites);
     }
     edges.extend(export_edges.into_values().flatten().filter(|(_, _, kind)| {
-        matches!(kind, EdgeKind::SymbolReexport | EdgeKind::SymbolTypeReexport)
+        matches!(
+            kind,
+            EdgeKind::SymbolReexport | EdgeKind::SymbolTypeReexport
+        )
     }));
     (edges, sites)
 }
@@ -137,10 +141,7 @@ fn selector_unknown(
         || inputs
             .workspace
             .recognizes_specifier_from(source, inputs.path)
-        || !inputs
-            .resolver
-            .resolution_candidates(source, inputs.path)
-            .is_empty()
+        || selector_has_local_candidate(inputs.resolver, inputs.graph_files, source, inputs.path)
     {
         NodeId::module(source)
     } else {
