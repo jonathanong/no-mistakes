@@ -22,6 +22,7 @@ pub(super) fn eligible(plan: &CheckFactPlan, playwright: Option<&PlaywrightFactP
             .flatten()
             .any(|scan| scan.unrestricted())
         && !plan.query_annotation_heads
+        && plan.embedded_sql_head_calls_only.is_empty()
         && plan.sql_identifier_profiles.is_empty()
         && plan.integration_runner_configs.is_none()
         && playwright.is_none()

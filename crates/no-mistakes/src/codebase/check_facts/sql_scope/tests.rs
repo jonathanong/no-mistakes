@@ -190,6 +190,11 @@ fn direct_annotation_low_and_ambiguous_requests_keep_broad_demand() {
             .insert(profile.clone(), scans);
         assert!(!eligible(&unsupported, None));
     }
+    let mut head_only = original.clone();
+    head_only
+        .embedded_sql_head_calls_only
+        .push(original.embedded_sql_options[0].clone());
+    assert!(!eligible(&head_only, None));
     let mut heads = original.clone();
     heads.query_annotation_heads = true;
     assert!(!eligible(&heads, None));
@@ -252,6 +257,11 @@ fn actual_check_json_preparation_activates_scoping_and_preserves_full_report() {
             ))
             .unwrap()
         });
+        assert_eq!(
+            observer.snapshot().work.get("check.fact_collections"),
+            Some(&1),
+            "actual full/scoped check preparation must record one collection: broad={broad}"
+        );
         let count = observer
             .snapshot()
             .work
