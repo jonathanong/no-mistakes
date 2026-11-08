@@ -45,22 +45,22 @@ pub(crate) fn test_discovery_scope(
     if filters.is_empty() {
         return FamilyPathScope::All;
     }
-    let paths = files
+    let selected = |path: &std::path::PathBuf| {
+        let relative = crate::codebase::ts_source::relative_slash_path(root, path);
+        filters
+            .iter()
+            .any(|(include, exclude)| include.is_match(&relative) && !exclude.is_match(&relative))
+    };
+    let Some(excluded) = files.iter().position(|path| !selected(path)) else {
+        return FamilyPathScope::All;
+    };
+    let paths = files[..excluded]
         .iter()
-        .filter(|path| {
-            let relative = crate::codebase::ts_source::relative_slash_path(root, path);
-            filters.iter().any(|(include, exclude)| {
-                include.is_match(&relative) && !exclude.is_match(&relative)
-            })
-        })
+        .chain(files[excluded + 1..].iter().filter(|path| selected(path)))
         .map(|path| {
             record_scope_normalization!();
             crate::codebase::ts_resolver::normalize_path(path)
         })
         .collect::<BTreeSet<_>>();
-    if paths.len() == files.len() {
-        FamilyPathScope::All
-    } else {
-        FamilyPathScope::Only(std::sync::Arc::new(paths))
-    }
+    FamilyPathScope::Only(std::sync::Arc::new(paths))
 }

@@ -36,7 +36,7 @@ fn explicit_scope_selects_all_empty_and_middle_excluded_files() {
     let files = inventory.paths();
     let (all, count) = scope(&root, &files, "all-files.yml");
     assert_eq!(all, FamilyPathScope::All);
-    assert_eq!(count, files.len());
+    assert_eq!(count, 0, "all-selected policies need no retained path set");
     let excluded = root.join("helpers/dependency.ts");
     let index = files.iter().position(|path| path == &excluded).unwrap();
     assert!(index > 0 && index + 1 < files.len());
