@@ -98,6 +98,16 @@ fn first_after<T, K: Ord + Copy>(items: &[T], at: K, mut position: impl FnMut(&T
 }
 
 impl TableTokenCursor {
+    pub(in crate::codebase::postgres) fn for_body(&self, start: Location) -> Self {
+        let mut cursor = self.clone();
+        let at = (start.line as usize, start.column as usize);
+        cursor.next = cursor.names.partition_point(|source| source.at < at);
+        cursor.last_at = None;
+        cursor.last_depth = 0;
+        cursor.last_operator = None;
+        cursor
+    }
+
     /// Ignore TABLE spellings in a SELECT projection before traversing its FROM sources.
     /// A scalar query can contain its own FROM, so match only the SELECT's nesting depth.
     pub(in super::super::super) fn advance_to_from(&mut self, select_start: Location) {

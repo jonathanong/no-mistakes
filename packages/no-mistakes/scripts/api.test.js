@@ -186,6 +186,11 @@ test("bounded statement options export key fan-out contracts", () => {
   assert.match(types, /export interface PostgresColumnBound \{\s*reason: string;/);
   assert.match(types, /export type PostgresViewBoundMode = "bounded" \| "unbounded";/);
   assert.match(types, /columnBounds\?: Record<string, PostgresColumnBound>;/);
+  assert.match(
+    types,
+    /export type PostgresMaterializedBodyPolicy = "ignore" \| "advise" \| "report" \| "require-bound";/,
+  );
+  assert.match(types, /materializedBodies\?: PostgresMaterializedBodyPolicy;/);
   assert.match(types, /viewBounds\?: Record<string, PostgresViewBoundMode>;/);
   assert.match(types, /schemaCatalogPath: string;/);
   assert.ok(

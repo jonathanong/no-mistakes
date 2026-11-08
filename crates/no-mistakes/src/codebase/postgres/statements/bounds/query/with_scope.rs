@@ -74,6 +74,13 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope_visiting_wri
         if let Some(donors) = &donors {
             super::recursive_domain::project(cte, donors, &mut bound);
         }
+        if cte.materialized == Some(sqlparser::ast::CteAsMaterialized::Materialized) {
+            scope.record_body(
+                &bound,
+                || start(cte.alias.name.span),
+                || format!("MATERIALIZED CTE {name}"),
+            );
+        }
         // SELECT and RETURNING CTEs can both duplicate prior bound trees. Keep the same
         // conservative expansion cap before either kind enters the shared scope.
         if size(&bound) > MAX_BOUND_ITEMS {
@@ -97,6 +104,9 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope_visiting_wri
         let counts =
             super::super::scalar_limit::outputs(&cte.query, &scope, positions, &cte.alias.columns);
         scope.insert(name.clone(), bound);
+        if cte.materialized == Some(sqlparser::ast::CteAsMaterialized::Materialized) {
+            scope.mark_pool(&name);
+        }
         if let Some(counts) = counts {
             scope.insert_counts(name, counts);
         }

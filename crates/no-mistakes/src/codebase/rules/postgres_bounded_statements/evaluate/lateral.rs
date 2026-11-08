@@ -1,6 +1,8 @@
 //! A per-call lateral cap becomes global only after its preceding drivers are bounded.
 use super::{qualified, reads_outer};
-use crate::codebase::postgres::{decoded_parts, SchemaCatalog, SqlBoundItem, SqlBoundItemKind};
+use crate::codebase::postgres::{
+    decoded_parts, SchemaCatalog, SqlBoundItem, SqlBoundItemKind, SqlQualifiedRead,
+};
 
 pub(super) fn dependencies(
     item: &SqlBoundItem,
@@ -18,8 +20,16 @@ pub(super) fn dependencies(
     {
         return None;
     }
+    qualified_dependencies(&item.lateral_qualified_reads, preceding, catalog)
+}
+
+pub(super) fn qualified_dependencies(
+    qualified_reads: &[SqlQualifiedRead],
+    preceding: &[SqlBoundItem],
+    catalog: &SchemaCatalog,
+) -> Option<Vec<usize>> {
     let mut dependencies = Vec::new();
-    for read in &item.lateral_qualified_reads {
+    for read in qualified_reads {
         if !qualified::reads_outer(std::slice::from_ref(read), catalog) {
             continue;
         }

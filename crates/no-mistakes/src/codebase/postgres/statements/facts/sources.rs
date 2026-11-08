@@ -5,6 +5,7 @@ use std::sync::Arc;
 pub(crate) struct StatementPolicySources<'a> {
     pub(crate) collect_json_writes: bool,
     pub(crate) collect_index_probes: bool,
+    pub(crate) collect_body_bounds: bool,
     pub(crate) tokens: Option<&'a [Option<Arc<[TokenWithSpan]>>]>,
     pub(crate) schema: Option<&'a crate::codebase::postgres::SqlSchemaFileFacts>,
     pub(crate) functions: &'a [crate::codebase::postgres::SqlFunctionCallFact],
@@ -16,6 +17,8 @@ pub(super) enum StatementProjection {
     Complete,
     ConflictPolicy,
     LockScope,
+    BodyBounds,
+    BodyBoundsLockScope,
 }
 
 #[derive(Default)]
@@ -35,7 +38,10 @@ impl StatementProjection {
         statements: &[sqlparser::ast::Statement],
         positions: super::super::value::PlaceholderPositions<'_>,
     ) -> super::super::lock_writes::LockWriteFacts {
-        if self == StatementProjection::LockScope {
+        if matches!(
+            self,
+            StatementProjection::LockScope | StatementProjection::BodyBoundsLockScope
+        ) {
             super::super::lock_writes::collect::<true>(statements, positions)
         } else {
             super::super::lock_writes::collect::<false>(statements, positions)

@@ -1,18 +1,16 @@
-/// Which statement a bound fact judges.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SqlBoundKind {
-    Select,
-    Update,
-    Delete,
-}
+mod kind;
+pub use kind::SqlBoundKind;
 
 /// One executed `SELECT`, `UPDATE` or `DELETE`, reduced to what decides its row count.
 ///
 /// The fact is syntactic: whether a pinned column set is a unique key is decided later,
 /// against a schema catalog.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct SqlBoundFact {
+    /// Owning executed statement, including for independently judged query bodies.
     pub kind: SqlBoundKind,
+    /// Independent body obligation, present only when explicitly requested.
+    pub body: Option<String>,
     pub line: usize,
     pub column: usize,
     /// Original outer SQL statement position, including WITH or an executing wrapper.
@@ -195,4 +193,5 @@ mod input_mode;
 mod lines;
 pub use input_mode::SqlBoundInputMode;
 use sqlparser::ast::Expr;
+mod debug;
 mod row_inputs;

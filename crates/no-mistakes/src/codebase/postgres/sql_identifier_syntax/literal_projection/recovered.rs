@@ -23,7 +23,7 @@ pub(crate) fn raw_statements(file: &CheckFileFacts) -> &RawStatements {
                                 observer.increment("postgres.low.recovered_parses", 1);
                             }
                             let facts = crate::codebase::postgres::statements::extract_sql_statement_facts_with_json_writes(
-                                &sql.sql, false, Some(&[]), crate::codebase::postgres::statement_facts::SqlLocationDemand::Full, false, super::super::statement_policy::direct::probe_demand(file));
+                                &sql.sql, false, Some(&[]), crate::codebase::postgres::statement_facts::SqlLocationDemand::Full, false, super::super::statement_policy::direct::probe_demand(file), false);
                             Arc::new(facts)
                         }).clone()
                     }).collect()

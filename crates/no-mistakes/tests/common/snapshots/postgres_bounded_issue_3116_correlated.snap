@@ -1,0 +1,145 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "correlated": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "correlated.sql",
+          "line": 19,
+          "message": "correlated.sql:19: SELECT can return every row of image_placements; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM image_placements target;",
+          "target": "table:image_placements"
+        },
+        {
+          "file": "correlated.sql",
+          "line": 21,
+          "message": "correlated.sql:21: SELECT can return every row of image_placements; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT target.placement_id FROM image_placements target",
+          "target": "table:image_placements"
+        },
+        {
+          "file": "correlated.sql",
+          "line": 29,
+          "message": "correlated.sql:29: SELECT can return every row of image_placements; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT p.created_by_id FROM image_placements p",
+          "target": "table:image_placements"
+        },
+        {
+          "file": "correlated.sql",
+          "line": 35,
+          "message": "correlated.sql:35: SELECT can return every row of image_placements; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT p.created_by_id FROM image_placements p",
+          "target": "table:image_placements"
+        },
+        {
+          "file": "correlated.sql",
+          "line": 47,
+          "message": "correlated.sql:47: SELECT can return every row of image_placements; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT p.created_by_id FROM image_placements p",
+          "target": "table:image_placements"
+        },
+        {
+          "file": "correlated.sql",
+          "line": 9,
+          "message": "correlated.sql:9: SELECT can return every row of image_placements; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT p.created_by_id FROM image_placements p",
+          "target": "table:image_placements"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query.ts",
+          "line": 15,
+          "message": "query.ts:15: SELECT can return every row of image_placements; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from query.ts:14)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(statement);",
+          "target": "table:image_placements"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "lateral_bare": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "lateral-bare.sql",
+          "line": 1,
+          "message": "lateral-bare.sql:1: SELECT can return every row of image_placements; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT p.placement_id FROM image_placements target",
+          "target": "table:image_placements"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unknown_bare": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "correlated-unknown.sql",
+          "line": 15,
+          "message": "correlated-unknown.sql:15: SELECT can return every row of image_placements; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT p.created_by_id FROM image_placements p CROSS JOIN unknown_rows u",
+          "target": "table:image_placements"
+        },
+        {
+          "file": "correlated-unknown.sql",
+          "line": 21,
+          "message": "correlated-unknown.sql:21: SELECT can return every row of image_placements; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT p.created_by_id FROM image_placements p CROSS JOIN unknown_rows",
+          "target": "table:image_placements"
+        },
+        {
+          "file": "correlated-unknown.sql",
+          "line": 7,
+          "message": "correlated-unknown.sql:7: SELECT can return every row of image_placements; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT target.placement_id FROM image_placements target",
+          "target": "table:image_placements"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
