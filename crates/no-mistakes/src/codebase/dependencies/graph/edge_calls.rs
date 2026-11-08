@@ -144,6 +144,7 @@ struct CallableResolutionIndexes {
     export_prerequisites: dashmap::DashMap<(std::path::PathBuf, String), std::sync::Arc<std::collections::BTreeSet<std::path::PathBuf>>>,
     namespace_roots: std::sync::Arc<dashmap::DashMap<(std::path::PathBuf, String), RootLookup>>,
     value_imports: bool,
+    external_namespaces: bool,
 }
 
 /// An `export *` branch can prove that a name is exported without proving it
@@ -160,6 +161,7 @@ enum ExportedCallableResolution {
     ExternalModuleExport(String, String),
     Value(std::path::PathBuf, String),
     Namespace(std::path::PathBuf),
+    ExternalNamespace(String),
     Unknown,
 }
 

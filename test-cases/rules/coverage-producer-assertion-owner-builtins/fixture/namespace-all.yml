@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/reexports.mts, symbol: defaultNamespace }
+        - { file: src/reexports.mts, symbol: namedNamespace }
+        - { file: src/reexports.mts, symbol: exportNamespace }
+        - { file: src/reexports.mts, symbol: nestedNamespace }
+        - { file: src/reexports.mts, symbol: shadowedNamespace }
+        - { file: src/reexports.mts, symbol: mapGet }
+        - { file: src/reexports.mts, symbol: arrayCallback }
+        - { file: src/reexports.mts, symbol: builtinNameOnly }
+      assertions: [{ module: "node:assert/strict", export: ok }]

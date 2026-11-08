@@ -202,6 +202,10 @@ unresolved dispatch.
 - Synchronous Node modules `path`, `url`, `os`, `querystring`, `buffer`, and
   `string_decoder` (with or without the `node:` prefix). Other external modules,
   such as an error reporter, remain `external call has no ownership model`.
+  This includes namespace bindings followed through local default or named
+  re-exports and `export * as` declarations. The receiver must resolve to the
+  imported namespace; matching a package or method name alone supplies no
+  provenance. Shadowed receivers remain uncertain.
 
 A built-in that invokes a callback keeps the proof: `map`, `filter`, `forEach`,
 `flatMap`, `reduce`, `some`, `every`, `find`, `findIndex`, `sort`, `then`,
@@ -218,6 +222,13 @@ same file.
 export function owned(items: number[]) { items.map((item) => assertItem(item)); } // reaches assertItem
 export function opaque(items: number[], fn: (item: number) => void) { items.map(fn); } // unanalyzable: `fn`
 ```
+
+Stored callbacks remain dispatch even on proven built-ins. For example,
+`const handler = handlers.get('check'); handler?.()` stays uncertain when
+`handlers` is a `Map` of callbacks. Likewise,
+`checks.forEach(check => check())` stays uncertain when `checks` is an array
+of stored functions: the callback parameter `check` has no resolved callable
+identity. Storing an assertion-bearing function does not prove its invocation.
 
 ## Node `fs` is modeled I/O
 

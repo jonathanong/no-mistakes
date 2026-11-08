@@ -2,6 +2,76 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "array-callback": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "check",
+              "detail": "callee target is unknown",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 19,
+              "sourceLine": "checks.forEach(check => check());"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 17,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:19 callee `check` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#arrayCallback",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function arrayCallback() {",
+          "target": "arrayCallback"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "builtin-name-only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "<unknown>",
+              "detail": "callee target is unknown",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 22,
+              "sourceLine": "export function builtinNameOnly(receiver: { get(): () => void }) { receiver.get()(); }"
+            },
+            {
+              "callee": "receiver.get",
+              "detail": "callee target is unknown",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 22,
+              "sourceLine": "export function builtinNameOnly(receiver: { get(): () => void }) { receiver.get()(); }"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 22,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:22 callee `<unknown>` (callee target is unknown); unresolved dispatch at src/reexports.mts:22 callee `receiver.get` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#builtinNameOnly",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function builtinNameOnly(receiver: { get(): () => void }) { receiver.get()(); }",
+          "target": "builtinNameOnly"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "callback-inline": {
     "exitCode": 0,
     "report": {
@@ -85,6 +155,49 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function callbackUnresolved(items: number[], fn: (value: number) => void) { format(items, 'a'); items.map(fn); }",
           "target": "callbackUnresolved"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "external-nested": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "client.transport.send",
+              "detail": "external call has no ownership model",
+              "file": "src/external-nested.mts",
+              "kind": "unresolved-dispatch",
+              "line": 2,
+              "sourceLine": "export function namedExternalMember() { client.transport.send(); }"
+            }
+          ],
+          "file": "src/external-nested.mts",
+          "line": 2,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/external-nested.mts:2 callee `client.transport.send` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/external-nested.mts#namedExternalMember",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function namedExternalMember() { client.transport.send(); }",
+          "target": "namedExternalMember"
         }
       ],
       "warnings": []
@@ -220,6 +333,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "map-get": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "handler",
+              "detail": "callee target is unknown",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 15,
+              "sourceLine": "handler?.();"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 11,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:15 callee `handler` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#mapGet",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function mapGet() {",
+          "target": "mapGet"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "member-callback": {
     "exitCode": 1,
     "report": {
@@ -262,6 +406,450 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function memberCallback(items: number[], holder: { cb: (value: number) => void }, pick: () => () => void) {",
           "target": "memberCallback"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "namespace-all": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "<unknown>",
+              "detail": "callee target is unknown",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 22,
+              "sourceLine": "export function builtinNameOnly(receiver: { get(): () => void }) { receiver.get()(); }"
+            },
+            {
+              "callee": "receiver.get",
+              "detail": "callee target is unknown",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 22,
+              "sourceLine": "export function builtinNameOnly(receiver: { get(): () => void }) { receiver.get()(); }"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 22,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:22 callee `<unknown>` (callee target is unknown); unresolved dispatch at src/reexports.mts:22 callee `receiver.get` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#builtinNameOnly",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function builtinNameOnly(receiver: { get(): () => void }) { receiver.get()(); }",
+          "target": "builtinNameOnly"
+        },
+        {
+          "causes": [
+            {
+              "callee": "Barrel.NamedSdk.captureException",
+              "detail": "external call has no ownership model",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 21,
+              "sourceLine": "export function nestedNamespace(error: unknown) { Barrel.NamedSdk.captureException(error); }"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 21,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:21 callee `Barrel.NamedSdk.captureException` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#nestedNamespace",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function nestedNamespace(error: unknown) { Barrel.NamedSdk.captureException(error); }",
+          "target": "nestedNamespace"
+        },
+        {
+          "causes": [
+            {
+              "callee": "DefaultSdk.captureException",
+              "detail": "callee target is unknown",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 10,
+              "sourceLine": "export function shadowedNamespace(DefaultSdk: { captureException(error: unknown): void }, error: unknown) { DefaultSdk.captureException(error); }"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 10,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:10 callee `DefaultSdk.captureException` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#shadowedNamespace",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function shadowedNamespace(DefaultSdk: { captureException(error: unknown): void }, error: unknown) { DefaultSdk.captureException(error); }",
+          "target": "shadowedNamespace"
+        },
+        {
+          "causes": [
+            {
+              "callee": "DefaultSdk.captureException",
+              "detail": "external call has no ownership model",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 7,
+              "sourceLine": "export function defaultNamespace(error: unknown) { DefaultSdk.captureException(error); }"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 7,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:7 callee `DefaultSdk.captureException` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#defaultNamespace",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function defaultNamespace(error: unknown) { DefaultSdk.captureException(error); }",
+          "target": "defaultNamespace"
+        },
+        {
+          "causes": [
+            {
+              "callee": "NamedSdk.captureException",
+              "detail": "external call has no ownership model",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 8,
+              "sourceLine": "export function namedNamespace(error: unknown) { NamedSdk.captureException(error); }"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 8,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:8 callee `NamedSdk.captureException` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#namedNamespace",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function namedNamespace(error: unknown) { NamedSdk.captureException(error); }",
+          "target": "namedNamespace"
+        },
+        {
+          "causes": [
+            {
+              "callee": "NamespaceSdk.captureException",
+              "detail": "external call has no ownership model",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 9,
+              "sourceLine": "export function exportNamespace(error: unknown) { NamespaceSdk.captureException(error); }"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 9,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:9 callee `NamespaceSdk.captureException` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#exportNamespace",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function exportNamespace(error: unknown) { NamespaceSdk.captureException(error); }",
+          "target": "exportNamespace"
+        },
+        {
+          "causes": [
+            {
+              "callee": "check",
+              "detail": "callee target is unknown",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 19,
+              "sourceLine": "checks.forEach(check => check());"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 17,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:19 callee `check` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#arrayCallback",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function arrayCallback() {",
+          "target": "arrayCallback"
+        },
+        {
+          "causes": [
+            {
+              "callee": "handler",
+              "detail": "callee target is unknown",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 15,
+              "sourceLine": "handler?.();"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 11,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:15 callee `handler` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#mapGet",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function mapGet() {",
+          "target": "mapGet"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "namespace-ambiguous": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "AmbiguousSdk.captureException",
+              "detail": "callee target is unknown",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 23,
+              "sourceLine": "export function ambiguousNamespace(error: unknown) { AmbiguousSdk.captureException(error); }"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 23,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:23 callee `AmbiguousSdk.captureException` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#ambiguousNamespace",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function ambiguousNamespace(error: unknown) { AmbiguousSdk.captureException(error); }",
+          "target": "ambiguousNamespace"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "namespace-bare": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "DefaultSdk",
+              "detail": "callee target is unknown",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 25,
+              "sourceLine": "export function bareNamespace() { DefaultSdk(); }"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 25,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:25 callee `DefaultSdk` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#bareNamespace",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function bareNamespace() { DefaultSdk(); }",
+          "target": "bareNamespace"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "namespace-cycle": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "CyclicSdk.captureException",
+              "detail": "external call has no ownership model",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 24,
+              "sourceLine": "export function cyclicNamespace(error: unknown) { CyclicSdk.captureException(error); }"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 24,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:24 callee `CyclicSdk.captureException` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#cyclicNamespace",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function cyclicNamespace(error: unknown) { CyclicSdk.captureException(error); }",
+          "target": "cyclicNamespace"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "namespace-default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "DefaultSdk.captureException",
+              "detail": "external call has no ownership model",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 7,
+              "sourceLine": "export function defaultNamespace(error: unknown) { DefaultSdk.captureException(error); }"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 7,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:7 callee `DefaultSdk.captureException` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#defaultNamespace",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function defaultNamespace(error: unknown) { DefaultSdk.captureException(error); }",
+          "target": "defaultNamespace"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "namespace-export": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "NamespaceSdk.captureException",
+              "detail": "external call has no ownership model",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 9,
+              "sourceLine": "export function exportNamespace(error: unknown) { NamespaceSdk.captureException(error); }"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 9,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:9 callee `NamespaceSdk.captureException` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#exportNamespace",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function exportNamespace(error: unknown) { NamespaceSdk.captureException(error); }",
+          "target": "exportNamespace"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "namespace-named": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "NamedSdk.captureException",
+              "detail": "external call has no ownership model",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 8,
+              "sourceLine": "export function namedNamespace(error: unknown) { NamedSdk.captureException(error); }"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 8,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:8 callee `NamedSdk.captureException` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#namedNamespace",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function namedNamespace(error: unknown) { NamedSdk.captureException(error); }",
+          "target": "namedNamespace"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "namespace-nested": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "Barrel.NamedSdk.captureException",
+              "detail": "external call has no ownership model",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 21,
+              "sourceLine": "export function nestedNamespace(error: unknown) { Barrel.NamedSdk.captureException(error); }"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 21,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:21 callee `Barrel.NamedSdk.captureException` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#nestedNamespace",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function nestedNamespace(error: unknown) { Barrel.NamedSdk.captureException(error); }",
+          "target": "nestedNamespace"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "namespace-shadowed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "DefaultSdk.captureException",
+              "detail": "callee target is unknown",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 10,
+              "sourceLine": "export function shadowedNamespace(DefaultSdk: { captureException(error: unknown): void }, error: unknown) { DefaultSdk.captureException(error); }"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 10,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:10 callee `DefaultSdk.captureException` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#shadowedNamespace",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function shadowedNamespace(DefaultSdk: { captureException(error: unknown): void }, error: unknown) { DefaultSdk.captureException(error); }",
+          "target": "shadowedNamespace"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "namespace-value": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "ValueSdk.captureException",
+              "detail": "external call has no ownership model",
+              "file": "src/reexports.mts",
+              "kind": "unresolved-dispatch",
+              "line": 26,
+              "sourceLine": "export function externalValue(error: unknown) { ValueSdk.captureException(error); }"
+            }
+          ],
+          "file": "src/reexports.mts",
+          "line": 26,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/reexports.mts:26 callee `ValueSdk.captureException` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/reexports.mts#externalValue",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function externalValue(error: unknown) { ValueSdk.captureException(error); }",
+          "target": "externalValue"
         }
       ],
       "warnings": []

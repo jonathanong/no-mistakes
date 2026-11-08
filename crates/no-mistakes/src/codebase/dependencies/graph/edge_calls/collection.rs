@@ -34,7 +34,10 @@ fn collect_call_edges_for_core(
 ) -> CallPass {
     use rayon::prelude::*;
     let plan = edge_inputs.plan;
-    let indexes = CallableResolutionIndexes::default();
+    let indexes = CallableResolutionIndexes {
+        external_namespaces: plan.assertion_owners,
+        ..Default::default()
+    };
     // Resolving a namespace member is part of `calls` as much as of `extends`:
     // a graph built for calls alone still needs `new Errors.X()` to be an edge.
     let namespaces_in_repo = (plan.calls || plan.extends)
