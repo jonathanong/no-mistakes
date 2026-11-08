@@ -81,10 +81,16 @@ pub(crate) fn project_bounds<'a>(
                 .as_ref()
                 .filter(|_| !scalar_functions.is_empty())
             {
-                let scope = bounds::Scope::with_scalar_functions(
+                let mut scope = bounds::Scope::with_scalar_functions(
                     inputs.table_tokens.clone(),
                     scalar_functions.clone(),
                 );
+                if bounds[step.first_bound..step.last_bound]
+                    .iter()
+                    .any(|fact| fact.body.is_some())
+                {
+                    scope.enable_bodies();
+                }
                 let mut projected = Vec::new();
                 bounds::collect(
                     &step.statement,

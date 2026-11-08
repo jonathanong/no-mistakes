@@ -631,13 +631,19 @@ It uses the same prepared source/effect projections and requires exact awaited
 report field or max-effort contract changes.
 
 Configured [`postgres-bounded-statements`](rules/postgres-bounded-statements.md)
-applications accept `columnBounds` through the existing asynchronous `check()` →
+applications accept `materializedBodies` and `columnBounds` through the existing
+asynchronous `check()` →
 `checkJson` binding and `analyzeProject()` check reports. Import
-`PostgresBoundedStatementsOptions`, `PostgresColumnBound`, and
-`PostgresViewBoundMode` for the rule options. `columnBounds` maps catalog
+`PostgresBoundedStatementsOptions`, `PostgresMaterializedBodyPolicy`,
+`PostgresColumnBound`, and `PostgresViewBoundMode` for the rule options. `columnBounds` maps catalog
 `table.column` names to a required nonempty `reason`; CLI and Node use the same
 catalog validation and caller-bounded key proof. No separate runtime export is
 needed.
+
+`materializedBodies` excludes existence and known correlated scalar probes.
+Pool-building IN/array/derived bodies and explicit MATERIALIZED CTEs remain
+independent obligations. A consumer of an existing materialized pool retains
+that source obligation without repeating it; new unbounded scans still report.
 
 `collectDiagnostics(operation, ...args)` is the asynchronous equivalent of CLI
 `--verbose-timings`. Pass a public operation name and its normal arguments:

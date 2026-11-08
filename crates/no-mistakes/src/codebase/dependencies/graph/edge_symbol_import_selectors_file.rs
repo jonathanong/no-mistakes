@@ -67,9 +67,30 @@ fn collect_symbol_import_selectors_file(
         if import.imported == "*" {
             // A type namespace used only as `ns.Member` is resolved to its members.
             if import.is_type_only
-                && type_namespace_members(file_facts, &import.source, &import.local).is_some()
+                && import_namespace_members(file_facts, &import.source, &import.local).is_some()
             {
                 continue;
+            }
+            if !import.is_type_only {
+                if let Some(members) = runtime_namespace_members(
+                    &inputs,
+                    file_facts,
+                    &import.source,
+                    &import.local,
+                    &target,
+                ) {
+                    let names: Vec<_> = members.iter().map(String::as_str).collect();
+                    push_dynamic_selectors(
+                        &inputs,
+                        &import.source,
+                        import.line as usize,
+                        &names,
+                        exported,
+                        &mut edges,
+                        &mut sites,
+                    );
+                    continue;
+                }
             }
             selector_unknown(
                 &inputs,

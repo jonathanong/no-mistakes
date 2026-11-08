@@ -1,5 +1,5 @@
 use super::*;
-
+include!("plan/bodies.rs");
 /// Record the prepared executor profiles and the rules that selected each one.
 pub fn assign_prepared_embedded_sql_options(
     config: &NoMistakesConfig,
@@ -15,7 +15,6 @@ pub fn assign_prepared_embedded_sql_options(
     plan.embedded_sql_rule_ids = rule_ids;
     Ok(())
 }
-
 include!("plan/head_calls.rs");
 /// Declare SQL projections before the shared request fact pass.
 pub fn configure_prepared_postgres_plan(
@@ -144,6 +143,7 @@ pub fn configure_prepared_postgres_plan(
     plan.postgres_bounds |= !config
         .rule_applications("postgres-bounded-statements")
         .is_empty();
+    configure_body_bounds(config, plan);
     plan.postgres_index_probes |= !config
         .rule_applications("postgres-required-predicates")
         .is_empty();
