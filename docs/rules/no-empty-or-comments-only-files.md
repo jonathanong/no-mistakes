@@ -17,9 +17,9 @@ extensions. `intentionallyEmpty` defaults to an empty list of exceptions. Use
 the common rule `include` and `exclude` fields to narrow the file scope.
 
 With `reportUnusedAllowEntries: report` (or `advise`), an
-`intentionallyEmpty` entry is stale only when its selected file was read
+`intentionallyEmpty` entry for an existing file is stale only when the file was read
 successfully, has a supported extension, and contains real content. Every
-matching duplicate entry is used for an empty or comment-only file. Missing,
+matching duplicate entry is used for an empty or comment-only file. Existing
 excluded, unreadable, and unsupported files cannot prove an entry stale.
 Remove stale entries so future empty files remain visible. See
 [suppression hygiene](../configuration/suppressions.md).
@@ -89,3 +89,10 @@ Fix: delete the file or add real implementation/docs content.
 
 Suppression caveat: suppress only temporary placeholders with a `no-mistakes`
 directive and a reason that names the follow-up owner or removal condition.
+
+With `reportUnusedAllowEntries: report` or `advise`, `intentionallyEmpty` paths also
+produce `unused-allow-entry` when the literal path is absent from both the
+request inventory and disk, within the application's configured scope. Remove
+the entry or fix its path. Existing excluded or ignored files and empty glob
+matches stay silent; narrowed runs do not audit paths outside their scope.
+See [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

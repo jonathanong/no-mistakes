@@ -1,0 +1,10 @@
+reportUnusedAllowEntries: report
+projects:
+  web: {type: nextjs, root: src}
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      include: [deleted.tsx]
+      allowFiles: {'./deleted.tsx': retired}
+      allowComponents: {'./deleted.tsx#Retired': retired}

@@ -138,7 +138,9 @@ Both APIs also honor repository `reportUnusedAllowEntries` for proven stale
 configured exceptions: `advise` (default) returns `unused-allow-entry` in
 `CheckReport.advisories`, `report` returns the same diagnostic in
 `CheckReport.rules`, and `ignore` omits it. The setting never expands analysis
-scope; incomplete selector coverage stays silent. The exported
+scope; incomplete selector coverage stays silent. Literal file paths within the
+configured scope also prove staleness when absent from both inventory and disk.
+Existing excluded or ignored files and empty glob matches stay silent. The exported
 `UnusedAllowEntryPolicy` union names this policy in `DeclaredConfig`.
 
 `check(options)` and check reports in `analyzeProject()` accept the same

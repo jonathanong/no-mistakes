@@ -126,3 +126,37 @@ macro_rules! diagnostic_source_rule_entrypoints {
     };
 }
 pub(crate) use diagnostic_source_rule_entrypoints;
+
+macro_rules! masked_source_rule_entrypoints {
+    ($compile:ident, $is_file:ident, $check:path) => {
+        super::borrowed_source_rule_entrypoints!();
+        pub(crate) fn check_with_files_sources_and_deferred_suppression(
+            root: &std::path::Path,
+            config: &crate::config::v2::NoMistakesConfig,
+            all_files: &[std::path::PathBuf],
+            sources: &crate::codebase::ts_source::SourceStore,
+            defer_suppression: bool,
+        ) -> anyhow::Result<Vec<super::RuleFinding>> {
+            let mut findings = Vec::new();
+            for rule in config.rule_applications(RULE_ID) {
+                let mut opts = $compile(rule.try_rule_options()?)?;
+                opts.allow.setup(root, config, rule, sources);
+                let files = super::selected_rule_files_matching_with_sources(
+                    root, config, rule, all_files, sources, $is_file,
+                )?;
+                findings.extend(super::scan_masked_files(
+                    root,
+                    &opts,
+                    &files,
+                    sources,
+                    defer_suppression,
+                    $check,
+                ));
+                findings.extend(opts.allow.finish(root, sources));
+            }
+            super::sort_findings(&mut findings);
+            Ok(findings)
+        }
+    };
+}
+pub(crate) use masked_source_rule_entrypoints;

@@ -46,14 +46,27 @@ pub(crate) fn check_with_files_and_sources(
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
         let compiled = compile_options(&opts)?;
-        let target_roots = super::target_roots(root, config, rule);
-        let skip = super::skip_dir_set(config);
-        let files: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots))
-            .cloned()
-            .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        findings.extend(super::allow_audit::missing_file_findings(
+            root,
+            config,
+            rule,
+            sources,
+            "allow",
+            opts.allow.iter().map(|file| {
+                let path = crate::codebase::ts_resolver::normalize_path(&root.join(file));
+                let rel = relative_slash_path(root, &path);
+                (
+                    if compiled.include.is_match(&rel) {
+                        file.clone()
+                    } else {
+                        String::new()
+                    },
+                    file.clone(),
+                )
+            }),
+        ));
+        let files =
+            super::selected_rule_files_with_sources(root, config, rule, all_files, sources)?;
         let files: Vec<PathBuf> = files
             .into_iter()
             .filter(|path| compiled.include.is_match(&relative_slash_path(root, path)))

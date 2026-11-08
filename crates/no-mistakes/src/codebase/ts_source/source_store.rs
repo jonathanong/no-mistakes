@@ -13,6 +13,7 @@ pub use json::{JsonLoadError, JsonParseOutcome};
 mod optional;
 mod read;
 mod regular_paths;
+mod roots;
 mod validation;
 mod yaml;
 use read::read_utf8_arc;
@@ -32,6 +33,8 @@ type SupplementalReadSlots = DashMap<PathBuf, Arc<OnceLock<SourceReadOutcome>>>;
 #[doc(hidden)]
 pub struct SourceStore {
     inventory: Arc<FileInventory>,
+    complete_inventory: bool,
+    inferred_roots: roots::InferredRootSlots,
     observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
     reads: Vec<OnceLock<SourceReadOutcome>>,
     json_parses: JsonParseSlots,
@@ -59,6 +62,8 @@ impl SourceStore {
         let reads = (0..inventory.len()).map(|_| OnceLock::new()).collect();
         Self {
             inventory,
+            complete_inventory: false,
+            inferred_roots: OnceLock::new(),
             observer,
             reads,
             json_parses: DashMap::new(),
@@ -71,6 +76,15 @@ impl SourceStore {
             json_parse_count: AtomicUsize::new(0),
             yaml_parse_count: AtomicUsize::new(0),
         }
+    }
+
+    pub(crate) fn with_complete_inventory(mut self) -> Self {
+        self.complete_inventory = true;
+        self
+    }
+
+    pub(crate) fn inventory_is_complete(&self) -> bool {
+        self.complete_inventory
     }
 
     #[doc(hidden)]

@@ -418,7 +418,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "stale_allow": {
     "exitCode": 0,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "<repo>/test-cases/rules/tsconfig-file-coverage/configs/allow-stale.yml",
+          "import": "tsconfig-file-coverage",
+          "line": 7,
+          "message": "stale tsconfig-file-coverage allow entry `missing.ts` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- path: missing.ts",
+          "target": "missing.ts"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],

@@ -1,0 +1,20 @@
+effort: max
+reportUnusedAllowEntries: report
+projects:
+  web:
+    type: nextjs
+    root: src
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    include: ['**']
+    exclude: [excluded.mts]
+    options:
+      allow_files:
+        deleted.tsx: retired
+        excluded.mts: excluded
+        'unmatched-*.tsx': unmatched
+      allow_components:
+        'deleted.tsx#Retired': retired
+        'excluded.mts#Excluded': excluded
+        'unmatched-*.tsx#Retired': unmatched

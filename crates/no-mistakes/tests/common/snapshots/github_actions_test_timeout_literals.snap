@@ -17,7 +17,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "allow_unscanned_file": {
     "exitCode": 0,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "<repo>/test-cases/rules/github-actions-test-timeout-literals/configs/allow-unscanned.yml",
+          "import": "github-actions-test-timeout-literals",
+          "line": 6,
+          "message": "stale github-actions-test-timeout-literals allow entry `.github/workflows/missing.test.mts#timeout-minutes: 20` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "- file: .github/workflows/missing.test.mts",
+          "target": ".github/workflows/missing.test.mts#timeout-minutes: 20"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],

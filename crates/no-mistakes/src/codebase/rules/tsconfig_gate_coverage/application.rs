@@ -1,4 +1,6 @@
-use super::{command_scan, is_tsconfig_path, RuleFinding, RULE_ID};
+use super::{
+    command_scan, is_tsconfig_path, relative_slash_path, Path, PathBuf, RuleFinding, RULE_ID,
+};
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(serde::Deserialize, Default)]
@@ -166,4 +168,29 @@ fn config_finding(file: &str, target: &str, message: String) -> RuleFinding {
         import: None,
         target: Some(target.to_string()),
     }
+}
+
+pub(super) fn local_typechecked_projects(
+    config: &crate::config::v2::NoMistakesConfig,
+) -> BTreeSet<String> {
+    config
+        .checks
+        .commands
+        .iter()
+        .filter(|command| {
+            command.always && command.file_args == crate::config::v2::schema::CheckFileArgs::None
+        })
+        .flat_map(|command| command_scan::scan_argv_for_typechecked_projects(&command.command, "."))
+        .collect()
+}
+
+pub(super) fn tracked_tsconfigs(root: &Path, paths: &[PathBuf]) -> BTreeSet<String> {
+    paths
+        .iter()
+        .filter_map(|path| {
+            let rel = relative_slash_path(root, path);
+            command_scan::normalize_repo_relative(&rel)
+                .filter(|normalized| is_tsconfig_path(normalized))
+        })
+        .collect()
 }

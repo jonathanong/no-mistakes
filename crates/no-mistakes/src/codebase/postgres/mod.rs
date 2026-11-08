@@ -158,7 +158,7 @@ pub use verdict::{
 #[cfg(test)]
 pub(crate) mod tests;
 
-pub(crate) use collect::collect_prepared_schema_facts;
+pub(crate) use collect::{collect_prepared_schema_facts, compile_sql_include, matches_sql_include};
 
 pub(crate) use on_conflict::judge_subcheck as judge_idempotent_subcheck;
 pub(crate) use on_conflict::{judge_file_with_prepared_triggers, InstalledTriggers};

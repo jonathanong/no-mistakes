@@ -1,0 +1,117 @@
+reportUnusedAllowEntries: ignore
+effects:
+  database:
+    functions: [read]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    include: [src/**]
+    exclude: [src/excluded.mts]
+    options:
+      effects: [database]
+      allow:
+        - {file: src/deleted.mts, callee: read}
+        - {file: src/excluded.mts, callee: read}
+        - {file: src/unmatched-*.mts, callee: read}
+  - rule: no-raw-ephemeral-port
+    scope: repository
+    include: [src/**]
+    exclude: [src/excluded.mts]
+    options:
+      allow: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]
+  - rule: swift-no-raw-print
+    scope: repository
+    include: [src/**]
+    exclude: [src/excluded.mts]
+    options:
+      allow: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]
+  - rule: swift-viewmodel-main-actor
+    scope: repository
+    include: [src/**]
+    exclude: [src/excluded.mts]
+    options:
+      allow: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]
+  - rule: csharp-no-async-void-delegate
+    scope: repository
+    include: [src/**]
+    exclude: [src/excluded.mts]
+    options:
+      allow: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]
+  - rule: lockfile-allowlist
+    scope: repository
+    include: [src/**]
+    exclude: [src/excluded.mts]
+    options:
+      allowed: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]
+  - rule: file-extension-policy
+    scope: repository
+    include: [src/**]
+    exclude: [src/excluded.mts]
+    options:
+      scopes: [{path: src, bannedExtensions: [.js]}]
+      allowlist: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]
+  - rule: no-empty-or-comments-only-files
+    scope: repository
+    include: [src/**]
+    exclude: [src/excluded.mts]
+    options:
+      intentionallyEmpty: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]
+  - rule: package-json-workspace-coverage
+    scope: repository
+    include: [packages/**]
+    exclude: [packages/excluded/package.json]
+    options:
+      packageRoots: [packages]
+      allowlist: [packages/deleted/package.json, packages/excluded/package.json, packages/unmatched-*/package.json]
+  - rule: no-git-identity-mutation
+    scope: repository
+    include: [src/**]
+    exclude: [src/excluded.mts]
+    options:
+      conditionallyAllowedWorkflows: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]
+  - rule: forbidden-dependencies
+    scope: repository
+    include: [src/**]
+    exclude: [src/excluded.mts]
+    options:
+      roots: [src]
+      forbiddenFiles: [src/banned.mts]
+      exceptions:
+        - roots: [src]
+          allowedFiles: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]
+  - rule: markdown-eval-tests
+    scope: repository
+    include: [src/**]
+    exclude: [src/excluded.mts]
+    options:
+      include: [src/**]
+      allow: [src/deleted.mts, src/excluded.mts, src/unmatched-*.mts]
+  - rule: tsconfig-file-coverage
+    scope: repository
+    include: [src/**]
+    exclude: [src/excluded.mts]
+    options:
+      allow:
+        - {path: src/deleted.mts, reason: retired}
+        - {path: src/excluded.mts, reason: excluded}
+        - {path: src/unmatched-*.mts, reason: pattern}
+  - rule: github-actions-job-timeouts
+    scope: repository
+    include: [src/**]
+    exclude: [src/excluded.mts]
+    options:
+      include: [src/**]
+      allow:
+        - {job: 'src/deleted.mts#build'}
+        - {job: 'src/excluded.mts#build'}
+        - {job: 'src/unmatched-*.mts#build'}
+  - rule: github-actions-test-timeout-literals
+    scope: repository
+    include: [src/**]
+    exclude: [src/excluded.mts]
+    options:
+      include: [src/**]
+      allow:
+        - {file: src/deleted.mts, text: retired, reason: retired}
+        - {file: src/excluded.mts, text: retired, reason: excluded}
+        - {file: src/unmatched-*.mts, text: retired, reason: pattern}

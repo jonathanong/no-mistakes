@@ -12,7 +12,7 @@ enum Scenario {
     Missing,
 }
 
-fn assert_audit_silent(scenario: Scenario) {
+fn assert_audit(scenario: Scenario) {
     let failed = matches!(scenario, Scenario::Failed);
     let root =
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/unused-allow-entries");
@@ -28,7 +28,7 @@ fn assert_audit_silent(scenario: Scenario) {
             root.join("src/query.mts")
         },
     ];
-    let sources = super::super::source_store_for_files(&files);
+    let sources = super::super::source_access::complete_source_store_for_files(&files);
     let mut facts = collect_check_facts_with_graph_files_playwright_and_sources(
         &root,
         files.to_vec(),
@@ -50,7 +50,7 @@ fn assert_audit_silent(scenario: Scenario) {
     }
     let filter =
         super::super::path_filter::RulePathFilter::new(&root, &config, application).unwrap();
-    let audit = AllowAudit::new(
+    let audit = AllowAudit::new_files(
         &root,
         &config,
         application,
@@ -58,27 +58,36 @@ fn assert_audit_silent(scenario: Scenario) {
         "allow",
         options.allow.len(),
     );
-    assert!(allow::finish(&root, &facts, Some(&sources), &filter, &options, &audit).is_empty());
+    let findings = allow::finish(&root, &facts, Some(&sources), &filter, &options, &audit);
+    if matches!(scenario, Scenario::Failed | Scenario::Missing) {
+        assert_eq!(findings.len(), 1, "{findings:?}");
+        assert_eq!(
+            findings[0].target.as_deref(),
+            Some("src/missing.mts#retired")
+        );
+    } else {
+        assert!(findings.is_empty(), "{findings:?}");
+    }
 }
 
 #[test]
 fn supporting_graph_files_outside_selected_scope_are_not_audited() {
-    assert_audit_silent(Scenario::Narrowed);
+    assert_audit(Scenario::Narrowed);
 }
 
 #[test]
-fn a_failed_supporting_fact_cannot_prove_an_allowance_stale() {
-    assert_audit_silent(Scenario::Failed);
+fn failed_facts_only_leave_the_absent_file_proof_eligible() {
+    assert_audit(Scenario::Failed);
 }
 
 #[test]
-fn missing_supporting_facts_cannot_prove_an_allowance_stale() {
-    assert_audit_silent(Scenario::Missing);
+fn missing_facts_only_leave_the_absent_file_proof_eligible() {
+    assert_audit(Scenario::Missing);
 }
 
 #[test]
 fn primary_facts_outside_the_query_graph_are_not_audited() {
-    assert_audit_silent(Scenario::NarrowedGraph);
+    assert_audit(Scenario::NarrowedGraph);
 }
 
 fn selector_root() -> std::path::PathBuf {

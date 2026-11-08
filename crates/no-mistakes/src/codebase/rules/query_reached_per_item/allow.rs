@@ -31,12 +31,13 @@ pub(super) fn finish(
     options: &Options,
     audit: &AllowAudit,
 ) -> Vec<RuleFinding> {
-    if facts.graph_file_universe().iter().any(|file| {
+    let graph_usable = !facts.graph_file_universe().iter().any(|file| {
         crate::codebase::dependencies::extract::is_indexable(file)
             && facts.get_ts_facts(file).is_none_or(|facts| {
                 facts.parse_error.is_some() || facts.operational_error.is_some()
             })
-    }) {
+    });
+    if !graph_usable && !audit.audits_missing_files() {
         return Vec::new();
     }
     let graph_files =
@@ -54,8 +55,28 @@ pub(super) fn finish(
         .cloned()
         .collect::<Vec<_>>();
     let scope = CheckedScope::new(root, sources, &checked);
-    audit.finish(
-        |index| scope.exact(&options.allow[index].file),
+    let complete = audit.audits_missing_files()
+        && sources.is_some_and(|sources| {
+            let primary = crate::codebase::check_facts::PathMembership::new(facts.files());
+            sources
+                .inventory()
+                .paths()
+                .iter()
+                .filter(|file| {
+                    crate::codebase::dependencies::extract::is_indexable(file)
+                        && audit.missing_scope_includes(file)
+                })
+                .all(|file| primary.contains(file) && graph_files.contains(file))
+        });
+    audit.finish_files(
+        |index| graph_usable && scope.exact(&options.allow[index].file),
+        |index| {
+            if complete {
+                options.allow[index].file.clone()
+            } else {
+                String::new()
+            }
+        },
         |index| {
             let entry = &options.allow[index];
             let mut selector = entry.file.clone();
@@ -71,4 +92,24 @@ pub(super) fn finish(
             selector
         },
     )
+}
+
+pub(super) fn filter(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    rule: &crate::config::v2::schema::RuleDef,
+    sources: Option<&SourceStore>,
+) -> anyhow::Result<RulePathFilter> {
+    let mut inferred = sources
+        .filter(|sources| sources.inventory_is_complete())
+        .map(|sources| {
+            sources.inferred_roots_for_projects(
+                root,
+                rule.projects
+                    .iter()
+                    .filter_map(|name| config.projects.get(name)),
+            )
+        })
+        .unwrap_or_default();
+    RulePathFilter::new_with_inferred(root, config, rule, &mut inferred)
 }

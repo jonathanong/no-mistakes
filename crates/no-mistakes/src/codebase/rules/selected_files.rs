@@ -6,62 +6,8 @@ use rayon::prelude::*;
 use serde::de::DeserializeOwned;
 use std::path::{Path, PathBuf};
 
-/// Select an application's files from the request-owned visible-file inventory.
-pub(crate) fn selected_rule_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    rule: &RuleDef,
-    all_files: &[PathBuf],
-) -> Result<Vec<PathBuf>> {
-    selected_rule_files_with_roots(root, config, rule, all_files).map(|(files, _)| files)
-}
-
-pub(crate) fn selected_rule_files_with_roots(
-    root: &Path,
-    config: &NoMistakesConfig,
-    rule: &RuleDef,
-    all_files: &[PathBuf],
-) -> Result<(Vec<PathBuf>, Vec<PathBuf>)> {
-    let (files, target_roots) = rule_scope_files_with_roots(root, config, rule, all_files);
-    let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-    Ok((files, target_roots))
-}
-
-/// Preserve companion-file visibility before an application's include/exclude filter.
-pub(crate) fn rule_scope_files_with_roots(
-    root: &Path,
-    config: &NoMistakesConfig,
-    rule: &RuleDef,
-    all_files: &[PathBuf],
-) -> (Vec<PathBuf>, Vec<PathBuf>) {
-    let target_roots = super::target_roots(root, config, rule);
-    let skip = super::skip_dir_set(config);
-    let files: Vec<PathBuf> = all_files
-        .iter()
-        .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots))
-        .cloned()
-        .collect();
-    (files, target_roots)
-}
-
-pub(crate) fn selected_rule_files_matching(
-    root: &Path,
-    config: &NoMistakesConfig,
-    rule: &RuleDef,
-    all_files: &[PathBuf],
-    matches: impl Fn(&Path) -> bool,
-) -> Result<Vec<PathBuf>> {
-    let target_roots = super::target_roots(root, config, rule);
-    let skip = super::skip_dir_set(config);
-    let files: Vec<PathBuf> = all_files
-        .iter()
-        .filter(|path| {
-            matches(path) && super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots)
-        })
-        .cloned()
-        .collect();
-    super::path_filter::filter_rule_files(root, config, rule, &files)
-}
+mod scope;
+pub(crate) use scope::*;
 
 /// Standalone rule entry points discover each configured target before filtering.
 pub(crate) fn discovered_rule_files(

@@ -50,8 +50,8 @@ pub(crate) fn check_with_graph_and_session(
     for application in config.rule_applications(RULE_ID) {
         let options: Options = application.try_rule_options()?;
         config::validate(&options, config)?;
-        let filter = super::path_filter::RulePathFilter::new(root, config, application)?;
-        let audit = super::allow_audit::AllowAudit::new(
+        let filter = allow::filter(root, config, application, sources)?;
+        let audit = super::allow_audit::AllowAudit::new_files(
             root,
             config,
             application,

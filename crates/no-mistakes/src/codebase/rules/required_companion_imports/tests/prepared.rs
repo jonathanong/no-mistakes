@@ -39,6 +39,9 @@ fn prepared_companions_select_and_project_each_shared_input_once() {
         crate::codebase::analysis_session::AnalysisSession::new(Some(Arc::clone(&observer)));
     let mut plan = CheckFactPlan::default();
     configure_fact_plan(&root, &config, &files, &sources, &mut plan).unwrap();
+    let mut narrowed = config.clone();
+    narrowed.missing_allow_audit_scope_incomplete = true;
+    assert!(plan.companion_import_plans[0].matches(&root, &narrowed));
     let cloned = plan.clone();
     assert!(Arc::ptr_eq(
         &plan.companion_import_plans,

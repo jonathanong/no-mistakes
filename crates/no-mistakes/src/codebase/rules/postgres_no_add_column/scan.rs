@@ -81,6 +81,7 @@ pub(super) fn scan(
             .filter(|migration| checked.contains(&migration.path))
             .map(stale_allowed_migration),
     );
+    findings.extend(opts.missing.iter().cloned());
     Ok(findings)
 }
 

@@ -99,13 +99,18 @@ fn assert_prepared_projection(saved: PathBuf, audit: bool) {
     .unwrap();
     assert!(!findings.is_empty());
     if audit {
-        assert_eq!(findings.len(), 1, "{findings:?}");
+        assert_eq!(findings.len(), 2, "{findings:?}");
         assert_eq!(findings[0].rule, "unused-allow-entry");
         assert_eq!(
             findings[0].import.as_deref(),
             Some("query-reached-per-item")
         );
-        assert!(findings[0].message.contains("src/entry.mts:900#read"));
+        assert!(findings
+            .iter()
+            .any(|finding| finding.message.contains("src/entry.mts:900#read")));
+        assert!(findings
+            .iter()
+            .any(|finding| finding.target.as_deref() == Some("src/missing.mts#retired")));
     }
     assert_eq!(
         sources.physical_read_count(),

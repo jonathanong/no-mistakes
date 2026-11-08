@@ -1,0 +1,12 @@
+reportUnusedAllowEntries: report
+effects:
+  database: {functions: [read]}
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    exclude: [src/excluded.mts]
+    options:
+      effects: [database]
+      allow:
+        - {file: src/deleted.mts, function: retired, callee: read}
+        - {file: src/excluded.mts, function: retired, callee: read}

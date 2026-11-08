@@ -61,5 +61,6 @@ pub(super) fn check_diagnostics_with_resolver(
     sort_findings(&mut diagnostics.advisories);
     Ok(diagnostics)
 }
+mod allow;
 mod execution;
 use execution::check_rule;

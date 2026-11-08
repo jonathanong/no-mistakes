@@ -1,0 +1,20 @@
+reportUnusedAllowEntries: report
+effects:
+  database: {functions: [read]}
+rules:
+  - rule: no-raw-ephemeral-port
+    scope: repository
+    include: [src/deleted.mts]
+    options: {allow: [src/deleted.mts]}
+  - rule: github-actions-test-timeout-literals
+    scope: repository
+    include: [src/deleted.test.mts]
+    options:
+      include: [src/*.test.mts]
+      allow: [{file: src/deleted.test.mts, text: retired, reason: retired}]
+  - rule: query-reached-per-item
+    scope: repository
+    include: [src/deleted.mts]
+    options:
+      effects: [database]
+      allow: [{file: src/deleted.mts, callee: read}]

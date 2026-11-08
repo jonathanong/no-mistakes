@@ -1,0 +1,12 @@
+reportUnusedAllowEntries: ignore
+rules:
+  - rule: no-raw-ephemeral-port
+    scope: repository
+    include: [absent/**]
+    options: {include: ['['], allow: [src/deleted.mts]}
+  - rule: github-actions-test-timeout-literals
+    scope: repository
+    include: [absent/**]
+    options:
+      include: ['[']
+      allow: [{file: src/deleted.test.mts, text: retired, reason: retired}]

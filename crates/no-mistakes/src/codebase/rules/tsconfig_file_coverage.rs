@@ -68,14 +68,21 @@ pub(crate) fn check_with_files_and_sources(
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
         let compiled = compile_options(&opts);
-        let target_roots = super::target_roots(root, config, rule);
-        let skip = super::skip_dir_set(config);
-        let in_scope: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots))
-            .cloned()
-            .collect();
-        let candidates = super::path_filter::filter_rule_files(root, config, rule, &in_scope)?;
+        findings.extend(super::allow_audit::missing_file_findings(
+            root,
+            config,
+            rule,
+            sources,
+            "allow",
+            opts.allow.iter().map(|entry| {
+                (
+                    normalize_rel(&entry.path).unwrap_or_default(),
+                    entry.path.clone(),
+                )
+            }),
+        ));
+        let candidates =
+            super::selected_rule_files_with_sources(root, config, rule, all_files, sources)?;
         findings.extend(scan::scan(root, &compiled, all_files, &candidates, sources));
     }
     super::sort_findings(&mut findings);

@@ -107,7 +107,7 @@ export type UnusedAllowEntryPolicy = "advise" | "report" | "ignore";
 
 /** Canonical source-level merge, before defaults, expansion, or materialization. */
 export interface DeclaredConfig extends DeclaredConfigObject {
-  /** Defaults to `advise`; incomplete selector coverage never proves staleness. */
+  /** Defaults to `advise`; absent literal file paths also prove staleness. */
   reportUnusedAllowEntries?: UnusedAllowEntryPolicy;
   rules?: DeclaredRule[];
 }

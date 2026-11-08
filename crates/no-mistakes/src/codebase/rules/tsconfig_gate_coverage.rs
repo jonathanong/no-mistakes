@@ -12,10 +12,9 @@ mod workflow;
 use super::RuleFinding;
 use crate::codebase::ci_workflows::ParsedWorkflowSet;
 use crate::codebase::ts_source::relative_slash_path;
-use crate::config::v2::schema::{CheckFileArgs, NoMistakesConfig};
+use crate::config::v2::schema::NoMistakesConfig;
 use anyhow::Result;
-use application::{scan_application, Options};
-use command_scan::scan_argv_for_typechecked_projects;
+use application::{local_typechecked_projects, scan_application, tracked_tsconfigs, Options};
 use no_check::non_enforcing_tsconfigs;
 use rayon::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
@@ -74,26 +73,17 @@ pub(crate) fn check_with_prepared(
         .into_par_iter()
         .map(|rule| {
             let opts: Options = rule.try_rule_options()?;
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let candidates = tracked
+            let paths = tracked
                 .iter()
-                .filter(|candidate| {
-                    let path = root.join(candidate);
-                    super::file_allowed_by_roots_and_skip(root, &skip, &path, &target_roots)
-                })
-                .cloned()
+                .map(|candidate| root.join(candidate))
                 .collect::<Vec<_>>();
-            let candidates = super::path_filter::filter_rule_files(
+            let candidates = super::selected_rule_files_with_sources(
                 root,
                 config,
                 rule,
-                &candidates
-                    .iter()
-                    .map(|candidate| root.join(candidate))
-                    .collect::<Vec<_>>(),
-            );
-            let candidates = candidates?;
+                &paths,
+                prepared.sources,
+            )?;
             let candidates = candidates
                 .iter()
                 .map(|path| relative_slash_path(root, path))
@@ -115,6 +105,19 @@ pub(crate) fn check_with_prepared(
                         .is_some_and(|path| candidates.contains(path))
             });
             diagnostics::annotate(root, config, rule, prepared.sources, &mut findings);
+            findings.extend(super::allow_audit::missing_file_findings(
+                root,
+                config,
+                rule,
+                prepared.sources,
+                "allowProjects",
+                opts.allow_projects.keys().map(|key| {
+                    (
+                        command_scan::normalize_repo_relative(key).unwrap_or_default(),
+                        key.clone(),
+                    )
+                }),
+            ));
             Ok(findings)
         })
         .collect();
@@ -161,17 +164,6 @@ pub fn prepare_project_source_inputs(
         .collect()
 }
 
-fn tracked_tsconfigs(root: &Path, paths: &[PathBuf]) -> BTreeSet<String> {
-    paths
-        .iter()
-        .filter_map(|path| {
-            let rel = relative_slash_path(root, path);
-            command_scan::normalize_repo_relative(&rel)
-                .filter(|normalized| is_tsconfig_path(normalized))
-        })
-        .collect()
-}
-
 fn is_tsconfig_path(path: &str) -> bool {
     if path.split('/').any(|component| component == "node_modules") {
         return false;
@@ -181,16 +173,6 @@ fn is_tsconfig_path(path: &str) -> bool {
         || name
             .strip_prefix("tsconfig.")
             .is_some_and(|suffix| !suffix.is_empty() && suffix.ends_with(".json"))
-}
-
-fn local_typechecked_projects(config: &NoMistakesConfig) -> BTreeSet<String> {
-    config
-        .checks
-        .commands
-        .iter()
-        .filter(|command| command.always && command.file_args == CheckFileArgs::None)
-        .flat_map(|command| scan_argv_for_typechecked_projects(&command.command, "."))
-        .collect()
 }
 
 mod diagnostics;

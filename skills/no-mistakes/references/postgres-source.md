@@ -217,6 +217,13 @@ unanalyzable policy and never proves a safe lock. See
 [the rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-lock-written-rows-only.md)
 for limits and rewrites.
 
+For catalog column bounds, use `postgres-column-check-constraints` with
+`schemaCatalogPath` and explicit column patterns, integer types, and
+`require: non-negative`. It requires validated CHECK proofs for selected
+columns. Adopt with `severity: advisory`; the default severity is `error`.
+Exceptions name an exact `table.column` and a reason. See
+the [rule contract](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-column-check-constraints.md).
+
 For catalog review, opt into `postgres-materialized-view-shape` with
 `schemaCatalogPath`. The shared application `severity` defaults to `error`;
 set `severity: advisory` for non-failing findings. It checks for missing

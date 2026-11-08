@@ -166,7 +166,7 @@ pub(super) fn read_source(
         .map_err(|error| PostgresFactError::for_path(path, format!("failed to read: {error}")))
 }
 
-pub(super) fn compile_sql_include(patterns: &[String]) -> Result<GlobSet, PostgresFactError> {
+pub(crate) fn compile_sql_include(patterns: &[String]) -> Result<GlobSet, PostgresFactError> {
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
         let glob = Glob::new(&glob_normalize::normalize(pattern)).map_err(|error| {
@@ -179,7 +179,7 @@ pub(super) fn compile_sql_include(patterns: &[String]) -> Result<GlobSet, Postgr
         .map_err(|error| PostgresFactError::message(format!("invalid sqlInclude globs: {error}")))
 }
 
-pub(super) fn matches_sql_include(root: &Path, path: &Path, globs: &GlobSet) -> bool {
+pub(crate) fn matches_sql_include(root: &Path, path: &Path, globs: &GlobSet) -> bool {
     let relative = relative_slash_path(root, path);
     globs.is_match(&relative)
         || path

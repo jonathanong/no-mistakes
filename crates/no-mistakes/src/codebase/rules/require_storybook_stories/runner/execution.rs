@@ -16,7 +16,18 @@ pub(super) fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
     let opts: Options = rule.try_rule_options()?;
     let policy = config.effective_rule_analysis(rule)?;
     let low = policy.effort == crate::config::v2::Effort::Low;
-    let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
+    let mut inferred_roots = inferred_roots.cloned().unwrap_or_else(|| {
+        if sources.inventory_is_complete() {
+            sources.inferred_roots_for_projects(
+                root,
+                rule.projects
+                    .iter()
+                    .filter_map(|name| config.projects.get(name)),
+            )
+        } else {
+            Default::default()
+        }
+    });
     let rule_filter = RulePathFilter::new_with_inferred(root, config, rule, &mut inferred_roots)?;
     let include = GlobMatcher::new(&opts.include)?;
     let exclude = GlobMatcher::new(&opts.exclude)?;
@@ -113,6 +124,15 @@ pub(super) fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
     incomplete |= catalog_sources.failed();
     let mut findings = Vec::new();
     findings.append(&mut namespace_findings);
+    findings.extend(super::allow::missing_findings(
+        root,
+        project_root,
+        config,
+        rule,
+        sources,
+        &opts,
+        (&include, &exclude, &inferred_roots),
+    ));
     let scope = super::super::findings::allow_scope(root, sources, &components);
     findings.extend(stale_or_blank_allow_findings(
         root,
@@ -155,7 +175,10 @@ pub(super) fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
         }
         findings.push(super::super::effort::missing(component));
     }
-    findings.retain(|finding| rule_filter.is_match(&root.join(&finding.file)));
+    findings.retain(|finding| {
+        finding.rule == crate::codebase::rules::allow_audit::RULE_ID
+            || rule_filter.is_match(&root.join(&finding.file))
+    });
     let mut diagnostics = AnalysisDiagnostics {
         findings,
         ..Default::default()

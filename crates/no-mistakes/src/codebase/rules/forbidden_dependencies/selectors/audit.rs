@@ -15,8 +15,12 @@ impl Selectors<'_> {
         graph: &DepGraph,
         sources: Option<&SourceStore>,
         universe: Option<&crate::fx::PathSet>,
-        checked: &[PathBuf],
+        scope: (
+            &[PathBuf],
+            Option<&crate::codebase::rules::allow_audit::MissingFiles>,
+        ),
     ) -> Vec<RuleFinding> {
+        let (checked, missing) = scope;
         let Some(sources) = sources else {
             return Vec::new();
         };
@@ -43,18 +47,17 @@ impl Selectors<'_> {
                         .any(|selector| selector.matches(self.root, path))
                 })
                 .collect::<Vec<_>>();
-            if source_files.is_empty()
-                || source_files.iter().any(|path| {
-                    !source_scope.exact(&crate::codebase::ts_source::relative_slash_path(
+            let complete = !source_files.is_empty()
+                && source_files.iter().all(|path| {
+                    source_scope.exact(&crate::codebase::ts_source::relative_slash_path(
                         self.root, path,
                     ))
-                })
-            {
-                continue;
-            }
+                });
             for item in exception.usage.unused() {
                 let pattern = &opts.exceptions[index].allowed_files[item];
-                if !targets.glob(pattern) {
+                if !(complete && targets.glob(pattern))
+                    && !missing.is_some_and(|scope| scope.contains(pattern))
+                {
                     continue;
                 }
                 findings.push(stale_finding(

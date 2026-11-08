@@ -1,4 +1,4 @@
-use super::RuleFinding;
+use super::{allow_audit::MissingFiles, RuleFinding};
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, NodeId};
 use crate::codebase::dependencies::{relationship_filter, EdgeKind};
 use crate::codebase::rules::config_diagnostic::ConfigAnchor;
@@ -116,13 +116,9 @@ fn check_rule_application(
         Err(finding) => return Ok(vec![*finding]),
     };
     let allowed = relationship_filter(&opts.relationships);
-    let mut inferred_roots = scope.inferred_roots.cloned().unwrap_or_default();
-    let source_filter = super::path_filter::RulePathFilter::new_with_inferred(
-        root,
-        config,
-        rule,
-        &mut inferred_roots,
-    );
+    let mut inferred = scope.inferred_roots.cloned().unwrap_or_default();
+    let source_filter =
+        super::path_filter::RulePathFilter::new_with_inferred(root, config, rule, &mut inferred);
     let source_filter = source_filter?;
     let mut findings = Vec::new();
     let mut checked = Vec::new();
@@ -184,13 +180,14 @@ fn check_rule_application(
             });
         }
     }
+    let missing = MissingFiles::new_with_inferred(root, config, rule, scope.sources, &inferred);
     findings.extend(selectors.audit(
         &anchor,
         opts,
         graph,
         scope.sources,
         scope.file_universe,
-        &checked,
+        (&checked, missing.as_ref()),
     ));
     Ok(findings)
 }

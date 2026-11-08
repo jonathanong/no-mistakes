@@ -9,9 +9,10 @@ fn audits_only_readable_selected_supported_entries() {
     let root = fixture();
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
     let findings = check(&root, &config).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings.len(), 2, "{findings:?}");
     assert_eq!(findings[0].rule, "unused-allow-entry");
     assert_eq!(findings[0].target.as_deref(), Some("clean.ts"));
+    assert_eq!(findings[1].target.as_deref(), Some("missing.ts"));
 }
 
 #[test]
