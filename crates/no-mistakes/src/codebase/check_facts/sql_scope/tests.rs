@@ -473,4 +473,10 @@ fn middle_exclusion_retains_selected_prefix_and_required_excluded_support() {
         2,
         "selected caller and unrelated selected executor both retain findings"
     );
+    assert!(
+        actual
+            .iter()
+            .any(|finding| finding.file == "unrelated/dense.mts"),
+        "selected suffix executor must produce its own finding: {actual:#?}"
+    );
 }
