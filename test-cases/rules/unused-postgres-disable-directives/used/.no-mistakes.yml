@@ -1,0 +1,37 @@
+version: 2
+reportUnusedDisableDirectives: report
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    include: [postgres-required-predicates.ts]
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      relations:
+        - table: topic_posts
+          requireColumns: [account_id]
+  - rule: postgres-bounded-statements
+    scope: repository
+    include: [postgres-bounded-statements.ts]
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    include: [postgres-no-transformed-uuid-predicates.ts]
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+  - rule: postgres-lock-ordering
+    scope: repository
+    include: [postgres-lock-ordering.ts]
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+  - rule: postgres-lock-written-rows-only
+    scope: repository
+    include: [postgres-lock-written-rows-only.ts]
+    options:
+      importSpecifier: "@example/db"
+      checks:
+        constant-advisory-lock: fail

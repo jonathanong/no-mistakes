@@ -235,3 +235,12 @@ in the JSON but fail closed for canonical proof. Deferrable unique indexes canno
 be conflict arbiters, although supported valid keys can still prove lock order.
 An ordering catalog declares its coverage and cannot satisfy rules requiring
 complete schema metadata; a complete catalog satisfies every catalog rule.
+
+### Stale SQL suppressions
+
+Aggregate `check` audits `no-mistakes-disable-next-line` comments inside
+statically recovered executor SQL, as well as native SQL and host comments.
+When the statement becomes accepted, remove its stale directive; otherwise
+`unused-disable-directive` identifies the physical comment line. A directive
+that still suppresses a finding remains used. Unexecuted SQL examples are not
+executor SQL. See [suppression hygiene](../configuration/suppressions.md).

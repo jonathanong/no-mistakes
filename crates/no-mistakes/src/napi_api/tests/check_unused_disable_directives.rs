@@ -118,3 +118,46 @@ fn batched_project_check_matches_direct_check_hygiene() {
         report(None, false)["advisories"]
     );
 }
+
+#[test]
+fn postgres_unused_disables_match_direct_and_batched_check() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/unused-postgres-disable-directives/fixture");
+    for config in [
+        ".no-mistakes.yml",
+        "advise.yml",
+        "ignore.yml",
+        "low.yml",
+        "clean.yml",
+    ] {
+        let options = json!({"root": root, "config": root.join(config)});
+        let direct: Value = serde_json::from_str(
+            &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string())).unwrap(),
+        )
+        .unwrap();
+        let mut options = options;
+        options["reports"] = json!([{ "type": "check" }]);
+        let batch: Value = serde_json::from_str(
+            &crate::napi_api::analyze_project::analyze_project_json_impl(
+                crate::napi_api::options::test_json_arg(options.to_string()),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(batch["reports"][0]["result"], direct);
+        let field = if config == "advise.yml" {
+            "advisories"
+        } else {
+            "rules"
+        };
+        assert_eq!(
+            direct[field].as_array().unwrap().len(),
+            if ["ignore.yml", "clean.yml"].contains(&config) {
+                0
+            } else {
+                15
+            },
+            "{direct}"
+        );
+    }
+}

@@ -1,0 +1,95 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "caller.mts",
+          "line": 11,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: second branch",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "caller.mts",
+          "line": 8,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: first branch",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "helper.mts",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-required-predicates: stale header",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "helper.mts",
+          "line": 4,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: shared indexed probe",
+          "target": "postgres-required-predicates"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "caller.mts",
+          "line": 11,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: second branch",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "caller.mts",
+          "line": 8,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: first branch",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "helper.mts",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-required-predicates: stale header",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "helper.mts",
+          "line": 4,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: shared indexed probe",
+          "target": "postgres-required-predicates"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

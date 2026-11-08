@@ -5,7 +5,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "all_triggers_combined": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "src/combined-suppressed.ts",
+          "line": 9,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -535,7 +544,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "generic_argument_only": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "src/combined-suppressed.ts",
+          "line": 9,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -564,7 +582,32 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "imported_tag_unanalyzable": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "src/imported-tag-suppressed.ts",
+          "line": 9,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 17,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 8,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -627,7 +670,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "leading_comment_only": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "src/combined-suppressed.ts",
+          "line": 9,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -850,7 +902,32 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "other_module_tag": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "src/imported-tag-suppressed.ts",
+          "line": 9,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 17,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 8,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -1574,7 +1651,32 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "tag_sibling": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "src/imported-tag-suppressed.ts",
+          "line": 9,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 17,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 8,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -1595,7 +1697,32 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "tag_subpath": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "src/imported-tag-suppressed.ts",
+          "line": 9,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 17,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 8,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -1616,7 +1743,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "tagged_suppressed": {
     "exitCode": 0,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "src/imported-tag-suppressed.ts",
+          "line": 9,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -1628,7 +1764,32 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "tagged_template": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "src/imported-tag-suppressed.ts",
+          "line": 9,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 17,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 8,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -1697,7 +1858,32 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "trusted_named_tag": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "src/imported-tag-suppressed.ts",
+          "line": 9,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 17,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 8,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -1718,7 +1904,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "trusted_suppressed_tag": {
     "exitCode": 0,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 17,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 8,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -1730,7 +1933,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "typed_parameter_executor": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "src/combined-suppressed.ts",
+          "line": 9,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -1811,7 +2023,32 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "untrusted_imported_tag": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "src/imported-tag-suppressed.ts",
+          "line": 9,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 17,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 8,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -1832,7 +2069,32 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "untrusted_suppressed_tag": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "src/imported-tag-suppressed.ts",
+          "line": 9,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 17,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "src/tagged-suppressed.ts",
+          "line": 8,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates",
+          "target": "postgres-required-predicates"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
