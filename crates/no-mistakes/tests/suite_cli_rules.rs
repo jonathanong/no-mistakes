@@ -12,6 +12,8 @@ mod cli_check_unused_allow_entries;
 
 #[path = "cli_check_production_exports_class_extends.rs"]
 mod cli_check_production_exports_class_extends;
+#[path = "cli_check_production_exports_dynamic_selectors.rs"]
+mod cli_check_production_exports_dynamic_selectors;
 #[path = "cli_check_production_exports_script_entry.rs"]
 mod cli_check_production_exports_script_entry;
 #[path = "cli_check_production_exports_test_only.rs"]

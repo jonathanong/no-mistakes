@@ -17,8 +17,8 @@ fn selectors(file: &str) -> Vec<Vec<String>> {
         facts.diagnostics
     );
     let mut proven = facts.dynamic_import_selectors.clone();
-    proven.sort_by_key(|(start, _)| *start);
-    proven.into_iter().map(|(_, names)| names).collect()
+    proven.sort_by_key(|(start, _, _)| *start);
+    proven.into_iter().map(|(_, names, _)| names).collect()
 }
 
 #[test]
@@ -48,6 +48,9 @@ fn dynamic_import_selectors_record_only_proven_forms() {
         vec!["default"],
         vec!["E", "F"],
         vec!["G"],
+        vec!["A"],
+        vec!["a"],
+        vec!["A"],
     ];
     assert_eq!(names, expected);
 }

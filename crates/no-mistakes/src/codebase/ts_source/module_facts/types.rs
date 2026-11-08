@@ -142,9 +142,9 @@ pub struct TypeScriptModuleFacts {
     /// cannot follow (escaping references, non-literal specifiers).
     #[serde(skip)]
     pub(crate) importer_unsafe: Vec<(u32, &'static str)>,
-    /// Start offset and export names of dynamic imports with proven selectors.
+    /// Start offset, selected names, and receiver calls of proven dynamic imports.
     #[serde(skip)]
-    pub(crate) dynamic_import_selectors: Vec<(u32, Vec<String>)>,
+    pub(crate) dynamic_import_selectors: Vec<(u32, Vec<String>, Vec<String>)>,
     #[serde(skip)]
     pub(crate) call_arguments:
         Option<std::sync::Arc<crate::fx::FxHashMap<u32, super::arguments::ArgumentValues>>>,
