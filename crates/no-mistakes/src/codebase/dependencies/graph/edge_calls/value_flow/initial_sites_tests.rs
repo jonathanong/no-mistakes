@@ -2,6 +2,16 @@ use super::*;
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use crate::codebase::ts_resolver::{normalize_path, TsConfig};
 
+#[cfg(feature = "test-instrumentation")]
+thread_local! {
+    static INITIAL_SITE_CLONES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+#[cfg(feature = "test-instrumentation")]
+pub(super) fn record_clone() {
+    INITIAL_SITE_CLONES.set(INITIAL_SITE_CLONES.get() + 1);
+}
+
 fn graph() -> DepGraph {
     let saved = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/call-site-assembly/fixture");
@@ -14,6 +24,7 @@ fn graph() -> DepGraph {
     ).unwrap()
 }
 
+#[cfg(feature = "test-instrumentation")]
 #[test]
 fn initial_originals_clone_only_admitted_complete_occurrences() {
     let sites = graph().resolved_call_sites().to_vec();
@@ -44,6 +55,7 @@ fn dense_work_ids_mutate_their_physical_occurrences_across_gaps() {
     assert_eq!(sites, expected);
 }
 
+#[cfg(feature = "test-instrumentation")]
 #[test]
 fn known_callers_still_supply_callback_arguments_without_original_copies() {
     INITIAL_SITE_CLONES.set(0);
