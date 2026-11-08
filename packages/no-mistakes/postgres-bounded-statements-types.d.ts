@@ -1,5 +1,7 @@
 import type { Effort, Unanalyzable } from "./traversal-types";
 
+export type PostgresMaterializedBodyPolicy = "ignore" | "advise" | "report" | "require-bound";
+
 export type PostgresViewBoundMode = "bounded" | "unbounded";
 
 /** An application assertion that each selected key has bounded fan-out. */
@@ -28,6 +30,8 @@ export interface PostgresBoundedStatementsOptions {
   viewBounds?: Record<string, PostgresViewBoundMode>;
   /** Catalog `table.column` names, each with a nonempty reason. */
   columnBounds?: Record<string, PostgresColumnBound>;
+  /** Independent pool-body bounds, excluding existence/correlated scalar probes. Defaults to ignore; require-bound advises. */
+  materializedBodies?: PostgresMaterializedBodyPolicy;
   effort?: Effort;
   unanalyzable?: Unanalyzable;
   unanalyzableSql?: Unanalyzable;

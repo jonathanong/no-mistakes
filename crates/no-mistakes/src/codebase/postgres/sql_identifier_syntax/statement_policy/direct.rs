@@ -59,7 +59,7 @@ pub(crate) fn literals<'a>(
                     }
                     Some(Literal {
                         facts: Arc::new(crate::codebase::postgres::statements::extract_sql_statement_facts_with_json_writes(
-                            text, false, Some(&[]), crate::codebase::postgres::statement_facts::SqlLocationDemand::Full, false, probe_demand(file))),
+                            text, false, Some(&[]), crate::codebase::postgres::statement_facts::SqlLocationDemand::Full, false, probe_demand(file), false)),
                         mapped: false,
                     })
                 });

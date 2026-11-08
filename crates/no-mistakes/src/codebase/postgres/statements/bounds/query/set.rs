@@ -14,6 +14,7 @@ pub(super) fn bound(
         SetExpr::Select(select) => {
             let items = items::from_select(select, scope, positions);
             let outputs = super::outputs::select(select, &items, scope, positions);
+            scope.expression_bodies(select, &items, positions);
             SqlBoundQuery {
                 input_mode: if super::super::predicate::rejects_all(select.selection.as_ref()) {
                     SqlBoundInputMode::Skipped

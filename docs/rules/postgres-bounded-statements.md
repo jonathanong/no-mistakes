@@ -38,6 +38,71 @@ rules:
 
 See [rationale](postgres-bounded-statements-rationale.md).
 
+## Independent candidate bodies
+
+`materializedBodies` defaults to `ignore`, preserving existing findings and fact
+collection. Set it to `require-bound` (an alias of `advise`) to receive non-failing
+advisories, or `report` to make violations findings. This option checks
+explicit `AS MATERIALIZED` CTEs and pool-building subquery bodies independently of the surrounding
+statement. Ordinary and `AS NOT MATERIALIZED` CTE declarations retain their
+existing behavior. Recursive bodies keep the existing depth-predicate proof.
+The `statements` filter selects the owning executed statement: selecting UPDATE
+or DELETE also checks its CTE and subquery bodies, while unrelated SELECT bodies
+remain outside that selection. Separate bodies on one line retain separate advisories.
+
+`EXISTS` and `NOT EXISTS` bodies are existence probes, so they do not receive
+independent pool diagnostics. Known correlated scalar subqueries are also
+per-row probes. `IN`, `ANY`, array subqueries and derived tables retain their
+body obligations. Materialized CTEs and pool-building bodies nested inside a
+probe are still checked.
+
+A later body that consumes an already materialized CTE inherits that pool's
+obligation. Report the unbounded source CTE once rather than repeating its
+underlying relations at every consumer. A consumer that adds a new unbounded
+scan still reports that scan; separate consumers of an ordinary inline CTE
+retain separate obligations. These body-only projections do not change the
+parent statement's cardinality or key proofs.
+
+An outer cap cannot establish a bounded candidate pool inside a body:
+
+```sql
+-- Reported with materializedBodies: report
+WITH candidates AS MATERIALIZED (SELECT id FROM posts)
+SELECT id FROM candidates LIMIT 20;
+
+-- Accepted: bound the body itself
+WITH candidates AS MATERIALIZED (SELECT id FROM posts LIMIT 200)
+SELECT id FROM candidates LIMIT 20;
+
+-- Reported: the outer LIMIT cannot bound the derived body
+SELECT id FROM (SELECT id FROM posts) candidates LIMIT 20;
+```
+
+A body can instead restrict every relation by an existing primary/unique-key
+proof, or by equality / `= ANY` on a reviewed `columnBounds` key. For example,
+`SELECT id FROM follows WHERE follower_id = $1` is bounded when
+`columnBounds` declares `follows.follower_id` with a finite fan-out reason.
+Outer predicates do not supply that body-local proof. Findings name the body
+and its unbounded relations, at the CTE declaration or subquery start. A body
+LIMIT retains the rule's existing conservative LIMIT-expression proofs.
+
+```yaml
+options:
+  schemaCatalogPath: schema.json
+  materializedBodies: report
+  columnBounds:
+    follows.follower_id:
+      reason: Application enforces at most 500 followed accounts per viewer
+```
+
+Use `-- no-mistakes-disable-next-line postgres-bounded-statements` immediately
+before the CTE/body statement, `-- no-mistakes-disable-line` on its line, or
+`-- no-mistakes-disable-file postgres-bounded-statements` for a file exception.
+The existing `allow` list can exempt a catalog relation with a reason. Prefer a
+body-local LIMIT or a documented finite key over suppressing the check: this
+policy prevents capped queries from constructing unbounded intermediate pools.
+
+
 ## What it catches/requires
 
 See [proof cases](postgres-bounded-statements-proof.md).
@@ -534,19 +599,48 @@ step, and have a conjunctive `<` or `<=` cap against a parameter or numeric
 literal (reversed comparisons also work):
 
 ```sql
-WITH RECURSIVE walk(id, depth) AS (
-  SELECT id, 0 FROM accounts WHERE id = $1
+WITH RECURSIVE ancestors AS (
+  SELECT id, parent_id, 1 AS depth FROM comments WHERE id = $1
   UNION ALL
-  SELECT a.id, w.depth + 1
-  FROM accounts a JOIN walk w ON a.id = w.id
-  WHERE w.depth < $2
+  SELECT c.id, c.parent_id, a.depth + 1
+  FROM comments c JOIN ancestors a ON c.id = a.parent_id
+  WHERE a.depth < 50
 )
-SELECT id FROM walk;
+SELECT * FROM ancestors;
 ```
 
 Without the cap, a cycle can revisit the same key forever, so the recursive
-lookup remains reported. A non-increasing depth, a cap bypassed by `OR`, an
+lookup remains reported; add a conjunctive depth cap to fix it. The catalog must
+include a valid, immediate primary or unique index for the joined key.
+A non-increasing depth, a cap bypassed by `OR`, an
 unbounded anchor, or a non-key join also retains its findings.
+
+### Correlated primary-key subqueries
+
+A subquery can use an equality between its primary or unique key and a known
+outer row's qualified column. The lookup is bounded per outer row; it does not
+make an unrestricted outer scan bounded. For example, both lookups below pass
+when `placement_id` has a valid primary-key index in the catalog:
+
+```sql
+SELECT target.placement_id FROM image_placements target
+WHERE target.placement_id = $1 AND target.created_by_id IN (
+  SELECT p.created_by_id FROM image_placements p
+  WHERE p.placement_id = target.placement_id
+);
+```
+
+Scalar projections such as `(SELECT p.created_by_id FROM image_placements p
+WHERE p.placement_id = target.placement_id)` also remain accepted when the
+outer lookup is bounded. Changing the inner predicate to the non-unique
+`p.created_by_id = target.created_by_id` retains an inner finding in the `IN`
+example; use a primary/unique key or declare a reviewed `columnBounds` contract
+to fix it. Removing `target.placement_id = $1` retains an outer finding.
+Unknown outer qualifiers, local self-comparisons, and an `OR` branch without a
+complete key do not prove a bounded lookup. In an `IN` subquery, an unrelated
+bare read from an explicitly aliased unknown table does not erase an
+independently proven qualified key equality. That unknown source still bounds
+nothing, and the outer query must establish its own bound.
 
 ### Correlated builder fragments
 

@@ -52,7 +52,11 @@ fn judge(
     let mut unknown_relation = false;
     for bound in project_sql_bounds(statement, catalog)
         .iter()
-        .filter(|bound| kind_name(bound.kind) == check)
+        .filter(|bound| {
+            kind_name(bound.kind) == check
+                && (bound.body.is_none()
+                    || opts.materialized_bodies == super::super::bodies::Policy::Report)
+        })
     {
         if has_unknown_relation(&bound.query, catalog, views) {
             unknown_relation = true;

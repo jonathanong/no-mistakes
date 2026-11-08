@@ -1,0 +1,5 @@
+SELECT id FROM;
+WITH candidates AS MATERIALIZED (SELECT id FROM orders)
+SELECT id FROM candidates LIMIT 20;
+WITH candidates AS MATERIALIZED (SELECT id FROM orders LIMIT 10)
+SELECT id FROM candidates LIMIT 20;

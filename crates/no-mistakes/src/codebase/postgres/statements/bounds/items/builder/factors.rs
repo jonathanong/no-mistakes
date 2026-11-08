@@ -51,6 +51,7 @@ impl<'a> Builder<'a> {
                     Default::default()
                 };
                 let bound = query::bound_query(subquery, &scope, self.positions);
+                scope.record_subquery(&bound, subquery);
                 let mut item = SqlBoundItem::new(
                     SqlBoundItemKind::Query(bound),
                     alias_key(alias),
@@ -108,7 +109,11 @@ impl<'a> Builder<'a> {
             .get(&object_name_key(name))
             .filter(|_| name.0.len() == 1);
         match cte {
-            Some(bound) => SqlBoundItemKind::Query(bound.clone()),
+            Some(bound) => {
+                self.scope
+                    .record_pool_reference(bound, || start(name.span()));
+                SqlBoundItemKind::Query(bound.clone())
+            }
             None => SqlBoundItemKind::Table(sql_name(name)),
         }
     }

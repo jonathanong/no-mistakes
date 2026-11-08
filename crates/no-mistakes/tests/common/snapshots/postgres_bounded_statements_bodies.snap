@@ -1,0 +1,1764 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "bodies.sql",
+          "line": 1,
+          "message": "bodies.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 10,
+          "message": "bodies.sql:10: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (SELECT id FROM orders) candidates LIMIT 20;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 19,
+          "message": "bodies.sql:19: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 22,
+          "message": "bodies.sql:22: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (SELECT id FROM orders) candidates WHERE id = $1 LIMIT 20;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 31,
+          "message": "bodies.sql:31: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE candidates can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 41,
+          "message": "bodies.sql:41: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE walk can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH RECURSIVE walk(id, depth) AS MATERIALIZED (",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 47,
+          "message": "bodies.sql:47: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE unused can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH unused AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 50,
+          "message": "bodies.sql:50: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders WHERE id IN (SELECT id FROM accounts) LIMIT 20;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 53,
+          "message": "bodies.sql:53: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT id FROM orders) LIMIT 20;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 58,
+          "message": "bodies.sql:58: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "catalog.sql",
+          "line": 4,
+          "message": "catalog.sql:4: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT unknown_id(id) AS value FROM orders LIMIT 20)",
+          "target": "materialized-body"
+        },
+        {
+          "file": "catalog.sql",
+          "line": 7,
+          "message": "catalog.sql:7: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT (SELECT id FROM orders)) LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 3,
+          "message": "clauses.sql:3: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders ORDER BY (SELECT id FROM accounts) LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 5,
+          "message": "clauses.sql:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:27 from clauses.sql)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 5,
+          "message": "clauses.sql:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:9 from clauses.sql)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "recovered.sql",
+          "line": 2,
+          "message": "recovered.sql:2: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "materialized-body"
+        },
+        {
+          "file": "repeated.sql",
+          "line": 1,
+          "message": "repeated.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE first_pool can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH first_pool AS MATERIALIZED (",
+          "target": "materialized-body"
+        },
+        {
+          "file": "repeated.sql",
+          "line": 3,
+          "message": "repeated.sql:3: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE second_pool can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "), second_pool AS MATERIALIZED (",
+          "target": "materialized-body"
+        },
+        {
+          "file": "repeated.sql",
+          "line": 9,
+          "message": "repeated.sql:9: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE unbounded can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "unbounded AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "materialized-body"
+        },
+        {
+          "file": "suppressed.sql",
+          "line": 7,
+          "message": "suppressed.sql:7: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "materialized-body"
+        },
+        {
+          "file": "table.sql",
+          "line": 1,
+          "message": "table.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "table.sql",
+          "line": 1,
+          "message": "table.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
+          "target": "materialized-body"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "bodies.sql",
+          "line": 17,
+          "message": "bodies.sql:17: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders;",
+          "target": "table:orders"
+        },
+        {
+          "file": "recovered.sql",
+          "line": 1,
+          "message": "recovered.sql:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM;",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "bodies.sql",
+          "line": 31,
+          "message": "bodies.sql:31: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE candidates can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 41,
+          "message": "bodies.sql:41: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE walk can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH RECURSIVE walk(id, depth) AS MATERIALIZED (",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 50,
+          "message": "bodies.sql:50: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders WHERE id IN (SELECT id FROM accounts) LIMIT 20;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 58,
+          "message": "bodies.sql:58: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 3,
+          "message": "clauses.sql:3: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders ORDER BY (SELECT id FROM accounts) LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 5,
+          "message": "clauses.sql:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:27 from clauses.sql)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 5,
+          "message": "clauses.sql:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:9 from clauses.sql)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "file-disabled.sql",
+          "line": 1,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "suppressed.sql",
+          "line": 1,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "suppressed.sql",
+          "line": 5,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "SELECT id FROM (SELECT id FROM orders) candidates LIMIT 20; -- no-mistakes-disable-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "table.sql",
+          "line": 1,
+          "message": "table.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "table.sql",
+          "line": 1,
+          "message": "table.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
+          "target": "materialized-body"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "recovered.sql",
+          "line": 1,
+          "message": "recovered.sql:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM;",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "deep": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query.sql",
+          "line": 10,
+          "message": "query.sql:10: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 11,
+          "message": "query.sql:11: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 12,
+          "message": "query.sql:12: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 13,
+          "message": "query.sql:13: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 14,
+          "message": "query.sql:14: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 15,
+          "message": "query.sql:15: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 16,
+          "message": "query.sql:16: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 17,
+          "message": "query.sql:17: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 18,
+          "message": "query.sql:18: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 19,
+          "message": "query.sql:19: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 2,
+          "message": "query.sql:2: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 20,
+          "message": "query.sql:20: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 21,
+          "message": "query.sql:21: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM accounts",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 3,
+          "message": "query.sql:3: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 4,
+          "message": "query.sql:4: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 5,
+          "message": "query.sql:5: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 6,
+          "message": "query.sql:6: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 7,
+          "message": "query.sql:7: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 8,
+          "message": "query.sql:8: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 9,
+          "message": "query.sql:9: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (",
+          "target": "table:accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "deletes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query.sql",
+          "line": 16,
+          "message": "query.sql:16: MATERIALIZED CTE pool can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH pool AS MATERIALIZED (SELECT id FROM accounts)",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 20,
+          "message": "query.sql:20: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM orders WHERE id = $1 AND id IN (SELECT id FROM accounts);",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 24,
+          "message": "query.sql:24: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "AND id IN (SELECT id FROM accounts) RETURNING id",
+          "target": "table:accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "embedded.ts",
+          "line": 10,
+          "message": "embedded.ts:10: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`SELECT id FROM (SELECT id FROM orders) candidates LIMIT 20`);",
+          "target": "table:orders"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 4,
+          "message": "embedded.ts:4: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`WITH candidates AS MATERIALIZED (",
+          "target": "table:orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "file-disabled.sql",
+          "line": 1,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "suppressed.sql",
+          "line": 1,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "suppressed.sql",
+          "line": 5,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "SELECT id FROM (SELECT id FROM orders) candidates LIMIT 20; -- no-mistakes-disable-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "bodies.sql",
+          "line": 17,
+          "message": "bodies.sql:17: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders;",
+          "target": "table:orders"
+        },
+        {
+          "file": "recovered.sql",
+          "line": 1,
+          "message": "recovered.sql:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM;",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "imported-advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "imported.ts",
+          "line": 5,
+          "message": "imported.ts:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE shared_pool can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (includes SQL appended from templates.ts:4)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(candidates());",
+          "target": "materialized-body"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "imported-report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "imported.ts",
+          "line": 5,
+          "message": "imported.ts:5: MATERIALIZED CTE shared_pool can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (includes SQL appended from templates.ts:4)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(candidates());",
+          "target": "table:orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "lock": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "embedded.ts",
+          "line": 10,
+          "message": "embedded.ts:10: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`SELECT id FROM (SELECT id FROM orders) candidates LIMIT 20`);",
+          "target": "table:orders"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 4,
+          "message": "embedded.ts:4: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(`WITH candidates AS MATERIALIZED (",
+          "target": "table:orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "bodies.sql",
+          "line": 1,
+          "message": "bodies.sql:1: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 10,
+          "message": "bodies.sql:10: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (SELECT id FROM orders) candidates LIMIT 20;",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 17,
+          "message": "bodies.sql:17: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders;",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 19,
+          "message": "bodies.sql:19: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 22,
+          "message": "bodies.sql:22: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (SELECT id FROM orders) candidates WHERE id = $1 LIMIT 20;",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 31,
+          "message": "bodies.sql:31: MATERIALIZED CTE candidates can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 41,
+          "message": "bodies.sql:41: MATERIALIZED CTE walk can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH RECURSIVE walk(id, depth) AS MATERIALIZED (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 47,
+          "message": "bodies.sql:47: MATERIALIZED CTE unused can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH unused AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 50,
+          "message": "bodies.sql:50: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders WHERE id IN (SELECT id FROM accounts) LIMIT 20;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 53,
+          "message": "bodies.sql:53: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT id FROM orders) LIMIT 20;",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 58,
+          "message": "bodies.sql:58: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "catalog.sql",
+          "line": 4,
+          "message": "catalog.sql:4: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT unknown_id(id) AS value FROM orders LIMIT 20)",
+          "target": "table:orders"
+        },
+        {
+          "file": "catalog.sql",
+          "line": 7,
+          "message": "catalog.sql:7: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT (SELECT id FROM orders)) LIMIT 1;",
+          "target": "table:orders"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 3,
+          "message": "clauses.sql:3: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders ORDER BY (SELECT id FROM accounts) LIMIT 1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 5,
+          "message": "clauses.sql:5: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:27 from clauses.sql)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
+          "target": "table:\"Orders\""
+        },
+        {
+          "file": "clauses.sql",
+          "line": 5,
+          "message": "clauses.sql:5: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:9 from clauses.sql)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
+          "target": "table:\"Orders\""
+        },
+        {
+          "file": "recovered.sql",
+          "line": 1,
+          "message": "recovered.sql:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "recovered.sql",
+          "line": 2,
+          "message": "recovered.sql:2: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "table:orders"
+        },
+        {
+          "file": "repeated.sql",
+          "line": 1,
+          "message": "repeated.sql:1: MATERIALIZED CTE first_pool can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH first_pool AS MATERIALIZED (",
+          "target": "table:orders"
+        },
+        {
+          "file": "repeated.sql",
+          "line": 3,
+          "message": "repeated.sql:3: MATERIALIZED CTE second_pool can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "), second_pool AS MATERIALIZED (",
+          "target": "table:orders"
+        },
+        {
+          "file": "repeated.sql",
+          "line": 9,
+          "message": "repeated.sql:9: MATERIALIZED CTE unbounded can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "unbounded AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "table:orders"
+        },
+        {
+          "file": "suppressed.sql",
+          "line": 7,
+          "message": "suppressed.sql:7: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "table:orders"
+        },
+        {
+          "file": "table.sql",
+          "line": 1,
+          "message": "table.sql:1: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
+          "target": "table:\"Orders\""
+        },
+        {
+          "file": "table.sql",
+          "line": 1,
+          "message": "table.sql:1: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
+          "target": "table:accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "off": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "file-disabled.sql",
+          "line": 1,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "suppressed.sql",
+          "line": 1,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "suppressed.sql",
+          "line": 5,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "SELECT id FROM (SELECT id FROM orders) candidates LIMIT 20; -- no-mistakes-disable-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "bodies.sql",
+          "line": 17,
+          "message": "bodies.sql:17: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders;",
+          "target": "table:orders"
+        },
+        {
+          "file": "recovered.sql",
+          "line": 1,
+          "message": "recovered.sql:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM;",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "probes-advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "collections.sql",
+          "line": 1,
+          "message": "collections.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT k.id FROM lookup_rows k WHERE k.id = ANY(ARRAY(SELECT e.user_id FROM edge_rows e WHERE e.group_id = k.group_id)) LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "collections.sql",
+          "line": 2,
+          "message": "collections.sql:2: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT k.id FROM lookup_rows k WHERE k.id IN (SELECT e.user_id FROM edge_rows e WHERE e.group_id = k.group_id) LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "collections.sql",
+          "line": 3,
+          "message": "collections.sql:3: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT e.id FROM edge_rows e WHERE e.user_id = k.user_id) = ANY(SELECT user_id FROM edge_rows) FROM lookup_rows k LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "collections.sql",
+          "line": 4,
+          "message": "collections.sql:4: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT k.id FROM lookup_rows k WHERE k.id = ALL(SELECT user_id FROM edge_rows) LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "nested.sql",
+          "line": 2,
+          "message": "nested.sql:2: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE nested_pool can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH nested_pool AS MATERIALIZED (SELECT id FROM edge_rows)",
+          "target": "materialized-body"
+        },
+        {
+          "file": "pools.sql",
+          "line": 1,
+          "message": "pools.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE a can build an unbounded candidate pool from source_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH a AS MATERIALIZED (",
+          "target": "materialized-body"
+        },
+        {
+          "file": "pools.sql",
+          "line": 10,
+          "message": "pools.sql:10: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (SELECT id FROM edge_rows) pool LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "pools.sql",
+          "line": 12,
+          "message": "pools.sql:12: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE a can build an unbounded candidate pool from source_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH a AS MATERIALIZED (",
+          "target": "materialized-body"
+        },
+        {
+          "file": "pools.sql",
+          "line": 14,
+          "message": "pools.sql:14: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE b can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "), b AS MATERIALIZED (",
+          "target": "materialized-body"
+        },
+        {
+          "file": "pools.sql",
+          "line": 19,
+          "message": "pools.sql:19: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE a can build an unbounded candidate pool from source_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "a AS MATERIALIZED (SELECT user_id FROM original),",
+          "target": "materialized-body"
+        },
+        {
+          "file": "pools.sql",
+          "line": 20,
+          "message": "pools.sql:20: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE b can build an unbounded candidate pool from source_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "b AS MATERIALIZED (SELECT user_id FROM original)",
+          "target": "materialized-body"
+        },
+        {
+          "file": "pools.sql",
+          "line": 23,
+          "message": "pools.sql:23: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE a can build an unbounded candidate pool from source_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH a AS MATERIALIZED (SELECT id FROM source_rows),",
+          "target": "materialized-body"
+        },
+        {
+          "file": "pools.sql",
+          "line": 24,
+          "message": "pools.sql:24: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE b can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "b AS MATERIALIZED (",
+          "target": "materialized-body"
+        },
+        {
+          "file": "pools.sql",
+          "line": 28,
+          "message": "pools.sql:28: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE a can build an unbounded candidate pool from source_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH a AS MATERIALIZED (SELECT id FROM source_rows),",
+          "target": "materialized-body"
+        },
+        {
+          "file": "pools.sql",
+          "line": 32,
+          "message": "pools.sql:32: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE a can build an unbounded candidate pool from source_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH a AS MATERIALIZED (SELECT id FROM source_rows),",
+          "target": "materialized-body"
+        },
+        {
+          "file": "pools.sql",
+          "line": 37,
+          "message": "pools.sql:37: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE a can build an unbounded candidate pool from source_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH a AS MATERIALIZED (SELECT id FROM source_rows),",
+          "target": "materialized-body"
+        },
+        {
+          "file": "pools.sql",
+          "line": 9,
+          "message": "pools.sql:9: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM lookup_rows WHERE id IN (SELECT user_id FROM edge_rows) LIMIT 1;",
+          "target": "materialized-body"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "probes-ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "probes-off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "probes-report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "collections.sql",
+          "line": 1,
+          "message": "collections.sql:1: subquery can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT k.id FROM lookup_rows k WHERE k.id = ANY(ARRAY(SELECT e.user_id FROM edge_rows e WHERE e.group_id = k.group_id)) LIMIT 1;",
+          "target": "table:edge_rows"
+        },
+        {
+          "file": "collections.sql",
+          "line": 2,
+          "message": "collections.sql:2: subquery can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT k.id FROM lookup_rows k WHERE k.id IN (SELECT e.user_id FROM edge_rows e WHERE e.group_id = k.group_id) LIMIT 1;",
+          "target": "table:edge_rows"
+        },
+        {
+          "file": "collections.sql",
+          "line": 3,
+          "message": "collections.sql:3: subquery can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT e.id FROM edge_rows e WHERE e.user_id = k.user_id) = ANY(SELECT user_id FROM edge_rows) FROM lookup_rows k LIMIT 1;",
+          "target": "table:edge_rows"
+        },
+        {
+          "file": "collections.sql",
+          "line": 4,
+          "message": "collections.sql:4: subquery can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT k.id FROM lookup_rows k WHERE k.id = ALL(SELECT user_id FROM edge_rows) LIMIT 1;",
+          "target": "table:edge_rows"
+        },
+        {
+          "file": "nested.sql",
+          "line": 2,
+          "message": "nested.sql:2: MATERIALIZED CTE nested_pool can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH nested_pool AS MATERIALIZED (SELECT id FROM edge_rows)",
+          "target": "table:edge_rows"
+        },
+        {
+          "file": "pools.sql",
+          "line": 1,
+          "message": "pools.sql:1: MATERIALIZED CTE a can build an unbounded candidate pool from source_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH a AS MATERIALIZED (",
+          "target": "table:source_rows"
+        },
+        {
+          "file": "pools.sql",
+          "line": 10,
+          "message": "pools.sql:10: subquery can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (SELECT id FROM edge_rows) pool LIMIT 1;",
+          "target": "table:edge_rows"
+        },
+        {
+          "file": "pools.sql",
+          "line": 12,
+          "message": "pools.sql:12: MATERIALIZED CTE a can build an unbounded candidate pool from source_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH a AS MATERIALIZED (",
+          "target": "table:source_rows"
+        },
+        {
+          "file": "pools.sql",
+          "line": 14,
+          "message": "pools.sql:14: MATERIALIZED CTE b can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "), b AS MATERIALIZED (",
+          "target": "table:edge_rows"
+        },
+        {
+          "file": "pools.sql",
+          "line": 19,
+          "message": "pools.sql:19: MATERIALIZED CTE a can build an unbounded candidate pool from source_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "a AS MATERIALIZED (SELECT user_id FROM original),",
+          "target": "table:source_rows"
+        },
+        {
+          "file": "pools.sql",
+          "line": 20,
+          "message": "pools.sql:20: MATERIALIZED CTE b can build an unbounded candidate pool from source_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "b AS MATERIALIZED (SELECT user_id FROM original)",
+          "target": "table:source_rows"
+        },
+        {
+          "file": "pools.sql",
+          "line": 23,
+          "message": "pools.sql:23: MATERIALIZED CTE a can build an unbounded candidate pool from source_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH a AS MATERIALIZED (SELECT id FROM source_rows),",
+          "target": "table:source_rows"
+        },
+        {
+          "file": "pools.sql",
+          "line": 24,
+          "message": "pools.sql:24: MATERIALIZED CTE b can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "b AS MATERIALIZED (",
+          "target": "table:edge_rows"
+        },
+        {
+          "file": "pools.sql",
+          "line": 28,
+          "message": "pools.sql:28: MATERIALIZED CTE a can build an unbounded candidate pool from source_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH a AS MATERIALIZED (SELECT id FROM source_rows),",
+          "target": "table:source_rows"
+        },
+        {
+          "file": "pools.sql",
+          "line": 32,
+          "message": "pools.sql:32: MATERIALIZED CTE a can build an unbounded candidate pool from source_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH a AS MATERIALIZED (SELECT id FROM source_rows),",
+          "target": "table:source_rows"
+        },
+        {
+          "file": "pools.sql",
+          "line": 37,
+          "message": "pools.sql:37: MATERIALIZED CTE a can build an unbounded candidate pool from source_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH a AS MATERIALIZED (SELECT id FROM source_rows),",
+          "target": "table:source_rows"
+        },
+        {
+          "file": "pools.sql",
+          "line": 9,
+          "message": "pools.sql:9: subquery can build an unbounded candidate pool from edge_rows; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM lookup_rows WHERE id IN (SELECT user_id FROM edge_rows) LIMIT 1;",
+          "target": "table:edge_rows"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "bodies.sql",
+          "line": 1,
+          "message": "bodies.sql:1: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 10,
+          "message": "bodies.sql:10: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (SELECT id FROM orders) candidates LIMIT 20;",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 17,
+          "message": "bodies.sql:17: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders;",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 19,
+          "message": "bodies.sql:19: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 22,
+          "message": "bodies.sql:22: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (SELECT id FROM orders) candidates WHERE id = $1 LIMIT 20;",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 31,
+          "message": "bodies.sql:31: MATERIALIZED CTE candidates can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 41,
+          "message": "bodies.sql:41: MATERIALIZED CTE walk can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH RECURSIVE walk(id, depth) AS MATERIALIZED (",
+          "target": "table:accounts"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 47,
+          "message": "bodies.sql:47: MATERIALIZED CTE unused can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH unused AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 50,
+          "message": "bodies.sql:50: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders WHERE id IN (SELECT id FROM accounts) LIMIT 20;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 53,
+          "message": "bodies.sql:53: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT id FROM orders) LIMIT 20;",
+          "target": "table:orders"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 58,
+          "message": "bodies.sql:58: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "catalog.sql",
+          "line": 4,
+          "message": "catalog.sql:4: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT unknown_id(id) AS value FROM orders LIMIT 20)",
+          "target": "table:orders"
+        },
+        {
+          "file": "catalog.sql",
+          "line": 7,
+          "message": "catalog.sql:7: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT (SELECT id FROM orders)) LIMIT 1;",
+          "target": "table:orders"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 3,
+          "message": "clauses.sql:3: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders ORDER BY (SELECT id FROM accounts) LIMIT 1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 5,
+          "message": "clauses.sql:5: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:27 from clauses.sql)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
+          "target": "table:\"Orders\""
+        },
+        {
+          "file": "clauses.sql",
+          "line": 5,
+          "message": "clauses.sql:5: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:9 from clauses.sql)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
+          "target": "table:\"Orders\""
+        },
+        {
+          "file": "recovered.sql",
+          "line": 1,
+          "message": "recovered.sql:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "recovered.sql",
+          "line": 2,
+          "message": "recovered.sql:2: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "table:orders"
+        },
+        {
+          "file": "repeated.sql",
+          "line": 1,
+          "message": "repeated.sql:1: MATERIALIZED CTE first_pool can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH first_pool AS MATERIALIZED (",
+          "target": "table:orders"
+        },
+        {
+          "file": "repeated.sql",
+          "line": 3,
+          "message": "repeated.sql:3: MATERIALIZED CTE second_pool can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "), second_pool AS MATERIALIZED (",
+          "target": "table:orders"
+        },
+        {
+          "file": "repeated.sql",
+          "line": 9,
+          "message": "repeated.sql:9: MATERIALIZED CTE unbounded can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "unbounded AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "table:orders"
+        },
+        {
+          "file": "suppressed.sql",
+          "line": 7,
+          "message": "suppressed.sql:7: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "table:orders"
+        },
+        {
+          "file": "table.sql",
+          "line": 1,
+          "message": "table.sql:1: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
+          "target": "table:\"Orders\""
+        },
+        {
+          "file": "table.sql",
+          "line": 1,
+          "message": "table.sql:1: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
+          "target": "table:accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "selects": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query.sql",
+          "line": 31,
+          "message": "query.sql:31: MATERIALIZED CTE pool can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH pool AS MATERIALIZED (SELECT id FROM accounts)",
+          "target": "table:accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "tagged-advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "bodies.sql",
+          "line": 1,
+          "message": "bodies.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 10,
+          "message": "bodies.sql:10: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (SELECT id FROM orders) candidates LIMIT 20;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 19,
+          "message": "bodies.sql:19: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 22,
+          "message": "bodies.sql:22: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM (SELECT id FROM orders) candidates WHERE id = $1 LIMIT 20;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 31,
+          "message": "bodies.sql:31: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE candidates can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 41,
+          "message": "bodies.sql:41: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE walk can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH RECURSIVE walk(id, depth) AS MATERIALIZED (",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 47,
+          "message": "bodies.sql:47: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE unused can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH unused AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 50,
+          "message": "bodies.sql:50: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders WHERE id IN (SELECT id FROM accounts) LIMIT 20;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 53,
+          "message": "bodies.sql:53: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT id FROM orders) LIMIT 20;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "bodies.sql",
+          "line": 58,
+          "message": "bodies.sql:58: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "catalog.sql",
+          "line": 4,
+          "message": "catalog.sql:4: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT unknown_id(id) AS value FROM orders LIMIT 20)",
+          "target": "materialized-body"
+        },
+        {
+          "file": "catalog.sql",
+          "line": 7,
+          "message": "catalog.sql:7: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (SELECT (SELECT id FROM orders)) LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 3,
+          "message": "clauses.sql:3: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders ORDER BY (SELECT id FROM accounts) LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 5,
+          "message": "clauses.sql:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:27 from clauses.sql)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "clauses.sql",
+          "line": 5,
+          "message": "clauses.sql:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (statement at SQL 5:9 from clauses.sql)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\"), (TABLE \"Orders\") FROM (TABLE accounts LIMIT 1) source LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "recovered.sql",
+          "line": 2,
+          "message": "recovered.sql:2: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "materialized-body"
+        },
+        {
+          "file": "repeated.sql",
+          "line": 1,
+          "message": "repeated.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE first_pool can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH first_pool AS MATERIALIZED (",
+          "target": "materialized-body"
+        },
+        {
+          "file": "repeated.sql",
+          "line": 3,
+          "message": "repeated.sql:3: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE second_pool can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "), second_pool AS MATERIALIZED (",
+          "target": "materialized-body"
+        },
+        {
+          "file": "repeated.sql",
+          "line": 9,
+          "message": "repeated.sql:9: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE unbounded can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "unbounded AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "materialized-body"
+        },
+        {
+          "file": "suppressed.sql",
+          "line": 7,
+          "message": "suppressed.sql:7: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE candidates can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH candidates AS MATERIALIZED (SELECT id FROM orders)",
+          "target": "materialized-body"
+        },
+        {
+          "file": "table.sql",
+          "line": 1,
+          "message": "table.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from \"Orders\"; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
+          "target": "materialized-body"
+        },
+        {
+          "file": "table.sql",
+          "line": 1,
+          "message": "table.sql:1: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT (TABLE \"Orders\") FROM (TABLE accounts) source LIMIT 1;",
+          "target": "materialized-body"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "bodies.sql",
+          "line": 17,
+          "message": "bodies.sql:17: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders;",
+          "target": "table:orders"
+        },
+        {
+          "file": "recovered.sql",
+          "line": 1,
+          "message": "recovered.sql:1: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM;",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "tagged-imported-advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "imported.ts",
+          "line": 5,
+          "message": "imported.ts:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: MATERIALIZED CTE shared_pool can build an unbounded candidate pool from orders; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (includes SQL appended from templates.ts:4)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "await query(candidates());",
+          "target": "materialized-body"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "updates": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query.sql",
+          "line": 1,
+          "message": "query.sql:1: MATERIALIZED CTE pool can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH pool AS MATERIALIZED (SELECT id FROM accounts)",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 5,
+          "message": "query.sql:5: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE orders SET account_id = (SELECT id FROM accounts) WHERE id = $1;",
+          "target": "table:accounts"
+        },
+        {
+          "file": "query.sql",
+          "line": 9,
+          "message": "query.sql:9: subquery can build an unbounded candidate pool from accounts; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "AND id IN (SELECT id FROM accounts) RETURNING id",
+          "target": "table:accounts"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

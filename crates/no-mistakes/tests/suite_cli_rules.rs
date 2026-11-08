@@ -254,3 +254,5 @@ mod cli_postgres_unused_disables;
 
 #[path = "cli_check_production_exports_precision.rs"]
 mod cli_check_production_exports_precision;
+#[path = "cli_check_production_exports_namespaces.rs"]
+mod cli_check_production_exports_namespaces;

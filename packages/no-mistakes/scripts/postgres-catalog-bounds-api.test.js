@@ -21,6 +21,20 @@ test(
       ["column-policy", "../../configs/column-bounds.yml", 6],
       ["../issue-3114-exact/fixture", "r5.yml", 6],
       ["../issue-3114-exact/fixture", "r6.yml", 1],
+      ["../materialized-bodies/fixture", "embedded.yml", 2],
+      ["../materialized-bodies/deep", ".no-mistakes.yml", 20],
+      ["../materialized-bodies/fixture", "imported-report.yml", 1],
+      ["../materialized-bodies/fixture", "imported-advise.yml", 0],
+      ["../materialized-bodies/fixture", "tagged-imported-advise.yml", 0],
+      ["../materialized-bodies/fixture", "advise.yml", 2],
+      ["../materialized-bodies/fixture", "tagged-advise.yml", 2],
+      ["../materialized-bodies/owners", "updates.yml", 3],
+      ["../materialized-bodies/owners", "deletes.yml", 3],
+      ["../materialized-bodies/owners", "selects.yml", 1],
+      ["../materialized-bodies/probes", "off.yml", 0],
+      ["../materialized-bodies/probes", "ignore.yml", 0],
+      ["../materialized-bodies/probes", "advise.yml", 0],
+      ["../materialized-bodies/probes", "report.yml", 17],
       ["column-policy", "../../configs/column-bounds-composite-prefix.yml", 1],
       ["column-policy", "../../configs/recursive-depth.yml", 10],
       ["join-roots", "valid.yml", 22],
@@ -44,6 +58,36 @@ test(
       const options = { root, config, includeSqlVerdicts: true };
       const standalone = await cjs.check(options);
       assert.equal(standalone.rules.length, expected, config);
+      if (config === "imported-advise.yml" || config === "tagged-imported-advise.yml") {
+        assert.equal(standalone.advisories.length, 1);
+        assert.equal(standalone.advisories[0].file, "imported.ts");
+        assert.equal(standalone.advisories[0].line, 5);
+        assert.match(standalone.advisories[0].message, /MATERIALIZED CTE shared_pool/);
+        const plain = await cjs.check({ root, config });
+        assert.deepEqual(plain.rules, standalone.rules);
+        assert.deepEqual(plain.advisories, standalone.advisories);
+      }
+      if (
+        directory === "../materialized-bodies/fixture" &&
+        (config === "advise.yml" || config === "tagged-advise.yml")
+      ) {
+        assert.equal(standalone.advisories.length, 22);
+        assert.equal(
+          standalone.advisories.filter((row) => row.file === "table.sql" && row.line === 1).length,
+          2,
+        );
+        assert.equal(
+          standalone.advisories.filter((row) => row.file === "clauses.sql" && row.line === 5)
+            .length,
+          2,
+        );
+        assert.deepEqual((await cjs.check({ root, config })).advisories, standalone.advisories);
+      }
+      if (directory === "../materialized-bodies/probes" && config === "advise.yml") {
+        assert.equal(standalone.advisories.length, 17);
+        assert.ok(standalone.advisories.every((row) => row.file !== "probes.sql"));
+        assert.deepEqual((await cjs.check({ root, config })).advisories, standalone.advisories);
+      }
       const relationTargets = {
         "key-resolution.yml": ["table:public.ambiguous_left", "table:public.ambiguous_right"],
         "key-operators.yml": ["table:public.customer_accounts", "table:public.owner_jobs"],

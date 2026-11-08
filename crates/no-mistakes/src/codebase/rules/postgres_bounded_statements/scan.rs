@@ -6,7 +6,9 @@ use crate::codebase::postgres::SqlBoundKind;
 use crate::codebase::ts_source::relative_slash_path;
 use std::path::{Path, PathBuf};
 mod groups;
+mod messages;
 mod verdicts;
+use messages::{finding, message};
 
 pub(super) fn scan(
     root: &Path,
@@ -51,6 +53,8 @@ pub(super) fn scan(
         }
     }
     let mut groups = groups::Groups::default();
+    let mut advice_groups = groups::Groups::default();
+    let mut advice = crate::codebase::rules::PostgresFindings::default();
     for (file_index, file) in statements.into_iter().enumerate() {
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path);
@@ -86,12 +90,22 @@ pub(super) fn scan(
             .enumerate()
             .filter(|(_, bound)| opts.statements.contains(&bound.kind))
         {
+            if bound.body.is_some() && opts.materialized_bodies == super::bodies::Policy::Ignore {
+                continue;
+            }
             let evaluate = if file.variant_locations.is_some() {
                 variant_offenders_with_views
             } else {
                 offenders_with_views
             };
-            let group_start = findings.len();
+            let (output, selected_groups) = if bound.body.is_some()
+                && opts.materialized_bodies == super::bodies::Policy::Advise
+            {
+                (&mut advice, &mut advice_groups)
+            } else {
+                (&mut findings, &mut groups)
+            };
+            let group_start = output.len();
             for offender in evaluate(bound, catalog, &views) {
                 // Keep suppression and its audit in the shared layer. A directive
                 // on the statement start anchors all of that statement's findings.
@@ -99,11 +113,20 @@ pub(super) fn scan(
                     .statement_start
                     .and_then(|(line, _)| statement_directive_line(source.as_deref(), line))
                     .or_else(|| statement_directive_line(source.as_deref(), bound.line))
-                    .unwrap_or(offender.line)
+                    .unwrap_or(if bound.body.is_some() {
+                        bound.line
+                    } else {
+                        offender.line
+                    })
                     .max(1);
+                let body_message = bound
+                    .body
+                    .as_ref()
+                    .map(|body| super::bodies::message(body, &offender.table));
                 let site = file
                     .variant_locations
                     .as_ref()
+                    .filter(|_| bound.body.is_none())
                     .and_then(|locations| {
                         locations
                             .bound_table_sites(bound_index, &offender.table, offender.line)
@@ -114,20 +137,22 @@ pub(super) fn scan(
                         bound_index,
                     ));
                 attribution.push_attributed(
-                    &mut findings,
+                    output,
                     file,
                     site,
                     source.as_deref(),
                     finding(
                         &rel,
                         line,
-                        &message(bound.kind, &offender.table, &offender.object),
+                        &body_message.unwrap_or_else(|| {
+                            message(bound.kind, &offender.table, &offender.object)
+                        }),
                         &offender.object.to_string(),
                     ),
                 );
             }
-            groups.collect(
-                &mut findings,
+            selected_groups.collect(
+                output,
                 group_start,
                 file,
                 bound_index,
@@ -137,15 +162,10 @@ pub(super) fn scan(
         }
     }
     groups.finish(&mut findings, root, sources, &opts.allow);
-    // Sorted first: dedup only removes adjacent duplicates, and one relation can be reported
-    // by several statements of a file (or arms of one) with others between them.
-    findings.sort();
-    let mut findings = opts
-        .allow
-        .clone()
-        .apply_located(&opts.schema_catalog_path, findings);
-    findings.sort();
-    Ok(findings)
+    advice_groups.finish(&mut advice, root, sources, &opts.allow);
+    Ok(super::bodies::finish(
+        prepared, opts, root, sources, findings, advice,
+    ))
 }
 
 pub(super) fn statement_directive_line(source: Option<&str>, line: usize) -> Option<usize> {
@@ -153,37 +173,5 @@ pub(super) fn statement_directive_line(source: Option<&str>, line: usize) -> Opt
     match matching_disable_directive(source?, Some(line.try_into().ok()?), RULE_ID)? {
         DisableDirective::Line { .. } | DisableDirective::NextLine { .. } => Some(line),
         DisableDirective::File { .. } => None,
-    }
-}
-
-fn message(
-    kind: SqlBoundKind,
-    table: &str,
-    object: &crate::codebase::postgres::CatalogObjectRef,
-) -> String {
-    if matches!(object, crate::codebase::postgres::CatalogObjectRef::View(_)) {
-        return format!("{kind:?} can read unbounded rows from view {table}; add a row cap or configure viewBounds as bounded only when its result is finite");
-    }
-    match kind {
-        SqlBoundKind::Select => format!(
-            "SELECT can return every row of {table}; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason"
-        ),
-        SqlBoundKind::Update => format!(
-            "UPDATE can change every row of {table}; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key"
-        ),
-        SqlBoundKind::Delete => format!(
-            "DELETE can remove every row of {table}; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key"
-        ),
-    }
-}
-
-fn finding(file: &str, line: usize, message: &str, target: &str) -> RuleFinding {
-    RuleFinding {
-        rule: RULE_ID.to_string(),
-        file: file.to_string(),
-        line,
-        message: format!("{file}:{line}: {message}"),
-        import: None,
-        target: Some(target.to_string()),
     }
 }

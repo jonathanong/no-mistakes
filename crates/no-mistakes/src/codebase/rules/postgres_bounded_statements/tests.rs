@@ -1,4 +1,6 @@
 mod blocking_query_wrappers;
+mod bodies;
+mod body_probes;
 mod caller_array_provenance;
 mod cardinality_basics;
 mod catalog_identity_edges;
@@ -15,6 +17,7 @@ mod fetch_expressions;
 mod fixture_configs;
 mod issue_2961;
 mod issue_2961_remainder;
+mod issue_3116;
 mod json_function_outputs;
 mod legacy_single_column;
 mod multi_table_arms;

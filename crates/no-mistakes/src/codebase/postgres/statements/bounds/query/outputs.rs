@@ -67,7 +67,10 @@ fn constant_null(expr: &Expr) -> bool {
     }
 }
 
-pub(super) fn caller_value(expr: &Expr, positions: PlaceholderPositions<'_>) -> bool {
+pub(in crate::codebase::postgres::statements::bounds) fn caller_value(
+    expr: &Expr,
+    positions: PlaceholderPositions<'_>,
+) -> bool {
     match expr {
         Expr::Value(_) => true,
         Expr::Identifier(ident) => is_placeholder_ident_at(ident, positions),

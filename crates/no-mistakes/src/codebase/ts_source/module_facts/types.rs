@@ -51,10 +51,12 @@ pub struct ModuleImportBinding {
     pub type_only: bool,
     pub binding_id: usize,
     pub span: ModuleSpan,
-    /// Members read through a `import type * as ns` binding, or `None` when
-    /// any use of the namespace is not a plain `ns.Member` type reference.
+    /// Exact members of a namespace binding, or `None` when any reference
+    /// escapes the supported static member syntax.
     #[serde(skip)]
     pub(crate) namespace_members: Option<Vec<String>>,
+    #[serde(skip)]
+    pub(crate) namespace_calls: Vec<String>,
 }
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -112,6 +114,8 @@ pub(crate) struct ModuleMockCall {
 }
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct TypeScriptModuleFacts {
+    #[serde(skip)]
+    pub(crate) receiver_safe_exports: crate::fx::FxHashSet<String>,
     #[serde(skip)]
     pub(crate) module_mock_calls: Vec<ModuleMockCall>,
     #[serde(skip)]
