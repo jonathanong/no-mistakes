@@ -1,0 +1,58 @@
+{
+  "exact-balanced": {
+    "off": {
+      "A": {
+        "userSeconds": 4.917,
+        "wallSeconds": 10.671
+      },
+      "B": {
+        "userSeconds": 4.94,
+        "wallSeconds": 10.606
+      }
+    },
+    "off-sql": {
+      "A": {
+        "userSeconds": 11.478,
+        "wallSeconds": 13.404
+      },
+      "B": {
+        "userSeconds": 11.235,
+        "wallSeconds": 13.372
+      }
+    }
+  },
+  "wide-balanced": {
+    "on": {
+      "A": {
+        "userSeconds": 463.174,
+        "wallSeconds": 252.186
+      },
+      "B": {
+        "userSeconds": 462.346,
+        "wallSeconds": 250.053
+      }
+    },
+    "off": {
+      "A": {
+        "userSeconds": 175.779,
+        "wallSeconds": 41.079
+      },
+      "B": {
+        "userSeconds": 177.48,
+        "wallSeconds": 40.122
+      }
+    }
+  },
+  "wide-reverse": {
+    "off": {
+      "A": {
+        "userSeconds": 170.868,
+        "wallSeconds": 38.568
+      },
+      "B": {
+        "userSeconds": 171.122,
+        "wallSeconds": 41.231
+      }
+    }
+  }
+}

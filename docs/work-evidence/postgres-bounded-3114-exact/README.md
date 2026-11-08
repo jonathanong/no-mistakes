@@ -77,6 +77,15 @@ Mean times in milliseconds, A baseline → B candidate:
 | wide-balanced: off | 177.955 → 175.413 | 41.130 → 41.303 |
 | wide-reverse: off | 171.825 → 172.059 | 38.912 → 39.127 |
 
+The strengthened harness also passes a [recheck](harness-recheck.json) with
+explicit binary identities, rule-off byte comparisons and validated RSS reports.
+Broader user CPU recheck: enabled 463.174 → 462.346 ms; disabled ABBA
+175.779 → 177.480 ms and reverse 170.868 → 171.122 ms. Corresponding wall
+means are 252.186 → 250.053, 41.079 → 40.122 and 38.568 → 41.231 ms.
+Wall differences vary across these host runs; no neutral-wall-cost claim is made.
+The rechecked RSS medians are R4 51,594 → 50,826 KiB and SQL-only rule-off
+52,426 → 51,106 KiB, further demonstrating why RSS is not a heap-gain claim.
+
 Raw samples: [exact balanced](balanced.csv), [exact reverse](reverse.csv),
 [broader balanced](wide-balanced.csv), [broader reverse](wide-reverse.csv).
 Rule-off CPU differences do not consistently reproduce across orders. The

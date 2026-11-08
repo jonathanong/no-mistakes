@@ -1,4 +1,4 @@
-import json,pathlib,subprocess,sys,resource,time,statistics,os,hashlib
+import json,pathlib,subprocess,sys,resource,time,statistics,os,hashlib,tempfile
 repo=pathlib.Path.cwd()
 mode=sys.argv[1]
 label=os.environ.get('NM_MEASUREMENT_LABEL', mode)
@@ -17,6 +17,7 @@ phases=['A'] if mode=='baseline' else (['B','A','A','B'] if mode=='reverse' else
 root=repo/'test-cases/rules/postgres-bounded-statements/issue-3114-exact/fixture'
 cases=['off','off-sql'] if mode=='reverse' else ['r1','r2','r3','r4','off','off-sql']
 samples=[]
+off_outputs={}
 for phase in ['A','B']:
  for shape in cases:
   cmd=[launches[phase],'check','--root',str(root),'--config',str(root/(shape+'.yml')),'--format','json']
@@ -25,6 +26,9 @@ for phase in ['A','B']:
   assert p.returncode==int(expected[phase][shape]>0) and not p.stderr
   assert len(report['rules'])==expected[phase][shape]
   assert not report['warnings'] and not report['advisories']
+  if shape in ['off','off-sql']:
+   previous=off_outputs.setdefault(shape,(p.stdout,p.stderr,p.returncode))
+   assert previous==(p.stdout,p.stderr,p.returncode), 'rule-off output changed'
 for phase_index,phase in enumerate(phases):
  for iteration in range(50 if mode=="reverse" else 25):
   for shape in cases[iteration%len(cases):]+cases[:iteration%len(cases)]:
@@ -36,6 +40,8 @@ for phase_index,phase in enumerate(phases):
    assert p.returncode==int(expected[phase][shape]>0) and not p.stderr
    assert len(report['rules'])==expected[phase][shape], (phase,shape,report)
    assert not report['warnings'] and not report['advisories']
+   if shape in off_outputs:
+    assert off_outputs[shape]==(p.stdout,p.stderr,p.returncode), 'rule-off output changed'
    samples.append({'binary':phase,'phase':phase_index,'sample':iteration,'case':shape,'userSeconds':after.ru_utime-before.ru_utime,'systemSeconds':after.ru_stime-before.ru_stime,'wallSeconds':wall,'status':p.returncode,'stdoutSha256':hashlib.sha256(p.stdout).hexdigest(),'findings':len(report['rules']),'advisories':len(report['advisories'])})
 out={'argv0Basename':'no-mistakes','warmupPerBinaryPerCase':1,'binarySha256':binary_hashes,'mode':mode,'order':phases,'effort':'default','jobs':'default','samplesPerPhasePerCase':50 if mode=='reverse' else 25,'samples':samples}
 pathlib.Path('/tmp/nm-3114-exact-cpu-'+label+'.json').write_text(json.dumps(out,indent=2)+'\n')
@@ -49,9 +55,15 @@ if mode=='reverse':
   for iteration in range(5):
    for shape in ['r4','off-sql']:
     cmd=[launches[phase],'check','--root',str(root),'--config',str(root/(shape+'.yml')),'--format','json']
-    p=subprocess.run(['/usr/bin/time','-q','-f','%M','-o','/tmp/nm-3114-exact-rss.tmp',*cmd],capture_output=True,env={**os.environ,'XDG_RUNTIME_DIR':'/tmp/nm-3114-exact-runtime'})
-    json.loads(p.stdout)
-    rss.append({'binary':phase,'phase':phase_index,'sample':iteration,'case':shape,'peakRssKiB':int(pathlib.Path('/tmp/nm-3114-exact-rss.tmp').read_text().strip()),'status':p.returncode})
+    with tempfile.TemporaryDirectory(prefix='nm-3114-rss-') as directory:
+     output=pathlib.Path(directory)/'rss'
+     p=subprocess.run(['/usr/bin/time','-q','-f','%M','-o',str(output),*cmd],capture_output=True,env={**os.environ,'XDG_RUNTIME_DIR':'/tmp/nm-3114-exact-runtime'})
+     report=json.loads(p.stdout)
+     assert p.returncode==int(expected[phase][shape]>0) and not p.stderr
+     assert len(report['rules'])==expected[phase][shape] and not report['warnings'] and not report['advisories']
+     if shape in off_outputs:
+      assert off_outputs[shape]==(p.stdout,p.stderr,p.returncode)
+     rss.append({'binary':phase,'phase':phase_index,'sample':iteration,'case':shape,'peakRssKiB':int(output.read_text().strip()),'status':p.returncode})
  pathlib.Path('/tmp/nm-3114-exact-rss-'+label+'.json').write_text(json.dumps(rss,indent=2)+'\n')
  for phase in ['A','B']:
   for shape in ['r4','off-sql']:

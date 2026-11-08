@@ -395,6 +395,9 @@ not bound the first write; use a key lookup or select a capped batch first.
 proves scalar elements, and its parameter array supplies the row bound.
 Selecting every `id` from a table instead remains unbounded. Keep the source
 caller-sized or cap its rows; unknown element types do not gain scalar proof.
+As with the rule's other builtin proofs, bare names assume standard PostgreSQL
+builtins. User-defined overloads and search-path shadowing of builtin names are
+outside this static model; use `pg_catalog.unnest` to state the builtin identity.
 
 A recursive CTE used by `UPDATE ... FROM` or `DELETE ... USING` can supply a
 finite key domain when both arms project keys from the same independently
@@ -407,6 +410,8 @@ The donor must be declared in the same `WITH` scope and use default or
 `MATERIALIZED` evaluation. Explicit `NOT MATERIALIZED` donors and donors from
 an outer scope remain unsupported for this proof; use a local materialized
 bounded source. Ordinary SELECT joins do not gain a recursive row-count bound.
+Recursive finite-domain credit through view writes or `IN (SELECT ...)` remains
+unsupported; use a direct keyed table write with `FROM` or `USING`.
 
 An unqualified key or `columnBounds` column still resolves beside a catalog
 view when the view's definition explicitly names its output columns and none
