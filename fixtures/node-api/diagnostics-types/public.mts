@@ -3,6 +3,7 @@ import {
   type CheckReport,
   type DependencyResult,
   type DiagnosticsError,
+  type DiagnosticArguments,
   type DiagnosticsResult,
   type ExecutedPostgresSqlReport,
   type ImportClosureResult,
@@ -44,3 +45,18 @@ collectDiagnostics("testsComment", {});
 // @ts-expect-error Unknown selectors are rejected.
 collectDiagnostics("unknown");
 void [optional, required, defaults, declared, symbols, signature, paths, graph, single, batch, sql, sqlBatch, extracted, ordering, complete];
+
+declare const selector: "check" | "dependents";
+const commonArgs: DiagnosticArguments<typeof selector> = [{ files: ["src/app.ts"] }];
+void commonArgs;
+collectDiagnostics(selector, { files: ["src/app.ts"] });
+// @ts-expect-error Every possible selector must accept the supplied arguments.
+collectDiagnostics(selector);
+// @ts-expect-error Optional check options cannot satisfy the dependents branch.
+collectDiagnostics(selector, {});
+if (selector === "check") {
+  const narrowed: Promise<DiagnosticsResult<CheckReport>> = collectDiagnostics(selector);
+  void narrowed;
+} else {
+  collectDiagnostics(selector, { files: ["src/app.ts"] });
+}

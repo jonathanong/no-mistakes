@@ -64,6 +64,15 @@ high-water mark, and RSS delta sums each span's nonnegative increase rather
 than subtracting across gaps occupied by other phases. Structured Node
 `phases` records use the same aggregation.
 
+Resource parents follow the lexical span stack for the same observer on each
+thread. Nested serial spans belong to that parent; a worker must enter a
+`Parallel` span before tracing serial children. The domain rule producers use
+`check.analysis` as the serial envelope and parallel rule spans inside it.
+Independent serial roots that overlap invalidate the entire candidate interval,
+including the first sibling; neither receives process CPU/RSS. After all active
+spans finish, a later serial root can be sampled again. Transparent dispatch and
+preparation envelopes do not become resource parents.
+
 Nested or parallel spans retain their elapsed timings but omit process CPU and
 RSS attribution, since process-wide counters cannot separate overlapping work.
 Unsupported platforms and failed resource samples omit values rather than
@@ -79,6 +88,9 @@ four passes (at most forty records total): `parse`, `value_flow.extract`,
 ```
 
 Each record identifies the pass, file path, elapsed milliseconds and work units.
+CLI paths escape control characters (including newlines and terminal escapes)
+and Unicode line separators so each record stays on one line. Ordinary filenames
+and structured API path values retain their original spelling.
 For parsing and value flow, units are source bytes. For PostgreSQL annotation,
 units are one root evaluation. Repeated paths retain their most expensive
 operation rather than a sum across profiles or parse modes. Records can overlap:
