@@ -112,7 +112,7 @@ Repeat for `r1`, `r2`, `r3`, `r4`, `off` and `off-sql`.
 ## Validation
 
 Strict all-target/all-feature Clippy, the complete locked workspace/all-feature
-suite and doctests pass with `INSTA_UPDATE=no`. Exact snapshots compare jobs
+suite and doc tests pass with `INSTA_UPDATE=no`. Exact snapshots compare jobs
 1 and 2; standalone/prepared aggregate API parity covers all six configurations.
 Nested-write snapshots intentionally attribute findings to changed targets
 instead of auxiliary tables. Focused LLVM coverage ran early without filename
