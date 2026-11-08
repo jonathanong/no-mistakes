@@ -259,3 +259,5 @@ mod cli_check_rules_test_no_live_repository_scan_env;
 
 #[path = "cli_check_production_exports_namespaces.rs"]
 mod cli_check_production_exports_namespaces;
+#[path = "cli_check_production_exports_precision.rs"]
+mod cli_check_production_exports_precision;

@@ -74,22 +74,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "declare module \"*.css\" {",
           "target": "unanalyzable"
-        },
-        {
-          "file": "src/legacy.d.ts",
-          "line": 2,
-          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "declare namespace Legacy {",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/named.d.ts",
-          "line": 2,
-          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "declare module \"virtual-pkg\" {",
-          "target": "unanalyzable"
         }
       ],
       "codebase": [],
@@ -687,14 +671,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "cannot analyze production export importers: symbol consumers of `genericKey` include an unknown import selector: tests/other-generic.test.mts:1 `../src/other-generic.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export type Wrapped = Promise<typeof import(\"../src/other-generic.mjs\")>;",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "tests/qualified-pick.test.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "declare namespace Utils {",
           "target": "unanalyzable"
         },
         {
