@@ -83,6 +83,11 @@ fn query_columns(item: &SqlBoundItem, query: &SqlBoundQuery) -> Option<BTreeSet<
     query
         .outputs
         .iter()
-        .map(|output| output.name.clone())
+        .map(|output| {
+            output
+                .name
+                .clone()
+                .or_else(|| output.source_column.as_ref().map(|(_, name)| name.clone()))
+        })
         .collect()
 }

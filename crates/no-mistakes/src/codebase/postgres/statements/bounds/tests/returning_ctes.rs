@@ -168,7 +168,7 @@ fn returning_context_preserves_original_sibling_pin_ordinals() {
         pin(SqlPinSource::Items(vec![1])),
         pin(SqlPinSource::Items(vec![3])),
     ];
-    let projected = super::super::super::returning::project(query).unwrap();
+    let projected = super::super::super::returning::project(query, &[]).unwrap();
     assert_eq!(projected.items.len(), 4);
     assert_eq!(projected.input_mode, SqlBoundInputMode::Returning);
     let sources: Vec<_> = projected.items[2]

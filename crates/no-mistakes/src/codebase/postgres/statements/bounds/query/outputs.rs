@@ -49,6 +49,12 @@ pub(super) fn select(
 fn projected_name(expr: &Expr) -> Option<String> {
     match unwrap_expr(expr) {
         Expr::Identifier(ident) => Some(ident_key(ident)),
+        Expr::Value(value) if matches!(value.value, Value::Number(..)) => {
+            Some("?column?".to_owned())
+        }
+        Expr::Function(function) => {
+            crate::codebase::postgres::idents::object_name_ident(&function.name).map(ident_key)
+        }
         _ => None,
     }
 }

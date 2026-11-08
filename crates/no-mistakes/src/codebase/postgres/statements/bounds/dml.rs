@@ -98,7 +98,7 @@ pub(super) fn returning_bound(
         }
         return None;
     }
-    match statement {
+    let returning = match statement {
         Statement::Update(update)
             if update
                 .returning
@@ -106,6 +106,7 @@ pub(super) fn returning_bound(
                 .is_some_and(|items| !items.is_empty()) =>
         {
             self::update(update, &projection_scope, positions, &mut facts);
+            update.returning.as_deref()?
         }
         Statement::Delete(delete)
             if delete
@@ -114,8 +115,9 @@ pub(super) fn returning_bound(
                 .is_some_and(|items| !items.is_empty()) =>
         {
             self::delete(delete, &projection_scope, positions, &mut facts);
+            delete.returning.as_deref()?
         }
         _ => return None,
-    }
-    super::returning::project(facts.pop()?.query)
+    };
+    super::returning::project(facts.pop()?.query, returning)
 }

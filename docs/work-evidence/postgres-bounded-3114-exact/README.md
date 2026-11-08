@@ -4,8 +4,9 @@
 
 Optimized baseline: `43da2047db3f8191283d1de68744f1c1f604add9`.
 Candidate runtime source: `6907e75757520a41165d44d67fb688239cb857b8`.
-Later rebases over test/docs-only changes and version bumps carry these
-measurements forward after checking production sources and dependencies.
+These historical samples apply to the captured production sources. The later
+output-label correction changes production code and needs a separate comparison;
+these samples do not establish current-head performance.
 Toolchain: `rustc 1.99.1 (58cf8f9c3 2026-10-13)`.
 Builds use locked dependencies, default features, matching release overrides
 `CARGO_PROFILE_RELEASE_LTO=thin` and `CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16`.

@@ -94,5 +94,5 @@ fn returning_drivers_keep_their_original_item_ordinals() {
 
 #[test]
 fn an_empty_returning_projection_is_absent() {
-    assert!(super::super::super::returning::project(SqlBoundQuery::default()).is_none());
+    assert!(super::super::super::returning::project(SqlBoundQuery::default(), &[]).is_none());
 }

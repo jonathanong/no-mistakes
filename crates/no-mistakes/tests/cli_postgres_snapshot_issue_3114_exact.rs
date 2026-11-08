@@ -29,6 +29,11 @@ fn postgres_bounded_issue_3114_exact_r4_check_json_snapshot() {
 }
 
 #[test]
+fn postgres_bounded_issue_3114_exact_r5_check_json_snapshot() {
+    snapshot("r5");
+}
+
+#[test]
 fn postgres_bounded_issue_3114_exact_off_check_json_snapshot() {
     snapshot("off");
 }

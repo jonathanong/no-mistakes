@@ -364,6 +364,16 @@ or caller-array lookup inside the CTE supplies that bound, as can bounded
 `RETURNING` rows. An unrestricted `SELECT id FROM accounts` CTE supplies no
 bound; add a key restriction or a batch `LIMIT` inside it.
 
+A write restricted by its complete composite primary key returns at most one
+row. Its `RETURNING` column names remain visible to later writes, so matching
+every target key column against that returned row keeps the later write bounded.
+Names alone grant no caller-value, array-element or predicate-pushdown proof.
+Implicit labels for numeric literals and function calls, along with qualified
+projected column names, identify which relation owns a bare key beside a lock or
+`LIMIT 1` CTE. Ambiguous names,
+wildcard layouts and incomplete keys remain conservative; qualify the key or
+declare explicit output aliases when ownership is unclear.
+
 `JOIN unnest($1::uuid[]) AS req(id) ON t.id = req.id` also bounds a primary-key
 lookup on `t.id`. The parameter array sizes the driver, while the target key
 limits its fan-out. Using a non-unique target column still reports.

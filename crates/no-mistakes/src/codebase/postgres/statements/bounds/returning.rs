@@ -1,14 +1,29 @@
 //! Project a data-modifying CTE's RETURNING cardinality back to its target.
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
-use crate::codebase::postgres::statements::{SqlBoundInputMode, SqlBoundQuery};
+use crate::codebase::postgres::statements::{SqlBoundInputMode, SqlBoundOutput, SqlBoundQuery};
 use sqlparser::ast::{Expr, SelectItem};
 
-pub(super) fn project(mut query: SqlBoundQuery) -> Option<SqlBoundQuery> {
+pub(super) fn project(mut query: SqlBoundQuery, returning: &[SelectItem]) -> Option<SqlBoundQuery> {
     if query.items.is_empty() {
         return None;
     }
     query.input_mode = SqlBoundInputMode::Returning;
-    query.outputs.clear();
+    query.outputs = returning
+        .iter()
+        .map(|item| match item {
+            SelectItem::Wildcard(_) | SelectItem::QualifiedWildcard(_, _) => None,
+            _ => Some(SqlBoundOutput {
+                name: returning_name(item),
+                caller_sized: false,
+                scalar: false,
+                source_column: None,
+                array_aggregate_column: None,
+                constant_null: false,
+                recursive_domain: false,
+            }),
+        })
+        .collect::<Option<Vec<_>>>()
+        .unwrap_or_default();
     Some(query)
 }
 
