@@ -209,3 +209,5 @@ mod public_query;
 mod execution;
 
 mod partial;
+
+mod cause_diagnostics;

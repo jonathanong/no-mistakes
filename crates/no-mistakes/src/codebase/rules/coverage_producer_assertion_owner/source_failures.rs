@@ -20,9 +20,16 @@ impl traversal::Outcome {
     }
 }
 
-pub(super) fn require_sources(outcome: &traversal::Outcome) -> Result<()> {
+pub(super) fn require_sources(root: &Path, outcome: &traversal::Outcome) -> Result<()> {
     if let Some((file, message)) = outcome.source_failures.first_key_value() {
-        return Err(CheckInputFailure::source(file.clone(), message.clone()).into());
+        return Err(CheckInputFailure::source(
+            file.clone(),
+            format!(
+                "source failure in {}: {message}",
+                relative_slash_path(root, file)
+            ),
+        )
+        .into());
     }
     Ok(())
 }

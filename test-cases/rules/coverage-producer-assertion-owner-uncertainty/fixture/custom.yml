@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    message: Assert the dispatch result
+    options:
+      producers: [{ file: src/producer.mts, symbol: dynamic }]
+      assertions: [{ module: "node:assert", export: strictEqual }]

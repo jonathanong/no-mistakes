@@ -131,9 +131,35 @@ deferred: the rule asks whether some owner is reached, so once any owner is
 reached the producer passes even when another call is dynamic, hits a bound, or
 is an unmodeled external module call such as a PostgreSQL client or another
 Node builtin. With no owner reached, any such uncertainty is reported with
-the shared `unanalyzable` message. Known globals retain the call graph's
+a cause-specific `unanalyzable` message. Known globals retain the call graph's
 classification; external process
 calls need contracts.
+
+## Uncertainty diagnostics
+
+Human output and JSON `rules[].message` / `advisories[].message` identify each
+applicable cause in deterministic order:
+
+- Unresolved dispatch includes the call file, line, exact callee expression,
+  and the reason the call is opaque. For example:
+  ``unresolved dispatch at src/producer.mts:2 callee `dispatch` (callee target is unknown)``.
+  Rewrite dynamic dispatch as a statically resolved call or configure a genuine
+  ownership contract. External calls and unmodeled callback execution name the
+  corresponding call site too; unmodeled generator bodies name their module and symbol.
+- Traversal limits name the option and configured or default value, plus the
+  last module and callable reached on the blocked path. For example:
+  `traversal limit maxDepth=1; last module src/helper.mts#helper`.
+  Inspect that path and raise the named bound when more traversal is intended.
+  Both `maxDepth` and `maxNodes` are reported if both block the same step.
+- Source failures remain incomplete checks, with the failing file in
+  `incomplete[].file` and `source failure in <file>: <error>` in
+  `incomplete[].message`. Human output carries the same file and error. Fix the
+  source read or parse failure; changing traversal bounds cannot resolve it.
+
+A producer with multiple uncertain paths reports their causes together. A reached
+assertion still passes despite dispatch or traversal uncertainty. Source failures
+remain errors even when an assertion is reached. Disabling this rule retains the
+same output and does not collect its uncertainty details.
 
 ## Node `fs` is modeled I/O
 
@@ -187,7 +213,7 @@ without failing the check.
 
 Rule `include`/`exclude` and project targeting select producers. Dependency
 traversal may cross those producer locations to reach actual owners. `message`
-customizes diagnostics. Suppress with `no-mistakes-disable-file
+customizes diagnostics; uncertainty causes are appended to that custom message. Suppress with `no-mistakes-disable-file
 coverage-producer-assertion-owner`, or `no-mistakes-disable-line` /
 `no-mistakes-disable-next-line` on the reported producer declaration line.
 

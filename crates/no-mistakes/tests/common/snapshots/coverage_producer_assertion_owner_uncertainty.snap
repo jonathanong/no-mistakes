@@ -1,0 +1,183 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/producer.mts",
+          "line": 2,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producer.mts:2 callee `dispatch` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producer.mts#dynamic",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function dynamic(dispatch: () => void) { dispatch(); }",
+          "target": "dynamic"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "both": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/producer.mts",
+          "line": 3,
+          "message": "unanalyzable coverage producer: traversal limit maxDepth=1; last module src/helper.mts#helper; traversal limit maxNodes=2; last module src/helper.mts#helper; model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producer.mts#bounded",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function bounded() { helper(); }",
+          "target": "bounded"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/producer.mts",
+          "line": 2,
+          "message": "Assert the dispatch result; unanalyzable coverage producer: unresolved dispatch at src/producer.mts:2 callee `dispatch` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producer.mts#dynamic",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function dynamic(dispatch: () => void) { dispatch(); }",
+          "target": "dynamic"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "depth": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/producer.mts",
+          "line": 3,
+          "message": "unanalyzable coverage producer: traversal limit maxDepth=1; last module src/helper.mts#helper; model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producer.mts#bounded",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function bounded() { helper(); }",
+          "target": "bounded"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dispatch": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/producer.mts",
+          "line": 2,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producer.mts:2 callee `dispatch` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producer.mts#dynamic",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function dynamic(dispatch: () => void) { dispatch(); }",
+          "target": "dynamic"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/producer.mts",
+          "line": 4,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producer.mts:4 callee `dispatch` (callee target is unknown); traversal limit maxDepth=1; last module src/helper.mts#helper; model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producer.mts#mixed",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function mixed(dispatch: () => void) { dispatch(); helper(); }",
+          "target": "mixed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nodes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/producer.mts",
+          "line": 3,
+          "message": "unanalyzable coverage producer: traversal limit maxNodes=1; last module src/producer.mts#bounded; model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producer.mts#bounded",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function bounded() { helper(); }",
+          "target": "bounded"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "source": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "coverage-producer-assertion-owner",
+          "file": "src/broken.mts",
+          "message": "source failure in src/broken.mts: parsing src/broken.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 41, end: 42 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

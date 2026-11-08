@@ -3,9 +3,8 @@ use std::collections::VecDeque;
 #[derive(Default)]
 pub(super) struct Outcome {
     pub assertion: bool,
-    pub uncertain: bool,
+    pub(super) causes: std::collections::BTreeSet<uncertainty::Cause>,
     pub(super) source_failures: std::collections::BTreeMap<std::path::PathBuf, String>,
-    unmodeled: bool,
 }
 pub(super) fn analyze(
     root: &NodeId,
@@ -25,12 +24,16 @@ pub(super) fn analyze(
         if source_unavailable {
             out.record_source_failure(file, facts);
         }
-        if source_unavailable || generator(&node, facts) {
-            out.uncertain = true;
+        if source_unavailable {
+            continue;
+        }
+        if generator(&node, facts) {
+            out.causes
+                .insert(uncertainty::Cause::Generator(node.clone()));
             continue;
         }
         let mut targets = FxHashSet::default();
-        let mut live_fs = false;
+        let mut live_fs = Vec::new();
         let node_sites = sites.get(&node).map_or(&[][..], Vec::as_slice);
         for site in node_sites
             .iter()
@@ -43,7 +46,7 @@ pub(super) fn analyze(
             // Calling a generator creates an iterator; neither a configured
             // selector nor a contract makes that occurrence execute its body.
             if site.target_nodes().any(|target| generator(target, facts)) {
-                out.uncertain = true;
+                out.dispatch(site, "generator body execution is not modeled");
                 continue;
             }
             if options
@@ -58,14 +61,14 @@ pub(super) fn analyze(
                 .iter()
                 .filter(|contract| contract.from == node && contract.via.matches(site))
                 .collect::<Vec<_>>();
-            out.uncertain |= modeled.iter().any(|contract| {
-                unavailable(contract.to.as_file().expect("callable file"), facts)
-                    || generator(&contract.to, facts)
-            });
             for contract in &modeled {
                 let file = contract.to.as_file().expect("callable file");
                 if unavailable(file, facts) {
                     out.record_source_failure(file, facts);
+                }
+                if generator(&contract.to, facts) {
+                    out.causes
+                        .insert(uncertainty::Cause::Generator(contract.to.clone()));
                 }
             }
             targets.extend(modeled.iter().map(|contract| contract.to.clone()));
@@ -74,18 +77,24 @@ pub(super) fn analyze(
             // is modeled I/O; known globals remain syntactically classified, while
             // dynamic targets abstain.
             if site.has_unknown_target() {
-                out.uncertain = true;
+                out.dispatch(site, "callee target is unknown");
             } else if modeled.is_empty() && external::unmodeled_external(site) {
-                out.unmodeled = true;
+                out.dispatch(site, "external call has no ownership model");
             }
             if modeled.is_empty() && external::fs_effect(site) {
-                live_fs = true;
-                out.uncertain |= external::callback_argument(site, facts);
+                live_fs.push(site);
+                if external::callback_argument(site, facts) {
+                    out.dispatch(site, "callback argument execution is not modeled");
+                }
             }
         }
         // Reachability of a synthetic callback is not recorded; a live `fs` call
         // plus any callback in the same callable stays uncertain.
-        out.uncertain |= live_fs && external::has_callback_site(node_sites);
+        if external::has_callback_site(node_sites) {
+            for site in live_fs {
+                out.dispatch(site, "callback execution alongside fs I/O is not modeled");
+            }
+        }
         for (target, kind) in graph.dependencies_of_node(&node).into_iter().flatten() {
             if !targets.contains(target)
                 || !matches!(kind, EdgeKind::Call | EdgeKind::AssertionOwner)
@@ -93,17 +102,20 @@ pub(super) fn analyze(
             {
                 continue;
             }
-            if depth >= options.max_depth.unwrap_or(64)
-                || seen.len() >= options.max_nodes.unwrap_or(10000)
-            {
-                out.uncertain = true;
+            let max_depth = options.max_depth.unwrap_or(64);
+            let max_nodes = options.max_nodes.unwrap_or(10000);
+            if depth >= max_depth || seen.len() >= max_nodes {
+                if depth >= max_depth {
+                    out.limit("maxDepth", max_depth, &node);
+                }
+                if seen.len() >= max_nodes {
+                    out.limit("maxNodes", max_nodes, &node);
+                }
                 continue;
             }
             seen.insert(target.clone());
             queue.push_back((target.clone(), depth + 1));
         }
     }
-    // Uncertainty elsewhere cannot change whether some owner was reached.
-    out.uncertain = !out.assertion && (out.uncertain || out.unmodeled);
     out
 }

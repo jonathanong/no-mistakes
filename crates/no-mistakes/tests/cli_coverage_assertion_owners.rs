@@ -100,3 +100,85 @@ fn cli_reports_generator_uncertainty_without_assertion_proof() {
         );
     }
 }
+
+#[test]
+fn cli_names_coverage_owner_uncertainty_in_human_and_json_output() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/coverage-producer-assertion-owner-uncertainty/fixture");
+    for (config, expected) in [
+        (
+            "dispatch",
+            vec!["unresolved dispatch", "src/producer.mts:2", "`dispatch`"],
+        ),
+        (
+            "depth",
+            vec!["traversal limit maxDepth=1", "last module src/helper.mts"],
+        ),
+        (
+            "nodes",
+            vec!["traversal limit maxNodes=1", "last module src/producer.mts"],
+        ),
+        (
+            "mixed",
+            vec![
+                "unresolved dispatch",
+                "`dispatch`",
+                "traversal limit maxDepth=1",
+            ],
+        ),
+        (
+            "both",
+            vec![
+                "traversal limit maxDepth=1",
+                "traversal limit maxNodes=2",
+                "last module src/helper.mts",
+            ],
+        ),
+        (
+            "custom",
+            vec![
+                "Assert the dispatch result",
+                "unresolved dispatch",
+                "`dispatch`",
+            ],
+        ),
+        (
+            "source",
+            vec!["source failure", "src/broken.mts", "Unexpected token"],
+        ),
+    ] {
+        for format in ["human", "json"] {
+            let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+                .args(["check", "--root"])
+                .arg(&root)
+                .arg("--config")
+                .arg(root.join(format!("{config}.yml")))
+                .args(["--format", format])
+                .output()
+                .unwrap();
+            assert!(!output.status.success());
+            let text = if format == "json" {
+                let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+                let field = if config == "source" {
+                    "incomplete"
+                } else {
+                    "rules"
+                };
+                report[field][0]["message"].as_str().unwrap().to_string()
+            } else {
+                format!(
+                    "{}{}",
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr)
+                )
+            };
+            for part in &expected {
+                assert!(
+                    text.contains(part),
+                    "{config}/{format}: missing {part}: {text}"
+                );
+            }
+            assert!(!text.contains("unresolved dispatch, source failure, or traversal limit"));
+        }
+    }
+}

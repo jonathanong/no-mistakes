@@ -14,7 +14,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 100,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#depthOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:100 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#depthOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function depthOptions() { void (fsNs.createReadStream('a', { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: 'utf8' } } } } } } } } } } } } } } } } }).path, 'a'); }",
           "target": "depthOptions"
@@ -94,7 +94,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 32,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#computedMember",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:32 callee `<unknown>` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#computedMember",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function computedMember(name: 'readFileSync') { void (fsDefault[name]('a', 'utf8'), 'x'); }",
           "target": "computedMember"
@@ -102,7 +102,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 35,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#dynamicRequire",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:35 callee `<unknown>.readFileSync` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#dynamicRequire",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function dynamicRequire() { void (require('node:fs').readFileSync('a', 'utf8'), 'x'); }",
           "target": "dynamicRequire"
@@ -110,7 +110,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 37,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#callbackAsserted",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:37 callee `<unknown>.then` (callee target is unknown); unresolved dispatch at src/fs-io.mts:37 callee `readFile` (callback execution alongside fs I/O is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#callbackAsserted",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function callbackAsserted() { readFile('a', 'utf8').then((text) => { equal(text, 'x'); }); }",
           "target": "callbackAsserted"
@@ -118,7 +118,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 45,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#ternaryCallback",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:46 callee `fsNs.readFile` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#ternaryCallback",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function ternaryCallback(flag: boolean, first: () => void, second: () => void) {",
           "target": "ternaryCallback"
@@ -126,7 +126,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 48,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#logicalCallback",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:49 callee `fsNs.readFile` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#logicalCallback",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function logicalCallback(first: (() => void) | undefined, second: () => void) {",
           "target": "logicalCallback"
@@ -134,7 +134,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 51,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#computedCallback",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:51 callee `fsNs.readFile` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#computedCallback",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function computedCallback() { fsNs.readFile('a', makeCallback()); }",
           "target": "computedCallback"
@@ -166,7 +166,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 56,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#dynamicTemplateArgument",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:56 callee `fsNs.readFile` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#dynamicTemplateArgument",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function dynamicTemplateArgument(encoding: string) { fsNs.readFile('a', `${encoding}`); }",
           "target": "dynamicTemplateArgument"
@@ -174,7 +174,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 57,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#spreadArguments",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:57 callee `fsNs.readFile` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#spreadArguments",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function spreadArguments(...callbacks: Array<() => void>) { fsNs.readFile('a', ...callbacks); }",
           "target": "spreadArguments"
@@ -206,7 +206,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 61,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#applyCallbackArgument",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:61 callee `fsNs.watch` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#applyCallbackArgument",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function applyCallbackArgument(flag: boolean, first: () => void, second: () => void) { fsNs.watch.apply(null, ['file', flag ? first : second]); }",
           "target": "applyCallbackArgument"
@@ -230,7 +230,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 64,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#applySpreadArguments",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:64 callee `fsNs.watch` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#applySpreadArguments",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function applySpreadArguments(...callbacks: Array<() => void>) { fsNs.watch.apply(null, ['file', ...callbacks]); }",
           "target": "applySpreadArguments"
@@ -246,7 +246,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 66,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#callCallbackArgument",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:66 callee `fsNs.watch` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#callCallbackArgument",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function callCallbackArgument(first: (() => void) | undefined, second: () => void) { fsNs.watch.call(null, 'file', first || second); }",
           "target": "callCallbackArgument"
@@ -254,7 +254,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 74,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#ternaryOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:74 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#ternaryOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function ternaryOptions(flag: boolean) { void (fsNs.createReadStream('a', flag ? { encoding: 'utf8' } : { encoding: 'ascii' }).path, 'a'); }",
           "target": "ternaryOptions"
@@ -262,7 +262,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 75,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#fnPropertyOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:75 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#fnPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function fnPropertyOptions() { void (fsNs.createReadStream('a', { cb: () => {} }).path, 'a'); }",
           "target": "fnPropertyOptions"
@@ -270,7 +270,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 76,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#functionPropertyOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:76 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#functionPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function functionPropertyOptions() { void (fsNs.createReadStream('a', { cb: function () {} }).path, 'a'); }",
           "target": "functionPropertyOptions"
@@ -278,7 +278,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 77,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#classPropertyOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:77 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#classPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function classPropertyOptions() { void (fsNs.createReadStream('a', { Handler: class {} }).path, 'a'); }",
           "target": "classPropertyOptions"
@@ -286,7 +286,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 78,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#nestedFnPropertyOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:78 callee `fsNs.createReadStream` (callback argument execution is not modeled); unresolved dispatch at src/fs-io.mts:78 callee `fsNs.createReadStream` (callback execution alongside fs I/O is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#nestedFnPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function nestedFnPropertyOptions() { void (fsNs.createReadStream('a', { nested: { callbacks: [() => {}] } }).path, 'a'); }",
           "target": "nestedFnPropertyOptions"
@@ -294,7 +294,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 79,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#unknownPropertyOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:79 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#unknownPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function unknownPropertyOptions(value: object) { void (fsNs.createReadStream('a', { nested: value }).path, 'a'); }",
           "target": "unknownPropertyOptions"
@@ -302,7 +302,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 80,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#memberPropertyOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:80 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#memberPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function memberPropertyOptions(value: { encoding: string }) { void (fsNs.createReadStream('a', { encoding: value.encoding }).path, 'a'); }",
           "target": "memberPropertyOptions"
@@ -310,7 +310,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 81,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#callPropertyOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:81 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#callPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function callPropertyOptions() { void (fsNs.createReadStream('a', { nested: makeOptions() }).path, 'a'); }",
           "target": "callPropertyOptions"
@@ -318,7 +318,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 82,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#conditionalPropertyOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:82 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#conditionalPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function conditionalPropertyOptions(flag: boolean) { void (fsNs.createReadStream('a', { encoding: flag ? 'utf8' : 'ascii' }).path, 'a'); }",
           "target": "conditionalPropertyOptions"
@@ -326,7 +326,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 83,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#logicalPropertyOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:83 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#logicalPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function logicalPropertyOptions(encoding: string | undefined) { void (fsNs.createReadStream('a', { encoding: encoding || 'utf8' }).path, 'a'); }",
           "target": "logicalPropertyOptions"
@@ -334,7 +334,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 84,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#arrayFunctionOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:84 callee `fsNs.createReadStream` (callback argument execution is not modeled); unresolved dispatch at src/fs-io.mts:84 callee `fsNs.createReadStream` (callback execution alongside fs I/O is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#arrayFunctionOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function arrayFunctionOptions() { void (fsNs.createReadStream('a', [() => {}]).path, 'a'); }",
           "target": "arrayFunctionOptions"
@@ -342,7 +342,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 85,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#arrayUnknownOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:85 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#arrayUnknownOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function arrayUnknownOptions(callback: () => void) { void (fsNs.createReadStream('a', [callback]).path, 'a'); }",
           "target": "arrayUnknownOptions"
@@ -350,7 +350,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 86,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#methodOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:86 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#methodOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function methodOptions() { void (fsNs.createReadStream('a', { cb() {} }).path, 'a'); }",
           "target": "methodOptions"
@@ -358,7 +358,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 87,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#getterOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:87 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#getterOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function getterOptions() { void (fsNs.createReadStream('a', { get encoding() { return 'utf8' } }).path, 'a'); }",
           "target": "getterOptions"
@@ -366,7 +366,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 88,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#shorthandOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:88 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#shorthandOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function shorthandOptions(callback: () => void) { void (fsNs.createReadStream('a', { callback }).path, 'a'); }",
           "target": "shorthandOptions"
@@ -374,7 +374,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 89,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#spreadOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:89 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#spreadOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function spreadOptions(value: object) { void (fsNs.createReadStream('a', { ...value }).path, 'a'); }",
           "target": "spreadOptions"
@@ -382,7 +382,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 90,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#arraySpreadOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:90 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#arraySpreadOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function arraySpreadOptions(values: unknown[]) { void (fsNs.createReadStream('a', [...values]).path, 'a'); }",
           "target": "arraySpreadOptions"
@@ -390,7 +390,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 91,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#arrayHoleOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:91 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#arrayHoleOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function arrayHoleOptions() { void (fsNs.createReadStream('a', [,]).path, 'a'); }",
           "target": "arrayHoleOptions"
@@ -398,7 +398,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 92,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#computedKeyOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:92 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#computedKeyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function computedKeyOptions(key: string) { void (fsNs.createReadStream('a', { [key]: 'utf8' }).path, 'a'); }",
           "target": "computedKeyOptions"
@@ -406,7 +406,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 93,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#computedStaticKeyOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:93 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#computedStaticKeyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function computedStaticKeyOptions() { void (fsNs.createReadStream('a', { ['encoding']: 'utf8' }).path, 'a'); }",
           "target": "computedStaticKeyOptions"
@@ -414,7 +414,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 94,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#templatePropertyOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:94 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#templatePropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function templatePropertyOptions(encoding: string) { void (fsNs.createReadStream('a', { encoding: `${encoding}` }).path, 'a'); }",
           "target": "templatePropertyOptions"
@@ -422,7 +422,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 97,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#callFnPropertyOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:97 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#callFnPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function callFnPropertyOptions() { void (fsNs.createReadStream.call(null, 'a', { cb: () => {} }).path, 'a'); }",
           "target": "callFnPropertyOptions"
@@ -430,7 +430,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/fs-io.mts",
           "line": 98,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#applyFnPropertyOptions",
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/fs-io.mts:98 callee `fsNs.createReadStream` (callback argument execution is not modeled); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/fs-io.mts#applyFnPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function applyFnPropertyOptions() { void (fsNs.createReadStream.apply(null, ['a', { cb: () => {} }]).path, 'a'); }",
           "target": "applyFnPropertyOptions"

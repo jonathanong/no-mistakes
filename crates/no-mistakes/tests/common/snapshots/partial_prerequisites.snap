@@ -11,7 +11,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "coverage-producer-assertion-owner",
           "file": "broken.ts",
-          "message": "parsing broken.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 23, end: 24 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+          "message": "source failure in broken.ts: parsing broken.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token\", labels: [LabeledSpan { label: None, span: Span { start: 23, end: 24 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
         }
       ],
       "integration": [],

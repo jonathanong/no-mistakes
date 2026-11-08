@@ -13,6 +13,25 @@ fn unique(label: &'static str, scenario: &str) -> Case {
 }
 
 #[test]
+fn coverage_producer_assertion_owner_uncertainty_json_matches_snapshot() {
+    let dir = "coverage-producer-assertion-owner-uncertainty/fixture";
+    assert_saved_fixture(
+        "coverage_producer_assertion_owner_uncertainty",
+        &[
+            rule("dispatch", dir, "dispatch.yml"),
+            rule("depth", dir, "depth.yml"),
+            rule("nodes", dir, "nodes.yml"),
+            rule("mixed", dir, "mixed.yml"),
+            rule("both", dir, "both.yml"),
+            rule("custom", dir, "custom.yml"),
+            rule("advise", dir, "advise.yml"),
+            rule("source", dir, "source.yml"),
+            rule("disabled", dir, "disabled.yml"),
+        ],
+    );
+}
+
+#[test]
 fn coverage_producer_assertion_owner_json_matches_snapshot() {
     let dir = "coverage-producer-assertion-owner/fixture";
     assert_saved_fixture(
