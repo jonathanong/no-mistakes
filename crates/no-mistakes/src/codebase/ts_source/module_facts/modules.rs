@@ -33,7 +33,7 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
             AstKind::ImportDeclaration(_)
                 | AstKind::ExportFromDeclaration(_)
                 | AstKind::ExportAllDeclaration(_)
-                | AstKind::TSImportType(_)
+                | AstKind::ImportExpression(_)
                 | AstKind::TSImportEqualsDeclaration(_)
         ) {
             references.push(node.kind().span().start);

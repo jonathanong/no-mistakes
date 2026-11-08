@@ -105,14 +105,14 @@ APIs requires a design decision.
 A dynamic `import("./x")` with a literal specifier is a runtime production
 consumer of the exports it provably reads. These forms are recognized:
 
-| Form | Consumed export |
-| --- | --- |
-| `import("./x").then((m) => m.Name)` (also a `function` callback with a sole `return m.Name`) | `Name` |
-| `import("./x").then((m) => ({ default: m.Name }))` (the `next/dynamic` idiom; expression or sole-`return` block body, `m["Name"]` also accepted) | `Name` |
-| `import("./x").then(({ Name, Other: o }) => ...)` | `Name`, `Other` |
-| `const X = dynamic(() => import("./x"))`, `export default lazy(() => import("./x"))`, a wrapper call as a bare statement or directly inside a JSX expression container (an expression-bodied arrow passed directly as a call argument whose wrapper call sits only in one of those places, or in a `const` binding whose every reference is a JSX element name, a `typeof` or type query, or an export specifier) | `default` |
-| `const m = await import("./x")` where every use of `m` is `m.Name` | `Name` |
-| `const { Name } = await import("./x")` | `Name` |
+| Form                                                                                                                                                                                                                                                                                                                                                                                                              | Consumed export |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| `import("./x").then((m) => m.Name)` (also a `function` callback with a sole `return m.Name`)                                                                                                                                                                                                                                                                                                                      | `Name`          |
+| `import("./x").then((m) => ({ default: m.Name }))` (the `next/dynamic` idiom; expression or sole-`return` block body, `m["Name"]` also accepted)                                                                                                                                                                                                                                                                  | `Name`          |
+| `import("./x").then(({ Name, Other: o }) => ...)`                                                                                                                                                                                                                                                                                                                                                                 | `Name`, `Other` |
+| `const X = dynamic(() => import("./x"))`, `export default lazy(() => import("./x"))`, a wrapper call as a bare statement or directly inside a JSX expression container (an expression-bodied arrow passed directly as a call argument whose wrapper call sits only in one of those places, or in a `const` binding whose every reference is a JSX element name, a `typeof` or type query, or an export specifier) | `default`       |
+| `const m = await import("./x")` where every use of `m` is `m.Name`                                                                                                                                                                                                                                                                                                                                                | `Name`          |
+| `const { Name } = await import("./x")`                                                                                                                                                                                                                                                                                                                                                                            | `Name`          |
 
 Everything else keeps the "unknown import selector" advisory: computed or
 optional member reads (`m[key]`, `m?.Name`), an object literal with any key other
@@ -208,14 +208,14 @@ keeps its advisory, and each shape has a saved accepted and near-miss fixture
 under `test-cases/rules/production-exports-only-used-by-tests/fixture/importer-gaps`
 or the `precision` cases in the same fixture directory.
 
-| Shape | Treated as |
-| --- | --- |
-| Declaration-only ambient modules (wildcard or named), namespaces, and type-only augmentations | No runtime importer, provided the declaration has no `import`, `export ... from`, `export *`, `import("...")` type or `import x = require(...)`. A body with any of those can name a production export and retains its analysis requirements. Runtime namespaces remain uncertain. See [Overloads and ambient declarations](#overloads-and-ambient-declarations). |
-| `import clip from "./clip.wav"`, also `.png`, `.svg`, `.css`, `.vue`, `.svelte` or any other file that is not JS/TS, when the relative `./` or `../` specifier names a file that exists on disk | An asset import. The only code test is the JS/TS extension list, so a `.vue` or `.svelte` file counts as an asset. This holds even when file discovery skipped the directory (`build/`, `dist/`). Only relative specifiers are checked: a tsconfig-alias import (`@assets/clip.wav`) of a file in a skipped directory keeps its advisory. A missing file, a directory, a query suffix (`./clip.wav?raw`) and an existing JS/TS file stay unanalyzable. |
-| `Pick<typeof import("./mod"), "a">` or `Pick<typeof import("./mod"), "a" \| "b">` with the global `Pick` | A type-only reference to exactly `a` and `b`, which follows [Type-only references](#type-only-references). A key that is not a string literal, a union containing one, `Omit`, a local `Pick`, and a bare `typeof import("./mod")` stay whole-module uses. |
-| `importOriginal<typeof import("./mod")>()` or `x as typeof import("./mod")` inside the factory of `vi.mock("./mod", factory)` with `vi` imported from `vitest` | An erased type assertion that selects nothing. The `importOriginal` call must use the factory's own first parameter, and the asserted module must be the mocked module. The factory's runtime handling is unchanged. |
-| A lone top-level `module.exports = value;`, or only top-level `exports.name = value;` statements | The file's own exports. They are not importers. `module.exports` mutated after assignment (`module.exports.x = 1`, `Object.assign(module.exports, ...)`), computed keys (`exports[key] = 1`), a second assignment, both forms in one file, an assignment that is conditional, nested or used as a value, and any other read of `module` or `exports` stay unsupported. |
-| `const require = createRequire(import.meta.url)` (any `const` name) where `createRequire` is imported from `module` or `node:module`, or is a member of an import of it | The ordinary `require`. Its literal specifiers are require selectors, and `node:` or package specifiers are external. Every use of the binding must be a direct call or `.resolve` (`require.resolve("x")` is accepted because it only resolves a path and loads nothing): passing it on, aliasing it, `.call`/`.apply`, `(0, require)(...)`, putting it in an array, or exporting it leaves the file unanalyzable, as does `export const require = createRequire(...)`. A `let` binding, an alias of the loader, a destructured binding, a `createRequire` from another module, a base other than `import.meta.url`, and a non-literal specifier also stay unanalyzable. |
+| Shape                                                                                                                                                                                           | Treated as                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Declaration-only ambient modules (wildcard or named), namespaces, and type-only augmentations                                                                                                   | No runtime importer, provided the declaration has no `import`, `export ... from`, `export *`, runtime `import(...)` or `import x = require(...)`. A body with any of those can name a production export and retains its analysis requirements. Runtime namespaces remain uncertain. See [Overloads and ambient declarations](#overloads-and-ambient-declarations).                                                                                                                                                                                                                                                                                                        |
+| `import clip from "./clip.wav"`, also `.png`, `.svg`, `.css`, `.vue`, `.svelte` or any other file that is not JS/TS, when the relative `./` or `../` specifier names a file that exists on disk | An asset import. The only code test is the JS/TS extension list, so a `.vue` or `.svelte` file counts as an asset. This holds even when file discovery skipped the directory (`build/`, `dist/`). Only relative specifiers are checked: a tsconfig-alias import (`@assets/clip.wav`) of a file in a skipped directory keeps its advisory. A missing file, a directory, a query suffix (`./clip.wav?raw`) and an existing JS/TS file stay unanalyzable.                                                                                                                                                                                                                    |
+| `Pick<typeof import("./mod"), "a">` or `Pick<typeof import("./mod"), "a" \| "b">` with the global `Pick`                                                                                        | A type-only reference to exactly `a` and `b`, which follows [Type-only references](#type-only-references). A key that is not a string literal, a union containing one, `Omit`, a local `Pick`, and a bare `typeof import("./mod")` stay whole-module uses.                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `importOriginal<typeof import("./mod")>()` or `x as typeof import("./mod")` inside the factory of `vi.mock("./mod", factory)` with `vi` imported from `vitest`                                  | An erased type assertion that selects nothing. The `importOriginal` call must use the factory's own first parameter, and the asserted module must be the mocked module. The factory's runtime handling is unchanged.                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| A lone top-level `module.exports = value;`, or only top-level `exports.name = value;` statements                                                                                                | The file's own exports. They are not importers. `module.exports` mutated after assignment (`module.exports.x = 1`, `Object.assign(module.exports, ...)`), computed keys (`exports[key] = 1`), a second assignment, both forms in one file, an assignment that is conditional, nested or used as a value, and any other read of `module` or `exports` stay unsupported.                                                                                                                                                                                                                                                                                                    |
+| `const require = createRequire(import.meta.url)` (any `const` name) where `createRequire` is imported from `module` or `node:module`, or is a member of an import of it                         | The ordinary `require`. Its literal specifiers are require selectors, and `node:` or package specifiers are external. Every use of the binding must be a direct call or `.resolve` (`require.resolve("x")` is accepted because it only resolves a path and loads nothing): passing it on, aliasing it, `.call`/`.apply`, `(0, require)(...)`, putting it in an array, or exporting it leaves the file unanalyzable, as does `export const require = createRequire(...)`. A `let` binding, an alias of the loader, a destructured binding, a `createRequire` from another module, a base other than `import.meta.url`, and a non-literal specifier also stay unanalyzable. |
 
 The ambient, CommonJS and `createRequire` shapes keep their `unsupported`
 diagnostics in the TypeScript module facts API (a `createRequire` named
@@ -333,7 +333,9 @@ and none when production code imports and calls it:
 ```typescript
 export function choose(value: string): string;
 export function choose(value: number): number;
-export function choose(value: unknown) { return value; }
+export function choose(value: unknown) {
+  return value;
+}
 ```
 
 Remove the export or move the test-only implementation into a configured helper
@@ -346,13 +348,37 @@ The rule skips their binding-form uncertainty in declaration files and ambient
 blocks, including augmentations in runtime source files:
 
 ```typescript
-declare module "package" { export function run(): string; }
-declare module "legacy" { function run(): string; export = run; }
-declare module "./context.mjs" { interface Context { extra: string } }
+declare module "package" {
+  export function run(): string;
+}
+declare module "legacy" {
+  function run(): string;
+  export = run;
+}
+declare module "./context.mjs" {
+  interface Context {
+    extra: string;
+  }
+}
 ```
 
-Imports, re-exports, import-equals declarations, and `import()` type references
-inside these blocks retain their own analysis requirements. Runtime namespaces,
+An `import()` type expression inside an ambient block stays a type-only
+reference and does not prevent this exception:
+
+```typescript
+declare module "fixture-package" {
+  type Ctx = import("./types.ts").Ctx;
+  export function run(): string;
+  export abstract class Entry<Env> {
+    constructor(env: Env);
+  }
+}
+```
+
+The imported type facts remain available to analysis. A runtime expression such
+as `import("fixture-external")` inside a module body stays uncertain, including
+inside an ambient block. Imports, re-exports, and import-equals declarations
+inside these blocks also retain their own analysis requirements. Runtime namespaces,
 function/namespace merges, and runtime `export =` remain uncertain. These
 exceptions affect only this rule; public TypeScript module-facts diagnostics and
 checks with the rule disabled retain their existing output.
@@ -415,7 +441,9 @@ and unresolved callees stay uncertain. Parentheses, TypeScript wrappers, optiona
 calls, and tagged templates retain the same receiver check.
 
 ```ts
-export function work() { return this; } // ns.work() stays uncertain
+export function work() {
+  return this;
+} // ns.work() stays uncertain
 export const safe = () => {}; // ns.safe() proves only safe
 ```
 
