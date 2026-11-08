@@ -1,4 +1,4 @@
-# Integration discovery acceptance workload
+# Check fact-scope acceptance workload
 
 `python3 fixtures/performance/integration-discovery/materialize.py /tmp/nm-discovery-corpus`
 expands the saved JSX source into 256 modules, each containing 64 independent
@@ -12,6 +12,12 @@ Use the same absolute corpus path for both default-feature release binaries.
 Run `check --root <corpus> --config <corpus>/configs/<policy>.yml --format json`
 at `--jobs 1`, `--jobs 4`, and default jobs. `consuming` selects one test;
 `broad` selects every source; `disabled` requests only import relationships rooted at every dense source module.
+`sql-consuming` selects one caller whose SQL builder imports a re-exported
+helper and constant through a tsconfig alias; it produces one definite OFFSET
+finding in the helper. `sql-broad` selects all source extensions with an exclude
+payload, exercising the all-selected fast path. Both SQL policies set `reportUnusedDisableDirectives: ignore`; `sql-audit`
+retains default auditing and its required broad SQL-fact support. The dense TSX modules have no
+SQL demand in the selected caller’s support closure.
 Measure observer off and `--timings --verbose-timings` separately. Retain fresh
 process exit statuses, complete stdout hashes, elapsed/user/system CPU and
 peak RSS in balanced ABBA blocks and adjacent reverse blocks. Build/test activity must
@@ -28,7 +34,9 @@ cell has 12 alternating forward/reverse blocks (24 samples per arm) followed by 
 AAAA and one BBBB same-binary calibration block.
 
 The provenance input identifies exact revisions, compiler/features/release flags,
-dependency lock digest, and the expected corpus SHA-256. The driver records
+dependency lock digest, expected corpus SHA-256, `policies` (the six names
+above), and `expectedFindings` (one `integration` finding for consuming/broad,
+one `rules` finding for sql-consuming/sql-broad/sql-audit, and none for disabled). The driver records
 executable hashes, platform and CPU affinity in a sidecar; verifies the corpus
 digest before and after; checks expected findings/statuses and observer-off/on
 report parity; and appends raw samples as JSONL before finalizing JSON per cell.

@@ -12,16 +12,6 @@ The explicit `nodenext` resolver configuration exercises `.mjs` to `.mts`
 source remapping. Successful executor recognition and identical one-finding
 reports in narrow and broad configs verify this import path.
 
-The `narrow.yml` SQL scan seeds extraction from the selected component only.
-The SQL facts still resolve its imported executor through `src/db.mts`, so
-that file is support evidence even though it is outside the rule's selected
-component path. The broad config selects every component and therefore acts as
-the unrestricted extraction control. The no-PostgreSQL config retains the
-shared source inventory and non-SQL fact demand without SQL extraction. These
-configurations document the intended distinction between selected SQL seeds,
-their resolved support files, and unrelated files; they do not change the
-expected findings or report hashes.
-
 Run `python3 generate.py` to regenerate the saved TSX and `.mts` files. The
 benchmark driver consumes the saved fixture and does not create input sources.
 

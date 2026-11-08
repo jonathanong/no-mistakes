@@ -40,6 +40,12 @@ fn check_json_snapshot_structural_sql_scope() {
     .into_iter()
     .map(|(name, config)| (name, root.clone(), root.join(config)))
     .collect::<Vec<_>>();
+    let audit = base.join("sql-audit-scope/fixture");
+    cases.push((
+        "active_audit",
+        audit.clone(),
+        audit.join(".no-mistakes.yml"),
+    ));
     let root = base.join("sql-no-support/fixture");
     cases.push(("no_support", root.clone(), root.join(".no-mistakes.yml")));
     cases.push(("all_selected", root.clone(), root.join("all-selected.yml")));

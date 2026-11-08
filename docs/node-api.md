@@ -241,7 +241,8 @@ unanalyzable policy, source locations, suppression, and SQL verdict controls as
 the CLI. Configured SQL-template interpolations are bind values; unsupported
 shapes follow the shared policy, and raw SQL files retain their existing
 analysis. See the [bounded helper contract](postgres-facts/low-helper-recovery.md).
-For eligible bounded selections, the prepared SQL facts also use the same
+For eligible bounded selections with `reportUnusedDisableDirectives: ignore`,
+the prepared SQL facts also use the same
 selected-file seeds and resolved import/re-export support closure described in
 the rule's [analysis contract](rules/postgres-no-offset.md#analysis); unsupported
 requests retain broad preparation.

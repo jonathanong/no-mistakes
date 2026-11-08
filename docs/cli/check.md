@@ -91,7 +91,8 @@ and [`postgres-required-predicates`](../rules/postgres-required-predicates.md#ef
 also support `low` with the bounded SQL helper subset. Unsupported shapes follow
 the shared unanalyzable policy; selected `.sql` files retain their existing
 analysis. See the [bounded helper contract](../postgres-facts/low-helper-recovery.md).
-For eligible bounded `postgres-no-offset` source selections, prepared SQL facts
+For eligible bounded `postgres-no-offset` source selections with
+`reportUnusedDisableDirectives: ignore`, prepared SQL facts
 start at files selected by the rule and follow only resolved import/re-export
 support recorded by extracted SQL facts. Unsupported or unrestricted SQL
 requests retain broad fact preparation; this does not change rule findings.
