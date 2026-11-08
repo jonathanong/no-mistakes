@@ -10,8 +10,14 @@ fn resolve_imported_call_target(
     indexes: &CallableResolutionIndexes,
 ) -> Option<ResolvedCallTarget> {
     let (callee, call, opaque_external_members, prerequisites) = call;
+    if indexes.external_namespaces && callee.matches('.').count() > 1 {
+        if let Some(target) = resolve_external_nested_member(edge_inputs, resolver, path, file, callee) {
+            opaque_external_members.borrow_mut().entry(call.offset).or_default().insert(call.callee.clone());
+            return Some(target);
+        }
+    }
     let (local, requested_export) = match callee.split_once('.') {
-        Some((local, member)) if !member.contains('.') => (local, Some(member)),
+        Some((local, member)) if indexes.external_namespaces || !member.contains('.') => (local, Some(member)),
         Some(_) => {
             let target = resolve_external_nested_member(edge_inputs, resolver, path, file, callee);
             if target.is_some() {
@@ -44,7 +50,11 @@ fn resolve_imported_call_target(
         (_, None) => binding.imported.clone(),
     };
     let direct_target = || {
-        module_export_target(file, callee, None, None).expect("callee came from an imported binding")
+        if requested_export.is_some_and(|member| member.contains('.')) {
+            ResolvedCallTarget::Unknown
+        } else {
+            module_export_target(file, callee, None, None).expect("callee came from an imported binding")
+        }
     };
     let Some(target_path) = resolver.resolve(&binding.specifier, path) else {
         return Some(direct_target());
@@ -95,7 +105,8 @@ fn resolve_imported_call_target(
         }
         ExportedCallableResolution::Value(_, _) => direct_target(),
         ExportedCallableResolution::Absent | ExportedCallableResolution::Unknown
-        | ExportedCallableResolution::Namespace(_) => {
+        | ExportedCallableResolution::Namespace(_)
+        | ExportedCallableResolution::ExternalNamespace(_) => {
             ResolvedCallTarget::Unknown
         }
     })

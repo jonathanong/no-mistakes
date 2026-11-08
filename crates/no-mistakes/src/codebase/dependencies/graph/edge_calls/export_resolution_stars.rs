@@ -17,6 +17,7 @@ fn resolve_star_export(
         let mut candidates = Vec::new();
         let mut values = Vec::new();
         let mut namespaces = Vec::new();
+        let mut external_namespaces = Vec::new();
         let mut external = Vec::new();
         let mut has_unknown_candidate = false;
         for specifier in &file.stars {
@@ -48,6 +49,7 @@ fn resolve_star_export(
                 }
                 ExportedCallableResolution::Value(path, local) => values.push((path, local)),
                 ExportedCallableResolution::Namespace(path) => namespaces.push(path),
+                ExportedCallableResolution::ExternalNamespace(module) => external_namespaces.push(module),
                 ExportedCallableResolution::ExternalModuleExport(module, name) => {
                     external.push((module, name))
                 }
@@ -63,10 +65,14 @@ fn resolve_star_export(
         external.dedup();
         namespaces.sort();
         namespaces.dedup();
+        external_namespaces.sort();
+        external_namespaces.dedup();
         if has_unknown_candidate
-            || candidates.len() + values.len() + external.len() + namespaces.len() > 1
+            || candidates.len() + values.len() + external.len() + namespaces.len() + external_namespaces.len() > 1
         {
             ExportedCallableResolution::Unknown
+        } else if let Some(module) = external_namespaces.pop() {
+            ExportedCallableResolution::ExternalNamespace(module)
         } else if let Some((module, name)) = external.pop() {
             ExportedCallableResolution::ExternalModuleExport(module, name)
         } else if let Some((path, local)) = values.pop() {

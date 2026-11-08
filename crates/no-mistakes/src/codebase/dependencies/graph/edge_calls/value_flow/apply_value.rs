@@ -76,6 +76,11 @@ pub(super) fn apply_value(
         site.typed_from.clear();
         site.returned_member_from.clear();
     }
+    if indexes.external_namespaces
+        && matches!(&value, FlowValue::Target(ResolvedCallTarget::ModuleExport { export_path, .. }) if export_path.is_empty())
+    {
+        value = FlowValue::Uncallable;
+    }
     if matches!(value, FlowValue::Promise(_) | FlowValue::Uncallable) {
         site.target = ResolvedCallTarget::Unknown;
         site.target_node = None;

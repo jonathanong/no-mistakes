@@ -4,6 +4,7 @@ impl CallableResolutionIndexes {
             files: self.files.clone(),
             namespace_roots: self.namespace_roots.clone(),
             value_imports: true,
+            external_namespaces: self.external_namespaces,
             exports: Default::default(),
             export_prerequisites: Default::default(),
         }

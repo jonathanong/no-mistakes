@@ -56,7 +56,7 @@ fn resolve_exported_callable(
                 .resolve(specifier, path)
                 .and_then(|target_path| edge_inputs.graph_files.visible_path(&target_path));
             if let Some(target_path) = visible_target {
-                if indexes.value_imports && binding.local == "*" {
+                if (indexes.value_imports || indexes.external_namespaces) && binding.local == "*" {
                     visited.record_source(facts, target_path, true);
                     ExportedCallableResolution::Namespace(target_path.to_path_buf())
                 } else {
@@ -70,6 +70,8 @@ fn resolve_exported_callable(
                         visited,
                     )
                 }
+            } else if indexes.external_namespaces && binding.local == "*" && external_module_specifier(specifier) {
+                ExportedCallableResolution::ExternalNamespace(specifier.clone())
             } else if external_module_specifier(specifier) {
                 ExportedCallableResolution::ExternalModuleExport(
                     specifier.clone(),

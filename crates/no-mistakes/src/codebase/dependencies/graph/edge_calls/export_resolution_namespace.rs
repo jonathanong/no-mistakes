@@ -8,7 +8,7 @@ fn resolve_exported_namespace_reexport_member(
     visited: &mut ExportResolutionTrace,
 ) -> ExportedCallableResolution {
     let (file, namespace, member) = export;
-    if indexes.value_imports {
+    if indexes.value_imports || indexes.external_namespaces {
         let root = resolve_exported_callable(
             edge_inputs,
             facts,
@@ -28,6 +28,9 @@ fn resolve_exported_namespace_reexport_member(
                 indexes,
                 visited,
             ),
+            ExportedCallableResolution::ExternalNamespace(specifier) => {
+                ExportedCallableResolution::ExternalModuleExport(specifier, member.to_string())
+            }
             ExportedCallableResolution::Unknown => ExportedCallableResolution::Unknown,
             _ => resolve_star_export(
                 edge_inputs,
@@ -80,7 +83,7 @@ fn resolve_exported_namespace_import(
     indexes: &CallableResolutionIndexes,
     visited: &mut ExportResolutionTrace,
 ) -> Option<ExportedCallableResolution> {
-    if !indexes.value_imports {
+    if !indexes.value_imports && !indexes.external_namespaces {
         return None;
     }
     let binding = alias.0.imported.get(alias.1).filter(|binding| {
@@ -94,6 +97,9 @@ fn resolve_exported_namespace_import(
             Some(target) => {
                 visited.record_source(facts, target, true);
                 ExportedCallableResolution::Namespace(target.to_path_buf())
+            }
+            None if indexes.external_namespaces && external_module_specifier(&binding.specifier) => {
+                ExportedCallableResolution::ExternalNamespace(binding.specifier.clone())
             }
             None => ExportedCallableResolution::Unknown,
         },

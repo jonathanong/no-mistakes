@@ -63,6 +63,14 @@ impl ValueFlowResolution<'_, '_> {
                 module_export_target(file, base, Some((target, scope)), id)
                     .expect("import binding"),
             ),
+            Some(ExportedCallableResolution::ExternalNamespace(specifier)) => {
+                FlowValue::Target(ResolvedCallTarget::ModuleExport {
+                    specifier,
+                    export_path: String::new(),
+                    repository_target: None,
+                    callable_id: None,
+                })
+            }
             Some(ExportedCallableResolution::ExternalModuleExport(specifier, export_path)) => {
                 FlowValue::Target(ResolvedCallTarget::ModuleExport {
                     specifier,
