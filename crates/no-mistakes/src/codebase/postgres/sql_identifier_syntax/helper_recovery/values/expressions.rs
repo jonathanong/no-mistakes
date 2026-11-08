@@ -52,7 +52,7 @@ impl Engine<'_> {
         match expr {
             Expr::Object(entries) => self.object_values(entries, state),
             Expr::Array(items) => self.array_values(items, state),
-            Expr::Call(name, args) => self.call(name, args, state),
+            Expr::Call(name, args, _) => self.call(name, args, state),
             Expr::Template(pieces, holes) => self.template(pieces, holes, state, false),
             Expr::Sql(pieces, holes, true) => self.template(pieces, holes, state, true),
             Expr::Append(target, argument, _) => self.append(target, argument, state),

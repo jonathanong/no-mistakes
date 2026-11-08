@@ -85,7 +85,7 @@ fn call_expression(scope: &mut Scope<'_, '_>, call: &CallExpression<'_>) -> Expr
                 .filter_map(Argument::as_expression)
                 .map(|argument| lower(scope, argument))
                 .collect();
-            Expr::Call(callee.name.to_string(), args)
+            Expr::Call(callee.name.to_string(), args, call.span.start)
         }
         _ => Expr::Opaque,
     }

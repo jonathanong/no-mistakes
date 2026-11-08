@@ -81,6 +81,7 @@ pub(super) fn recovered_site(
     caller: &Path,
     sql: &crate::codebase::postgres::RecoveredSql,
     use_: &crate::codebase::postgres::statements::SqlTransformedColumnUseFact,
+    execution: u32,
 ) -> super::super::groups::Site {
     let at = use_.expression_site;
     let (origin, _) =
@@ -106,6 +107,11 @@ pub(super) fn recovered_site(
         crate::codebase::ts_source::relative_slash_path(root, origin),
         offset,
         at,
-        None,
+        Some((
+            crate::codebase::ts_source::relative_slash_path(root, caller),
+            false,
+            execution as usize,
+        )),
+        sql.invocations.at(&sql.sql, at),
     )
 }

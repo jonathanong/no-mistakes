@@ -89,7 +89,7 @@ pub(crate) enum Expr {
     Eq(Box<Expr>, Box<Expr>, bool, bool),
     Add(Box<Expr>, Box<Expr>),
     Append(Box<Expr>, Box<Expr>, Mark),
-    Call(String, Vec<Expr>),
+    Call(String, Vec<Expr>, u32),
     Opaque,
 }
 

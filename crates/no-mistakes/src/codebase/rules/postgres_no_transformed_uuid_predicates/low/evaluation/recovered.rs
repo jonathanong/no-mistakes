@@ -64,6 +64,7 @@ fn project_alternatives(
         ..
     } = context;
     for (sql, facts) in alternatives {
+        groups.begin_projection();
         match facts {
             Ok(uses) => {
                 for use_ in uses {
@@ -77,7 +78,7 @@ fn project_alternatives(
                                 finding.line = call.line as usize;
                             }
                             groups.push(
-                                cache::recovered_site(root, caller, sql, use_),
+                                cache::recovered_site(root, caller, sql, use_, call.span.0),
                                 finding.into(),
                             );
                         }

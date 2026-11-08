@@ -117,7 +117,7 @@ pub(super) fn recover(
 fn literal(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, line: u32) -> Option<Vec<Recovered>> {
     let sql = compose::static_fragment(expr, visitor)?;
     let helper = compose::helper_provenance(expr, visitor).filter(|value| value.sql == sql);
-    let (line, positions, origins) = helper.map_or_else(
+    let (line, positions, origins, mut invocations) = helper.map_or_else(
         || {
             (
                 line,
@@ -128,9 +128,17 @@ fn literal(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, line: u32) -> Opti
                     line,
                 ),
                 source_positions::origins::expression(expr, visitor.source, &sql),
+                Default::default(),
             )
         },
-        |value| (value.line, value.positions, value.origins),
+        |value| {
+            (
+                value.line,
+                value.positions,
+                value.origins,
+                value.invocations,
+            )
+        },
     );
     // Const splicing inlines hole text, while origin walks still count a placeholder.
     // Stamp the expression when those lengths diverge so publish cannot panic.
@@ -139,9 +147,13 @@ fn literal(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, line: u32) -> Opti
     } else {
         vec![expr.span().start; sql.len()]
     };
+    if let Expression::CallExpression(call) = expr {
+        invocations.record(sql.len(), call.span.start);
+    }
     Some(vec![Recovered {
         value: ValueKind::Sql,
         origins,
+        invocations,
         sql,
         line,
         positions,

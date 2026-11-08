@@ -110,6 +110,7 @@ fn replace(
 fn absent(mut value: Recovered) -> Recovered {
     value.sql.clear();
     value.origins.clear();
+    value.invocations = Default::default();
     value.positions.clear();
     value.append_sites.clear();
     value.first_append_offset = None;

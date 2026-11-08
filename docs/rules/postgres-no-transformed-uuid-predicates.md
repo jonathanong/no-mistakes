@@ -115,6 +115,15 @@ distinguishes them. These labels stay stable when unrelated SQL inputs or verdic
 reporting are enabled.
 Single-column messages and targets keep their existing shape.
 
+Repeated evaluations of one physical expression combine their affected UUID
+columns. Repeating that helper expression twice within one executed SQL query
+produces two findings, at both efforts. Optional earlier helper calls do not
+shift the identity of later expressions. Parameterized casts such as
+`CAST(id AS varchar(36))`, `CAST(id AS character varying(36))`, and
+`id::varchar(36)` retain their distinct cast sites
+even when a helper supplies the same column to both casts. Keep the column bare
+and cast the parameter instead.
+
 The rule checks which operand contains the UUID column. Casting a parameter to
 UUID or computing a bound on the other side of a comparison to a bare UUID
 column is allowed. For example, `id >= fn_min_child_uuidv7($1)` leaves the

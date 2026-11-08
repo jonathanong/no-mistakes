@@ -1,0 +1,10 @@
+CAST(id AS numeric(36, 2))
+id::varchar(36)
+CAST(id AS varchar())
+CAST(id AS varchar(abc))
+CAST(id AS varchar(36,))
+CAST(id AS varchar(36 + 1))
+id::varchar(36)[]
+CAST(id AS varchar(36)[])
+CAST(id AS character varying(36))
+id::character varying(36)

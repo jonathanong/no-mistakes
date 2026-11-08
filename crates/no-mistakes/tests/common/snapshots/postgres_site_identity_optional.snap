@@ -1,0 +1,238 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "off": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "imported.ts",
+          "line": 4,
+          "message": "directive names disabled or out-of-scope rule `postgres-bounded-statements`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-bounded-statements -- caller exemption",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "suppressed-helper.ts",
+          "line": 2,
+          "message": "directive names disabled or out-of-scope rule `postgres-bounded-statements`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-bounded-statements -- helper exemption",
+          "target": "postgres-bounded-statements"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "off-control.ts",
+          "line": 2,
+          "message": "off-control.ts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "query('SELECT id FROM accounts OFFSET 1');",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "optional-alternatives-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "optional-alternatives.ts",
+          "line": 2,
+          "message": "optional-alternatives.ts:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of other; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "function bodySql() { return sql`SELECT a.id FROM accounts a CROSS JOIN `; }",
+          "target": "table:accounts, table:orders, table:other"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "optional-control-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "optional-control.ts",
+          "line": 2,
+          "message": "optional-control.ts:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from optional-control.ts:5)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "function statementSql() { return sql`SELECT a.id FROM accounts a `; }",
+          "target": "table:accounts, table:orders"
+        },
+        {
+          "file": "optional-control.ts",
+          "line": 4,
+          "message": "optional-control.ts:4: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from optional-control.ts:2); SELECT can return every row of other; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from optional-control.ts:7)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "table:accounts, table:other"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "optional-imported-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "optional-imported.ts",
+          "line": 4,
+          "message": "optional-imported.ts:4: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from statement-fragment.ts:2); SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from optional-imported.ts:5)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "table:accounts, table:orders"
+        },
+        {
+          "file": "optional-imported.ts",
+          "line": 4,
+          "message": "optional-imported.ts:4: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from statement-fragment.ts:2); SELECT can return every row of other; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from optional-imported.ts:7)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "table:accounts, table:other"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "optional-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "optional.ts",
+          "line": 2,
+          "message": "optional.ts:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from optional.ts:5)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "function statementSql() { return sql`SELECT a.id FROM accounts a `; }",
+          "target": "table:accounts, table:orders"
+        },
+        {
+          "file": "optional.ts",
+          "line": 4,
+          "message": "optional.ts:4: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from optional.ts:2); SELECT can return every row of other; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from optional.ts:7)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "table:accounts, table:other"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "optional-nested-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "optional-nested.ts",
+          "line": 2,
+          "message": "optional-nested.ts:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "function statementSql() { return sql`SELECT a.id FROM accounts a `; }",
+          "target": "table:accounts, table:orders"
+        },
+        {
+          "file": "optional-nested.ts",
+          "line": 2,
+          "message": "optional-nested.ts:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of other; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "function statementSql() { return sql`SELECT a.id FROM accounts a `; }",
+          "target": "table:accounts, table:other"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "optional-parameter-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "optional-parameter.ts",
+          "line": 7,
+          "message": "optional-parameter.ts:7: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from optional-parameter.ts:4); SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from optional-parameter.ts:8)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "table:accounts, table:orders"
+        },
+        {
+          "file": "optional-parameter.ts",
+          "line": 7,
+          "message": "optional-parameter.ts:7: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from optional-parameter.ts:4); SELECT can return every row of other; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from optional-parameter.ts:10)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "table:accounts, table:other"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "optional-placeholders-max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "optional-placeholders.ts",
+          "line": 4,
+          "message": "optional-placeholders.ts:4: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from optional-placeholders.ts:2); SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from optional-placeholders.ts:5)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "table:accounts, table:orders"
+        },
+        {
+          "file": "optional-placeholders.ts",
+          "line": 4,
+          "message": "optional-placeholders.ts:4: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from optional-placeholders.ts:2); SELECT can return every row of other; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from optional-placeholders.ts:7)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "table:accounts, table:other"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

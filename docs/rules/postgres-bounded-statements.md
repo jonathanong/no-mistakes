@@ -455,7 +455,8 @@ findings. Unrelated files and optional SQL verdicts do not change those labels.
 SQL alternatives from one executor statement share the union of their unbounded relations.
 Physical statement origins keep that union intact when an earlier fragment changes
 the SQL line or column. Repeated executions of one helper's statement inside an
-executor call remain separate statement occurrences. `severity: advisory` uses the
+executor call remain separate statement occurrences. Invocation identity stays stable
+when an optional earlier call disappears from an alternative. `severity: advisory` uses the
 same grouped shape and produces one non-failing advisory per statement.
 
 The finding uses the earliest remaining relation location after source attribution.
@@ -536,7 +537,7 @@ SQL and TypeScript honor `-- no-mistakes-disable-line`, `-- no-mistakes-disable-
 and `-- no-mistakes-disable-file` for `postgres-bounded-statements`. To exempt a table
 everywhere, use `allow: [{object: 'table:<name>', reason}]`.
 
-SQL recovered from an imported helper is reported in the helper's module at the helper's line. A directive in the helper's file suppresses it, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
+SQL recovered from an imported helper is reported at the executing caller; the grouped message names the helper's contributing file and line. Suppression still checks the helper's physical SQL location before grouping. A directive in the helper's file suppresses that contribution, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
 
 A line directive covering the first line of a statement suppresses every relation
 in that statement, including when its `FROM` or target is on a later line.

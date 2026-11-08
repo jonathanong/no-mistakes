@@ -70,7 +70,7 @@ fn switch_returns_every_literal_arm_unless_default_throws() {
 
     // Not proven: the name assertNever, a local before return, no default
     // (usesSwitch), past the cap, or async.
-    let Some(super::super::Stmt::Switch(_, _, Some(super::super::Expr::Call(callee, _)))) = p
+    let Some(super::super::Stmt::Switch(_, _, Some(super::super::Expr::Call(callee, _, _)))) = p
         .get("assertNeverIsNotProof")
         .and_then(|program| program.body.first())
     else {

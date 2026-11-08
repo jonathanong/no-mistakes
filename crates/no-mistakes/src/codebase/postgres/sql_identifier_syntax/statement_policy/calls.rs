@@ -57,6 +57,7 @@ pub(super) fn recovered(call: &SqlCall, proof: &Recovered) -> EmbeddedSqlCall {
             .alternatives
             .iter()
             .map(|sql| EmbeddedSqlVariant {
+                invocations: sql.invocations.clone(),
                 sql_text: sql.sql.clone(),
                 sql_source_offsets: sql.origins.clone(),
                 line: sql.line,
@@ -86,7 +87,7 @@ pub(super) fn helper_lines(
         return Vec::new();
     };
     match argument.program.body.as_slice() {
-        [Stmt::Return(Some(Expr::Call(_, _)), mark)] => vec![mark.line],
+        [Stmt::Return(Some(Expr::Call(_, _, _)), mark)] => vec![mark.line],
         _ => Vec::new(),
     }
 }

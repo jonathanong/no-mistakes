@@ -46,6 +46,7 @@ pub(crate) struct Marker {
 pub(crate) fn plain(sql: String, marker: Marker) -> RecoveredSql {
     let Marker { line, path, origin } = marker;
     RecoveredSql {
+        invocations: Default::default(),
         origins: vec![origin; sql.len()],
         sql,
         line,
@@ -128,6 +129,7 @@ fn piece(recovered: &RecoveredSql, range: &Range<usize>) -> RecoveredSql {
         .to_vec();
     origins.resize(sql.len(), 0);
     RecoveredSql {
+        invocations: recovered.invocations.slice(range.clone()),
         origins,
         sql,
         line,

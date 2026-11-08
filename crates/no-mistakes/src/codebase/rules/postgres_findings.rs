@@ -1,3 +1,4 @@
+pub(crate) mod site_identity;
 use super::RuleFinding;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
