@@ -50,7 +50,7 @@ pub(super) fn uniques(table: &SnapshotTable) -> Vec<CatalogUnique> {
 pub(super) fn indexes(indexes: &BTreeMap<String, SnapshotIndex>) -> Vec<CatalogIndexInfo> {
     indexes
         .iter()
-.map(|(name, index)| index_info(name, index))
+        .map(|(name, index)| index_info(name, index))
         .collect()
 }
 
