@@ -1,15 +1,15 @@
 use crate::codebase::dependencies::graph::{DepGraph, NodeId};
 use crate::codebase::ts_source::relative_slash_path;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-pub(super) fn for_export(
+pub(super) fn for_sites(
     root: &Path,
     graph: &DepGraph,
     unknown: &BTreeSet<(PathBuf, NodeId)>,
-    name: &str,
-) -> Option<(PathBuf, usize, String)> {
+) -> Vec<(PathBuf, usize, String)> {
     let mut evidence = BTreeSet::new();
+    let mut reasons = BTreeMap::<_, BTreeSet<_>>::new();
     for (importer, target) in unknown {
         let path = relative_slash_path(root, importer);
         let sites = graph.unknown_selector_sites(importer, target);
@@ -26,30 +26,31 @@ pub(super) fn for_export(
             ));
         }
         for site in sites {
-            evidence.insert((
-                importer.clone(),
-                site.line,
-                format!(
-                    "{path}:{} `{}` ({})",
-                    site.line, site.specifier, site.reason,
-                ),
-            ));
+            reasons
+                .entry((importer.clone(), site.line, site.specifier.clone()))
+                .or_default()
+                .insert(site.reason);
         }
     }
-    // Callers have at least one unknown relationship. Group all its source
-    // evidence so one export never expands into one advisory per importer.
-    let (file, line, _) = evidence.first()?;
-    let (file, line) = (file.clone(), *line);
-    let detail = evidence
+    for ((file, line, specifier), reasons) in reasons {
+        let path = relative_slash_path(root, &file);
+        let reasons = reasons.into_iter().collect::<Vec<_>>().join(", ");
+        evidence.insert((
+            file,
+            line,
+            format!("{path}:{line} `{specifier}` ({reasons})"),
+        ));
+    }
+    evidence
         .into_iter()
-        .map(|(_, _, detail)| detail)
-        .collect::<Vec<_>>()
-        .join(", ");
-    Some((
-        file,
-        line,
-        format!("symbol consumers of `{name}` include an unknown import selector: {detail}"),
-    ))
+        .map(|(file, line, detail)| {
+            (
+                file,
+                line,
+                format!("production export consumers include an unknown import selector: {detail}"),
+            )
+        })
+        .collect()
 }
 
 /// Type-only importers of an export whose value-or-type kind is unknown.

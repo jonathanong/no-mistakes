@@ -115,7 +115,7 @@ impl AnalysisSession {
         Arc::clone(cell.get_or_init(|| {
             let sources = self.existing_sources_for(root).unwrap_or_else(|| self.supplemental_sources.clone());
             let facts = crate::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session(
-                self, &[path.to_path_buf()], TsFactPlan { imports: true, function_calls: true, ..Default::default() },
+                self, &[path.to_path_buf()], TsFactPlan { imports: true, function_calls: true, symbols: true, ..Default::default() },
                 &TsFactContext { root: root.to_path_buf(), ..Default::default() }, &sources,
             );
             Arc::new(facts.get(path).cloned().unwrap_or_default())

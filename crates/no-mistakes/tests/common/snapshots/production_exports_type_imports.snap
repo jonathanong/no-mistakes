@@ -25,7 +25,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "other/whole-module.mts",
           "line": 2,
-          "message": "cannot analyze production export importers: symbol consumers of `wholeModuleValue` include an unknown import selector: other/whole-module.mts:2 `../src/whole-module.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: other/whole-module.mts:2 `../src/whole-module.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export type Whole = typeof import(\"../src/whole-module.mjs\");",
           "target": "unanalyzable"
@@ -33,7 +33,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "other/whole-namespace.mts",
           "line": 2,
-          "message": "cannot analyze production export importers: symbol consumers of `WholeNamespaceType` include an unknown import selector: other/whole-namespace.mts:2 `../src/whole-namespace.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: other/whole-namespace.mts:2 `../src/whole-namespace.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import type * as Whole from \"../src/whole-namespace.mjs\";",
           "target": "unanalyzable"

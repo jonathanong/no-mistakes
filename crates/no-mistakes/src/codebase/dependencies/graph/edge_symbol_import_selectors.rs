@@ -6,7 +6,10 @@ fn collect_symbol_import_selectors(
     facts: &dyn TsFactLookup,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> (Vec<Edge>, SelectorImportSites) {
+    let sources = graph_edge_sources(session, input);
+    let external = ExternalStarProjection::new(input, facts, resolver, workspace, session, &sources);
     let export_edges: FxHashMap<_, _> = input
         .graph_files
         .indexable()
@@ -26,6 +29,7 @@ fn collect_symbol_import_selectors(
             };
             let mut edges = Vec::new();
             collect_export_edges(inputs, &mut Vec::new(), &mut HashMap::new(), &mut edges);
+            external.extend_edges(path, &mut edges);
             Some((path.clone(), edges))
         })
         .collect();
@@ -72,6 +76,9 @@ fn collect_symbol_import_selectors(
         edges.extend(file_edges);
         sites.extend(file_sites);
     }
+    edges.extend(export_edges.into_values().flatten().filter(|(_, _, kind)| {
+        matches!(kind, EdgeKind::SymbolReexport | EdgeKind::SymbolTypeReexport)
+    }));
     (edges, sites)
 }
 

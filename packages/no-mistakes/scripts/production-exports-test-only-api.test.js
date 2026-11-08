@@ -139,3 +139,45 @@ test(
     }
   },
 );
+
+test(
+  "platform consumption and namespace sites preserve async CLI parity",
+  { skip: !addon?.endsWith(".node") },
+  async () => {
+    const stable = ({ jobsPoolWarning: _warning, ...report }) => report;
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const cli = process.env.NO_MISTAKES_TEST_CLI_PATH || join(dirname(addon), "no-mistakes");
+    for (const [scenario, config, targets, count] of [
+      ["platform-consumed", "enabled.yml", ["stillTestOnly", "Worker"], 1],
+      ["namespace-keyof-helper", ".no-mistakes.yml", ["onlyTests"], 2],
+    ]) {
+      const root = join(
+        __dirname,
+        "../../../test-cases/rules/production-exports-only-used-by-tests/fixture",
+        scenario,
+      );
+      const options = { root, config: join(root, config), jobs: 1 };
+      const pending = cjs.check(options);
+      assert.ok(pending instanceof Promise);
+      const report = stable(await pending);
+      assert.deepEqual(
+        report.rules.map(({ target }) => target),
+        targets,
+      );
+      assert.equal(report.advisories.length, count);
+      assert.deepEqual(stable(await esm.check(options)), report);
+      for (const api of [cjs, esm]) {
+        const batch = await api.analyzeProject({ ...options, reports: [{ type: "check" }] });
+        assert.deepEqual(stable(batch.reports[0].result), report);
+      }
+      const child = spawnSync(
+        cli,
+        ["check", "--root", root, "--config", options.config, "--jobs", "1", "--format", "json"],
+        { encoding: "utf8" },
+      );
+      assert.equal(child.status, 1, child.stderr);
+      assert.deepEqual(stable(JSON.parse(child.stdout)), report);
+    }
+  },
+);

@@ -10,6 +10,8 @@ use std::sync::{Arc, OnceLock};
 mod ambient;
 #[path = "declarations/package.rs"]
 mod package;
+pub(crate) use package::lookup_context as package_import_context;
+pub(crate) use package::resolve_source as resolve_package_export_source;
 #[path = "declarations/type_entries.rs"]
 mod type_entries;
 

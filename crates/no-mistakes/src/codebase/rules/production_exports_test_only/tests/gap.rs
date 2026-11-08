@@ -267,20 +267,17 @@ fn manual_unknown_edges_without_source_evidence_report_the_missing_provenance() 
         path("consumer.mts"),
         NodeId::file(path("source.mts")),
     )]);
-    let (file, line, reason) =
-        super::super::selector_advisories::for_export(root, &graph, &unknown, "value").unwrap();
-    assert_eq!(file, path("consumer.mts"));
-    assert_eq!(line, 1);
+    let sites = super::super::selector_advisories::for_sites(root, &graph, &unknown);
+    assert_eq!(sites.len(), 1);
+    let (file, line, reason) = &sites[0];
+    assert_eq!(file, &path("consumer.mts"));
+    assert_eq!(*line, 1);
     assert!(reason.contains("consumer.mts"));
     assert!(reason.contains("missing prepared selector provenance"));
     assert!(reason.contains("import line, module specifier, and selector reason"));
     assert!(reason.contains("rebuild analysis with symbol import selector facts"));
     assert!(reason.contains("replace the import/re-export with explicit names"));
-    assert!(super::super::selector_advisories::for_export(
-        root,
-        &graph,
-        &Default::default(),
-        "value"
-    )
-    .is_none());
+    assert!(
+        super::super::selector_advisories::for_sites(root, &graph, &Default::default()).is_empty()
+    );
 }

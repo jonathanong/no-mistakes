@@ -9,7 +9,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "other/candidate.mts",
           "line": 2,
-          "message": "cannot analyze production export importers: symbol consumers of `uncertainValue` include an unknown import selector: other/candidate.mts:2 `../src/candidate.mjs` (namespace selector), other/z-candidate.mts:2 `../src/candidate.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: other/candidate.mts:2 `../src/candidate.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as values from \"../src/candidate.mjs\";",
           "target": "unanalyzable"
@@ -17,7 +17,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "other/pair.mts",
           "line": 2,
-          "message": "cannot analyze production export importers: symbol consumers of `firstValue` include an unknown import selector: other/pair.mts:2 `../src/first.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: other/pair.mts:2 `../src/first.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as first from \"../src/first.mjs\";",
           "target": "unanalyzable"
@@ -25,9 +25,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "other/pair.mts",
           "line": 4,
-          "message": "cannot analyze production export importers: symbol consumers of `secondValue` include an unknown import selector: other/pair.mts:4 `../src/second.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: other/pair.mts:4 `../src/second.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as second from \"../src/second.mjs\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "other/z-candidate.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: other/z-candidate.mts:2 `../src/candidate.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as values from \"../src/candidate.mjs\";",
           "target": "unanalyzable"
         }
       ],

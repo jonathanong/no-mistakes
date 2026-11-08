@@ -64,7 +64,9 @@ pub(crate) fn check_with_graph_and_session(
                         {
                             continue;
                         }
-                        if local_uses.as_ref().is_some_and(|uses| uses.contains(name)) {
+                        if options.platform_consumed(file, name)
+                            || local_uses.as_ref().is_some_and(|uses| uses.contains(name))
+                        {
                             continue;
                         }
                         if entries.exempts(file, nextjs::consumed_export(file, &nextjs_roots, name))
@@ -81,12 +83,9 @@ pub(crate) fn check_with_graph_and_session(
                             continue;
                         }
                         if !consumers.unknown.is_empty() {
-                            if let Some((importer, line, reason)) = selector_advisories::for_export(
-                                &root,
-                                graph,
-                                &consumers.unknown,
-                                &export.name,
-                            ) {
+                            for (importer, line, reason) in
+                                selector_advisories::for_sites(&root, graph, &consumers.unknown)
+                            {
                                 chunk.unanalyzable(
                                     policy,
                                     uncertain(&root, application, &importer, line, &reason),

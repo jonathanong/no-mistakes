@@ -1,0 +1,17 @@
+import { Queue as Cycle } from './cycle-a.mts';
+import { Queue as Conditional } from './conditional.mts';
+import { Queue as Relay } from './relay.mts';
+import { Queue as Distinct } from './distinct.mts';
+import { Queue as Override } from './override.mts';
+import { Queue as Same } from './same.mts';
+import type { Queue as Typed } from './types.mts';
+console.log(Cycle, Conditional, Relay, Distinct, Override, Same);
+export type Result = Typed;
+import { Queue as Alias } from './alias.mts';
+console.log(Alias);
+import { Queue as RuntimeNested } from './runtime-nested.mts';
+console.log(RuntimeNested);
+import { Queue as Malformed } from './malformed.mts';
+import { Queue as MissingTarget } from './missing-target.mts';
+import { Queue as KnownAmbiguous } from './known-ambiguous.mts';
+console.log(Malformed, MissingTarget, KnownAmbiguous);

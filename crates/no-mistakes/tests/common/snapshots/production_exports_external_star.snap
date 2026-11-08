@@ -1,0 +1,180 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "enabled": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/controls.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: unresolved symbol `Queue` from `./blocked.mts` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import { Queue as Blocked } from './blocked.mts';",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/controls.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: unresolved symbol `Queue` from `./missing.mts` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import { Queue as Missing } from './missing.mts';",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/controls.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: unresolved symbol `Queue` from `./mixed.mts` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import { Queue as Ambiguous } from './mixed.mts';",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/controls.mts",
+          "line": 4,
+          "message": "cannot analyze production export importers: unresolved symbol `default` from `./adapter.mts` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import Default from './adapter.mts';",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/controls.mts",
+          "line": 5,
+          "message": "cannot analyze production export importers: unresolved symbol `absent` from `./adapter.mts` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import { absent } from './adapter.mts';",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/controls.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: unresolved symbol `Queue` from `./no-map.mts` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import { Queue as NoMap } from './no-map.mts';",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/controls.mts",
+          "line": 7,
+          "message": "cannot analyze production export importers: unresolved symbol `Queue` from `./unresolved-member.mts` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import { Queue as Unresolved } from './unresolved-member.mts';",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/owned.mts",
+          "line": 1,
+          "message": "production export `testOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const testOnly = 1;",
+          "target": "testOnly"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "uncertain_controls": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/alias.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: unresolved module selector `@blocked/runtime` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export * from '@blocked/runtime';",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: unresolved symbol `Queue` from `./cycle-a.mts` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import { Queue as Cycle } from './cycle-a.mts';",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 10,
+          "message": "cannot analyze production export importers: unresolved symbol `Queue` from `./alias.mts` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import { Queue as Alias } from './alias.mts';",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 14,
+          "message": "cannot analyze production export importers: unresolved symbol `Queue` from `./malformed.mts` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import { Queue as Malformed } from './malformed.mts';",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 15,
+          "message": "cannot analyze production export importers: unresolved symbol `Queue` from `./missing-target.mts` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import { Queue as MissingTarget } from './missing-target.mts';",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 16,
+          "message": "cannot analyze production export importers: unresolved symbol `Queue` from `./known-ambiguous.mts` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import { Queue as KnownAmbiguous } from './known-ambiguous.mts';",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: unresolved symbol `Queue` from `./conditional.mts` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import { Queue as Conditional } from './conditional.mts';",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: unresolved symbol `Queue` from `./relay.mts` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import { Queue as Relay } from './relay.mts';",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/consumer.mts",
+          "line": 4,
+          "message": "cannot analyze production export importers: unresolved symbol `Queue` from `./distinct.mts` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import { Queue as Distinct } from './distinct.mts';",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

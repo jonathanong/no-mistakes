@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 mod class_extends;
 mod gap;
+mod namespace_keyof;
 mod script_entry;
 mod selector_shape;
 

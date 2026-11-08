@@ -1,0 +1,12 @@
+rules:
+  - rule: production-exports-only-used-by-tests
+    scope: repository
+    options:
+      productionRoots: [src]
+      testGlobs: ["tests/**"]
+      unanalyzable: advise
+      platformConsumedExports:
+        - file: src/./worker.mts
+          exports: [Worker, default]
+        - file: src/declared.mts
+          exports: [Ready, default]

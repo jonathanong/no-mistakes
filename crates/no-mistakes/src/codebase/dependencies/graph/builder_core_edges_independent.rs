@@ -107,6 +107,7 @@ fn collect_independent_core_edges(
                                                                 facts,
                                                                 resolver,
                                                                 workspace,
+                                                                session,
                                                             )
                                                         },
                                                     )

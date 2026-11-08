@@ -124,9 +124,14 @@ fn escaping_namespaces_keep_every_export_uncertain() {
         );
         assert_eq!(
             report["advisories"].as_array().unwrap().len(),
-            2,
+            1,
             "{case}: {report}"
         );
+        if matches!(*case, "default-export" | "reexport") {
+            let message = report["advisories"][0]["message"].as_str().unwrap();
+            assert!(message.contains("namespace re-export selector"), "{report}");
+            assert!(message.contains("namespace selector"), "{report}");
+        }
     }
     let report = report("missing");
     assert!(report["advisories"]
@@ -159,4 +164,22 @@ fn static_namespaces_check_json_snapshot() {
         "production_exports_static_namespaces_off",
         &off,
     );
+}
+
+#[test]
+fn namespace_keyof_helper_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "production-exports-only-used-by-tests",
+        "fixture",
+        "namespace-keyof-helper",
+    );
+    let cases: Vec<_> = [
+        ("advise", ".no-mistakes.yml"),
+        ("report", "report.yml"),
+        ("ignore", "ignore.yml"),
+    ]
+    .into_iter()
+    .map(|(case, config)| (case, root.clone(), root.join(config)))
+    .collect();
+    crate::check_json_snapshot::assert_saved_fixture("production_exports_namespace_keyof", &cases);
 }

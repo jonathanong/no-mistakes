@@ -90,6 +90,8 @@ pub(crate) use edge_route_imports::*;
 include!("edge_symbols_types.rs");
 include!("edge_symbols.rs");
 include!("edge_symbol_import_selectors.rs");
+include!("edge_symbol_import_selectors_external.rs");
+include!("edge_symbol_import_selectors_external_demand.rs");
 include!("edge_symbol_import_selectors_assets.rs");
 include!("edge_symbol_import_selectors_file.rs");
 include!("edge_symbol_import_selectors_namespace.rs");

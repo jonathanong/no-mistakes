@@ -3,6 +3,7 @@ fn collect_symbol_edges_for_core(
     facts: Option<&dyn TsFactLookup>,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> (Vec<Edge>, SelectorImportSites) {
     let mut selectors = if edge_inputs.plan.symbol_import_selectors {
         collect_symbol_import_selectors(
@@ -10,6 +11,7 @@ fn collect_symbol_edges_for_core(
             facts.expect("symbol selector plan requires facts"),
             resolver,
             workspace,
+            session,
         )
     } else {
         (Vec::new(), fx_map())

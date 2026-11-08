@@ -103,7 +103,7 @@ fn dynamic_selectors_prove_members_and_preserve_escapes() {
             );
             assert_eq!(
                 report["advisories"].as_array().unwrap().len(),
-                3,
+                1,
                 "{case}: {report}"
             );
         } else {
