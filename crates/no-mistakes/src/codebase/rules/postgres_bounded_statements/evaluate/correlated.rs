@@ -1,7 +1,9 @@
 use super::super::view_bounds::ViewBounds;
 use super::{lateral, qualified, Evaluation};
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
-use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlBoundQuery};
+use crate::codebase::postgres::statements::{
+    SqlBoundItem, SqlBoundItemKind, SqlBoundPin, SqlBoundQuery, SqlPinSource, SqlQualifiedRead,
+};
 use crate::codebase::postgres::SchemaCatalog;
 use sqlparser::ast::Expr;
 use std::borrow::Cow;
@@ -17,16 +19,35 @@ pub(super) fn nested(
         return None;
     };
     let projected = if lateral::dependencies(item, preceding, catalog).is_some() {
-        project(inner, item, catalog, views)
+        project(inner, &item.lateral_qualified_reads, catalog, views)
     } else {
         Cow::Borrowed(inner)
     };
     Some(super::evaluate(&projected, catalog, views, precise_columns))
 }
 
+pub(super) fn pin_query(
+    inner: &SqlBoundQuery,
+    pin: &SqlBoundPin,
+    outer: &[SqlBoundItem],
+    catalog: &SchemaCatalog,
+    views: &ViewBounds,
+    precise_columns: bool,
+) -> Evaluation {
+    let projected = if !pin.qualified_reads.is_empty()
+        && !matches!(pin.source, SqlPinSource::ReadQuery(_))
+        && lateral::read_dependencies(&pin.reads, &pin.qualified_reads, outer, catalog).is_some()
+    {
+        project(inner, &pin.qualified_reads, catalog, views)
+    } else {
+        Cow::Borrowed(inner)
+    };
+    super::evaluate(&projected, catalog, views, precise_columns)
+}
+
 fn project<'a>(
     inner: &'a SqlBoundQuery,
-    parent: &SqlBoundItem,
+    outer_reads: &[SqlQualifiedRead],
     catalog: &SchemaCatalog,
     views: &ViewBounds,
 ) -> Cow<'a, SqlBoundQuery> {
@@ -66,7 +87,7 @@ fn project<'a>(
                 continue;
             }
             let allowed = |read: &crate::codebase::postgres::statements::SqlQualifiedRead| {
-                parent.lateral_qualified_reads.iter().any(|outer| {
+                outer_reads.iter().any(|outer| {
                     outer == read || (read.scopes.is_empty() && outer.qualifier == read.qualifier)
                 }) && qualified::reads_outer(std::slice::from_ref(read), catalog)
             };

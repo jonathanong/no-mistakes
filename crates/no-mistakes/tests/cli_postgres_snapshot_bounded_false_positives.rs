@@ -64,3 +64,33 @@ fn postgres_bounded_statements_issue_3100_snapshot() {
         )],
     );
 }
+
+#[test]
+fn issue_3116_recursive_check_json_snapshot() {
+    let root = repo_rel("test-cases/rules/postgres-bounded-statements/issue-3116/fixture");
+    assert_saved_fixture(
+        "postgres_bounded_issue_3116_recursive",
+        &[("recursive", root.clone(), root.join("recursive.yml"))],
+    );
+}
+
+#[test]
+fn issue_3116_correlated_check_json_snapshot() {
+    let root = repo_rel("test-cases/rules/postgres-bounded-statements/issue-3116/fixture");
+    assert_saved_fixture(
+        "postgres_bounded_issue_3116_correlated",
+        &[
+            ("correlated", root.clone(), root.join("correlated.yml")),
+            ("embedded", root.clone(), root.join("embedded.yml")),
+        ],
+    );
+}
+
+#[test]
+fn issue_3116_off_check_json_snapshot() {
+    let root = repo_rel("test-cases/rules/postgres-bounded-statements/issue-3116/fixture");
+    assert_saved_fixture(
+        "postgres_bounded_issue_3116_off",
+        &[("off", root.clone(), root.join("off.yml"))],
+    );
+}
