@@ -280,7 +280,7 @@ module also supplies this proof when every matching project supplies an owned
 write. The existing prepared project catalog supplies setup ownership; configs
 are not parsed again. Only unconditional module-level writes in setup files or their
 static imports qualify. `globalSetup`, unknown setup paths, imported hooks,
-unexecuted functions, conditional or dynamic imports, and import cycles that
+mocked setup modules, unexecuted functions, conditional or dynamic imports, and import cycles that
 can reach the caller before the write retain the advisory. A write after an
 earlier call in the setup file does not cover that call. An env value without a stub
 or any write naming a repository path also retains the advisory.

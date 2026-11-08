@@ -170,6 +170,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "mocked-setup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "parameter": {
     "exitCode": 0,
     "report": {
@@ -255,6 +267,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "type-only-setup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "typed-mocked-setup": {
     "exitCode": 0,
     "report": {
       "advisories": [],

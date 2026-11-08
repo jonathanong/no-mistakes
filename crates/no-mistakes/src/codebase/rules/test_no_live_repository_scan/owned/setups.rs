@@ -1,4 +1,4 @@
-use super::imports::ImportedWrites;
+use super::{consumers::Consumed, imports::ImportedWrites};
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::rules::PreparedVitestProjectCatalog;
 use crate::codebase::test_discovery::ProjectTestFilter;
@@ -26,6 +26,7 @@ impl ConfiguredSetups {
         name: &str,
         facts: &dyn TsFactLookup,
         imports: &ImportedWrites<'_>,
+        consumed: &Consumed,
     ) -> bool {
         let relative = crate::codebase::ts_source::relative_slash_path(&self.root, file);
         let mut matched = false;
@@ -34,7 +35,7 @@ impl ConfiguredSetups {
                 matched = true;
                 if !setups
                     .iter()
-                    .any(|setup| imports.module_owns_before(setup, file, name, facts))
+                    .any(|setup| imports.module_owns_before(setup, file, name, facts, consumed))
                 {
                     return false;
                 }

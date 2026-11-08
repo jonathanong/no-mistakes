@@ -1,4 +1,4 @@
-use super::path_provenance;
+use super::{consumers::Consumed, path_provenance};
 use crate::codebase::dependencies::extract::ImportKind;
 use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId, TsFactLookup};
 use crate::codebase::ts_source::module_facts::arguments::{PathAnchor, WriteScope};
@@ -26,11 +26,20 @@ impl<'g> ImportedWrites<'g> {
         }
     }
 
-    pub(super) fn owns(&self, file: &Path, name: &str, facts: &dyn TsFactLookup) -> bool {
+    pub(super) fn owns(
+        &self,
+        file: &Path,
+        name: &str,
+        facts: &dyn TsFactLookup,
+        consumed: &Consumed,
+    ) -> bool {
+        if consumed.unknown() || consumed.contains(file) {
+            return false;
+        }
         let mut summaries = self.summaries.borrow_mut();
         let summary = summaries
             .entry(file.to_path_buf())
-            .or_insert_with(|| self.collect(file, facts));
+            .or_insert_with(|| self.collect(file, facts, consumed));
         !summary.cycle && summary.owned.contains(name)
     }
 
@@ -40,11 +49,15 @@ impl<'g> ImportedWrites<'g> {
         caller: &Path,
         name: &str,
         facts: &dyn TsFactLookup,
+        consumed: &Consumed,
     ) -> bool {
+        if consumed.unknown() || consumed.contains(module) {
+            return false;
+        }
         let mut summaries = self.summaries.borrow_mut();
         let summary = summaries
             .entry(module.to_path_buf())
-            .or_insert_with(|| self.collect(module, facts));
+            .or_insert_with(|| self.collect(module, facts, consumed));
         module != caller
             && !summary.cycle
             && !summary.imports.contains(&NodeId::file(caller))
@@ -52,7 +65,7 @@ impl<'g> ImportedWrites<'g> {
                 || program_writes(module, facts).any(|write| write == name))
     }
 
-    fn collect(&self, file: &Path, facts: &dyn TsFactLookup) -> Summary {
+    fn collect(&self, file: &Path, facts: &dyn TsFactLookup, consumed: &Consumed) -> Summary {
         let root = NodeId::file(file);
         let mut pending = vec![root.clone()];
         let mut seen = FxHashSet::default();
@@ -71,6 +84,9 @@ impl<'g> ImportedWrites<'g> {
                 if !(*kind == EdgeKind::Import
                     || (*kind == EdgeKind::WorkspaceImport && eager_workspace))
                 {
+                    continue;
+                }
+                if target.as_file().is_some_and(|file| consumed.contains(file)) {
                     continue;
                 }
                 if *target == root {

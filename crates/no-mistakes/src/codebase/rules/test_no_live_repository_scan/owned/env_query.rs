@@ -22,13 +22,13 @@ impl Owners<'_> {
                     .and_then(path_provenance)
                     .is_some_and(|provenance| {
                         env::dominated(provenance, name, entry.offset)
-                            || self.imported.owns(&entry.file, name, facts)
+                            || self.imported.owns(&entry.file, name, facts, &self.consumed)
                             || self
                                 .setups
                                 .get_or_init(|| {
                                     super::setups::ConfiguredSetups::new(self.root, self.catalog)
                                 })
-                                .owns(&entry.file, name, facts, &self.imported)
+                                .owns(&entry.file, name, facts, &self.imported, &self.consumed)
                     })
             })
     }

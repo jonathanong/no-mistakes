@@ -30,6 +30,8 @@ const CASES: &[(&str, usize, usize)] = &[
     ("type-only-setup", 0, 1),
     ("dynamic-setup", 0, 1),
     ("cyclic-setup", 0, 1),
+    ("mocked-setup", 0, 1),
+    ("typed-mocked-setup", 0, 1),
 ];
 
 fn cases(config: &str) -> Vec<(&'static str, PathBuf, PathBuf)> {
