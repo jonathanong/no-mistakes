@@ -205,11 +205,12 @@ also stays unresolved because it names no member.
 These forms look like unresolved or dynamic importers but cannot reach a JS/TS
 export, so they add no advisory. Everything outside the exact shapes below
 keeps its advisory, and each shape has a saved accepted and near-miss fixture
-under `test-cases/rules/production-exports-only-used-by-tests/fixture/importer-gaps`.
+under `test-cases/rules/production-exports-only-used-by-tests/fixture/importer-gaps`
+or the `precision` cases in the same fixture directory.
 
 | Shape | Treated as |
 | --- | --- |
-| `declare module "*.css" { ... }` or `declare module "*.svg";` at the top level of a file | An ambient wildcard declaration: no runtime export and no importer, provided its body has no `import`, `export ... from`, `export *`, `import("...")` type or `import x = require(...)`. A body with any of those can name a production export and stays unsupported, as do a named module (`declare module "pkg"`), `declare namespace`, and a declaration without a `*` in its name. |
+| Declaration-only ambient modules (wildcard or named), namespaces, and type-only augmentations | No runtime importer, provided the declaration has no `import`, `export ... from`, `export *`, `import("...")` type or `import x = require(...)`. A body with any of those can name a production export and retains its analysis requirements. Runtime namespaces remain uncertain. See [Overloads and ambient declarations](#overloads-and-ambient-declarations). |
 | `import clip from "./clip.wav"`, also `.png`, `.svg`, `.css`, `.vue`, `.svelte` or any other file that is not JS/TS, when the relative `./` or `../` specifier names a file that exists on disk | An asset import. The only code test is the JS/TS extension list, so a `.vue` or `.svelte` file counts as an asset. This holds even when file discovery skipped the directory (`build/`, `dist/`). Only relative specifiers are checked: a tsconfig-alias import (`@assets/clip.wav`) of a file in a skipped directory keeps its advisory. A missing file, a directory, a query suffix (`./clip.wav?raw`) and an existing JS/TS file stay unanalyzable. |
 | `Pick<typeof import("./mod"), "a">` or `Pick<typeof import("./mod"), "a" \| "b">` with the global `Pick` | A type-only reference to exactly `a` and `b`, which follows [Type-only references](#type-only-references). A key that is not a string literal, a union containing one, `Omit`, a local `Pick`, and a bare `typeof import("./mod")` stay whole-module uses. |
 | `importOriginal<typeof import("./mod")>()` or `x as typeof import("./mod")` inside the factory of `vi.mock("./mod", factory)` with `vi` imported from `vitest` | An erased type assertion that selects nothing. The `importOriginal` call must use the factory's own first parameter, and the asserted module must be the mocked module. The factory's runtime handling is unchanged. |
@@ -321,6 +322,44 @@ export default { ready: true };
 
 The same file with no bundler script, imported only by a configured test, is
 reported.
+
+## Overloads and ambient declarations
+
+Named and default-exported TypeScript overload signatures and their implementation
+describe one binding.
+For example, this export produces one finding when only configured tests call it,
+and none when production code imports and calls it:
+
+```typescript
+export function choose(value: string): string;
+export function choose(value: number): number;
+export function choose(value: unknown) { return value; }
+```
+
+Remove the export or move the test-only implementation into a configured helper
+root. Function/namespace merges remain uncertain rather than being treated as
+ordinary overloads.
+
+Declaration-only ambient modules and namespaces, ambient `export =` assignments,
+and type-only module augmentations do not create runtime exports or importers.
+The rule skips their binding-form uncertainty in declaration files and ambient
+blocks, including augmentations in runtime source files:
+
+```typescript
+declare module "package" { export function run(): string; }
+declare module "legacy" { function run(): string; export = run; }
+declare module "./context.mjs" { interface Context { extra: string } }
+```
+
+Imports, re-exports, import-equals declarations, and `import()` type references
+inside these blocks retain their own analysis requirements. Runtime namespaces,
+function/namespace merges, and runtime `export =` remain uncertain. These
+exceptions affect only this rule; public TypeScript module-facts diagnostics and
+checks with the rule disabled retain their existing output.
+
+A computed runtime `import(target)` emits one uncertainty diagnostic per site,
+with its source column, including separate sites on the same line. Replace it
+with a literal named import to make the consumer statically analyzable.
 
 ## Incomplete analysis
 

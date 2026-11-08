@@ -49,6 +49,7 @@ pub(crate) fn check_with_graph_and_session(
                     let local_uses = options
                         .ignore_exports_used_in_file
                         .then(|| used_in_file::exports(ts));
+                    let mut functions = std::collections::BTreeSet::new();
                     for export in &symbols.exports {
                         if forwarded(symbols, export) {
                             continue;
@@ -58,6 +59,11 @@ pub(crate) fn check_with_graph_and_session(
                         } else {
                             &export.name
                         };
+                        if matches!(export.kind, ExportKind::Function | ExportKind::Default)
+                            && !functions.insert(name)
+                        {
+                            continue;
+                        }
                         if local_uses.as_ref().is_some_and(|uses| uses.contains(name)) {
                             continue;
                         }

@@ -23,7 +23,25 @@ pub(super) fn push_binding_gaps(
             continue;
         }
         let line = span.map_or(1, |span| line_at(span.start));
-        incomplete.push((file.to_path_buf(), line, diagnostic.message.clone()));
+        let message = if diagnostic.message == "Non-literal dynamic import specifier" {
+            let column = span
+                .and_then(|span| {
+                    ts.source.as_deref().map(|source| {
+                        source[..span.start as usize]
+                            .rsplit('\n')
+                            .next()
+                            .unwrap_or("")
+                            .chars()
+                            .count()
+                            + 1
+                    })
+                })
+                .unwrap_or(1);
+            format!("Non-literal dynamic import specifier at column {column}; use a literal named import")
+        } else {
+            diagnostic.message.clone()
+        };
+        incomplete.push((file.to_path_buf(), line, message));
     }
     for (start, message) in &bindings.importer_unsafe {
         incomplete.push((file.to_path_buf(), line_at(*start), (*message).to_owned()));
