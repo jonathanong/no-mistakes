@@ -1,0 +1,15 @@
+version: 2
+effort: low
+reportUnusedDisableDirectives: report
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    include: ['*.mts']
+    options:
+      importSpecifier: '@example/db'
+      schemaCatalogPath: schema.json
+      partitionKeys: require
+      unanalyzableSql: ignore
+      relations:
+        - table: topic_posts
+          requireColumns: [account_id]

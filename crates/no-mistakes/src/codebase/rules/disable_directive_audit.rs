@@ -2,6 +2,7 @@
 use super::suppression::{SuppressionDirective, SuppressionDirectiveKind};
 use super::{RuleFinding, SuppressedFinding};
 mod consumed;
+mod postgres;
 use crate::codebase::ts_source::{
     audit_directives_for_path, relative_slash_path, DisableDirective, SourceStore,
 };

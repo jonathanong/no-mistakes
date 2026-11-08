@@ -351,3 +351,12 @@ justifies transforming a key column.
 that derive from UUID primary keys. This rule checks transformations of
 catalog-resolved UUID columns directly in predicates, without predicting the
 chosen query plan.
+
+### Stale SQL suppressions
+
+Aggregate `check` audits `no-mistakes-disable-next-line` comments inside
+statically recovered executor SQL, as well as native SQL and host comments.
+When the statement becomes accepted, remove its stale directive; otherwise
+`unused-disable-directive` identifies the physical comment line. A directive
+that still suppresses a finding remains used. Unexecuted SQL examples are not
+executor SQL. See [suppression hygiene](../configuration/suppressions.md).

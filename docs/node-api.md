@@ -117,6 +117,11 @@ no-mistakes disable comments using the selected configuration's
 IDs have distinct messages. `includeSuppressed` controls only the optional
 ledger of hidden findings. See [suppression hygiene](configuration/suppressions.md).
 
+Suppression hygiene in `check()` and `analyzeProject()` check reports includes
+stale next-line directives inside statically recovered PostgreSQL executor SQL.
+It follows `reportUnusedDisableDirectives` and uses the same physical comment
+locations as CLI `check`; existing report types and async entrypoints apply.
+
 Both APIs also honor repository `reportUnusedAllowEntries` for proven stale
 configured exceptions: `advise` (default) returns `unused-allow-entry` in
 `CheckReport.advisories`, `report` returns the same diagnostic in

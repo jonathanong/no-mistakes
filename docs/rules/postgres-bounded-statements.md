@@ -555,3 +555,12 @@ Stale allow reporting retains this rule's established diagnostic messages and
 severity for checked inputs. Entries outside the checked scope stay silent;
 uncertain or partial selector coverage cannot prove staleness. See
 [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
+
+### Stale SQL suppressions
+
+Aggregate `check` audits `no-mistakes-disable-next-line` comments inside
+statically recovered executor SQL, as well as native SQL and host comments.
+When the statement becomes accepted, remove its stale directive; otherwise
+`unused-disable-directive` identifies the physical comment line. A directive
+that still suppresses a finding remains used. Unexecuted SQL examples are not
+executor SQL. See [suppression hygiene](../configuration/suppressions.md).

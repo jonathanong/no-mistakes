@@ -48,6 +48,14 @@ declared roots and top-level filters, not from that rule's input options. A
 known rule outside its enabled application scope is reported as disabled or out
 of scope.
 
+PostgreSQL statement rules also audit next-line comments inside statically
+recovered executor SQL. For example, after an indexed LIMIT-bounded probe is
+accepted by `postgres-required-predicates`, remove its in-template
+`-- no-mistakes-disable-next-line postgres-required-predicates` comment.
+The audit reuses prepared executor projections and physical source mappings;
+unexecuted SQL strings are not added to the audit. Only directives that the
+existing statement suppression matcher can consume are included.
+
 Each directive names one rule ID. Put separate directives on separate lines
 when a file needs exceptions for multiple rules:
 

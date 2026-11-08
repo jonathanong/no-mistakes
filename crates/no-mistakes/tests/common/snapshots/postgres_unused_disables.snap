@@ -1,0 +1,432 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "probe.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: accepted probe",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "probe.sql",
+          "line": 3,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements: accepted probe",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "probe.sql",
+          "line": 5,
+          "message": "directive for `postgres-no-transformed-uuid-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-no-transformed-uuid-predicates: accepted probe",
+          "target": "postgres-no-transformed-uuid-predicates"
+        },
+        {
+          "file": "probe.sql",
+          "line": 7,
+          "message": "directive for `postgres-lock-ordering` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-lock-ordering: accepted probe",
+          "target": "postgres-lock-ordering"
+        },
+        {
+          "file": "probe.sql",
+          "line": 9,
+          "message": "directive for `postgres-lock-written-rows-only` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-lock-written-rows-only: accepted probe",
+          "target": "postgres-lock-written-rows-only"
+        },
+        {
+          "file": "probe.ts",
+          "line": 11,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements: accepted probe",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "probe.ts",
+          "line": 14,
+          "message": "directive for `postgres-no-transformed-uuid-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-no-transformed-uuid-predicates: accepted probe",
+          "target": "postgres-no-transformed-uuid-predicates"
+        },
+        {
+          "file": "probe.ts",
+          "line": 17,
+          "message": "directive for `postgres-no-transformed-uuid-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-no-transformed-uuid-predicates: accepted probe",
+          "target": "postgres-no-transformed-uuid-predicates"
+        },
+        {
+          "file": "probe.ts",
+          "line": 2,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-required-predicates: accepted probe",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "probe.ts",
+          "line": 20,
+          "message": "directive for `postgres-lock-ordering` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-lock-ordering: accepted probe",
+          "target": "postgres-lock-ordering"
+        },
+        {
+          "file": "probe.ts",
+          "line": 23,
+          "message": "directive for `postgres-lock-ordering` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-lock-ordering: accepted probe",
+          "target": "postgres-lock-ordering"
+        },
+        {
+          "file": "probe.ts",
+          "line": 26,
+          "message": "directive for `postgres-lock-written-rows-only` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-lock-written-rows-only: accepted probe",
+          "target": "postgres-lock-written-rows-only"
+        },
+        {
+          "file": "probe.ts",
+          "line": 29,
+          "message": "directive for `postgres-lock-written-rows-only` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-lock-written-rows-only: accepted probe",
+          "target": "postgres-lock-written-rows-only"
+        },
+        {
+          "file": "probe.ts",
+          "line": 5,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: accepted probe",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "probe.ts",
+          "line": 8,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-bounded-statements: accepted probe",
+          "target": "postgres-bounded-statements"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "probe.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: accepted probe",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "probe.sql",
+          "line": 3,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements: accepted probe",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "probe.sql",
+          "line": 5,
+          "message": "directive for `postgres-no-transformed-uuid-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-no-transformed-uuid-predicates: accepted probe",
+          "target": "postgres-no-transformed-uuid-predicates"
+        },
+        {
+          "file": "probe.sql",
+          "line": 7,
+          "message": "directive for `postgres-lock-ordering` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-lock-ordering: accepted probe",
+          "target": "postgres-lock-ordering"
+        },
+        {
+          "file": "probe.sql",
+          "line": 9,
+          "message": "directive for `postgres-lock-written-rows-only` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-lock-written-rows-only: accepted probe",
+          "target": "postgres-lock-written-rows-only"
+        },
+        {
+          "file": "probe.ts",
+          "line": 11,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements: accepted probe",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "probe.ts",
+          "line": 14,
+          "message": "directive for `postgres-no-transformed-uuid-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-no-transformed-uuid-predicates: accepted probe",
+          "target": "postgres-no-transformed-uuid-predicates"
+        },
+        {
+          "file": "probe.ts",
+          "line": 17,
+          "message": "directive for `postgres-no-transformed-uuid-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-no-transformed-uuid-predicates: accepted probe",
+          "target": "postgres-no-transformed-uuid-predicates"
+        },
+        {
+          "file": "probe.ts",
+          "line": 2,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-required-predicates: accepted probe",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "probe.ts",
+          "line": 20,
+          "message": "directive for `postgres-lock-ordering` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-lock-ordering: accepted probe",
+          "target": "postgres-lock-ordering"
+        },
+        {
+          "file": "probe.ts",
+          "line": 23,
+          "message": "directive for `postgres-lock-ordering` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-lock-ordering: accepted probe",
+          "target": "postgres-lock-ordering"
+        },
+        {
+          "file": "probe.ts",
+          "line": 26,
+          "message": "directive for `postgres-lock-written-rows-only` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-lock-written-rows-only: accepted probe",
+          "target": "postgres-lock-written-rows-only"
+        },
+        {
+          "file": "probe.ts",
+          "line": 29,
+          "message": "directive for `postgres-lock-written-rows-only` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-lock-written-rows-only: accepted probe",
+          "target": "postgres-lock-written-rows-only"
+        },
+        {
+          "file": "probe.ts",
+          "line": 5,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: accepted probe",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "probe.ts",
+          "line": 8,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-bounded-statements: accepted probe",
+          "target": "postgres-bounded-statements"
+        }
+      ],
+      "warnings": [
+        "postgres-bounded-statements: requested effort low; effective effort max because this rule has no low implementation",
+        "postgres-lock-ordering: requested effort low; effective effort max because this rule has no low implementation",
+        "postgres-lock-written-rows-only: requested effort low; effective effort max because this rule has no low implementation"
+      ]
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "probe.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: accepted probe",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "probe.sql",
+          "line": 3,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements: accepted probe",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "probe.sql",
+          "line": 5,
+          "message": "directive for `postgres-no-transformed-uuid-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-no-transformed-uuid-predicates: accepted probe",
+          "target": "postgres-no-transformed-uuid-predicates"
+        },
+        {
+          "file": "probe.sql",
+          "line": 7,
+          "message": "directive for `postgres-lock-ordering` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-lock-ordering: accepted probe",
+          "target": "postgres-lock-ordering"
+        },
+        {
+          "file": "probe.sql",
+          "line": 9,
+          "message": "directive for `postgres-lock-written-rows-only` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-lock-written-rows-only: accepted probe",
+          "target": "postgres-lock-written-rows-only"
+        },
+        {
+          "file": "probe.ts",
+          "line": 11,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements: accepted probe",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "probe.ts",
+          "line": 14,
+          "message": "directive for `postgres-no-transformed-uuid-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-no-transformed-uuid-predicates: accepted probe",
+          "target": "postgres-no-transformed-uuid-predicates"
+        },
+        {
+          "file": "probe.ts",
+          "line": 17,
+          "message": "directive for `postgres-no-transformed-uuid-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-no-transformed-uuid-predicates: accepted probe",
+          "target": "postgres-no-transformed-uuid-predicates"
+        },
+        {
+          "file": "probe.ts",
+          "line": 2,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-required-predicates: accepted probe",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "probe.ts",
+          "line": 20,
+          "message": "directive for `postgres-lock-ordering` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-lock-ordering: accepted probe",
+          "target": "postgres-lock-ordering"
+        },
+        {
+          "file": "probe.ts",
+          "line": 23,
+          "message": "directive for `postgres-lock-ordering` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-lock-ordering: accepted probe",
+          "target": "postgres-lock-ordering"
+        },
+        {
+          "file": "probe.ts",
+          "line": 26,
+          "message": "directive for `postgres-lock-written-rows-only` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-lock-written-rows-only: accepted probe",
+          "target": "postgres-lock-written-rows-only"
+        },
+        {
+          "file": "probe.ts",
+          "line": 29,
+          "message": "directive for `postgres-lock-written-rows-only` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-lock-written-rows-only: accepted probe",
+          "target": "postgres-lock-written-rows-only"
+        },
+        {
+          "file": "probe.ts",
+          "line": 5,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: accepted probe",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "probe.ts",
+          "line": 8,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-bounded-statements: accepted probe",
+          "target": "postgres-bounded-statements"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

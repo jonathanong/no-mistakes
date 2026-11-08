@@ -166,6 +166,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "postgres-json-relation-ids"
         },
         {
+          "file": "suppress/ts/multiline.ts",
+          "line": 5,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-json-relation-ids",
+          "target": "postgres-json-relation-ids"
+        },
+        {
           "file": "suppress/ts/next-line.ts",
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
@@ -388,6 +396,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
           "sourceLine": "export const run = () => query(`INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1));`); // no-mistakes-disable-line postgres-json-relation-ids",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/multiline.ts",
+          "line": 5,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -665,6 +681,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "postgres-json-relation-ids"
         },
         {
+          "file": "suppress/ts/multiline.ts",
+          "line": 5,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-json-relation-ids",
+          "target": "postgres-json-relation-ids"
+        },
+        {
           "file": "suppress/ts/next-line.ts",
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
@@ -787,6 +811,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "postgres-json-relation-ids"
         },
         {
+          "file": "suppress/ts/multiline.ts",
+          "line": 5,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-json-relation-ids",
+          "target": "postgres-json-relation-ids"
+        },
+        {
           "file": "suppress/ts/next-line.ts",
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
@@ -905,6 +937,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "postgres-json-relation-ids"
         },
         {
+          "file": "suppress/ts/multiline.ts",
+          "line": 5,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-json-relation-ids",
+          "target": "postgres-json-relation-ids"
+        },
+        {
           "file": "suppress/ts/next-line.ts",
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
@@ -999,6 +1039,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
           "sourceLine": "export const run = () => query(`INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1));`); // no-mistakes-disable-line postgres-json-relation-ids",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/multiline.ts",
+          "line": 5,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -1105,6 +1153,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
           "sourceLine": "export const run = () => query(`INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1));`); // no-mistakes-disable-line postgres-json-relation-ids",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/multiline.ts",
+          "line": 5,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {

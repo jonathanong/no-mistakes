@@ -144,7 +144,13 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
             advisories: &mut advisories,
         },
     );
-    let directive_findings = disable_directives.findings_from_consumed(&accounting.consumed);
+    let directive_findings = disable_directives.findings_with_postgres(
+        config,
+        filesystem_files,
+        sources,
+        facts,
+        &accounting.consumed,
+    )?;
     let suppressed = accounting.into_public(include_suppressed);
     if config.report_unused_disable_directives == DisableDirectivePolicy::Report {
         rules.findings.extend(directive_findings);
