@@ -39,7 +39,6 @@ pub use options::{EmbeddedSqlOptions, TrustedSqlTag};
 pub(crate) use relative::{
     package_name, package_root_for_specifier, project_relative_scoped_facts, PendingRelativeScope,
 };
-/// Parse `source` and extract executor SQL call sites.
 pub fn extract_embedded_sql_from_source(
     path: &Path,
     source: &str,
@@ -50,7 +49,6 @@ pub fn extract_embedded_sql_from_source(
     let parsed = crate::ast::parse(path, &allocator, source, source_type);
     extract_embedded_sql_from_program(path, &parsed.program, source, options)
 }
-/// Extract executor SQL call sites from an already-parsed program.
 pub fn extract_embedded_sql_from_program(
     path: &Path,
     program: &Program<'_>,
@@ -67,6 +65,10 @@ pub(crate) fn extract_embedded_sql_from_program_with_demand(
     options: &EmbeddedSqlOptions,
     head_calls_only: bool,
 ) -> EmbeddedSqlFileFacts {
+    #[cfg(test)]
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment("postgres.embedded.collections", 1);
+    }
     let bindings = executor_bindings(program, options);
     let mut executor_bindings: Vec<String> = bindings
         .iter()

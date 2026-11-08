@@ -12,6 +12,7 @@ mod playwright_facts;
 mod playwright_plan;
 mod relative_scope;
 mod runner;
+mod sql_scope;
 mod staged_playwright;
 pub(crate) use staged_playwright::{collect_precollected_route_facts, PrecollectedRouteFacts};
 pub(crate) mod sql_source_prerequisites;

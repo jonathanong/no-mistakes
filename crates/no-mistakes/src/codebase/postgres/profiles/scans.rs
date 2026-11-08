@@ -26,6 +26,15 @@ impl EmbeddedSqlRuleScan {
         })
     }
 
+    pub(crate) fn unrestricted(&self) -> bool {
+        self.exclude.is_empty()
+            && (self.include.is_empty()
+                || self
+                    .include
+                    .iter()
+                    .any(|value| matches!(value.as_str(), "**" | "**/*")))
+    }
+
     pub(crate) fn same_application(&self, other: &Self) -> bool {
         self.rule_id == other.rule_id
             && self.annotation_seed == other.annotation_seed

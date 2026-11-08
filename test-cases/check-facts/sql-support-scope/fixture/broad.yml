@@ -1,0 +1,5 @@
+rules:
+  - rule: postgres-no-offset
+    options:
+      include: [**/*]
+      importSpecifier: '@example/db'
