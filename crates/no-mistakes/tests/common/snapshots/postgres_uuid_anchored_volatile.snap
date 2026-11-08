@@ -1,0 +1,143 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "anchored-volatile.sql",
+          "line": 1,
+          "message": "anchored-volatile.sql:1: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id = gen_random_uuid() AND fn(token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-volatile.sql",
+          "line": 2,
+          "message": "anchored-volatile.sql:2: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id = (gen_random_uuid()::text)::uuid AND fn(token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-volatile.sql",
+          "line": 3,
+          "message": "anchored-volatile.sql:3: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id = COALESCE(gen_random_uuid(), $1) AND fn(token) = $2;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-volatile.sql",
+          "line": 4,
+          "message": "anchored-volatile.sql:4: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id >= uuidv7() AND fn(token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-volatile.sql",
+          "line": 5,
+          "message": "anchored-volatile.sql:5: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id = ANY(ARRAY[gen_random_uuid()]) AND fn(token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-volatile.sql",
+          "line": 8,
+          "message": "anchored-volatile.sql:8: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE fn(token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-volatile.sql",
+          "line": 9,
+          "message": "anchored-volatile.sql:9: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id = pg_catalog.gen_random_uuid() AND fn(token) = $1;",
+          "target": "accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "anchored-volatile.sql",
+          "line": 1,
+          "message": "anchored-volatile.sql:1: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id = gen_random_uuid() AND fn(token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-volatile.sql",
+          "line": 2,
+          "message": "anchored-volatile.sql:2: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id = (gen_random_uuid()::text)::uuid AND fn(token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-volatile.sql",
+          "line": 3,
+          "message": "anchored-volatile.sql:3: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id = COALESCE(gen_random_uuid(), $1) AND fn(token) = $2;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-volatile.sql",
+          "line": 4,
+          "message": "anchored-volatile.sql:4: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id >= uuidv7() AND fn(token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-volatile.sql",
+          "line": 5,
+          "message": "anchored-volatile.sql:5: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id = ANY(ARRAY[gen_random_uuid()]) AND fn(token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-volatile.sql",
+          "line": 8,
+          "message": "anchored-volatile.sql:8: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE fn(token) = $1;",
+          "target": "accounts.token"
+        },
+        {
+          "file": "anchored-volatile.sql",
+          "line": 9,
+          "message": "anchored-volatile.sql:9: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM accounts WHERE id = pg_catalog.gen_random_uuid() AND fn(token) = $1;",
+          "target": "accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

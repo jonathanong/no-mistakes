@@ -108,6 +108,8 @@ fn uuid_site_messages_are_independent_of_native_sql_scope_and_verdict_projection
 fn uuid_residuals_require_mandatory_indexed_anchors_on_the_same_relation_occurrence() {
     for (shape, expected) in [
         ("anchored-residual", vec![3]),
+        ("anchored-volatile", vec![1, 2, 3, 4, 5, 8, 9]),
+        ("anchored-operators", vec![1, 2, 3, 4, 7, 8, 9, 12]),
         ("anchored-embedded", vec![3, 9]),
         (
             "anchored-indexes",

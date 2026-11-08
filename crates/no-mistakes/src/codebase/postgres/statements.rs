@@ -18,6 +18,7 @@ pub(crate) mod lock_writes;
 mod mutations;
 mod not_exists;
 mod predicates;
+mod row_variant;
 mod select;
 mod sweeps;
 mod tokens;

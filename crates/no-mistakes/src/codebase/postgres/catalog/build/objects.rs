@@ -63,6 +63,7 @@ pub(super) fn indexes(table: &SnapshotTable) -> Vec<CatalogIndexInfo> {
                 .keys
                 .iter()
                 .map(|key| CatalogIndexKey {
+                    ordering_supported: key.ordering_supported.unwrap_or(true),
                     column: key.column.clone(),
                     expression: key.expression.clone(),
                 })

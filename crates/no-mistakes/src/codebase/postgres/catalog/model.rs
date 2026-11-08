@@ -80,6 +80,7 @@ pub struct CatalogIndexInfo {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CatalogIndexKey {
+    pub ordering_supported: bool,
     pub column: Option<String>,
     pub expression: String,
 }

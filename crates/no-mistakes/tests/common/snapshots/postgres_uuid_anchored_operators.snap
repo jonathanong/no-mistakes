@@ -1,0 +1,159 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "anchored-operators.sql",
+          "line": 1,
+          "message": "anchored-operators.sql:1: WHERE applies fn to UUID column patterned.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM patterned WHERE key > $1 AND fn(id) = $2;",
+          "target": "patterned.id"
+        },
+        {
+          "file": "anchored-operators.sql",
+          "line": 12,
+          "message": "anchored-operators.sql:12: WHERE applies fn to UUID column keyed.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM keyed WHERE key = ($1 COLLATE \"C\") AND fn(id) = $2;",
+          "target": "keyed.id"
+        },
+        {
+          "file": "anchored-operators.sql",
+          "line": 2,
+          "message": "anchored-operators.sql:2: WHERE applies fn to UUID column patterned.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM patterned WHERE key = $1 AND fn(id) = $2;",
+          "target": "patterned.id"
+        },
+        {
+          "file": "anchored-operators.sql",
+          "line": 3,
+          "message": "anchored-operators.sql:3: WHERE applies fn to UUID column patterned.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM patterned WHERE key = ANY($1::text[]) AND fn(id) = $2;",
+          "target": "patterned.id"
+        },
+        {
+          "file": "anchored-operators.sql",
+          "line": 4,
+          "message": "anchored-operators.sql:4: WHERE applies fn to UUID column patterned.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM patterned WHERE key BETWEEN $1 AND $2 AND fn(id) = $3;",
+          "target": "patterned.id"
+        },
+        {
+          "file": "anchored-operators.sql",
+          "line": 7,
+          "message": "anchored-operators.sql:7: WHERE applies fn to UUID column patterned.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM patterned WHERE fn(id) = $1;",
+          "target": "patterned.id"
+        },
+        {
+          "file": "anchored-operators.sql",
+          "line": 8,
+          "message": "anchored-operators.sql:8: WHERE applies fn to UUID column pattern_pk.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM pattern_pk WHERE key = $1 AND fn(id) = $2;",
+          "target": "pattern_pk.id"
+        },
+        {
+          "file": "anchored-operators.sql",
+          "line": 9,
+          "message": "anchored-operators.sql:9: WHERE applies fn to UUID column pattern_unique.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM pattern_unique WHERE key = $1 AND fn(id) = $2;",
+          "target": "pattern_unique.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "anchored-operators.sql",
+          "line": 1,
+          "message": "anchored-operators.sql:1: WHERE applies fn to UUID column patterned.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM patterned WHERE key > $1 AND fn(id) = $2;",
+          "target": "patterned.id"
+        },
+        {
+          "file": "anchored-operators.sql",
+          "line": 12,
+          "message": "anchored-operators.sql:12: WHERE applies fn to UUID column keyed.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM keyed WHERE key = ($1 COLLATE \"C\") AND fn(id) = $2;",
+          "target": "keyed.id"
+        },
+        {
+          "file": "anchored-operators.sql",
+          "line": 2,
+          "message": "anchored-operators.sql:2: WHERE applies fn to UUID column patterned.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM patterned WHERE key = $1 AND fn(id) = $2;",
+          "target": "patterned.id"
+        },
+        {
+          "file": "anchored-operators.sql",
+          "line": 3,
+          "message": "anchored-operators.sql:3: WHERE applies fn to UUID column patterned.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM patterned WHERE key = ANY($1::text[]) AND fn(id) = $2;",
+          "target": "patterned.id"
+        },
+        {
+          "file": "anchored-operators.sql",
+          "line": 4,
+          "message": "anchored-operators.sql:4: WHERE applies fn to UUID column patterned.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM patterned WHERE key BETWEEN $1 AND $2 AND fn(id) = $3;",
+          "target": "patterned.id"
+        },
+        {
+          "file": "anchored-operators.sql",
+          "line": 7,
+          "message": "anchored-operators.sql:7: WHERE applies fn to UUID column patterned.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM patterned WHERE fn(id) = $1;",
+          "target": "patterned.id"
+        },
+        {
+          "file": "anchored-operators.sql",
+          "line": 8,
+          "message": "anchored-operators.sql:8: WHERE applies fn to UUID column pattern_pk.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM pattern_pk WHERE key = $1 AND fn(id) = $2;",
+          "target": "pattern_pk.id"
+        },
+        {
+          "file": "anchored-operators.sql",
+          "line": 9,
+          "message": "anchored-operators.sql:9: WHERE applies fn to UUID column pattern_unique.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM pattern_unique WHERE key = $1 AND fn(id) = $2;",
+          "target": "pattern_unique.id"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

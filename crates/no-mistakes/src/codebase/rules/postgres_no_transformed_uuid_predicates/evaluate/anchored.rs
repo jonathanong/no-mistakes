@@ -15,21 +15,27 @@ impl Columns<'_> {
                 return false;
             };
             let leading = |columns: &[String]| columns.first() == Some(&anchor.column);
-            table.primary_key.as_deref().is_some_and(leading)
-                || table
-                    .unique_constraints
-                    .iter()
-                    .any(|key| leading(&key.columns))
-                || table.indexes.iter().any(|index| {
-                    index.valid
-                        && index.ready
-                        && index.live
-                        && index.predicate.is_none()
-                        && index.access_method.eq_ignore_ascii_case("btree")
-                        && index
-                            .keys
-                            .first()
-                            .is_some_and(|key| key.column.as_ref() == Some(&anchor.column))
+            table.indexes.iter().any(|index| {
+                index.valid
+                    && index.ready
+                    && index.live
+                    && index.predicate.is_none()
+                    && index.access_method.eq_ignore_ascii_case("btree")
+                    && index.keys.first().is_some_and(|key| {
+                        key.ordering_supported && key.column.as_ref() == Some(&anchor.column)
+                    })
+            }) || (table.primary_key.as_deref().is_some_and(leading)
+                && !table.indexes.iter().any(|index| index.primary))
+                || table.unique_constraints.iter().any(|key| {
+                    leading(&key.columns)
+                        && !table.indexes.iter().any(|index| {
+                            index.constraint_backed
+                                && index
+                                    .keys
+                                    .iter()
+                                    .map(|part| part.column.as_deref())
+                                    .eq(key.columns.iter().map(|column| Some(column.as_str())))
+                        })
                 })
         })
     }

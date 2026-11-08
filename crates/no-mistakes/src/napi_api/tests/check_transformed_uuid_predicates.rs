@@ -163,6 +163,8 @@ fn anchored_uuid_residuals_match_public_check_and_analyze_project() {
     let root = crate::test_support::rule_fixture_root("postgres-no-transformed-uuid-predicates");
     for (shape, count) in [
         ("residual", 1),
+        ("volatile", 7),
+        ("operators", 8),
         ("left-join", 3),
         ("range", 8),
         ("embedded", 2),

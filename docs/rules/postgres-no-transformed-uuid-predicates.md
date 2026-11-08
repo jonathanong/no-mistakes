@@ -73,7 +73,16 @@ The anchor must belong to the same relation occurrence in the same query scope;
 a different self-join alias, nested query, or separate statement cannot exempt
 it. Unqualified references require a single known relation for this exemption.
 Disjunctions, negations, self-dependent bounds, columns without indexes,
-partial indexes, and non-leading index columns do not establish an anchor. An outer
+partial indexes, and non-leading index columns do not establish an anchor.
+Bounds containing known row-variant builtins such as `gen_random_uuid()`,
+`uuidv7()`, or `clock_timestamp()` also retain findings, including inside casts
+or other functions. Compute such a value once and pass it as a bind when the
+query should perform a fixed key lookup. Explicit `COLLATE` bounds do not qualify.
+Index keys with catalog `orderingSupported: false` do not prove an anchor for
+any comparison: this flag covers non-default operator classes and collations,
+including cases whose equality may differ. An explicit backing index with
+incompatible operators also prevents primary/unique constraint metadata from
+establishing the anchor. Other compatible indexes can still establish it. An outer
 join's key anchors only the newly joined relation. A cast on that key, such as
 `LEFT JOIN accounts a ON a.id::text = e.email`, still reports. Without a bare
 anchor, `WHERE uuid_extract_timestamp(id) >= $1` still reports: fix it by

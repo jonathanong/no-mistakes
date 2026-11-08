@@ -242,7 +242,15 @@ fn postgres_no_transformed_uuid_predicates_check_json_snapshot() {
 fn postgres_anchored_transformed_uuid_predicates_check_json_snapshot() {
     let rule = "postgres-no-transformed-uuid-predicates";
     let root = rules_path(rule, "fixture", ".");
-    for shape in ["residual", "left-join", "range", "indexes", "embedded"] {
+    for shape in [
+        "residual",
+        "left-join",
+        "range",
+        "indexes",
+        "embedded",
+        "volatile",
+        "operators",
+    ] {
         let cases = ["", "-low"].map(|effort| {
             (
                 if effort.is_empty() { "max" } else { "low" },

@@ -1,0 +1,12 @@
+SELECT * FROM patterned WHERE key > $1 AND fn(id) = $2;
+SELECT * FROM patterned WHERE key = $1 AND fn(id) = $2;
+SELECT * FROM patterned WHERE key = ANY($1::text[]) AND fn(id) = $2;
+SELECT * FROM patterned WHERE key BETWEEN $1 AND $2 AND fn(id) = $3;
+SELECT * FROM keyed WHERE key > $1 AND fn(id) = $2;
+SELECT * FROM keyed WHERE key = $1 AND fn(id) = $2;
+SELECT * FROM patterned WHERE fn(id) = $1;
+SELECT * FROM pattern_pk WHERE key = $1 AND fn(id) = $2;
+SELECT * FROM pattern_unique WHERE key = $1 AND fn(id) = $2;
+SELECT * FROM mixed_order WHERE key > $1 AND fn(id) = $2;
+SELECT * FROM accounts WHERE id > $1 AND fn(token) = $2;
+SELECT * FROM keyed WHERE key = ($1 COLLATE "C") AND fn(id) = $2;

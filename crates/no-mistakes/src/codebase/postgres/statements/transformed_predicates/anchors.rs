@@ -1,3 +1,4 @@
+use super::super::row_variant::is_row_variant;
 use super::super::select::uses::{columns::bare, scope::BaseRel};
 use super::super::value::PlaceholderPositions;
 use super::super::SqlTransformedColumnProbeFact as Probe;
@@ -128,7 +129,11 @@ fn independent(
 ) -> bool {
     visit_expressions(expr, |child| {
         let unsafe_value = match child {
-            Expr::Subquery(_) | Expr::Exists { .. } | Expr::InSubquery { .. } => true,
+            Expr::Subquery(_)
+            | Expr::Exists { .. }
+            | Expr::InSubquery { .. }
+            | Expr::Collate { .. } => true,
+            Expr::Function(function) if is_row_variant(&function.name) => true,
             Expr::Identifier(_) | Expr::CompoundIdentifier(_)
                 if bare(child, positions).is_some() =>
             {
