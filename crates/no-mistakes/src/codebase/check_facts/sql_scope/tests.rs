@@ -67,7 +67,8 @@ fn findings(
 
 #[test]
 fn sql_seed_closure_preserves_imported_helper_findings_and_skips_unrelated_walks() {
-    let root = fixture();
+    let saved = crate::test_support::materialize_saved_fixture(&fixture());
+    let root = crate::codebase::ts_resolver::normalize_path(saved.path());
     let files = crate::codebase::ts_source::discover_files(&root, &[]);
     let sources = crate::codebase::rules::source_store_for_files(&files);
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
@@ -111,7 +112,8 @@ fn sql_seed_closure_preserves_imported_helper_findings_and_skips_unrelated_walks
 
 #[test]
 fn batch_mixed_graph_demand_preserves_other_variants_and_disabled_work_is_zero() {
-    let root = fixture();
+    let saved = crate::test_support::materialize_saved_fixture(&fixture());
+    let root = crate::codebase::ts_resolver::normalize_path(saved.path());
     let files = crate::codebase::ts_source::discover_files(&root, &[]);
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
     let sql = prepared(&root, &files, &config);
@@ -153,7 +155,8 @@ fn batch_mixed_graph_demand_preserves_other_variants_and_disabled_work_is_zero()
 
 #[test]
 fn direct_annotation_low_and_ambiguous_requests_keep_broad_demand() {
-    let root = fixture();
+    let saved = crate::test_support::materialize_saved_fixture(&fixture());
+    let root = crate::codebase::ts_resolver::normalize_path(saved.path());
     let files = crate::codebase::ts_source::discover_files(&root, &[]);
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
     let original = prepared(&root, &files, &config);
@@ -237,7 +240,8 @@ fn actual_check_json_preparation_activates_scoping_and_preserves_full_report() {
             BROAD.with(|value| value.set(false));
         }
     }
-    let root = fixture();
+    let saved = crate::test_support::materialize_saved_fixture(&fixture());
+    let root = crate::codebase::ts_resolver::normalize_path(saved.path());
     let run = |broad| {
         BROAD.with(|value| value.set(broad));
         let _restore = Restore;
@@ -275,5 +279,86 @@ fn actual_check_json_preparation_activates_scoping_and_preserves_full_report() {
             .filter(|finding| finding["rule"] == "postgres-no-offset")
             .count(),
         1
+    );
+}
+
+#[test]
+fn no_support_and_empty_seeds_keep_unused_workspace_uninitialized() {
+    let fixture = fixture().join("../../sql-no-support/fixture");
+    let saved = crate::test_support::materialize_saved_fixture(&fixture);
+    let root = crate::codebase::ts_resolver::normalize_path(saved.path());
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    for config_name in [".no-mistakes.yml", "empty.yml"] {
+        let config =
+            crate::config::v2::load_v2_config(&root, Some(&root.join(config_name))).unwrap();
+        let narrow = prepared(&root, &files, &config);
+        let mut full = narrow.clone();
+        full.embedded_sql = false;
+        let (narrow, narrow_loads) =
+            crate::codebase::workspaces::load_metrics_tests::count(&root, || {
+                collect_single(&root, files.clone(), narrow)
+            });
+        let (full, full_loads) =
+            crate::codebase::workspaces::load_metrics_tests::count(&root, || {
+                collect_single(&root, files.clone(), full)
+            });
+        assert_eq!((narrow_loads, full_loads), (0, 0), "{config_name}");
+        assert_eq!(
+            findings(&root, &files, &sources, &config, &narrow),
+            findings(&root, &files, &sources, &config, &full)
+        );
+        assert_eq!(
+            findings(&root, &files, &sources, &config, &narrow).len(),
+            usize::from(config_name == ".no-mistakes.yml")
+        );
+    }
+}
+
+#[test]
+fn all_selected_payload_classifies_once_and_retains_no_seed_set() {
+    let saved = crate::test_support::materialize_saved_fixture(
+        &fixture().join("../../sql-no-support/fixture"),
+    );
+    let root = crate::codebase::ts_resolver::normalize_path(saved.path());
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join("all-selected.yml"))).unwrap();
+    let plan = prepared(&root, &files, &config);
+    assert!(eligible(&plan, None));
+    let demands = files
+        .iter()
+        .map(|path| {
+            (
+                path.clone(),
+                vec![FactDemand {
+                    request: 0,
+                    plan: plan.clone(),
+                }],
+            )
+        })
+        .collect();
+    let session = crate::diagnostics::InvocationObserver::new(true);
+    let selected = crate::diagnostics::with_observer(Some(session.clone()), || {
+        seeds::select(
+            &BatchCheckFactRequest {
+                root,
+                files: files.clone(),
+                graph_files: vec![],
+                plan,
+                playwright: None,
+                sources: crate::codebase::rules::source_store_for_files(&files),
+            },
+            0,
+            &demands,
+        )
+    });
+    assert!(
+        selected.is_none(),
+        "all-selected payloads return before retaining seeds"
+    );
+    assert_eq!(
+        session.snapshot().work.get("sql_scope.seed_checks"),
+        Some(&(files.len() as u64))
     );
 }

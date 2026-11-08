@@ -1,0 +1,6 @@
+rules:
+  - rule: postgres-no-offset
+    options:
+      include: ['**/*.mts']
+      exclude: ['**/never-generated.mts']
+      importSpecifier: '@example/db'

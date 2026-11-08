@@ -62,51 +62,13 @@ pub(super) fn collect(
     {
         return Vec::new();
     }
-    let seeds = demands
-        .iter()
-        .filter(|(path, variants)| {
-            variants
-                .iter()
-                .any(|variant| variant.request == id && variant.plan.embedded_sql)
-                && request
-                    .plan
-                    .embedded_sql_rule_ids
-                    .values()
-                    .flatten()
-                    .any(|scan| {
-                        scan.paths
-                            .includes(&crate::codebase::ts_source::relative_slash_path(
-                                &request.root,
-                                path,
-                            ))
-                    })
-        })
-        .map(|(path, _)| path.clone())
-        .collect::<BTreeSet<_>>();
-    let total = demands
-        .values()
-        .filter(|variants| {
-            variants
-                .iter()
-                .any(|variant| variant.request == id && variant.plan.embedded_sql)
-        })
-        .count();
-    if seeds.len() == total {
+    let Some(seeds) = seeds::select(request, id, demands) else {
         return Vec::new();
-    }
-    let visible = request
-        .sources
-        .inventory()
-        .paths()
-        .iter()
-        .cloned()
-        .collect::<PathSet>();
-    let workspace = session.workspace(&request.root);
-    let resolver = ScopedImportResolver::new_in_session(
-        request.plan.query_annotation_catalog.as_ref().unwrap(),
-        &visible,
-        session,
-    );
+    };
+    let visible = std::sync::OnceLock::new();
+    let workspace = std::sync::OnceLock::new();
+    let resolver = std::sync::OnceLock::new();
+    let mut support = false;
     let mut pending = seeds;
     let mut collected = Vec::new();
     let observer = crate::diagnostics::current();
@@ -123,7 +85,19 @@ pub(super) fn collect(
                 })
             })
             .collect::<Vec<_>>();
-        for result in &results {
+        support |= results.iter().any(|result| {
+            result.1.iter().zip(&result.2).any(|(variant, facts)| {
+                variant.request == id
+                    && facts.as_ref().is_some_and(|facts| {
+                        facts.embedded_sql.iter().any(|(_, facts)| {
+                            !facts.pending_imported.is_empty()
+                                || !facts.imported_lock_helpers.is_empty()
+                                || !facts.pending_relative.candidates.is_empty()
+                        })
+                    })
+            })
+        });
+        for result in results.iter().filter(|_| support) {
             let Some(facts) = result.1.iter().zip(&result.2).find_map(|(variant, facts)| {
                 (variant.request == id).then_some(facts.as_ref()).flatten()
             }) else {
@@ -145,6 +119,23 @@ pub(super) fn collect(
                 )
                 .chain(facts.ts.star_reexport_specifiers.iter().map(String::as_str));
             for specifier in specifiers {
+                let visible = visible.get_or_init(|| {
+                    request
+                        .sources
+                        .inventory()
+                        .paths()
+                        .iter()
+                        .cloned()
+                        .collect::<PathSet>()
+                });
+                let workspace = workspace.get_or_init(|| session.workspace(&request.root));
+                let resolver = resolver.get_or_init(|| {
+                    ScopedImportResolver::new_in_session(
+                        request.plan.query_annotation_catalog.as_ref().unwrap(),
+                        visible,
+                        session,
+                    )
+                });
                 let target = resolver.resolve(specifier, &result.0).or_else(|| {
                     workspace.resolve_specifier_from_file_visible(specifier, &result.0, &visible)
                 });
@@ -167,5 +158,6 @@ pub(super) fn collect(
     collected
 }
 
+mod seeds;
 #[cfg(test)]
 mod tests;
