@@ -5,7 +5,8 @@ use crate::codebase::postgres::SchemaCatalog;
 pub(crate) fn bound(items: &mut [SqlBoundItem], bounded: &mut [bool], catalog: &SchemaCatalog) {
     for item in items.iter_mut() {
         item.pins.retain(|pin| {
-            matches!(&pin.source, SqlPinSource::Items(sources) if !sources.is_empty())
+            (matches!(pin.source, SqlPinSource::Value)
+                || matches!(&pin.source, SqlPinSource::Items(sources) if !sources.is_empty()))
                 && pin.column != "ctid"
                 && pin.expression.is_none()
                 && pin.reads.is_empty()
@@ -20,7 +21,7 @@ pub(crate) fn bound(items: &mut [SqlBoundItem], bounded: &mut [bool], catalog: &
     }
     let owners = ownership::owners(items, catalog);
     let views = super::super::view_bounds::ViewBounds::default();
-    let keys: Vec<_> = items
+    let mut keys: Vec<_> = items
         .iter()
         .enumerate()
         .map(|(index, item)| {
@@ -35,5 +36,19 @@ pub(crate) fn bound(items: &mut [SqlBoundItem], bounded: &mut [bool], catalog: &
             )
         })
         .collect();
+    // Require a driver per key; see docs/rules/postgres-materialized-view-shape.md.
+    for item in &mut keys {
+        for alternative in item {
+            for key in alternative {
+                let drivers = key
+                    .iter()
+                    .flatten()
+                    .filter(|source| !source.is_empty())
+                    .cloned()
+                    .collect();
+                key.push(drivers);
+            }
+        }
+    }
     propagation::bound(&keys, bounded);
 }
