@@ -1739,6 +1739,198 @@
           ]
         }
       }
+    },
+    "good_qualified_function": {
+      "materialized": true,
+      "definition": "SELECT * FROM events WHERE id >= public.fn_floor(100)",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_quoted_function": {
+      "materialized": true,
+      "definition": "SELECT * FROM events WHERE id >= \"Window.Step\"(100)",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_quoted_function_identity": {
+      "materialized": true,
+      "definition": "SELECT * FROM events WHERE id >= \"public.fn_floor\"(100)",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_quoted_function_case": {
+      "materialized": true,
+      "definition": "SELECT * FROM events WHERE id >= \"window.step\"(100)",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "good_qualified_temporal_range": {
+      "materialized": true,
+      "definition": "SELECT * FROM events WHERE created_at >= pg_catalog.now() - interval '7 days'",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
+    },
+    "bad_in_list": {
+      "materialized": true,
+      "definition": "SELECT * FROM events WHERE id IN (100, 200)",
+      "indexes": {
+        "refresh": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranking": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "created_at",
+              "expression": "created_at"
+            }
+          ]
+        }
+      }
     }
   }
 }

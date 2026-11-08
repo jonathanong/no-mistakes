@@ -162,6 +162,7 @@ fn materialized_view_invalid_options_fail_with_actionable_errors() {
         ("missing-catalog.yml", "schemaCatalogPath"),
         ("invalid-mode.yml", "mode"),
         ("invalid-window-name.yml", "windowFunctions"),
+        ("invalid-window-target.yml", "windowFunctions"),
         ("duplicate-base-allow.yml", "allowBaseTables"),
         ("empty-base-table.yml", "allowBaseTables"),
     ] {
@@ -182,6 +183,7 @@ fn materialized_view_index_and_identity_edges_keep_valid_controls_clear() {
     let checked = report("edges", "edges.yml");
     let expected: BTreeSet<_> = [
         "bad_nonkey_function_equality",
+        "bad_in_list",
         "bad_function_range_nonkey",
         "bad_function_between_nonkey",
         "bad_function_wrapped_range_nonkey",
@@ -203,6 +205,8 @@ fn materialized_view_index_and_identity_edges_keep_valid_controls_clear() {
         "bad_nonleading_base_index",
         "bad_recursive",
         "bad_quoted_wrong_case",
+        "bad_quoted_function_identity",
+        "bad_quoted_function_case",
         "bad_foreign_schema",
         "bad_or_unindexed_column",
     ]

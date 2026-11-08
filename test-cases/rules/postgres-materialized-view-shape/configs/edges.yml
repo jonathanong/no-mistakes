@@ -5,6 +5,6 @@ rules:
     include: [schema.json]
     options:
       schemaCatalogPath: schema.json
-      windowFunctions: [fn_min_uuidv7, fn_floor]
+      windowFunctions: [fn_min_uuidv7, fn_floor, public.fn_floor, pg_catalog.now, '"Window.Step"']
       allowBaseTables:
         - { table: countries, reason: catalogue-sized }

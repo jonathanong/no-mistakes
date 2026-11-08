@@ -113,3 +113,9 @@ rules:
         - pattern: id
           types: [smallint, integer, bigint]
           require: non-negative
+
+  - rule: postgres-materialized-view-shape
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      mode: report

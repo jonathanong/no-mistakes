@@ -90,11 +90,16 @@ fn compile(options: &Options) -> Result<Compiled> {
     {
         bail!("{RULE_ID} option windowFunctions: names must not be empty");
     }
+    let functions = options.window_functions.iter().map(|name| {
+        crate::codebase::postgres::idents::parse_relation_identity(name).ok_or_else(|| {
+            anyhow::anyhow!("{RULE_ID} option windowFunctions: expected a PostgreSQL function name, found {name}")
+        })
+    }).collect::<Result<Vec<_>>>()?;
     Ok(Compiled {
         path: options.schema_catalog_path.clone(),
         additional: options.min_additional_indexes.unwrap_or(1),
         report: options.mode.as_deref() == Some("report"),
-        functions: options.window_functions.clone(),
+        functions,
         base_tables: options.allow_base_tables.clone(),
         allow: AllowList::compile(RULE_ID, options.allow.clone())?,
     })
