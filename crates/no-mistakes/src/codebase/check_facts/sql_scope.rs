@@ -13,6 +13,7 @@ pub(super) fn eligible(plan: &CheckFactPlan, playwright: Option<&PlaywrightFactP
         return false;
     }
     plan.embedded_sql
+        && !plan.postgres_sql_audit
         && !plan.embedded_sql_options.is_empty()
         && plan.query_annotation_catalog.is_some()
         && !plan.query_annotation

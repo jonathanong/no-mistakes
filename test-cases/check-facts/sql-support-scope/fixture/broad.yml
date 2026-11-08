@@ -1,3 +1,4 @@
+reportUnusedDisableDirectives: ignore
 effort: max
 rules:
   - rule: postgres-no-offset

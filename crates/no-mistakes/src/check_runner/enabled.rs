@@ -98,6 +98,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
             || enabled.storybook_stories,
         postgres_schema: false,
         embedded_sql: enabled.embedded_sql,
+        postgres_sql_audit: false,
         query_annotation: false,
         query_annotation_heads: false,
         query_annotation_options: None,

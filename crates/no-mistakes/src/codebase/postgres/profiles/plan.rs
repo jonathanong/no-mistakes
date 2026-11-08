@@ -1,6 +1,5 @@
 use super::*;
 include!("plan/bodies.rs");
-/// Record the prepared executor profiles and the rules that selected each one.
 pub fn assign_prepared_embedded_sql_options(
     config: &NoMistakesConfig,
     plan: &mut crate::codebase::check_facts::CheckFactPlan,
@@ -10,6 +9,7 @@ pub fn assign_prepared_embedded_sql_options(
         super::PREPARED_EMBEDDED_SQL_RULE_IDS,
     )?;
     plan.embedded_sql = !options.is_empty();
+    plan.postgres_sql_audit |= config.audits_disable_directives();
     plan.embedded_sql_head_calls_only = head_calls_only_profiles(&options, &annotation, &rule_ids);
     plan.embedded_sql_options = options;
     plan.embedded_sql_rule_ids = rule_ids;

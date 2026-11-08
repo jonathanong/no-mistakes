@@ -1,0 +1,7 @@
+effort: max
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      include: [src/selected.mts]
+      importSpecifier: '@example/db'
