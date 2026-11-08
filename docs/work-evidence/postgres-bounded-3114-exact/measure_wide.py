@@ -1,12 +1,13 @@
-import pathlib,subprocess,resource,time,statistics,json,os,hashlib
+import argparse,pathlib,subprocess,resource,time,statistics,json,os,hashlib
+from measurement_support import launch_binaries
+parser=argparse.ArgumentParser();parser.add_argument('mode',choices=['balanced','reverse']);mode=parser.parse_args().mode
 repo=pathlib.Path.cwd();root=repo/'test-cases/rules/postgres-bounded-statements/fixture';config=repo/'test-cases/performance/postgres-bounded-3114'
 exe={'A':'/tmp/nm-3114-main-final','B':'/tmp/nm-3114-candidate-final'};launch={}
 identities={'A':'e30bb4e885e8e2e8f2200885b017b1d9be7005168a645f958e554fc507beb597','B':'61aff52ea54b2270ae5f22318fad8ed1f55b12bed5e48d6618c6570bc7c8027f'}
 for b,path in exe.items():
  assert hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()==identities[b], 'unexpected executable identity'
-for b in exe:
- p=pathlib.Path('/tmp/nm-3114-wide-launch')/b/'no-mistakes';p.parent.mkdir(parents=True,exist_ok=True);p.unlink(missing_ok=True);os.link(exe[b],p);launch[b]=str(p)
-mode=__import__('sys').argv[1];phases=['A','B','B','A'] if mode=='balanced' else ['B','A','A','B'];cases=['on','off'] if mode=='balanced' else ['off'];rows=[]
+launch_directory,launch=launch_binaries(exe,'nm-3114-wide-launch-')
+phases=['A','B','B','A'] if mode=='balanced' else ['B','A','A','B'];cases=['on','off'] if mode=='balanced' else ['off'];rows=[]
 expected={'A':{'on':1056,'off':1},'B':{'on':1053,'off':1}};advisories={'on':10,'off':26}
 off_output=None
 for phase,b in enumerate(phases):

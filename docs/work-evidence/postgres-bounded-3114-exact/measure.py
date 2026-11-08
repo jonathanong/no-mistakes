@@ -1,18 +1,13 @@
-import json,pathlib,subprocess,sys,resource,time,statistics,os,hashlib,tempfile
+import argparse,json,pathlib,subprocess,resource,time,statistics,os,hashlib,tempfile
+from measurement_support import launch_binaries
 repo=pathlib.Path.cwd()
-mode=sys.argv[1]
+parser=argparse.ArgumentParser();parser.add_argument('mode',choices=['baseline','balanced','reverse']);mode=parser.parse_args().mode
 label=os.environ.get('NM_MEASUREMENT_LABEL', mode)
 binaries={'A':os.environ.get('NM_BASELINE_BINARY','/tmp/nm-3114-exact-main'),'B':os.environ.get('NM_CANDIDATE_BINARY','/tmp/nm-3114-exact-candidate')}
 binary_hashes={k:hashlib.sha256(pathlib.Path(v).read_bytes()).hexdigest() for k,v in binaries.items()}
 assert binary_hashes['A'] != binary_hashes['B'], 'baseline/candidate artifacts must differ'
 expected={'A':{'r1':2,'r2':3,'r3':6,'r4':4,'off':0,'off-sql':1},'B':{'r1':1,'r2':2,'r3':4,'r4':2,'off':0,'off-sql':1}}
-launches={}
-for key,binary in binaries.items():
- path=pathlib.Path('/tmp/nm-3114-exact-launch')/key/'no-mistakes'
- path.parent.mkdir(parents=True,exist_ok=True)
- path.unlink(missing_ok=True)
- os.link(binary,path)
- launches[key]=str(path)
+launch_directory,launches=launch_binaries(binaries,'nm-3114-exact-launch-')
 phases=['A'] if mode=='baseline' else (['B','A','A','B'] if mode=='reverse' else ['A','B','B','A'])
 root=repo/'test-cases/rules/postgres-bounded-statements/issue-3114-exact/fixture'
 cases=['off','off-sql'] if mode=='reverse' else ['r1','r2','r3','r4','off','off-sql']

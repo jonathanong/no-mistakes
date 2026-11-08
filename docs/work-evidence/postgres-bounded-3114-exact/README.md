@@ -137,16 +137,16 @@ changes an unrelated ancestor-ignore fixture. Cargo artifacts remain under
 ## Output-label follow-up
 
 The rejected head was `62f2a4fac9973cd07490133f812d0fb234e7bd28`; the corrected
-production source is `027df26cf1b07a4dbb2a11bfe75769a6968a1d19`, rebased on
-`ffdd24de80a8e002f40633dbf8f219e5c5ffb54f`. This comparison includes that rebase.
+production source is `c502b32d916d90636f9402f617579a3ddd8e40d8`, rebased on
+`ba93010d5aa2c3e7a597364f80ca770f956cb002`. This comparison includes that rebase.
 Matching locked default-feature **dev** builds use rustc 1.99.1 and six Cargo
 build jobs in separate task-owned targets. CLI effort is default with `--jobs 1`.
 Instruction counters remain unavailable, so these are user-CPU observations.
 
 [Raw samples](follow-up.csv) use fresh processes, warmed OS cache, and balanced
 A/B/B/A order: ten samples per binary for each SQL workload, four for the
-repository check. User CPU is 30.451→31.065 ms for the follow-up fixture,
-26.083→24.625 ms for rule-off SQL, and 3.172073→3.158721 s for the repository.
+repository check. User CPU is 29.882→31.011 ms for the follow-up fixture,
+27.747→25.269 ms for rule-off SQL, and 3.186011→3.242978 s for the repository.
 The new fixture changes 11 grouped findings to six retained controls. R1–R4,
 empty/off SQL controls and repository JSON remain byte-identical, including
 stderr and exit status for the exact controls. No speedup or equivalence claim
@@ -163,3 +163,10 @@ values as unverified caller labels. It cannot infer build revisions from an
 executable or the current checkout. The captured measurements above were tied
 to separate builds during this run; their binary hashes are retained. Later
 production changes require a separate comparison.
+
+Run the harness regressions with `python3 -B
+docs/work-evidence/postgres-bounded-3114-exact/test_measurements.py`. Saved sample
+cases reject failed statuses, unexpected diagnostics and finding-count changes.
+The launch checks execute a saved fixture through private directories and verify
+the permission-preserving copy fallback across filesystems. Unsupported modes
+fail before accessing binaries or starting measurements.
