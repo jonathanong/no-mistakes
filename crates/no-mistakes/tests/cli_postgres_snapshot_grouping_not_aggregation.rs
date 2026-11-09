@@ -96,8 +96,18 @@ fn postgres_grouping_not_aggregation_reports_only_marked_sound_controls() {
         ),
         (
             "raw/shape-controls.sql",
+            "raw-union-arm-left",
+            "distinct-over-unique-key",
+        ),
+        (
+            "raw/shape-controls.sql",
             "raw-union-arm-right",
             "distinct-over-union",
+        ),
+        (
+            "raw/shape-controls.sql",
+            "raw-union-arm-right",
+            "distinct-over-unique-key",
         ),
         (
             "raw/shape-controls.sql",
@@ -201,8 +211,18 @@ fn postgres_grouping_not_aggregation_reports_only_marked_sound_controls() {
         ),
         (
             "src/shape-controls.ts",
+            "embedded-union-arm-left",
+            "distinct-over-unique-key",
+        ),
+        (
+            "src/shape-controls.ts",
             "embedded-union-arm-right",
             "distinct-over-union",
+        ),
+        (
+            "src/shape-controls.ts",
+            "embedded-union-arm-right",
+            "distinct-over-unique-key",
         ),
         (
             "src/shape-controls.ts",
@@ -306,8 +326,18 @@ fn postgres_grouping_not_aggregation_reports_only_marked_sound_controls() {
         ),
         (
             "src/shape-controls.ts",
+            "embedded-append-union-arm-left",
+            "distinct-over-unique-key",
+        ),
+        (
+            "src/shape-controls.ts",
             "embedded-append-union-arm-right",
             "distinct-over-union",
+        ),
+        (
+            "src/shape-controls.ts",
+            "embedded-append-union-arm-right",
+            "distinct-over-unique-key",
         ),
         (
             "src/shape-controls.ts",
