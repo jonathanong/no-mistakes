@@ -1,0 +1,1 @@
+export async function deferred() { const { selected } = await import(new URL('./target.mts', import.meta.url)); selected(); } const { selected } = await import(new URL('./target.mts', import.meta.url)); selected();

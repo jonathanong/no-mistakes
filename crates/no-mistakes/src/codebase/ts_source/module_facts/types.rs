@@ -115,6 +115,8 @@ pub(crate) struct ModuleMockCall {
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct TypeScriptModuleFacts {
     #[serde(skip)]
+    pub(crate) folded_dynamic_imports: Vec<super::static_dynamic::FoldedImport>,
+    #[serde(skip)]
     pub(crate) receiver_safe_exports: crate::fx::FxHashSet<String>,
     #[serde(skip)]
     pub(crate) module_mock_calls: Vec<ModuleMockCall>,

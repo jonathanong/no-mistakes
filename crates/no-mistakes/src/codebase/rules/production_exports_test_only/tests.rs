@@ -59,9 +59,9 @@ fn supports_file_line_and_next_line_suppression() {
 }
 
 #[test]
-fn computed_and_unresolved_imports_do_not_silently_pass() {
+fn constant_loads_preserve_test_only_exports_alongside_unresolved_imports() {
     let found = findings("uncertain");
-    assert!(found.iter().any(|row| row.file == "src/dynamic.mts"));
+    assert!(!found.iter().any(|row| row.file == "src/dynamic.mts"));
     assert!(found.iter().any(|row| row.file == "src/unresolved.mts"));
     assert!(found
         .iter()

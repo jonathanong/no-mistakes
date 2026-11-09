@@ -9,6 +9,7 @@ mod modules;
 mod node_loaders;
 mod receiver_safety;
 mod report;
+mod static_dynamic;
 pub use report::*;
 mod types;
 pub use types::*;
@@ -142,3 +143,6 @@ mod mock_boundary_tests;
 
 #[cfg(test)]
 mod precision_tests;
+
+#[cfg(test)]
+mod static_dynamic_tests;

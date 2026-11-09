@@ -3,6 +3,7 @@ fn collect_symbol_import_selectors_file(
     file_facts: &crate::codebase::ts_source::facts::TsFileFacts,
     export_edges: &[Edge],
     exported: &FxHashSet<NodeId>,
+    imports: bool,
 ) -> (Vec<Edge>, SelectorImportSites) {
     let mut edges = Vec::new();
     let mut sites = fx_map();
@@ -147,7 +148,16 @@ fn collect_symbol_import_selectors_file(
     collect_type_import_selectors(&inputs, file_facts, exported, &mut edges, &mut sites);
     let mock_sites = typed_mock_import_sites(file_facts);
     let proven_sites = proven_dynamic_selectors(&inputs, file_facts);
+    let folded_sites = folded_import_sites(
+        &inputs, file_facts, exported, &mut edges, &mut sites, imports,
+    );
     for import in &file_facts.imports {
+        if import.computed
+            && import.kind == ImportKind::Dynamic
+            && folded_sites.contains(&(import.specifier.as_str(), import.line))
+        {
+            continue;
+        }
         if !import.computed
             && import.kind == ImportKind::Dynamic
             && mock_sites.contains(&(import.specifier.as_str(), import.line))
@@ -170,13 +180,7 @@ fn collect_symbol_import_selectors_file(
                 continue;
             }
         }
-        if import.computed
-            || matches!(
-                import.kind,
-                crate::codebase::dependencies::extract::ImportKind::Dynamic
-                    | crate::codebase::dependencies::extract::ImportKind::Require
-            )
-        {
+        if import.computed || matches!(import.kind, ImportKind::Dynamic | ImportKind::Require) {
             selector_unknown(
                 &inputs,
                 &import.specifier,

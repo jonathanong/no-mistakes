@@ -426,9 +426,67 @@ function/namespace merges, and runtime `export =` remain uncertain. These
 exceptions affect only this rule; public TypeScript module-facts diagnostics and
 checks with the rule disabled retain their existing output.
 
-A computed runtime `import(target)` emits one uncertainty diagnostic per site,
-with its source column, including separate sites on the same line. Replace it
-with a literal named import to make the consumer statically analyzable.
+The rule folds string-valued `const` bindings and their constant aliases in
+module or function scope before resolving dynamic imports. It follows lexical
+bindings and rejects reassignment, mutable bindings, and unknown initializers.
+It also resolves `new URL("./module.mts", import.meta.url)`, its `.href` and
+`.pathname` forms, and `String(new URL(...))` when no local binding shadows the built-ins
+and the target can be established safely. For example:
+
+```typescript
+const nodeEntry = './node-entry.mts';
+const { run } = await import(/* @vite-ignore */ nodeEntry);
+const specifier = new URL('./worker.mts', import.meta.url).href;
+const { work } = await import(specifier);
+```
+
+Built-in recognition assumes the ambient constructors retain their standard
+behavior. Replace global mutation with a stable lexical binding; the rule does
+not execute modules to discover constructor replacements.
+
+These imports use the same resolved module and selected-export relationships as
+literal imports. Knowing the module does not prove that every export is used:
+an escaping namespace still leaves its export selection unknown. A discarded
+result (`void import(target)`, `import(target);`, or `await import(target);`)
+selects no exports when the target is proven constant, preserving findings on
+exports used only by tests under every uncertainty policy. Mutable URL
+object aliases and URL forms whose path semantics cannot be preserved remain
+uncertain, as do computed occurrences with differing call scopes on the same
+source line. Occurrences with equivalent reachability scopes share a resolved
+edge, including a real import beside an isolated mock. Public module-facts output
+and checks with this rule disabled keep their existing behavior.
+
+A remaining computed runtime `import(target)` emits one uncertainty diagnostic per site,
+with its source column, including separate sites on the same line:
+“Runtime-resolved import; exports reached through it are unknown.” The rule cannot
+prove which exports the import consumes, so it does not recommend replacing a
+runtime target with a literal import.
+
+This includes imports driven by directory enumeration and paths returned by
+`require.resolve` or `createRequire(...).resolve`. For example:
+
+```typescript
+for (const file of readdirSync(toolsDir).filter(f => f.endsWith('.mts'))) {
+  await import(pathToFileURL(join(toolsDir, file)).href);
+}
+const dependency = await import(pathToFileURL(require.resolve('some-package')).href);
+```
+
+The rule does not assume that every enumerated file is consumed or that a
+resolver-provided path is external: the directory can change at runtime, and a
+bare package can resolve to workspace code. These sites retain uncertainty under
+the configured `unanalyzable` policy. Review the runtime targets before using a
+line suppression for an intentional boundary. `unanalyzable: advise` keeps these
+limitations visible without failing the check, but applies to all uncertainty in
+the configured rule scope. Neither option proves that the unknown exports have a
+production consumer.
+
+Folded imports preserve the isolated Vitest mock handling used for literal
+imports. An inert `vi.mock` or `vi.doMock` module-promise argument does not consume
+the original exports. Factories that can load the original and real imports on
+the same line retain their ordinary analysis. Alias resolution has a per-import
+depth limit; cached results include that depth so earlier imports cannot change
+whether a later import resolves.
 
 ## Incomplete analysis
 

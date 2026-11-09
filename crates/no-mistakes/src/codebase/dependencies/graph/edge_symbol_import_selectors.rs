@@ -68,6 +68,7 @@ fn collect_symbol_import_selectors(
                     .map(Vec::as_slice)
                     .unwrap_or_default(),
                 &exported,
+                input.plan.imports,
             )
         })
         .collect();
@@ -138,6 +139,7 @@ fn selector_unknown(
         return;
     } else if source.starts_with('.')
         || source.starts_with('/')
+        || Path::new(source).is_absolute()
         || inputs
             .workspace
             .recognizes_specifier_from(source, inputs.path)
