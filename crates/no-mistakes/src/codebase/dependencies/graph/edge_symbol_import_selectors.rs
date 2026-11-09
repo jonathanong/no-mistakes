@@ -68,6 +68,7 @@ fn collect_symbol_import_selectors(
                     .map(Vec::as_slice)
                     .unwrap_or_default(),
                 &exported,
+                input.plan.imports,
             )
         })
         .collect();

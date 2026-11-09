@@ -440,6 +440,10 @@ const specifier = new URL('./worker.mts', import.meta.url).href;
 const { work } = await import(specifier);
 ```
 
+Built-in recognition assumes the ambient constructors retain their standard
+behavior. Replace global mutation with a stable lexical binding; the rule does
+not execute modules to discover constructor replacements.
+
 These imports use the same resolved module and selected-export relationships as
 literal imports. Knowing the module does not prove that every export is used:
 an escaping namespace still leaves its export selection unknown. A discarded
@@ -447,9 +451,10 @@ result (`void import(target)`, `import(target);`, or `await import(target);`)
 selects no exports when the target is proven constant, preserving findings on
 exports used only by tests under every uncertainty policy. Mutable URL
 object aliases and URL forms whose path semantics cannot be preserved remain
-uncertain, as do computed occurrences whose call scopes cannot be distinguished
-on the same source line. Public module-facts output and checks with this rule disabled keep
-their existing behavior.
+uncertain, as do computed occurrences with differing call scopes on the same
+source line. Occurrences with equivalent reachability scopes share a resolved
+edge, including a real import beside an isolated mock. Public module-facts output
+and checks with this rule disabled keep their existing behavior.
 
 A remaining computed runtime `import(target)` emits one uncertainty diagnostic per site,
 with its source column, including separate sites on the same line:

@@ -5,6 +5,14 @@ fn fixture_graph(selectors: bool) -> (tempfile::TempDir, DepGraph) {
 }
 
 fn fixture_graph_named(name: &str, selectors: bool) -> (tempfile::TempDir, DepGraph) {
+    fixture_graph_with_imports(name, selectors, true)
+}
+
+fn fixture_graph_with_imports(
+    name: &str,
+    selectors: bool,
+    imports: bool,
+) -> (tempfile::TempDir, DepGraph) {
     let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/production-exports-only-used-by-tests/fixture")
         .join(name);
@@ -20,7 +28,7 @@ fn fixture_graph_named(name: &str, selectors: bool) -> (tempfile::TempDir, DepGr
             base_url: None,
         },
         GraphBuildPlan {
-            imports: true,
+            imports,
             symbols: true,
             symbol_import_selectors: selectors,
             ..Default::default()
@@ -28,6 +36,22 @@ fn fixture_graph_named(name: &str, selectors: bool) -> (tempfile::TempDir, DepGr
     )
     .unwrap();
     (dir, graph)
+}
+
+#[test]
+fn folded_dynamic_selectors_do_not_widen_disabled_import_edges() {
+    let (dir, graph) = fixture_graph_with_imports("folded-dynamic-graph", true, false);
+    let edges = graph
+        .dependencies_of_node(&NodeId::file(dir.path().join("consumer.mts")))
+        .unwrap();
+    assert!(edges.contains(&(
+        NodeId::symbol(dir.path().join("target.mts"), "selected"),
+        EdgeKind::SymbolImport,
+    )));
+    assert!(!edges.iter().any(|(_, kind)| matches!(
+        kind,
+        EdgeKind::DynamicImport | EdgeKind::ConditionalDynamicImport
+    )));
 }
 
 #[test]
@@ -56,6 +80,16 @@ fn folded_dynamic_mocks_preserve_isolation_and_same_line_runtime_imports() {
         NodeId::symbol(dir.path().join("src/same-line.mts"), "selected"),
         EdgeKind::SymbolImport,
     )));
+    for name in ["same-line", "runtime"] {
+        let observed = edges(&format!("other/{name}.mts"));
+        assert!(observed.contains(&(
+            NodeId::file(dir.path().join(format!("src/{name}.mts"))),
+            EdgeKind::DynamicImport,
+        )));
+        assert!(!observed.iter().any(|(target, kind)| {
+            matches!(target, NodeId::Module(_)) && *kind == EdgeKind::SymbolImportUnknown
+        }));
+    }
 }
 
 #[test]
@@ -66,11 +100,11 @@ fn folded_dynamic_edges_are_opt_in_and_preserve_occurrence_uncertainty() {
             .dependencies_of_node(&NodeId::file(dir.path().join(name)))
             .unwrap()
     };
-    for name in ["consumer.mts", "with space/href.mts"] {
-        let target_file = if name == "consumer.mts" {
-            "target.mts"
-        } else {
+    for name in ["consumer.mts", "equivalent.mts", "with space/href.mts"] {
+        let target_file = if name.starts_with("with space/") {
             "with space/target.mts"
+        } else {
+            "target.mts"
         };
         let target = NodeId::file(dir.path().join(target_file));
         assert!(edges(name).contains(&(target.clone(), EdgeKind::DynamicImport)));
@@ -78,6 +112,9 @@ fn folded_dynamic_edges_are_opt_in_and_preserve_occurrence_uncertainty() {
             NodeId::symbol(dir.path().join(target_file), "selected"),
             EdgeKind::SymbolImport,
         )));
+        assert!(!edges(name).iter().any(|(target, kind)| {
+            matches!(target, NodeId::Module(_)) && *kind == EdgeKind::SymbolImportUnknown
+        }));
     }
     for name in ["ambiguous.mts", "with space/pathname.mts", "unresolved.mts"] {
         assert!(!edges(name).iter().any(|(_, kind)| matches!(
@@ -92,6 +129,7 @@ fn folded_dynamic_edges_are_opt_in_and_preserve_occurrence_uncertainty() {
     let (off_dir, off) = fixture_graph(false);
     for name in [
         "consumer.mts",
+        "equivalent.mts",
         "with space/href.mts",
         "ambiguous.mts",
         "with space/pathname.mts",

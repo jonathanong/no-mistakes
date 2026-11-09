@@ -1,9 +1,10 @@
-fn collect_folded_dynamic_imports<'a>(
+fn folded_import_sites<'a>(
     inputs: &ExportEdgeInputs<'_>,
     facts: &'a crate::codebase::ts_source::facts::TsFileFacts,
     exported: &FxHashSet<NodeId>,
     edges: &mut Vec<Edge>,
     sites: &mut SelectorImportSites,
+    imports: bool,
 ) -> FxHashSet<(&'a str, u32)> {
     let (Some(module), Some(source)) = (&facts.module_bindings, facts.source.as_deref()) else {
         return fx_set();
@@ -18,13 +19,20 @@ fn collect_folded_dynamic_imports<'a>(
         .collect();
     let mut folded_counts: FxHashMap<(&str, u32), usize> = fx_map();
     let reachable = reachable_function_scopes(facts);
-    let mut originals: FxHashMap<(&str, u32), Vec<&ExtractedImport>> = fx_map();
+    let mut originals: FxHashMap<(&str, u32), (usize, Option<&ExtractedImport>)> = fx_map();
     for import in &facts.imports {
         if import.computed && import.kind == ImportKind::Dynamic {
-            originals
+            let (count, representative) = originals
                 .entry((&import.specifier, import.line))
-                .or_default()
-                .push(import);
+                .or_insert((0, Some(import)));
+            *count += 1;
+            if representative.is_some_and(|first| {
+                first.function_scope_id != import.function_scope_id
+                    || first.function_scope != import.function_scope
+                    || first.runtime_reachable != import.runtime_reachable
+            }) {
+                *representative = None;
+            }
         }
     }
     let selectors: FxHashMap<_, _> = module
@@ -78,10 +86,12 @@ fn collect_folded_dynamic_imports<'a>(
             originals.get(&(folded.source.as_str(), line)),
             selector_target(inputs, &specifier),
         ) {
-            if let [original] = originals.as_slice() {
+            if let (_, Some(original)) = originals {
                 let mut import = (*original).clone();
                 import.computed = false;
-                if let Some(kind) = graph_edge_kind_for_extracted_import(&import, facts, &reachable)
+                if let Some(kind) = imports
+                    .then(|| graph_edge_kind_for_extracted_import(&import, facts, &reachable))
+                    .flatten()
                 {
                     edges.push((
                         NodeId::file_in(inputs.interner, inputs.path),
@@ -142,7 +152,7 @@ fn collect_folded_dynamic_imports<'a>(
         .filter_map(|(site, count)| {
             originals
                 .get(&site)
-                .is_some_and(|originals| originals.len() == count)
+                .is_some_and(|(originals, _)| *originals == count)
                 .then_some(site)
         })
         .collect()

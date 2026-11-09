@@ -21,22 +21,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "vi.doMock(import(target), () => ({ selected: 0 })); console.log(await import(target));",
           "target": "unanalyzable"
-        },
-        {
-          "file": "other/runtime.mts",
-          "line": 3,
-          "message": "cannot analyze production export importers: unresolved module selector `../src/runtime.mjs` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "vi.doMock(import(target), () => ({ selected: 0 })); console.log(await import(target));",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "other/same-line.mts",
-          "line": 3,
-          "message": "cannot analyze production export importers: unresolved module selector `../src/same-line.mjs` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "vi.doMock(import(target), () => ({ selected: 0 })); console.log((await import(target)).selected);",
-          "target": "unanalyzable"
         }
       ],
       "codebase": [],
@@ -112,22 +96,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "cannot analyze production export importers: symbol consumers of `selected` include an unknown import selector: other/runtime.mts:3 `../src/runtime.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "vi.doMock(import(target), () => ({ selected: 0 })); console.log(await import(target));",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "other/runtime.mts",
-          "line": 3,
-          "message": "cannot analyze production export importers: unresolved module selector `../src/runtime.mjs` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "vi.doMock(import(target), () => ({ selected: 0 })); console.log(await import(target));",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "other/same-line.mts",
-          "line": 3,
-          "message": "cannot analyze production export importers: unresolved module selector `../src/same-line.mjs` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "vi.doMock(import(target), () => ({ selected: 0 })); console.log((await import(target)).selected);",
           "target": "unanalyzable"
         },
         {
