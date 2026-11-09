@@ -101,6 +101,12 @@ reproduce either validation scope. Release resumes use validation tooling from
 the running workflow while retaining the tagged Rust source; see the
 [CI build guide](docs/development/ci-builds.md).
 
+The coverage test step shares nine raw profiles per instrumented binary through
+LLVM's online merge pool. This preserves concurrent subprocess counts without a
+full raw profile for every CLI invocation. LCOV, CRAP, and coverage floors still
+consume all collected counts. Run `node --test .github/scripts/rust-profile-pooling.test.cjs`
+with `llvm-tools-preview` installed to compare pooled and per-process reports.
+
 Before pushing Rust analysis changes, also run the AST invariant checks used by
 CI with ast-grep 0.44.1. The repository `check` command does not run these guards;
 for example, direct clock calls must go through the optional observer even when
