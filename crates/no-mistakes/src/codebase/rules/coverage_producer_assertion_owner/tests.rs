@@ -220,3 +220,7 @@ mod external_stars;
 mod builtin_callback_coverage_tests;
 #[path = "tests/builtin_callbacks.rs"]
 mod builtin_callbacks;
+#[path = "tests/json_reviver_tests.rs"]
+mod json_reviver_tests;
+#[path = "tests/timer_owner.rs"]
+mod timer_owner;

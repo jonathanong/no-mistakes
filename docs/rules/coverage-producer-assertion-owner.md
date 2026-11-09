@@ -222,7 +222,9 @@ Modeled Node I/O through a proven star still requires an assertion owner.
 A built-in that invokes a callback keeps the proof: `map`, `filter`, `forEach`,
 `flatMap`, `reduce`, `some`, `every`, `find`, `findIndex`, `findLast`, `findLastIndex`, `sort`, `then`,
 `catch`, `finally`, `replace` / `replaceAll` (second argument), `Array.from` (second argument), `AsyncLocalStorage.run` /
-`exit`, and the timers `setTimeout`, `setInterval`, and `setImmediate`. The built-in executes the callback, so an inline function or a
+`exit`, `JSON.parse` (reviver) and `JSON.stringify` (function replacer) in the
+second argument on the proven global `JSON`,
+and the timers `setTimeout`, `setInterval`, and `setImmediate`. The built-in executes the callback, so an inline function or a
 named function the call graph resolves at that exact argument occurrence is
 traversed and can reach an assertion. This includes imported helpers, local
 aliases, and callback parameters when the canonical call graph proves the

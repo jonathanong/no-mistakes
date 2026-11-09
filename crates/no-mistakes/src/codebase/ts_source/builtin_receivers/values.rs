@@ -26,7 +26,15 @@ pub(super) fn callback_name(method: &str) -> bool {
     ARRAY_CALLBACKS.contains(&method)
         || matches!(
             method,
-            "then" | "catch" | "finally" | "run" | "exit" | "replace" | "replaceAll"
+            "then"
+                | "catch"
+                | "finally"
+                | "run"
+                | "exit"
+                | "replace"
+                | "replaceAll"
+                | "parse"
+                | "stringify"
         )
 }
 

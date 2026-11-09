@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "builtin_callback_worklist.rs"]
+mod worklist;
+
 pub(in super::super) fn project_builtin_callbacks(
     inputs: &GraphEdgeBuildInputs<'_>,
     facts: &dyn TsFactLookup,
@@ -72,26 +75,7 @@ pub(in super::super) fn project_builtin_callbacks(
     if sites.is_empty() { return; }
     let forwarded = prepared.iter().any(|(_, owner)| !owner.values.forwarded_callbacks.is_empty());
     if forwarded {
-        let ordinary_len = pass.sites.len();
-        let mut owner_pass = CallPass {
-            sites: pass.sites.iter().cloned().chain(sites).collect(),
-            constructor_routes: pass.constructor_routes.clone(),
-            super_constructors: pass.super_constructors.clone(),
-            replacement_files: pass.replacement_files.clone(),
-            ..Default::default()
-        };
-        refine::refine_value_calls(inputs, facts, resolver, &owner_indexes, &mut owner_pass);
-        let key = |site: &ResolvedCallSite| (site.file.clone(), site.caller_id, site.offset,
-            site.source_callee.clone(), site.invocation);
-        let mut counts: FxHashMap<_, usize> = fx_map();
-        for site in &pass.sites { *counts.entry(key(site)).or_default() += 1; }
-        sites = owner_pass.sites.into_iter().enumerate().filter_map(|(index, site)| {
-            if counts.get(&key(&site)).is_some_and(|count| *count > 1) { return None; }
-            (index >= ordinary_len || {
-                let original = &pass.sites[index];
-                original.target != site.target || original.target_node != site.target_node
-            }).then_some(site)
-        }).collect();
+        sites = worklist::refine_callbacks(inputs, facts, resolver, &owner_indexes, pass, sites);
     } else {
         let incoming = refine::incoming_inputs(&pass.sites, &pass.constructor_routes, indexes, facts);
         let phases = execution_phases::ModuleWriterPhases::default();

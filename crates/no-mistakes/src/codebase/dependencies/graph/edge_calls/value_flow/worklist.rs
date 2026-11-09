@@ -4,24 +4,27 @@ use super::*;
 #[path = "replacement_incoming.rs"]
 mod replacement_incoming;
 
-type FunctionKey = (std::path::PathBuf, CallableId);
+include!("worklist_entry.rs");
 
-pub(in super::super::super) fn refine_value_calls(
+pub(in super::super::super) fn refine_value_calls_with_incoming(
     inputs: &GraphEdgeBuildInputs<'_>,
     facts: &dyn TsFactLookup,
     resolver: &dyn ImportResolution,
     indexes: &CallableResolutionIndexes,
     pass: &mut CallPass,
+    data: WorklistInputs<'_>,
+    mut expand: impl FnMut(&[ResolvedCallSite]) -> Vec<ResolvedCallSite>,
 ) {
-    #[cfg(all(test, feature = "test-instrumentation"))]
-    if pass.parameter_cache.site_storage.cloning() || pass.parameter_cache.site_storage.original() {
-        return owned_worklist::refine_value_calls(inputs, facts, resolver, indexes, pass);
-    }
-    let mut incoming = incoming_inputs(&pass.sites, &pass.constructor_routes, indexes, facts);
+    let incoming = data.incoming;
     let replacements = replacement_catalog::ReplacementCatalog::prepare(
-        inputs, facts, resolver, indexes, pass, &incoming,
+        inputs,
+        facts,
+        resolver,
+        indexes,
+        data.replacement_pass.unwrap_or(pass),
+        incoming,
     );
-    let pending = pass.sites.iter().enumerate().filter(|(_, site)| {
+    let admission = |site: &ResolvedCallSite| {
         site.invocation != InvocationKind::Construct
             && (site.target_node.is_none()
                 || site.invocation == InvocationKind::Call
@@ -36,19 +39,41 @@ pub(in super::super::super) fn refine_value_calls(
                         #[cfg(feature = "test-instrumentation")]
                         &pass.parameter_cache.admission_probe,
                     ))
-    });
+    };
+    let pending = pass
+        .sites
+        .iter()
+        .enumerate()
+        .filter(|(_, site)| admission(site));
     #[cfg(feature = "test-instrumentation")]
     let pending = pending.inspect(|(_, site)| {
         pass.parameter_cache
             .admission_probe
             .admission(site.target_node.is_some())
     });
-    let (admitted, base) = initial_sites(&pass.sites, pending.map(|(index, _)| index));
+    let (mut admitted, mut base) = initial_sites(&pass.sites, pending.map(|(index, _)| index));
     let mut pending: FxHashSet<usize> = (0..base.len()).collect();
     let mut dependencies: FxHashMap<FunctionKey, FxHashSet<usize>> = fx_map();
     let mut previous_dependencies: FxHashMap<usize, FxHashSet<FunctionKey>> = fx_map();
     let mut visits: FxHashMap<usize, usize> = fx_map();
-    while !pending.is_empty() {
+    loop {
+        if pending.is_empty() {
+            let offset = pass.sites.len();
+            let added = expand(&pass.sites);
+            if added.is_empty() {
+                break;
+            }
+            pass.sites.extend(added);
+            let (next, originals) = initial_sites(
+                &pass.sites,
+                (offset..pass.sites.len()).filter(|index| admission(&pass.sites[*index])),
+            );
+            let start = base.len();
+            admitted.extend(next);
+            base.extend(originals);
+            pending.extend(start..base.len());
+            continue;
+        }
         let mut batch: Vec<_> = pending.drain().collect();
         batch.sort_unstable();
         for index in &batch {
@@ -71,7 +96,7 @@ pub(in super::super::super) fn refine_value_calls(
                     ValueInputs {
                         module_writer_phases: &module_writer_phases,
                         cache: &pass.parameter_cache,
-                        incoming: &incoming,
+                        incoming,
                         supers: &pass.super_constructors,
                         replacements: replacements.as_ref(),
                     },
@@ -136,7 +161,9 @@ pub(in super::super::super) fn refine_value_calls(
     processed.sort_unstable();
     replace_call_edges(
         &mut pass.edges,
-        processed.iter().map(|index| (&base[*index], &pass.sites[admitted[*index]])),
+        processed
+            .iter()
+            .map(|index| (&base[*index], &pass.sites[admitted[*index]])),
         |site| site_source(inputs, site),
     );
     #[cfg(all(test, feature = "test-instrumentation"))]
@@ -150,7 +177,7 @@ pub(in super::super::super) fn refine_value_calls(
             });
         pass.parameter_cache.admission_probe.capture(&mut snapshot);
         admission_mode::capture_edges(&mut snapshot, &pass.edges);
-        replacement_incoming::capture(&mut snapshot, &incoming, &pass.sites, indexes, facts);
+        replacement_incoming::capture(&mut snapshot, incoming, &pass.sites, indexes, facts);
         super::super::super::value_flow_metrics::record_replacements(snapshot);
     }
 }

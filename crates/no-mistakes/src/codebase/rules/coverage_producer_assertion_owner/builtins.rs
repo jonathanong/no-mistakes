@@ -6,6 +6,8 @@ use crate::codebase::dependencies::extract::{InvocationKind, ValueCall, ValueExp
 use crate::codebase::dependencies::graph::ResolvedCallTarget;
 #[path = "builtins/call_index.rs"]
 mod call_index;
+#[path = "builtins/timers.rs"]
+mod timers;
 pub(super) use call_index::CallIndex;
 
 /// A built-in call and the callbacks it invokes.
@@ -33,25 +35,24 @@ pub(super) fn classify<'a>(
     {
         return None;
     }
-    let group = calls.at(site);
-    let selected = group
-        .iter()
-        .copied()
-        .filter(|call| call.source_callee == site.source_callee)
-        .collect::<Vec<_>>();
     let mut out = Callbacks::default();
     if !site.source_callee.contains('.') {
         if GLOBAL_FUNCTIONS.contains(&site.source_callee.as_str()) {
             return Some(out);
         }
-        if TIMERS.contains(&site.source_callee.as_str()) {
-            for call in &selected {
-                collect_arguments(Some(*call), &[0], node_sites, &mut out);
-            }
-            return Some(out);
+        if TIMERS.contains(&site.source_callee.as_str())
+            && matches!(&site.target, ResolvedCallTarget::Global { name } if name == &site.source_callee)
+        {
+            return Some(timers::classify(site, node_sites, calls));
         }
         return None;
     }
+    let selected = calls
+        .at(site)
+        .iter()
+        .copied()
+        .filter(|call| call.source_callee == site.source_callee)
+        .collect::<Vec<_>>();
     let file = facts.get_ts_facts(&site.file)?;
     let mut native = false;
     let mut leaf = false;

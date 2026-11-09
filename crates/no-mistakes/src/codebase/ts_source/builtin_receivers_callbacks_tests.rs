@@ -120,6 +120,9 @@ fn callback_positions_require_the_proven_receiver_family() {
 #[path = "builtin_receivers_cardinality_tests.rs"]
 mod cardinality_tests;
 
+#[path = "builtin_receivers_json_tests.rs"]
+mod json_tests;
+
 #[test]
 fn contextual_primitive_proofs_need_explicit_source_types() {
     let source = proof_source("proof-primitives.mts");

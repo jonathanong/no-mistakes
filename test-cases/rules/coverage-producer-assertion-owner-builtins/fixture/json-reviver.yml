@@ -1,0 +1,17 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/json-reviver.mts, symbol: reviverOwner }
+        - { file: src/json-reviver.mts, symbol: inlineReviverOwner }
+        - { file: src/json-reviver.mts, symbol: reviverNoOwner }
+        - { file: src/json-reviver.mts, symbol: absentReviver }
+        - { file: src/json-reviver.mts, symbol: literalReviver }
+        - { file: src/json-reviver.mts, symbol: unknownReviver }
+        - { file: src/json-reviver.mts, symbol: stringifyOwner }
+        - { file: src/json-reviver.mts, symbol: stringifyUnknown }
+        - { file: src/json-reviver.mts, symbol: stringifyArray }
+        - { file: src/json-reviver.mts, symbol: stringifyAbsent }
+      assertions: [{ module: "node:assert", export: strictEqual }]

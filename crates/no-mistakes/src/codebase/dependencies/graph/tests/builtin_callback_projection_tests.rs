@@ -184,3 +184,73 @@ fn storage_forwarded_arguments_refine_only_assertion_ownership() {
         }));
     }
 }
+
+#[cfg(feature = "test-instrumentation")]
+#[test]
+fn storage_callback_worklist_only_clones_reached_callable_bodies() {
+    let root =
+        crate::test_support::rule_fixture_root("coverage-producer-assertion-owner-storage-closure");
+    let files = GraphFiles::discover(&root);
+    let plan = GraphBuildPlan {
+        calls: true,
+        assertion_owners: true,
+        ..Default::default()
+    };
+    let facts = collect_ts_facts(files.indexable(), plan.ts_fact_plan());
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan_files_config_and_facts(
+        &root,
+        &tsconfig,
+        plan,
+        &files,
+        None,
+        Some(&facts),
+    )
+    .unwrap();
+    let reached = [
+        "owner",
+        "bridge",
+        "delegate",
+        "missingBridge",
+        "missingDelegate",
+        "directDelegate",
+        "directBridge",
+    ];
+    let expected = graph
+        .resolved_call_sites()
+        .iter()
+        .filter(|site| {
+            site.caller
+                .as_deref()
+                .is_some_and(|caller| reached.contains(&caller))
+        })
+        .count();
+    assert_eq!(
+        super::super::value_flow_metrics::builtin_callback_sites(),
+        expected
+    );
+    assert!(expected < graph.resolved_call_sites().len());
+    assert!(graph.assertion_call_sites().iter().any(|site| {
+        site.caller.as_deref() == Some("directBridge") && site.source_callee == "fn"
+            && site.target_nodes().any(|target| matches!(target, NodeId::Symbol { symbol, .. } if symbol.as_ref() == "owner"))
+    }));
+    assert!(graph.assertion_call_sites().iter().any(|site| {
+        site.caller.as_deref() == Some("delegate") && site.source_callee == "next"
+            && site.target_nodes().any(|target| matches!(target, NodeId::Symbol { symbol, .. } if symbol.as_ref() == "bridge"))
+    }));
+    assert!(!graph.assertion_call_sites().iter().any(|site| {
+        site.caller.as_deref() == Some("bridge")
+            && site.source_callee == "fn"
+            && site.target_node.is_some()
+    }));
+    assert!(!graph.assertion_call_sites().iter().any(|site| {
+        site.caller.as_deref() == Some("missingBridge")
+            && site.source_callee == "fn"
+            && site.target_node.is_some()
+    }));
+}

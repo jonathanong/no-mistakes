@@ -2,7 +2,7 @@ use super::*;
 
 #[path = "worklist.rs"]
 mod worklist;
-pub(in super::super) use worklist::refine_value_calls;
+pub(in super::super) use worklist::{refine_value_calls, refine_value_calls_with_incoming, WorklistInputs};
 include!("refine_incoming.rs");
 pub(super) fn refine_site_in_place(
     inputs: &GraphEdgeBuildInputs<'_>,

@@ -57,8 +57,10 @@ fn coverage_producer_assertion_owner_builtins_json_matches_snapshot() {
         "review-parent-ignore",
         "review-storage",
         "review-context",
+        "review-timer",
         "review-array",
         "review-array-ignore",
+        "json-reviver",
         "member-callback",
         "namespace-all",
         "namespace-default",
@@ -83,6 +85,11 @@ fn coverage_producer_assertion_owner_builtins_json_matches_snapshot() {
     cases.push(rule(
         "without-storage",
         "coverage-producer-assertion-owner-builtins-no-storage/fixture",
+        "check.yml",
+    ));
+    cases.push(rule(
+        "storage-closure",
+        "coverage-producer-assertion-owner-storage-closure/fixture",
         "check.yml",
     ));
     assert_saved_fixture("coverage_producer_assertion_owner_builtins", &cases);

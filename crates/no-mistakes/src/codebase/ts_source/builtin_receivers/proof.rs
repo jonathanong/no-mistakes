@@ -72,6 +72,12 @@ impl Names {
         receiver: &Expression<'_>,
         method: &str,
     ) -> Option<&'static [usize]> {
+        if matches!(method, "parse" | "stringify")
+            && matches!(receiver.without_parentheses(),
+                Expression::Identifier(id) if id.name == "JSON" && self.global(&id.name))
+        {
+            return Some(&[1]);
+        }
         if method == "from"
             && matches!(receiver.without_parentheses(),
                 Expression::Identifier(id) if id.name == "Array" && self.global(&id.name))

@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/review-timer.mts, symbol: "<entry-point>" }
+        - { file: src/review-timer.mts, symbol: shadowedTimer }
+      assertions: [{ module: "node:assert/strict", export: strictEqual }]
