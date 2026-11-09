@@ -31,7 +31,7 @@ fn repeated_primitive_bindings_keep_private_identity_through_bound_extraction() 
     let binds = super::collect(call, &path);
     assert_eq!(binds.len(), 2, "{call:#?}");
     assert!(binds.values().all(|id| *id == declaration));
-    let facts = super::super::embedded_call_facts_with_json_writes(
+    let facts = crate::codebase::postgres::collect::dml::embedded_call_facts_with_json_writes(
         &embedded,
         true,
         false,

@@ -59,7 +59,7 @@ pub(super) fn select_filters(
                 || subquery.limit_clause.is_some()
                 || subquery.fetch.is_some()
                 || !alias.columns.is_empty()
-                || groups(inner).len() > 0
+                || !groups(inner).is_empty()
             {
                 continue;
             }
@@ -67,9 +67,9 @@ pub(super) fn select_filters(
                 continue;
             };
             if projected.iter().any(|expr| used(expr))
-                || groups(select).iter().any(|expr| used(expr))
-                || select.having.as_ref().is_some_and(|expr| used(expr))
-                || select.selection.as_ref().is_some_and(|expr| used(expr))
+                || groups(select).iter().any(&used)
+                || select.having.as_ref().is_some_and(&used)
+                || select.selection.as_ref().is_some_and(used)
             {
                 continue;
             }
