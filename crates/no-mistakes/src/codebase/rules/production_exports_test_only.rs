@@ -22,6 +22,11 @@ use std::path::Path;
 
 pub const RULE_ID: &str = "production-exports-only-used-by-tests";
 
+const RUNTIME_RESOLVED_IMPORT_ADVICE: &str = concat!(
+    "; suppress this line with // no-mistakes-disable-line ",
+    "production-exports-only-used-by-tests -- runtime-resolved import boundary",
+);
+
 pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     config.rule_configured(RULE_ID).then(|| GraphBuildPlan {
         symbol_import_selectors: true,
@@ -68,7 +73,7 @@ fn uncertain(
     reason: &str,
 ) -> RuleFinding {
     let advice = if reason.starts_with("Runtime-resolved import") {
-        ""
+        RUNTIME_RESOLVED_IMPORT_ADVICE
     } else {
         "; use explicit named imports and statically analyzable exports"
     };

@@ -117,12 +117,7 @@ fn production_exports_issues_3175_3176_check_json_snapshot() {
             assert_eq!(advisories.len(), 4, "{case}: {report}");
         }
         for advisory in advisories {
-            let message = advisory.to_string();
-            assert!(!message.contains("use a literal"), "{case}: {message}");
-            assert!(
-                !message.contains("literal named import"),
-                "{case}: {message}"
-            );
+            assert_runtime_import_next_step(&advisory.to_string());
         }
     }
 
@@ -144,7 +139,11 @@ fn production_exports_issues_3175_3176_check_json_snapshot() {
         "expected unanalyzable:report to fail"
     );
     let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-    assert_eq!(report["rules"].as_array().unwrap().len(), 4, "{report}");
+    let rules = report["rules"].as_array().unwrap();
+    assert_eq!(rules.len(), 4, "{report}");
+    for finding in rules {
+        assert_runtime_import_next_step(&finding.to_string());
+    }
     assert!(
         report["advisories"].as_array().unwrap().is_empty(),
         "{report}"
@@ -166,4 +165,20 @@ fn production_exports_issues_3175_3176_check_json_snapshot() {
         report["advisories"].as_array().unwrap().is_empty(),
         "{report}"
     );
+}
+
+fn assert_runtime_import_next_step(message: &str) {
+    assert!(!message.contains("use a literal"), "{message}");
+    assert!(!message.contains("literal named import"), "{message}");
+    if !message.contains("Runtime-resolved import") {
+        return;
+    }
+    assert!(
+        message.contains(concat!(
+            "// no-mistakes-disable-line production-exports-only-used-by-tests",
+            " -- runtime-resolved import boundary"
+        )),
+        "{message}"
+    );
+    assert!(!message.contains("use explicit named imports"), "{message}");
 }

@@ -457,29 +457,39 @@ edge, including a real import beside an isolated mock. Public module-facts outpu
 and checks with this rule disabled keep their existing behavior.
 
 A remaining computed runtime `import(target)` emits one uncertainty diagnostic per site,
-with its source column, including separate sites on the same line:
-“Runtime-resolved import; exports reached through it are unknown.” The rule cannot
-prove which exports the import consumes, so it does not recommend replacing a
-runtime target with a literal import.
+with its source column, including separate sites on the same line. The diagnostic
+names that column, says the reached exports are unknown, and tells you to suppress
+the reported line. The rule cannot prove which exports the import consumes, so it
+does not recommend replacing a runtime target with a literal import. Suppress the
+reported import line with a reason:
+
+```typescript
+await import(entry); // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary
+```
+
+The comment is on the reported line. The text after `--` is the reason; replace
+it when the boundary is more specific. The same exception on the previous line is
+`// no-mistakes-disable-next-line production-exports-only-used-by-tests -- runtime-resolved import boundary`.
 
 This includes imports driven by directory enumeration and paths returned by
 `require.resolve` or `createRequire(...).resolve`. For example:
 
 ```typescript
 for (const file of readdirSync(toolsDir).filter(f => f.endsWith('.mts'))) {
+  // no-mistakes-disable-next-line production-exports-only-used-by-tests -- enumerated tool entrypoints
   await import(pathToFileURL(join(toolsDir, file)).href);
 }
+// no-mistakes-disable-next-line production-exports-only-used-by-tests -- package resolved outside this file
 const dependency = await import(pathToFileURL(require.resolve('some-package')).href);
 ```
 
 The rule does not assume that every enumerated file is consumed or that a
 resolver-provided path is external: the directory can change at runtime, and a
 bare package can resolve to workspace code. These sites retain uncertainty under
-the configured `unanalyzable` policy. Review the runtime targets before using a
-line suppression for an intentional boundary. `unanalyzable: advise` keeps these
-limitations visible without failing the check, but applies to all uncertainty in
-the configured rule scope. Neither option proves that the unknown exports have a
-production consumer.
+the configured `unanalyzable` policy until the reported line is suppressed.
+`unanalyzable: advise` keeps these limitations visible without failing the check,
+but applies to all uncertainty in the configured rule scope. A line suppression
+and `unanalyzable: advise` both leave the reached exports unproven.
 
 Folded imports preserve the isolated Vitest mock handling used for literal
 imports. An inert `vi.mock` or `vi.doMock` module-promise argument does not consume
@@ -645,6 +655,12 @@ export function testSeam() {}
 
 `no-mistakes-disable-line production-exports-only-used-by-tests` and
 `no-mistakes-disable-file production-exports-only-used-by-tests` are also supported.
+A runtime-resolved import uses the line form on the reported import:
+
+```typescript
+await import(entry); // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary
+```
+
 The generic rule `message` customizes diagnostics for agents.
 
 ## CLI and Node API
