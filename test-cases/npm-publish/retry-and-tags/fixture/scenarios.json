@@ -878,7 +878,7 @@
     "packageName": "no-mistakes-darwin-arm64"
   },
   {
-    "name": "successful upload metadata outage fails closed",
+    "name": "successful upload permission error fails immediately",
     "results": [
       {
         "status": 1,
@@ -901,7 +901,7 @@
       {
         "status": 1,
         "stdout": "",
-        "stderr": "E503",
+        "stderr": "E403",
         "request": "version"
       }
     ],
@@ -991,5 +991,425 @@
     "delays": [
       500
     ]
+  },
+  {
+    "name": "successful upload retries E500 metadata lookup then becomes visible",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "request": "publish"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\":{\"code\":\"E500\"}}",
+        "stderr": "",
+        "request": "version",
+        "timeoutMs": 120000
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": "",
+        "request": "version",
+        "timeoutMs": 119000
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "delays": [
+      1000
+    ]
+  },
+  {
+    "name": "successful upload retries ECONNRESET metadata lookup then becomes visible",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "request": "publish"
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "npm error code ECONNRESET",
+        "request": "version",
+        "timeoutMs": 120000
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": "",
+        "request": "version",
+        "timeoutMs": 119000
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "delays": [
+      1000
+    ]
+  },
+  {
+    "name": "successful upload retries ETIMEDOUT metadata lookup then becomes visible",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "request": "publish"
+      },
+      {
+        "throw": {
+          "code": "ETIMEDOUT",
+          "message": "spawnSync npm ETIMEDOUT"
+        },
+        "request": "version",
+        "timeoutMs": 120000
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": "",
+        "request": "version",
+        "timeoutMs": 119000
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "delays": [
+      1000
+    ]
+  },
+  {
+    "name": "successful upload transient metadata errors exhaust the poll window without reupload",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "request": "publish"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\":{\"code\":\"E500\"}}",
+        "stderr": "",
+        "request": "version",
+        "timeoutMs": 120000
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "npm error code ECONNRESET",
+        "request": "version",
+        "timeoutMs": 119000
+      },
+      {
+        "throw": {
+          "code": "ETIMEDOUT",
+          "message": "spawnSync npm ETIMEDOUT"
+        },
+        "request": "version",
+        "timeoutMs": 117000
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\":{\"code\":\"E500\"}}",
+        "stderr": "",
+        "request": "version",
+        "timeoutMs": 113000
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "npm error code ECONNRESET",
+        "request": "version",
+        "timeoutMs": 105000
+      },
+      {
+        "throw": {
+          "code": "ETIMEDOUT",
+          "message": "spawnSync npm ETIMEDOUT"
+        },
+        "request": "version",
+        "timeoutMs": 95000
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\":{\"code\":\"E500\"}}",
+        "stderr": "",
+        "request": "version",
+        "timeoutMs": 85000
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "npm error code ECONNRESET",
+        "request": "version",
+        "timeoutMs": 75000
+      },
+      {
+        "throw": {
+          "code": "ETIMEDOUT",
+          "message": "spawnSync npm ETIMEDOUT"
+        },
+        "request": "version",
+        "timeoutMs": 65000
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\":{\"code\":\"E500\"}}",
+        "stderr": "",
+        "request": "version",
+        "timeoutMs": 55000
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "npm error code ECONNRESET",
+        "request": "version",
+        "timeoutMs": 45000
+      },
+      {
+        "throw": {
+          "code": "ETIMEDOUT",
+          "message": "spawnSync npm ETIMEDOUT"
+        },
+        "request": "version",
+        "timeoutMs": 35000
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\":{\"code\":\"E500\"}}",
+        "stderr": "",
+        "request": "version",
+        "timeoutMs": 25000
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "npm error code ECONNRESET",
+        "request": "version",
+        "timeoutMs": 15000
+      },
+      {
+        "throw": {
+          "code": "ETIMEDOUT",
+          "message": "spawnSync npm ETIMEDOUT"
+        },
+        "request": "version",
+        "timeoutMs": 5000
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "delays": [
+      1000,
+      2000,
+      4000,
+      8000,
+      10000,
+      10000,
+      10000,
+      10000,
+      10000,
+      10000,
+      10000,
+      10000,
+      10000,
+      10000,
+      5000
+    ],
+    "error": "inspect npm publication status before resuming the same tag"
+  },
+  {
+    "name": "successful upload lookup timeout consumes the whole poll window",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "request": "publish"
+      },
+      {
+        "throw": {
+          "code": "ETIMEDOUT",
+          "message": "spawnSync npm ETIMEDOUT"
+        },
+        "request": "version",
+        "timeoutMs": 120000,
+        "elapsedMs": 120000
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "error": "inspect npm publication status before resuming the same tag"
+  },
+  {
+    "name": "successful upload unexpected version fails immediately",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "request": "publish"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.9\"",
+        "stderr": "",
+        "request": "version"
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "error": "Unexpected version 0.109.9"
+  },
+  {
+    "name": "successful upload permanent process error fails immediately",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "request": "publish"
+      },
+      {
+        "throw": {
+          "code": "ENOENT",
+          "message": "spawnSync npm ENOENT"
+        },
+        "request": "version"
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "error": "ENOENT"
+  },
+  {
+    "name": "successful upload unexpected metadata shape fails immediately",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "request": "publish"
+      },
+      {
+        "status": 0,
+        "stdout": "{\"code\":\"E500\"}",
+        "stderr": "",
+        "request": "version"
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "error": "Unexpected npm view result"
   }
 ]

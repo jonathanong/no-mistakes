@@ -1,4 +1,4 @@
-<!-- cspell:ignore Sigstore TLOG packument unpromoted -->
+<!-- cspell:ignore Sigstore TLOG packument unpromoted ECONNRESET ETIMEDOUT -->
 
 # Release stages
 
@@ -27,14 +27,19 @@ is skipped. Failed publishes are checked again in case the registry accepted the
 write before the response failed. Sigstore `TLOG_CREATE_ENTRY_ERROR`, rate limits,
 server errors, process timeouts, and transient connection errors get at most
 three publish attempts
-with 10 and 20 second delays. Other failures stop the job. Registry lookup errors
-other than a missing version fail closed. Each npm command has a two minute
+with 10 and 20 second delays. Other failures stop the job. Registry lookups before
+publishing or after a failed upload fail closed on errors other than a missing
+version. Each npm command has a two minute
 process deadline and a one minute fetch timeout with npm fetch retries disabled.
 After a successful upload, the helper polls the exact version for up to two
 minutes, backing off from one second to a ten second maximum between lookups.
+During this poll window, missing versions and transient lookup errors (`E5xx`,
+`ECONNRESET`, and `ETIMEDOUT`, including process timeouts) use the same backoff.
+Other lookup errors and unexpected versions still fail immediately.
 Lookup time and sleeps share that deadline; each lookup's process and fetch
 limits shrink to fit the remaining budget. A version that appears during this
-window proceeds normally. If it remains missing, the helper stops with a clear
+window proceeds normally. If it remains missing or transient lookups keep failing,
+the helper stops with a clear
 error that it may still be propagating or staged but unpromoted, without
 repeating the accepted upload or entering the 30 minute tarball wait.
 A failed upload response gets one bounded lookup in case the write succeeded.
