@@ -52,3 +52,11 @@ SELECT (SELECT COUNT(DISTINCT author_id) /* CASE: recall-count-distinct-existenc
 
 -- A primary-key grouping determines the other plain columns in each group.
 SELECT slug /* CASE: recall-grouped-key-projection */ FROM posts GROUP BY id;
+
+-- Recursive work does not weaken an unrelated catalog-proven primary key.
+WITH RECURSIVE walk AS (
+  SELECT id, parent_id FROM posts WHERE id = $1
+  UNION ALL
+  SELECT p.id, p.parent_id FROM posts AS p JOIN walk AS w ON p.id = w.parent_id
+)
+SELECT DISTINCT id /* CASE: recall-recursive-unrelated-key */ FROM posts;

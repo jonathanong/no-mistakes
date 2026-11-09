@@ -79,3 +79,23 @@ export async function recallAggregateAppend() {
   await query(existence);
   await query(grouped);
 }
+
+export async function recursiveUnrelatedKey(id: string) {
+  await query(sql`
+    WITH RECURSIVE walk AS (
+      SELECT id, parent_id FROM posts WHERE id = ${id}
+      UNION ALL
+      SELECT p.id, p.parent_id FROM posts AS p JOIN walk AS w ON p.id = w.parent_id
+    )
+    SELECT DISTINCT id /* CASE: embedded-recall-recursive-unrelated-key */ FROM posts
+  `);
+}
+
+export async function recursiveUnrelatedKeyAppend(id: string) {
+  const statement = sql`WITH RECURSIVE walk AS (
+    SELECT id, parent_id FROM posts WHERE id = ${id}
+  `;
+  statement.append(sql`UNION ALL SELECT p.id, p.parent_id FROM posts AS p JOIN walk AS w ON p.id = w.parent_id)`);
+  statement.append(sql` SELECT DISTINCT id /* CASE: append-recall-recursive-unrelated-key */ FROM posts`);
+  await query(statement);
+}
