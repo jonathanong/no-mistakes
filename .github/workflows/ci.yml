@@ -702,6 +702,7 @@ jobs:
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
+          components: llvm-tools-preview
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
@@ -713,6 +714,10 @@ jobs:
         with:
           # The profile-reuse helper depends on the 0.9.0 report glob and reuse behavior.
           tool: cargo-llvm-cov@0.9.0
+
+      - name: Test Rust profile pooling
+        timeout-minutes: 2
+        run: node --test .github/scripts/rust-profile-pooling.test.cjs
 
       - name: Start isolated PostgreSQL for catalog fixtures
         timeout-minutes: 5

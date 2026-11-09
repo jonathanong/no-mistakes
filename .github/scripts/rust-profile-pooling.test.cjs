@@ -18,6 +18,9 @@ const step = workflow.split("- name: Run Rust tests for coverage")[1].split("- n
 const pattern = step.match(/LLVM_PROFILE_FILE_NAME: (\S+)/)?.[1];
 test("coverage subprocesses share a bounded binary-signature pool", () => {
   assert.match(pattern, /^no-mistakes-%[1-9]m\.profraw$/);
+  const job = workflow.split("\n  tests:")[1].split(/^  [\w-]+:/m)[0];
+  assert.match(job, /components: llvm-tools-preview/);
+  assert.match(job, /run: node --test \.github\/scripts\/rust-profile-pooling\.test\.cjs/);
 });
 
 const rustc = (...args) => spawnSync("rustc", args, { encoding: "utf8" });
@@ -36,9 +39,10 @@ const run = (command, args) => {
 test(
   "pooled concurrent processes retain every branch and execution count",
   {
-    skip: !existsSync(profdata) || !existsSync(cov) ? "requires rustup llvm-tools-preview" : false,
+    timeout: 60_000,
   },
   async () => {
+    assert.ok(existsSync(profdata) && existsSync(cov), "requires rustup llvm-tools-preview");
     const temp = mkdtempSync(join(tmpdir(), "nm-profile-pooling-"));
     try {
       const binary = join(temp, `probe${suffix}`);
