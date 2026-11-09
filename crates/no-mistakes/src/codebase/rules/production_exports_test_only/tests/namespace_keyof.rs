@@ -35,6 +35,12 @@ fn namespace_keyof_helpers_keep_uncertainty_at_each_import_site() {
                     .as_str()
                     .unwrap()
                     .contains("namespace selector"));
+                for name in ["processX", "processY", "processZ"] {
+                    assert!(row["message"]
+                        .as_str()
+                        .unwrap()
+                        .contains(&format!("`{name}`")));
+                }
             }
         }
     }

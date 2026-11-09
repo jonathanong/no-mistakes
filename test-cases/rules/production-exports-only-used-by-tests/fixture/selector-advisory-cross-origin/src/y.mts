@@ -1,0 +1,10 @@
+export { same as oneSame } from './one.mjs';
+export { left as oneLeft } from './one.mjs';
+export { middle as oneMiddle } from './one.mjs';
+export { same as twoSame } from './two.mjs';
+export { left as twoLeft } from './two.mjs';
+export { right as twoRight } from './two.mjs';
+export { same as threeSame } from './three.mjs';
+export { middle as threeMiddle } from './three.mjs';
+export { right as threeRight } from './three.mjs';
+export { same as fourSame } from './four.mjs';

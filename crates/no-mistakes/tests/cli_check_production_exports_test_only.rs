@@ -98,16 +98,10 @@ fn selector_advisories_check_json_snapshot() {
         );
     }
     let advisories = report["advisories"].as_array().unwrap();
-    assert_eq!(advisories.len(), 4, "{report}");
+    assert_eq!(advisories.len(), 3, "{report}");
     for (file, line, specifier, other) in [
         (
             "other/candidate.mts",
-            2,
-            "../src/candidate.mjs",
-            "../src/proven.mjs",
-        ),
-        (
-            "other/z-candidate.mts",
             2,
             "../src/candidate.mjs",
             "../src/proven.mjs",
@@ -132,6 +126,19 @@ fn selector_advisories_check_json_snapshot() {
         assert!(detail.contains("namespace"), "{report}");
         assert!(detail.contains(&format!("{file}:{line}")), "{report}");
     }
+    let candidate = advisories
+        .iter()
+        .find(|row| {
+            row["message"]
+                .as_str()
+                .unwrap()
+                .contains("`uncertainValue`")
+        })
+        .unwrap();
+    assert!(candidate["message"]
+        .as_str()
+        .unwrap()
+        .contains("other/z-candidate.mts:2"));
     let root = crate::check_json_snapshot::rules_path(RULE, "fixture", "selector-advisories");
     crate::check_json_snapshot::assert_saved_fixture(
         "production_exports_selector_advisories",

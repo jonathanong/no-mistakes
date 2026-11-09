@@ -1,0 +1,113 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/x-consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `same` include an unknown import selector: src/x-consumer.mts:1 `./x.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import('./x.mjs');",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/y-consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: production export consumers for `left`, `middle`, `right`, `same` include unknown import selectors: src/y-consumer.mts:1 `./y.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import('./y.mjs');",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/definite.mts",
+          "line": 1,
+          "message": "production export `onlyTests` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function onlyTests() { return 1; }",
+          "target": "onlyTests"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/definite.mts",
+          "line": 1,
+          "message": "production export `onlyTests` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function onlyTests() { return 1; }",
+          "target": "onlyTests"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/definite.mts",
+          "line": 1,
+          "message": "production export `onlyTests` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function onlyTests() { return 1; }",
+          "target": "onlyTests"
+        },
+        {
+          "file": "src/x-consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `same` include an unknown import selector: src/x-consumer.mts:1 `./x.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import('./x.mjs');",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/y-consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: production export consumers for `left`, `middle`, `right`, `same` include unknown import selectors: src/y-consumer.mts:1 `./y.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import('./y.mjs');",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

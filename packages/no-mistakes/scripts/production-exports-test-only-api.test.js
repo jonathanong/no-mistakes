@@ -159,6 +159,10 @@ test(
     for (const [root, config, targets, count] of [
       [join(rules, "platform-consumed"), "enabled.yml", ["stillTestOnly", "Worker"], 1],
       [join(rules, "namespace-keyof-helper"), ".no-mistakes.yml", ["onlyTests"], 2],
+      [join(rules, "selector-advisory-grouping"), ".no-mistakes.yml", ["onlyTests"], 5],
+      [join(rules, "selector-advisory-cross-origin"), ".no-mistakes.yml", ["onlyTests"], 2],
+      [join(rules, "selector-advisory-suppression"), ".no-mistakes.yml", ["onlyTests"], 0],
+      [join(rules, "selector-advisory-default"), ".no-mistakes.yml", ["onlyTests"], 1],
       [external, ".no-mistakes.yml", ["testOnly"], 7],
     ]) {
       const options = { root, config: join(root, config), jobs: 1 };

@@ -9,7 +9,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/assigned-consumer.mts",
           "line": 4,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/assigned-consumer.mts:4 `./assigned-target.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `Assigned` include an unknown import selector: src/assigned-consumer.mts:4 `./assigned-target.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const stored = retry(() => import(\"./assigned-target.mjs\"));",
           "target": "unanalyzable"
@@ -17,7 +17,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/mixed-line.mts",
           "line": 3,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/mixed-line.mts:3 `./mixed-line-target.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `shared` include an unknown import selector: src/mixed-line.mts:3 `./mixed-line-target.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export const both = [import(\"./mixed-line-target.mjs\").then((mod) => mod.shared), import(\"./mixed-line-target.mjs\")];",
           "target": "unanalyzable"
@@ -25,7 +25,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/paren-consumer.mts",
           "line": 4,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/paren-consumer.mts:4 `./paren-target.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `Paren` include an unknown import selector: src/paren-consumer.mts:4 `./paren-target.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export const parenthesized = (retry(() => import(\"./paren-target.mjs\")) as Promise<unknown>).then((mod: any) => mod.Paren);",
           "target": "unanalyzable"
@@ -33,31 +33,31 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/then-default-extra-consumer.mts",
           "line": 5,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/then-default-extra-consumer.mts:5 `./then-default-extra.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `Computed` include an unknown import selector: src/then-default-extra-consumer.mts:5 `./then-default-extra.mjs` (dynamic or require selector), src/then-default-extra-consumer.mts:6 `./then-default-extra.mjs` (dynamic or require selector), src/then-default-extra-consumer.mts:7 `./then-default-extra.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export const extraKey = dynamic(() => import(\"./then-default-extra.mjs\").then((m) => ({ default: m.ExtraKey, other: 1 })));",
           "target": "unanalyzable"
         },
         {
           "file": "src/then-default-extra-consumer.mts",
-          "line": 6,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/then-default-extra-consumer.mts:6 `./then-default-extra.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "line": 5,
+          "message": "cannot analyze production export importers: symbol consumers of `ExtraKey` include an unknown import selector: src/then-default-extra-consumer.mts:5 `./then-default-extra.mjs` (dynamic or require selector), src/then-default-extra-consumer.mts:6 `./then-default-extra.mjs` (dynamic or require selector), src/then-default-extra-consumer.mts:7 `./then-default-extra.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "export const spread = dynamic(() => import(\"./then-default-extra.mjs\").then((m) => ({ ...m })));",
+          "sourceLine": "export const extraKey = dynamic(() => import(\"./then-default-extra.mjs\").then((m) => ({ default: m.ExtraKey, other: 1 })));",
           "target": "unanalyzable"
         },
         {
           "file": "src/then-default-extra-consumer.mts",
-          "line": 7,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/then-default-extra-consumer.mts:7 `./then-default-extra.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "line": 5,
+          "message": "cannot analyze production export importers: symbol consumers of `Spread` include an unknown import selector: src/then-default-extra-consumer.mts:5 `./then-default-extra.mjs` (dynamic or require selector), src/then-default-extra-consumer.mts:6 `./then-default-extra.mjs` (dynamic or require selector), src/then-default-extra-consumer.mts:7 `./then-default-extra.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "export const computed = dynamic(() => import(\"./then-default-extra.mjs\").then((m) => ({ [k]: m.Computed })));",
+          "sourceLine": "export const extraKey = dynamic(() => import(\"./then-default-extra.mjs\").then((m) => ({ default: m.ExtraKey, other: 1 })));",
           "target": "unanalyzable"
         },
         {
           "file": "src/unknown-consumer.mts",
           "line": 3,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/unknown-consumer.mts:3 `./unknown.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `unknownForm` include an unknown import selector: src/unknown-consumer.mts:3 `./unknown.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export const unknownLoaded = import(\"./unknown.mjs\").then((mod) => mod[key]);",
           "target": "unanalyzable"
@@ -81,7 +81,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/wrapper-consumer.mts",
           "line": 5,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/wrapper-consumer.mts:5 `./retried.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `Retried` include an unknown import selector: src/wrapper-consumer.mts:5 `./retried.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export const retried = retry(() => import(\"./retried.mjs\")).then((mod) => mod.Retried);",
           "target": "unanalyzable"
@@ -89,7 +89,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/wrapper-consumer.mts",
           "line": 8,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/wrapper-consumer.mts:8 `./wrapped.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `Wrapped` include an unknown import selector: src/wrapper-consumer.mts:8 `./wrapped.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "return await wrap(() => import(\"./wrapped.mjs\"));",
           "target": "unanalyzable"
@@ -97,7 +97,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/mock-factory.test.mts",
           "line": 7,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/mock-factory.test.mts:7 `../src/mock-helper.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `InfiniteScroll` include an unknown import selector: tests/mock-factory.test.mts:7 `../src/mock-helper.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "vi.mock(import(\"../src/mock-target.mjs\"), async () => import(\"../src/mock-helper.mjs\"));",
           "target": "unanalyzable"
@@ -105,7 +105,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/mock-factory.test.mts",
           "line": 7,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/mock-factory.test.mts:7 `../src/mock-target.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `Target` include an unknown import selector: tests/mock-factory.test.mts:7 `../src/mock-target.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "vi.mock(import(\"../src/mock-target.mjs\"), async () => import(\"../src/mock-helper.mjs\"));",
           "target": "unanalyzable"

@@ -9,7 +9,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./templates.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `processX`, `processY`, `processZ` include unknown import selectors: src/consumer.mts:1 `./templates.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as templates from './templates.mjs';",
           "target": "unanalyzable"
@@ -17,7 +17,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/other.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/other.mts:1 `./templates.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `processX`, `processY`, `processZ` include unknown import selectors: src/other.mts:1 `./templates.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as templates from './templates.mjs';",
           "target": "unanalyzable"
@@ -73,7 +73,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./templates.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `processX`, `processY`, `processZ` include unknown import selectors: src/consumer.mts:1 `./templates.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as templates from './templates.mjs';",
           "target": "unanalyzable"
@@ -89,7 +89,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/other.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/other.mts:1 `./templates.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `processX`, `processY`, `processZ` include unknown import selectors: src/other.mts:1 `./templates.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as templates from './templates.mjs';",
           "target": "unanalyzable"

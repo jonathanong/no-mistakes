@@ -9,7 +9,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -30,7 +30,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -51,7 +51,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -72,7 +72,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./barrel.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./barrel.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./barrel.mjs\";",
           "target": "unanalyzable"
@@ -177,7 +177,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -198,7 +198,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -261,7 +261,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -345,7 +345,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -366,7 +366,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -387,7 +387,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -408,7 +408,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -429,7 +429,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -471,7 +471,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -492,7 +492,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -513,7 +513,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -534,7 +534,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -555,7 +555,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -576,7 +576,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -597,7 +597,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace re-export selector, namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace re-export selector, namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -639,7 +639,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -660,7 +660,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -723,7 +723,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -765,7 +765,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -786,7 +786,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -807,7 +807,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -828,7 +828,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -870,7 +870,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -891,7 +891,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -950,7 +950,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -992,7 +992,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace re-export selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace re-export selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -1013,7 +1013,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -1055,7 +1055,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -1097,7 +1097,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -1181,7 +1181,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -1202,7 +1202,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace re-export selector, namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace re-export selector, namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -1223,7 +1223,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -1244,7 +1244,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -1265,7 +1265,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -1286,7 +1286,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -1307,7 +1307,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -1349,7 +1349,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"
@@ -1391,7 +1391,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import * as ns from \"./worker.mjs\";",
           "target": "unanalyzable"

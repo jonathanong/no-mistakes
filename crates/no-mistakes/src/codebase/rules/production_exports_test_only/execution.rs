@@ -12,6 +12,8 @@ pub(crate) fn check_with_graph_and_session(
     }
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut diagnostics = AnalysisDiagnostics::default();
+    let mut baseline_selectors = AnalysisDiagnostics::default();
+    let mut compressed_selectors = AnalysisDiagnostics::default();
     let incomplete = traversal::incomplete_sources(graph, facts);
     prerequisites::record_incomplete(&incomplete, facts, session)?;
     for application in config.rule_applications(RULE_ID) {
@@ -37,19 +39,20 @@ pub(crate) fn check_with_graph_and_session(
                 .map(|file| {
                     let mut chunk = AnalysisDiagnostics::default();
                     let Some(ts) = facts.get_ts_facts(file) else {
-                        return chunk;
+                        return (chunk, selector_advisories::SelectorAdvisories::default());
                     };
                     let Some(symbols) = ts
                         .symbols
                         .as_ref()
                         .filter(|_| ts.parse_error.is_none() && ts.operational_error.is_none())
                     else {
-                        return chunk;
+                        return (chunk, selector_advisories::SelectorAdvisories::default());
                     };
                     let local_uses = options
                         .ignore_exports_used_in_file
                         .then(|| used_in_file::exports(ts));
                     let mut functions = std::collections::BTreeSet::new();
+                    let mut selectors = selector_advisories::SelectorAdvisories::default();
                     for export in &symbols.exports {
                         if forwarded(symbols, export) {
                             continue;
@@ -83,14 +86,7 @@ pub(crate) fn check_with_graph_and_session(
                             continue;
                         }
                         if !consumers.unknown.is_empty() {
-                            for (importer, line, reason) in
-                                selector_advisories::for_sites(&root, graph, &consumers.unknown)
-                            {
-                                chunk.unanalyzable(
-                                    policy,
-                                    uncertain(&root, application, &importer, line, &reason),
-                                );
-                            }
+                            selectors.insert(graph, file, name, &export.name, &consumers.unknown);
                         } else if !undetermined.is_empty() {
                             let (importer, line, reason) = selector_advisories::undetermined(
                                 &root,
@@ -110,11 +106,22 @@ pub(crate) fn check_with_graph_and_session(
                                 .push(finding(&root, application, file, export));
                         }
                     }
-                    chunk
+                    (chunk, selectors)
                 })
                 .collect();
-            for completed in chunks {
+            let mut selectors = selector_advisories::SelectorAdvisories::default();
+            for (completed, groups) in chunks {
                 chunk.append(completed);
+                selectors.append(groups);
+            }
+            let (baseline, compressed) = selectors
+                .finish(&root)
+                .findings(|file, line, reason| uncertain(&root, application, file, line, reason));
+            for finding in baseline {
+                baseline_selectors.unanalyzable(policy, finding);
+            }
+            for finding in compressed {
+                compressed_selectors.unanalyzable(policy, finding);
             }
             Ok(())
         })();
@@ -125,6 +132,12 @@ pub(crate) fn check_with_graph_and_session(
         }
         diagnostics.append(chunk);
     }
+    diagnostics.append(selector_advisories::choose(
+        &root,
+        session,
+        baseline_selectors,
+        compressed_selectors,
+    ));
     crate::codebase::rules::sort_findings(&mut diagnostics.findings);
     crate::codebase::rules::sort_findings(&mut diagnostics.advisories);
     Ok(diagnostics)

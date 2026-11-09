@@ -528,9 +528,16 @@ Passing a namespace to a helper remains uncertain, including a helper whose
 parameters use `typeof templates` and `keyof typeof templates` and whose body
 calls `t[name]()`. The rule does not trace namespace arguments through helper
 parameters or infer the selected member from a string argument. The affected
-module's exports remain uncertain, with one diagnostic at the namespace import
-site. Rewrite the helper to accept explicitly named functions to establish the
-consumer relationship.
+module's exports remain uncertain. A site repeated across several exports can
+share one diagnostic listing those export names. Other uncertain sites stay
+grouped per export, with every site and the export name in the message. If
+site grouping would not reduce the per-export diagnostic count, all sites stay
+grouped per export. The final choice compares deduplicated diagnostics across
+the whole check, including repeated evidence through alias barrels, and neither
+the finding count nor the advisory count may increase. A module with one export
+and many plain dynamic imports therefore emits one diagnostic, not one per
+import. Rewrite the helper to accept explicitly named functions to establish
+the consumer relationship.
 
 Rewrite that import or re-export with explicit names. A literal import in
 `vi.mock(import("./module"), factory)` with an imported Vitest `vi` binding and

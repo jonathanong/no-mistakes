@@ -314,7 +314,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/loader.test.mts",
           "line": 6,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/loader.test.mts:6 `../src/api.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: tests/loader.test.mts:6 `../src/api.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export const api = require(\"../src/api.mjs\");",
           "target": "unanalyzable"
@@ -506,7 +506,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/callback.test.mts",
           "line": 2,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/callback.test.mts:2 `../src/callback.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `callbackKey` include an unknown import selector: tests/callback.test.mts:2 `../src/callback.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export const items = [1].map(() => ({}) as typeof import(\"../src/callback.mjs\"));",
           "target": "unanalyzable"
@@ -514,7 +514,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/local-vi.test.mts",
           "line": 5,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/local-vi.test.mts:5 `../src/local-vi.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `localViKey` include an unknown import selector: tests/local-vi.test.mts:5 `../src/local-vi.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "...((await importOriginal()) as typeof import(\"../src/local-vi.mjs\")),",
           "target": "unanalyzable"
@@ -522,7 +522,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/member-callee.test.mts",
           "line": 6,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/member-callee.test.mts:6 `../src/member-callee.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `memberKey` include an unknown import selector: tests/member-callee.test.mts:6 `../src/member-callee.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "...(await helpers.load<typeof import(\"../src/member-callee.mjs\")>()),",
           "target": "unanalyzable"
@@ -530,7 +530,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/not-a-factory.test.mts",
           "line": 4,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/not-a-factory.test.mts:4 `../src/not-a-factory.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `argKey` include an unknown import selector: tests/not-a-factory.test.mts:4 `../src/not-a-factory.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const stub = {} as typeof import(\"../src/not-a-factory.mjs\");",
           "target": "unanalyzable"
@@ -538,7 +538,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/not-a-mock.test.mts",
           "line": 2,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/not-a-mock.test.mts:2 `../src/not-a-mock.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `plainKey` include an unknown import selector: tests/not-a-mock.test.mts:2 `../src/not-a-mock.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "...((await original()) as typeof import(\"../src/not-a-mock.mjs\")),",
           "target": "unanalyzable"
@@ -546,7 +546,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/other-module.test.mts",
           "line": 5,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/other-module.test.mts:5 `../src/other-module.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `otherKey` include an unknown import selector: tests/other-module.test.mts:5 `../src/other-module.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "...(await importOriginal<typeof import(\"../src/other-module.mjs\")>()),",
           "target": "unanalyzable"
@@ -554,7 +554,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/plain-assertion.test.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/plain-assertion.test.mts:1 `../src/plain-assertion.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `stubKey` include an unknown import selector: tests/plain-assertion.test.mts:1 `../src/plain-assertion.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export const stub = {} as typeof import(\"../src/plain-assertion.mjs\");",
           "target": "unanalyzable"
@@ -562,7 +562,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/wrong-callee.test.mts",
           "line": 6,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/wrong-callee.test.mts:6 `../src/wrong-callee.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `calleeKey` include an unknown import selector: tests/wrong-callee.test.mts:6 `../src/wrong-callee.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "...(await other<typeof import(\"../src/wrong-callee.mjs\")>()),",
           "target": "unanalyzable"
@@ -612,7 +612,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/bare.test.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/bare.test.mts:1 `../src/bare.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `bareKey` include an unknown import selector: tests/bare.test.mts:1 `../src/bare.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export type Whole = typeof import(\"../src/bare.mjs\");",
           "target": "unanalyzable"
@@ -620,7 +620,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/computed-key.test.mts",
           "line": 2,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/computed-key.test.mts:2 `../src/computed-key.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `computedKey` include an unknown import selector: tests/computed-key.test.mts:2 `../src/computed-key.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export type Dynamic = Pick<typeof import(\"../src/computed-key.mjs\"), Key>;",
           "target": "unanalyzable"
@@ -628,7 +628,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/local-pick.test.mts",
           "line": 3,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/local-pick.test.mts:3 `../src/local-pick.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `localKey` include an unknown import selector: tests/local-pick.test.mts:3 `../src/local-pick.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export type Local = Pick<typeof import(\"../src/local-pick.mjs\"), \"localKey\">;",
           "target": "unanalyzable"
@@ -636,7 +636,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/mixed-union.test.mts",
           "line": 2,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/mixed-union.test.mts:2 `../src/mixed-union.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `mixedKey` include an unknown import selector: tests/mixed-union.test.mts:2 `../src/mixed-union.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export type Mixed = Pick<typeof import(\"../src/mixed-union.mjs\"), \"mixedKey\" | Key>;",
           "target": "unanalyzable"
@@ -644,7 +644,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/numeric-key.test.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/numeric-key.test.mts:1 `../src/numeric-key.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `numericKey` include an unknown import selector: tests/numeric-key.test.mts:1 `../src/numeric-key.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export type Numeric = Pick<typeof import(\"../src/numeric-key.mjs\"), 1>;",
           "target": "unanalyzable"
@@ -652,7 +652,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/omit.test.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/omit.test.mts:1 `../src/omit.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `omitKey` include an unknown import selector: tests/omit.test.mts:1 `../src/omit.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export type Rest = Omit<typeof import(\"../src/omit.mjs\"), \"omitKey\">;",
           "target": "unanalyzable"
@@ -660,7 +660,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/other-generic.test.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/other-generic.test.mts:1 `../src/other-generic.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `genericKey` include an unknown import selector: tests/other-generic.test.mts:1 `../src/other-generic.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export type Wrapped = Promise<typeof import(\"../src/other-generic.mjs\")>;",
           "target": "unanalyzable"
@@ -668,7 +668,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/qualified-pick.test.mts",
           "line": 4,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/qualified-pick.test.mts:4 `../src/qualified-pick.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `qualKey` include an unknown import selector: tests/qualified-pick.test.mts:4 `../src/qualified-pick.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export type Qualified = Utils.Pick<typeof import(\"../src/qualified-pick.mjs\"), \"qualKey\">;",
           "target": "unanalyzable"

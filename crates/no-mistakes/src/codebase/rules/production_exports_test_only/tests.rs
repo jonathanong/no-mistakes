@@ -1,6 +1,7 @@
 use crate::codebase::rules::{run_check, RuleFinding};
 use std::path::PathBuf;
 
+mod advisory_grouping;
 mod class_extends;
 mod gap;
 mod namespace_keyof;

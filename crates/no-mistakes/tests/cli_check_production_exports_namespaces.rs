@@ -183,3 +183,82 @@ fn namespace_keyof_helper_check_json_snapshot() {
     .collect();
     crate::check_json_snapshot::assert_saved_fixture("production_exports_namespace_keyof", &cases);
 }
+
+#[test]
+fn selector_advisory_grouping_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "production-exports-only-used-by-tests",
+        "fixture",
+        "selector-advisory-grouping",
+    );
+    let cases: Vec<_> = [
+        ("advise", ".no-mistakes.yml"),
+        ("report", "report.yml"),
+        ("ignore", "ignore.yml"),
+        ("off", "off.yml"),
+    ]
+    .into_iter()
+    .map(|(case, config)| (case, root.clone(), root.join(config)))
+    .collect();
+    crate::check_json_snapshot::assert_saved_fixture(
+        "production_exports_advisory_grouping",
+        &cases,
+    );
+}
+
+#[test]
+fn selector_advisory_cross_origin_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "production-exports-only-used-by-tests",
+        "fixture",
+        "selector-advisory-cross-origin",
+    );
+    let cases: Vec<_> = [
+        ("advise", ".no-mistakes.yml"),
+        ("report", "report.yml"),
+        ("ignore", "ignore.yml"),
+        ("off", "off.yml"),
+    ]
+    .into_iter()
+    .map(|(case, config)| (case, root.clone(), root.join(config)))
+    .collect();
+    crate::check_json_snapshot::assert_saved_fixture(
+        "production_exports_advisory_cross_origin",
+        &cases,
+    );
+}
+
+#[test]
+fn selector_advisory_suppression_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "production-exports-only-used-by-tests",
+        "fixture",
+        "selector-advisory-suppression",
+    );
+    let cases: Vec<_> = [
+        ("advise", ".no-mistakes.yml"),
+        ("report", "report.yml"),
+        ("ignore", "ignore.yml"),
+    ]
+    .into_iter()
+    .map(|(case, config)| (case, root.clone(), root.join(config)))
+    .collect();
+    crate::check_json_snapshot::assert_saved_fixture(
+        "production_exports_advisory_suppression",
+        &cases,
+    );
+}
+
+#[test]
+fn selector_advisory_default_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "production-exports-only-used-by-tests",
+        "fixture",
+        "selector-advisory-default",
+    );
+    let cases: Vec<_> = [("advise", ".no-mistakes.yml"), ("report", "report.yml")]
+        .into_iter()
+        .map(|(case, config)| (case, root.clone(), root.join(config)))
+        .collect();
+    crate::check_json_snapshot::assert_saved_fixture("production_exports_advisory_default", &cases);
+}

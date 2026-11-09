@@ -9,7 +9,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/helper.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/helper.mts:1 `../src/worker.mts` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `DefaultWorker`, `Worker`, `testOnly` include unknown import selectors: tests/helper.mts:1 `../src/worker.mts` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export function loadWorker() { return import('../src/worker.mts'); }",
           "target": "unanalyzable"
@@ -63,7 +63,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/helper.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/helper.mts:1 `../src/worker.mts` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `DefaultWorker`, `Worker`, `testOnly` include unknown import selectors: tests/helper.mts:1 `../src/worker.mts` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export function loadWorker() { return import('../src/worker.mts'); }",
           "target": "unanalyzable"
@@ -117,7 +117,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/helper.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: production export consumers include an unknown import selector: tests/helper.mts:1 `../src/worker.mts` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: tests/helper.mts:1 `../src/worker.mts` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export function loadWorker() { return import('../src/worker.mts'); }",
           "target": "unanalyzable"

@@ -1,0 +1,64 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `namedDefault` include an unknown import selector: src/consumer.mts:1 `./value.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import('./value.mjs');",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/definite.mts",
+          "line": 1,
+          "message": "production export `onlyTests` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function onlyTests() { return 1; }",
+          "target": "onlyTests"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `namedDefault` include an unknown import selector: src/consumer.mts:1 `./value.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import('./value.mjs');",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/definite.mts",
+          "line": 1,
+          "message": "production export `onlyTests` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function onlyTests() { return 1; }",
+          "target": "onlyTests"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
