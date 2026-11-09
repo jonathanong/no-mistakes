@@ -209,7 +209,8 @@ comment when an explain-analyze scenario and benchmark justify the aggregate.
 ## Counterexample
 
 These named files use the configuration above. The catalog's composite primary
-key and equality pin prove that `DISTINCT` is redundant:
+key and equality pin prove that `DISTINCT` is redundant. The usable backing index
+is included in the catalog:
 
 ```json
 // db/schema.json
@@ -222,7 +223,21 @@ key and equality pin prove that `DISTINCT` is redundant:
         "post_id": {"dataType": "uuid", "nullable": false},
         "topic_id": {"dataType": "uuid", "nullable": false}
       },
-      "primaryKey": {"columns": ["post_id", "topic_id"]}
+      "primaryKey": {"columns": ["post_id", "topic_id"]},
+      "indexes": {
+        "post_topics_pkey": {
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "immediate": true,
+          "accessMethod": "btree",
+          "keys": [
+            {"expression": "post_id", "column": "post_id"},
+            {"expression": "topic_id", "column": "topic_id"}
+          ]
+        }
+      }
     }
   }
 }
