@@ -95,6 +95,7 @@ fn legacy_executor_call(
             {
                 sql_source_positions = positions;
             }
+            super::exact_origins::fill(visitor, argument, sql.as_deref(), &mut sql_source_offsets);
             let (sql_text, recovered_placeholder_positions) = sql
                 .map(super::super::super::placeholders::publish_placeholders_with_positions)
                 .map_or_else(

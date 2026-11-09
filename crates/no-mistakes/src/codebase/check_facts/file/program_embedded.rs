@@ -21,12 +21,12 @@ pub(in crate::codebase::check_facts::file) fn prepared_embedded_sql(
         .into_iter()
         .map(|options| {
             let mut facts =
-                crate::codebase::postgres::embedded::extract_embedded_sql_from_program_with_demand(
+                crate::codebase::postgres::embedded::extract_embedded_sql_from_program_with_projections(
                     path,
                     program,
                     source,
                     &options,
-                    plan.embedded_sql_head_calls_only.contains(&options),
+                    (plan.embedded_sql_head_calls_only.contains(&options), plan.postgres_grouping),
                 );
             assign_unproven_rules(
                 &mut facts,

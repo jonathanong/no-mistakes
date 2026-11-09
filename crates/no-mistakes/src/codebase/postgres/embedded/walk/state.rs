@@ -41,6 +41,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(super) stable_primitives: crate::fx::FxHashSet<u32>,
     pub(super) scalar_literals: crate::fx::FxHashMap<std::num::NonZeroU32, String>,
     pub(crate) head_calls_only: bool,
+    pub(crate) exact_sql_origins: bool,
     pub(crate) source: &'a str,
     pub(crate) configured_module: String,
     pub(super) executor_options: &'a super::super::EmbeddedSqlOptions,
