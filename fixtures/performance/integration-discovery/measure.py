@@ -13,13 +13,23 @@ binaries = {'A': sys.argv[2], 'B': sys.argv[3]}
 output = pathlib.Path(sys.argv[4]).resolve()
 source_provenance = json.loads(pathlib.Path(sys.argv[5]).read_text())
 policies = source_provenance.get('policies', ['consuming', 'broad', 'disabled'])
+
+
 def executable_digest(path):
     with pathlib.Path(path).open('rb') as source:
         return hashlib.file_digest(source, 'sha256').hexdigest()
 
 
+for output_path in [output, output.with_suffix('.jsonl'), output.with_suffix('.warmups.jsonl'),
+                    output.with_suffix('.stdout'), output.with_suffix('.stderr'),
+                    output.with_suffix('.provenance.json')]:
+    if output_path.exists():
+        raise FileExistsError(f'refusing to overwrite prior cohort: {output_path}')
+
 binary_hashes = {arm: executable_digest(path) for arm, path in binaries.items()}
 assert len(set(binary_hashes.values())) == 2, 'baseline and candidate must be distinct'
+driver_sha256 = executable_digest(__file__)
+source_provenance['measurementDriverSha256'] = driver_sha256
 
 
 def corpus_digest():
@@ -33,7 +43,10 @@ input_digest = corpus_digest()
 assert input_digest == source_provenance['corpusSha256']
 metadata = dict(binaryHashes=binary_hashes, binaries=binaries, corpusSha256=input_digest,
                 sourceProvenance=source_provenance, platform=platform.platform(),
-                affinity=sorted(os.sched_getaffinity(0)))
+                affinity=sorted(os.sched_getaffinity(0)),
+                measurementDriverSha256=driver_sha256,
+                warmupProtocol='four untimed fresh-process runs in ABBA arm order before every mode/scope/jobs cell',
+                warmupJsonl=str(output.with_suffix('.warmups.jsonl')))
 output.with_suffix('.provenance.json').write_text(json.dumps(metadata, indent=2) + '\n')
 allowed_cpus = sorted(os.sched_getaffinity(0))
 affinities = json.loads(os.environ.get('NM_BENCH_AFFINITY_JSON', '{}'))
@@ -45,10 +58,46 @@ output.with_suffix('.provenance.json').write_text(json.dumps(metadata, indent=2)
 child_environment = os.environ.copy()
 child_environment.pop('RAYON_NUM_THREADS', None)
 rows = []
-with output.with_suffix('.jsonl').open('w') as trace:
+with output.with_suffix('.jsonl').open('w') as trace, output.with_suffix('.warmups.jsonl').open('w') as warm_trace:
     for mode in ['off', 'on']:
         for scope in policies:
             for jobs in ['1', '4', 'default']:
+                warmup_rows = []
+                for warm_position, arm in enumerate('ABBA'):
+                    command = ['taskset', '--cpu-list', ','.join(map(str, affinities[jobs])), binaries[arm]]
+                    if jobs != 'default':
+                        command += ['--jobs', jobs]
+                    command += ['check', '--root', str(corpus), '--config',
+                                str(corpus / 'configs' / (scope + '.yml')), '--format', 'json']
+                    if mode == 'on':
+                        command += ['--timings', '--verbose-timings']
+                    warm = subprocess.run(command, capture_output=True, env=child_environment)
+                    warm_stderr = warm.stderr
+                    warm_authoritative_stderr = b'\n'.join(
+                        line for line in warm_stderr.splitlines()
+                        if not line.startswith((b'[timing]', b'[cpu]', b'[memory]', b'[hot]', b'[work]')))
+                    expected = source_provenance['expectedFindings'][scope]
+                    warm_row = dict(mode=mode, scope=scope, jobs=jobs, warmup_position=warm_position,
+                                    arm=arm, command=command, exit=warm.returncode,
+                                    sha256=hashlib.sha256(warm.stdout).hexdigest(),
+                                    stderr_sha256=hashlib.sha256(warm_stderr).hexdigest(),
+                                    authoritative_stderr_sha256=hashlib.sha256(warm_authoritative_stderr).hexdigest())
+                    warmup_rows.append(warm_row)
+                    warm_trace.write(json.dumps(warm_row) + '\n')
+                    warm_trace.flush()
+                    warm_report = json.loads(warm.stdout)
+                    assert warm.returncode == int(sum(expected.values()) > 0), warm_row
+                    assert all(len(warm_report[key]) == expected.get(key, 0) for key in
+                               ['integration', 'advisories', 'codebase', 'queues', 'react', 'rules', 'warnings']), warm_row
+                    assert not warm_report.get('incomplete'), warm_row
+                    if scope.startswith('sql-'):
+                        assert warm_report['rules'][0]['rule'] == 'postgres-no-offset', warm_row
+                        assert warm_report['rules'][0]['target'] == 'offset', warm_row
+                assert len({(row['exit'], row['sha256']) for row in warmup_rows}) == 1, (mode, scope, jobs, warmup_rows)
+                assert len({row['authoritative_stderr_sha256'] for row in warmup_rows}) == 1, (mode, scope, jobs)
+                if mode == 'off':
+                    assert len({row['stderr_sha256'] for row in warmup_rows}) == 1, (scope, jobs)
+
                 orders = ['ABBA' if block % 2 == 0 else 'BAAB' for block in range(12)]
                 orders += ['AAAA', 'BBBB']
                 for block, order in enumerate(orders):
@@ -106,3 +155,7 @@ for scope in policies:
         cell = [r for r in rows if (r['scope'], r['jobs']) == (scope, jobs)]
         assert len({(r['exit'], r['sha256']) for r in cell}) == 1, (scope, jobs, 'observer parity')
 assert corpus_digest() == input_digest, 'input corpus changed while sampling'
+final_binary_hashes = {arm: executable_digest(path) for arm, path in binaries.items()}
+assert final_binary_hashes == binary_hashes, 'a frozen executable changed while sampling'
+metadata['binaryHashesAfter'] = final_binary_hashes
+output.with_suffix('.provenance.json').write_text(json.dumps(metadata, indent=2) + '\n')
