@@ -30,13 +30,16 @@ three publish attempts
 with 10 and 20 second delays. Other failures stop the job. Registry lookup errors
 other than a missing version fail closed. Each npm command has a two minute
 process deadline and a one minute fetch timeout with npm fetch retries disabled.
-After every upload response, including success, the helper makes one bounded
-version lookup before entering the tarball wait. A successful upload with a
-missing version fails immediately with a possibly staged-but-unpromoted error.
+After a successful upload, the helper polls the exact version for up to two
+minutes, backing off from one second to a ten second maximum between lookups.
+Lookup time and sleeps share that deadline; each lookup's process and fetch
+limits shrink to fit the remaining budget. A version that appears during this
+window proceeds normally. If it remains missing, the helper stops with a clear
+error that it may still be propagating or staged but unpromoted, without
+repeating the accepted upload or entering the 30 minute tarball wait.
+A failed upload response gets one bounded lookup in case the write succeeded.
 A registry response saying `previously staged version` with no visible version
-fails distinctly without retrying the upload. The post-upload lookup has the
-same two minute process deadline; missing metadata cannot consume the subsequent
-30 minute tarball wait. Visible versions retain that wait and checksum
+fails distinctly without retrying the upload. Visible versions retain that wait and checksum
 verification because tarball propagation can legitimately take longer.
 
 ### Staged publication recovery

@@ -12,10 +12,14 @@ for (const scenario of scenarios) {
     const packageName = scenario.packageName || "eslint-plugin-no-mistakes";
     const tags = [];
     const delays = [];
+    let elapsed = 0;
     const options = {
-      run(args) {
+      now: () => elapsed,
+      run(args, timeoutMs) {
         assert.ok(results.length, `Unexpected npm command: ${args.join(" ")}`);
         const result = results.shift();
+        if (result.timeoutMs !== undefined) assert.equal(timeoutMs, result.timeoutMs);
+        elapsed += result.elapsedMs || 0;
         const requests = {
           version: ["view", `${packageName}@0.109.8`, "version", "--json"],
           latest: ["view", packageName, "dist-tags.latest", "--json"],
@@ -26,7 +30,7 @@ for (const scenario of scenarios) {
         if (result.throw) throw Object.assign(new Error(result.throw.message), result.throw);
         return result;
       },
-      async sleep(ms) { delays.push(ms); },
+      async sleep(ms) { delays.push(ms); elapsed += ms; },
     };
     const result = publish(packageName, "0.109.8", options);
     if (scenario.error) await assert.rejects(result, new RegExp(scenario.error));
