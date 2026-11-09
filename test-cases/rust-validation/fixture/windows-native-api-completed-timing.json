@@ -1,0 +1,28 @@
+{
+  "source": "PR #3172 Test CI, 2026-11-09",
+  "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42543472369",
+  "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42543472369/job/128923331465",
+  "headSha": "1180b2f86313e04463d8ea62c3296c18ae76e979",
+  "jobStartedAt": "2026-11-09T01:03:22Z",
+  "platformTestsStartedAt": "2026-11-09T01:09:25Z",
+  "platformTestsCompletedAt": "2026-11-09T01:21:14Z",
+  "platformStepConclusion": "success",
+  "apiStartedAt": "2026-11-09T01:21:14Z",
+  "apiStepCompletedAt": "2026-11-09T01:26:18Z",
+  "apiStepConclusion": "failure",
+  "apiStepTimeoutSeconds": 300,
+  "reportedTestDurationSeconds": 300.86,
+  "testFiles": {
+    "passed": 7,
+    "total": 7
+  },
+  "tests": {
+    "passed": 537,
+    "skipped": 2,
+    "failed": 0,
+    "total": 539
+  },
+  "startupTeardownReserveSeconds": 30,
+  "postJobReserveSeconds": 120,
+  "note": "Setup and platform Rust tests completed. Vitest reported every selected test file complete and wrote JSON before the API step exceeded its five-minute deadline. The API wrapper outcome is censored; this is not a completed-step runtime or tail guarantee."
+}

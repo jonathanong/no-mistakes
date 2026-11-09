@@ -84,8 +84,10 @@ python3 test-cases/performance/call-site-assembly/tools/check-audit.py /tmp/nm-h
 The measured baseline is `bdcd31ae5a7d060cc5b4c7a795d0924882d57266`
 (version 0.109.29); the measured candidate is
 `3f9266460b3dd934ff37fb39179e8e02ea7cbb3d` (version 0.109.29).
-Later commits update tests and documentation. The measured production source
-is unchanged. Both library and executable artifacts were rebuilt (`fresh: false`)
+These tables retain the exact 0.109.29 comparison. The
+[PR report](https://github.com/jonathanong/no-mistakes/pull/3172) records the final
+matched comparison after rebases over later runtime changes. Both library and
+executable artifacts were rebuilt (`fresh: false`)
 from their own worktrees with the same lockfile and release settings. The
 candidate ELF SHA-256 is
 `d7b1eb0d5c00c893d845fe0911dafeee8a848391d2458b4f5c43bb6f62c1f966`.
@@ -165,6 +167,9 @@ wrappers and avoid GNU time's 0.01-second CPU rounding. Mean child user CPU is
 −0.000568 seconds, with an approximate 95% Student-t interval of
 [−0.010769, 0.009633] seconds. This longer block does not reproduce a CPU
 slowdown. Raw coarse and supplemental CPU fields remain in the linked data.
+
+The saved fixture snapshot test supplies an explicit timeout of 120 seconds
+for coverage instrumentation. The normal CLI deadline remains 30 seconds.
 
 ## Output and scope
 

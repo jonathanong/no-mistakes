@@ -12,5 +12,10 @@ fn call_site_assembly_check_json_snapshot() {
         ("large-off", large.clone(), large.join("off.yml")),
         ("large-imports", large.clone(), large.join("imports.yml")),
     ];
-    crate::check_json_snapshot::assert_saved_fixture("call_site_assembly", &cases);
+    crate::check_json_snapshot::assert_saved_fixture_with_env_and_args(
+        "call_site_assembly",
+        &cases,
+        &[],
+        &["--timeout", "120"],
+    );
 }

@@ -143,3 +143,9 @@ workflow sets these Cargo profile overrides before restoring its build cache.
 Other release targets and local builds retain full LTO and one code generation
 unit. Compile-time and runtime differences require measurements on the same
 platform; Linux benchmarks do not establish the macOS tradeoff.
+
+Native API tests run serially on Windows and macOS. Their CI step allows six
+minutes on Windows and five on macOS; individual test deadlines and duration
+warnings remain in force. The native job retains its thirty-minute limit.
+Saved timing records distinguish historical censored progress from current
+completed setup and Rust work; neither observation guarantees tail duration.
