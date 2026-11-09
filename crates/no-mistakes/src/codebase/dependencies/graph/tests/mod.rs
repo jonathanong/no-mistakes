@@ -202,3 +202,6 @@ mod value_import_selectors;
 
 mod call_pass;
 mod external_star_exports;
+
+#[cfg(feature = "test-instrumentation")]
+mod refinement_visit_cap;

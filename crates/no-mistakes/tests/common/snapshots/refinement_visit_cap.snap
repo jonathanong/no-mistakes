@@ -1,0 +1,48 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "on": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry.mts",
+          "import": "api.run",
+          "line": 3,
+          "message": "forbidden call (application #1): unknown call",
+          "rule": "forbidden-calls",
+          "sourceLine": "api.run({ run: other });",
+          "target": "unknown call"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "setTimeout",
+          "line": 41,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "sourceLine": "setTimeout(() => {}, 1);",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

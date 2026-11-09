@@ -280,6 +280,11 @@ Definite matches of a configured selector remain findings under either value. Se
 
 ## Unknown calls and suppression
 
+Callback refinement bounds repeated visits by the number of admitted call sites,
+not unrelated known calls. A final pass disables parameter refinement when the
+bound is exhausted; unresolved calls still follow `unknownCalls` (a finding by
+default), so a cyclic callback cannot silently become clean.
+
 `unknownCalls: ignore` omits unresolved dynamic calls that do not match an
 `exact` or `terminal` selector. The default, `finding`, reports remaining
 unknown calls as explicit policy findings. Configuration errors, such as an
