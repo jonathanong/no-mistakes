@@ -24,7 +24,7 @@ fn findings(
     root: &std::path::Path,
     config: &crate::config::v2::NoMistakesConfig,
     facts: &crate::codebase::check_facts::CheckFactMap,
-) -> Vec<crate::integration_tests::IntegrationFinding> {
+) -> Result<Vec<crate::integration_tests::IntegrationFinding>, String> {
     let analyses = facts
         .ts
         .iter()
@@ -43,7 +43,7 @@ fn findings(
         &crate::codebase::analysis_session::AnalysisSession::disabled(),
         facts,
     )
-    .unwrap()
+    .map_err(|error| error.to_string())
 }
 
 #[test]
@@ -72,8 +72,9 @@ fn same_root_scoped_and_direct_batch_requests_keep_their_projections_in_both_ord
         let scope = config::test_discovery_scope(&root, &files, &config);
         let expected = findings(&root, &config, &full);
         if case == "discovery-scope" {
-            assert_eq!(expected.len(), 7);
+            assert_eq!(expected.as_ref().unwrap().len(), 7);
         } else {
+            assert!(expected.is_err(), "{case}");
             assert!(full.ts.values().any(|facts| facts.parse_error.is_some()));
         }
         for reverse in [false, true] {
