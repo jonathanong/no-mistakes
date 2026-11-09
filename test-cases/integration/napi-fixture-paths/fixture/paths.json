@@ -56,5 +56,130 @@
       "root": "D:\\a\\no-mistakes\\fixture",
       "file": "..\\outside.ts"
     }
-  ]
+  ],
+  "reports": {
+    "root": "D:\\a\\no-mistakes\\fixture",
+    "aliases": [
+      {
+        "input": {
+          "incomplete": [
+            {
+              "file": "D:\\a\\no-mistakes\\fixture\\settings.ts",
+              "message": "required source D:\\a\\no-mistakes\\fixture\\settings.ts could not be analyzed: parsing D:\\a\\no-mistakes\\fixture\\settings.ts: Unexpected token"
+            }
+          ]
+        },
+        "expected": {
+          "incomplete": [
+            {
+              "file": "<fixture>/settings.ts",
+              "message": "required source <fixture>/settings.ts could not be analyzed: parsing <fixture>/settings.ts: Unexpected token"
+            }
+          ]
+        }
+      },
+      {
+        "input": {
+          "incomplete": [
+            {
+              "file": "\\\\?\\D:\\a\\no-mistakes\\fixture\\settings.ts",
+              "message": "required source \\\\?\\D:\\a\\no-mistakes\\fixture\\settings.ts could not be analyzed: parsing \\\\?\\D:\\a\\no-mistakes\\fixture\\settings.ts: Unexpected token"
+            }
+          ]
+        },
+        "expected": {
+          "incomplete": [
+            {
+              "file": "<fixture>/settings.ts",
+              "message": "required source <fixture>/settings.ts could not be analyzed: parsing <fixture>/settings.ts: Unexpected token"
+            }
+          ]
+        }
+      }
+    ],
+    "forwardSlashAlias": {
+      "input": {
+        "incomplete": [
+          {
+            "file": "//?/D:/a/no-mistakes/fixture/settings.ts",
+            "message": "required source //?/D:/a/no-mistakes/fixture/settings.ts could not be analyzed: parsing //?/D:/a/no-mistakes/fixture/settings.ts: Unexpected token"
+          }
+        ]
+      },
+      "expected": {
+        "incomplete": [
+          {
+            "file": "<fixture>/settings.ts",
+            "message": "required source <fixture>/settings.ts could not be analyzed: parsing <fixture>/settings.ts: Unexpected token"
+          }
+        ]
+      }
+    },
+    "changedError": {
+      "input": {
+        "file": "\\\\?\\D:\\a\\no-mistakes\\fixture\\settings.ts",
+        "message": "required source \\\\?\\D:\\a\\no-mistakes\\fixture\\settings.ts could not be analyzed: parsing \\\\?\\D:\\a\\no-mistakes\\fixture\\settings.ts: Missing semicolon"
+      },
+      "expected": {
+        "file": "<fixture>/settings.ts",
+        "message": "required source <fixture>/settings.ts could not be analyzed: parsing <fixture>/settings.ts: Missing semicolon"
+      }
+    },
+    "similarPrefix": {
+      "input": {
+        "file": "D:\\a\\no-mistakes\\fixture-other\\setup.ts",
+        "message": "diagnostic D:\\a\\no-mistakes\\fixture-other\\setup.ts remains unchanged"
+      },
+      "expected": {
+        "file": "D:\\a\\no-mistakes\\fixture-other\\setup.ts",
+        "message": "diagnostic D:\\a\\no-mistakes\\fixture-other\\setup.ts remains unchanged"
+      }
+    },
+    "outside": {
+      "input": {
+        "file": "D:\\a\\no-mistakes\\outside.ts",
+        "message": "outside D:\\a\\no-mistakes\\outside.ts: preserve this diagnostic"
+      },
+      "expected": {
+        "file": "D:\\a\\no-mistakes\\outside.ts",
+        "message": "outside D:\\a\\no-mistakes\\outside.ts: preserve this diagnostic"
+      }
+    }
+  },
+  "diagnosticDistinctPaths": {
+    "root": "/tmp/no-mistakes/fixture",
+    "file": "/tmp/no-mistakes/fixture/src\\runner.ts",
+    "excluded": "src/runner.ts"
+  },
+  "posixReport": {
+    "root": "/tmp/no-mistakes/fixture",
+    "input": {
+      "root": "/tmp/no-mistakes/fixture",
+      "incomplete": [
+        {
+          "file": "/tmp/no-mistakes/fixture/setup.ts",
+          "message": "could not parse /tmp/no-mistakes/fixture/setup.ts: Unexpected token"
+        }
+      ],
+      "metadata": [
+        1,
+        false,
+        null
+      ]
+    },
+    "expected": {
+      "root": "<fixture>",
+      "incomplete": [
+        {
+          "file": "<fixture>/setup.ts",
+          "message": "could not parse <fixture>/setup.ts: Unexpected token"
+        }
+      ],
+      "metadata": [
+        1,
+        false,
+        null
+      ]
+    }
+  }
 }

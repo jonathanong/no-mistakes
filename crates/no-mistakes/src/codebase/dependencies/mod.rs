@@ -52,6 +52,8 @@ include!("run.rs");
 #[cfg(test)]
 mod shared_traversal_collect_cache_tests;
 #[cfg(test)]
+mod shared_traversal_collect_diagnostics_tests;
+#[cfg(test)]
 mod shared_traversal_facts_tests;
 #[cfg(test)]
 mod shared_traversal_lazy_graph_tests;

@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const { isAbsolute, join, relative, resolve, sep } = require("node:path");
 const test = globalThis.test || require("node:test").test;
-const { fixtureRelativePath } = require("./fixture-relative-path.js");
+const { fixtureRelativePath, normalizeFixtureReport } = require("./fixture-relative-path.js");
 
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 const root = join(__dirname, "../../../test-cases/rules/test-no-live-repository-scan/fixture");
@@ -305,8 +305,9 @@ for (const [name, expected, incomplete = []] of [
           assert.equal(typeof pending.then, "function");
           const result = await pending;
           const report = withoutPoolWarning(index < 2 ? result : result.reports[0].result);
-          if (first) assert.deepEqual(report, first, `${name}: API ${index}, jobs ${jobs}`);
-          else first = report;
+          const parityReport = normalizeFixtureReport(report, fixture);
+          if (first) assert.deepEqual(parityReport, first, `${name}: API ${index}, jobs ${jobs}`);
+          else first = parityReport;
           const findings = [...report.rules, ...report.advisories]
             .filter((finding) => finding.rule === rule)
             .map(({ file, line }) => `${file}:${line}`)

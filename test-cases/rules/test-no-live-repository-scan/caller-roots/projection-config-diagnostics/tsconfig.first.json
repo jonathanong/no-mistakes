@@ -6,6 +6,6 @@
     "composite": true
   },
   "files": [
-    "../../qa.runner.ts"
+    "qa.runner.ts"
   ]
 }

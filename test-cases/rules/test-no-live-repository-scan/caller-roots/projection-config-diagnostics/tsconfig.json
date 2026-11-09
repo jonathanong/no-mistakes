@@ -5,6 +5,8 @@
     "moduleResolution": "nodenext"
   },
   "include": [
+    ".no-mistakes-vitest-setup.ts",
+    "settings.ts",
     "src",
     "tests",
     "setup.ts",
@@ -12,10 +14,10 @@
   ],
   "references": [
     {
-      "path": "./projects/first"
+      "path": "./tsconfig.first.json"
     },
     {
-      "path": "./projects/second"
+      "path": "./tsconfig.second.json"
     }
   ]
 }

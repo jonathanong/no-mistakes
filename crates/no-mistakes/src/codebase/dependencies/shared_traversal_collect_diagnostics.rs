@@ -48,12 +48,30 @@ fn ordinary_diagnostic_visible(
         return true;
     }
     diagnostic.file.as_deref().is_none_or(|file| {
-        let absolute = if file.is_absolute() {
+        let absolute = if crate::codebase::ts_source::is_portably_absolute_path(file) {
             file.to_path_buf()
         } else {
             root.join(file)
         };
-        !excluded.contains(&crate::codebase::ts_resolver::normalize_path(&absolute))
+        let normalized = crate::codebase::ts_resolver::normalize_path(&absolute);
+        if excluded.contains(&normalized) {
+            return false;
+        }
+        let root_text = root.to_string_lossy();
+        let bytes = root_text.as_bytes();
+        let windows_root = root_text.starts_with(r"\\")
+            || root_text.starts_with("//")
+            || (bytes.len() >= 3
+                && bytes[0].is_ascii_alphabetic()
+                && bytes[1] == b':'
+                && (bytes[2] == b'/' || bytes[2] == b'\\'));
+        if !windows_root {
+            return true;
+        }
+        let relative = crate::codebase::ts_source::relative_slash_path(root, &absolute);
+        !excluded
+            .iter()
+            .any(|path| crate::codebase::ts_source::relative_slash_path(root, path) == relative)
     })
 }
 
