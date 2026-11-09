@@ -1,17 +1,26 @@
 use crate::codebase::postgres::statement_facts::SqlGroupingQuery;
 use sqlparser::ast::{Query, SetExpr, Statement, Visit, Visitor};
-use std::ops::ControlFlow;
+use std::{ops::ControlFlow, sync::Arc};
 
-pub(super) fn collect(statement: &Statement, out: &mut Vec<SqlGroupingQuery>, enabled: bool) {
-    if !enabled {
+pub(super) fn collect(
+    statement: &Statement,
+    out: &mut Vec<SqlGroupingQuery>,
+    parameter_sites: Option<&Arc<[(u32, u32)]>>,
+) {
+    let Some(parameter_sites) = parameter_sites else {
         return;
-    }
-    let _: ControlFlow<()> = statement.visit(&mut Roots { out, depth: 0 });
+    };
+    let _: ControlFlow<()> = statement.visit(&mut Roots {
+        out,
+        depth: 0,
+        parameter_sites,
+    });
 }
 
 struct Roots<'a> {
     out: &'a mut Vec<SqlGroupingQuery>,
     depth: usize,
+    parameter_sites: &'a Arc<[(u32, u32)]>,
 }
 
 impl Visitor for Roots<'_> {
@@ -23,6 +32,7 @@ impl Visitor for Roots<'_> {
             self.out.push(SqlGroupingQuery {
                 query: Box::new(query.clone()),
                 sites: Vec::new(),
+                parameter_sites: Arc::clone(self.parameter_sites),
             });
         }
         self.depth += 1;

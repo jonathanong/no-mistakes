@@ -86,3 +86,60 @@ fn grouping_positions_keep_sql_identity_when_embedded_locations_are_rebased() {
         }
     }
 }
+
+#[test]
+fn generated_parameter_sites_are_exact_shared_and_opt_in() {
+    use sqlparser::ast::{visit_expressions, Expr};
+    use std::{ops::ControlFlow, sync::Arc};
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/postgres-facts/grouping/fixture/parameter-sites.sql"
+    ));
+    let positions: Vec<(u32, u32)> = serde_json::from_str(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/postgres-facts/grouping/fixture/parameter-sites.json"
+    )))
+    .unwrap();
+    let extract = |enabled| {
+        extract_sql_statement_facts_with_policy(
+            sql,
+            false,
+            Some(&positions),
+            SqlLocationDemand::None,
+            StatementPolicySources {
+                collect_grouping: enabled,
+                ..Default::default()
+            },
+            false,
+        )
+    };
+    work::begin();
+    let without = extract(false);
+    assert_eq!(work::finish().grouping_parameter_copies, 0);
+    assert!(without.grouping_queries.is_empty());
+    work::begin();
+    let with = extract(true);
+    let counts = work::finish();
+    assert_eq!(counts.grouping_parameter_copies, 1);
+    assert_eq!(counts.grouping_roots, 2);
+    let roots = &with.grouping_queries;
+    assert!(Arc::ptr_eq(
+        &roots[0].parameter_sites,
+        &roots[1].parameter_sites
+    ));
+    for (index, root) in roots.iter().enumerate() {
+        assert_eq!(root.parameter_sites.as_ref(), positions);
+        let mut identifiers = Vec::new();
+        let _: ControlFlow<()> = visit_expressions(&root.query, |expr| {
+            if let Expr::Identifier(id) = expr {
+                if id.value == "sql_placeholder_1" {
+                    let site = (id.span.start.line as u32, id.span.start.column as u32);
+                    identifiers.push((site.0, site.1, root.parameter_sites.contains(&site)));
+                }
+            }
+            ControlFlow::Continue(())
+        });
+        let line = index as u32 + 1;
+        assert_eq!(identifiers, [(line, 8, false), (line, 48, true)]);
+    }
+}

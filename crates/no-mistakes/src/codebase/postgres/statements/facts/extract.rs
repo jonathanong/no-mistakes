@@ -13,6 +13,10 @@ pub(super) fn extract_from_parsed_and_sources(
     let masked = fallback::mask_quoted_sql(sql);
     let (mut writes, mut json_writes) = (Vec::new(), Vec::new());
     let mut groups = Vec::new();
+    let parameters: Option<Arc<[(u32, u32)]>> = sources.policy.collect_grouping.then(|| {
+        locations::work::grouping_parameter_copy();
+        Arc::from(placeholder_positions.unwrap_or_default())
+    });
     let mut locations = (sources.locations != SqlLocationDemand::None).then(|| {
         locations::Locations::new(placeholder_positions.unwrap_or_default(), sources.locations)
     });
@@ -71,7 +75,13 @@ pub(super) fn extract_from_parsed_and_sources(
                 locations.collect(statement);
             }
             writes::collect(statement, &mut writes);
-            grouping::collect(statement, &mut groups, sources.grouping_requested(index));
+            grouping::collect(
+                statement,
+                &mut groups,
+                parameters
+                    .as_ref()
+                    .filter(|_| sources.grouping_requested(index)),
+            );
             if sources.policy.collect_json_writes {
                 super::super::json_writes::collect(statement, &mut json_writes);
             }
