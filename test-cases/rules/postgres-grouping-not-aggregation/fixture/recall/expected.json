@@ -118,5 +118,35 @@
     "file": "recall/src/recall.ts",
     "marker": "append-recall-filtered-distinct-id",
     "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/raw/same-line.sql",
+    "marker": "raw-same-line-first",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/raw/same-line.sql",
+    "marker": "raw-same-line-second",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/same-line.ts",
+    "marker": "embedded-same-line-first",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/same-line.ts",
+    "marker": "embedded-same-line-second",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/same-line.ts",
+    "marker": "append-same-line-first",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/same-line.ts",
+    "marker": "append-same-line-second",
+    "code": "distinct-over-unique-key"
   }
 ]
