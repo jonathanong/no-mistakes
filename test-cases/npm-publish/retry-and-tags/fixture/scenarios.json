@@ -661,7 +661,7 @@
     ]
   },
   {
-    "name": "successful upload stays missing for two minutes without reupload",
+    "name": "successful upload stays missing for the whole poll window without reupload",
     "results": [
       {
         "status": 1,
@@ -790,7 +790,7 @@
     "tags": [
       "latest"
     ],
-    "error": "missing from the packument after two minutes.*staged but unpromoted",
+    "error": "missing from the packument after 2 minutes.*staged but unpromoted",
     "packageName": "no-mistakes-darwin-arm64",
     "delays": [
       1000,
@@ -986,7 +986,7 @@
     "tags": [
       "latest"
     ],
-    "error": "missing from the packument after two minutes.*staged but unpromoted",
+    "error": "missing from the packument after 2 minutes.*staged but unpromoted",
     "packageName": "no-mistakes-darwin-arm64",
     "delays": [
       500
@@ -1274,7 +1274,7 @@
       10000,
       5000
     ],
-    "error": "inspect npm publication status before resuming the same tag"
+    "error": "re-run the failed Publish job to resume the same tag"
   },
   {
     "name": "successful upload lookup timeout consumes the whole poll window",
@@ -1310,7 +1310,7 @@
     "tags": [
       "latest"
     ],
-    "error": "inspect npm publication status before resuming the same tag"
+    "error": "re-run the failed Publish job to resume the same tag"
   },
   {
     "name": "successful upload unexpected version fails immediately",
@@ -1554,5 +1554,91 @@
     ],
     "tags": [],
     "error": "npm view"
+  },
+  {
+    "name": "default window keeps polling past seven minutes until the version is visible",
+    "windowMs": "default",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "request": "publish"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version",
+        "timeoutMs": 120000,
+        "elapsedMs": 420000
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": "",
+        "request": "version",
+        "timeoutMs": 120000
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "packageName": "no-mistakes-darwin-arm64",
+    "delays": [
+      1000
+    ]
+  },
+  {
+    "name": "default window stops after fifteen minutes with the resume instruction",
+    "windowMs": "default",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "request": "publish"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version",
+        "timeoutMs": 120000,
+        "elapsedMs": 899500
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "packageName": "no-mistakes-darwin-arm64",
+    "delays": [
+      500
+    ],
+    "error": "missing from the packument after 15 minutes.*wait until npm view shows the version, then re-run the failed Publish job"
   }
 ]

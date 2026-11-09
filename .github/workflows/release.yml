@@ -728,7 +728,7 @@ jobs:
       - validate
       - build-native
     runs-on: ubuntu-latest
-    timeout-minutes: 80
+    timeout-minutes: 100
     permissions:
       contents: write
       id-token: write
@@ -834,7 +834,7 @@ jobs:
       # parallel, and one slow tarball (over 10 minutes for 0.74.0) cannot
       # starve the packages queued behind it.
       - name: Publish npm platform packages with OIDC
-        timeout-minutes: 50
+        timeout-minutes: 80
         shell: bash
         run: |
           set -euo pipefail

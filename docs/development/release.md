@@ -31,14 +31,14 @@ with 10 and 20 second delays. Other failures stop the job. Registry lookups befo
 publishing or after a failed upload fail closed on errors other than a missing
 version. Each npm command has a two minute
 process deadline and a one minute fetch timeout with npm fetch retries disabled.
-After a successful upload, the helper polls the exact version for up to two
+After a successful upload, the helper polls the exact version for up to 15
 minutes, backing off from one second to a ten second maximum between lookups.
 During this poll window, missing versions and transient lookup errors (`E5xx`,
 `ECONNRESET`, `ECONNREFUSED`, and `ETIMEDOUT`, including process timeouts) use
 the same backoff.
 Other lookup errors and unexpected versions still fail immediately.
-Lookup time and sleeps share that deadline; each lookup's process and fetch
-limits shrink to fit the remaining budget. A version that appears during this
+Lookup time and sleeps share that deadline. Each lookup keeps its two minute
+process and one minute fetch limits, shrunk to fit the remaining budget. A version that appears during this
 window proceeds normally. If it remains missing or transient lookups keep failing,
 the helper stops with a clear
 error that it may still be propagating or staged but unpromoted, without
@@ -57,12 +57,22 @@ it does not establish whether npm processing, provenance, or package settings
 prevented promotion. A missing post-upload version can also reflect propagation,
 so the helper reports it as a possible staging problem and stops conservatively.
 
+Propagation alone has taken longer than the old two minute window. For 0.109.31
+and 0.109.32, each platform package became visible 4.5 to 7.3 minutes after its
+upload exited 0. The 15 minute window covers that with margin. The platform
+publish step allows 17 minutes for each of its four packages, and the root and
+ESLint steps cover one package each. `.github/scripts/publish-npm.test.cjs`
+enforces those budgets.
+
 On either error, inspect npm publication status and package settings, and retain
 the registry response in the release logs. Check the exact version's metadata
 with `npm view <package>@<version> version --json`. Do not repeatedly republish a
 staged version or move dist-tags to hide the failure. Resolve the staging state
-with npm support if necessary, then resume the same release tag once the version
-is visible. If npm cannot recover that version, explicitly retire the partial
+with npm support if necessary. Once `npm view` shows the version, re-run the
+failed Publish job. The job skips packages whose tarball is already fetchable,
+so it resumes the same release tag without uploading again. A re-run uses the
+publish tooling from the release's workflow commit, so a tooling fix merged
+later does not apply to it. If npm cannot recover that version, explicitly retire the partial
 release before preparing a new version; already published immutable packages
 cannot be overwritten. No release is triggered automatically by these checks.
 
