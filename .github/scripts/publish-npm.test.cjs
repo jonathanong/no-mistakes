@@ -86,6 +86,10 @@ test("npm publish steps outlast the visibility window for every package", () => 
     const jobMinutes = Number(block.match(/\n    timeout-minutes: (\d+)/)[1]);
     const packages = step.split("packages=(\n")[1].split(")")[0].trim().split(/\s+/).length;
     assert.ok(stepMinutes >= packages * (windowMinutes + 2) + 5, `${name} step needs ${packages} x ${windowMinutes + 2} minutes`);
-    assert.ok(jobMinutes >= stepMinutes + 10, `${name} job must leave setup time around the publish step`);
+    const stepTimeouts = block.split("\n    steps:\n")[1].split(/\n?      - /).slice(1).map((s) => Number(s.match(/\n        timeout-minutes: (\d+)/)?.[1]));
+    assert.ok(stepTimeouts.every(Number.isInteger), `${name} steps all need literal timeouts`);
+    const stepSum = stepTimeouts.reduce((a, b) => a + b, 0);
+    assert.ok(jobMinutes >= Math.max(...stepTimeouts), `${name} job must cover its longest step`);
+    assert.ok(jobMinutes < stepSum, `${name} job must stay below the sum of its step timeouts (${stepSum})`);
   }
 });

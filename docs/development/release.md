@@ -61,8 +61,10 @@ Propagation alone has taken longer than the old two minute window. For 0.109.31
 and 0.109.32, each platform package became visible 4.5 to 7.3 minutes after its
 upload exited 0. The 15 minute window covers that with margin. The platform
 publish step allows 17 minutes for each of its four packages, and the root and
-ESLint steps cover one package each. `.github/scripts/publish-npm.test.cjs`
-enforces those budgets.
+ESLint steps cover one package each. Each publish job's timeout covers its
+longest step and stays below the sum of its step timeouts, matching
+[`github-actions-job-timeouts`](../rules/github-actions-job-timeouts.md).
+`.github/scripts/publish-npm.test.cjs` enforces those budgets.
 
 On either error, inspect npm publication status and package settings, and retain
 the registry response in the release logs. Check the exact version's metadata
