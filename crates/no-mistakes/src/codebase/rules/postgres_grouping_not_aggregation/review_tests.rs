@@ -93,7 +93,7 @@ fn embedded_review_controls_only_report_guarded_absence_rewrites() {
         },
     ]);
     let embedded = extract_embedded_sql_from_source(&path, source, &options);
-    assert_eq!(embedded.calls.len(), 12);
+    assert_eq!(embedded.calls.len(), 18);
     let records = crate::codebase::postgres::tests::embedded_call_facts_with_policy(
         &embedded,
         false,
