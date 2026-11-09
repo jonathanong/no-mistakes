@@ -2,7 +2,6 @@ use super::*;
 use crate::codebase::dependencies::extract::{
     ValueType, ValueBinding, ValueCall, ValueExpression, ValueParameter, ValueProjection,
 };
-
 #[path = "value_flow/models.rs"]
 mod models;
 pub(super) use models::FlowFileIndex;
@@ -23,7 +22,6 @@ use super::value_flow_metrics::{
     ReplacementProbeSnapshot, ReplacementRhsProbe, ReplacementSourceCallProbe,
 };
 use types::{BoundArguments, FlowValue};
-
 /// Resolves returned values and receiver parameters over parser-owned facts and
 /// the same prepared callable indexes as ordinary calls. Incoming argument
 /// bindings must agree; an unknown or unrelated argument cannot manufacture a
@@ -194,3 +192,9 @@ pub(super) mod site_storage;
 #[cfg(all(test, feature = "test-instrumentation"))]
 #[path = "value_flow/opaque_entry_mode.rs"]
 pub(super) mod opaque_entry_mode;
+
+#[path = "value_flow/builtin_callbacks.rs"]
+mod builtin_callbacks;
+#[path = "value_flow/builtin_callback_projection.rs"]
+mod builtin_callback_projection;
+pub(super) use builtin_callback_projection::project_builtin_callbacks;

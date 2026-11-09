@@ -4,7 +4,7 @@ use super::*;
 mod worklist;
 pub(in super::super) use worklist::refine_value_calls;
 include!("refine_incoming.rs");
-fn refine_site_in_place(
+pub(super) fn refine_site_in_place(
     inputs: &GraphEdgeBuildInputs<'_>,
     facts: &dyn TsFactLookup,
     resolver: &dyn ImportResolution,

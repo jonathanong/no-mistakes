@@ -92,12 +92,14 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
     } else {
         Default::default()
     };
+    let builtin_calls = if plan.function_calls && plan.call_eligibility {
+        crate::codebase::ts_source::builtin_receivers::collect(program)
+    } else {
+        Default::default()
+    };
     TsFileFacts {
-        builtin_receiver_calls: if plan.function_calls {
-            crate::codebase::ts_source::builtin_receivers::collect(program)
-        } else {
-            Default::default()
-        },
+        builtin_receiver_calls: builtin_calls.calls,
+        builtin_callback_calls: builtin_calls.callbacks,
         ancestry,
         module_bindings: (plan.module_bindings || plan.call_arguments).then(|| {
             Arc::new(match semantic {

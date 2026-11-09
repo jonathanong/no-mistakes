@@ -2,6 +2,7 @@ use super::*;
 
 #[derive(Clone, Default)]
 pub(in super::super) struct FlowFileIndex {
+    pub(in super::super) builtin_callbacks: Vec<FunctionCall>,
     pub(super) callable_value_uses: Option<std::sync::Arc<FxHashMap<usize, FxHashSet<String>>>>,
     pub(super) synthetic_callbacks: FxHashSet<String>,
     pub(super) immediate_factory_results: FxHashSet<(u32, u32)>,

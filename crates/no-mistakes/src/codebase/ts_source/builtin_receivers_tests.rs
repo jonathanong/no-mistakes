@@ -9,7 +9,7 @@ fn proven(source: &str) -> Vec<String> {
     let program = Parser::new(&allocator, source, SourceType::mjs().with_typescript(true))
         .parse()
         .program;
-    let mut offsets: Vec<u32> = collect(&program).into_iter().collect();
+    let mut offsets: Vec<u32> = collect(&program).calls.into_iter().collect();
     offsets.sort_unstable();
     offsets
         .into_iter()
@@ -87,3 +87,6 @@ fn deeply_chained_initializers_stop_at_the_depth_bound() {
     source.push_str("v11.push(1);");
     assert!(!proven(&source).contains(&"v11.push".to_string()));
 }
+
+#[path = "builtin_receivers_callbacks_tests.rs"]
+mod callbacks;

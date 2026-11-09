@@ -160,6 +160,517 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "continuations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.finally",
+              "detail": "built-in callback `argument 1` is not statically resolved",
+              "file": "src/uncertain-builtins.mjs",
+              "kind": "unresolved-dispatch",
+              "line": 7,
+              "sourceLine": "export function conditionalCallback(flag) { return Promise.resolve().finally(flag ? owner : noop); }"
+            }
+          ],
+          "file": "src/uncertain-builtins.mjs",
+          "line": 7,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/uncertain-builtins.mjs:7 callee `<unknown>.finally` (built-in callback `argument 1` is not statically resolved); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/uncertain-builtins.mjs#conditionalCallback",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function conditionalCallback(flag) { return Promise.resolve().finally(flag ? owner : noop); }",
+          "target": "conditionalCallback"
+        },
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.finally",
+              "detail": "built-in callback `argument 1` is not statically resolved",
+              "file": "src/uncertain-builtins.mjs",
+              "kind": "unresolved-dispatch",
+              "line": 8,
+              "sourceLine": "export function unknownCallback(factory) { return Promise.resolve().finally(factory()); }"
+            },
+            {
+              "callee": "factory",
+              "detail": "callee target is unknown",
+              "file": "src/uncertain-builtins.mjs",
+              "kind": "unresolved-dispatch",
+              "line": 8,
+              "sourceLine": "export function unknownCallback(factory) { return Promise.resolve().finally(factory()); }"
+            }
+          ],
+          "file": "src/uncertain-builtins.mjs",
+          "line": 8,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/uncertain-builtins.mjs:8 callee `<unknown>.finally` (built-in callback `argument 1` is not statically resolved); unresolved dispatch at src/uncertain-builtins.mjs:8 callee `factory` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/uncertain-builtins.mjs#unknownCallback",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function unknownCallback(factory) { return Promise.resolve().finally(factory()); }",
+          "target": "unknownCallback"
+        },
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.finally",
+              "detail": "built-in callback `fn` is not statically resolved",
+              "file": "src/continuations.mts",
+              "kind": "unresolved-dispatch",
+              "line": 27,
+              "sourceLine": "export function unresolved(fn: () => void) { return Promise.resolve(1).finally(fn); }"
+            }
+          ],
+          "file": "src/continuations.mts",
+          "line": 27,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/continuations.mts:27 callee `<unknown>.finally` (built-in callback `fn` is not statically resolved); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/continuations.mts#unresolved",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function unresolved(fn: () => void) { return Promise.resolve(1).finally(fn); }",
+          "target": "unresolved"
+        },
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.finally",
+              "detail": "built-in callback `fn` is not statically resolved",
+              "file": "src/continuations.mts",
+              "kind": "unresolved-dispatch",
+              "line": 35,
+              "sourceLine": "{ const fn = 0; Promise.resolve(1).finally(fn); }"
+            }
+          ],
+          "file": "src/continuations.mts",
+          "line": 33,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/continuations.mts:35 callee `<unknown>.finally` (built-in callback `fn` is not statically resolved); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/continuations.mts#collision",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function collision() {",
+          "target": "collision"
+        },
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.finally",
+              "detail": "callee target is unknown",
+              "file": "src/uncertain-builtins.mjs",
+              "kind": "unresolved-dispatch",
+              "line": 16,
+              "sourceLine": "export function promiseSliceFinally() { return Promise.resolve(1).slice().finally(owner); }"
+            }
+          ],
+          "file": "src/uncertain-builtins.mjs",
+          "line": 16,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/uncertain-builtins.mjs:16 callee `<unknown>.finally` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/uncertain-builtins.mjs#promiseSliceFinally",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function promiseSliceFinally() { return Promise.resolve(1).slice().finally(owner); }",
+          "target": "promiseSliceFinally"
+        },
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.finally",
+              "detail": "callee target is unknown",
+              "file": "src/uncertain-builtins.mjs",
+              "kind": "unresolved-dispatch",
+              "line": 5,
+              "sourceLine": "export function stringFinally() { ''.finally(owner); }"
+            }
+          ],
+          "file": "src/uncertain-builtins.mjs",
+          "line": 5,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/uncertain-builtins.mjs:5 callee `<unknown>.finally` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/uncertain-builtins.mjs#stringFinally",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function stringFinally() { ''.finally(owner); }",
+          "target": "stringFinally"
+        },
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.map",
+              "detail": "callee target is unknown",
+              "file": "src/uncertain-builtins.mjs",
+              "kind": "unresolved-dispatch",
+              "line": 15,
+              "sourceLine": "export function arrayJoinMap() { return [1].join(',').map(owner); }"
+            }
+          ],
+          "file": "src/uncertain-builtins.mjs",
+          "line": 15,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/uncertain-builtins.mjs:15 callee `<unknown>.map` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/uncertain-builtins.mjs#arrayJoinMap",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function arrayJoinMap() { return [1].join(',').map(owner); }",
+          "target": "arrayJoinMap"
+        },
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.map",
+              "detail": "callee target is unknown",
+              "file": "src/uncertain-builtins.mjs",
+              "kind": "unresolved-dispatch",
+              "line": 17,
+              "sourceLine": "export function arrayIteratorMap() { return [1].values().map(owner); }"
+            }
+          ],
+          "file": "src/uncertain-builtins.mjs",
+          "line": 17,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/uncertain-builtins.mjs:17 callee `<unknown>.map` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/uncertain-builtins.mjs#arrayIteratorMap",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function arrayIteratorMap() { return [1].values().map(owner); }",
+          "target": "arrayIteratorMap"
+        },
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.map",
+              "detail": "callee target is unknown",
+              "file": "src/uncertain-builtins.mjs",
+              "kind": "unresolved-dispatch",
+              "line": 2,
+              "sourceLine": "export function numericMap() { (1).map(owner); }"
+            }
+          ],
+          "file": "src/uncertain-builtins.mjs",
+          "line": 2,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/uncertain-builtins.mjs:2 callee `<unknown>.map` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/uncertain-builtins.mjs#numericMap",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function numericMap() { (1).map(owner); }",
+          "target": "numericMap"
+        },
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.run",
+              "detail": "callee target is unknown",
+              "file": "src/continuations.mts",
+              "kind": "unresolved-dispatch",
+              "line": 53,
+              "sourceLine": "export function foreignRun() { return ({}).run('id', owner); }"
+            }
+          ],
+          "file": "src/continuations.mts",
+          "line": 53,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/continuations.mts:53 callee `<unknown>.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/continuations.mts#foreignRun",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function foreignRun() { return ({}).run('id', owner); }",
+          "target": "foreignRun"
+        },
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.run",
+              "detail": "callee target is unknown",
+              "file": "src/shadowed-storage.mts",
+              "kind": "unresolved-dispatch",
+              "line": 3,
+              "sourceLine": "export function shadowed(Storage: string) { new Storage().run('id', owner); }"
+            },
+            {
+              "callee": "Storage",
+              "detail": "callee target is unknown",
+              "file": "src/shadowed-storage.mts",
+              "kind": "unresolved-dispatch",
+              "line": 3,
+              "sourceLine": "export function shadowed(Storage: string) { new Storage().run('id', owner); }"
+            }
+          ],
+          "file": "src/shadowed-storage.mts",
+          "line": 3,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/shadowed-storage.mts:3 callee `<unknown>.run` (callee target is unknown); unresolved dispatch at src/shadowed-storage.mts:3 callee `Storage` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/shadowed-storage.mts#shadowed",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function shadowed(Storage: string) { new Storage().run('id', owner); }",
+          "target": "shadowed"
+        },
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.run",
+              "detail": "callee target is unknown",
+              "file": "src/uncertain-builtins.mjs",
+              "kind": "unresolved-dispatch",
+              "line": 3,
+              "sourceLine": "export function plainRun() { ({}).run('id', owner); }"
+            }
+          ],
+          "file": "src/uncertain-builtins.mjs",
+          "line": 3,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/uncertain-builtins.mjs:3 callee `<unknown>.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/uncertain-builtins.mjs#plainRun",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function plainRun() { ({}).run('id', owner); }",
+          "target": "plainRun"
+        },
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.then",
+              "detail": "built-in callback `spread arguments` is not statically resolved",
+              "file": "src/continuations.mts",
+              "kind": "unresolved-dispatch",
+              "line": 45,
+              "sourceLine": "export function spreadContinuation(callbacks: (() => void)[]) { return Promise.resolve(1).then(...callbacks, owner); }"
+            }
+          ],
+          "file": "src/continuations.mts",
+          "line": 45,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/continuations.mts:45 callee `<unknown>.then` (built-in callback `spread arguments` is not statically resolved); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/continuations.mts#spreadContinuation",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function spreadContinuation(callbacks: (() => void)[]) { return Promise.resolve(1).then(...callbacks, owner); }",
+          "target": "spreadContinuation"
+        },
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.then",
+              "detail": "callee target is unknown",
+              "file": "src/uncertain-builtins.mjs",
+              "kind": "unresolved-dispatch",
+              "line": 4,
+              "sourceLine": "export function mapThen() { new Map().then(owner); }"
+            }
+          ],
+          "file": "src/uncertain-builtins.mjs",
+          "line": 4,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/uncertain-builtins.mjs:4 callee `<unknown>.then` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/uncertain-builtins.mjs#mapThen",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function mapThen() { new Map().then(owner); }",
+          "target": "mapThen"
+        },
+        {
+          "causes": [
+            {
+              "callee": "check",
+              "detail": "callee target is unknown",
+              "file": "src/continuations.mts",
+              "kind": "unresolved-dispatch",
+              "line": 30,
+              "sourceLine": "export function storedArray() { const checks = [owner]; checks.forEach(check => check()); }"
+            }
+          ],
+          "file": "src/continuations.mts",
+          "line": 30,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/continuations.mts:30 callee `check` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/continuations.mts#storedArray",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function storedArray() { const checks = [owner]; checks.forEach(check => check()); }",
+          "target": "storedArray"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fn",
+              "detail": "callee target is unknown",
+              "file": "src/continuations.mts",
+              "kind": "unresolved-dispatch",
+              "line": 28,
+              "sourceLine": "export function unresolvedCall(fn: () => void) { fn(); }"
+            }
+          ],
+          "file": "src/continuations.mts",
+          "line": 28,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/continuations.mts:28 callee `fn` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/continuations.mts#unresolvedCall",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function unresolvedCall(fn: () => void) { fn(); }",
+          "target": "unresolvedCall"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fn",
+              "detail": "callee target is unknown",
+              "file": "src/continuations.mts",
+              "kind": "unresolved-dispatch",
+              "line": 29,
+              "sourceLine": "export function storedMap() { const handlers = new Map(); handlers.set('check', owner); const fn = handlers.get('check'); fn(); }"
+            }
+          ],
+          "file": "src/continuations.mts",
+          "line": 29,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/continuations.mts:29 callee `fn` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/continuations.mts#storedMap",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function storedMap() { const handlers = new Map(); handlers.set('check', owner); const fn = handlers.get('check'); fn(); }",
+          "target": "storedMap"
+        },
+        {
+          "causes": [
+            {
+              "callee": "receiver.finally",
+              "detail": "callee target is unknown",
+              "file": "src/continuations.mts",
+              "kind": "unresolved-dispatch",
+              "line": 31,
+              "sourceLine": "export function unknownReceiver(receiver: { finally: (fn: () => void) => void }) { receiver.finally(owner); }"
+            }
+          ],
+          "file": "src/continuations.mts",
+          "line": 31,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/continuations.mts:31 callee `receiver.finally` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/continuations.mts#unknownReceiver",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function unknownReceiver(receiver: { finally: (fn: () => void) => void }) { receiver.finally(owner); }",
+          "target": "unknownReceiver"
+        },
+        {
+          "causes": [
+            {
+              "callee": "value.finally",
+              "detail": "callee target is unknown",
+              "file": "src/shadowed-types.mts",
+              "kind": "unresolved-dispatch",
+              "line": 5,
+              "sourceLine": "export function promiseType(value: Promise) { value.finally(owner); }"
+            }
+          ],
+          "file": "src/shadowed-types.mts",
+          "line": 5,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/shadowed-types.mts:5 callee `value.finally` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/shadowed-types.mts#promiseType",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function promiseType(value: Promise) { value.finally(owner); }",
+          "target": "promiseType"
+        },
+        {
+          "causes": [
+            {
+              "callee": "value.map",
+              "detail": "callee target is unknown",
+              "file": "src/shadowed-types.mts",
+              "kind": "unresolved-dispatch",
+              "line": 6,
+              "sourceLine": "export function arrayType(value: Array<void>) { value.map(owner); }"
+            }
+          ],
+          "file": "src/shadowed-types.mts",
+          "line": 6,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/shadowed-types.mts:6 callee `value.map` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/shadowed-types.mts#arrayType",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function arrayType(value: Array<void>) { value.map(owner); }",
+          "target": "arrayType"
+        },
+        {
+          "causes": [
+            {
+              "callee": "value.run",
+              "detail": "callee target is unknown",
+              "file": "src/shadowed-types.mts",
+              "kind": "unresolved-dispatch",
+              "line": 7,
+              "sourceLine": "export function storageType(value: AsyncLocalStorage) { value.run('request', owner); }"
+            }
+          ],
+          "file": "src/shadowed-types.mts",
+          "line": 7,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/shadowed-types.mts:7 callee `value.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/shadowed-types.mts#storageType",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function storageType(value: AsyncLocalStorage) { value.run('request', owner); }",
+          "target": "storageType"
+        },
+        {
+          "file": "src/continuations.mts",
+          "line": 37,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/continuations.mts#registered",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function registered() { register(owner); }",
+          "target": "registered"
+        },
+        {
+          "file": "src/continuations.mts",
+          "line": 41,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/continuations.mts#callbackNoOwner",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function callbackNoOwner() { return Promise.resolve(1).finally(noop); }",
+          "target": "callbackNoOwner"
+        },
+        {
+          "file": "src/continuations.mts",
+          "line": 51,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/continuations.mts#emptyNumbers",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function emptyNumbers() { const emptyMixed: number[] = []; emptyMixed.forEach(owner); }",
+          "target": "emptyNumbers"
+        },
+        {
+          "file": "src/continuations.mts",
+          "line": 52,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/continuations.mts#emptyTexts",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function emptyTexts() { const emptyMixed: string[] = []; emptyMixed.forEach(owner); }",
+          "target": "emptyTexts"
+        },
+        {
+          "file": "src/continuations.mts",
+          "line": 6,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/continuations.mts#leaves",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function leaves(rows: number[], text: string, n: number, expectation: { function: string }) {",
+          "target": "leaves"
+        },
+        {
+          "file": "src/uncertain-builtins.mjs",
+          "line": 10,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/uncertain-builtins.mjs#nonCallableCallback",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function nonCallableCallback() { return Promise.resolve().finally(1); }",
+          "target": "nonCallableCallback"
+        },
+        {
+          "file": "src/uncertain-builtins.mjs",
+          "line": 11,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/uncertain-builtins.mjs#replaceLeaf",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function replaceLeaf() { return 'x'.replace(/x/, 'y'); }",
+          "target": "replaceLeaf"
+        },
+        {
+          "file": "src/uncertain-builtins.mjs",
+          "line": 12,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/uncertain-builtins.mjs#emptyArray",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function emptyArray() { [].forEach(owner); }",
+          "target": "emptyArray"
+        },
+        {
+          "file": "src/uncertain-builtins.mjs",
+          "line": 13,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/uncertain-builtins.mjs#emptyAlias",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function emptyAlias() { const values = []; values.map(owner); }",
+          "target": "emptyAlias"
+        },
+        {
+          "file": "src/uncertain-builtins.mjs",
+          "line": 14,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/uncertain-builtins.mjs#emptyChain",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function emptyChain() { [].map(() => 1).forEach(owner); }",
+          "target": "emptyChain"
+        },
+        {
+          "file": "src/uncertain-builtins.mjs",
+          "line": 18,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/uncertain-builtins.mjs#factoryValue",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function factoryValue() { return Promise.resolve(owner).finally(noop); }",
+          "target": "factoryValue"
+        },
+        {
+          "file": "src/uncertain-builtins.mjs",
+          "line": 21,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/uncertain-builtins.mjs#repeatedNoOwner",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function repeatedNoOwner() { return Promise.resolve().finally(noop).finally(noop); }",
+          "target": "repeatedNoOwner"
+        },
+        {
+          "file": "src/uncertain-builtins.mjs",
+          "line": 9,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/uncertain-builtins.mjs#absentCallback",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function absentCallback() { return Promise.resolve().finally(undefined); }",
+          "target": "absentCallback"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "disabled": {
     "exitCode": 0,
     "report": {
@@ -216,33 +727,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "imported-callback": {
-    "exitCode": 1,
+    "exitCode": 0,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [
-        {
-          "causes": [
-            {
-              "callee": "<unknown>.then",
-              "detail": "built-in callback `owner` is not statically resolved",
-              "file": "src/globals.mts",
-              "kind": "unresolved-dispatch",
-              "line": 13,
-              "sourceLine": "export function importedCallback() { Promise.resolve(1).then(owner); }"
-            }
-          ],
-          "file": "src/globals.mts",
-          "line": 13,
-          "message": "unanalyzable coverage producer: unresolved dispatch at src/globals.mts:13 callee `<unknown>.then` (built-in callback `owner` is not statically resolved); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/globals.mts#importedCallback",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function importedCallback() { Promise.resolve(1).then(owner); }",
-          "target": "importedCallback"
-        }
-      ],
+      "rules": [],
       "warnings": []
     }
   },

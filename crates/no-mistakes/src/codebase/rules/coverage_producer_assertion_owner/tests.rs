@@ -215,3 +215,6 @@ mod cause_diagnostics;
 mod reexports;
 
 mod external_stars;
+
+#[path = "tests/builtin_callbacks.rs"]
+mod builtin_callbacks;

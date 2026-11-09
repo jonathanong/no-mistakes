@@ -10,7 +10,7 @@ pub(super) const GLOBAL_FUNCTIONS: &[&str] = &[
 /// Global functions which run their first argument later.
 pub(super) const TIMERS: &[&str] = &["setTimeout", "setInterval", "setImmediate"];
 /// String, RegExp, Date, Array, Map, Set, Error, console, and AsyncLocalStorage
-/// prototype methods matched by name when the receiver is not statically resolved.
+/// prototype methods accepted only with receiver provenance.
 #[rustfmt::skip]
 pub(super) const METHODS: &[&str] = &[
     "trim", "trimStart", "trimEnd", "slice", "split", "padStart", "padEnd", "startsWith",
@@ -22,14 +22,6 @@ pub(super) const METHODS: &[&str] = &[
     "getDate", "getDay", "getHours", "getMinutes", "getSeconds", "getMilliseconds",
     "getUTCFullYear", "getUTCMonth", "getUTCDate", "getUTCHours", "getTimezoneOffset", "valueOf",
     "toFixed", "log", "error", "warn", "info", "debug", "getStore", "enterWith", "disable",
-];
-/// Methods which invoke a callback at these argument positions.
-#[rustfmt::skip]
-pub(super) const CALLBACKS: &[(&str, &[usize])] = &[
-    ("map", &[0]), ("filter", &[0]), ("forEach", &[0]), ("flatMap", &[0]), ("reduce", &[0]),
-    ("reduceRight", &[0]), ("some", &[0]), ("every", &[0]), ("find", &[0]), ("findIndex", &[0]),
-    ("findLast", &[0]), ("sort", &[0]), ("toSorted", &[0]), ("then", &[0, 1]), ("catch", &[0]),
-    ("finally", &[0]), ("replace", &[1]), ("replaceAll", &[1]),
 ];
 /// Node modules whose exports are synchronous value computations.
 #[rustfmt::skip]

@@ -18,7 +18,8 @@ impl CallableResolutionIndexes {
         if let Some(index) = self.files.get(path) {
             return Some(index.clone());
         }
-        let index = std::sync::Arc::new(CallableFileIndex::from_facts(facts.get_ts_facts(path)?));
+        let file = facts.get_ts_facts(path)?;
+        let index = std::sync::Arc::new(CallableFileIndex::from_facts(file));
         self.files.insert(path.to_path_buf(), index.clone());
         Some(index)
     }

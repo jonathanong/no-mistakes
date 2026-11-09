@@ -5,6 +5,8 @@
 struct CallPass {
     edges: Vec<Edge>,
     sites: Vec<ResolvedCallSite>,
+    assertion_edges: Vec<Edge>,
+    assertion_sites: Vec<ResolvedCallSite>,
     opaque_external_members: FxHashMap<std::path::PathBuf, OpaqueExternalMembers>,
     call_prerequisites: FxHashMap<std::path::PathBuf, FailedCallSources>,
     replacement_files: Vec<(

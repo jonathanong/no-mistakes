@@ -1,0 +1,62 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/continuations.mts, symbol: leaves }
+        - { file: src/continuations.mts, symbol: arrayImported }
+        - { file: src/continuations.mts, symbol: promiseImported }
+        - { file: src/continuations.mts, symbol: promiseInline }
+        - { file: src/continuations.mts, symbol: storageImported }
+        - { file: src/continuations.mts, symbol: directAssertion }
+        - { file: src/continuations.mts, symbol: callerArray }
+        - { file: src/continuations.mts, symbol: callerPromise }
+        - { file: src/continuations.mts, symbol: callerStorage }
+        - { file: src/continuations.mts, symbol: unresolved }
+        - { file: src/continuations.mts, symbol: unresolvedCall }
+        - { file: src/continuations.mts, symbol: storedMap }
+        - { file: src/continuations.mts, symbol: storedArray }
+        - { file: src/continuations.mts, symbol: unknownReceiver }
+        - { file: src/continuations.mts, symbol: collision }
+        - { file: src/continuations.mts, symbol: boundAlias }
+        - { file: src/shadowed-storage.mts, symbol: shadowed }
+        - { file: src/shadowed-types.mts, symbol: promiseType }
+        - { file: src/shadowed-types.mts, symbol: arrayType }
+        - { file: src/shadowed-types.mts, symbol: storageType }
+        - { file: src/continuations.mts, symbol: registered }
+        - { file: src/continuations.mts, symbol: callerInvoke }
+        - { file: src/continuations.mts, symbol: callbackNoOwner }
+        - { file: src/continuations.mts, symbol: namedLiteral }
+        - { file: src/continuations.mts, symbol: namespaceAlias }
+        - { file: src/continuations.mts, symbol: spreadContinuation }
+        - { file: src/continuations.mts, symbol: spreadAfterAssertion }
+        - { file: src/continuations.mts, symbol: stringArray }
+        - { file: src/uncertain-builtins.mjs, symbol: numericMap }
+        - { file: src/uncertain-builtins.mjs, symbol: plainRun }
+        - { file: src/uncertain-builtins.mjs, symbol: mapThen }
+        - { file: src/uncertain-builtins.mjs, symbol: stringFinally }
+        - { file: src/uncertain-builtins.mjs, symbol: conditionalCallback }
+        - { file: src/uncertain-builtins.mjs, symbol: unknownCallback }
+        - { file: src/uncertain-builtins.mjs, symbol: absentCallback }
+        - { file: src/uncertain-builtins.mjs, symbol: nonCallableCallback }
+        - { file: src/uncertain-builtins.mjs, symbol: replaceLeaf }
+        - { file: src/uncertain-builtins.mjs, symbol: emptyArray }
+        - { file: src/uncertain-builtins.mjs, symbol: emptyAlias }
+        - { file: src/uncertain-builtins.mjs, symbol: emptyChain }
+        - { file: src/uncertain-builtins.mjs, symbol: arrayJoinMap }
+        - { file: src/uncertain-builtins.mjs, symbol: promiseSliceFinally }
+        - { file: src/uncertain-builtins.mjs, symbol: arrayIteratorMap }
+        - { file: src/uncertain-builtins.mjs, symbol: factoryValue }
+        - { file: src/uncertain-builtins.mjs, symbol: chainedOwner }
+        - { file: src/uncertain-builtins.mjs, symbol: repeatedOwner }
+        - { file: src/uncertain-builtins.mjs, symbol: repeatedNoOwner }
+        - { file: src/uncertain-builtins.mjs, symbol: sparseFromOwner }
+        - { file: src/uncertain-builtins.mjs, symbol: sparseFromChain }
+        - { file: src/continuations.mts, symbol: unionRows }
+        - { file: src/continuations.mts, symbol: numberRows }
+        - { file: src/continuations.mts, symbol: textRows }
+        - { file: src/continuations.mts, symbol: emptyNumbers }
+        - { file: src/continuations.mts, symbol: emptyTexts }
+        - { file: src/continuations.mts, symbol: foreignRun }
+      assertions: [{ module: "node:assert", export: strictEqual }]

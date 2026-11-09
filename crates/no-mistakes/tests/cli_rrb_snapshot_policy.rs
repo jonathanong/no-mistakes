@@ -52,6 +52,7 @@ fn coverage_producer_assertion_owner_builtins_json_matches_snapshot() {
         "many",
         "globals",
         "imported-callback",
+        "continuations",
         "member-callback",
         "namespace-all",
         "namespace-default",

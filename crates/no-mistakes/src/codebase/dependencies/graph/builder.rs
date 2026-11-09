@@ -9,6 +9,7 @@ pub struct DepGraph {
     callable_export_resolutions: FxHashMap<(PathBuf, String), ExportedCallableResolution>,
     module_files: FxHashMap<String, FxHashSet<PathBuf>>,
     resolved_call_sites: Vec<ResolvedCallSite>,
+    assertion_call_sites: Vec<ResolvedCallSite>,
     root_mock_boundaries: FxHashMap<PathBuf, RootMockBoundaries>,
     opaque_external_members: FxHashMap<PathBuf, OpaqueExternalMembers>,
     call_prerequisites: FxHashMap<PathBuf, FailedCallSources>,
@@ -28,7 +29,6 @@ pub struct DepGraph {
     selector_import_sites: SelectorImportSites,
     resource_diagnostics: Vec<ResourceGraphDiagnostic>,
 }
-
 /// Compact Vitest project ownership retained until test-edge traversal.
 pub(crate) struct VitestSetupProject {
     pub(crate) config: Option<String>,

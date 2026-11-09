@@ -18,6 +18,7 @@ impl FlowFileIndex {
                 .insert(call.source_callee.clone(), (call.offset, call.end));
         }
         Self {
+            builtin_callbacks: Vec::new(),
             callable_value_uses: flow.callable_value_uses.clone(),
             synthetic_callbacks: function_calls
                 .iter()

@@ -223,12 +223,34 @@ A built-in that invokes a callback keeps the proof: `map`, `filter`, `forEach`,
 `flatMap`, `reduce`, `some`, `every`, `find`, `findIndex`, `sort`, `then`,
 `catch`, `finally`, `replace` / `replaceAll` (second argument), `Array.from` (second argument), `AsyncLocalStorage.run` /
 `exit`, and the timers `setTimeout`, `setInterval`, and `setImmediate`. The built-in executes the callback, so an inline function or a
-named function the call graph resolves in the same callable is traversed and can
-reach an assertion. An argument which is a parameter, a member read, a call
-result, or a function imported from another module (outside `map`-family
-iteration) is reported as `built-in callback `name` is not statically resolved`
-at the built-in call. Inline the callback or pass a function declared in the
-same file.
+named function the call graph resolves at that exact argument occurrence is
+traversed and can reach an assertion. This includes imported helpers, local
+aliases, and callback parameters when the canonical call graph proves the
+callers' arguments. Direct assertion imports passed as callbacks also count as
+executed assertions. Promise continuations (`then` / `finally`) and
+`AsyncLocalStorage.run` use the same resolution as array iteration. Imported
+aliases of the Node `AsyncLocalStorage` constructor retain receiver provenance.
+
+The receiver family must support the callback method: `new Map().then(owner)`
+and `(1).map(owner)` supply no ownership evidence. Callback execution is represented
+by opt-in `assertion-owner` edges; enabling the rule leaves ordinary `call` queries
+and call-site reports unchanged.
+
+An explicit array element type also supplies context for inline callback parameters:
+`rows: number[]` makes `rows.map(r => r.toFixed(1)).join(',')` ordinary built-in
+work. Declared string properties retain their type through a member read, and a
+global `Date.UTC(...)` result is numeric when `Date` is not shadowed. Unknown
+elements and stored function elements do not acquire callable identities from an
+array annotation.
+
+An argument with no resolved callable identity (including an unbound parameter,
+a conditional expression, a member read, or a call result) remains ``built-in callback `name` is not
+statically resolved``. Pass a statically resolvable function or configure a real
+ownership contract. A callback occurrence elsewhere in the producer, even one
+with the same name, supplies no evidence for this argument. Chained calls retain
+each invocation’s argument positions: `Promise.resolve(owner).finally(noop)`
+does not execute `owner`, while `Promise.resolve().then(owner).finally(noop)`
+reaches it through `then`.
 
 ```ts
 export function owned(items: number[]) { items.map((item) => assertItem(item)); } // reaches assertItem

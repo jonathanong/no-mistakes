@@ -2,8 +2,11 @@
 //! The model and its limits are documented in docs/rules/coverage-producer-assertion-owner.md.
 use super::builtin_tables::*;
 use super::*;
-use crate::codebase::dependencies::extract::{InvocationKind, ValueExpression};
+use crate::codebase::dependencies::extract::{InvocationKind, ValueCall, ValueExpression};
 use crate::codebase::dependencies::graph::ResolvedCallTarget;
+#[path = "builtins/call_index.rs"]
+mod call_index;
+pub(super) use call_index::CallIndex;
 
 /// A built-in call and the callbacks it invokes.
 #[derive(Default)]
@@ -14,65 +17,77 @@ pub(super) struct Callbacks<'a> {
     pub unresolved: Vec<String>,
 }
 
-fn positions(site: &ResolvedCallSite, facts: &dyn TsFactLookup) -> Option<&'static [usize]> {
-    if !matches!(site.target, ResolvedCallTarget::Unknown)
-        || site.invocation != InvocationKind::Call
-    {
-        return None;
-    }
-    let callee = site.source_callee.as_str();
-    let Some((receiver, method)) = callee.rsplit_once('.') else {
-        return GLOBAL_FUNCTIONS
-            .contains(&callee)
-            .then_some(&[][..])
-            .or_else(|| TIMERS.contains(&callee).then_some(&[0][..]));
-    };
-    let proven = facts
-        .get_ts_facts(&site.file)
-        .is_some_and(|file| file.builtin_receiver_calls.contains(&site.offset));
-    if !proven {
-        return None;
-    }
-    if let Some((_, positions)) = CALLBACKS.iter().find(|(name, _)| *name == method) {
-        return Some(positions);
-    }
-    if callee == "Array.from" {
-        return Some(&[1]);
-    }
-    if matches!(method, "run" | "exit") {
-        return als_file(&site.file, facts).then_some(if method == "run" { &[1] } else { &[0] });
-    }
-    (GLOBAL_OBJECTS.contains(&receiver) || METHODS.contains(&method)).then_some(&[])
-}
-
-fn als_file(file: &Path, facts: &dyn TsFactLookup) -> bool {
-    facts.get_ts_facts(file).is_some_and(|facts| {
-        facts.imported_bindings.iter().any(|binding| {
-            binding.imported == "AsyncLocalStorage"
-                && matches!(
-                    binding.specifier.as_str(),
-                    "async_hooks" | "node:async_hooks"
-                )
-        })
-    })
-}
-
 /// Classify an unresolved call as a non-dispatching built-in; `None` when it is not one.
 /// Callback arguments of callback-invoking built-ins are returned, never dropped.
 pub(super) fn classify<'a>(
     site: &ResolvedCallSite,
     node_sites: &[&'a ResolvedCallSite],
+    calls: &CallIndex<'_>,
     facts: &dyn TsFactLookup,
 ) -> Option<Callbacks<'a>> {
-    let positions = positions(site, facts)?;
+    if site.invocation != InvocationKind::Call
+        || !matches!(
+            site.target,
+            ResolvedCallTarget::Unknown | ResolvedCallTarget::Global { .. }
+        )
+    {
+        return None;
+    }
+    let group = calls.at(site);
+    let exact = group
+        .iter()
+        .copied()
+        .filter(|call| call.source_callee == site.source_callee)
+        .collect::<Vec<_>>();
+    let selected = if exact.is_empty() && site.source_callee == "<unknown>" {
+        group.to_vec()
+    } else {
+        exact
+    };
     let mut out = Callbacks::default();
-    let call = facts.get_ts_facts(&site.file).and_then(|file| {
-        file.value_flow
-            .calls
-            .iter()
-            .find(|call| call.offset == site.offset)
-    });
+    if !site.source_callee.contains('.') {
+        if GLOBAL_FUNCTIONS.contains(&site.source_callee.as_str()) {
+            return Some(out);
+        }
+        if TIMERS.contains(&site.source_callee.as_str()) {
+            for call in &selected {
+                collect_arguments(Some(*call), &[0], node_sites, &mut out);
+            }
+            return Some(out);
+        }
+        return None;
+    }
+    let file = facts.get_ts_facts(&site.file)?;
+    let mut native = false;
+    let mut leaf = false;
+    for call in selected {
+        match file.builtin_callback_calls.get(&(call.offset, call.end)) {
+            Some(Some(positions)) => {
+                native = true;
+                collect_arguments(Some(call), positions, node_sites, &mut out);
+            }
+            Some(None) => leaf = true,
+            None => {}
+        }
+    }
+    if native {
+        return Some(out);
+    }
+    let (receiver, method) = site.source_callee.rsplit_once('.')?;
+    (leaf && (GLOBAL_OBJECTS.contains(&receiver) || METHODS.contains(&method))).then_some(out)
+}
+
+fn collect_arguments<'a>(
+    call: Option<&ValueCall>,
+    positions: &[usize],
+    node_sites: &[&'a ResolvedCallSite],
+    out: &mut Callbacks<'a>,
+) {
     for position in positions {
+        if call.is_some_and(|call| call.spread_at.is_some_and(|spread| *position >= spread)) {
+            out.unresolved.push("spread arguments".to_string());
+            break;
+        }
         let Some(argument) = call.and_then(|call| call.arguments.get(*position)) else {
             continue;
         };
@@ -83,22 +98,25 @@ pub(super) fn classify<'a>(
                 .find(|other| other.invocation == InvocationKind::Callback && matches(other))
         };
         match argument {
-            ValueExpression::Callable(id) => {
-                out.executed.extend(callback(&|other| other.offset == id.0));
-            }
-            ValueExpression::Named { name, .. } => {
-                match callback(&|other| other.source_callee == *name) {
+            ValueExpression::Callable(id) => match callback(&|other| other.offset == id.0) {
+                Some(found) => out.executed.push(found),
+                None => out.unresolved.push(format!("argument {}", position + 1)),
+            },
+            ValueExpression::Named { name, offset, .. } => {
+                match callback(&|other| other.source_callee == *name && other.offset == *offset) {
                     Some(found) if !found.has_unknown_target() => out.executed.push(found),
                     _ => out.unresolved.push(name.clone()),
                 }
             }
-            ValueExpression::Member(..) | ValueExpression::Call(..) => {
+            ValueExpression::Undefined
+            | ValueExpression::Null
+            | ValueExpression::Object(..)
+            | ValueExpression::Array(..) => {}
+            _ => {
                 out.unresolved.push(format!("argument {}", position + 1));
             }
-            _ => {}
         }
     }
-    Some(out)
 }
 
 /// Whether this candidate is a synchronous Node built-in module export.

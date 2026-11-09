@@ -59,11 +59,7 @@ fn collect_call_edges_for_core(
                         .push((path.clone(), std::sync::Arc::clone(replacements)));
                 }
                 value_flow::collect_constructors(&resolution, file, &mut output);
-                for call in file
-                    .function_calls
-                    .iter()
-                    .filter(|call| is_traversable_call(&index, call))
-                {
+                for call in file.function_calls.iter().filter(|call| is_traversable_call(&index, call)) {
                     let (edge, site) = resolution.resolve(call);
                     output.edges.extend(edge);
                     output.sites.push(site);
@@ -116,6 +112,9 @@ fn collect_call_edges_for_core(
     if plan.calls {
         value_flow::prepare_constructor_routes(&mut pass);
         refine_value_calls(edge_inputs, facts, resolver, &indexes, &mut pass);
+        if plan.assertion_owners {
+            value_flow::project_builtin_callbacks(edge_inputs, facts, resolver, &indexes, &mut pass);
+        }
         if plan.effect_selectors {
             value_flow::resolve_value_exports(
                 edge_inputs,
