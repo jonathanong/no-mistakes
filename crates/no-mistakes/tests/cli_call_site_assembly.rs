@@ -19,3 +19,16 @@ fn call_site_assembly_check_json_snapshot() {
         &["--timeout", "120"],
     );
 }
+
+#[test]
+fn refinement_visit_cap_check_json_snapshot() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/value-flow-visit-cap/fixture");
+    crate::check_json_snapshot::assert_saved_fixture(
+        "refinement_visit_cap",
+        &[
+            ("on", root.clone(), root.join("on.yml")),
+            ("off", root.clone(), root.join("off.yml")),
+        ],
+    );
+}

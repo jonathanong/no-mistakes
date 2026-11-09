@@ -17,7 +17,6 @@ pub(in super::super::super) fn refine_value_calls(
     if pass.parameter_cache.site_storage.cloning() || pass.parameter_cache.site_storage.original() {
         return owned_worklist::refine_value_calls(inputs, facts, resolver, indexes, pass);
     }
-    let total_sites = pass.sites.len();
     let mut incoming = incoming_inputs(&pass.sites, &pass.constructor_routes, indexes, facts);
     let replacements = replacement_catalog::ReplacementCatalog::prepare(
         inputs, facts, resolver, indexes, pass, &incoming,
@@ -61,7 +60,7 @@ pub(in super::super::super) fn refine_value_calls(
         let results: Vec<_> = selected
             .into_par_iter()
             .map(|(index, site)| {
-                let enabled = visits[&index] <= total_sites + 1;
+                let enabled = visits[&index] <= base.len() + 1;
                 let previous = reset_resolution(site, &base[index]);
                 let used = refine_site_in_place(
                     inputs,
@@ -126,7 +125,7 @@ pub(in super::super::super) fn refine_value_calls(
                     users
                         .iter()
                         .copied()
-                        .filter(|index| visits[index] <= total_sites + 1),
+                        .filter(|index| visits[index] <= base.len() + 1),
                 );
             }
         }

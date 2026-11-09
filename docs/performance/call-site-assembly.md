@@ -6,7 +6,8 @@ assembles call-site records into one exactly sized vector and transfers that
 allocation into the canonical graph. Refinement retains complete immutable
 originals only for its existing set of admitted sites, using dense IDs mapped back
 to physical occurrences. Incoming arguments still include every caller and
-constructor; visit limits retain the full initial site count. Every record
+constructor; visit limits use the admitted site count plus one, followed by
+one conservative pass with parameter refinement disabled. Every record
 and its order survive. Extraction, resolution and refinement results, selectors,
 and suppressions are unchanged.
 
@@ -186,6 +187,28 @@ The saved small semantic fixture and full owned-original oracle cover callback
 inputs from known callers, constructors, duplicate same-line occurrences,
 dynamic calls and gaps in admitted indices. Work-count regressions assert the
 exact merged capacity and complete-record clone count. No rule admission,
-resolution fallback, recursion/visit bound, suppression or record field is
-removed. This workload establishes a construction-heavy call-analysis gain;
+resolution fallback, suppression or record field is removed. The admitted-site
+visit bound is covered separately by the sparse callback-cycle regression.
+This workload establishes a construction-heavy call-analysis gain;
 it does not establish a speedup for every codebase or configuration.
+
+## Admitted-site visit bound
+
+Issue #3184 tightens both the refinement and requeue predicates to the
+admitted count plus one. Only admitted occurrences can change during this
+traversal; known callers still contribute incoming arguments without widening
+its visit budget. One final visit disables parameter refinement when the
+budget is exhausted, preserving the conservative unknown-call result.
+
+The saved `value-flow-visit-cap` fixture has one 471-byte, 41-line TypeScript
+source with no JSX, 32 unrelated direct calls, and a callback member that
+oscillates between agreement and disagreement. It admits 2 of 36 physical
+sites. The unchanged owned-original oracle performs 39 visits; the admitted
+cap performs 5. The work-count test first fails on main and then passes with
+both predicates tightened. It compares every public graph field, incoming
+argument ownership, and physical edge order and multiplicity.
+
+The `check_json_snapshot` golden was generated on main before this fix. At
+jobs 1 and 2 it retains the unknown callback finding, the configured timer
+finding, and the empty rule-off report. These are work-bound and compatibility
+guards, independent of any measured runtime improvement.
