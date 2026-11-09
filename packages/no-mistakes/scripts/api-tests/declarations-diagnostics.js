@@ -1,4 +1,6 @@
 const { assert, test, readFileSync, join, packageRoot } = require("./context");
+const { createRequire } = require("node:module");
+const ts = createRequire(require.resolve("@storybook/react"))("typescript");
 
 const declarations =
   readFileSync(join(packageRoot, "diagnostics-types.d.ts"), "utf8") +
@@ -84,8 +86,6 @@ test("diagnostics selectors cover public analyses and exclude utilities and raw 
 });
 
 test("diagnostics collector overloads retain required arguments and correlated result types", () => {
-  const { createRequire } = require("node:module");
-  const ts = createRequire(require.resolve("@storybook/react"))("typescript");
   const fixture = join(
     packageRoot,
     "..",
