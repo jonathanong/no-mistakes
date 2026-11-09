@@ -34,16 +34,11 @@ pub(super) fn classify<'a>(
         return None;
     }
     let group = calls.at(site);
-    let exact = group
+    let selected = group
         .iter()
         .copied()
         .filter(|call| call.source_callee == site.source_callee)
         .collect::<Vec<_>>();
-    let selected = if exact.is_empty() && site.source_callee == "<unknown>" {
-        group.to_vec()
-    } else {
-        exact
-    };
     let mut out = Callbacks::default();
     if !site.source_callee.contains('.') {
         if GLOBAL_FUNCTIONS.contains(&site.source_callee.as_str()) {

@@ -13,20 +13,20 @@ impl<'a> CallIndex<'a> {
         facts: &'a dyn TsFactLookup,
     ) -> Self {
         let files: FxHashSet<_> = sites.keys().filter_map(NodeId::as_file).collect();
-        let mut indexed = FxHashMap::default();
-        for path in files {
-            let Some(file) = facts.get_ts_facts(path) else {
-                continue;
-            };
-            let mut calls: CallsByOwner<'a> = FxHashMap::default();
-            for call in &file.value_flow.calls {
-                calls
-                    .entry((call.offset, call.context))
-                    .or_default()
-                    .push(call);
-            }
-            indexed.insert(path.to_path_buf(), calls);
-        }
+        let indexed = files
+            .into_iter()
+            .filter_map(|path| {
+                let file = facts.get_ts_facts(path)?;
+                let mut calls: CallsByOwner<'a> = FxHashMap::default();
+                for call in &file.value_flow.calls {
+                    calls
+                        .entry((call.offset, call.context))
+                        .or_default()
+                        .push(call);
+                }
+                Some((path.to_path_buf(), calls))
+            })
+            .collect();
         Self { files: indexed }
     }
 

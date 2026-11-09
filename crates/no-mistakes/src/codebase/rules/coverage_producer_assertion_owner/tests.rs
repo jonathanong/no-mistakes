@@ -216,5 +216,7 @@ mod reexports;
 
 mod external_stars;
 
+#[path = "tests/builtin_callback_coverage_tests.rs"]
+mod builtin_callback_coverage_tests;
 #[path = "tests/builtin_callbacks.rs"]
 mod builtin_callbacks;

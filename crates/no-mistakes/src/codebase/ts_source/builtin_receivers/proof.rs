@@ -77,9 +77,6 @@ impl Names {
         {
             return Some(&[1]);
         }
-        if !self.callback_method_supported(receiver, method) {
-            return None;
-        }
         match self.value_kind(receiver, 0)? {
             ValueKind::Array { .. } if values::ARRAY_CALLBACKS.contains(&method) => Some(&[0]),
             ValueKind::Promise if method == "then" => Some(&[0, 1]),
@@ -88,25 +85,6 @@ impl Names {
             ValueKind::AsyncStorage if method == "exit" => Some(&[0]),
             ValueKind::String if matches!(method, "replace" | "replaceAll") => Some(&[1]),
             _ => None,
-        }
-    }
-
-    fn callback_method_supported(&self, receiver: &Expression<'_>, method: &str) -> bool {
-        if method == "from"
-            && matches!(receiver.without_parentheses(),
-            Expression::Identifier(id) if id.name == "Array" && self.global(&id.name))
-        {
-            return true;
-        }
-        let Some(kind) = self.value_kind(receiver, 0) else {
-            return false;
-        };
-        match kind {
-            ValueKind::Array { .. } if values::ARRAY_CALLBACKS.contains(&method) => true,
-            ValueKind::Promise if matches!(method, "then" | "catch" | "finally") => true,
-            ValueKind::AsyncStorage if matches!(method, "run" | "exit") => true,
-            ValueKind::String if matches!(method, "replace" | "replaceAll") => true,
-            _ => false,
         }
     }
 
@@ -121,11 +99,8 @@ impl Names {
     }
 
     pub(super) fn builtin(&self, expr: &Expression<'_>, method: Option<&str>, depth: u8) -> bool {
-        if depth > 8 {
-            return false;
-        }
         if matches!(method, Some(name) if values::callback_name(name))
-            && !self.callback_method_supported(expr, method.unwrap())
+            && self.callback_positions(expr, method.unwrap()).is_none()
         {
             return false;
         }
@@ -149,10 +124,6 @@ impl Names {
     fn has_builtin_object(&self, expr: &Expression<'_>) -> bool {
         match expr.without_parentheses() {
             Expression::Identifier(id) => GLOBAL_OBJECTS.contains(&id.name.as_str()),
-            Expression::NewExpression(new) => {
-                matches!(&new.callee, Expression::Identifier(id) if self.constructor(&id.name))
-            }
-            Expression::CallExpression(call) => values::call_result(self, call, 0).is_some(),
             _ => false,
         }
     }

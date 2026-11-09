@@ -20,7 +20,6 @@ fn callbacks(source: &str) -> Vec<String> {
     calls.sort();
     calls
 }
-
 fn callback_values(
     source: &str,
     needle: &str,

@@ -1,6 +1,7 @@
 use crate::codebase::ts_resolver::ImportResolver;
 use crate::codebase::ts_source::facts::collect_ts_facts_with_context;
 mod bridge_projection;
+mod builtin_callback_projection_tests;
 mod foreign_receiver_declaration_order;
 mod foreign_receiver_work_budget;
 mod import_main;

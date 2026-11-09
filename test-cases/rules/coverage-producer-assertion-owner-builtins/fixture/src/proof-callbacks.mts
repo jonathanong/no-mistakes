@@ -19,4 +19,3 @@ export function callbackFamilies(rows: number[]) {
   empty.forEach(run);
   [,,].map(run);
 }
-

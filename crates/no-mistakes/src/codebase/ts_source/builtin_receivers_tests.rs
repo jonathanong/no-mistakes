@@ -90,3 +90,6 @@ fn deeply_chained_initializers_stop_at_the_depth_bound() {
 
 #[path = "builtin_receivers_callbacks_tests.rs"]
 mod callbacks;
+
+#[path = "builtin_receivers_coverage_tests.rs"]
+mod coverage;
