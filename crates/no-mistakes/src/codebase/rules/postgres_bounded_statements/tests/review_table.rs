@@ -26,7 +26,12 @@ fn repeated_quoted_table_arms_do_not_consume_tokens_twice() {
         "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-table-quoted-repeat.sql"
     ));
     let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
-    assert_eq!(facts.bounds.len(), 3);
+    let statements: Vec<_> = facts
+        .bounds
+        .iter()
+        .filter(|fact| fact.statement_start == Some((fact.line, fact.column)))
+        .collect();
+    assert_eq!(statements.len(), 3);
 }
 
 #[test]
@@ -36,7 +41,12 @@ fn skipped_create_table_arm_cannot_supply_a_later_query_identity() {
         "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-table-quoted-skipped.sql"
     ));
     let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
-    assert_eq!(facts.bounds.len(), 1);
+    let statements: Vec<_> = facts
+        .bounds
+        .iter()
+        .filter(|fact| fact.statement_start == Some((fact.line, fact.column)))
+        .collect();
+    assert_eq!(statements.len(), 1);
 }
 
 #[test]
@@ -46,7 +56,12 @@ fn ignored_scalar_table_arm_cannot_supply_an_outer_arm_identity() {
         "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-table-quoted-nested.sql"
     ));
     let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
-    assert_eq!(facts.bounds.len(), 1);
+    let statements: Vec<_> = facts
+        .bounds
+        .iter()
+        .filter(|fact| fact.statement_start == Some((fact.line, fact.column)))
+        .collect();
+    assert_eq!(statements.len(), 1);
 }
 
 #[test]
@@ -56,8 +71,13 @@ fn ignored_scalar_table_arm_does_not_steal_a_quoted_outer_identity() {
         "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-table-quoted-nested-reverse.sql"
     ));
     let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
-    assert_eq!(facts.bounds.len(), 2);
-    let right = &facts.bounds[0].query.items[1].kind;
+    let statements: Vec<_> = facts
+        .bounds
+        .iter()
+        .filter(|fact| fact.statement_start == Some((fact.line, fact.column)))
+        .collect();
+    assert_eq!(statements.len(), 2);
+    let right = &statements[0].query.items[1].kind;
     let crate::codebase::postgres::statements::SqlBoundItemKind::Query(right) = right else {
         panic!("the outer TABLE arm must be parsed");
     };
@@ -65,7 +85,7 @@ fn ignored_scalar_table_arm_does_not_steal_a_quoted_outer_identity() {
         &right.items[0].kind,
         crate::codebase::postgres::statements::SqlBoundItemKind::Opaque
     ));
-    let after_drop = &facts.bounds[1].query.items[1].kind;
+    let after_drop = &statements[1].query.items[1].kind;
     let crate::codebase::postgres::statements::SqlBoundItemKind::Query(after_drop) = after_drop
     else {
         panic!("the replayed outer TABLE arm must be parsed");
@@ -85,7 +105,12 @@ fn ignored_projection_table_arm_cannot_mask_a_derived_relation() {
     ));
     let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
     assert!(!facts.parse_failed);
-    assert_eq!(facts.bounds.len(), 1);
+    let statements: Vec<_> = facts
+        .bounds
+        .iter()
+        .filter(|fact| fact.statement_start == Some((fact.line, fact.column)))
+        .collect();
+    assert_eq!(statements.len(), 1);
 }
 
 #[test]
@@ -96,5 +121,10 @@ fn ignored_projection_table_arm_cannot_rename_a_direct_derived_relation() {
     ));
     let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
     assert!(!facts.parse_failed);
-    assert_eq!(facts.bounds.len(), 1);
+    let statements: Vec<_> = facts
+        .bounds
+        .iter()
+        .filter(|fact| fact.statement_start == Some((fact.line, fact.column)))
+        .collect();
+    assert_eq!(statements.len(), 1);
 }

@@ -4,6 +4,7 @@ use crate::codebase::postgres::statements::{
     SqlBoundFact, SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
 };
 use crate::codebase::postgres::{CatalogObjectRef, SchemaCatalog};
+mod body_reads;
 mod correlated;
 mod driven;
 mod keys;
@@ -16,6 +17,9 @@ mod propagation;
 mod qualified;
 mod reads;
 mod scalar_output;
+mod scalar_reads;
+mod statement;
+use statement::offenders_with_columns;
 mod target;
 mod view_key;
 use outer_reads::reads_outer;
@@ -64,19 +68,6 @@ pub(super) fn variant_offenders_with_views(
     offenders_with_columns(fact, catalog, views, true)
 }
 
-fn offenders_with_columns(
-    fact: &SqlBoundFact,
-    catalog: &SchemaCatalog,
-    views: &ViewBounds,
-    precise_columns: bool,
-) -> Vec<Offender> {
-    let query = possible_temporary::project(&fact.query, catalog);
-    let evaluation = evaluate(&query, catalog, views, precise_columns, fact.target);
-    let Some(target) = fact.target else {
-        return evaluation.offenders;
-    };
-    target::offenders(&query, target, &evaluation, catalog, views)
-}
 fn evaluate(
     query: &SqlBoundQuery,
     catalog: &SchemaCatalog,

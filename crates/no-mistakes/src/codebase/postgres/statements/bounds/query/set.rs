@@ -58,5 +58,7 @@ pub(super) fn bound(
 }
 
 fn arm(bound: SqlBoundQuery, set: &SetExpr) -> SqlBoundItem {
-    SqlBoundItem::new(SqlBoundItemKind::Query(bound), None, start(set.span()))
+    let mut item = SqlBoundItem::new(SqlBoundItemKind::Query(bound), None, start(set.span()));
+    item.set_operation_arm = true;
+    item
 }

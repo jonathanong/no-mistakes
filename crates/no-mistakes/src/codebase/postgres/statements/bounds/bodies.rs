@@ -1,5 +1,5 @@
 use super::{Scope, SqlBoundFact, SqlBoundKind, SqlBoundQuery};
-use crate::codebase::postgres::statements::SqlBoundItem;
+use crate::codebase::postgres::statements::{SqlBoundItem, SqlQualifiedRead, SqlScalarReads};
 use std::{
     cell::RefCell,
     collections::{BTreeMap, BTreeSet},
@@ -10,6 +10,7 @@ mod pools;
 
 #[derive(Default)]
 pub(super) struct Collected {
+    materialized: bool,
     facts: Vec<SqlBoundFact>,
     references: BTreeSet<(usize, usize)>,
     // Retained canonical CTEs prevent address reuse in request-local identity keys.
@@ -17,9 +18,24 @@ pub(super) struct Collected {
 }
 
 impl Scope {
-    pub(super) fn record_subquery(&self, bound: &SqlBoundQuery, query: &sqlparser::ast::Query) {
+    pub(super) fn record_subquery(
+        &self,
+        bound: &SqlBoundQuery,
+        query: &sqlparser::ast::Query,
+        scalar_reads: Option<SqlScalarReads>,
+    ) {
+        self.record_subquery_with_reads(bound, query, scalar_reads, &[]);
+    }
+
+    pub(super) fn record_subquery_with_reads(
+        &self,
+        bound: &SqlBoundQuery,
+        query: &sqlparser::ast::Query,
+        scalar_reads: Option<SqlScalarReads>,
+        lateral_qualified_reads: &[SqlQualifiedRead],
+    ) {
         use sqlparser::ast::Spanned;
-        self.record_body(
+        self.record_fact(
             bound,
             || {
                 let span = query.span();
@@ -32,19 +48,22 @@ impl Scope {
                         .map_or((1, 1), |item| (item.line, item.column))
                 }
             },
-            || "subquery".into(),
+            scalar_reads.is_none().then(|| "subquery".into()),
+            scalar_reads,
+            lateral_qualified_reads,
         );
     }
 
     pub(in crate::codebase::postgres) fn with_bodies(mut self, enabled: bool) -> Self {
-        if enabled {
-            self.enable_bodies();
-        }
+        self.bodies = Some(Rc::new(RefCell::new(Collected {
+            materialized: enabled,
+            ..Default::default()
+        })));
         self
     }
 
     pub(in crate::codebase::postgres) fn enable_bodies(&mut self) {
-        self.bodies = Some(Rc::default());
+        *self = self.clone().with_bodies(true);
     }
 
     pub(super) fn record_body(
@@ -53,18 +72,44 @@ impl Scope {
         at: impl FnOnce() -> (usize, usize),
         name: impl FnOnce() -> String,
     ) {
+        if self
+            .bodies
+            .as_ref()
+            .is_some_and(|bodies| bodies.borrow().materialized)
+        {
+            self.record_fact(query, at, Some(name()), None, &[]);
+        }
+    }
+
+    fn record_fact(
+        &self,
+        query: &SqlBoundQuery,
+        at: impl FnOnce() -> (usize, usize),
+        body: Option<String>,
+        scalar_reads: Option<SqlScalarReads>,
+        lateral_qualified_reads: &[SqlQualifiedRead],
+    ) {
         if let Some(bodies) = &self.bodies {
             let at = at();
             let mut bodies = bodies.borrow_mut();
-            let query = pools::project(query, &bodies.references);
+            if body.is_some() && !bodies.materialized {
+                return;
+            }
+            let query = if body.is_none() {
+                query.clone()
+            } else {
+                pools::project(query, &bodies.references)
+            };
             bodies.facts.push(SqlBoundFact {
                 kind: self.body_owner.unwrap_or(SqlBoundKind::Select),
-                body: Some(name()),
+                body,
                 line: at.0,
                 column: at.1,
                 statement_start: None,
                 query,
                 target: None,
+                scalar_reads,
+                lateral_qualified_reads: lateral_qualified_reads.to_vec(),
             });
         }
     }

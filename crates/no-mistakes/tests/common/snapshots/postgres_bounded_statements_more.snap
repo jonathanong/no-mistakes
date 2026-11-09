@@ -1540,10 +1540,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/caller-array-provenance.sql",
           "line": 11,
-          "message": "sql/caller-array-provenance.sql:11: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "message": "sql/caller-array-provenance.sql:11: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key; SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE accounts a SET name = 'changed' WHERE a.id = ANY((SELECT o.account_ids FROM orders o)::uuid[]);",
-          "target": "table:accounts"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "sql/caller-array-provenance.sql",
@@ -3157,10 +3157,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/conditional-table-function-inputs.sql",
           "line": 11,
-          "message": "sql/conditional-table-function-inputs.sql:11: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "message": "sql/conditional-table-function-inputs.sql:11: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key; SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE accounts a SET name='x' FROM unnest(COALESCE((SELECT account_ids FROM orders), ARRAY[]::uuid[])) u(id) WHERE a.id=u.id;",
-          "target": "table:accounts"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "sql/conditional-table-function-inputs.sql",
@@ -5273,10 +5273,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/finite-array.sql",
           "line": 28,
-          "message": "sql/finite-array.sql:28: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "message": "sql/finite-array.sql:28: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key; SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE accounts a SET name = 'x' FROM orders o WHERE o.id = $1 AND a.id = ANY(ARRAY[coalesce((SELECT account_id FROM orders), $2)]);",
-          "target": "table:accounts"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "sql/finite-array.sql",
@@ -5289,10 +5289,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/finite-array.sql",
           "line": 30,
-          "message": "sql/finite-array.sql:30: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "message": "sql/finite-array.sql:30: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key; SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE accounts a SET name = 'x' FROM orders o WHERE o.id = $1 AND a.id = ANY(ARRAY[ARRAY[(SELECT account_id FROM orders)]]);",
-          "target": "table:accounts"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "sql/finite-array.sql",

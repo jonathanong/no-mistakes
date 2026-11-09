@@ -1,10 +1,7 @@
 mod kind;
 pub use kind::SqlBoundKind;
-
-/// One executed `SELECT`, `UPDATE` or `DELETE`, reduced to what decides its row count.
-///
-/// The fact is syntactic: whether a pinned column set is a unique key is decided later,
-/// against a schema catalog.
+/// One executed SELECT, UPDATE or DELETE, reduced to its row-count facts.
+/// Key uniqueness is determined later against the schema catalog.
 #[derive(Clone, PartialEq, Eq)]
 pub struct SqlBoundFact {
     /// Owning executed statement, including for independently judged query bodies.
@@ -16,10 +13,12 @@ pub struct SqlBoundFact {
     /// Original outer SQL statement position, including WITH or an executing wrapper.
     pub statement_start: Option<(usize, usize)>,
     pub query: SqlBoundQuery,
+    pub scalar_reads: Option<SqlScalarReads>,
+    /// Qualified enclosing rows fixed for one explicitly LATERAL body invocation.
+    pub lateral_qualified_reads: Vec<SqlQualifiedRead>,
     /// For `UPDATE` and `DELETE`: the index in `query.items` of the relation being changed.
     pub target: Option<usize>,
 }
-
 /// A query body: its FROM items, and whether it caps its own row count.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct SqlBoundQuery {
@@ -77,9 +76,11 @@ pub struct SqlBoundItem {
     /// Bare columns of a `LATERAL` source that none of its own relations is known to own: it
     /// reads the items before it when the catalog shows that none of their tables has them.
     pub lateral_reads: Vec<SqlBareRead>,
-    /// Schema-qualified reads which may name items before a `LATERAL` source. Catalog identity
-    /// can show that an unqualified local table is the same relation.
+    /// Schema-qualified reads which may name preceding `LATERAL` items.
     pub lateral_qualified_reads: Vec<SqlQualifiedRead>,
+    /// A synthetic transparent wrapper for one `UNION` / `INTERSECT` / `EXCEPT` arm.
+    #[doc(hidden)]
+    pub set_operation_arm: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -124,7 +125,6 @@ pub struct SqlQualifiedScope {
 }
 
 mod item;
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SqlBoundItemKind {
     /// A base relation, as written and normalized.
@@ -195,3 +195,6 @@ pub use input_mode::SqlBoundInputMode;
 use sqlparser::ast::Expr;
 mod debug;
 mod row_inputs;
+
+mod scalar;
+pub use scalar::SqlScalarReads;

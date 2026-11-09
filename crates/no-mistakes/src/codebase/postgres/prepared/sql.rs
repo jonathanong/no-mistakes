@@ -91,6 +91,7 @@ pub(super) fn collect(
                             plan.postgres_bounds,
                             None,
                             crate::codebase::postgres::statements::StatementPolicySources {
+                                bind_values: Default::default(),
                                 tokens: Some(statement_sources),
                                 schema: schema.as_ref().and_then(|entry| entry.as_ref().ok()).map(std::sync::Arc::as_ref),
                                 functions,

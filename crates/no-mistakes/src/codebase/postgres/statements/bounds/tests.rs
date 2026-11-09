@@ -127,7 +127,7 @@ fn limits_and_pure_aggregates_cap_a_query() {
     );
     assert_eq!(
         shape("SELECT (SELECT count(*) FROM x) FROM orders"),
-        ["select: orders"]
+        ["select: orders", "select: capped x"]
     );
 }
 
@@ -276,7 +276,7 @@ fn expressions_over_other_items_and_scalar_subqueries_are_values() {
     );
     assert_eq!(
         shape("SELECT 1 FROM a WHERE a.f = EXISTS (SELECT 1) AND a.g = (SELECT 2)"),
-        ["select: a[f=value g=value]"]
+        ["select: a[f=value g=value]", "select: "]
     );
     assert_eq!(shape("(SELECT id FROM t LIMIT 5)"), ["select: capped t"]);
     assert_eq!(shape("SELECT id FROM t LIMIT (NULL)"), ["select: t"]);
@@ -434,7 +434,7 @@ fn only_a_subquery_independent_of_the_row_is_a_pin() {
     );
     assert_eq!(
         shape("DELETE FROM t WHERE id = (SELECT max(id) FROM t)"),
-        ["delete: t[id=value]"]
+        ["delete: t[id=value]", "delete: capped t"]
     );
 }
 
@@ -486,3 +486,5 @@ mod conditional_table_function_inputs;
 mod wrapped_scalar_reducer_arrays;
 
 mod join_on_scope;
+
+mod closed_range_values;

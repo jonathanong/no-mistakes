@@ -559,7 +559,9 @@ error severity enforces failures.
 `postgres-bounded-statements.options.materializedBodies` is `ignore` by default.
 `require-bound` / `advise` adds non-failing advisories for unbounded MATERIALIZED
 CTE and pool-building subquery bodies; `report` makes them findings. Existence
-and known correlated scalar probes are excluded. Consumers of an already
-materialized pool retain the source obligation without repeating it. It uses the same scoped
+and scalar subquery probes are excluded from pool diagnostics; unbounded
+uncorrelated scalar reads remain ordinary findings even with `ignore`. Consumers
+of an already materialized pool retain the source obligation without repeating
+it. It uses the same scoped
 SQL inputs, catalog and `columnBounds` declarations as the parent rule. See the
 [rule examples](../rules/postgres-bounded-statements.md#independent-candidate-bodies).

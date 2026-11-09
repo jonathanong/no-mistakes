@@ -109,9 +109,20 @@ pub(crate) fn unnest(expr: &Expr) -> Expr {
 pub(crate) fn canonical_bound_expr(expr: &Expr) -> Expr {
     let mut normalized = unnest(expr);
     let _: ControlFlow<()> = visit_expressions_mut(&mut normalized, |expr| {
+        if let Expr::Nested(inner) = expr {
+            // The post-order visitor has already canonicalized the nested operand.
+            let inner = std::mem::replace(inner, Box::new(Expr::Value(Value::Null.into())));
+            *expr = *inner;
+            return ControlFlow::Continue(());
+        }
         match expr {
-            Expr::Identifier(ident) if ident.quote_style.is_none() => {
-                ident.value.make_ascii_lowercase();
+            Expr::Identifier(ident) => {
+                ident.value = crate::codebase::postgres::idents::ident_key(ident);
+                ident.quote_style = ident
+                    .value
+                    .bytes()
+                    .any(|byte| byte.is_ascii_uppercase())
+                    .then_some('"');
             }
             Expr::Function(function) => {
                 for part in &mut function.name.0 {

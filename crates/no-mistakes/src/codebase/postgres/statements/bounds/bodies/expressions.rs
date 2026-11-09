@@ -2,7 +2,7 @@ use super::super::super::value::PlaceholderPositions;
 use super::super::{pins, query, Scope};
 use crate::codebase::postgres::statements::SqlBoundItem;
 use sqlparser::ast::{Expr, Query, TableFactor, Visit, Visitor};
-use std::ops::ControlFlow;
+use std::{cell::OnceCell, ops::ControlFlow};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Context {
@@ -20,6 +20,7 @@ pub(super) fn collect<T: Visit>(
 ) {
     let mut visitor = Expressions {
         scope,
+        nested_scope: OnceCell::new(),
         items,
         positions,
         depth: 0,
@@ -31,6 +32,7 @@ pub(super) fn collect<T: Visit>(
 
 struct Expressions<'a> {
     scope: &'a Scope,
+    nested_scope: OnceCell<Scope>,
     items: &'a [SqlBoundItem],
     positions: PlaceholderPositions<'a>,
     depth: usize,
@@ -75,12 +77,23 @@ impl Visitor for Expressions<'_> {
     fn pre_visit_query(&mut self, subquery: &Query) -> ControlFlow<()> {
         // FROM traversal owns derived projections; binding them again grows exponentially.
         if self.depth == 0 && self.derived == 0 {
-            let bound = query::bound_query(subquery, self.scope, self.positions);
+            let scope = self
+                .nested_scope
+                .get_or_init(|| self.scope.with_scalar_scope(self.items));
+            let bound = query::bound_query(subquery, scope, self.positions);
             let context = self.contexts.last().copied().unwrap_or(Context::Other);
+            let reads = (context == Context::Scalar)
+                .then(|| pins::reads_items(subquery, self.items, scope, self.positions));
             let probe = context == Context::Probe
-                || (context == Context::Scalar && self.correlated(subquery));
+                || reads
+                    .as_ref()
+                    .is_some_and(|reads| reads.certain || !reads.qualified.is_empty());
             if !probe {
-                self.scope.record_subquery(&bound, subquery);
+                scope.record_subquery(
+                    &bound,
+                    subquery,
+                    reads.map(|reads| scope.scalar_reads(reads.bare)),
+                );
             }
         }
         self.depth += 1;
@@ -100,12 +113,5 @@ impl Visitor for Expressions<'_> {
     fn post_visit_table_factor(&mut self, factor: &TableFactor) -> ControlFlow<()> {
         self.derived -= usize::from(matches!(factor, TableFactor::Derived { .. }));
         ControlFlow::Continue(())
-    }
-}
-
-impl Expressions<'_> {
-    fn correlated(&self, subquery: &Query) -> bool {
-        let reads = pins::reads_items(subquery, self.items, self.scope, self.positions);
-        reads.certain || !reads.qualified.is_empty()
     }
 }

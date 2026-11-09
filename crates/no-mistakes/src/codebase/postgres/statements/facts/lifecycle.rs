@@ -28,6 +28,7 @@ impl LifecycleBuilder {
         bounds: &mut Vec<SqlBoundFact>,
     ) -> (usize, Option<SqlViewReads>) {
         let function_bounds = bounds::needs_catalog(statement).then(|| SqlFunctionBounds {
+            bind_values: scope.bind_values(),
             positions: positions.map(<[_]>::to_vec),
             table_tokens: scope.table_cursor(),
         });
@@ -84,7 +85,9 @@ pub(crate) fn project_bounds<'a>(
                 let mut scope = bounds::Scope::with_scalar_functions(
                     inputs.table_tokens.clone(),
                     scalar_functions.clone(),
-                );
+                )
+                .with_bodies(false)
+                .with_bind_values(inputs.bind_values.clone());
                 if bounds[step.first_bound..step.last_bound]
                     .iter()
                     .any(|fact| fact.body.is_some())

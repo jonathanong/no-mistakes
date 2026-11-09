@@ -81,11 +81,9 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_update_expression(&mut self, expression: &oxc_ast::ast::UpdateExpression<'a>) {
         self.walk_update_binding(expression);
     }
-
     fn visit_assignment_expression(&mut self, assign: &ast::AssignmentExpression<'a>) {
         self.walk_assignment_expression_bindings(assign);
     }
-
     fn visit_expression_statement(&mut self, statement: &oxc_ast::ast::ExpressionStatement<'a>) {
         self.note_statement_call(statement);
         walk::walk_expression_statement(self, statement);
@@ -198,3 +196,5 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
 
 mod transaction;
 mod transaction_flow;
+
+mod stable_binds;

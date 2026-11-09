@@ -1,0 +1,57 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "members": {
+      "relationKind": "table",
+      "columns": {
+        "group_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "role": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "group_id",
+          "user_id"
+        ]
+      },
+      "indexes": {
+        "members_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX members_pkey ON members (group_id, user_id)",
+          "keys": [
+            {
+              "column": "group_id",
+              "expression": "group_id"
+            },
+            {
+              "column": "user_id",
+              "expression": "user_id"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

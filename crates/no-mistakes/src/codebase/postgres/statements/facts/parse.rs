@@ -192,3 +192,6 @@ mod json_write_demand_tests;
 
 #[cfg(test)]
 mod index_probe_demand_tests;
+
+mod bind_values;
+pub(crate) use bind_values::extract_with_bound_values;

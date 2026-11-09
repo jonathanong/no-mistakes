@@ -36,6 +36,14 @@ impl<'a> ScopeVisitor<'a> {
             .then_some(function.id.as_ref())
             .flatten()
             .map(|id| id.name.as_str());
+        let mut writes = super::stable_binds::Writes::default();
+        if let Some(body) = &function.body {
+            oxc_ast_visit::Visit::visit_function_body(&mut writes, body);
+        }
+        self.stable_primitives
+            .extend(writes.parameters(&function.params));
+        self.stable_parameter_fields
+            .extend(writes.fields(&function.params));
         self.enter_plain_function(declaration_name, function.span.start);
         self.push_scope();
         self.record_params(&function.params);
@@ -99,6 +107,12 @@ impl<'a> ScopeVisitor<'a> {
     }
 
     pub(super) fn walk_arrow_scope(&mut self, arrow: &ast::ArrowFunctionExpression<'a>) {
+        let mut writes = super::stable_binds::Writes::default();
+        oxc_ast_visit::Visit::visit_arrow_function_body(&mut writes, &arrow.body);
+        self.stable_primitives
+            .extend(writes.parameters(&arrow.params));
+        self.stable_parameter_fields
+            .extend(writes.fields(&arrow.params));
         self.push_scope();
         self.record_params(&arrow.params);
         self.enter_function();

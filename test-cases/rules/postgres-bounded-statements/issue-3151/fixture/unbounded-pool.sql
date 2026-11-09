@@ -1,0 +1,1 @@
+SELECT 1 WHERE 1 IN (SELECT role FROM members);

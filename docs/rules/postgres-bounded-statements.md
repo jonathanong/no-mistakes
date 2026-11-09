@@ -40,8 +40,8 @@ See [rationale](postgres-bounded-statements-rationale.md).
 
 ## Independent candidate bodies
 
-`materializedBodies` defaults to `ignore`, preserving existing findings and fact
-collection. Set it to `require-bound` (an alias of `advise`) to receive non-failing
+`materializedBodies` defaults to `ignore`; candidate-pool checks are opt-in.
+Set it to `require-bound` (an alias of `advise`) to receive non-failing
 advisories, or `report` to make violations findings. This option checks
 explicit `AS MATERIALIZED` CTEs and pool-building subquery bodies independently of the surrounding
 statement. Ordinary and `AS NOT MATERIALIZED` CTE declarations retain their
@@ -51,10 +51,21 @@ or DELETE also checks its CTE and subquery bodies, while unrelated SELECT bodies
 remain outside that selection. Separate bodies on one line retain separate advisories.
 
 `EXISTS` and `NOT EXISTS` bodies are existence probes, so they do not receive
-independent pool diagnostics. Known correlated scalar subqueries are also
-per-row probes. `IN`, `ANY`, array subqueries and derived tables retain their
+independent pool diagnostics. Scalar subqueries, including SELECT-list and
+`COALESCE((SELECT ...), ...)` expressions, also do not build candidate pools,
+regardless of correlation. Their ordinary relation-bound checks still apply: an
+unbounded uncorrelated scalar read remains a SELECT finding, including when
+`materializedBodies` is `ignore`. Known correlated probes keep their existing
+per-row treatment. Unqualified outer columns need catalog ownership and a
+complete key proof: a bare correlated equality on a non-unique inner column
+still reports. Ancestor references inside LATERAL select lists retain their
+scope. A local column with the same name remains local and supplies no
+correlation proof. An ordinary CTE retains
+its own `ORDER BY ... LIMIT` input bound when its predicate contains a scalar
+probe. `IN`, `ANY`, array subqueries and derived tables retain their
 body obligations. Materialized CTEs and pool-building bodies nested inside a
-probe are still checked.
+probe are still checked. Scalar reads inside UPDATE or DELETE retain the owning
+statement selection while reporting SELECT read bounds.
 
 A later body that consumes an already materialized CTE inherits that pool's
 obligation. Report the unbounded source CTE once rather than repeating its
@@ -79,7 +90,26 @@ SELECT id FROM (SELECT id FROM posts) candidates LIMIT 20;
 ```
 
 A body can instead restrict every relation by an existing primary/unique-key
-proof, or by equality / `= ANY` on a reviewed `columnBounds` key. For example,
+proof, or by equality / `= ANY` on a reviewed `columnBounds` key. A closed range
+with the same parameter or literal on both sides (`user_id >= $2 AND user_id <= $2`)
+counts as equality for key matching. When a trusted SQL template interpolates
+only primitive literals and unchanged parameters declared as `string`, `number`,
+`bigint`, or `boolean`, repeated reads of a parameter retain their identity.
+Function parameter fields have a plain-data contract: repeated direct static
+reads such as `user.id` share one binding identity, independently of named,
+imported, inline, or absent type annotations. Callers must supply data values;
+getters and Proxies are outside this contract. Known own data fields initialized
+from an unchanged primitive parameter also qualify. Observed writes, aliases or
+escapes, getters, Proxies, unrelated calls or suspensions, computed reads, and
+interpolations with side effects retain the finding.
+Different parameters do not share an identity; use an explicit equality or a
+single stable primitive value when a field cannot satisfy the contract. The [saved template controls](../../test-cases/rules/postgres-bounded-statements/issue-3151-embedded/)
+cover repeated parameters and the unsafe alternatives.
+For a unique key `(group_id, user_id)`,
+`group_id = $1 AND user_id >= $2 AND user_id <= $2` therefore proves a bounded
+lookup. Different bounds (`>= $2 AND <= $3`), open ranges, and halves separated
+by `OR` do not establish that equality; rewrite a lookup as `user_id = $2` or
+supply a separate finite-key proof. For example,
 `SELECT id FROM follows WHERE follower_id = $1` is bounded when
 `columnBounds` declares `follows.follower_id` with a finite fan-out reason.
 Outer predicates do not supply that body-local proof. Findings name the body
@@ -451,8 +481,25 @@ An ambiguous bare column supplies no proof; qualify it with the intended
 relation alias. Catalog indexes include plain unique keys such as
 `receipt_id`, partial unique keys whose predicates the query establishes,
 and matching functional keys such as `LOWER(username) = LOWER($1)`.
+Redundant predicate parentheses and quoted lowercase identifiers preserve the
+same partial-index proof, including inside scalar closed-range lookups.
 A missing partial predicate or a different expression still reports;
 repeat the predicate and match the indexed expression, or cap the query.
+
+The [saved scalar-scope controls](../../test-cases/rules/postgres-bounded-statements/issue-3151-scopes/)
+cover unqualified and LATERAL correlation, partial-index predicates, CTE limits,
+and unbounded scalar reads that must still report. The attachment fixture gives
+the outer `parent_id` lookup its own unique key to isolate the scalar proof. The
+partial-index control also covers a boolean scalar inside `COALESCE`, combined
+with an independent `EXISTS` in a SELECT list without an outer FROM. A nested
+LATERAL lookup may complete a composite key using columns from different
+visible ancestor rows; every key column must still have a finite source.
+UNION ALL arms inside that LATERAL source inherit the same visible ancestors,
+including nested JOIN LATERAL and LEFT JOIN LATERAL lookups. Ordinary derived
+queries and CTEs keep their own scope boundaries. The
+[saved embedded controls](../../test-cases/rules/postgres-bounded-statements/issue-3151-real/)
+exercise fragment-built SQL and SQL-language catalog functions, together with
+missing composite-key halves that must still report.
 
 The [saved key-proof cases](../../test-cases/rules/postgres-bounded-statements/issue-3114/)
 pair these accepted forms with still-reported controls. Each shape has a

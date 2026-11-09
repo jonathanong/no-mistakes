@@ -10,7 +10,7 @@ mod writes;
 pub use bounds::{
     SqlBareRead, SqlBoundFact, SqlBoundInputMode, SqlBoundItem, SqlBoundItemKind, SqlBoundKind,
     SqlBoundOutput, SqlBoundPin, SqlBoundQuery, SqlPinSource, SqlPossibleTemporary,
-    SqlQualifiedRead, SqlQualifiedScope,
+    SqlQualifiedRead, SqlQualifiedScope, SqlScalarReads,
 };
 pub use iteration::{SqlConjunctFact, SqlCursorBound, SqlLimitFact, SqlLimitValue, SqlSweepFact};
 pub use json_writes::SqlJsonWriteFact;

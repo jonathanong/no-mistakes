@@ -9,6 +9,8 @@ impl Scope {
             table_tokens: Some(Rc::new(RefCell::new(tokens))),
             limit_columns: Default::default(),
             scalar_functions: std::sync::Arc::default(),
+            scalar_scope: Rc::default(),
+            bind_values: Default::default(),
         }
     }
 
@@ -65,6 +67,8 @@ impl Scope {
             table_tokens: self.table_tokens.clone(),
             limit_columns: self.limit_columns.clone(),
             scalar_functions: self.scalar_functions.clone(),
+            scalar_scope: self.scalar_scope.clone(),
+            bind_values: self.bind_values.clone(),
         }
     }
 

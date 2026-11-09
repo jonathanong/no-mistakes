@@ -44,14 +44,27 @@ impl<'a> Builder<'a> {
                 alias,
                 ..
             } => {
-                let mut scope = self.scope.clone();
+                let mut scope = if *lateral {
+                    self.scope.with_scalar_scope(&self.items)
+                } else {
+                    self.scope.clone()
+                };
                 scope.limit_columns = if *lateral {
                     self.limit_columns.visible(self.positions).clone()
                 } else {
                     Default::default()
                 };
                 let bound = query::bound_query(subquery, &scope, self.positions);
-                scope.record_subquery(&bound, subquery);
+                let reads = lateral
+                    .then(|| pins::reads_items(subquery, &self.items, self.scope, self.positions));
+                scope.record_subquery_with_reads(
+                    &bound,
+                    subquery,
+                    None,
+                    reads
+                        .as_ref()
+                        .map_or(&[][..], |reads| reads.qualified.as_slice()),
+                );
                 let mut item = SqlBoundItem::new(
                     SqlBoundItemKind::Query(bound),
                     alias_key(alias),
@@ -59,9 +72,7 @@ impl<'a> Builder<'a> {
                 );
                 item.alias_explicit = alias.is_some();
                 item.column_aliases = alias_columns(alias);
-                if *lateral {
-                    let reads =
-                        pins::reads_items(subquery, &self.items, self.scope, self.positions);
+                if let Some(reads) = reads {
                     item.lateral = reads.certain;
                     item.lateral_reads = reads.bare;
                     item.lateral_qualified_reads = reads.qualified;

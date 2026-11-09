@@ -89,6 +89,16 @@ impl Resolver {
         reads_outer_rows(query, &self.outer, &self.ctes, self.positions.as_deref())
     }
 
+    pub(in super::super) fn reads_with_outer(
+        &self,
+        query: &Query,
+        enclosing: &BTreeSet<Vec<String>>,
+    ) -> Reads {
+        let mut outer = self.outer.clone();
+        outer.extend(enclosing.iter().cloned());
+        reads_outer_rows(query, &outer, &self.ctes, self.positions.as_deref())
+    }
+
     /// The item and column when `expr` is a bare column of one FROM item.
     pub(in super::super) fn column(&self, expr: &Expr) -> Option<(usize, String)> {
         match unwrap_expr(expr) {

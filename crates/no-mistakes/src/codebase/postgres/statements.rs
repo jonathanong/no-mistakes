@@ -1,4 +1,5 @@
 //! Typed INSERT, SELECT, and trigger facts from PostgreSQL SQL.
+pub(crate) use bounds::BindValues;
 pub(super) use bounds::TableTokenIndex;
 
 mod bounds;
@@ -34,7 +35,7 @@ pub(crate) use facts::{
     extract_sql_lock_scope_facts, extract_sql_statement_facts_with_bounds,
     extract_sql_statement_facts_with_json_writes, extract_sql_statement_facts_with_location_demand,
     extract_sql_statement_facts_with_recovered_placeholders, extract_sql_variant_statement_facts,
-    project_bounds, StatementPolicySources,
+    extract_with_bound_values, project_bounds, StatementPolicySources,
 };
 pub use facts::{extract_sql_statement_facts, has_top_level_not_exists_in};
 pub use fallback::{insert_keyword_count, mask_quoted_sql};

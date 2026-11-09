@@ -9,6 +9,9 @@ impl Scope {
         let Some(bodies) = &self.bodies else {
             return;
         };
+        if !bodies.borrow().materialized {
+            return;
+        }
         let mut frame = Some(self.frame.as_ref());
         while let Some(current) = frame {
             if let Some(bound) = current.ctes.get(name) {

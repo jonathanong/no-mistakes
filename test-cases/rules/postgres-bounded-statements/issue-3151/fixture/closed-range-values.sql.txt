@@ -1,0 +1,3 @@
+SELECT role FROM anonymous_bounds WHERE group_id = 1 AND user_id >= ? AND user_id <= ?;
+SELECT role FROM computed_bounds WHERE group_id = 1 AND user_id >= -$2 AND user_id <= -$2;
+SELECT role FROM positive_literals WHERE group_id = 1 AND user_id >= +2 AND user_id <= +2;

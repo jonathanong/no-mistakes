@@ -35,16 +35,27 @@ fn independent_bodies_do_not_borrow_outer_caps_or_predicates() {
         .iter()
         .filter(|bound| bound.body.is_some())
         .collect::<Vec<_>>();
-    assert_eq!(bodies.len(), 20);
+    assert_eq!(bodies.len(), 16);
     assert!(format!("{:?}", bodies[0]).contains("MATERIALIZED CTE candidates"));
     let counts = bodies
         .iter()
         .map(|body| evaluate::offenders_with_views(body, &catalog, &views).len())
         .collect::<Vec<_>>();
-    assert_eq!(
-        counts,
-        [1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0]
-    );
+    assert_eq!(counts, [1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0]);
+    let scalar_counts: Vec<_> = on
+        .bounds
+        .iter()
+        .filter(|fact| {
+            fact.body.is_none() && [53, 54, 58, 59].contains(&fact.line) && fact.column > 1
+        })
+        .map(|fact| {
+            (
+                fact.line,
+                evaluate::offenders_with_views(fact, &catalog, &views).len(),
+            )
+        })
+        .collect();
+    assert_eq!(scalar_counts, [(53, 1), (54, 0), (58, 1), (59, 0)]);
     on.bounds.retain(|bound| bound.body.is_none());
     assert_eq!(on, off);
 }
@@ -84,7 +95,7 @@ fn table_bodies_keep_distinct_sites_and_quoted_relation_identity() {
         .iter()
         .filter(|bound| bound.body.is_some())
         .collect::<Vec<_>>();
-    assert_eq!(bodies.len(), 4, "{facts:?}");
+    assert_eq!(bodies.len(), 2, "{facts:?}");
     let names = bodies
         .iter()
         .flat_map(|body| &body.query.items)
@@ -93,7 +104,19 @@ fn table_bodies_keep_distinct_sites_and_quoted_relation_identity() {
             _ => None,
         })
         .collect::<Vec<_>>();
-    assert_eq!(names, ["\"Orders\"", "accounts", "\"Orders\"", "accounts"]);
+    assert_eq!(names, ["accounts", "accounts"]);
+    let scalars: Vec<_> = facts
+        .bounds
+        .iter()
+        .filter(|fact| fact.body.is_none() && fact.column > 1)
+        .collect();
+    assert_eq!(scalars.len(), 2);
+    for (scalar, capped) in scalars.iter().zip([false, true]) {
+        assert!(
+            matches!(&scalar.query.items[0].kind, SqlBoundItemKind::Table(name) if name == "\"Orders\"")
+        );
+        assert_eq!(scalar.query.capped, capped);
+    }
 }
 
 #[test]
@@ -148,10 +171,10 @@ fn body_statement_filters_follow_the_owning_execution() {
     assert!(!facts.parse_failed);
     let catalog = catalog();
     let views = ViewBounds::compile(&Default::default(), &catalog).unwrap();
-    for (kind, count) in [
-        (SqlBoundKind::Update, 3),
-        (SqlBoundKind::Delete, 3),
-        (SqlBoundKind::Select, 1),
+    for (kind, count, scalar_count) in [
+        (SqlBoundKind::Update, 2, 1),
+        (SqlBoundKind::Delete, 3, 0),
+        (SqlBoundKind::Select, 1, 0),
     ] {
         assert_eq!(
             facts
@@ -161,6 +184,18 @@ fn body_statement_filters_follow_the_owning_execution() {
                 .flat_map(|fact| evaluate::offenders_with_views(fact, &catalog, &views))
                 .count(),
             count
+        );
+        assert_eq!(
+            facts
+                .bounds
+                .iter()
+                .filter(|fact| fact.body.is_none()
+                    && fact.target.is_none()
+                    && fact.column > 1
+                    && fact.kind == kind)
+                .flat_map(|fact| evaluate::offenders_with_views(fact, &catalog, &views))
+                .count(),
+            scalar_count
         );
     }
 }

@@ -7,7 +7,26 @@ fn recursive_forward_aliases_are_local_in_select_and_dependency_facts() {
     let sql = std::fs::read_to_string(fixture().join("sql/forward.sql")).unwrap();
     let facts = crate::codebase::postgres::extract_sql_statement_facts(&sql);
     assert!(!facts.parse_failed);
-    assert_eq!(facts.bounds.len(), 7);
+    let statements: Vec<_> = facts
+        .bounds
+        .iter()
+        .filter(|fact| fact.statement_start == Some((fact.line, fact.column)))
+        .collect();
+    assert_eq!(statements.len(), 7);
+    let scalar_reads: Vec<_> = facts
+        .bounds
+        .iter()
+        .filter(|fact| fact.statement_start != Some((fact.line, fact.column)))
+        .collect();
+    assert_eq!(scalar_reads.len(), 1);
+    let scalar = scalar_reads[0];
+    assert_eq!(scalar.line, 8);
+    assert!(scalar.body.is_none());
+    assert_eq!(scalar.query.items[0].alias.as_deref(), Some("later_cte"));
+    assert!(matches!(
+        &scalar.query.items[0].kind,
+        crate::codebase::postgres::SqlBoundItemKind::Query(_)
+    ));
     assert_eq!(
         facts
             .selects

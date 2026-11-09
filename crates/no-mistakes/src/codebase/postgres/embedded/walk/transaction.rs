@@ -9,6 +9,7 @@ pub(super) fn annotate(
     call: &CallExpression<'_>,
     fact: &mut EmbeddedSqlCall,
 ) {
+    super::stable_binds::annotate(visitor, call, fact);
     fact.lock_scope_analysis = visitor.executor_options.track_transaction_helpers;
     let owner = visitor
         .member_query_proof
