@@ -93,7 +93,6 @@ fn external_star_projection_keeps_cycles_conditions_and_collisions_unknown() {
         "named-type",
         "single-collision",
         "nested-collision",
-        "baseurl-owned",
     ] {
         let suffix = format!("{barrel}.mts#Queue");
         assert!(
@@ -105,6 +104,7 @@ fn external_star_projection_keeps_cycles_conditions_and_collisions_unknown() {
         );
     }
     for (barrel, kind) in [
+        ("baseurl-owned", EdgeKind::SymbolImport),
         ("override", EdgeKind::SymbolImport),
         ("same", EdgeKind::SymbolImport),
         ("runtime-nested", EdgeKind::SymbolImport),
@@ -163,4 +163,23 @@ fn external_star_projection_keeps_cycles_conditions_and_collisions_unknown() {
         .into_iter()
         .flatten()
         .any(|(target, _)| target == &value));
+}
+
+#[test]
+fn hidden_existing_baseurl_source_keeps_ownership_over_an_installed_package() {
+    let (dir, graph) = graph("external-star-exports-hidden-local");
+    assert!(dir.path().join("local-owned.mts").is_file());
+    assert!(dir
+        .path()
+        .join("node_modules/local-owned/package.json")
+        .is_file());
+    let consumer = NodeId::file(dir.path().join("src/consumer.mts"));
+    let edges = graph.dependencies_of_node(&consumer).unwrap();
+    assert!(edges
+        .iter()
+        .any(|(node, kind)| *kind == EdgeKind::SymbolImportUnknown
+            && matches!(node, NodeId::Module(name) if name.ends_with("barrel.mts#Queue"))));
+    assert!(!edges
+        .iter()
+        .any(|(_, kind)| *kind == EdgeKind::SymbolImport));
 }

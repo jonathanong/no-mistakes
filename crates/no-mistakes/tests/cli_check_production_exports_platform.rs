@@ -82,16 +82,40 @@ fn external_star_exports_check_json_snapshot() {
         .map(|finding| finding["target"].as_str().unwrap())
         .collect();
     assert_eq!(targets, ["testOnly", "Queue"], "{report}");
+    assert_external_star_snapshot(&root, &controls);
+}
+
+fn assert_external_star_snapshot(root: &std::path::Path, controls: &std::path::Path) {
     crate::check_json_snapshot::assert_saved_fixture(
         "production_exports_external_star",
         &[
-            ("enabled", root.clone(), root.join(".no-mistakes.yml")),
-            ("off", root.clone(), root.join("off.yml")),
+            ("enabled", root.to_path_buf(), root.join(".no-mistakes.yml")),
+            ("off", root.to_path_buf(), root.join("off.yml")),
             (
                 "uncertain_controls",
-                root.join("../../external-star-exports-controls/fixture"),
-                root.join("../../external-star-exports-controls/fixture/.no-mistakes.yml"),
+                controls.to_path_buf(),
+                controls.join(".no-mistakes.yml"),
             ),
         ],
     );
+}
+
+#[test]
+fn external_star_exports_check_json_snapshot_without_git() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/external-star-exports/fixture");
+    let controls = crate::saved_fixture::materialize_path(
+        &root.join("../../external-star-exports-controls/fixture"),
+    );
+    assert!(!controls.path().join(".git").exists());
+    assert!(controls.path().join("local-owned.mts").is_file());
+    assert!(controls
+        .path()
+        .join("node_modules/local-owned/package.json")
+        .is_file());
+    assert!(controls
+        .path()
+        .join("node_modules/local-owned/entry.js")
+        .is_file());
+    assert_external_star_snapshot(&root, controls.path());
 }
