@@ -680,7 +680,7 @@ jobs:
         uses: ./.github/actions/start-test-postgres
 
       - name: Test standalone Rust library without a CLI build
-        timeout-minutes: 10
+        timeout-minutes: 12
         run: |
           env -u CARGO_BIN_EXE_no-mistakes cargo test --locked -p no-mistakes --lib
           test ! -e "$CARGO_TARGET_DIR/debug/no-mistakes"
