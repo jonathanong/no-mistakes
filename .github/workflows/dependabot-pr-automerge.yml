@@ -1,7 +1,7 @@
 name: Dependabot PR Auto-merge
 
 on:
-  pull_request_target:
+  pull_request:
     types:
       - opened
       - reopened
@@ -26,6 +26,7 @@ jobs:
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.pull_request.base.sha }}
           persist-credentials: false
 
       - name: Evaluate Dependabot pull request
