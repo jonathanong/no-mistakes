@@ -148,5 +148,35 @@
     "file": "recall/src/same-line.ts",
     "marker": "append-same-line-second",
     "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/raw/recall.sql",
+    "marker": "recall-count-distinct-existence",
+    "code": "aggregate-existence-test"
+  },
+  {
+    "file": "recall/raw/recall.sql",
+    "marker": "recall-grouped-key-projection",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "embedded-recall-count-distinct-existence",
+    "code": "aggregate-existence-test"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "embedded-recall-grouped-key-projection",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "append-recall-count-distinct-existence",
+    "code": "aggregate-existence-test"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "append-recall-grouped-key-projection",
+    "code": "distinct-over-unique-key"
   }
 ]

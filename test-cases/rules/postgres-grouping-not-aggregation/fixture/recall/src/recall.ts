@@ -45,9 +45,12 @@ export async function recallAggregates() {
   `);
   await query(sql`SELECT COUNT(DISTINCT id) FILTER (WHERE author_id IS NOT NULL) /* CASE: embedded-recall-filtered-distinct-id */ FROM posts`);
   await query(sql`
-    SELECT p.id /* CASE: embedded-recall-negative-scalar-author-count */ FROM posts AS p
-    WHERE (SELECT COUNT(DISTINCT author_id) FROM posts) > 0
+    SELECT p.id /* CASE: embedded-recall-negative-scalar-author-count */,
+      (SELECT COUNT(DISTINCT author_id) FROM posts) AS author_count
+    FROM posts AS p
   `);
+  await query(sql`SELECT (SELECT COUNT(DISTINCT author_id) /* CASE: embedded-recall-count-distinct-existence */ FROM posts) > 0`);
+  await query(sql`SELECT slug /* CASE: embedded-recall-grouped-key-projection */ FROM posts GROUP BY id`);
 }
 
 export async function recallAggregateAppend() {
@@ -61,12 +64,18 @@ export async function recallAggregateAppend() {
   having.append(sql`GROUP BY id HAVING COUNT(DISTINCT id) = 1`);
   const filtered = sql`SELECT COUNT(DISTINCT id) FILTER (WHERE author_id IS NOT NULL) /* CASE: append-recall-filtered-distinct-id */ `;
   filtered.append(sql`FROM posts`);
-  const negative = sql`SELECT p.id /* CASE: append-recall-negative-scalar-author-count */ FROM posts AS p `;
-  negative.append(sql`WHERE (SELECT COUNT(DISTINCT author_id) FROM posts) > 0`);
+  const negative = sql`SELECT p.id /* CASE: append-recall-negative-scalar-author-count */, `;
+  negative.append(sql`(SELECT COUNT(DISTINCT author_id) FROM posts) AS author_count FROM posts AS p`);
+  const existence = sql`SELECT (SELECT COUNT(DISTINCT author_id) /* CASE: append-recall-count-distinct-existence */ `;
+  existence.append(sql`FROM posts) > 0`);
+  const grouped = sql`SELECT slug /* CASE: append-recall-grouped-key-projection */ FROM posts `;
+  grouped.append(sql`GROUP BY id`);
   await query(composite);
   await query(joined);
   await query(fanout);
   await query(having);
   await query(filtered);
   await query(negative);
+  await query(existence);
+  await query(grouped);
 }

@@ -42,7 +42,13 @@ HAVING COUNT(DISTINCT id) = 1;
 SELECT COUNT(DISTINCT id) FILTER (WHERE author_id IS NOT NULL) /* CASE: recall-filtered-distinct-id */
 FROM posts;
 
--- The outer primary key does not make a scalar subquery's author count unique.
-SELECT p.id /* CASE: recall-negative-scalar-author-count */
-FROM posts AS p
-WHERE (SELECT COUNT(DISTINCT author_id) FROM posts) > 0;
+-- The outer primary key does not make a projected scalar aggregate redundant.
+SELECT p.id /* CASE: recall-negative-scalar-author-count */,
+  (SELECT COUNT(DISTINCT author_id) FROM posts) AS author_count
+FROM posts AS p;
+
+-- A nonnull distinct count used only as an existence test is redundant.
+SELECT (SELECT COUNT(DISTINCT author_id) /* CASE: recall-count-distinct-existence */ FROM posts) > 0;
+
+-- A primary-key grouping determines the other plain columns in each group.
+SELECT slug /* CASE: recall-grouped-key-projection */ FROM posts GROUP BY id;
