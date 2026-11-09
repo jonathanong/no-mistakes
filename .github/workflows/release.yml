@@ -282,6 +282,8 @@ jobs:
             ...fs.readdirSync("packages")
               .map((name) => path.join("packages", name, "package.json"))
               .filter((file) => fs.existsSync(file)),
+            "plugins/no-mistakes/.claude-plugin/plugin.json",
+            "plugins/no-mistakes/.codex-plugin/plugin.json",
           ];
           const mismatches = files
             .map((file) => [file, JSON.parse(fs.readFileSync(file, "utf8")).version])

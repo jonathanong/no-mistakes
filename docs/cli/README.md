@@ -2,7 +2,7 @@
 
 If an agent is choosing a command as part of a coding workflow, start with the
 [agent guide](../agent-guide.md) or the compact
-[packaged skill](../../skills/no-mistakes/SKILL.md). This index is the complete
+[packaged skill](../../plugins/no-mistakes/skills/no-mistakes/SKILL.md). This index is the complete
 command reference.
 
 Prefer JSON for agent parsing and paths for command substitution:

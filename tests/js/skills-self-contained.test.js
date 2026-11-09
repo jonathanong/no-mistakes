@@ -3,7 +3,7 @@ const { existsSync, readdirSync, readFileSync } = require("node:fs");
 const { dirname, join, relative, resolve, sep } = require("node:path");
 
 const repoRoot = join(__dirname, "..", "..");
-const skillsDir = join(repoRoot, "skills");
+const skillsDir = join(repoRoot, "plugins", "no-mistakes", "skills");
 
 // Absolute URLs (https://…, etc.) travel with the skill, so they are allowed.
 // Bare relative paths do not — they only resolve in this repo, not in a consumer
@@ -23,7 +23,7 @@ function walkMarkdown(dir) {
   return files;
 }
 
-// A skill's own root is `skills/<name>`; only files under it survive the sync.
+// A skill's own root is `plugins/no-mistakes/skills/<name>`; only files under it survive the sync.
 function skillRootFor(file) {
   const [name] = relative(skillsDir, file).split(sep);
   return join(skillsDir, name);

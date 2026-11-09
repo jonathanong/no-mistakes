@@ -11,6 +11,11 @@ const PACKAGE_NAMES = [
   "no-mistakes-win32-x64-msvc",
 ];
 
+const PLUGIN_MANIFESTS = [
+  join("plugins", "no-mistakes", ".claude-plugin", "plugin.json"),
+  join("plugins", "no-mistakes", ".codex-plugin", "plugin.json"),
+];
+
 function manifest(path) {
   return JSON.parse(readFileSync(path, "utf8"));
 }
@@ -19,18 +24,29 @@ function writeManifest(path, value) {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
 }
 
+function setVersion(path, version) {
+  const value = manifest(path);
+  value.version = version;
+  writeManifest(path, value);
+}
+
+function replaceVersion(path, version) {
+  const source = readFileSync(path, "utf8");
+  const updated = source.replace(/("version"\s*:\s*")[^"]*(")/, `$1${version}$2`);
+  if (updated === source && manifest(path).version !== version) {
+    throw new Error(`${path} has no "version" field`);
+  }
+  writeFileSync(path, updated);
+}
+
 function syncNativePackageVersions(root, version) {
   const packageRoot = join(root, "packages");
-  for (const name of PACKAGE_NAMES) {
-    const path = join(packageRoot, name, "package.json");
-    const value = manifest(path);
-    value.version = version;
-    writeManifest(path, value);
-  }
+  for (const name of PACKAGE_NAMES) setVersion(join(packageRoot, name, "package.json"), version);
   const mainPath = join(packageRoot, "no-mistakes", "package.json");
   const main = manifest(mainPath);
   for (const name of PACKAGE_NAMES) main.optionalDependencies[name] = version;
   writeManifest(mainPath, main);
+  for (const file of PLUGIN_MANIFESTS) replaceVersion(join(root, file), version);
 }
 
 function main(argv = process.argv.slice(2)) {
@@ -41,4 +57,4 @@ function main(argv = process.argv.slice(2)) {
 
 if (require.main === module) main();
 
-module.exports = { PACKAGE_NAMES, syncNativePackageVersions };
+module.exports = { PACKAGE_NAMES, PLUGIN_MANIFESTS, syncNativePackageVersions };

@@ -242,11 +242,11 @@ Build a control from the shipped skill instead, never from a stored variant:
 
 ```sh
 mkdir -p evals/variants/<name>
-cp -R skills/no-mistakes/references evals/variants/<name>/references
-cp skills/no-mistakes/SKILL.md evals/variants/<name>/SKILL.md
+cp -R plugins/no-mistakes/skills/no-mistakes/references evals/variants/<name>/references
+cp plugins/no-mistakes/skills/no-mistakes/SKILL.md evals/variants/<name>/SKILL.md
 # replace ONLY the description: line, then prove it:
-diff skills/no-mistakes/SKILL.md evals/variants/<name>/SKILL.md   # line 3 only
-diff -r skills/no-mistakes/references evals/variants/<name>/references  # silent
+diff plugins/no-mistakes/skills/no-mistakes/SKILL.md evals/variants/<name>/SKILL.md   # line 3 only
+diff -r plugins/no-mistakes/skills/no-mistakes/references evals/variants/<name>/references  # silent
 python3 evals/generate.py --variant <name>
 ```
 
@@ -274,8 +274,8 @@ name=shipped-pre-981
 sha=<the commit that shipped that description>
 
 mkdir -p "evals/variants/$name"
-cp -R skills/no-mistakes/references "evals/variants/$name/"
-cp skills/no-mistakes/SKILL.md "evals/variants/$name/SKILL.md"
+cp -R plugins/no-mistakes/skills/no-mistakes/references "evals/variants/$name/"
+cp plugins/no-mistakes/skills/no-mistakes/SKILL.md "evals/variants/$name/SKILL.md"
 
 # Overwrite the `description:` line in the COPY with the historical one. Reading
 # the old line without writing it is the whole trap: the copy keeps the current
@@ -285,7 +285,7 @@ python3 - "$name" "$sha" <<'PY'
 import pathlib, subprocess, sys
 name, sha = sys.argv[1], sys.argv[2]
 old = subprocess.run(
-    ["git", "show", f"{sha}:skills/no-mistakes/SKILL.md"],
+    ["git", "show", f"{sha}:plugins/no-mistakes/skills/no-mistakes/SKILL.md"],
     capture_output=True, text=True, check=True,
 ).stdout
 desc = next(l for l in old.splitlines() if l.startswith("description:"))
@@ -309,10 +309,10 @@ python3 evals/generate.py --variant "$name"
 description:
 
 ```sh
-sed '3d' skills/no-mistakes/SKILL.md > /tmp/a.md
+sed '3d' plugins/no-mistakes/skills/no-mistakes/SKILL.md > /tmp/a.md
 sed '3d' "evals/variants/$name/SKILL.md" > /tmp/b.md
 diff /tmp/a.md /tmp/b.md && echo "only line 3 differs"
-diff -r skills/no-mistakes/references "evals/variants/$name/references" && echo "references identical"
+diff -r plugins/no-mistakes/skills/no-mistakes/references "evals/variants/$name/references" && echo "references identical"
 ```
 
 Both must be clean, and the two `description:` lines must actually differ —

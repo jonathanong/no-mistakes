@@ -1,0 +1,39 @@
+{
+  "name": "no-mistakes",
+  "version": "0.109.32",
+  "description": "Deterministic impact maps, test plans, Playwright coverage, and repository checks for Codex.",
+  "author": {
+    "name": "Jonathan Ong",
+    "email": "jonathanrichardong@gmail.com",
+    "url": "https://github.com/jonathanong"
+  },
+  "homepage": "https://github.com/jonathanong/no-mistakes",
+  "repository": "https://github.com/jonathanong/no-mistakes",
+  "license": "MIT",
+  "keywords": [
+    "static-analysis",
+    "dependency-graph",
+    "test-impact",
+    "code-intelligence",
+    "typescript",
+    "codex"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "No Mistakes",
+    "shortDescription": "Local AST graph: impact, tests, and checks.",
+    "longDescription": "Use no-mistakes from Codex to answer structural codebase questions from the resolved import graph: who uses a symbol or file, whether code is dead or only used by tests, which tests a change needs, whether a route has e2e coverage, and what to run before handing off a change.",
+    "developerName": "Jonathan Ong",
+    "category": "Coding",
+    "capabilities": ["Interactive", "Read"],
+    "websiteURL": "https://github.com/jonathanong/no-mistakes",
+    "privacyPolicyURL": "https://github.com/jonathanong/no-mistakes",
+    "termsOfServiceURL": "https://github.com/jonathanong/no-mistakes",
+    "defaultPrompt": [
+      "Use no-mistakes to find every consumer of this symbol",
+      "Which tests does this change need?",
+      "Is this export only used by tests?"
+    ],
+    "screenshots": []
+  }
+}

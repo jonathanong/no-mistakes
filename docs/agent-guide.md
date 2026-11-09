@@ -158,4 +158,4 @@ See the [Node/N-API guide](node-api.md) for report types and dedicated APIs.
   `empty_result` before concluding that a narrow or empty result is safe.
 
 For a compact operational version of this guide, use the
-[packaged agent skill](../skills/no-mistakes/SKILL.md).
+[packaged agent skill](../plugins/no-mistakes/skills/no-mistakes/SKILL.md).

@@ -1,6 +1,6 @@
 # `no-mistakes` skill evals
 
-Eval suite for the [`skills/no-mistakes`](../skills/no-mistakes/SKILL.md)
+Eval suite for the [`plugins/no-mistakes/skills/no-mistakes`](../plugins/no-mistakes/skills/no-mistakes/SKILL.md)
 skill. It measures two things about the skill's `description:` — whether an
 agent **reaches for the skill** on the questions it answers (and stays away
 from the ones it does not), and whether the **plan** it writes is better for
@@ -15,7 +15,7 @@ having loaded it.
 
 ## Current results
 
-**Description:** the `description:` line in `skills/no-mistakes/SKILL.md`
+**Description:** the `description:` line in `plugins/no-mistakes/skills/no-mistakes/SKILL.md`
 today. **Measured:** 2026-09-21, all eleven routine flows, `runs: 3`, both
 arms, Opus agent / Sonnet judge, 318 runs, zero errored runs. The `heldout`
 flow is not measured for this description; cases 07-09 are reserved, unrun,
@@ -237,7 +237,7 @@ that says "use `rg` here, the graph won't help" is ideal.
 
 ## Conventions
 
-- `plugins: [../../skills/no-mistakes]` in each case — the skill is not at the
+- `plugins: [../../plugins/no-mistakes/skills/no-mistakes]` in each case — the skill is not at the
   repo root, so auto-detection does not find it.
 - `model: claude-opus-5` for the agent, `--judge-model sonnet` for LLM graders.
   The judge must be sonnet-tier or larger and must not be the agent model.
