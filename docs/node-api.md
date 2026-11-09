@@ -603,9 +603,18 @@ retain unresolved computed loads, and distinguish shared temporary roots from
 owned `mkdtemp` directories. Direct `import.meta.glob` and `fs-extra` scans follow
 the same rule contract. CLI and compiled CJS, ESM, and prepared API reports are
 locked by saved-fixture snapshots.
+Owned parameters and env roots follow every selected test caller through the same
+canonical graph. Configured fixture paths and `vi.stubEnv` writes participate in
+that proof. Mixed or unresolved callers remain reported, and unrelated production
+files do not invalidate ownership. CLI, CJS, ESM and prepared reports share these
+semantics.
 Node-origin `module.require` and imported `createRequire` loads use conservative
 unresolved-root findings in these same async APIs, including computed module
 arguments and simple loader aliases. They add no public module-fact fields.
+
+Adding a `check` report to `analyzeProject()` retains ordinary traversal and
+importer results, including config ownership diagnostics. Both projections
+reuse the request inventory, sources, fact pass, and canonical graph.
 
 ## PostgreSQL query annotation
 

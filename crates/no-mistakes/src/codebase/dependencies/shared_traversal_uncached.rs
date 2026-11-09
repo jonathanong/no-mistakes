@@ -24,6 +24,7 @@ fn collect_uncached_entries(
         symbol_index,
     } = request;
     let root = shared.root.clone();
+    let excluded = ordinary_exclusions(shared, entrypoints);
     let entries = match direction {
         Direction::Deps if import_only => import_only_deps(args, roots, allowed, shared)?,
         Direction::Deps if has_callable_relationship(allowed) => {
@@ -32,15 +33,16 @@ fn collect_uncached_entries(
             let roots = roots_with_call_roots(roots, call_roots, entrypoints, allowed);
             graph.deps_of(&roots, args.depth, allowed)
         }
-        Direction::Deps if shared.build_plan.symbols && !args.include_symbols => shared
-            .request_graph_without_symbols_shared(allowed)?
-            .deps_of(roots, args.depth, allowed),
+        Direction::Deps if shared.build_plan.symbols && !args.include_symbols => {
+            let graph = shared.request_graph_without_symbols_shared(allowed)?;
+            graph.deps_of(roots, args.depth, allowed)
+        }
         Direction::Deps => shared.graph_shared()?.deps_of(roots, args.depth, allowed),
         Direction::Dependents if has_callable_relationship(allowed) => {
             let graph = shared.graph_shared()?;
             let call_roots = graph.expand_call_roots(&call_roots(entrypoints));
             let roots = roots_with_call_roots(roots, call_roots, entrypoints, allowed);
-            graph.dependents_of(&roots, args.depth, allowed)
+            report_dependents(&graph, &roots, args.depth, allowed, &excluded)
         }
         Direction::Dependents if args.include_symbols => {
             let graph = shared.graph_shared()?;
@@ -51,7 +53,7 @@ fn collect_uncached_entries(
                 shared.session.interner(),
             );
             let roots = roots_with_exported_symbol_roots(&roots, graph.as_ref());
-            graph.dependents_of_symbol_nodes(&roots, args.depth, allowed)
+            report_symbol_nodes(&graph, &roots, args.depth, allowed, &excluded)
         }
         Direction::Dependents if any_symbol && shared.build_plan.symbols => {
             let graph = shared.request_graph_without_symbols_shared(allowed)?;
@@ -62,6 +64,7 @@ fn collect_uncached_entries(
                 allowed,
                 &graph,
                 symbol_index.expect("symbol index is built for symbol dependents"),
+                (!excluded.is_empty()).then_some(excluded.as_ref()),
             )
         }
         Direction::Dependents if any_symbol => {
@@ -73,14 +76,20 @@ fn collect_uncached_entries(
                 allowed,
                 graph.as_ref(),
                 symbol_index.expect("symbol index is built for symbol dependents"),
+                (!excluded.is_empty()).then_some(excluded.as_ref()),
             )
         }
-        Direction::Dependents if shared.build_plan.symbols && !args.include_symbols => shared
-            .request_graph_without_symbols_shared(allowed)?
-            .dependents_of(roots, args.depth, allowed),
-        Direction::Dependents => shared
-            .graph_shared()?
-            .dependents_of(roots, args.depth, allowed),
+        Direction::Dependents if shared.build_plan.symbols && !args.include_symbols => {
+            let graph = shared.request_graph_without_symbols_shared(allowed)?;
+            report_dependents(&graph, roots, args.depth, allowed, &excluded)
+        }
+        Direction::Dependents => report_dependents(
+            shared.graph_shared()?.as_ref(),
+            roots,
+            args.depth,
+            allowed,
+            &excluded,
+        ),
     };
     Ok(entries)
 }
@@ -130,70 +139,4 @@ fn import_only_deps(
         );
     shared.publish_lazy_facts(collected);
     Ok(entries)
-}
-
-fn has_callable_relationship(allowed: Option<&std::collections::HashSet<EdgeKind>>) -> bool {
-    allowed.is_some_and(|allowed| {
-        allowed.contains(&EdgeKind::Call) || allowed.contains(&EdgeKind::AssertionOwner)
-    })
-}
-
-fn call_roots(entrypoints: &[Entrypoint]) -> Vec<graph::CallRoot> {
-    entrypoints
-        .iter()
-        .filter_map(|entrypoint| {
-            let file = entrypoint.node.as_file()?.to_path_buf();
-            Some(match &entrypoint.symbol {
-                Some(symbol) => graph::CallRoot::Function {
-                    file,
-                    symbol: symbol.clone(),
-                },
-                None => graph::CallRoot::File(file),
-            })
-        })
-        .collect()
-}
-
-/// Mixed relationship traversals retain file roots for file-level edges and
-/// expanded roots for callable edges. Callable-only symbol queries omit the
-/// file node so projection does not also walk unrelated top-level calls.
-fn roots_with_call_roots(
-    roots: &[NodeId],
-    call_roots: Vec<NodeId>,
-    entrypoints: &[Entrypoint],
-    allowed: Option<&std::collections::HashSet<EdgeKind>>,
-) -> Vec<NodeId> {
-    let callable_only = allowed.is_some_and(|kinds| {
-        !kinds.is_empty()
-            && kinds
-                .iter()
-                .all(|kind| matches!(kind, EdgeKind::Call | EdgeKind::AssertionOwner))
-    });
-    let mut combined = Vec::with_capacity(roots.len() + call_roots.len());
-    combined.extend(
-        roots
-            .iter()
-            .filter(|root| keep_callable_projection_file_root(root, entrypoints, callable_only))
-            .cloned(),
-    );
-    combined.extend(call_roots);
-    combined.sort();
-    combined.dedup();
-    combined
-}
-
-fn keep_callable_projection_file_root(
-    root: &NodeId,
-    entrypoints: &[Entrypoint],
-    callable_only: bool,
-) -> bool {
-    if !callable_only {
-        return true;
-    }
-    let NodeId::File(file) = root else {
-        return true;
-    };
-    !entrypoints.iter().any(|entrypoint| {
-        entrypoint.symbol.is_some() && entrypoint.node.as_file() == Some(file.as_ref())
-    })
 }

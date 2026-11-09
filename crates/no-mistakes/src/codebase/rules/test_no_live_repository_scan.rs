@@ -66,7 +66,9 @@ pub(crate) fn check_with_graph(
             graph_files,
             target_roots: &target_roots,
         })?;
-        let reachable = reachable::sources(graph, &roots, &root_files)?;
+        let setups = owned::setups::ConfiguredSetups::new(&root, vitest, &root_files);
+        let scope = reachable::sources(graph, &roots, &root_files, graph_files, &setups)?;
+        let reachable = &scope.sources;
         let filter = super::path_filter::RulePathFilter::new(&root, config, application)?;
         let fixture_dirs = options.fixture_dirs();
         let mut sites = requires::Sites::default();
@@ -111,14 +113,18 @@ pub(crate) fn check_with_graph(
                         .get_or_init(|| {
                             owned::Owners::new(
                                 graph,
-                                &reachable,
+                                &scope,
                                 facts,
                                 graph_files,
                                 resolution,
+                                setups.clone(),
                                 owned::Environment {
                                     root: &root,
                                     config,
-                                    vitest,
+                                    fixture_dirs: fixture_dirs
+                                        .iter()
+                                        .map(|dir| (*dir).to_owned())
+                                        .collect(),
                                 },
                             )
                         })

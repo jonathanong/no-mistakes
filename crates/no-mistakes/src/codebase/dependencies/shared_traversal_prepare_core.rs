@@ -111,6 +111,8 @@ impl SharedTraversalContext {
             tsconfig_catalog,
             tsconfig_build_diagnostics,
             graph_files,
+            ordinary_excluded_files: Default::default(),
+            ordinary_retained_roots: Default::default(),
             dataset,
             config,
             config_path: config_path.map(Path::to_path_buf),

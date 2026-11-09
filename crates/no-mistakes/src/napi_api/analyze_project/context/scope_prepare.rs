@@ -21,15 +21,18 @@ impl PreparedScopePlan {
             prepare_import_usage_views(options, &root, &session)?;
         let ordinary_calls = prepare_ordinary_call_sites(options, &root, session.clone())?;
         let build_plan = graph_build_plan(options)?;
-        let has_non_check_report = options
-            .reports
-            .iter()
-            .any(|request| request.report_type != "check");
-        let framework_plan = framework_preparation_plan(options, build_plan)?;
-        let include_check_plan = options
-            .reports
-            .iter()
-            .any(|request| request.report_type == "check");
+        let has_non_check_report = options.reports.iter().any(|r| r.report_type != "check");
+        let include_check_plan = options.reports.iter().any(|r| r.report_type == "check");
+        let check_config = include_check_plan
+            .then(|| session.config(&root, options.config.as_deref().map(Path::new)))
+            .transpose()?;
+        let (framework_plan, ordinary_excluded) = with_vitest_check_framework(
+            framework_preparation_plan(options, build_plan)?,
+            check_config.as_deref(),
+            &root,
+            visible_paths.paths_for(&root).as_ref(),
+            has_non_check_report,
+        );
         let mut traversal =
             SharedTraversalContext::prepare_with_snapshot_session_check_and_framework_plan(
                 root.clone(),
@@ -45,6 +48,7 @@ impl PreparedScopePlan {
                 },
             )?;
         let authoritative_report_files = authoritative_report_files(options, &root)?;
+        traversal.set_ordinary_excluded_files(ordinary_excluded, &authoritative_report_files);
         apply_exclusive_candidate_inventory(options, &mut traversal)?;
         traversal.add_explicit_roots(&authoritative_report_files);
         let check = options

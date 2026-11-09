@@ -153,7 +153,7 @@ fn runtime_assets_match_whole_segments_of_literal_paths_only() {
 
 #[test]
 fn only_unconditional_owned_writes_that_precede_the_call_dominate_it() {
-    use super::owned::env::dominated;
+    use super::owned::env::{dominated, owned_origin};
     use crate::codebase::ts_source::module_facts::arguments::{
         EnvWrite, PathProvenance, WriteScope,
     };
@@ -174,23 +174,42 @@ fn only_unconditional_owned_writes_that_precede_the_call_dominate_it() {
         test_callbacks: vec![(100, 150)],
         ..PathProvenance::default()
     };
-    assert!(dominated(&provenance, "TOP", 10));
-    assert!(!dominated(&provenance, "TOP", 9));
-    assert!(!dominated(&provenance, "LIVE", 90));
-    assert!(!dominated(&provenance, "COND", 90));
-    assert!(!dominated(&provenance, "OTHER", 90));
-    assert!(dominated(&provenance, "BODY", 40));
-    assert!(!dominated(&provenance, "BODY", 25));
-    assert!(!dominated(&provenance, "BODY", 70));
+    let fixture_dirs = vec!["golden".to_owned()];
+    assert!(dominated(&provenance, "TOP", 10, &fixture_dirs));
+    assert!(!dominated(&provenance, "TOP", 9, &fixture_dirs));
+    assert!(!dominated(&provenance, "LIVE", 90, &fixture_dirs));
+    assert!(!dominated(&provenance, "COND", 90, &fixture_dirs));
+    assert!(!dominated(&provenance, "OTHER", 90, &fixture_dirs));
+    assert!(dominated(&provenance, "BODY", 40, &fixture_dirs));
+    assert!(!dominated(&provenance, "BODY", 25, &fixture_dirs));
+    assert!(!dominated(&provenance, "BODY", 70, &fixture_dirs));
     // A hook covers test callbacks in its scope, not the registering scope itself.
-    assert!(dominated(&provenance, "HOOK", 120));
-    assert!(!dominated(&provenance, "HOOK", 160));
-    assert!(!dominated(&provenance, "HOOK", 70));
+    assert!(dominated(&provenance, "HOOK", 120, &fixture_dirs));
+    assert!(!dominated(&provenance, "HOOK", 160, &fixture_dirs));
+    assert!(!dominated(&provenance, "HOOK", 70, &fixture_dirs));
     let mut climb = write("CLIMB", PathAnchor::Temp, WriteScope::Program, 10);
     climb.origin = origin(PathAnchor::Temp, &[".."]);
     let mut climbed = provenance.clone();
     climbed.env_writes.push(climb);
-    assert!(!dominated(&climbed, "CLIMB", 90));
+    assert!(!dominated(&climbed, "CLIMB", 90, &fixture_dirs));
+    let fixture = EnvWrite {
+        name: "GOLDEN".into(),
+        end: 10,
+        origin: origin(PathAnchor::Module, &["golden", "data"]),
+        scope: WriteScope::Program,
+    };
+    let mut with_fixture = provenance;
+    with_fixture.env_writes.push(fixture);
+    assert!(dominated(&with_fixture, "GOLDEN", 10, &fixture_dirs));
+    assert!(!dominated(&with_fixture, "GOLDEN", 10, &[]));
+    assert!(owned_origin(
+        &origin(PathAnchor::Module, &["..", "golden"]),
+        &fixture_dirs
+    ));
+    assert!(!owned_origin(
+        &origin(PathAnchor::Temp, &["..", "golden"]),
+        &fixture_dirs
+    ));
 }
 
 #[test]

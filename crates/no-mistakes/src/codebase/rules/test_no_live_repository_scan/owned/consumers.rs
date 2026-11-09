@@ -35,6 +35,7 @@ impl Consumed {
         graph: &DepGraph,
         facts: &dyn TsFactLookup,
         graph_files: &[PathBuf],
+        reachable_files: &FxHashSet<PathBuf>,
         resolution: &Resolution<'_>,
     ) -> Self {
         let visible: PathSet = graph_files.iter().cloned().collect();
@@ -42,7 +43,10 @@ impl Consumed {
         let workspace = resolution.workspace.unwrap_or(&fallback_workspace);
         let empty = TsConfig::default();
         let mut consumed = Self::default();
-        for file in graph_files {
+        for file in graph_files
+            .iter()
+            .filter(|file| reachable_files.contains(*file))
+        {
             let Some(provenance) = facts.get_ts_facts(file).and_then(path_provenance) else {
                 continue;
             };

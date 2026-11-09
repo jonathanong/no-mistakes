@@ -1,7 +1,8 @@
+use super::env;
 use super::{path_provenance, Owners};
 use crate::codebase::dependencies::graph::{ResolvedCallSite, TsFactLookup};
 use crate::codebase::rules::forbidden_calls::site_source_node;
-use crate::codebase::ts_source::module_facts::arguments::{PathAnchor, WriteScope};
+use crate::codebase::ts_source::module_facts::arguments::WriteScope;
 
 impl Owners<'_> {
     pub(super) fn local_env_owned(
@@ -32,8 +33,8 @@ impl Owners<'_> {
             let Some(paths) = facts.get_ts_facts(&caller.file).and_then(path_provenance) else { return false };
             let Some(end) = paths.test_env_calls.get(&caller.offset) else { return false };
             paths.env_writes.iter().any(|write| {
-                write.end == *end && write.name == name && write.origin.anchor == PathAnchor::Temp
-                    && !write.origin.segments.iter().any(|part| part == "..")
+                write.end == *end && write.name == name
+                    && env::owned_origin(&write.origin, &self.fixture_dirs)
                     && matches!(write.scope, WriteScope::Function(start, end) if start <= caller.offset && caller.offset < end)
             })
         })

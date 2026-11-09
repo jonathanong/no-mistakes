@@ -1,7 +1,7 @@
-use super::{path_provenance, Owners};
+use super::{env, path_provenance, Owners};
 use crate::codebase::dependencies::graph::{NodeId, ResolvedCallSite, TsFactLookup};
 use crate::codebase::rules::test_no_live_repository_scan::provenance::{classify, Verdict};
-use crate::codebase::ts_source::module_facts::arguments::{PathOrigin, PathProvenance};
+use crate::codebase::ts_source::module_facts::arguments::{PathAnchor, PathOrigin, PathProvenance};
 use crate::fx::FxHashSet;
 
 impl Owners<'_> {
@@ -23,7 +23,7 @@ impl Owners<'_> {
             if !seen.insert((source.clone(), index, member.clone())) {
                 continue;
             }
-            if seen.len() > 128 || self.escape_unknown || !self.proven_target(&source) {
+            if self.escape_unknown || !self.proven_target(&source) {
                 return false;
             }
             let Some(callers) = self
@@ -43,10 +43,19 @@ impl Owners<'_> {
                 let Some(argument) = argument else {
                     return false;
                 };
-                if argument.segments.iter().any(|part| part == "..") {
+                if argument.segments.iter().any(|part| part == "..")
+                    && (argument.param.is_some()
+                        || argument.env.is_some()
+                        || argument.anchor == PathAnchor::Temp)
+                {
                     return false;
                 }
                 if classify(Some(argument), fixture_dirs) == Verdict::Allowed {
+                    seeded = true;
+                } else if let Some(name) = argument.env.as_deref() {
+                    if !self.env_argument_owned(name, caller, facts) {
+                        return false;
+                    }
                     seeded = true;
                 } else if let Some(index) = argument.param {
                     let Some(source) = self.parameter_source(argument, caller) else {
@@ -60,6 +69,38 @@ impl Owners<'_> {
         }
         // A recursive component needs an independently owned entry argument.
         seeded
+    }
+
+    fn env_argument_owned(
+        &self,
+        name: &str,
+        site: &ResolvedCallSite,
+        facts: &dyn TsFactLookup,
+    ) -> bool {
+        if !self.env.all_owned(name) {
+            return false;
+        }
+        facts
+            .get_ts_facts(&site.file)
+            .and_then(path_provenance)
+            .is_some_and(|provenance| {
+                env::dominated(provenance, name, site.offset, &self.fixture_dirs)
+                    || self.imported.owns(
+                        &site.file,
+                        name,
+                        facts,
+                        &self.consumed,
+                        &self.fixture_dirs,
+                    )
+                    || self.setups.owns(
+                        &site.file,
+                        name,
+                        facts,
+                        &self.imported,
+                        &self.consumed,
+                        &self.fixture_dirs,
+                    )
+            })
     }
 
     fn parameter_source(&self, origin: &PathOrigin, site: &ResolvedCallSite) -> Option<NodeId> {

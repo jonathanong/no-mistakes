@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "module": "nodenext",
+    "target": "esnext",
+    "moduleResolution": "nodenext"
+  },
+  "include": [
+    ".no-mistakes-vitest-setup.ts",
+    "settings.ts",
+    "src",
+    "tests",
+    "setup.ts",
+    "qa.runner.ts"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.first.json"
+    },
+    {
+      "path": "./tsconfig.second.json"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 use super::{consumers::Consumed, path_provenance};
 use crate::codebase::dependencies::extract::ImportKind;
 use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId, TsFactLookup};
-use crate::codebase::ts_source::module_facts::arguments::{PathAnchor, WriteScope};
+use crate::codebase::ts_source::module_facts::arguments::WriteScope;
 use crate::fx::{FxHashMap, FxHashSet};
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
@@ -32,6 +32,7 @@ impl<'g> ImportedWrites<'g> {
         name: &str,
         facts: &dyn TsFactLookup,
         consumed: &Consumed,
+        fixture_dirs: &[String],
     ) -> bool {
         if consumed.unknown() || consumed.contains(file) {
             return false;
@@ -39,7 +40,7 @@ impl<'g> ImportedWrites<'g> {
         let mut summaries = self.summaries.borrow_mut();
         let summary = summaries
             .entry(file.to_path_buf())
-            .or_insert_with(|| self.collect(file, facts, consumed));
+            .or_insert_with(|| self.collect(file, facts, consumed, fixture_dirs));
         !summary.cycle && summary.owned.contains(name)
     }
 
@@ -50,6 +51,7 @@ impl<'g> ImportedWrites<'g> {
         name: &str,
         facts: &dyn TsFactLookup,
         consumed: &Consumed,
+        fixture_dirs: &[String],
     ) -> bool {
         if consumed.unknown() || consumed.contains(module) {
             return false;
@@ -57,15 +59,21 @@ impl<'g> ImportedWrites<'g> {
         let mut summaries = self.summaries.borrow_mut();
         let summary = summaries
             .entry(module.to_path_buf())
-            .or_insert_with(|| self.collect(module, facts, consumed));
+            .or_insert_with(|| self.collect(module, facts, consumed, fixture_dirs));
         module != caller
             && !summary.cycle
             && !summary.imports.contains(&NodeId::file(caller))
             && (summary.owned.contains(name)
-                || program_writes(module, facts).any(|write| write == name))
+                || program_writes(module, facts, fixture_dirs).any(|write| write == name))
     }
 
-    fn collect(&self, file: &Path, facts: &dyn TsFactLookup, consumed: &Consumed) -> Summary {
+    fn collect(
+        &self,
+        file: &Path,
+        facts: &dyn TsFactLookup,
+        consumed: &Consumed,
+        fixture_dirs: &[String],
+    ) -> Summary {
         let root = NodeId::file(file);
         let mut pending = vec![root.clone()];
         let mut seen = FxHashSet::default();
@@ -100,7 +108,7 @@ impl<'g> ImportedWrites<'g> {
                 if let Some(file) = target.as_file() {
                     summary
                         .owned
-                        .extend(program_writes(file, facts).map(str::to_owned));
+                        .extend(program_writes(file, facts, fixture_dirs).map(str::to_owned));
                 }
             }
         }
@@ -108,16 +116,19 @@ impl<'g> ImportedWrites<'g> {
     }
 }
 
-fn program_writes<'a>(file: &Path, facts: &'a dyn TsFactLookup) -> impl Iterator<Item = &'a str> {
+fn program_writes<'a>(
+    file: &Path,
+    facts: &'a dyn TsFactLookup,
+    fixture_dirs: &'a [String],
+) -> impl Iterator<Item = &'a str> {
     facts
         .get_ts_facts(file)
         .and_then(path_provenance)
         .into_iter()
         .flat_map(|paths| &paths.env_writes)
-        .filter(|write| {
+        .filter(move |write| {
             write.scope == WriteScope::Program
-                && write.origin.anchor == PathAnchor::Temp
-                && !write.origin.segments.iter().any(|part| part == "..")
+                && super::env::owned_origin(&write.origin, fixture_dirs)
         })
         .map(|write| write.name.as_str())
 }

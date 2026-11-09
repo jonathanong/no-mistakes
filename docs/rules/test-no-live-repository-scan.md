@@ -119,10 +119,10 @@ instead. A matching `fixtureDirs` segment remains an explicit allowance.
 ## Unresolved roots
 
 When the root's provenance cannot be established, the rule reports it with the
-reason `unresolved root` instead of passing silently. This covers a function
-parameter, a `let` binding, an environment value, a call this analysis does not
-model, a spread argument, and an enumeration call whose receiver is not
-resolved. These go to the non-failing `advisories` list by default. Set
+reason `unresolved root` instead of passing silently. Parameters and env values
+are accepted when every selected test caller proves an owned root as described
+below. A mixed or unresolved caller, an unowned reassignment, an unmodeled call
+or spread, or an unresolved enumeration receiver retains the finding. These go to the non-failing `advisories` list by default. Set
 `unresolvedRoot: report` to fail on them; the rule's `severity: advisory` still
 demotes them.
 
@@ -201,7 +201,7 @@ the helper.
 Two provenance gaps resolve when every route into the enumeration is proven.
 
 **Parameters.** `sync(user, dir = DEFAULT_DIR)` enumerates `dir`. If every
-reachable call site passes an owned or fixture root at that argument position,
+reachable test call site passes an owned or configured fixture root at that argument position,
 the enumeration is accepted for those calls. Same-file call chains and recursive
 helpers retain this proof only when every external entry supplies a bounded root;
 a recursive call cannot establish ownership by itself. A call that omits the
@@ -222,27 +222,30 @@ the call graph cannot see may pass anything:
 - The callee is a named function declaration or function-valued `const`, not
   a class or object member.
 - Every reference to it is a direct call.
-- Every file that consumes its module does so through named static imports
+- Every test-reachable file that consumes its module does so through named static imports
   (`import { sync } from "./sync"`) whose uses are all direct calls. A namespace
   import, a default import, `import()`, `require`, an unsupported re-export,
   and `vi.mock`/`vi.importActual` of the module make its consumers unknowable.
   A named static barrel re-export can preserve the route when all consumers
   remain named direct calls. A load through a `const` string specifier is
   attributed to that module; a specifier that cannot be resolved statically
-  makes consumers unknowable for every module.
+  makes consumers unknowable for every module in that test execution scope.
 
 A consumer is matched to the callee by resolved file, not by specifier text: the
 resolver the dependency graph uses (relative paths, tsconfig `paths` aliases,
 workspace packages, `package.json` `exports`) maps each such specifier to a file,
 so `import * as m from "@lib"` consumes the file `@lib` points at. A specifier
 that is neither a bare package nor resolvable to a file keeps the finding for
-every callee. A default import, an unsupported barrel re-export, and a type-only
+every callee in the selected test scope. A default import, an unsupported barrel re-export, and a type-only
 import of the callee also keep the finding. Class and object-literal methods can be
 reached from a file root; when a method's enumeration root depends on an
 unresolved parameter or expression, the rule reports an unresolved-root
 advisory at that call.
 
-Callers are the repository call sites in the canonical call graph; only calls
+Callers include the selected tests and their selected `setupFiles` execution,
+using the canonical call graph. A setup-only scan is checked, and a setup call
+with a live root prevents an otherwise owned test caller from clearing it.
+Production-only callers do not widen that set. Only calls
 through imported bindings or same-file named functions record their argument roots.
 A function reached only through `import()` or a namespace is not scanned at all unless a resolved call
 reaches it.
@@ -252,7 +255,7 @@ reaches it.
 expression), a `process.env.X` or `process.env["X"]` read, and `path.join`
 around it carry the variable through. The enumeration is accepted when:
 
-- every write to `X` in the analyzed files (`process.env.X = ...`,
+- every write to `X` in the relevant test execution files (`process.env.X = ...`,
   `process.env["X"] = ...`, `vi.stubEnv("X", ...)`) assigns an owned root, and
 - an unconditional owned write dominates every call chain that reaches the
   enumeration: a module top-level statement before the call, a statement earlier
@@ -312,9 +315,17 @@ or any write naming a repository path also retains the advisory.
 
 An owned root is only owned below itself: a path that climbs out of it with
 `..` (`join(dir, "..", "src")`) keeps the finding for both parameters and env
-vars. A write is an owned root only when its value stays inside the temp
-directory. `process.env.X = join(mkdtempSync(...), "..", "..", "..")` is not an
-owned write, and that write does not dominate the call.
+vars. A temporary-root write is owned only while its value stays inside the
+temp directory. A fixture write is also owned when its
+normalized segments retain a configured `fixtureDirs` entry; for example,
+`join(import.meta.dirname, "../samples")` is bounded when `samples` is configured. `process.env.X = join(mkdtempSync(...), "..", "..", "..")` is not an
+owned write, and that write does not dominate the call. The configured segment
+allowance also applies when the prefix is unresolved; a segment outside that list
+does not establish ownership.
+
+A named helper can receive `process.env.X` as an argument when the value is
+proven owned at that argument read. The same dominance and poison checks apply
+to direct calls and named forwarding helpers.
 
 The env read must happen at the call: a value captured into a module- or
 function-level `const` (`const dir = process.env.X ?? "."`) keeps the finding, as
@@ -326,15 +337,16 @@ A hook setup-and-restore pair remains unresolved: assigning an owned root in
 prove a lifecycle interval for every imported caller, concurrent test, and hook;
 it cannot discard the restore write merely because a visible caller is in an
 `it` callback. Pass the owned root as an argument to a statically named helper
-instead. The unresolved-root hint leads with passing a temporary root the test
-owns (mkdtemp) as a parameter or via `vi.stubEnv`, or using a constant fixture
-path. A reasoned suppression is the last option.
+instead. The unresolved-root hint names two supported rewrites: build a `const` fixture
+path or owned `mkdtemp` root inside the enumerating function, or supply it through
+every statically resolved test caller (`vi.stubEnv` for env roots). A reasoned
+suppression is the last option.
 
 The finding is kept when the write comes after the call, sits in an `if`, loop,
-or `try`, or the whole-run proof encounters a live write elsewhere. Writes are read from
-every file in the run, including Vitest setup files that the rule's `include`/
-`exclude` filters remove from reporting, because a setup `beforeEach` runs after
-a test file's `beforeAll`.
+or `try`, or another relevant write is live. The proof includes selected test roots,
+imported module initialization, reached helpers, runner configuration and setup
+files, even when `include`/`exclude` removes them from reporting. A setup
+`beforeEach` can run after a test file's `beforeAll`.
 
 Recall comes first: an owned variable stays owned only while every `process.env`
 use is understood. A use is understood when it is a member read
@@ -384,8 +396,9 @@ by themselves.
 
 A computed object key poisons when its text is the literal `unstubEnvs` or
 `unstubAllEnvs` (a string or a template with no substitutions). Any other
-computed key whose text is not a literal poisons when the file is
-`vitest.config.*`, `vitest.workspace.*`, `vitest.projects.*`, or `vite.config.*`.
+computed key whose text is not a literal poisons in a selected project config
+or its imported modules, including custom-named configs. Unknown config or
+setup selection retains the conservative fallback to the graph file inventory.
 A literal key with different text, such as `"include"`, does not. The same two
 names poison wherever they appear in a Vitest JSON or JSONC config: each path in
 `tests.vitest.configs`, plus `vitest.workspace.json`, `vitest.workspace.jsonc`,
@@ -406,13 +419,34 @@ The key poisons whatever its value is, including `false`.
 - `vi.stubEnv` / `jest` stub helpers whose name is not a string literal
 - `unstubAllEnvs`, `unstubEnvs`, and `createRequire` wherever those names appear
 - `stubGlobal("process")` and `stubGlobal` with a non-literal first argument
-- a computed `unstubEnvs` / `unstubAllEnvs` key, and an opaque computed key in a Vitest or Vite config file
+- a computed `unstubEnvs` / `unstubAllEnvs` key, and an opaque computed key in a selected config or its imports
 - `unstubEnvs` or `unstubAllEnvs` in a Vitest JSON or JSONC config, as above
 - `.constructor` / `.__proto__`, a computed key that spells them or is built from strings, templates, or calls, and the strings `"constructor"` and `"__proto__"`
 - `eval` and `Function`
 - `require` or `module` used other than as a call, `require.resolve`, or `module.exports` / `module.require`
 - `vi` or `jest` (including a local import name) used other than as a known helper or `stubEnv`
 - a namespace or default import of `vitest` or `@jest/globals`, or an `import()` / `require` of those modules
+
+## Small and large projects
+
+A standalone helper and the same helper in a larger project use the same caller
+proof. Unrelated source files cannot invalidate it merely by containing an
+opaque module load or a same-named function used as a value. Earlier analysis
+collected those blockers across the whole file inventory, so adding either kind
+of unrelated file made an otherwise owned parameter appear unresolved.
+
+The proof now uses the selected test execution scope and keys local function
+escapes by file. A selected test file without calls still contributes its writes
+and module loads. Selected setup calls count as callers, and config evidence
+comes from the prepared project selection and its imports rather than filename
+conventions. Imports, reexports, runner settings and setup modules retain
+their conservative checks; an unknown consumer in that scope keeps the finding.
+Selected setup and config sources must parse successfully. Otherwise, `check`
+reports incomplete analysis; fix the reported source parse error before relying
+on caller ownership.
+
+Long call chains use a cycle-safe traversal of the canonical graph without a
+fixed caller-state cutoff. Cycles need an independently owned entry argument.
 
 ## Pass-through mocks
 
@@ -529,10 +563,17 @@ module's directory and a Vitest root reaches it.
 
 Move the repository-wide check into a released command that runs once in static
 CI, and keep the Vitest test for small supplied fixtures that exercise that
-check's evaluator. If a test truly needs a directory tree, create it under
-`mkdtemp(join(tmpdir(), ...))` or commit it under a `fixtures` directory.
+check's evaluator. For an unresolved root, build a `const` fixture path or owned
+`mkdtemp` root inside the enumerating function, or supply it through every
+statically resolved test caller (`vi.stubEnv` for env roots). Configured
+`fixtureDirs` apply to caller arguments and env writes too. A mixed or unknown
+caller, escaping function, unsafe env write, or unowned reassignment must be
+rewritten or isolated before that proof succeeds.
 
-An absolute literal below the invocation root matches `runtimeAssets` using the same root-relative containment test as a relative literal; paths outside that root do not inherit the declaration. An unresolved relative consumer also invalidates owned-parameter proofs, retaining callee diagnostics for review.
+An absolute literal below the invocation root matches `runtimeAssets` using the
+same root-relative containment test as a relative literal; paths outside that
+root do not inherit the declaration. An unresolved relative consumer in the
+selected test scope invalidates owned-parameter proofs and retains the finding.
 
 ## Suppression
 
