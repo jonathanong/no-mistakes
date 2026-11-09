@@ -84,8 +84,8 @@ python3 test-cases/performance/call-site-assembly/tools/check-audit.py /tmp/nm-h
 The measured baseline is `bdcd31ae5a7d060cc5b4c7a795d0924882d57266`
 (version 0.109.29); the measured candidate is
 `3f9266460b3dd934ff37fb39179e8e02ea7cbb3d` (version 0.109.29).
-Subsequent documentation-only commits do not change the measured production
-source. Both library and executable artifacts were rebuilt (`fresh: false`)
+Later commits update tests and documentation. The measured production source
+is unchanged. Both library and executable artifacts were rebuilt (`fresh: false`)
 from their own worktrees with the same lockfile and release settings. The
 candidate ELF SHA-256 is
 `d7b1eb0d5c00c893d845fe0911dafeee8a848391d2458b4f5c43bb6f62c1f966`.
