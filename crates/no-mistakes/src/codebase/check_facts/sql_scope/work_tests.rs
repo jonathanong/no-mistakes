@@ -13,3 +13,11 @@ macro_rules! record_seed_check {
         }
     };
 }
+
+macro_rules! record_sql_delegation {
+    () => {
+        if let Some(observer) = $crate::diagnostics::current() {
+            observer.increment("sql_scope.single_delegations", 1);
+        }
+    };
+}

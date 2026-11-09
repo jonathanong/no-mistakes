@@ -23,6 +23,14 @@ pub(crate) fn collect_check_fact_batch_with_session(
     session: &crate::codebase::analysis_session::AnalysisSession,
     requests: Vec<BatchCheckFactRequest>,
 ) -> Vec<CheckFactMap> {
+    collect_check_fact_batch_with_sql_seeds(session, requests, None)
+}
+
+pub(in crate::codebase::check_facts) fn collect_check_fact_batch_with_sql_seeds(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    requests: Vec<BatchCheckFactRequest>,
+    sql_seeds: Option<std::collections::BTreeSet<PathBuf>>,
+) -> Vec<CheckFactMap> {
     // Runner evaluation may visit helper programs before facts are collected.
     // Only already-requested runner plans are evaluated; ordinary source
     // queries do not activate runner discovery.
@@ -36,7 +44,7 @@ pub(crate) fn collect_check_fact_batch_with_session(
         }
     }
     let mut demands = demands_by_path(&requests);
-    let mut collected = super::sql_scope::collect(session, &requests, &mut demands);
+    let mut collected = super::sql_scope::collect(session, &requests, &mut demands, sql_seeds);
     let cache = crate::ast::current_request_parse_cache();
     let demands = demands
         .into_iter()

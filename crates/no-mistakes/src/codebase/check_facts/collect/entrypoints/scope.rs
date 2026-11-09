@@ -28,7 +28,7 @@ pub(super) fn collect_with_scope(
         }
         plan.graph_context.set_visible_files(visible_files);
     }
-    if crate::codebase::check_facts::sql_scope::eligible(&plan, playwright.as_ref())
+    let sql_seeds = if crate::codebase::check_facts::sql_scope::eligible(&plan, playwright.as_ref())
         && precollected.is_empty()
         && supplemental_call_sites.is_empty()
         && session
@@ -38,7 +38,12 @@ pub(super) fn collect_with_scope(
             .iter()
             .any(|path| crate::codebase::dependencies::extract::is_indexable(path))
     {
-        let mut map = crate::codebase::check_facts::batch::collect_check_fact_batch_with_session(
+        crate::codebase::check_facts::sql_scope::seeds::single(root, &files, &plan)
+    } else {
+        None
+    };
+    if let Some(sql_seeds) = sql_seeds {
+        let mut map = crate::codebase::check_facts::batch::collect_check_fact_batch_with_sql_seeds(
             session,
             vec![crate::codebase::check_facts::batch::BatchCheckFactRequest {
                 root: root.to_path_buf(),
@@ -48,6 +53,7 @@ pub(super) fn collect_with_scope(
                 playwright,
                 sources,
             }],
+            Some(sql_seeds),
         )
         .pop()
         .expect("one requested fact map");

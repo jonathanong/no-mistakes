@@ -15,6 +15,10 @@ macro_rules! reject_broad_control {
 macro_rules! record_seed_check {
     () => {};
 }
+#[cfg(not(test))]
+macro_rules! record_sql_delegation {
+    () => {};
+}
 #[cfg(test)]
 #[macro_use]
 mod work_tests;
@@ -51,6 +55,7 @@ pub(super) fn collect(
     session: &AnalysisSession,
     requests: &[BatchCheckFactRequest],
     demands: &mut BTreeMap<PathBuf, Vec<FactDemand>>,
+    prepared_seeds: Option<BTreeSet<PathBuf>>,
 ) -> Vec<CollectedDemand> {
     let mut sql = requests.iter().enumerate().filter(|(_, request)| {
         request.plan.embedded_sql
@@ -73,7 +78,7 @@ pub(super) fn collect(
     {
         return Vec::new();
     }
-    let Some(seeds) = seeds::select(request, id, demands) else {
+    let Some(seeds) = prepared_seeds.or_else(|| seeds::select(request, id, demands)) else {
         return Vec::new();
     };
     let visible = std::sync::OnceLock::new();
@@ -169,6 +174,6 @@ pub(super) fn collect(
     collected
 }
 
-mod seeds;
+pub(super) mod seeds;
 #[cfg(test)]
 mod tests;
