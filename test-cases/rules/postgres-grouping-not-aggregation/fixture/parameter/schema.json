@@ -1,0 +1,100 @@
+{
+  "coverage": "complete",
+  "enums": {},
+  "formatVersion": 2,
+  "functions": {},
+  "schema": "public",
+  "tables": {
+    "marker_inputs": {
+      "checkConstraints": {},
+      "columns": {
+        "id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "sql_placeholder_1": {
+          "comment": null,
+          "dataType": "text",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "marker_inputs_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX marker_inputs_pkey ON public.marker_inputs USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        },
+        "marker_inputs_sql_placeholder_1_key": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX marker_inputs_sql_placeholder_1_key ON public.marker_inputs USING btree (sql_placeholder_1)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": "pg_catalog.\"default\"",
+              "column": "sql_placeholder_1",
+              "descending": false,
+              "expression": "sql_placeholder_1",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.text_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": false,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {
+        "marker_inputs_sql_placeholder_1_key": {
+          "columns": [
+            "sql_placeholder_1"
+          ]
+        }
+      }
+    }
+  },
+  "views": {}
+}
