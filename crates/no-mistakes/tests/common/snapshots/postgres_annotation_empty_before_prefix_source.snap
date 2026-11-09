@@ -1,0 +1,42 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "empty-before-prefix-source": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.mts",
+          "line": 12,
+          "message": "src/query.mts:12: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "write(dense());",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 13,
+          "message": "src/query.mts:13: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "write(sparse());",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 17,
+          "message": "src/query.mts:17: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "write('SELECT 2'); // finding:explicit-unsafe",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

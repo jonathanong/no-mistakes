@@ -456,6 +456,16 @@ Each root retains its own contextual module initialization. A shared scalar
 initialization cache was removed after downstream validation found higher CPU
 cost when excluded callers repeatedly imported large in-scope helpers. Scope
 pruning does not imply that excluded dependencies initialize only once per run.
+
+Branch comparison first collects the incoming binding's builder prefixes. If
+that map is empty, it skips collecting the arm's replacement value: this
+comparison only taints identities present in the incoming map.
+The incoming walk still checks dense and sparse slots, cycles and deletion
+masks. Nonempty incoming maps retain both walks and the existing comparison.
+Executor roots and evaluation remain unchanged. The diagnostic counter
+`postgres.annotation.prefix_after_empty_skips` counts omitted replacement walks;
+attempted and completed comparisons still include them.
+
 No state persists between runs. Use the [annotation diagnostics](../cli/diagnostics.md)
 to compare roots before/after scoping and actual module-cache work.
 

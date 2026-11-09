@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      effort: max
+      importSpecifier: '@app/db'
+      executorNames: [write]
+      trustedSqlTags: [{ module: '@app/db', name: sql }]
+      include: ['src/**/*.mts']
+      unanalyzableSql: report

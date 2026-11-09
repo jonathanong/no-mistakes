@@ -1,5 +1,6 @@
 use super::*;
 use crate::diagnostics::{with_observer, InvocationObserver};
+mod empty_before;
 mod fixture;
 mod legacy;
 mod unchanged_scope;

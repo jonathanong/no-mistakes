@@ -1,0 +1,8 @@
+{
+  "nodes": [],
+  "root": ["array", 1],
+  "objects": {"1": [["arguments", 1], ["prefix", 1, "/* deleted dense */ SELECT 1", true], ["prefix", 1, "/* live dense */ SELECT 3", true]]},
+  "extras": {"1": {"50": ["prefix", 2, "/* deleted sparse */ SELECT 2", true], "51": ["prefix", 2, "/* live sparse */ SELECT 4", true]}},
+  "definite": [[1, 1], [1, 50]],
+  "expected": {"1": ["/* live dense */ SELECT 3", true], "2": ["/* live sparse */ SELECT 4", true]}
+}

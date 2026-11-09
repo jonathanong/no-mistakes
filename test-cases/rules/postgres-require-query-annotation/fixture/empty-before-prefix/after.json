@@ -1,0 +1,11 @@
+{
+  "nodes": [
+    [["prefix", 1, "unsafe dense SELECT 3", false]],
+    [["node", 0], ["node", 0]]
+  ],
+  "root": ["arguments", 1],
+  "objects": {"1": [["arguments", 1], ["prefix", 1, "ignored masked dense", false], ["node", 1]]},
+  "extras": {"1": {"50": ["prefix", 2, "ignored masked sparse", false], "51": ["prefix", 2, "unsafe sparse SELECT 4", false], "99": ["array", 1]}},
+  "definite": [[1, 1], [1, 50]],
+  "expected": {"1": ["unsafe dense SELECT 3", false], "2": ["unsafe sparse SELECT 4", false]}
+}

@@ -54,6 +54,10 @@ pub(super) fn load(name: &str) -> Case {
     let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/performance/annotation-shared-record-dag/prefix-semantics")
         .join(format!("{name}.json"));
+    load_path(&path)
+}
+
+pub(super) fn load_path(path: &std::path::Path) -> Case {
     let json: Json = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
     let mut nodes: Vec<Values> = Vec::new();
     for node in json["nodes"].as_array().unwrap() {

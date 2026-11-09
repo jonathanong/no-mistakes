@@ -272,6 +272,9 @@ prefix comparisons, visited nodes and container visits. `postgres.annotation.pre
 locally per arm and published on completion or unwinding. `postgres.annotation.prefix_observer_batches`
 counts nonempty publications. Verbose-only observation publishes no shared
 counters per binding or node.
+`postgres.annotation.prefix_after_empty_skips` counts replacement-value walks
+omitted after the incoming prefix map is found empty. These remain completed
+comparisons; node and container counters include only actual visits.
 
 Annotation scope and initialization diagnostics also include:
 
