@@ -85,9 +85,9 @@ WITH both_posts AS (
 SELECT DISTINCT id /* CASE: raw-union-cte */ FROM both_posts;
 
 -- distinct-join-filter: duplicate read rows are only used to test matching posts.
-SELECT p.id /* CASE: raw-filter-derived-join */
+SELECT p.id
 FROM posts AS p
-JOIN (SELECT DISTINCT post_id FROM post_reads WHERE reader_id = $1) AS reads
+JOIN (SELECT DISTINCT post_id /* CASE: raw-filter-derived-join */ FROM post_reads WHERE reader_id = $1) AS reads
   ON reads.post_id = p.id;
 
 -- negative control: DISTINCT covers both derived keys but the join predicate uses only one.
@@ -111,21 +111,21 @@ JOIN (SELECT DISTINCT post_id, created_at FROM post_reads) AS reads
 ORDER BY reads.created_at;
 
 -- distinct-join-filter: duplicates do not affect ALL membership semantics.
-SELECT p.id /* CASE: raw-filter-all-membership */
+SELECT p.id
 FROM posts AS p
-WHERE p.id <> ALL(ARRAY(SELECT DISTINCT post_id FROM blocked_posts WHERE active));
+WHERE p.id <> ALL(ARRAY(SELECT DISTINCT post_id /* CASE: raw-filter-all-membership */ FROM blocked_posts WHERE active));
 
 -- distinct-join-filter: every consumer uses the distinct CTE for membership only.
 WITH watched AS (
-  SELECT DISTINCT post_id FROM post_reads WHERE reader_id = $1
+  SELECT DISTINCT post_id /* CASE: raw-filter-cte-in */ FROM post_reads WHERE reader_id = $1
 )
-SELECT p.id /* CASE: raw-filter-cte-in */ FROM posts AS p WHERE p.id IN (SELECT post_id FROM watched);
+SELECT p.id FROM posts AS p WHERE p.id IN (SELECT post_id FROM watched);
 
 -- distinct-join-filter: every consumer uses the distinct CTE for anti-membership only.
 WITH watched AS (
-  SELECT DISTINCT post_id FROM post_reads WHERE reader_id = $1
+  SELECT DISTINCT post_id /* CASE: raw-filter-cte-not-exists */ FROM post_reads WHERE reader_id = $1
 )
-SELECT p.id /* CASE: raw-filter-cte-not-exists */ FROM posts AS p
+SELECT p.id FROM posts AS p
 WHERE NOT EXISTS (SELECT 1 FROM watched AS w WHERE w.post_id = p.id);
 
 -- distinct-join-filter: DISTINCT masks join fan-out used only as a filter.
@@ -136,12 +136,12 @@ WHERE t.tag_id = ANY($1::uuid[])
 GROUP BY p.author_id;
 
 -- aggregate-existence-test: scalar row count is used only as a boolean.
-SELECT p.id /* CASE: raw-count-positive */ FROM posts AS p
-WHERE (SELECT COUNT(*) FROM post_reads AS r WHERE r.post_id = p.id) > 0;
+SELECT p.id FROM posts AS p
+WHERE (SELECT COUNT(*) /* CASE: raw-count-positive */ FROM post_reads AS r WHERE r.post_id = p.id) > 0;
 
 -- aggregate-existence-test: zero matching rows is an anti-existence check.
-SELECT p.id /* CASE: raw-count-zero */ FROM posts AS p
-WHERE (SELECT COUNT(*) FROM post_reads AS r WHERE r.post_id = p.id) = 0;
+SELECT p.id FROM posts AS p
+WHERE (SELECT COUNT(*) /* CASE: raw-count-zero */ FROM post_reads AS r WHERE r.post_id = p.id) = 0;
 
 -- aggregate-existence-test: direct scalar COUNT results are boolean tests.
 SELECT COUNT(*) > 0 /* CASE: raw-count-direct-positive */ FROM post_reads WHERE reader_id = $1;

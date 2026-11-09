@@ -42,8 +42,8 @@ export async function allShapes(id: string, slug: string, tags: string[]) {
     ) SELECT DISTINCT id /* CASE: embedded-union-cte */ FROM both_posts
   `);
   await query(sql`
-    SELECT p.id /* CASE: embedded-filter-derived-join */ FROM posts AS p
-    JOIN (SELECT DISTINCT post_id FROM post_reads WHERE reader_id = ${id}) AS reads
+    SELECT p.id FROM posts AS p
+    JOIN (SELECT DISTINCT post_id /* CASE: embedded-filter-derived-join */ FROM post_reads WHERE reader_id = ${id}) AS reads
       ON reads.post_id = p.id
   `);
   await query(sql`
@@ -61,16 +61,16 @@ export async function allShapes(id: string, slug: string, tags: string[]) {
     ORDER BY reads.created_at
   `);
   await query(sql`
-    SELECT p.id /* CASE: embedded-filter-all-membership */ FROM posts AS p
-    WHERE p.id <> ALL(ARRAY(SELECT DISTINCT post_id FROM blocked_posts WHERE active))
+    SELECT p.id FROM posts AS p
+    WHERE p.id <> ALL(ARRAY(SELECT DISTINCT post_id /* CASE: embedded-filter-all-membership */ FROM blocked_posts WHERE active))
   `);
   await query(sql`
-    WITH watched AS (SELECT DISTINCT post_id FROM post_reads WHERE reader_id = ${id})
-    SELECT p.id /* CASE: embedded-filter-cte-in */ FROM posts AS p WHERE p.id IN (SELECT post_id FROM watched)
+    WITH watched AS (SELECT DISTINCT post_id /* CASE: embedded-filter-cte-in */ FROM post_reads WHERE reader_id = ${id})
+    SELECT p.id FROM posts AS p WHERE p.id IN (SELECT post_id FROM watched)
   `);
   await query(sql`
-    WITH watched AS (SELECT DISTINCT post_id FROM post_reads WHERE reader_id = ${id})
-    SELECT p.id /* CASE: embedded-filter-cte-not-exists */ FROM posts AS p
+    WITH watched AS (SELECT DISTINCT post_id /* CASE: embedded-filter-cte-not-exists */ FROM post_reads WHERE reader_id = ${id})
+    SELECT p.id FROM posts AS p
     WHERE NOT EXISTS (SELECT 1 FROM watched AS w WHERE w.post_id = p.id)
   `);
   await query(sql`
@@ -79,12 +79,12 @@ export async function allShapes(id: string, slug: string, tags: string[]) {
     WHERE t.tag_id = ANY(${tags}::uuid[]) GROUP BY p.author_id
   `);
   await query(sql`
-    SELECT p.id /* CASE: embedded-count-positive */ FROM posts AS p
-    WHERE (SELECT COUNT(*) FROM post_reads AS r WHERE r.post_id = p.id) > 0
+    SELECT p.id FROM posts AS p
+    WHERE (SELECT COUNT(*) /* CASE: embedded-count-positive */ FROM post_reads AS r WHERE r.post_id = p.id) > 0
   `);
   await query(sql`
-    SELECT p.id /* CASE: embedded-count-zero */ FROM posts AS p
-    WHERE (SELECT COUNT(*) FROM post_reads AS r WHERE r.post_id = p.id) = 0
+    SELECT p.id FROM posts AS p
+    WHERE (SELECT COUNT(*) /* CASE: embedded-count-zero */ FROM post_reads AS r WHERE r.post_id = p.id) = 0
   `);
   await query(sql`SELECT COUNT(*) > 0 /* CASE: embedded-count-direct-positive */ FROM post_reads WHERE reader_id = ${id}`);
   await query(sql`SELECT COUNT(*) = 0 /* CASE: embedded-count-direct-zero */ FROM post_reads WHERE reader_id = ${id}`);
@@ -180,15 +180,15 @@ export async function appendedUnion() {
 }
 
 export async function appendedJoinFilter(readerId: string) {
-  const statement = sql`SELECT p.id /* CASE: embedded-append-filter-join */ FROM posts AS p JOIN (`;
-  statement.append(sql`SELECT DISTINCT post_id FROM post_reads WHERE reader_id = ${readerId}`);
+  const statement = sql`SELECT p.id FROM posts AS p JOIN (`;
+  statement.append(sql`SELECT DISTINCT post_id /* CASE: embedded-append-filter-join */ FROM post_reads WHERE reader_id = ${readerId}`);
   statement.append(sql`) AS reads ON reads.post_id = p.id`);
   await query(statement);
 }
 
 export async function appendedAggregateExistence() {
-  const statement = sql`SELECT p.id /* CASE: embedded-append-count-positive */ FROM posts AS p `;
-  statement.append(sql`WHERE (SELECT COUNT(*) FROM post_reads AS r WHERE r.post_id = p.id) > 0`);
+  const statement = sql`SELECT p.id FROM posts AS p `;
+  statement.append(sql`WHERE (SELECT COUNT(*) /* CASE: embedded-append-count-positive */ FROM post_reads AS r WHERE r.post_id = p.id) > 0`);
   await query(statement);
 }
 
@@ -231,15 +231,15 @@ export async function appendedUnionArms() {
 }
 
 export async function appendedCteNotExists(readerId: string) {
-  const statement = sql`WITH watched AS (SELECT DISTINCT post_id FROM post_reads `;
+  const statement = sql`WITH watched AS (SELECT DISTINCT post_id /* CASE: embedded-append-filter-cte-not-exists */ FROM post_reads `;
   statement.append(sql`WHERE reader_id = ${readerId})`);
-  statement.append(sql` SELECT p.id /* CASE: embedded-append-filter-cte-not-exists */ FROM posts AS p WHERE NOT EXISTS (SELECT 1 FROM watched w WHERE w.post_id = p.id)`);
+  statement.append(sql` SELECT p.id FROM posts AS p WHERE NOT EXISTS (SELECT 1 FROM watched w WHERE w.post_id = p.id)`);
   await query(statement);
 }
 
 export async function appendedCountZero() {
-  const statement = sql`SELECT p.id /* CASE: embedded-append-count-zero */ FROM posts AS p `;
-  statement.append(sql`WHERE (SELECT COUNT(*) FROM post_reads AS r WHERE r.post_id = p.id) = 0`);
+  const statement = sql`SELECT p.id FROM posts AS p `;
+  statement.append(sql`WHERE (SELECT COUNT(*) /* CASE: embedded-append-count-zero */ FROM post_reads AS r WHERE r.post_id = p.id) = 0`);
   await query(statement);
 }
 
