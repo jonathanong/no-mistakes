@@ -1411,5 +1411,148 @@
       "latest"
     ],
     "error": "Unexpected npm view result"
+  },
+  {
+    "name": "successful upload retries ECONNREFUSED JSON code then becomes visible",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "request": "publish"
+      },
+      {
+        "status": 1,
+        "stdout": "{\"error\":{\"code\":\"ECONNREFUSED\"}}",
+        "stderr": "",
+        "request": "version",
+        "timeoutMs": 120000
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": "",
+        "request": "version",
+        "timeoutMs": 119000
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "delays": [
+      1000
+    ]
+  },
+  {
+    "name": "successful upload retries ECONNREFUSED stderr code then becomes visible",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "request": "publish"
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "npm error code ECONNREFUSED",
+        "request": "version",
+        "timeoutMs": 120000
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": "",
+        "request": "version",
+        "timeoutMs": 119000
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "delays": [
+      1000
+    ]
+  },
+  {
+    "name": "successful upload retries ECONNREFUSED process error then becomes visible",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\": {\"code\": \"E404\"}}",
+        "stderr": "npm error code E404",
+        "request": "version"
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.7\"",
+        "stderr": "",
+        "request": "latest"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "request": "publish"
+      },
+      {
+        "throw": {
+          "code": "ECONNREFUSED",
+          "message": "spawnSync npm ECONNREFUSED"
+        },
+        "request": "version",
+        "timeoutMs": 120000
+      },
+      {
+        "status": 0,
+        "stdout": "\"0.109.8\"",
+        "stderr": "",
+        "request": "version",
+        "timeoutMs": 119000
+      }
+    ],
+    "tags": [
+      "latest"
+    ],
+    "delays": [
+      1000
+    ]
+  },
+  {
+    "name": "connection refusal before upload fails closed",
+    "results": [
+      {
+        "status": 1,
+        "stdout": "{\"error\":{\"code\":\"ECONNREFUSED\"}}",
+        "stderr": "npm error code ECONNREFUSED",
+        "request": "version"
+      }
+    ],
+    "tags": [],
+    "error": "npm view"
   }
 ]

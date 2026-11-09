@@ -32,7 +32,7 @@ function view(run, spec, field, timeoutMs) {
     try { code = JSON.parse(result.stdout).error?.code; } catch {}
     if (code === "E404") return null;
     throw Object.assign(new Error(`npm view ${spec} ${field} failed: ${result.stderr}`), {
-      code: code || result.stderr.match(/\b(E5\d\d|ECONNRESET|ETIMEDOUT)\b/)?.[1],
+      code: code || result.stderr.match(/\b(E5\d\d|ECONNRESET|ECONNREFUSED|ETIMEDOUT)\b/)?.[1],
     });
   }
   const value = JSON.parse(result.stdout || "null");
@@ -49,7 +49,7 @@ async function confirmPublication(packageName, version, { run, sleep, now }) {
     try {
       visible = view(run, `${packageName}@${version}`, "version", Math.max(1, Math.ceil(deadline - now())));
     } catch (error) {
-      if (!/^(?:E5\d\d|ECONNRESET|ETIMEDOUT)$/.test(error.code)) throw error;
+      if (!/^(?:E5\d\d|ECONNRESET|ECONNREFUSED|ETIMEDOUT)$/.test(error.code)) throw error;
     }
     if (visible === version) return;
     if (visible !== null) throw new Error(`Unexpected version ${visible} for ${packageName}@${version}`);

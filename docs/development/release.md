@@ -1,4 +1,4 @@
-<!-- cspell:ignore Sigstore TLOG packument unpromoted ECONNRESET ETIMEDOUT -->
+<!-- cspell:ignore Sigstore TLOG packument unpromoted ECONNRESET ECONNREFUSED ETIMEDOUT -->
 
 # Release stages
 
@@ -34,7 +34,8 @@ process deadline and a one minute fetch timeout with npm fetch retries disabled.
 After a successful upload, the helper polls the exact version for up to two
 minutes, backing off from one second to a ten second maximum between lookups.
 During this poll window, missing versions and transient lookup errors (`E5xx`,
-`ECONNRESET`, and `ETIMEDOUT`, including process timeouts) use the same backoff.
+`ECONNRESET`, `ECONNREFUSED`, and `ETIMEDOUT`, including process timeouts) use
+the same backoff.
 Other lookup errors and unexpected versions still fail immediately.
 Lookup time and sleeps share that deadline; each lookup's process and fetch
 limits shrink to fit the remaining budget. A version that appears during this
