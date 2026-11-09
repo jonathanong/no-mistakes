@@ -9,25 +9,30 @@ const scenarios = JSON.parse(readFileSync(path.join(root, "test-cases/npm-publis
 for (const scenario of scenarios) {
   test(scenario.name, async () => {
     const results = [...scenario.results];
+    const packageName = scenario.packageName || "eslint-plugin-no-mistakes";
     const tags = [];
     const delays = [];
+    let elapsed = 0;
     const options = {
-      run(args) {
+      now: () => elapsed,
+      run(args, timeoutMs) {
         assert.ok(results.length, `Unexpected npm command: ${args.join(" ")}`);
         const result = results.shift();
+        if (result.timeoutMs !== undefined) assert.equal(timeoutMs, result.timeoutMs);
+        elapsed += result.elapsedMs || 0;
         const requests = {
-          version: ["view", "eslint-plugin-no-mistakes@0.109.8", "version", "--json"],
-          latest: ["view", "eslint-plugin-no-mistakes", "dist-tags.latest", "--json"],
-          publish: ["publish", "./packages/eslint-plugin-no-mistakes", "--provenance", "--access", "public", "--tag", scenario.tags[tags.length]],
+          version: ["view", `${packageName}@0.109.8`, "version", "--json"],
+          latest: ["view", packageName, "dist-tags.latest", "--json"],
+          publish: ["publish", `./packages/${packageName}`, "--provenance", "--access", "public", "--tag", scenario.tags[tags.length]],
         };
         assert.deepEqual(args, requests[result.request]);
         if (args[0] === "publish") tags.push(args[6]);
         if (result.throw) throw Object.assign(new Error(result.throw.message), result.throw);
         return result;
       },
-      async sleep(ms) { delays.push(ms); },
+      async sleep(ms) { delays.push(ms); elapsed += ms; },
     };
-    const result = publish("eslint-plugin-no-mistakes", "0.109.8", options);
+    const result = publish(packageName, "0.109.8", options);
     if (scenario.error) await assert.rejects(result, new RegExp(scenario.error));
     else await result;
     assert.equal(results.length, 0);
@@ -49,10 +54,15 @@ for (const [version, latest, tag] of [
 
 const workflow = readFileSync(path.join(root, ".github/workflows/release.yml"), "utf8");
 const job = (name) => workflow.split(`\n  ${name}:\n`)[1].split(/\n  [\w-]+:\n/)[0];
-test("root publication requires successful plugin publication", () => {
-  const needs = job("publish-js").split("    needs:\n")[1].split("    runs-on:")[0];
-  assert.match(needs, /      - publish-eslint\n/);
-  assert.doesNotMatch(job("publish-js"), /if:.*always\(\)/);
+test("plugin publication requires fetchable native packages and root", () => {
+  const needs = (name) => job(name).split("    needs:\n")[1].split("    runs-on:")[0];
+  assert.match(needs("publish-js"), /      - verify-npm-platform\n/);
+  assert.doesNotMatch(needs("publish-js"), /publish-eslint/);
+  assert.match(needs("verify-npm-root"), /      - publish-js\n/);
+  assert.match(needs("publish-eslint"), /      - verify-npm-root\n/);
+  for (const name of ["publish-js", "verify-npm-root", "publish-eslint"]) {
+    assert.doesNotMatch(job(name), /if:.*always\(\)/);
+  }
 });
 test("every npm channel uses workflow-owned publish tooling, including older tags", () => {
   for (const name of ["publish", "publish-js", "publish-eslint"]) {

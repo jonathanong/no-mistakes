@@ -453,7 +453,11 @@ jobs:
 
       - name: Run JavaScript tests
         timeout-minutes: 5
-        run: pnpm test
+        run: pnpm run test:ci
+
+      - name: Run timeout-policy browser tests
+        timeout-minutes: 5
+        run: pnpm run --if-present test:timeout-policy-browser
 
       - name: Check npm packages
         timeout-minutes: 2
@@ -954,7 +958,6 @@ jobs:
     needs:
       - prepare
       - verify-npm-platform
-      - publish-eslint
     runs-on: ubuntu-latest
     timeout-minutes: 50
     permissions:
@@ -1030,7 +1033,7 @@ jobs:
     name: Publish ESLint package
     needs:
       - prepare
-      - validate
+      - verify-npm-root
     runs-on: ubuntu-latest
     timeout-minutes: 50
     permissions:
@@ -1071,7 +1074,7 @@ jobs:
         with:
           install: false
 
-      # This source-only package does not depend on native artifacts.
+      # Publish only after the matching native packages and root are fetchable.
       - name: Publish ESLint package with OIDC
         timeout-minutes: 40
         shell: bash

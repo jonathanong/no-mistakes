@@ -1,0 +1,7 @@
+{
+  "name": "release-browser-current",
+  "private": true,
+  "scripts": {
+    "test:timeout-policy-browser": "node ../browser.cjs"
+  }
+}

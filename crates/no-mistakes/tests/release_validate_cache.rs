@@ -89,8 +89,14 @@ fn validate_job_drops_test_executables_after_tests_before_package_verification()
         .unwrap();
     // JavaScript tests run independently and do not consume Rust executables.
     let javascript = job_body(&workflow, "validate-js");
-    assert!(javascript.contains("run: pnpm test\n"));
-    assert!(!validate.contains("run: pnpm test\n"));
+    for command in [
+        "pnpm run test:ci",
+        "pnpm run --if-present test:timeout-policy-browser",
+    ] {
+        let run = format!("run: {command}\n");
+        assert!(javascript.contains(&run));
+        assert!(!validate.contains(&run));
+    }
     let cleanup_heading = validate
         .find("name: Drop Rust test executables")
         .expect("Validate must free test executables before package verification");
