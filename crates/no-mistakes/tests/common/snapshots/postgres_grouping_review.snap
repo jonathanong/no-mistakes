@@ -1,0 +1,74 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "guarded_absence_and_soundness_controls": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "review/raw/review-controls.sql",
+          "line": 54,
+          "message": "review/raw/review-controls.sql:54: [aggregate-existence-test] MAX is a boolean absence test; preserve the original NOT EXISTS disjunct and replace MAX < threshold with threshold IS NOT NULL AND NOT EXISTS for rows at or above the threshold (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT r.post_id FROM post_reads AS r",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "review/raw/review-controls.sql",
+          "line": 62,
+          "message": "review/raw/review-controls.sql:62: [aggregate-existence-test] MAX is a boolean absence test; preserve the original NOT EXISTS disjunct and replace MAX < threshold with threshold IS NOT NULL AND NOT EXISTS for rows at or above the threshold (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT p.parent_id FROM posts AS p",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "review/src/review-controls.ts",
+          "line": 68,
+          "message": "review/src/review-controls.ts:68: [aggregate-existence-test] MAX is a boolean absence test; preserve the original NOT EXISTS disjunct and replace MAX < threshold with threshold IS NOT NULL AND NOT EXISTS for rows at or above the threshold (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT r.post_id FROM post_reads AS r",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "review/src/review-controls.ts",
+          "line": 77,
+          "message": "review/src/review-controls.ts:77: [aggregate-existence-test] MAX is a boolean absence test; preserve the original NOT EXISTS disjunct and replace MAX < threshold with threshold IS NOT NULL AND NOT EXISTS for rows at or above the threshold (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT p.parent_id FROM posts AS p",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "src/suppress-file.ts",
+          "line": 1,
+          "message": "directive for `postgres-grouping-not-aggregation` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-grouping-not-aggregation",
+          "target": "postgres-grouping-not-aggregation"
+        },
+        {
+          "file": "src/suppress-line.ts",
+          "line": 4,
+          "message": "directive for `postgres-grouping-not-aggregation` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "return query(sql`SELECT DISTINCT post_id FROM topic_memberships WHERE topic_id = ${topicId}`); // no-mistakes-disable-line postgres-grouping-not-aggregation",
+          "target": "postgres-grouping-not-aggregation"
+        },
+        {
+          "file": "src/suppress-next-line-append.ts",
+          "line": 4,
+          "message": "directive for `postgres-grouping-not-aggregation` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-grouping-not-aggregation",
+          "target": "postgres-grouping-not-aggregation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

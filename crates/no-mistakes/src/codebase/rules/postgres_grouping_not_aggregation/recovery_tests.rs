@@ -26,7 +26,7 @@ fn assert_complete_sibling_findings(records: &[SqlStatementFileFacts], kind: &st
         assert!(record.parse_failed);
         assert_eq!(record.grouping_queries.len(), 2);
         for (query_index, query) in record.grouping_queries.iter().enumerate() {
-            for finding in analyze::query(&query.query, &catalog) {
+            for finding in analyze::query(&query.query, &catalog, &query.parameter_sites) {
                 assert_eq!(finding.code, "distinct-over-unique-key");
                 let select_index = query
                     .sites
@@ -87,7 +87,7 @@ fn embedded_recovery_reports_only_complete_siblings_at_physical_lines() {
     ]);
     let embedded = extract_embedded_sql_from_source(&path, source, &options);
     assert_eq!(embedded.calls.len(), 1);
-    let records = crate::codebase::postgres::embedded_call_facts_with_policy(
+    let records = crate::codebase::postgres::tests::embedded_call_facts_with_policy(
         &embedded,
         false,
         false,

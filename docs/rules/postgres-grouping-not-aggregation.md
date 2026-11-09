@@ -28,6 +28,8 @@ rules:
 
 The five stable message codes are carried in each finding's `target` field.
 Consumers can filter advisory records by `rule` and `target` to select one shape.
+Messages include a column to distinguish separate SELECT sites on one source line.
+For embedded SQL, this is the source column when provenance is available.
 This does not add a separate severity or suppression syntax per shape.
 
 All shapes require a configured schema catalog. With no `schemaCatalogPath`,
@@ -78,6 +80,9 @@ apply to `DISTINCT ON`, grouping keys, or a distinct aggregate. A partial unique
 index requires its predicate to be proven by an exact supported query conjunct.
 Nullable unique keys also need non-null proof unless the index declares `NULLS
 NOT DISTINCT`; ordinary uniqueness permits repeated NULL values.
+For `COUNT(DISTINCT expression)`, repeated NULL values do not prevent dropping
+`DISTINCT`: `COUNT(expression)` also ignores them. Retain the counted expression
+and any aggregate filter.
 
 ```sql
 SELECT post_id FROM post_topics WHERE topic_id = $1;

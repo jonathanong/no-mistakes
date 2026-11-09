@@ -80,4 +80,44 @@ export async function reviewControls() {
       SELECT 1 FROM posts AS older WHERE older.parent_id = p.parent_id
     ) OR MAX(p.created_at) < $1
   `);
+
+  // CTE DISTINCT also determines a correlated scalar count used by ORDER BY.
+  await query(sql`
+    WITH watched AS (SELECT DISTINCT post_id FROM post_reads)
+    SELECT p.id FROM posts AS p
+    WHERE p.id IN (SELECT post_id FROM watched)
+    ORDER BY (SELECT COUNT(*) FROM watched AS w WHERE w.post_id = p.id)
+  `);
+
+  const statement = sql`WITH watched AS (SELECT DISTINCT post_id FROM post_reads)
+    SELECT p.id FROM posts AS p WHERE p.id IN (`;
+  statement.append(sql`SELECT post_id FROM watched) ORDER BY (SELECT COUNT(*) FROM watched AS w WHERE w.post_id = p.id)`);
+  await query(statement);
+
+  // COUNT(DISTINCT item_id) does not count the requested tag matches.
+  await query(sql`
+    SELECT item_id FROM direct_tags
+    WHERE tag_id = ANY($1::uuid[])
+    GROUP BY item_id
+    HAVING COUNT(DISTINCT item_id) = cardinality($1::uuid[])
+  `);
+
+  const unrelatedCount = sql`SELECT item_id FROM direct_tags WHERE tag_id = ANY($1::uuid[]) `;
+  unrelatedCount.append(sql`GROUP BY item_id HAVING COUNT(DISTINCT item_id) = cardinality($1::uuid[])`);
+  await query(unrelatedCount);
+
+  // Counting a bind value does not count distinct pool terms.
+  await query(sql`
+    SELECT p.item_id FROM (
+      SELECT item_id, tag_id FROM direct_tags
+      UNION SELECT item_id, tag_id FROM alias_tags
+    ) p GROUP BY p.item_id HAVING COUNT(DISTINCT ${counted}) = $2
+  `);
+
+  const boundCount = sql`SELECT p.item_id FROM (
+    SELECT item_id, tag_id FROM direct_tags
+    UNION SELECT item_id, tag_id FROM alias_tags
+  ) p GROUP BY p.item_id `;
+  boundCount.append(sql`HAVING COUNT(DISTINCT ${counted}) = $2`);
+  await query(boundCount);
 }

@@ -1,4 +1,3 @@
-use super::check_json_clean::assert_saved_fixture_clean;
 use super::check_json_snapshot::{assert_saved_fixture, rules_path};
 use std::fs::read_to_string;
 use std::process::Command;
@@ -14,29 +13,25 @@ fn postgres_grouping_not_aggregation_check_json_snapshot() {
         ("disabled", root.clone(), root.join("disabled.yml")),
     ];
     assert_saved_fixture("postgres_grouping_not_aggregation", &cases[..1]);
-    assert_saved_fixture_clean(
-        "postgres_grouping_not_aggregation_clean_controls",
+    assert_saved_fixture(
+        "postgres_grouping_not_aggregation_inactive_controls",
         &cases[1..],
     );
+    for (_, _, config) in &cases[1..] {
+        let report = check_report(&root, config);
+        assert!(report["advisories"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|row| row["rule"] != RULE));
+        assert_eq!(report["rules"], serde_json::json!([]));
+    }
 }
 
 #[test]
 fn postgres_grouping_not_aggregation_reports_only_marked_sound_controls() {
     let root = rules_path(RULE, "fixture", "");
-    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
-        .args(["check", "--root"])
-        .arg(&root)
-        .arg("--config")
-        .arg(root.join(".no-mistakes.yml"))
-        .args(["--format", "json"])
-        .output()
-        .unwrap();
-    assert!(
-        output.status.success(),
-        "{}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let report = check_report(&root, &root.join(".no-mistakes.yml"));
     assert_eq!(
         report["rules"],
         serde_json::json!([]),
@@ -392,7 +387,7 @@ fn postgres_grouping_not_aggregation_reports_only_marked_sound_controls() {
     );
     for file in ["raw/shape-controls.sql", "src/shape-controls.ts"] {
         let source = read_to_string(root.join(file)).unwrap();
-        for (index, source_line) in source
+        for (index, _) in source
             .lines()
             .enumerate()
             .filter(|(_, line)| line.contains("CASE:") && line.contains("negative"))
@@ -422,7 +417,7 @@ fn line_for_marker(root: &std::path::Path, file: &str, marker: &str) -> usize {
 #[test]
 fn postgres_grouping_not_aggregation_legacy_control_matches_scope() {
     let root = rules_path(RULE, "fixture", "");
-    assert_saved_fixture_clean(
+    assert_saved_fixture(
         "postgres_grouping_not_aggregation_legacy_control",
         &[("legacy", root.clone(), root.join("legacy-control.yml"))],
     );
@@ -455,4 +450,21 @@ fn postgres_grouping_not_aggregation_rejects_blocking_severity_and_fail_option()
             "{config} should explain its invalid setting: {output}"
         );
     }
+}
+
+fn check_report(root: &std::path::Path, config: &std::path::Path) -> serde_json::Value {
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--root"])
+        .arg(root)
+        .arg("--config")
+        .arg(config)
+        .args(["--format", "json", "--jobs", "1"])
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    serde_json::from_slice(&output.stdout).unwrap()
 }

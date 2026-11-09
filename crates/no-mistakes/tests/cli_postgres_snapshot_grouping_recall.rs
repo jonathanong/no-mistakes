@@ -30,7 +30,12 @@ fn postgres_grouping_not_aggregation_recall_reports_exact_markers() {
         String::from_utf8_lossy(&output.stderr)
     );
     let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-    let findings = report["advisories"].as_array().unwrap();
+    let findings = report["advisories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|row| row["rule"] == RULE)
+        .collect::<Vec<_>>();
     let expected: serde_json::Value =
         serde_json::from_str(&read_to_string(root.join("recall/expected.json")).unwrap()).unwrap();
     let expected = expected.as_array().unwrap();

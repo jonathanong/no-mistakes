@@ -1,8 +1,8 @@
+// no-mistakes-disable-file postgres-grouping-not-aggregation
 import { query, sql } from "db";
 
 export function suppressedByFile() {
   return query(sql`
-    -- no-mistakes-disable-file postgres-grouping-not-aggregation
-    SELECT DISTINCT post_id FROM topic_memberships WHERE topic_id = 'topic'
+    SELECT DISTINCT post_id FROM topic_memberships WHERE topic_id = '00000000-0000-0000-0000-000000000001'
   `);
 }

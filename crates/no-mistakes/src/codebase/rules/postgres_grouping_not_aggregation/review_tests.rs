@@ -10,8 +10,9 @@ use crate::codebase::postgres::{
 use std::path::PathBuf;
 
 fn fixture() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/postgres-grouping-not-aggregation/fixture")
+    crate::codebase::ts_resolver::normalize_path(&crate::test_support::rule_fixture_root(
+        super::RULE_ID,
+    ))
 }
 
 fn catalog() -> SchemaCatalog {
@@ -26,7 +27,7 @@ fn assert_review_findings(records: &[SqlStatementFileFacts], kind: &str) {
     for record in records {
         assert!(!record.parse_failed, "{record:?}");
         for (query_index, query) in record.grouping_queries.iter().enumerate() {
-            for finding in analyze::query(&query.query, &catalog) {
+            for finding in analyze::query(&query.query, &catalog, &query.parameter_sites) {
                 let select_index = query
                     .sites
                     .iter()
@@ -93,7 +94,7 @@ fn embedded_review_controls_only_report_guarded_absence_rewrites() {
     ]);
     let embedded = extract_embedded_sql_from_source(&path, source, &options);
     assert_eq!(embedded.calls.len(), 12);
-    let records = crate::codebase::postgres::embedded_call_facts_with_policy(
+    let records = crate::codebase::postgres::tests::embedded_call_facts_with_policy(
         &embedded,
         false,
         false,

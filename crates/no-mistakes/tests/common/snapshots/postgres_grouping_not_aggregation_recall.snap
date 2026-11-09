@@ -1,0 +1,402 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "recall": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "recall/raw/recall.sql",
+          "line": 12,
+          "message": "recall/raw/recall.sql:12: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT id, id::text AS display_id /* CASE: recall-union-extra-expression */",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "recall/raw/recall.sql",
+          "line": 2,
+          "message": "recall/raw/recall.sql:2: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT COUNT(DISTINCT slug) /* CASE: recall-nullable-count-distinct */ FROM nullable_slugs;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/raw/recall.sql",
+          "line": 20,
+          "message": "recall/raw/recall.sql:20: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT topic_id, COUNT(DISTINCT post_id) /* CASE: recall-composite-count-distinct */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/raw/recall.sql",
+          "line": 25,
+          "message": "recall/raw/recall.sql:25: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT COUNT(DISTINCT r.input_order) /* CASE: recall-one-to-one-join-count */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/raw/recall.sql",
+          "line": 30,
+          "message": "recall/raw/recall.sql:30: [distinct-join-filter] COUNT(DISTINCT) masks filter-side join fan-out; replace those joins with EXISTS and remove DISTINCT from COUNT(expression) (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT m.topic_id, COUNT(DISTINCT m.post_id) /* CASE: recall-fanout-count-distinct */",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "recall/raw/recall.sql",
+          "line": 36,
+          "message": "recall/raw/recall.sql:36: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT id /* CASE: recall-having-distinct-id */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/raw/recall.sql",
+          "line": 42,
+          "message": "recall/raw/recall.sql:42: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT COUNT(DISTINCT id) FILTER (WHERE author_id IS NOT NULL) /* CASE: recall-filtered-distinct-id */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/raw/recall.sql",
+          "line": 5,
+          "message": "recall/raw/recall.sql:5: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT * /* CASE: recall-union-star */ FROM (",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "recall/raw/recall.sql",
+          "line": 51,
+          "message": "recall/raw/recall.sql:51: [aggregate-existence-test] COUNT is used only as a boolean existence test; use EXISTS or NOT EXISTS with the same filters (SQL column 9)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT (SELECT COUNT(DISTINCT author_id) /* CASE: recall-count-distinct-existence */ FROM posts) > 0;",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "recall/raw/recall.sql",
+          "line": 54,
+          "message": "recall/raw/recall.sql:54: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT slug /* CASE: recall-grouped-key-projection */ FROM posts GROUP BY id;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/raw/recall.sql",
+          "line": 62,
+          "message": "recall/raw/recall.sql:62: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT id /* CASE: recall-recursive-unrelated-key */ FROM posts;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/raw/recall.sql",
+          "line": 65,
+          "message": "recall/raw/recall.sql:65: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT item_id /* CASE: recall-any-distinct-tag-pool */",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "recall/raw/recall.sql",
+          "line": 65,
+          "message": "recall/raw/recall.sql:65: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT item_id /* CASE: recall-any-distinct-tag-pool */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/raw/same-line.sql",
+          "line": 1,
+          "message": "recall/raw/same-line.sql:1: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 72)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "/* π */ SELECT DISTINCT id /* CASE: raw-same-line-first */ FROM posts; SELECT DISTINCT id /* CASE: raw-same-line-second */ FROM posts;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/raw/same-line.sql",
+          "line": 1,
+          "message": "recall/raw/same-line.sql:1: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 9)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "/* π */ SELECT DISTINCT id /* CASE: raw-same-line-first */ FROM posts; SELECT DISTINCT id /* CASE: raw-same-line-second */ FROM posts;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 105,
+          "message": "recall/src/recall.ts:105: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT item_id /* CASE: embedded-recall-any-distinct-tag-pool */",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 105,
+          "message": "recall/src/recall.ts:105: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT item_id /* CASE: embedded-recall-any-distinct-tag-pool */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 11,
+          "message": "recall/src/recall.ts:11: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT id, id::text AS display_id /* CASE: embedded-recall-union-extra-expression */",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 114,
+          "message": "recall/src/recall.ts:114: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (source column 25)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const statement = sql`SELECT item_id /* CASE: append-recall-any-distinct-tag-pool */ FROM direct_tags `;",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 114,
+          "message": "recall/src/recall.ts:114: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 25)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const statement = sql`SELECT item_id /* CASE: append-recall-any-distinct-tag-pool */ FROM direct_tags `;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 17,
+          "message": "recall/src/recall.ts:17: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 21)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const count = sql`SELECT COUNT(DISTINCT slug) /* CASE: append-recall-nullable-count-distinct */ `;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 19,
+          "message": "recall/src/recall.ts:19: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (source column 20)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const star = sql`SELECT DISTINCT * /* CASE: append-recall-union-star */ FROM (`;",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 21,
+          "message": "recall/src/recall.ts:21: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (source column 26)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const expression = sql`SELECT DISTINCT id, id::text AS display_id /* CASE: append-recall-union-extra-expression */ FROM (`;",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 30,
+          "message": "recall/src/recall.ts:30: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT topic_id, COUNT(DISTINCT post_id) /* CASE: embedded-recall-composite-count-distinct */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 34,
+          "message": "recall/src/recall.ts:34: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT COUNT(DISTINCT r.input_order) /* CASE: embedded-recall-one-to-one-join-count */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 38,
+          "message": "recall/src/recall.ts:38: [distinct-join-filter] COUNT(DISTINCT) masks filter-side join fan-out; replace those joins with EXISTS and remove DISTINCT from COUNT(expression) (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT m.topic_id, COUNT(DISTINCT m.post_id) /* CASE: embedded-recall-fanout-count-distinct */",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 4,
+          "message": "recall/src/recall.ts:4: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 19)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "await query(sql`SELECT COUNT(DISTINCT slug) /* CASE: embedded-recall-nullable-count-distinct */ FROM nullable_slugs`);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 43,
+          "message": "recall/src/recall.ts:43: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT id /* CASE: embedded-recall-having-distinct-id */ FROM posts",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 46,
+          "message": "recall/src/recall.ts:46: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 19)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "await query(sql`SELECT COUNT(DISTINCT id) FILTER (WHERE author_id IS NOT NULL) /* CASE: embedded-recall-filtered-distinct-id */ FROM posts`);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 52,
+          "message": "recall/src/recall.ts:52: [aggregate-existence-test] COUNT is used only as a boolean existence test; use EXISTS or NOT EXISTS with the same filters (source column 27)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "await query(sql`SELECT (SELECT COUNT(DISTINCT author_id) /* CASE: embedded-recall-count-distinct-existence */ FROM posts) > 0`);",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 53,
+          "message": "recall/src/recall.ts:53: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 19)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "await query(sql`SELECT slug /* CASE: embedded-recall-grouped-key-projection */ FROM posts GROUP BY id`);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 57,
+          "message": "recall/src/recall.ts:57: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 25)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const composite = sql`SELECT topic_id, COUNT(DISTINCT post_id) /* CASE: append-recall-composite-count-distinct */ `;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 59,
+          "message": "recall/src/recall.ts:59: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 22)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const joined = sql`SELECT COUNT(DISTINCT r.input_order) /* CASE: append-recall-one-to-one-join-count */ `;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 6,
+          "message": "recall/src/recall.ts:6: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT * /* CASE: embedded-recall-union-star */ FROM (",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 61,
+          "message": "recall/src/recall.ts:61: [distinct-join-filter] COUNT(DISTINCT) masks filter-side join fan-out; replace those joins with EXISTS and remove DISTINCT from COUNT(expression) (source column 22)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const fanout = sql`SELECT m.topic_id, COUNT(DISTINCT m.post_id) /* CASE: append-recall-fanout-count-distinct */ `;",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 63,
+          "message": "recall/src/recall.ts:63: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 22)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const having = sql`SELECT id /* CASE: append-recall-having-distinct-id */ FROM posts `;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 65,
+          "message": "recall/src/recall.ts:65: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 24)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const filtered = sql`SELECT COUNT(DISTINCT id) FILTER (WHERE author_id IS NOT NULL) /* CASE: append-recall-filtered-distinct-id */ `;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 69,
+          "message": "recall/src/recall.ts:69: [aggregate-existence-test] COUNT is used only as a boolean existence test; use EXISTS or NOT EXISTS with the same filters (source column 33)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const existence = sql`SELECT (SELECT COUNT(DISTINCT author_id) /* CASE: append-recall-count-distinct-existence */ `;",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 71,
+          "message": "recall/src/recall.ts:71: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 23)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const grouped = sql`SELECT slug /* CASE: append-recall-grouped-key-projection */ FROM posts `;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 90,
+          "message": "recall/src/recall.ts:90: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT id /* CASE: embedded-recall-recursive-unrelated-key */ FROM posts",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/recall.ts",
+          "line": 99,
+          "message": "recall/src/recall.ts:99: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 25)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "statement.append(sql` SELECT DISTINCT id /* CASE: append-recall-recursive-unrelated-key */ FROM posts`);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/same-line.ts",
+          "line": 4,
+          "message": "recall/src/same-line.ts:4: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 126)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const unicode = \"é\"; await query(sql`SELECT DISTINCT id /* CASE: embedded-same-line-first */ FROM posts`); await query(sql`SELECT DISTINCT id /* CASE: embedded-same-line-second */ FROM posts`);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/same-line.ts",
+          "line": 4,
+          "message": "recall/src/same-line.ts:4: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 40)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const unicode = \"é\"; await query(sql`SELECT DISTINCT id /* CASE: embedded-same-line-first */ FROM posts`); await query(sql`SELECT DISTINCT id /* CASE: embedded-same-line-second */ FROM posts`);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/same-line.ts",
+          "line": 6,
+          "message": "recall/src/same-line.ts:6: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 175)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const unicodeAppend = \"é\"; const first = sql`SELECT DISTINCT id /* CASE: append-same-line-first */ `; first.append(sql`FROM posts`); await query(first); const second = sql`SELECT DISTINCT id /* CASE: append-same-line-second */ `; second.append(sql`FROM posts`); await query(second); void unicodeAppend;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "recall/src/same-line.ts",
+          "line": 6,
+          "message": "recall/src/same-line.ts:6: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 48)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const unicodeAppend = \"é\"; const first = sql`SELECT DISTINCT id /* CASE: append-same-line-first */ `; first.append(sql`FROM posts`); await query(first); const second = sql`SELECT DISTINCT id /* CASE: append-same-line-second */ `; second.append(sql`FROM posts`); await query(second); void unicodeAppend;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "src/suppress-file.ts",
+          "line": 1,
+          "message": "directive for `postgres-grouping-not-aggregation` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-grouping-not-aggregation",
+          "target": "postgres-grouping-not-aggregation"
+        },
+        {
+          "file": "src/suppress-line.ts",
+          "line": 4,
+          "message": "directive for `postgres-grouping-not-aggregation` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "return query(sql`SELECT DISTINCT post_id FROM topic_memberships WHERE topic_id = ${topicId}`); // no-mistakes-disable-line postgres-grouping-not-aggregation",
+          "target": "postgres-grouping-not-aggregation"
+        },
+        {
+          "file": "src/suppress-next-line-append.ts",
+          "line": 4,
+          "message": "directive for `postgres-grouping-not-aggregation` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-grouping-not-aggregation",
+          "target": "postgres-grouping-not-aggregation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

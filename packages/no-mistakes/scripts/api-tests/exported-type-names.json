@@ -196,6 +196,8 @@
   "PostgresCompleteCatalog",
   "PostgresCompleteCatalogColumn",
   "PostgresCompleteCatalogTable",
+  "PostgresGroupingNotAggregationCode",
+  "PostgresGroupingNotAggregationOptions",
   "PostgresJsonRelationIdsAllowEntry",
   "PostgresJsonRelationIdsOptions",
   "PostgresLockWrittenRowsAllow",

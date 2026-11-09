@@ -208,5 +208,20 @@
     "file": "recall/src/recall.ts",
     "marker": "append-recall-any-distinct-tag-pool",
     "code": "all-of-candidate-pool"
+  },
+  {
+    "file": "recall/raw/recall.sql",
+    "marker": "recall-any-distinct-tag-pool",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "embedded-recall-any-distinct-tag-pool",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "append-recall-any-distinct-tag-pool",
+    "code": "distinct-over-unique-key"
   }
 ]
