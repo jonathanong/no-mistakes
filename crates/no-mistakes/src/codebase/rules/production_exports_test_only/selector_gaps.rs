@@ -37,7 +37,7 @@ pub(super) fn push_binding_gaps(
                     })
                 })
                 .unwrap_or(1);
-            format!("Non-literal dynamic import specifier at column {column}; use a literal named import")
+            format!("Runtime-resolved import at column {column}; exports reached through it are unknown")
         } else {
             diagnostic.message.clone()
         };

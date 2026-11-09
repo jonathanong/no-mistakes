@@ -67,7 +67,12 @@ fn uncertain(
     line: usize,
     reason: &str,
 ) -> RuleFinding {
-    let detail = format!("cannot analyze production export importers: {reason}; use explicit named imports and statically analyzable exports");
+    let advice = if reason.starts_with("Runtime-resolved import") {
+        ""
+    } else {
+        "; use explicit named imports and statically analyzable exports"
+    };
+    let detail = format!("cannot analyze production export importers: {reason}{advice}");
     RuleFinding {
         causes: Vec::new(),
         rule: RULE_ID.to_owned(),

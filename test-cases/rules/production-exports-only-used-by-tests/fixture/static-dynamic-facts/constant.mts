@@ -1,0 +1,13 @@
+const relative = "./target.mjs";
+const alias = relative;
+await import(relative);
+await import(alias);
+await import(alias);
+await import(`./target.mjs`);
+await import("./target.mjs");
+await import(new URL("./target.mjs", import.meta.url));
+await import(new URL("./target.mjs", import.meta.url).href);
+await import(new URL("./target.mjs", import.meta.url).pathname);
+await import(String(new URL("./target.mjs", import.meta.url)));
+const href = new URL("../target.mjs", import.meta.url).href;
+await import(href);

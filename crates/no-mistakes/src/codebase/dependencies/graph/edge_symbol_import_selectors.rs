@@ -138,6 +138,7 @@ fn selector_unknown(
         return;
     } else if source.starts_with('.')
         || source.starts_with('/')
+        || Path::new(source).is_absolute()
         || inputs
             .workspace
             .recognizes_specifier_from(source, inputs.path)

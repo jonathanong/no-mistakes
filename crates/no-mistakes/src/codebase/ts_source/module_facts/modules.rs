@@ -14,6 +14,7 @@ mod type_selection;
 
 pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts, arguments: bool) {
     let mut node_loaders = super::node_loaders::Collector::new(semantic);
+    let mut static_dynamic = super::static_dynamic::Collector::new(semantic);
     let mut assignments = Vec::new();
     let mut inline_bindings = facts
         .bindings
@@ -75,6 +76,7 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
                         .push((value.span.start, names, calls));
                 }
                 loads::dynamic(value, facts);
+                static_dynamic.collect(value, node.id(), facts);
             }
             AstKind::CallExpression(value) => {
                 mock_boundaries::collect(value, node.id(), semantic, facts);

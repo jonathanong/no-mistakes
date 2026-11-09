@@ -147,7 +147,15 @@ fn collect_symbol_import_selectors_file(
     collect_type_import_selectors(&inputs, file_facts, exported, &mut edges, &mut sites);
     let mock_sites = typed_mock_import_sites(file_facts);
     let proven_sites = proven_dynamic_selectors(&inputs, file_facts);
+    let folded_sites =
+        collect_folded_dynamic_imports(&inputs, file_facts, exported, &mut edges, &mut sites);
     for import in &file_facts.imports {
+        if import.computed
+            && import.kind == ImportKind::Dynamic
+            && folded_sites.contains(&(import.specifier.as_str(), import.line))
+        {
+            continue;
+        }
         if !import.computed
             && import.kind == ImportKind::Dynamic
             && mock_sites.contains(&(import.specifier.as_str(), import.line))

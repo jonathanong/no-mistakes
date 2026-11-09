@@ -133,8 +133,11 @@ pub(super) fn incomplete_sources(
                 && !(ts.module_bindings.is_some()
                     && import.kind == crate::codebase::dependencies::extract::ImportKind::Dynamic)
         }) {
-            incomplete.push((file.clone(), import.line as usize,
-                "computed import target prevents complete per-symbol analysis; use a literal named import".to_owned()));
+            incomplete.push((
+                file.clone(),
+                import.line as usize,
+                "Runtime-resolved import target; exports reached through it are unknown".to_owned(),
+            ));
         }
         push_module_selector_gaps(file, ts, graph, &mut incomplete);
     }
