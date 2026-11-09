@@ -1,0 +1,27 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "selected_provider": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/provider.mts",
+          "import": "client.get",
+          "line": 1,
+          "message": "forbidden call (application #1): module export `@vendor/valkey#primary.get`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function factory() { return ({ client }) => client.get(); }",
+          "target": "module export `@vendor/valkey#primary.get`"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
