@@ -26,4 +26,8 @@ rules:
         - { file: src/review-array-aliases.mts, symbol: shadowedFormalPure }
         - { file: src/review-array-aliases.mts, symbol: shadowedArrowPure }
         - { file: src/review-array-aliases.mts, symbol: capturedMutates }
+        - { file: src/review-array-aliases.mts, symbol: readOnlyLength }
+        - { file: src/review-array-aliases.mts, symbol: writtenLength }
+        - { file: src/review-array-aliases.mts, symbol: readOnlyComputedLength }
+        - { file: src/review-array-aliases.mts, symbol: updatedLength }
       assertions: [{ module: "node:assert", export: strictEqual }]

@@ -128,3 +128,23 @@ export function capturedMutates() {
   });
   capturedHoles.map(owner);
 }
+export function readOnlyLength() {
+  const readOnlyHoles = [,];
+  readOnlyHoles.find((value, index, array) => array.length > 0);
+  readOnlyHoles.map(owner);
+}
+export function writtenLength() {
+  const writtenLengthHoles = [,];
+  writtenLengthHoles.find((value, index, array) => { array.length = 0; return false; });
+  writtenLengthHoles.map(owner);
+}
+export function readOnlyComputedLength() {
+  const computedLengthHoles = [,];
+  computedLengthHoles.find((value, index, array) => array['length'] > 0);
+  computedLengthHoles.map(owner);
+}
+export function updatedLength() {
+  const updatedLengthHoles = [,];
+  updatedLengthHoles.find((value, index, array) => { array['length']--; return false; });
+  updatedLengthHoles.map(owner);
+}

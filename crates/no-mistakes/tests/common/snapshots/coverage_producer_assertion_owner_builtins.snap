@@ -1957,6 +1957,58 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unknownCallback"
         },
         {
+          "causes": [
+            {
+              "callee": "updatedLengthHoles.find",
+              "detail": "callee target is unknown",
+              "file": "src/review-array-aliases.mts",
+              "kind": "unresolved-dispatch",
+              "line": 148,
+              "sourceLine": "updatedLengthHoles.find((value, index, array) => { array['length']--; return false; });"
+            },
+            {
+              "callee": "updatedLengthHoles.map",
+              "detail": "callee target is unknown",
+              "file": "src/review-array-aliases.mts",
+              "kind": "unresolved-dispatch",
+              "line": 149,
+              "sourceLine": "updatedLengthHoles.map(owner);"
+            }
+          ],
+          "file": "src/review-array-aliases.mts",
+          "line": 146,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/review-array-aliases.mts:148 callee `updatedLengthHoles.find` (callee target is unknown); unresolved dispatch at src/review-array-aliases.mts:149 callee `updatedLengthHoles.map` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/review-array-aliases.mts#updatedLength",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function updatedLength() {",
+          "target": "updatedLength"
+        },
+        {
+          "causes": [
+            {
+              "callee": "writtenLengthHoles.find",
+              "detail": "callee target is unknown",
+              "file": "src/review-array-aliases.mts",
+              "kind": "unresolved-dispatch",
+              "line": 138,
+              "sourceLine": "writtenLengthHoles.find((value, index, array) => { array.length = 0; return false; });"
+            },
+            {
+              "callee": "writtenLengthHoles.map",
+              "detail": "callee target is unknown",
+              "file": "src/review-array-aliases.mts",
+              "kind": "unresolved-dispatch",
+              "line": 139,
+              "sourceLine": "writtenLengthHoles.map(owner);"
+            }
+          ],
+          "file": "src/review-array-aliases.mts",
+          "line": 136,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/review-array-aliases.mts:138 callee `writtenLengthHoles.find` (callee target is unknown); unresolved dispatch at src/review-array-aliases.mts:139 callee `writtenLengthHoles.map` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/review-array-aliases.mts#writtenLength",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function writtenLength() {",
+          "target": "writtenLength"
+        },
+        {
           "file": "src/review-array-aliases.mts",
           "line": 106,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-array-aliases.mts#shadowedFormalPure",
@@ -1974,11 +2026,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/review-array-aliases.mts",
+          "line": 131,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-array-aliases.mts#readOnlyLength",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function readOnlyLength() {",
+          "target": "readOnlyLength"
+        },
+        {
+          "file": "src/review-array-aliases.mts",
           "line": 14,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-array-aliases.mts#freshConditional",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function freshConditional(flag: boolean) {",
           "target": "freshConditional"
+        },
+        {
+          "file": "src/review-array-aliases.mts",
+          "line": 141,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-array-aliases.mts#readOnlyComputedLength",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function readOnlyComputedLength() {",
+          "target": "readOnlyComputedLength"
         },
         {
           "file": "src/review-array-aliases.mts",
@@ -2075,11 +2143,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/review-array-aliases.mts",
+          "line": 131,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-array-aliases.mts#readOnlyLength",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function readOnlyLength() {",
+          "target": "readOnlyLength"
+        },
+        {
+          "file": "src/review-array-aliases.mts",
           "line": 14,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-array-aliases.mts#freshConditional",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function freshConditional(flag: boolean) {",
           "target": "freshConditional"
+        },
+        {
+          "file": "src/review-array-aliases.mts",
+          "line": 141,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-array-aliases.mts#readOnlyComputedLength",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function readOnlyComputedLength() {",
+          "target": "readOnlyComputedLength"
         },
         {
           "file": "src/review-array-aliases.mts",
