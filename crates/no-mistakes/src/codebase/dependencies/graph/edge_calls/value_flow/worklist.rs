@@ -5,6 +5,8 @@ use super::*;
 mod replacement_incoming;
 
 include!("worklist_entry.rs");
+#[path = "callback_parameter_cache.rs"]
+mod callback_parameters;
 
 pub(in super::super::super) fn refine_value_calls_with_incoming(
     inputs: &GraphEdgeBuildInputs<'_>,
@@ -16,6 +18,7 @@ pub(in super::super::super) fn refine_value_calls_with_incoming(
     mut expand: impl FnMut(&[ResolvedCallSite]) -> Vec<ResolvedCallSite>,
 ) {
     let incoming = data.incoming;
+    let callbacks = callback_parameters::Caches::default();
     let replacements = replacement_catalog::ReplacementCatalog::prepare(
         inputs,
         facts,
@@ -87,6 +90,7 @@ pub(in super::super::super) fn refine_value_calls_with_incoming(
             .map(|(index, site)| {
                 let enabled = visits[&index] <= base.len() + 1;
                 let previous = reset_resolution(site, &base[index]);
+                let cache = callbacks.for_site(site, facts, indexes, &pass.parameter_cache);
                 let used = refine_site_in_place(
                     inputs,
                     facts,
@@ -95,7 +99,7 @@ pub(in super::super::super) fn refine_value_calls_with_incoming(
                     site,
                     ValueInputs {
                         module_writer_phases: &module_writer_phases,
-                        cache: &pass.parameter_cache,
+                        cache,
                         incoming,
                         supers: &pass.super_constructors,
                         replacements: replacements.as_ref(),
@@ -142,6 +146,7 @@ pub(in super::super::super) fn refine_value_calls_with_incoming(
         }
         if !changed.is_empty() {
             changed = pass.parameter_cache.affected(changed);
+            changed = callbacks.invalidate(&pass.parameter_cache, changed);
             pass.parameter_cache.clear();
         }
         for key in changed {
@@ -179,6 +184,9 @@ pub(in super::super::super) fn refine_value_calls_with_incoming(
         admission_mode::capture_edges(&mut snapshot, &pass.edges);
         replacement_incoming::capture(&mut snapshot, incoming, &pass.sites, indexes, facts);
         super::super::super::value_flow_metrics::record_replacements(snapshot);
+        super::super::super::value_flow_metrics::record_callback_ownership_cache(
+            callbacks.initialized(),
+        );
     }
 }
 include!("worklist_edges.rs");
@@ -186,15 +194,3 @@ include!("site_ownership.rs");
 
 include!("worklist_keys.rs");
 include!("initial_sites.rs");
-
-#[cfg(test)]
-#[path = "replacement_edges_tests.rs"]
-mod tests;
-
-#[cfg(all(test, feature = "test-instrumentation"))]
-#[path = "worklist_owned_oracle_tests.rs"]
-mod owned_worklist;
-
-#[cfg(test)]
-#[path = "initial_sites_tests.rs"]
-mod initial_sites_tests;

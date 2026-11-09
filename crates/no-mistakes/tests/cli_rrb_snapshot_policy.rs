@@ -66,6 +66,10 @@ fn coverage_producer_assertion_owner_builtins_json_matches_snapshot() {
         "review-array-from-ignore",
         "review-array-aliases",
         "review-array-aliases-ignore",
+        "consumer-shapes",
+        "review-generic-shapes",
+        "review-generic-shapes-advise",
+        "review-generic-shapes-ignore",
         "json-reviver",
         "member-callback",
         "namespace-all",
@@ -96,6 +100,11 @@ fn coverage_producer_assertion_owner_builtins_json_matches_snapshot() {
     cases.push(rule(
         "storage-closure",
         "coverage-producer-assertion-owner-storage-closure/fixture",
+        "check.yml",
+    ));
+    cases.push(rule(
+        "storage-wrapper",
+        "coverage-producer-assertion-owner-storage-wrapper/fixture",
         "check.yml",
     ));
     assert_saved_fixture("coverage_producer_assertion_owner_builtins", &cases);

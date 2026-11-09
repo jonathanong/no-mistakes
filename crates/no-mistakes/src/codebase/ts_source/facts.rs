@@ -80,6 +80,7 @@ pub struct TsFileFacts {
     pub builtin_receiver_calls: crate::fx::FxHashSet<u32>,
     /// Exact callback positions proved by the receiver's built-in family.
     pub builtin_callback_calls: crate::fx::FxHashMap<(u32, u32), Option<&'static [usize]>>,
+    pub known_nonbuiltin_receiver_calls: crate::fx::FxHashSet<(u32, u32)>,
     pub module_bindings: Option<Arc<super::module_facts::TypeScriptModuleFacts>>,
     /// A source read or collector failure. Consumers that need a complete
     /// answer must surface this instead of treating the empty facts as a

@@ -1,0 +1,29 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/consumer-shapes.ts, symbol: untypedNumber }
+        - { file: src/consumer-shapes.ts, symbol: untypedJoin }
+        - { file: src/consumer-shapes.ts, symbol: untypedHas }
+        - { file: src/consumer-shapes.ts, symbol: untypedCustom }
+        - { file: src/consumer-shapes.ts, symbol: typedWrong }
+        - { file: src/consumer-shapes.ts, symbol: customSink }
+        - { file: src/consumer-shapes.ts, symbol: unknownNumber }
+        - { file: src/consumer-shapes.ts, symbol: anyNumber }
+        - { file: src/consumer-shapes.ts, symbol: localUnknown }
+        - { file: src/consumer-shapes.ts, symbol: resultUnknown }
+        - { file: src/consumer-shapes.ts, symbol: resultUnknownFactory }
+        - { file: src/consumer-shapes.ts, symbol: wrongLiteral }
+        - { file: src/consumer-shapes.ts, symbol: unknownFind }
+        - { file: src/consumer-shapes.ts, symbol: castedBinding }
+        - { file: src/consumer-shapes.ts, symbol: directCasted }
+        - { file: src/consumer-shapes.ts, symbol: directAssertion }
+        - { file: src/consumer-shapes.ts, symbol: unknownCast }
+        - { file: src/consumer-shapes.ts, symbol: anyCast }
+        - { file: src/consumer-shapes.ts, symbol: unknownCastBinding }
+        - { file: src/consumer-shapes.ts, symbol: arrayFindOwner }
+        - { file: src/consumer-shapes.ts, symbol: arrayFindNoOwner }
+        - { file: src/consumer-shapes.ts, symbol: setHas }
+      assertions: [{ module: "node:assert", export: strictEqual }]

@@ -60,3 +60,12 @@ pub(super) fn record_builtin_callback_sites(count: usize) {
 #[cfg(test)]
 #[path = "value_flow_metrics_tests.rs"]
 pub(crate) mod tests;
+
+thread_local! { static LAST_CALLBACK_OWNERSHIP_CACHE: std::cell::Cell<bool> = const { std::cell::Cell::new(false) }; }
+pub(super) fn record_callback_ownership_cache(initialized: bool) {
+    LAST_CALLBACK_OWNERSHIP_CACHE.set(initialized);
+}
+#[cfg(test)]
+pub fn callback_ownership_cache_initialized() -> bool {
+    LAST_CALLBACK_OWNERSHIP_CACHE.get()
+}

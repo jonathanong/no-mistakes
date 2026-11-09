@@ -56,20 +56,36 @@ pub(super) fn classify<'a>(
     let file = facts.get_ts_facts(&site.file)?;
     let mut native = false;
     let mut leaf = false;
-    for call in selected {
-        match file.builtin_callback_calls.get(&(call.offset, call.end))? {
-            Some(positions) => {
-                native = true;
-                collect_arguments(Some(call), positions, node_sites, &mut out);
-            }
-            None => leaf = true,
+    let mut missing = false;
+    for call in &selected {
+        if file
+            .known_nonbuiltin_receiver_calls
+            .contains(&(call.offset, call.end))
+        {
+            return None;
         }
+        match file.builtin_callback_calls.get(&(call.offset, call.end)) {
+            Some(Some(positions)) => {
+                native = true;
+                collect_arguments(Some(*call), positions, node_sites, &mut out);
+            }
+            Some(None) => leaf = true,
+            None => missing = true,
+        }
+    }
+    if missing && (native || leaf) {
+        return None;
     }
     if native {
         return Some(out);
     }
     let (receiver, method) = site.source_callee.rsplit_once('.')?;
-    (leaf && (GLOBAL_OBJECTS.contains(&receiver) || METHODS.contains(&method))).then_some(out)
+    (leaf && (GLOBAL_OBJECTS.contains(&receiver) || METHODS.contains(&method))
+        || missing
+            && !selected.is_empty()
+            && matches!(site.target, ResolvedCallTarget::Unknown)
+            && METHODS.contains(&method))
+    .then_some(out)
 }
 
 fn collect_arguments<'a>(

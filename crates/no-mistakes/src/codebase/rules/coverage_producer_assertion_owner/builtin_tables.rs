@@ -10,7 +10,7 @@ pub(super) const GLOBAL_FUNCTIONS: &[&str] = &[
 /// Global functions which run their first argument later.
 pub(super) const TIMERS: &[&str] = &["setTimeout", "setInterval", "setImmediate"];
 /// String, RegExp, Date, Array, Map, Set, Error, console, and AsyncLocalStorage
-/// prototype methods accepted only with receiver provenance.
+/// prototype method names; proven receivers or untyped unknown calls qualify as leaves.
 #[rustfmt::skip]
 pub(super) const METHODS: &[&str] = &[
     "trim", "trimStart", "trimEnd", "slice", "split", "padStart", "padEnd", "startsWith",

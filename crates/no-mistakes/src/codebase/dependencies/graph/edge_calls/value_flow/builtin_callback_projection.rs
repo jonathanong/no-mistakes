@@ -79,7 +79,7 @@ pub(in super::super) fn project_builtin_callbacks(
     } else {
         let incoming = refine::incoming_inputs(&pass.sites, &pass.constructor_routes, indexes, facts);
         let phases = execution_phases::ModuleWriterPhases::default();
-        let cache = ParameterCache::default();
+        let cache = ParameterCache::for_callback_ownership();
         sites.par_iter_mut().for_each(|site| {
             if site.target_node.is_some() { return; }
             refine::refine_site_in_place(

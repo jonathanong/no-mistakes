@@ -45,6 +45,7 @@ pub(super) struct Names {
     pub(super) map: FxHashMap<String, Vec<Option<ValueKind>>>,
     pub(super) properties: FxHashMap<String, FxHashMap<String, Vec<Option<ValueKind>>>>,
     pub(super) storage_constructors: FxHashSet<String>,
+    pub(super) custom_names: FxHashSet<String>,
     pub(super) unstable_array_lengths: FxHashSet<String>,
 }
 

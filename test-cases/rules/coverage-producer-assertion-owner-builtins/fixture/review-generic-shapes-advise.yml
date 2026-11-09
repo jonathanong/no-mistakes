@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/review-generic-shapes.mts, symbol: scriptRun }
+        - { file: src/review-generic-shapes.mts, symbol: explicitUnknown }
+        - { file: src/review-generic-shapes.mts, symbol: customMethod }
+        - { file: src/review-generic-shapes.mts, symbol: wrongKnownReceiver }
+        - { file: src/review-generic-shapes.mts, symbol: unresolvedWithoutCaller }
+      assertions: [{ module: "node:assert", export: strictEqual }]
+      unanalyzable: advise

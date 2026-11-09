@@ -128,6 +128,9 @@ impl<'a> Visit<'a> for ArrayUses {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         if let Expression::StaticMemberExpression(member) = call.callee.without_parentheses() {
             let method = member.property.name.as_str();
+            if method == "join" && !self.local_callback {
+                self.safe_identifier(&member.object);
+            }
             if matches!(
                 method,
                 "forEach"

@@ -4,6 +4,7 @@
 mod array_escapes;
 mod callback_arguments;
 mod contextual;
+mod known_wrong;
 mod names;
 mod proof;
 mod tables;
@@ -20,6 +21,7 @@ pub(crate) use tables::GLOBAL_OBJECTS;
 pub(crate) struct ProvenCalls {
     pub(crate) calls: FxHashSet<u32>,
     pub(crate) callbacks: FxHashMap<(u32, u32), Option<&'static [usize]>>,
+    pub(crate) known_nonbuiltin: FxHashSet<(u32, u32)>,
 }
 
 pub(crate) fn collect(program: &Program<'_>) -> ProvenCalls {
@@ -52,10 +54,6 @@ struct Decls {
 }
 
 impl Decls {
-    fn declare(&mut self, name: &str, kind: Option<ValueKind>) {
-        self.next.record(name, kind);
-    }
-
     fn declare_properties(&mut self, name: &str, ty: &TSType<'_>) {
         for (property, kind) in values::property_types(&self.prior, ty) {
             self.next.record_property(name, &property, kind);
@@ -84,7 +82,14 @@ impl<'a> Visit<'a> for Decls {
             }
             _ => None,
         };
-        self.declare(id.name.as_str(), kind);
+        known_wrong::record_custom(
+            &mut self.next,
+            id.name.as_str(),
+            kind,
+            node.type_annotation.as_ref().map(|ty| &ty.type_annotation),
+            node.init.as_ref(),
+        );
+        self.next.record(id.name.as_str(), kind);
         if let Some(annotation) = &node.type_annotation {
             self.declare_properties(id.name.as_str(), &annotation.type_annotation);
         }
@@ -99,10 +104,15 @@ impl<'a> Visit<'a> for Decls {
         else {
             return walk::walk_formal_parameter(self, node);
         };
-        self.declare(
+        let kind = self.prior.type_kind(&annotation.type_annotation);
+        known_wrong::record_custom(
+            &mut self.next,
             id.name.as_str(),
-            self.prior.type_kind(&annotation.type_annotation),
+            kind,
+            Some(&annotation.type_annotation),
+            node.initializer.as_deref(),
         );
+        self.next.record(id.name.as_str(), kind);
         self.declare_properties(id.name.as_str(), &annotation.type_annotation);
         if let Some(init) = &node.initializer {
             self.visit_expression(init);
@@ -123,7 +133,7 @@ impl<'a> Visit<'a> for Decls {
 
     fn visit_import_specifier(&mut self, node: &ImportSpecifier<'a>) {
         let builtin = self.hooks && node.imported.name() == "AsyncLocalStorage";
-        self.declare(
+        self.next.record(
             node.local.name.as_str(),
             builtin.then_some(ValueKind::Builtin),
         );
@@ -135,7 +145,7 @@ impl<'a> Visit<'a> for Decls {
     }
 
     fn visit_binding_identifier(&mut self, node: &BindingIdentifier<'a>) {
-        self.declare(node.name.as_str(), None);
+        self.next.record(node.name.as_str(), None);
     }
 }
 
@@ -148,12 +158,15 @@ impl<'a> Visit<'a> for Calls<'_> {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         if let Expression::StaticMemberExpression(member) = call.callee.without_parentheses() {
             let method = member.property.name.as_str();
+            let key = (call.span.start, call.span.end);
+            if known_wrong::receiver(self.names, &member.object, method) {
+                self.out.known_nonbuiltin.insert(key);
+            }
             let shadowed_array_from = method == "from"
                 && matches!(&member.object, Expression::Identifier(id)
                     if id.name == "Array" && !self.names.global(&id.name));
             if !shadowed_array_from && self.names.builtin(&member.object, Some(method), 0) {
                 self.out.calls.insert(call.span.start);
-                let key = (call.span.start, call.span.end);
                 if let Some(positions) = self.names.callback_positions(&member.object, method) {
                     let positions = callback_arguments::callable_positions(
                         self.names,

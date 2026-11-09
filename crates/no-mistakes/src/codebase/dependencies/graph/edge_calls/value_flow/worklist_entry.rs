@@ -30,3 +30,15 @@ pub(in super::super::super) fn refine_value_calls(
         |_| Vec::new(),
     );
 }
+
+#[cfg(test)]
+#[path = "replacement_edges_tests.rs"]
+mod tests;
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "worklist_owned_oracle_tests.rs"]
+mod owned_worklist;
+
+#[cfg(test)]
+#[path = "initial_sites_tests.rs"]
+mod initial_sites_tests;

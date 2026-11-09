@@ -126,6 +126,9 @@ mod json_tests;
 #[path = "builtin_receivers_storage_constructor_tests.rs"]
 mod storage_constructor_tests;
 
+#[path = "builtin_receivers_consumer_shapes_tests.rs"]
+mod consumer_shapes_tests;
+
 #[test]
 fn contextual_primitive_proofs_need_explicit_source_types() {
     let source = proof_source("proof-primitives.mts");

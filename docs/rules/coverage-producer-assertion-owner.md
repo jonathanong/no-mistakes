@@ -184,7 +184,7 @@ unresolved dispatch.
   `Buffer`, `URL`, `performance`; plus `parseInt`, `parseFloat`, `isNaN`,
   `isFinite`, `encodeURIComponent`, `decodeURIComponent`, `structuredClone`.
 - Prototype methods (`trim`, `slice`, `split`, `join`, `push`, `has`, `get`, `set`,
-  `test`, `getTime`, `log`, ...) only on a receiver which is provably built-in
+  `test`, `getTime`, `log`, ...) on a receiver which is provably built-in
   in the same file: a string, number, regular expression, template, or array
   literal; an object literal without a member of that name; `new` of a built-in
   constructor (`Map`, `Set`, `Date`, `RegExp`, `Promise`, `AsyncLocalStorage`,
@@ -192,11 +192,11 @@ unresolved dispatch.
   result-preserving methods on such a receiver (`text.trim().split(',')`); or a
   name whose every declaration is built-in, through an annotation (`string`,
   `T[]`, `Map<...>`, ...) or a `const` initializer of the kinds above. A receiver
-  whose type is unknown stays `callee target is unknown`, even when the method
-  name matches a built-in: a repository `Sink.push` is never mistaken for
-  `Array.prototype.push`. A name collision can only keep a producer uncertain,
-  never make it a definitive no-owner error. Annotate the binding (`path: string`)
-  to make the proof explicit.
+  whose type cannot be established also admits a method-name fallback for these
+  non-callback leaves, such as `amount.toFixed(2)`. This fallback supplies no
+  assertion evidence. Resolved repository methods are still traversed, and known
+  custom or incompatible receiver types retain dispatch uncertainty. Callback-taking
+  methods require the receiver proof described below.
 - `AsyncLocalStorage` `getStore`, `enterWith`, `disable`, `run`, and `exit`,
   on constructed or typed instances in files which import it from `async_hooks`
   or `node:async_hooks`. The imported constructor itself is not an instance.
@@ -229,14 +229,18 @@ and the timers `setTimeout`, `setInterval`, and `setImmediate`. The built-in exe
 named function the call graph resolves at that exact argument occurrence is
 traversed and can reach an assertion. This includes imported helpers, local
 aliases, and callback parameters when the canonical call graph proves the
-callers' arguments. Direct assertion imports passed as callbacks also count as
+callers' arguments. For ownership callback resolution, known callable arguments
+from any caller are followed even when another caller supplies an unknown value.
+The callback remains unresolved when no caller supplies a resolvable function.
+Ordinary call reports retain their existing parameter-agreement behavior.
+Direct assertion imports passed as callbacks also count as
 executed assertions. Promise continuations (`then` / `finally`) and
 `AsyncLocalStorage.run` use the same resolution as array iteration. Imported
 aliases of the Node `AsyncLocalStorage` constructor retain receiver provenance.
 Proven `run` / `exit` calls also forward their trailing arguments into the
 callback for assertion ownership. Unknown or spread arguments retain uncertainty.
-Actual built-in invocations also contribute uncertainty to helper parameter
-resolution; an unrelated direct caller cannot prove a callback's arguments.
+Actual built-in invocations still contribute uncertainty to values passed into
+the callback; an unrelated direct caller cannot prove those invocation arguments.
 
 The receiver family must support the callback method: `new Map().then(owner)`
 and `(1).map(owner)` supply no ownership evidence. Callback execution is represented
@@ -244,7 +248,8 @@ by opt-in `assertion-owner` edges; enabling the rule leaves ordinary `call` quer
 and call-site reports unchanged.
 Zero-length arrays execute no iteration callbacks. Sparse arrays still execute
 the `find` family and `Array.from` callbacks for holes. Mutating or escaping an
-array invalidates its length proof and retains dispatch uncertainty. Known empty
+array invalidates its length proof and retains dispatch uncertainty. Read-only
+calls such as `join` do not invalidate a later `find` callback proof. Known empty
 results from `slice` and `splice` still execute no callbacks, including on sparse arrays.
 Conditional aliases share this invalidation with their source arrays. Writes or
 escapes through a known callback's array parameter also invalidate length evidence;

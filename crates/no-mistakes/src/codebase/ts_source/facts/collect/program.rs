@@ -100,6 +100,7 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
     TsFileFacts {
         builtin_receiver_calls: builtin_calls.calls,
         builtin_callback_calls: builtin_calls.callbacks,
+        known_nonbuiltin_receiver_calls: builtin_calls.known_nonbuiltin,
         ancestry,
         module_bindings: (plan.module_bindings || plan.call_arguments).then(|| {
             Arc::new(match semantic {

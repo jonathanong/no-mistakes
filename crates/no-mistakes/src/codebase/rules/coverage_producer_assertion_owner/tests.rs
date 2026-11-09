@@ -220,6 +220,10 @@ mod external_stars;
 mod builtin_callback_coverage_tests;
 #[path = "tests/builtin_callbacks.rs"]
 mod builtin_callbacks;
+#[path = "tests/consumer_shapes_tests.rs"]
+mod consumer_shapes_tests;
+#[path = "tests/generic_shapes.rs"]
+mod generic_shapes;
 #[path = "tests/json_reviver_tests.rs"]
 mod json_reviver_tests;
 #[path = "tests/storage_constructor_tests.rs"]
