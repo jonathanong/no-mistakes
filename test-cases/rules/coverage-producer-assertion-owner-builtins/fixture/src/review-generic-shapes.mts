@@ -3,7 +3,7 @@ import { owner } from './owner.mjs';
 
 type Result = { value: string };
 const context = new AsyncLocalStorage<Result>();
-const PARTITIONS = ['ALPHA', 'BETA'];
+const PARTITIONS = ['ALPHA', 'BETA'] as const;
 
 function invoke(handler: () => Result): Result {
   return context.run({ value: '' }, handler)!;

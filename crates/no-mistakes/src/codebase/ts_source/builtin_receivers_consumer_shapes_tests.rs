@@ -56,3 +56,17 @@ fn leaf_fallback_excludes_known_custom_and_wrong_receivers() {
         vec![None]
     );
 }
+
+#[test]
+fn const_array_assertion_preserves_native_callback_and_leaf_proofs() {
+    let source = proof_source("review-generic-shapes.mts");
+    let facts = proven_facts(&source);
+    assert_eq!(
+        callback_values(&source, "PARTITIONS.find", &facts),
+        vec![Some(vec![0])]
+    );
+    assert_eq!(
+        callback_values(&source, "PARTITIONS.join", &facts),
+        vec![None]
+    );
+}

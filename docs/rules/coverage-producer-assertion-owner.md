@@ -191,7 +191,8 @@ unresolved dispatch.
   ...); a built-in factory such as `Array.from` or `Object.keys`; a chain of
   result-preserving methods on such a receiver (`text.trim().split(',')`); or a
   name whose every declaration is built-in, through an annotation (`string`,
-  `T[]`, `Map<...>`, ...) or a `const` initializer of the kinds above. A receiver
+  `T[]`, `Map<...>`, ...) or a `const` initializer of the kinds above, including
+  an `as const` assertion on a literal array. A receiver
   whose type cannot be established also admits a method-name fallback for these
   non-callback leaves, such as `amount.toFixed(2)`. This fallback supplies no
   assertion evidence. Resolved repository methods are still traversed, and known

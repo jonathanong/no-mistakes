@@ -55,6 +55,9 @@ impl Names {
                     }
                 })
             }
+            Expression::TSAsExpression(cast) if cast.type_annotation.is_const_type_reference() => {
+                self.value_kind(&cast.expression, depth + 1)
+            }
             Expression::TSAsExpression(cast) => self.type_kind(&cast.type_annotation),
             Expression::TSNonNullExpression(inner) => self.value_kind(&inner.expression, depth + 1),
             Expression::ConditionalExpression(cond) => {

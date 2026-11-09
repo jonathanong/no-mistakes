@@ -33,7 +33,7 @@ fn generic_native_shapes_reduce_unresolved_dispatches() {
         .map_or(0, Vec::len);
     assert_eq!(
         script_causes, 0,
-        "the frozen 73e baseline has two dispatches here: {script}"
+        "the frozen 73e baseline has three dispatches here with `as const`: {script}"
     );
     assert_eq!(
         findings
@@ -42,7 +42,7 @@ fn generic_native_shapes_reduce_unresolved_dispatches() {
             .map(Vec::len)
             .sum::<usize>(),
         2,
-        "the frozen 73e baseline has five dispatches across these same four findings: {report}"
+        "the frozen 73e baseline has six dispatches across these same four findings with `as const`: {report}"
     );
     let explicitly_unknown = finding(findings, "explicitUnknown");
     assert!(
