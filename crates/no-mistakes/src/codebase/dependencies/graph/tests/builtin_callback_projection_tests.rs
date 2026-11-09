@@ -135,3 +135,52 @@ fn missing_prepared_inline_scope_does_not_invent_callback_identity() {
         .iter()
         .any(|call| call.offset == id.0));
 }
+
+#[test]
+fn storage_forwarded_arguments_refine_only_assertion_ownership() {
+    let (root, graph) = fixture_graph(false);
+    let source = root.join("src/storage-forwarded.mts");
+    let owner = root.join("src/owner.mts");
+    for caller in ["invokeRun", "invokeExit"] {
+        let projected = graph
+            .assertion_call_sites()
+            .iter()
+            .find(|site| {
+                site.file == source
+                    && site.caller.as_deref() == Some(caller)
+                    && site.source_callee == "fn"
+            })
+            .expect("forwarded native callback argument resolves nested invocation");
+        assert!(
+            projected
+                .target_nodes()
+                .any(|target| target.as_file() == Some(owner.as_path())),
+            "{projected:?}"
+        );
+        let ordinary = graph
+            .resolved_call_sites()
+            .iter()
+            .find(|site| {
+                site.file == source
+                    && site.caller.as_deref() == Some(caller)
+                    && site.source_callee == "fn"
+            })
+            .unwrap();
+        assert!(ordinary.target_node.is_none(), "{ordinary:?}");
+    }
+    for caller in [
+        "conflicting",
+        "invokeSpread",
+        "invokeMissing",
+        "invokePromise",
+        "invokeArray",
+        "invokeTimer",
+    ] {
+        assert!(!graph.assertion_call_sites().iter().any(|site| {
+            site.file == source
+                && site.caller.as_deref() == Some(caller)
+                && site.source_callee == "fn"
+                && site.target_node.is_some()
+        }));
+    }
+}

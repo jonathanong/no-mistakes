@@ -53,6 +53,12 @@ fn coverage_producer_assertion_owner_builtins_json_matches_snapshot() {
         "globals",
         "imported-callback",
         "continuations",
+        "review-parent",
+        "review-parent-ignore",
+        "review-storage",
+        "review-context",
+        "review-array",
+        "review-array-ignore",
         "member-callback",
         "namespace-all",
         "namespace-default",
@@ -70,10 +76,15 @@ fn coverage_producer_assertion_owner_builtins_json_matches_snapshot() {
         "external-nested",
         "disabled",
     ];
-    let cases: Vec<Case> = names
+    let mut cases: Vec<Case> = names
         .iter()
         .map(|name| rule(name, dir, &format!("{name}.yml")))
         .collect();
+    cases.push(rule(
+        "without-storage",
+        "coverage-producer-assertion-owner-builtins-no-storage/fixture",
+        "check.yml",
+    ));
     assert_saved_fixture("coverage_producer_assertion_owner_builtins", &cases);
 }
 

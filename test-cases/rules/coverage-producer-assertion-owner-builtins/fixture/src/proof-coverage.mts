@@ -18,6 +18,7 @@ export function callbackShape(
   });
 
   words.map((text) => text.trim().toLowerCase().padEnd(4).slice(0));
+  words.map((text) => text.trim().toLowerCase());
   words.map((text) => text.trimStart().trimEnd().padStart(2).padEnd(2).substring(0)
     .toUpperCase().repeat(1).concat('x').normalize().replace('x', 'y').replaceAll('y', 'z'));
   words.map((text) => {

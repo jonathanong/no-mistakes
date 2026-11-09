@@ -30,6 +30,7 @@ impl Names {
                     .elements
                     .iter()
                     .all(|item| matches!(item, ArrayExpressionElement::Elision(_))),
+                length: super::array_escapes::literal_length(array),
             }),
             Expression::Identifier(id) => self.named(id.name.as_str()),
             Expression::StaticMemberExpression(member) => {
@@ -93,6 +94,7 @@ impl Names {
             ValueKind::Array {
                 element,
                 empty: false,
+                ..
             } => element,
             _ => None,
         }
@@ -134,14 +136,43 @@ fn agreed(values: &[Option<ValueKind>]) -> Option<ValueKind> {
     if values.iter().all(|value| *value == Some(first)) {
         return Some(first);
     }
+    let ValueKind::Array {
+        element,
+        empty,
+        length,
+    } = first
+    else {
+        return None;
+    };
     values
         .iter()
         .all(|value| matches!(value, Some(ValueKind::Array { .. })))
         .then(|| ValueKind::Array {
-            element: None,
+            element: values
+                .iter()
+                .all(|value| {
+                    matches!(value,
+                Some(ValueKind::Array { element: other, empty: other_empty, length: other_len })
+                    if *other == element && *other_empty == empty
+                        && (*other_len == Some(0)) == (length == Some(0)))
+                })
+                .then_some(element)
+                .flatten(),
             empty: values
                 .iter()
                 .all(|value| matches!(value, Some(ValueKind::Array { empty: true, .. }))),
+            length: match values.first().copied().flatten() {
+                Some(ValueKind::Array {
+                    length: Some(len), ..
+                }) if values.iter().all(|value| {
+                    matches!(value,
+                        Some(ValueKind::Array { length: Some(other), .. }) if *other == len)
+                }) =>
+                {
+                    Some(len)
+                }
+                _ => None,
+            },
         })
 }
 

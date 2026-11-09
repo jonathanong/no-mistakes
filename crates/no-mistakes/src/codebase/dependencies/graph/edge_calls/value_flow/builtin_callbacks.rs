@@ -3,7 +3,18 @@ use super::*;
 impl CallableFileIndex {
     pub(in super::super) fn prepare_builtin_callbacks(&mut self, file: &TsFileFacts) {
         use crate::codebase::dependencies::extract::{ValueCall, ValueExpression};
-        if file.builtin_callback_calls.values().all(|proof| proof.is_none()) { return; }
+        for call in &file.value_flow.calls {
+            if matches!(&call.callee, ValueExpression::Named { name, scope: None, .. }
+                if matches!(name.as_str(), "setTimeout" | "setInterval" | "setImmediate")
+                    && !self.imported.contains_key(name)) {
+                if let Some(ValueExpression::Named { offset, .. }) = call.arguments.first() {
+                    self.values.native_callbacks.insert(*offset);
+                }
+                if let Some(ValueExpression::Callable(id)) = call.arguments.first() {
+                    self.values.native_callbacks.insert(id.0);
+                }
+            }
+        }
         let lines: FxHashMap<_, _> = file
             .function_calls
             .iter()
@@ -69,6 +80,15 @@ impl CallableFileIndex {
                     .entry(offset)
                     .or_default()
                     .insert(name.clone(), (offset, end));
+                self.values.native_callbacks.insert(offset);
+                let forwarded = match (call.source_callee.rsplit('.').next(), positions) {
+                    (Some("run"), [1]) => Some(2),
+                    (Some("exit"), [0]) => Some(1),
+                    _ => None,
+                };
+                if forwarded.is_some() {
+                    self.values.forwarded_callbacks.insert(offset);
+                }
                 self.values.calls.insert(
                     (offset, end),
                     ValueCall {
@@ -77,10 +97,12 @@ impl CallableFileIndex {
                         context: call.context,
                         source_callee: name.clone(),
                         callee: argument.clone(),
-                        arguments: std::sync::Arc::new(Vec::new()),
+                        arguments: std::sync::Arc::new(
+                            forwarded.map_or_else(Vec::new, |start| call.arguments[start..].to_vec()),
+                        ),
                         last_argument_literal: false,
                         bound: false,
-                        spread_at: None,
+                        spread_at: forwarded.and_then(|start| call.spread_at.map(|spread| spread - start)),
                         once: false,
                         repeated: call.repeated,
                     },

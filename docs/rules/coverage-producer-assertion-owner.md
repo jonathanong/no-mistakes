@@ -220,7 +220,7 @@ re-export, or add an assertion-bearing owner or genuine ownership contract.
 Modeled Node I/O through a proven star still requires an assertion owner.
 
 A built-in that invokes a callback keeps the proof: `map`, `filter`, `forEach`,
-`flatMap`, `reduce`, `some`, `every`, `find`, `findIndex`, `sort`, `then`,
+`flatMap`, `reduce`, `some`, `every`, `find`, `findIndex`, `findLast`, `findLastIndex`, `sort`, `then`,
 `catch`, `finally`, `replace` / `replaceAll` (second argument), `Array.from` (second argument), `AsyncLocalStorage.run` /
 `exit`, and the timers `setTimeout`, `setInterval`, and `setImmediate`. The built-in executes the callback, so an inline function or a
 named function the call graph resolves at that exact argument occurrence is
@@ -230,11 +230,19 @@ callers' arguments. Direct assertion imports passed as callbacks also count as
 executed assertions. Promise continuations (`then` / `finally`) and
 `AsyncLocalStorage.run` use the same resolution as array iteration. Imported
 aliases of the Node `AsyncLocalStorage` constructor retain receiver provenance.
+Proven `run` / `exit` calls also forward their trailing arguments into the
+callback for assertion ownership. Unknown or spread arguments retain uncertainty.
+Actual built-in invocations also contribute uncertainty to helper parameter
+resolution; an unrelated direct caller cannot prove a callback's arguments.
 
 The receiver family must support the callback method: `new Map().then(owner)`
 and `(1).map(owner)` supply no ownership evidence. Callback execution is represented
 by opt-in `assertion-owner` edges; enabling the rule leaves ordinary `call` queries
 and call-site reports unchanged.
+Zero-length arrays execute no iteration callbacks. Sparse arrays still execute
+the `find` family and `Array.from` callbacks for holes. Mutating or escaping an
+array invalidates its length proof and retains dispatch uncertainty. Known empty
+results from `slice` and `splice` still execute no callbacks, including on sparse arrays.
 
 An explicit array element type also supplies context for inline callback parameters:
 `rows: number[]` makes `rows.map(r => r.toFixed(1)).join(',')` ordinary built-in
@@ -242,6 +250,9 @@ work. Declared string properties retain their type through a member read, and a
 global `Date.UTC(...)` result is numeric when `Date` is not shadowed. Unknown
 elements and stored function elements do not acquire callable identities from an
 array annotation.
+Both `sort` / `toSorted` comparator parameters receive the element type.
+Parameter writes invalidate that context. Proven numeric `toExponential` and
+`toPrecision` calls are ordinary built-in work and still require an assertion owner.
 
 An argument with no resolved callable identity (including an unbound parameter,
 a conditional expression, a member read, or a call result) remains ``built-in callback `name` is not
@@ -251,6 +262,8 @@ with the same name, supplies no evidence for this argument. Chained calls retain
 each invocation’s argument positions: `Promise.resolve(owner).finally(noop)`
 does not execute `owner`, while `Promise.resolve().then(owner).finally(noop)`
 reaches it through `then`.
+Calls sharing a start offset and spelling must each have their own complete
+span proof; an unproven call in that group retains dispatch uncertainty.
 
 ```ts
 export function owned(items: number[]) { items.map((item) => assertItem(item)); } // reaches assertItem

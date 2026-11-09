@@ -3,6 +3,8 @@ use super::*;
 #[derive(Clone, Default)]
 pub(in super::super) struct FlowFileIndex {
     pub(in super::super) builtin_callbacks: Vec<FunctionCall>,
+    pub(super) forwarded_callbacks: FxHashSet<u32>,
+    pub(super) native_callbacks: FxHashSet<u32>,
     pub(super) callable_value_uses: Option<std::sync::Arc<FxHashMap<usize, FxHashSet<String>>>>,
     pub(super) synthetic_callbacks: FxHashSet<String>,
     pub(super) immediate_factory_results: FxHashSet<(u32, u32)>,
@@ -36,13 +38,16 @@ impl ParameterInput {
         facts: &dyn TsFactLookup,
     ) -> Self {
         Self {
-            callback: site.invocation == InvocationKind::Callback,
+            callback: site.invocation == InvocationKind::Callback
+                && !indexes.file(facts, &site.file).is_some_and(|index| {
+                    index.values.forwarded_callbacks.contains(&site.offset)
+                }),
             file: site.file.clone(),
             offset: site.offset,
             callee: site.source_callee.clone(),
             synthetic_callback: site.invocation == InvocationKind::Callback
                 && indexes.file(facts, &site.file).is_some_and(|index| {
-                    index
+                    !index.values.native_callbacks.contains(&site.offset) && index
                         .values
                         .synthetic_callbacks
                         .contains(site.source_callee.as_str())

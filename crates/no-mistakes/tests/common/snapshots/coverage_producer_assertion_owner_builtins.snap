@@ -1497,6 +1497,500 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "review-array": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "escapedRows.forEach",
+              "detail": "callee target is unknown",
+              "file": "src/review-array.mts",
+              "kind": "unresolved-dispatch",
+              "line": 17,
+              "sourceLine": "const escapedRows = []; mutate(escapedRows); escapedRows.forEach(owner);"
+            },
+            {
+              "callee": "mutate",
+              "detail": "callee target is unknown",
+              "file": "src/review-array.mts",
+              "kind": "unresolved-dispatch",
+              "line": 17,
+              "sourceLine": "const escapedRows = []; mutate(escapedRows); escapedRows.forEach(owner);"
+            }
+          ],
+          "file": "src/review-array.mts",
+          "line": 16,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/review-array.mts:17 callee `mutate` (callee target is unknown); unresolved dispatch at src/review-array.mts:17 callee `escapedRows.forEach` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/review-array.mts#escaped",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function escaped(mutate: (rows: unknown[]) => void) {",
+          "target": "escaped"
+        },
+        {
+          "causes": [
+            {
+              "callee": "holes.find",
+              "detail": "callee target is unknown",
+              "file": "src/review-array.mts",
+              "kind": "unresolved-dispatch",
+              "line": 8,
+              "sourceLine": "export function mutatedHoles() { const holes = [,]; holes.pop(); holes.find(owner); }"
+            }
+          ],
+          "file": "src/review-array.mts",
+          "line": 8,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/review-array.mts:8 callee `holes.find` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/review-array.mts#mutatedHoles",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function mutatedHoles() { const holes = [,]; holes.pop(); holes.find(owner); }",
+          "target": "mutatedHoles"
+        },
+        {
+          "causes": [
+            {
+              "callee": "mutableSource.forEach",
+              "detail": "callee target is unknown",
+              "file": "src/review-array.mts",
+              "kind": "unresolved-dispatch",
+              "line": 14,
+              "sourceLine": "const mutableSource = []; const mutableAlias = mutableSource; mutableAlias.push(1); mutableSource.forEach(owner);"
+            }
+          ],
+          "file": "src/review-array.mts",
+          "line": 13,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/review-array.mts:14 callee `mutableSource.forEach` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/review-array.mts#aliasMutated",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function aliasMutated() {",
+          "target": "aliasMutated"
+        },
+        {
+          "causes": [
+            {
+              "callee": "mutatedRows.forEach",
+              "detail": "callee target is unknown",
+              "file": "src/review-array.mts",
+              "kind": "unresolved-dispatch",
+              "line": 12,
+              "sourceLine": "export function mutated() { const mutatedRows = []; mutatedRows.push(1); mutatedRows.forEach(owner); }"
+            }
+          ],
+          "file": "src/review-array.mts",
+          "line": 12,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/review-array.mts:12 callee `mutatedRows.forEach` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/review-array.mts#mutated",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function mutated() { const mutatedRows = []; mutatedRows.push(1); mutatedRows.forEach(owner); }",
+          "target": "mutated"
+        },
+        {
+          "file": "src/review-array.mts",
+          "line": 10,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-array.mts#emptyStable",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function emptyStable() { const empty = []; empty.findLastIndex(owner); }",
+          "target": "emptyStable"
+        },
+        {
+          "file": "src/review-array.mts",
+          "line": 11,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-array.mts#sparseSkip",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function sparseSkip() { const sparse = [,]; sparse.map(owner); }",
+          "target": "sparseSkip"
+        },
+        {
+          "file": "src/review-array.mts",
+          "line": 5,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-array.mts#emptySparseSlice",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function emptySparseSlice() { [,].slice(1).find(owner); }",
+          "target": "emptySparseSlice"
+        },
+        {
+          "file": "src/review-array.mts",
+          "line": 6,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-array.mts#emptySparseSplice",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function emptySparseSplice() { [,,].splice(0, 0).find(owner); }",
+          "target": "emptySparseSplice"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review-array-ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/review-array.mts",
+          "line": 10,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-array.mts#emptyStable",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function emptyStable() { const empty = []; empty.findLastIndex(owner); }",
+          "target": "emptyStable"
+        },
+        {
+          "file": "src/review-array.mts",
+          "line": 11,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-array.mts#sparseSkip",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function sparseSkip() { const sparse = [,]; sparse.map(owner); }",
+          "target": "sparseSkip"
+        },
+        {
+          "file": "src/review-array.mts",
+          "line": 5,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-array.mts#emptySparseSlice",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function emptySparseSlice() { [,].slice(1).find(owner); }",
+          "target": "emptySparseSlice"
+        },
+        {
+          "file": "src/review-array.mts",
+          "line": 6,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-array.mts#emptySparseSplice",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function emptySparseSplice() { [,,].splice(0, 0).find(owner); }",
+          "target": "emptySparseSplice"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review-context": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "factory",
+              "detail": "callee target is unknown",
+              "file": "src/review-context.mts",
+              "kind": "unresolved-dispatch",
+              "line": 14,
+              "sourceLine": "words.forEach(text => { text = factory(); text.trim(); });"
+            },
+            {
+              "callee": "text.trim",
+              "detail": "callee target is unknown",
+              "file": "src/review-context.mts",
+              "kind": "unresolved-dispatch",
+              "line": 14,
+              "sourceLine": "words.forEach(text => { text = factory(); text.trim(); });"
+            }
+          ],
+          "file": "src/review-context.mts",
+          "line": 13,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/review-context.mts:14 callee `factory` (callee target is unknown); unresolved dispatch at src/review-context.mts:14 callee `text.trim` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/review-context.mts#writtenString",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function writtenString(words: string[], factory: () => unknown) {",
+          "target": "writtenString"
+        },
+        {
+          "file": "src/review-context.mts",
+          "line": 1,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-context.mts#numericComparator",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function numericComparator(rows: number[]) {",
+          "target": "numericComparator"
+        },
+        {
+          "file": "src/review-context.mts",
+          "line": 10,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-context.mts#lastIndexContext",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function lastIndexContext(values: string[]) {",
+          "target": "lastIndexContext"
+        },
+        {
+          "file": "src/review-context.mts",
+          "line": 4,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-context.mts#stringComparator",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function stringComparator(words: string[]) {",
+          "target": "stringComparator"
+        },
+        {
+          "file": "src/review-context.mts",
+          "line": 7,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-context.mts#stringChain",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function stringChain(words: string[]) {",
+          "target": "stringChain"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review-parent": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.find",
+              "detail": "callee target is unknown",
+              "file": "src/review-parent.mts",
+              "kind": "unresolved-dispatch",
+              "line": 12,
+              "sourceLine": "return rows.map(makeObject).find(owner).find(opaque);"
+            }
+          ],
+          "file": "src/review-parent.mts",
+          "line": 11,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/review-parent.mts:12 callee `<unknown>.find` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/review-parent.mts#repeatedFindOwner",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function repeatedFindOwner(rows: number[], opaque: (value: unknown) => boolean) {",
+          "target": "repeatedFindOwner"
+        },
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.find",
+              "detail": "callee target is unknown",
+              "file": "src/review-parent.mts",
+              "kind": "unresolved-dispatch",
+              "line": 5,
+              "sourceLine": "return rows.map(makeObject).find(predicate).find(opaque);"
+            }
+          ],
+          "file": "src/review-parent.mts",
+          "line": 4,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/review-parent.mts:5 callee `<unknown>.find` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/review-parent.mts#repeatedFind",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function repeatedFind(rows: number[], opaque: (value: unknown) => boolean) {",
+          "target": "repeatedFind"
+        },
+        {
+          "file": "src/review-parent.mts",
+          "line": 7,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-parent.mts#numberMethods",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function numberMethods(rows: number[]) {",
+          "target": "numberMethods"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review-parent-ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/review-parent.mts",
+          "line": 7,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/review-parent.mts#numberMethods",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function numberMethods(rows: number[]) {",
+          "target": "numberMethods"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review-storage": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "fn",
+              "detail": "callee target is unknown",
+              "file": "src/storage-forwarded.mts",
+              "kind": "unresolved-dispatch",
+              "line": 11,
+              "sourceLine": "function invokeSpread(fn: () => void) { fn(); }"
+            }
+          ],
+          "file": "src/storage-forwarded.mts",
+          "line": 12,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/storage-forwarded.mts:11 callee `fn` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/storage-forwarded.mts#forwardedSpread",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function forwardedSpread(callbacks: (() => void)[]) {",
+          "target": "forwardedSpread"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fn",
+              "detail": "callee target is unknown",
+              "file": "src/storage-forwarded.mts",
+              "kind": "unresolved-dispatch",
+              "line": 15,
+              "sourceLine": "function invokeMissing(fn: () => void) { fn(); }"
+            }
+          ],
+          "file": "src/storage-forwarded.mts",
+          "line": 16,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/storage-forwarded.mts:15 callee `fn` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/storage-forwarded.mts#missingAlternate",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function missingAlternate() {",
+          "target": "missingAlternate"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fn",
+              "detail": "callee target is unknown",
+              "file": "src/storage-forwarded.mts",
+              "kind": "unresolved-dispatch",
+              "line": 20,
+              "sourceLine": "function invokePromise(fn: () => void) { fn(); }"
+            }
+          ],
+          "file": "src/storage-forwarded.mts",
+          "line": 21,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/storage-forwarded.mts:20 callee `fn` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/storage-forwarded.mts#promiseAlternate",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function promiseAlternate() {",
+          "target": "promiseAlternate"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fn",
+              "detail": "callee target is unknown",
+              "file": "src/storage-forwarded.mts",
+              "kind": "unresolved-dispatch",
+              "line": 25,
+              "sourceLine": "function invokeArray(fn: () => void) { fn(); }"
+            }
+          ],
+          "file": "src/storage-forwarded.mts",
+          "line": 26,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/storage-forwarded.mts:25 callee `fn` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/storage-forwarded.mts#arrayAlternate",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function arrayAlternate() {",
+          "target": "arrayAlternate"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fn",
+              "detail": "callee target is unknown",
+              "file": "src/storage-forwarded.mts",
+              "kind": "unresolved-dispatch",
+              "line": 30,
+              "sourceLine": "function invokeTimer(fn: () => void) { fn(); }"
+            }
+          ],
+          "file": "src/storage-forwarded.mts",
+          "line": 31,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/storage-forwarded.mts:30 callee `fn` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/storage-forwarded.mts#timerAlternate",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function timerAlternate() {",
+          "target": "timerAlternate"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fn",
+              "detail": "callee target is unknown",
+              "file": "src/storage-forwarded.mts",
+              "kind": "unresolved-dispatch",
+              "line": 35,
+              "sourceLine": "function ordinaryArrayInvoke(fn: () => void) { fn(); }"
+            }
+          ],
+          "file": "src/storage-forwarded.mts",
+          "line": 37,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/storage-forwarded.mts:35 callee `fn` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/storage-forwarded.mts#ordinaryArrayAlternate",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function ordinaryArrayAlternate() { [1].map(ordinaryArrayInvoke); }",
+          "target": "ordinaryArrayAlternate"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fn",
+              "detail": "callee target is unknown",
+              "file": "src/storage-forwarded.mts",
+              "kind": "unresolved-dispatch",
+              "line": 38,
+              "sourceLine": "function ordinaryPromiseInvoke(fn: () => void) { fn(); }"
+            }
+          ],
+          "file": "src/storage-forwarded.mts",
+          "line": 40,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/storage-forwarded.mts:38 callee `fn` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/storage-forwarded.mts#ordinaryPromiseAlternate",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function ordinaryPromiseAlternate() { Promise.resolve().then(ordinaryPromiseInvoke); }",
+          "target": "ordinaryPromiseAlternate"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fn",
+              "detail": "callee target is unknown",
+              "file": "src/storage-forwarded.mts",
+              "kind": "unresolved-dispatch",
+              "line": 41,
+              "sourceLine": "function ordinaryTimerInvoke(fn: () => void) { fn(); }"
+            }
+          ],
+          "file": "src/storage-forwarded.mts",
+          "line": 43,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/storage-forwarded.mts:41 callee `fn` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/storage-forwarded.mts#ordinaryTimerAlternate",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function ordinaryTimerAlternate() { setTimeout(ordinaryTimerInvoke); }",
+          "target": "ordinaryTimerAlternate"
+        },
+        {
+          "causes": [
+            {
+              "callee": "fn",
+              "detail": "callee target is unknown",
+              "file": "src/storage-forwarded.mts",
+              "kind": "unresolved-dispatch",
+              "line": 6,
+              "sourceLine": "function conflicting(fn: () => void) { fn(); }"
+            }
+          ],
+          "file": "src/storage-forwarded.mts",
+          "line": 9,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/storage-forwarded.mts:6 callee `fn` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/storage-forwarded.mts#forwardedConflict",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function forwardedConflict() { storage.run('id', conflicting, owner); }",
+          "target": "forwardedConflict"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "third-party": {
     "exitCode": 1,
     "report": {
@@ -1554,6 +2048,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function thirdPartyCatch() { format([1], 'a'); try { JSON.parse('1'); } catch (e) { Sentry.captureException(e); } }",
           "target": "thirdPartyCatch"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "without-storage": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.finally",
+              "detail": "built-in callback `callback` is not statically resolved",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 7,
+              "sourceLine": "export function unknown(callback: () => void) { return Promise.resolve(1).finally(callback); }"
+            }
+          ],
+          "file": "src/producers.mts",
+          "line": 7,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:7 callee `<unknown>.finally` (built-in callback `callback` is not statically resolved); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#unknown",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function unknown(callback: () => void) { return Promise.resolve(1).finally(callback); }",
+          "target": "unknown"
         }
       ],
       "warnings": []

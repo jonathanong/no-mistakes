@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/review-parent.mts, symbol: repeatedFind }
+        - { file: src/review-parent.mts, symbol: repeatedFindOwner }
+        - { file: src/review-parent.mts, symbol: numberMethods }
+      assertions: [{ module: "node:assert", export: strictEqual }]
+      unanalyzable: ignore

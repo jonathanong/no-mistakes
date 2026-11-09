@@ -17,10 +17,12 @@ pub(in super::super) fn value_kind_from_type(ty: &TSType<'_>) -> Option<ValueKin
         TSType::TSArrayType(array) => Some(ValueKind::Array {
             element: value_kind_from_type(&array.element_type).and_then(PrimitiveKind::from_value),
             empty: false,
+            length: None,
         }),
         TSType::TSTupleType(_) => Some(ValueKind::Array {
             element: None,
             empty: false,
+            length: None,
         }),
         TSType::TSTypeReference(reference) => reference_kind(reference),
         TSType::TSParenthesizedType(inner) => value_kind_from_type(&inner.type_annotation),
@@ -50,6 +52,7 @@ fn union_kind(union: &TSUnionType<'_>) -> Option<ValueKind> {
         return Some(ValueKind::Array {
             element: None,
             empty: false,
+            length: None,
         });
     }
     kinds
@@ -72,6 +75,7 @@ fn reference_kind(reference: &TSTypeReference<'_>) -> Option<ValueKind> {
                 .and_then(value_kind_from_type)
                 .and_then(PrimitiveKind::from_value),
             empty: false,
+            length: None,
         }),
         "Promise" | "PromiseLike" => Some(ValueKind::Promise),
         "AsyncLocalStorage" => Some(ValueKind::Builtin),

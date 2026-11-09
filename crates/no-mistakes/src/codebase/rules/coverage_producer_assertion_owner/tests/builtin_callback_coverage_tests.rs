@@ -71,3 +71,29 @@ fn missing_inline_callback_site_is_uncertain() {
     });
     assert_eq!(unresolved, Some(vec!["argument 1".to_string()]));
 }
+
+#[test]
+fn repeated_method_group_requires_every_exact_span_to_be_proven() {
+    let root = crate::test_support::rule_fixture_root("coverage-producer-assertion-owner-builtins");
+    let result = classify_saved_call(&root.join("src/review-parent.mts"), |call, file| {
+        call.source_callee.ends_with(".find")
+            && !file
+                .builtin_callback_calls
+                .contains_key(&(call.offset, call.end))
+    });
+    assert!(result.is_none());
+}
+
+#[test]
+fn ignored_uncertainty_keeps_proven_numeric_missing_owner_findings() {
+    let root = crate::test_support::rule_fixture_root("coverage-producer-assertion-owner-builtins");
+    let input = crate::napi_api::options::test_json_arg(serde_json::json!({
+        "root": root, "config": root.join("review-parent-ignore.yml")
+    }));
+    let report: serde_json::Value =
+        serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap();
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{report}");
+    assert_eq!(findings[0]["target"], "numberMethods", "{report}");
+    assert!(findings[0].get("causes").is_none(), "{report}");
+}

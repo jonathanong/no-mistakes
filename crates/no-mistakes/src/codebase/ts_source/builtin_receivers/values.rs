@@ -1,5 +1,6 @@
 use super::names::{Names, ValueKind};
 use super::tables::{FACTORIES, PRESERVING};
+mod array_lengths;
 mod type_values;
 use oxc_ast::ast::*;
 pub(super) use type_values::{property_types, value_kind_from_type};
@@ -16,6 +17,7 @@ pub(super) const ARRAY_CALLBACKS: &[&str] = &[
     "find",
     "findIndex",
     "findLast",
+    "findLastIndex",
     "sort",
     "toSorted",
 ];
@@ -33,6 +35,7 @@ pub(super) fn constructor_kind(name: &str) -> ValueKind {
         "Array" => ValueKind::Array {
             element: None,
             empty: false,
+            length: None,
         },
         "Promise" => ValueKind::Promise,
         "AsyncLocalStorage" => ValueKind::AsyncStorage,
@@ -74,12 +77,19 @@ pub(super) fn call_result(
     if let Expression::Identifier(id) = &member.object {
         if names.global(&id.name) && FACTORIES.contains(&(id.name.as_str(), method)) {
             let mut result = factory_kind(id.name.as_str(), method);
-            if id.name == "Array" && method == "from"
-                && call.arguments.first().is_some_and(|argument| {
-                    matches!(argument, Argument::ArrayExpression(array) if array.elements.is_empty())
-                })
-            {
-                result = ValueKind::Array { element: None, empty: true };
+            if id.name == "Array" && method == "from" {
+                if let Some(ValueKind::Array { empty, length, .. }) = call
+                    .arguments
+                    .first()
+                    .and_then(Argument::as_expression)
+                    .and_then(|arg| names.value_kind(arg, depth + 1))
+                {
+                    result = ValueKind::Array {
+                        element: None,
+                        empty: length == Some(0) || empty && length.is_none(),
+                        length,
+                    };
+                }
             }
             return Some(result);
         }
@@ -88,12 +98,16 @@ pub(super) fn call_result(
     if !PRESERVING.contains(&method) || !names.builtin(&member.object, Some(method), depth + 1) {
         return None;
     }
-    preserved_result(receiver, method)
+    preserved_result(receiver, method, call)
 }
 
-fn preserved_result(receiver: ValueKind, method: &str) -> Option<ValueKind> {
+fn preserved_result(
+    receiver: ValueKind,
+    method: &str,
+    call: &CallExpression<'_>,
+) -> Option<ValueKind> {
     match receiver {
-        ValueKind::Array { empty, .. }
+        ValueKind::Array { empty, length, .. }
             if matches!(
                 method,
                 "map"
@@ -107,14 +121,17 @@ fn preserved_result(receiver: ValueKind, method: &str) -> Option<ValueKind> {
                     | "splice"
             ) =>
         {
+            let result_length = array_lengths::result_length(method, length, empty, call);
             Some(ValueKind::Array {
                 element: None,
-                empty,
+                empty: result_length == Some(0) || (empty && method != "toSorted"),
+                length: result_length,
             })
         }
         ValueKind::Array { .. } if method == "concat" => Some(ValueKind::Array {
             element: None,
             empty: false,
+            length: None,
         }),
         ValueKind::Array { .. } if matches!(method, "join" | "toString") => Some(ValueKind::String),
         ValueKind::Array { .. } if matches!(method, "keys" | "values" | "entries") => {
@@ -126,6 +143,7 @@ fn preserved_result(receiver: ValueKind, method: &str) -> Option<ValueKind> {
         ValueKind::String if method == "split" => Some(ValueKind::Array {
             element: Some(super::names::PrimitiveKind::String),
             empty: false,
+            length: None,
         }),
         ValueKind::String
             if matches!(
@@ -165,6 +183,7 @@ fn factory_kind(owner: &str, method: &str) -> ValueKind {
         ("Array", _) | ("Object", "keys" | "values" | "entries") => ValueKind::Array {
             element: None,
             empty: false,
+            length: None,
         },
         ("Promise", _) => ValueKind::Promise,
         ("String", _) | ("JSON", "stringify") => ValueKind::String,

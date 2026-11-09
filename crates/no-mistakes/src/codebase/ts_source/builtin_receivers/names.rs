@@ -12,6 +12,7 @@ pub(super) enum ValueKind {
     Array {
         element: Option<PrimitiveKind>,
         empty: bool,
+        length: Option<usize>,
     },
     Promise,
     AsyncStorage,
@@ -44,6 +45,7 @@ pub(super) struct Names {
     pub(super) map: FxHashMap<String, Vec<Option<ValueKind>>>,
     pub(super) properties: FxHashMap<String, FxHashMap<String, Vec<Option<ValueKind>>>>,
     pub(super) storage_constructors: FxHashSet<String>,
+    pub(super) unstable_array_lengths: FxHashSet<String>,
 }
 
 impl Names {
@@ -81,6 +83,7 @@ impl Names {
                     ValueKind::Array {
                         element: None,
                         empty: false,
+                        length: None,
                     }
                 } else {
                     ValueKind::Builtin

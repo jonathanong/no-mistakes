@@ -1,0 +1,20 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/review-array.mts, symbol: sparseFind }
+        - { file: src/review-array.mts, symbol: sparseNamed }
+        - { file: src/review-array.mts, symbol: sparseSorted }
+        - { file: src/review-array.mts, symbol: emptySparseSlice }
+        - { file: src/review-array.mts, symbol: emptySparseSplice }
+        - { file: src/review-array.mts, symbol: holeSlice }
+        - { file: src/review-array.mts, symbol: mutatedHoles }
+        - { file: src/review-array.mts, symbol: lastIndex }
+        - { file: src/review-array.mts, symbol: emptyStable }
+        - { file: src/review-array.mts, symbol: sparseSkip }
+        - { file: src/review-array.mts, symbol: mutated }
+        - { file: src/review-array.mts, symbol: aliasMutated }
+        - { file: src/review-array.mts, symbol: escaped }
+      assertions: [{ module: "node:assert", export: strictEqual }]

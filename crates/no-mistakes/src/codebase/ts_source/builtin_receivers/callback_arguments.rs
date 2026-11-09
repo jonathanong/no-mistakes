@@ -1,3 +1,4 @@
+use super::array_escapes::source_array;
 use super::names::{Names, ValueKind};
 use oxc_ast::ast::*;
 
@@ -12,36 +13,53 @@ pub(super) fn callable_positions(
     receiver: &Expression<'_>,
     method: &str,
     positions: &[usize],
-) -> &'static [usize] {
-    let empty_array_receiver = matches!(
-        names.value_kind(receiver, 0),
-        Some(ValueKind::Array { empty: true, .. })
-    );
-    let empty_array_from = method == "from"
+) -> Option<&'static [usize]> {
+    let uncertain_receiver =
+        source_array(receiver).is_some_and(|name| names.unstable_array_lengths.contains(name));
+    let uncertain_from = method == "from"
         && call
             .arguments
             .first()
             .and_then(Argument::as_expression)
-            .is_some_and(|iterable| match iterable.without_parentheses() {
-                Expression::ArrayExpression(array) => array.elements.is_empty(),
-                _ => matches!(
-                    names.value_kind(iterable, 0),
-                    Some(ValueKind::Array { empty: true, .. })
-                ),
-            });
-    if empty_array_receiver || empty_array_from {
-        return NONE;
+            .and_then(source_array)
+            .is_some_and(|name| names.unstable_array_lengths.contains(name));
+    if uncertain_receiver || uncertain_from {
+        return None;
+    }
+    let holes_visited = matches!(method, "find" | "findIndex" | "findLast" | "findLastIndex");
+    if let Some(ValueKind::Array { empty, length, .. }) = names.value_kind(receiver, 0) {
+        if length == Some(0) || (empty && !holes_visited) {
+            return Some(NONE);
+        }
+        if empty && length.is_none() && holes_visited {
+            return None;
+        }
+    }
+    if method == "from" {
+        if let Some(ValueKind::Array { empty, length, .. }) = call
+            .arguments
+            .first()
+            .and_then(Argument::as_expression)
+            .and_then(|iterable| names.value_kind(iterable, 0))
+        {
+            if length == Some(0) {
+                return Some(NONE);
+            }
+            if empty && length.is_none() {
+                return None;
+            }
+        }
     }
     let first =
         positions.contains(&0) && call.arguments.first().is_none_or(argument_may_be_callable);
     let second =
         positions.contains(&1) && call.arguments.get(1).is_none_or(argument_may_be_callable);
-    match (first, second) {
+    Some(match (first, second) {
         (true, true) => BOTH,
         (true, false) => FIRST,
         (false, true) => SECOND,
         (false, false) => NONE,
-    }
+    })
 }
 
 fn argument_may_be_callable(argument: &Argument<'_>) -> bool {

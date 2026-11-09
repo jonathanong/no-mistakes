@@ -34,14 +34,27 @@ pub(crate) fn check(
     let replaced: FxHashSet<_> = graph
         .assertion_call_sites()
         .iter()
-        .map(|site| (&site.file, site.caller_id, site.offset))
+        .map(|site| {
+            (
+                &site.file,
+                site.caller_id,
+                site.offset,
+                site.invocation,
+                &site.source_callee,
+            )
+        })
         .collect();
     for site in graph
         .resolved_call_sites()
         .iter()
         .filter(|site| {
-            site.invocation != crate::codebase::dependencies::extract::InvocationKind::Callback
-                || !replaced.contains(&(&site.file, site.caller_id, site.offset))
+            !replaced.contains(&(
+                &site.file,
+                site.caller_id,
+                site.offset,
+                site.invocation,
+                &site.source_callee,
+            ))
         })
         .chain(graph.assertion_call_sites())
     {

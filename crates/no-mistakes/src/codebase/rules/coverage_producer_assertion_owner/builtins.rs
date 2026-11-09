@@ -56,13 +56,12 @@ pub(super) fn classify<'a>(
     let mut native = false;
     let mut leaf = false;
     for call in selected {
-        match file.builtin_callback_calls.get(&(call.offset, call.end)) {
-            Some(Some(positions)) => {
+        match file.builtin_callback_calls.get(&(call.offset, call.end))? {
+            Some(positions) => {
                 native = true;
                 collect_arguments(Some(call), positions, node_sites, &mut out);
             }
-            Some(None) => leaf = true,
-            None => {}
+            None => leaf = true,
         }
     }
     if native {

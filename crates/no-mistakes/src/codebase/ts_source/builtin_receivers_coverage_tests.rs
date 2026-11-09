@@ -70,3 +70,47 @@ fn receiver_proofs_cover_callback_shapes_and_property_types() {
         .values()
         .any(|positions| *positions == Some(&[0][..])));
 }
+
+#[test]
+fn contextual_comparators_writes_and_string_chains_are_proven_soundly() {
+    let text = source("review-context.mts");
+    let proof = facts(&text);
+    for needle in [
+        "left.localeCompare",
+        "right.trim()",
+        "left.toFixed()",
+        "right.toExponential()",
+        "word.trim()",
+    ] {
+        let offset = text.find(needle).unwrap() as u32;
+        assert!(proof.calls.contains(&offset), "{needle}");
+    }
+    for function in ["writtenString", "writtenPattern", "writtenExpression"] {
+        let start = text.find(&format!("export function {function}")).unwrap();
+        let tail = &text[start..];
+        let end = tail.find("\nexport function ").unwrap_or(tail.len());
+        for (relative, _) in tail[..end].match_indices("text.trim()") {
+            let write = start + relative;
+            assert!(!proof.calls.contains(&(write as u32)), "{function}");
+        }
+    }
+    let update = text.find("value.toFixed()").unwrap() as u32;
+    assert!(!proof.calls.contains(&update));
+    let callback_cases = text.find("export function callbackShapeCases").unwrap();
+    let tail = &text[callback_cases..];
+    let end = tail.find("\nexport function ").unwrap_or(tail.len());
+    for (relative, _) in tail[..end].match_indices("word.trim()") {
+        assert!(!proof.calls.contains(&((callback_cases + relative) as u32)));
+    }
+    let string_receiver = text.find("String(word).trim()").unwrap() as u32;
+    assert!(proof.calls.contains(&string_receiver));
+    let chain = text.find("text.trim().toLowerCase()").unwrap();
+    let inner_end = chain + "text.trim()".len();
+    let outer_end = chain + "text.trim().toLowerCase()".len();
+    assert!(proof
+        .callbacks
+        .contains_key(&(chain as u32, inner_end as u32)));
+    assert!(proof
+        .callbacks
+        .contains_key(&(chain as u32, outer_end as u32)));
+}

@@ -21,7 +21,7 @@ pub(super) const METHODS: &[&str] = &[
     "matchAll", "toString", "toISOString", "toJSON", "getTime", "getFullYear", "getMonth",
     "getDate", "getDay", "getHours", "getMinutes", "getSeconds", "getMilliseconds",
     "getUTCFullYear", "getUTCMonth", "getUTCDate", "getUTCHours", "getTimezoneOffset", "valueOf",
-    "toFixed", "log", "error", "warn", "info", "debug", "getStore", "enterWith", "disable",
+    "toFixed", "toExponential", "toPrecision", "log", "error", "warn", "info", "debug", "getStore", "enterWith", "disable",
 ];
 /// Node modules whose exports are synchronous value computations.
 #[rustfmt::skip]

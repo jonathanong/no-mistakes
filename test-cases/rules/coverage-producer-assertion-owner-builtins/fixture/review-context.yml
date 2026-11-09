@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/review-context.mts, symbol: numericComparator }
+        - { file: src/review-context.mts, symbol: stringComparator }
+        - { file: src/review-context.mts, symbol: stringChain }
+        - { file: src/review-context.mts, symbol: lastIndexContext }
+        - { file: src/review-context.mts, symbol: writtenString }
+      assertions: [{ module: "node:assert", export: strictEqual }]

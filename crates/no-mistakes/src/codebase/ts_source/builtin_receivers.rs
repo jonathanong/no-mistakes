@@ -1,6 +1,7 @@
 //! Calls whose receiver is provably an ECMAScript or Node built-in value.
 //! The proof is per file and name based: a name is built-in only when every
 //! declaration of it is. Anything else stays unproven.
+mod array_escapes;
 mod callback_arguments;
 mod contextual;
 mod names;
@@ -34,6 +35,7 @@ pub(crate) fn collect(program: &Program<'_>) -> ProvenCalls {
         decls.visit_program(program);
         names = decls.next;
     }
+    array_escapes::invalidate(&mut names, program);
     let mut calls = Calls {
         names: &names,
         out: ProvenCalls::default(),
@@ -75,7 +77,7 @@ impl<'a> Visit<'a> for Decls {
         let kind = match (&node.type_annotation, &node.init) {
             (Some(annotation), init) => {
                 let kind = self.prior.type_kind(&annotation.type_annotation);
-                preserve_empty_array(kind, init.as_ref(), self.kind)
+                array_escapes::preserve_empty_array(kind, init.as_ref(), self.kind)
             }
             (None, Some(init)) if self.kind == VariableDeclarationKind::Const => {
                 self.prior.value_kind(init, 0)
@@ -137,20 +139,6 @@ impl<'a> Visit<'a> for Decls {
     }
 }
 
-fn preserve_empty_array(
-    kind: Option<ValueKind>,
-    init: Option<&Expression<'_>>,
-    declaration_kind: VariableDeclarationKind,
-) -> Option<ValueKind> {
-    let Some(ValueKind::Array { element, .. }) = kind else {
-        return kind;
-    };
-    let empty = declaration_kind == VariableDeclarationKind::Const
-        && matches!(init.map(Expression::without_parentheses), Some(Expression::ArrayExpression(array))
-            if array.elements.iter().all(|item| matches!(item, ArrayExpressionElement::Elision(_))));
-    Some(ValueKind::Array { element, empty })
-}
-
 struct Calls<'n> {
     names: &'n Names,
     out: ProvenCalls,
@@ -174,15 +162,17 @@ impl<'a> Visit<'a> for Calls<'_> {
                         method,
                         positions,
                     );
-                    self.out.callbacks.insert(key, Some(positions));
-                    contextual::collect(
-                        self.names,
-                        call,
-                        &member.object,
-                        method,
-                        positions,
-                        &mut self.out,
-                    );
+                    if let Some(positions) = positions {
+                        self.out.callbacks.insert(key, Some(positions));
+                        contextual::collect(
+                            self.names,
+                            call,
+                            &member.object,
+                            method,
+                            positions,
+                            &mut self.out,
+                        );
+                    }
                 } else {
                     self.out.callbacks.insert(key, None);
                 }
