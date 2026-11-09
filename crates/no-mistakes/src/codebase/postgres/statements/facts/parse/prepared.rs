@@ -99,5 +99,12 @@ pub(super) fn extract_with_bind_values(
     projection: StatementProjection,
     policy: super::super::StatementPolicySources<'_>,
 ) -> SqlStatementFileFacts {
-    extract(sql, collect_bounds, positions, locations, projection, policy)
+    extract(
+        sql,
+        collect_bounds,
+        positions,
+        locations,
+        projection,
+        policy,
+    )
 }

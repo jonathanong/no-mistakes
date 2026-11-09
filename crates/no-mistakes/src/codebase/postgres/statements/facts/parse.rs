@@ -188,15 +188,13 @@ mod json_write_demand_tests;
 mod location_demand_tests;
 #[cfg(test)]
 mod mapped_demand_tests;
+mod policy;
 #[cfg(test)]
 mod policy_projection_tests;
-
-mod policy;
 pub(crate) use policy::extract_sql_statement_facts_with_policy;
+mod bind_values;
 #[cfg(test)]
 mod grouping_demand_tests;
-mod bind_values;
 pub(crate) use bind_values::extract_with_bound_values;
-
 #[cfg(test)]
 mod grouping_recovery_tests;
