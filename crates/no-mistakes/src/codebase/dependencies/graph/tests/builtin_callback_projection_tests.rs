@@ -267,7 +267,7 @@ fn storage_callback_worklist_only_clones_reached_callable_bodies() {
         })
         .count();
     assert_eq!(
-        super::super::value_flow_metrics::builtin_callback_sites(),
+        super::super::value_flow_metrics::tests::builtin_callback_sites(),
         expected
     );
     assert!(expected < graph.resolved_call_sites().len());

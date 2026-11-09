@@ -116,10 +116,9 @@ pub(super) fn collect(names: &Names, program: &Program<'_>, uses: &mut ArrayUses
 
 #[cfg(feature = "test-instrumentation")]
 thread_local! { static LAST_SUMMARIES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
-#[cfg(all(test, feature = "test-instrumentation"))]
-pub(super) fn last_summaries() -> usize {
-    LAST_SUMMARIES.get()
-}
+#[cfg(test)]
+#[path = "array_callback_aliases_tests.rs"]
+pub(crate) mod tests;
 
 #[cfg(feature = "test-instrumentation")]
 pub(super) fn reset_summaries() {

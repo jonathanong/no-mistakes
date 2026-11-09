@@ -109,7 +109,6 @@ pub(super) fn source_array<'e>(expression: &'e Expression<'_>) -> Option<&'e str
 
 include!("array_uses.rs");
 
-#[cfg(all(test, feature = "test-instrumentation"))]
-pub(super) fn callback_summaries() -> usize {
-    callback_aliases::last_summaries()
-}
+#[cfg(test)]
+#[path = "array_escapes_tests.rs"]
+pub(crate) mod tests;

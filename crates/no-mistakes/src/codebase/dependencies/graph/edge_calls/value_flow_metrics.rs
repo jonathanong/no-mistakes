@@ -58,6 +58,5 @@ pub(super) fn record_builtin_callback_sites(count: usize) {
     LAST_BUILTIN_CALLBACK_SITES.set(count);
 }
 #[cfg(test)]
-pub fn builtin_callback_sites() -> usize {
-    LAST_BUILTIN_CALLBACK_SITES.get()
-}
+#[path = "value_flow_metrics_tests.rs"]
+pub(crate) mod tests;

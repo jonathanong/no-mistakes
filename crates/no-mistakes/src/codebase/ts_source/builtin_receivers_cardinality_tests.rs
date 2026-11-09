@@ -153,8 +153,14 @@ fn conditional_array_aliases_and_callback_receivers_propagate_instability() {
 fn array_callback_summaries_skip_unrelated_bodies_and_empty_candidates() {
     let source = proof_source("review-array-aliases.mts");
     let _ = proven_facts(&source);
-    assert_eq!(super::super::super::array_escapes::callback_summaries(), 3);
+    assert_eq!(
+        super::super::super::array_escapes::tests::callback_summaries(),
+        3
+    );
     let source = proof_source("review-no-array-candidates.mts");
     let _ = proven_facts(&source);
-    assert_eq!(super::super::super::array_escapes::callback_summaries(), 0);
+    assert_eq!(
+        super::super::super::array_escapes::tests::callback_summaries(),
+        0
+    );
 }
