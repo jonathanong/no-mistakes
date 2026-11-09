@@ -120,4 +120,12 @@ export async function reviewControls() {
   ) p GROUP BY p.item_id `;
   boundCount.append(sql`HAVING COUNT(DISTINCT ${counted}) = $2`);
   await query(boundCount);
+  // nullable-max-needs-nonnull-input-witness
+  await query(sql`SELECT t.topic_id FROM live_topics AS t GROUP BY t.topic_id
+    HAVING NOT EXISTS (SELECT 1 FROM live_topics AS old WHERE old.topic_id = t.topic_id AND old.deleted_at IS NOT NULL)
+    OR MAX(t.deleted_at) < $1`);
+
+  const nullableMax = sql`SELECT t.topic_id FROM live_topics AS t GROUP BY t.topic_id `;
+  nullableMax.append(sql`HAVING NOT EXISTS (SELECT 1 FROM live_topics AS old WHERE old.topic_id = t.topic_id) OR MAX(t.deleted_at) < $1`);
+  await query(nullableMax);
 }

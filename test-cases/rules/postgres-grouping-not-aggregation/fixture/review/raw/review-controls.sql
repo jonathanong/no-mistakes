@@ -83,3 +83,13 @@ SELECT p.item_id FROM (
   SELECT item_id, tag_id FROM direct_tags
   UNION SELECT item_id, tag_id FROM alias_tags
 ) p GROUP BY p.item_id HAVING COUNT(DISTINCT $3) = $2;
+
+-- nullable-max-needs-nonnull-input-witness
+SELECT t.topic_id FROM live_topics AS t GROUP BY t.topic_id
+HAVING NOT EXISTS (SELECT 1 FROM live_topics AS old WHERE old.topic_id = t.topic_id AND old.deleted_at IS NOT NULL)
+OR MAX(t.deleted_at) < $1;
+
+-- unknown-max-column-is-not-catalog-evidence
+SELECT t.topic_id FROM live_topics AS t GROUP BY t.topic_id
+HAVING NOT EXISTS (SELECT 1 FROM live_topics AS old WHERE old.topic_id = t.topic_id)
+OR MAX(t.missing_timestamp) < $1;

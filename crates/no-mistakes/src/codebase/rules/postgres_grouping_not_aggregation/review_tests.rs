@@ -50,6 +50,20 @@ fn assert_review_findings(records: &[SqlStatementFileFacts], kind: &str) {
                     "{}",
                     finding.message
                 );
+                if (kind == "raw" && position.source_line == 88)
+                    || (kind == "embedded" && [124, 128].contains(&position.source_line))
+                {
+                    for guard in [
+                        "AND EXISTS",
+                        "non-NULL MAX input",
+                        "physical outer table",
+                        "every grouping key",
+                        "independently",
+                        "HAVING rowset",
+                    ] {
+                        assert!(finding.message.contains(guard), "{}", finding.message);
+                    }
+                }
                 actual.push((position.source_line, finding.code));
             }
         }
@@ -93,7 +107,7 @@ fn embedded_review_controls_only_report_guarded_absence_rewrites() {
         },
     ]);
     let embedded = extract_embedded_sql_from_source(&path, source, &options);
-    assert_eq!(embedded.calls.len(), 18);
+    assert_eq!(embedded.calls.len(), 20);
     let records = crate::codebase::postgres::tests::embedded_call_facts_with_policy(
         &embedded,
         false,

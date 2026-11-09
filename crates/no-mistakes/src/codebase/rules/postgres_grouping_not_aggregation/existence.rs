@@ -114,6 +114,13 @@ fn grouped_threshold(
             } else {
                 "MAX is a boolean absence test; preserve the original NOT EXISTS disjunct and replace MAX < threshold with threshold IS NOT NULL AND NOT EXISTS for rows at or above the threshold"
             })
+        } else if catalog
+            .relation(&relation.name)?
+            .columns
+            .iter()
+            .any(|column| column.name == max_column)
+        {
+            Some("MAX is a boolean absence test; preserve the original NOT EXISTS disjunct and replace MAX < threshold with threshold IS NOT NULL AND EXISTS for rows with a non-NULL MAX input AND NOT EXISTS for rows at or above the threshold; both new probes must read the physical outer table and correlate every grouping key, independently of the original absence filters, to preserve the HAVING rowset")
         } else {
             None
         }

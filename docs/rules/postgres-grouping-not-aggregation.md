@@ -181,8 +181,22 @@ HAVING NOT EXISTS (
 
 Keep the original `NOT EXISTS` disjunct, especially for nullable grouping keys.
 The threshold guard is necessary because `MAX(...) < NULL` is unknown, while
-`NOT EXISTS (... >= NULL)` is true. Without non-null timestamp proof, the bare
-absence shape stays silent: an all-NULL group needs additional handling.
+`NOT EXISTS (... >= NULL)` is true. For a catalog-known nullable input, also require `EXISTS` for rows with a
+non-NULL input: an all-NULL group must remain excluded. Both new probes read the
+physical outer table and correlate every grouping key, independently of any
+extra filters in the original absence subquery. Preserve that original disjunct.
+For example, replace only the MAX disjunct with:
+
+```sql
+$1 IS NOT NULL
+AND EXISTS (SELECT 1 FROM live_topics x
+            WHERE x.topic_id = t.topic_id AND x.deleted_at IS NOT NULL)
+AND NOT EXISTS (SELECT 1 FROM live_topics x
+                WHERE x.topic_id = t.topic_id AND x.deleted_at >= $1)
+```
+
+These guards preserve the HAVING rowset; they need not preserve UNKNOWN versus
+FALSE as a standalone boolean value. Unknown catalog columns remain silent.
 If the original absence subquery already tests `created_at >= $1`, retain that
 original `NOT EXISTS` and remove the redundant `MAX` disjunct instead; its NULL
 behavior is already represented by the existing predicate.
@@ -220,6 +234,10 @@ SELECT DISTINCT post_id FROM post_topics WHERE topic_id = $1;
 Fix: remove `DISTINCT`; the remaining primary-key column is already unique in
 this result. This example produces an advisory whose `target` is
 `distinct-over-unique-key` and does not fail the run.
+
+For dynamic candidate terms, retain caller input validation and the original
+empty/NULL-list behavior: zero ANDed `EXISTS` predicates can be vacuously true
+while an empty candidate `GROUP BY` produces no rows.
 
 ## Valid example
 
