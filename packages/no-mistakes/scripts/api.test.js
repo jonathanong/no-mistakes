@@ -11,6 +11,7 @@ require("./api-tests/declarations-mutable");
 require("./api-tests/declarations-test-state-mutation");
 require("./api-tests/declarations-live-repository-scan");
 require("./api-tests/declarations-postgres");
+require("./api-tests/declarations-grouping");
 require("./api-tests/declarations-graph");
 require("./api-tests/declarations-executor-diagnostics");
 require("./api-tests/declarations-analysis");
