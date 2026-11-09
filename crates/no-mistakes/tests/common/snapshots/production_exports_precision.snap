@@ -86,7 +86,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/loader.mts",
           "line": 2,
-          "message": "cannot analyze production export importers: Runtime-resolved import at column 29; exports reached through it are unknown",
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 29; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "await import(target); await import(target);",
           "target": "unanalyzable"
@@ -94,7 +94,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/loader.mts",
           "line": 2,
-          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown",
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "await import(target); await import(target);",
           "target": "unanalyzable"
@@ -102,7 +102,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/loader.mts",
           "line": 3,
-          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown",
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "await import(target);",
           "target": "unanalyzable"

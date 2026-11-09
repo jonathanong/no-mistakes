@@ -150,7 +150,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 16,
-          "message": "cannot analyze production export importers: Runtime-resolved import at column 9; exports reached through it are unknown",
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 9; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "await import(new URL(\"./targets/shadowed-url.mts\", import.meta.url).value);",
           "target": "unanalyzable"
@@ -158,7 +158,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 17,
-          "message": "cannot analyze production export importers: Runtime-resolved import at column 9; exports reached through it are unknown",
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 9; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "await import(String(new URL(\"./targets/shadowed-string.mts\", import.meta.url)));",
           "target": "unanalyzable"
@@ -166,7 +166,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 22,
-          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown",
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "await import(mutableSpecifier);",
           "target": "unanalyzable"
@@ -182,7 +182,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 8,
-          "message": "cannot analyze production export importers: Runtime-resolved import at column 11; exports reached through it are unknown",
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 11; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "await import(moduleSpecifier);",
           "target": "unanalyzable"
@@ -203,7 +203,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 13,
-          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown",
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "await import(pathToFileURL(require.resolve(\"some-package/runtime-entry\")).href);",
           "target": "unanalyzable"
@@ -211,7 +211,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 14,
-          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown",
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "await import(pathToFileURL(require.resolve(\"another-package\")).href);",
           "target": "unanalyzable"
@@ -219,7 +219,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 15,
-          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown",
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "await import(pathToFileURL(makeRequire(require.resolve(\"vitest/node\")).resolve(\"vite\")).href);",
           "target": "unanalyzable"
@@ -227,7 +227,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 9,
-          "message": "cannot analyze production export importers: Runtime-resolved import at column 9; exports reached through it are unknown",
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 9; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "await import(pathToFileURL(join(toolsDirectory, file)).href);",
           "target": "unanalyzable"
@@ -289,7 +289,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 13,
-          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown",
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "await import(pathToFileURL(require.resolve(\"some-package/runtime-entry\")).href);",
           "target": "unanalyzable"
@@ -297,7 +297,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 14,
-          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown",
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "await import(pathToFileURL(require.resolve(\"another-package\")).href);",
           "target": "unanalyzable"
@@ -305,7 +305,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 15,
-          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown",
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "await import(pathToFileURL(makeRequire(require.resolve(\"vitest/node\")).resolve(\"vite\")).href);",
           "target": "unanalyzable"
@@ -313,7 +313,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 9,
-          "message": "cannot analyze production export importers: Runtime-resolved import at column 9; exports reached through it are unknown",
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 9; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "await import(pathToFileURL(join(toolsDirectory, file)).href);",
           "target": "unanalyzable"
