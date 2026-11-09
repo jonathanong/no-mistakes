@@ -89,7 +89,10 @@ fn validate_job_drops_test_executables_after_tests_before_package_verification()
         .unwrap();
     // JavaScript tests run independently and do not consume Rust executables.
     let javascript = job_body(&workflow, "validate-js");
-    for command in ["pnpm run test:ci", "pnpm run test:timeout-policy-browser"] {
+    for command in [
+        "pnpm run test:ci",
+        "pnpm run --if-present test:timeout-policy-browser",
+    ] {
         let run = format!("run: {command}\n");
         assert!(javascript.contains(&run));
         assert!(!validate.contains(&run));

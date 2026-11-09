@@ -105,9 +105,11 @@ with PostgreSQL 18 fixtures, and Cargo package verification. It still installs
 and builds the JavaScript fixtures used by Rust tests. The JavaScript job retains
 formatting, lint, spelling, Chromium browser tests, the full coverage-gated test
 suite, and npm package dry runs. Like CI, release runs `pnpm run test:ci` with
-a five minute step deadline, followed by `pnpm run test:timeout-policy-browser`
+a five minute step deadline, followed by `pnpm run --if-present test:timeout-policy-browser`
 under its own five minute deadline. Together these cover the full JavaScript
-suite without adding the browser suites to the coverage step's deadline.
+suite without adding the browser suites to the coverage step's deadline. A resumed
+older tag whose manifest has no browser-test script skips only that absent
+script. When the script exists, its test failures still fail validation.
 
 The `Validate` join succeeds only when both jobs succeed. A failed, cancelled,
 or skipped suite blocks all publication channels. Native compilation continues

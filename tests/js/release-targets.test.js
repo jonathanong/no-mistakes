@@ -356,7 +356,7 @@ test("release publication requires both parallel validation suites", () => {
     "pnpm run lint:js",
     "pnpm run lint:spell",
     "pnpm run test:ci",
-    "pnpm run test:timeout-policy-browser",
+    "pnpm run --if-present test:timeout-policy-browser",
   ]) {
     assert.ok(js.includes(`run: ${command}\n`), command);
   }

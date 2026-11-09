@@ -457,7 +457,7 @@ jobs:
 
       - name: Run timeout-policy browser tests
         timeout-minutes: 5
-        run: pnpm run test:timeout-policy-browser
+        run: pnpm run --if-present test:timeout-policy-browser
 
       - name: Check npm packages
         timeout-minutes: 2

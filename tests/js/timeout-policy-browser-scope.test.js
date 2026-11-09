@@ -265,7 +265,30 @@ test("release validation gives browser and other JavaScript tests separate timeo
   );
   assert.match(
     js,
-    /- name: Run timeout-policy browser tests\n {8}timeout-minutes: 5\n {8}run: pnpm run test:timeout-policy-browser\n/,
+    /- name: Run timeout-policy browser tests\n {8}timeout-minutes: 5\n {8}run: pnpm run --if-present test:timeout-policy-browser\n/,
   );
   assert.doesNotMatch(js, /run: pnpm test\n/);
 });
+
+for (const [manifest, exitCode, runsBrowser] of [
+  ["current", 0, true],
+  ["older", 0, false],
+  ["current", 7, true],
+]) {
+  test(`release browser step supports ${manifest} manifest with script exit ${exitCode}`, () => {
+    const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
+    const command = workflow.match(
+      /- name: Run timeout-policy browser tests\n {8}timeout-minutes: 5\n {8}run: ([^\n]+)/,
+    )?.[1];
+    assert.ok(command);
+    const result = spawnSync("bash", ["-e", "-c", command], {
+      cwd: join(repoRoot, "test-cases/release-validation/browser-script/fixture", manifest),
+      env: { ...process.env, BROWSER_FIXTURE_EXIT_CODE: String(exitCode) },
+      encoding: "utf8",
+      timeout: 15_000,
+    });
+    assert.ifError(result.error);
+    assert.equal(result.status === 0, exitCode === 0, result.stdout + result.stderr);
+    assert.equal(result.stdout.includes("browser-suite-executed"), runsBrowser);
+  });
+}
