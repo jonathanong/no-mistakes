@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const path = require("node:path");
 const { test } = require("node:test");
-const { distTag, publish } = require("./publish-npm.cjs");
+const { VISIBILITY_WINDOW_MS, distTag, publish } = require("./publish-npm.cjs");
 const root = path.resolve(__dirname, "../..");
 const scenarios = JSON.parse(readFileSync(path.join(root, "test-cases/npm-publish/retry-and-tags/fixture/scenarios.json"), "utf8"));
 
@@ -31,6 +31,7 @@ for (const scenario of scenarios) {
         return result;
       },
       async sleep(ms) { delays.push(ms); elapsed += ms; },
+      windowMs: scenario.windowMs === "default" ? undefined : (scenario.windowMs ?? 120000),
     };
     const result = publish(packageName, "0.109.8", options);
     if (scenario.error) await assert.rejects(result, new RegExp(scenario.error));
@@ -73,5 +74,22 @@ test("every npm channel uses workflow-owned publish tooling, including older tag
     assert.match(block, /node "\$RUNNER_TEMP\/publish-tools\/\.github\/scripts\/publish-npm.cjs" "\$pkg" "\$version"/);
     assert.doesNotMatch(block, /npm publish /);
     assert.match(block, /--timeout-ms 1800000/);
+  }
+});
+test("npm publish steps outlast the visibility window for every package", () => {
+  const windowMinutes = VISIBILITY_WINDOW_MS / 60000;
+  assert.equal(windowMinutes, 15);
+  for (const name of ["publish", "publish-js", "publish-eslint"]) {
+    const block = job(name);
+    const step = block.split(/\n      - name: Publish npm [^\n]*\n/)[1] ?? block.split(/\n      - name: Publish ESLint package with OIDC\n/)[1];
+    const stepMinutes = Number(step.match(/timeout-minutes: (\d+)/)[1]);
+    const jobMinutes = Number(block.match(/\n    timeout-minutes: (\d+)/)[1]);
+    const packages = step.split("packages=(\n")[1].split(")")[0].trim().split(/\s+/).length;
+    assert.ok(stepMinutes >= packages * (windowMinutes + 2) + 5, `${name} step needs ${packages} x ${windowMinutes + 2} minutes`);
+    const stepTimeouts = block.split("\n    steps:\n")[1].split(/\n?      - /).slice(1).map((s) => Number(s.match(/\n        timeout-minutes: (\d+)/)?.[1]));
+    assert.ok(stepTimeouts.every(Number.isInteger), `${name} steps all need literal timeouts`);
+    const stepSum = stepTimeouts.reduce((a, b) => a + b, 0);
+    assert.ok(jobMinutes >= Math.max(...stepTimeouts), `${name} job must cover its longest step`);
+    assert.ok(jobMinutes < stepSum, `${name} job must stay below the sum of its step timeouts (${stepSum})`);
   }
 });
