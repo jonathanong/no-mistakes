@@ -65,7 +65,3 @@ thread_local! { static LAST_CALLBACK_OWNERSHIP_CACHE: std::cell::Cell<bool> = co
 pub(super) fn record_callback_ownership_cache(initialized: bool) {
     LAST_CALLBACK_OWNERSHIP_CACHE.set(initialized);
 }
-#[cfg(test)]
-pub fn callback_ownership_cache_initialized() -> bool {
-    LAST_CALLBACK_OWNERSHIP_CACHE.get()
-}

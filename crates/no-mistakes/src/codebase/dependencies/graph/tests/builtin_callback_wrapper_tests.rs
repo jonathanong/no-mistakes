@@ -40,7 +40,7 @@ fn native_callback_parameters_keep_all_known_callers_without_changing_calls() {
             .count();
         assert_eq!(selected, expected);
         assert!(selected < graph.resolved_call_sites().len());
-        assert!(super::super::value_flow_metrics::callback_ownership_cache_initialized());
+        assert!(super::super::value_flow_metrics::tests::callback_ownership_cache_initialized());
     }
     let ordinary = build(GraphBuildPlan {
         assertion_owners: false,
@@ -48,7 +48,7 @@ fn native_callback_parameters_keep_all_known_callers_without_changing_calls() {
     });
     assert_eq!(ordinary.resolved_call_sites(), graph.resolved_call_sites());
     #[cfg(feature = "test-instrumentation")]
-    assert!(!super::super::value_flow_metrics::callback_ownership_cache_initialized());
+    assert!(!super::super::value_flow_metrics::tests::callback_ownership_cache_initialized());
     let callback = graph
         .assertion_call_sites()
         .iter()
