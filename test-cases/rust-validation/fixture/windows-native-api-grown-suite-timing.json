@@ -1,0 +1,18 @@
+{
+  "source": "PR #3191 Test CI attempt 2, 2026-11-09",
+  "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42613455874/attempts/2",
+  "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42613455874/job/129158658979",
+  "headSha": "bf007e74b88f97e06afb9c10fd313e194bb76033",
+  "jobStartedAt": "2026-11-09T12:25:06Z",
+  "apiStartedAt": "2026-11-09T12:43:15Z",
+  "apiStepCompletedAt": "2026-11-09T12:49:17Z",
+  "apiStepConclusion": "failure",
+  "apiStepTimeoutSeconds": 360,
+  "reportedTestDurationSeconds": 358.73,
+  "testFiles": { "passed": 7, "total": 7 },
+  "tests": { "passed": 629, "skipped": 2, "failed": 0, "total": 631 },
+  "startupTeardownReserveSeconds": 30,
+  "postJobReserveSeconds": 120,
+  "rawLogSha256": "a61678e460e9ab9c0ad93a4e57712c071fbcd420571fc5807d23ba3f8ad5a631",
+  "note": "All selected assertions completed and JSON was written before the six-minute step expired. The wrapper outcome is censored; Vitest duration omits launcher and teardown work. The reserve is bounded CI capacity, not a changed performance threshold or tail guarantee."
+}

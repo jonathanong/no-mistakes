@@ -284,7 +284,7 @@ test("native API timeout leaves startup and teardown room after the observed Win
   const native = workflow.split("\n  native-tests:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
   const seconds = stepBudgetSeconds(native, "Run real N-API API test", "Windows");
   assert.ok(seconds >= required, "native API step must include launcher/teardown reserve");
-  assert.ok(seconds <= 360, "keep the correction bounded rather than removing its deadline");
+  assert.ok(seconds <= 420, "keep the correction bounded rather than removing its deadline");
   assert.match(native, /\n    timeout-minutes: 30\n/);
   const linux = workflow.split("\n  native-tests:\n")[0];
   assert.match(linux, /name: Run real N-API API test\n\s+timeout-minutes: 3\n/);
@@ -425,10 +425,30 @@ test("current native API budgets fit completed Windows setup and Rust work", () 
   assert.equal(observed.tests.passed + observed.tests.skipped, observed.tests.total);
   assert.ok(observed.reportedTestDurationSeconds > observed.apiStepTimeoutSeconds);
   assert.ok(api >= observed.reportedTestDurationSeconds + observed.startupTeardownReserveSeconds);
-  assert.ok(api <= 360, "keep the Windows API phase bounded to six minutes");
+  assert.ok(api <= 420, "keep the Windows API phase bounded to seven minutes");
   assert.equal(stepBudgetSeconds(job, "Run real N-API API test", "macOS"), 300);
   assert.ok(jobBudgetSeconds(job) >= beforeApi + api + observed.postJobReserveSeconds);
   assert.ok(jobBudgetSeconds(job) <= 1800);
   assert.match(job, /node \.github\/scripts\/report-native-api-tests\.cjs/);
   assert.match(job, /Upload real N-API test durations/);
+});
+
+test("Windows API deadline includes startup and teardown for the expanded suite", () => {
+  const observed = JSON.parse(readFileSync(path.join(root,
+    "test-cases/rust-validation/fixture/windows-native-api-grown-suite-timing.json"), "utf8"));
+  const job = workflowJob("native-tests");
+  const api = stepBudgetSeconds(job, "Run real N-API API test", "Windows");
+  const beforeApi = (Date.parse(observed.apiStartedAt) - Date.parse(observed.jobStartedAt)) / 1000;
+  assert.equal(observed.apiStepConclusion, "failure");
+  assert.equal(observed.apiStepTimeoutSeconds, 360);
+  assert.equal(observed.testFiles.passed, observed.testFiles.total);
+  assert.equal(observed.tests.failed, 0);
+  assert.equal(observed.tests.passed + observed.tests.skipped, observed.tests.total);
+  assert.ok(observed.reportedTestDurationSeconds >= observed.apiStepTimeoutSeconds - 2);
+  assert.ok(api >= observed.reportedTestDurationSeconds + observed.startupTeardownReserveSeconds);
+  assert.ok(api <= 420, "retain a bounded seven-minute API phase");
+  assert.equal(stepBudgetSeconds(job, "Run real N-API API test", "macOS"), 300);
+  assert.ok(jobBudgetSeconds(job) >= beforeApi + api + observed.postJobReserveSeconds);
+  assert.ok(jobBudgetSeconds(job) <= 1800);
+  assert.match(job, /report-native-api-tests\.cjs target\/native-api-tests\.json target/);
 });
