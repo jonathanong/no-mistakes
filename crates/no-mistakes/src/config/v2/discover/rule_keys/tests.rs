@@ -85,3 +85,36 @@ fn fragment_unknown_keeps_raw_validation_and_location() {
     assert!(error.contains("unknown key `serverity`"), "{error}");
     assert!(error.contains(&format!("{}:2:", path.display())), "{error}");
 }
+
+#[test]
+fn grouping_rule_accepts_only_advisory_configuration() {
+    for name in ["grouping-default.yml", "grouping-advisory.yml"] {
+        check(name).unwrap();
+    }
+    for name in ["grouping-error.yml", "grouping-fail.yml"] {
+        let error = check(name).unwrap_err().to_string();
+        assert!(error.contains("advisory only"), "{error}");
+    }
+    let error = check("grouping-options-fail.yml").unwrap_err().to_string();
+    assert!(error.contains("option fail is not supported"), "{error}");
+}
+
+#[test]
+fn grouping_rule_fragment_validation_preserves_advisory_only_policy() {
+    for (name, expected) in [
+        ("grouping-fragment.yml", "advisory only"),
+        (
+            "grouping-fragment-options.yml",
+            "option fail is not supported",
+        ),
+    ] {
+        let (source, path) = load(name);
+        let error = super::validate_fragment(&source, &path, "rules")
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains(expected), "{error}");
+        super::validate_fragment(&source, &path, "projects").unwrap();
+    }
+    let (source, path) = load("grouping-fragment-valid.yml");
+    super::validate_fragment(&source, &path, "rules").unwrap();
+}

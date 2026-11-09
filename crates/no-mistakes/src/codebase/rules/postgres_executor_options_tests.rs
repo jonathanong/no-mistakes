@@ -33,6 +33,7 @@ fn every_executor_rule_decodes_extensions_with_its_actual_option_type() {
     check!(postgres_require_query_annotation);
     check!(postgres_sql_statement_policy);
     check!(postgres_json_relation_ids);
+    check!(postgres_grouping_not_aggregation);
     rule.rule = "postgres-require-query-annotation".into();
     decode::<super::postgres_unmatched_executors::Options>(&rule);
     decode::<super::postgres_undeclared_executors::Options>(&rule);

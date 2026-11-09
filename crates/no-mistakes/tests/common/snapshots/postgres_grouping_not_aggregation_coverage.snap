@@ -1,0 +1,1058 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "coverage": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "proof-controls/raw/consumers.sql",
+          "line": 1,
+          "message": "proof-controls/raw/consumers.sql:1: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (SQL column 18)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "WITH watched AS (SELECT DISTINCT post_id FROM post_reads) -- CASE exists-star",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/raw/consumers.sql",
+          "line": 4,
+          "message": "proof-controls/raw/consumers.sql:4: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (SQL column 18)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "WITH watched AS (SELECT DISTINCT post_id FROM post_reads) -- CASE not-exists-qualified-star",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/raw/consumers.sql",
+          "line": 7,
+          "message": "proof-controls/raw/consumers.sql:7: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (SQL column 18)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "WITH watched AS (SELECT DISTINCT post_id FROM post_reads) -- CASE membership-column",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/raw/coverage-tail.sql",
+          "line": 11,
+          "message": "proof-controls/raw/coverage-tail.sql:11: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (SQL column 18)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "WITH watched AS (SELECT DISTINCT post_id /* CASE: tail-consumer-unrelated-values */ FROM post_reads) SELECT p.id FROM posts p WHERE EXISTS(SELECT * FROM watched w WHERE w.post_id=p.id) AND EXISTS(SELECT 1 FROM (VALUES(1))v(n));",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/raw/coverage-tail.sql",
+          "line": 13,
+          "message": "proof-controls/raw/coverage-tail.sql:13: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (SQL column 18)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "WITH watched AS (SELECT DISTINCT post_id /* CASE: tail-consumer-unrelated-union */ FROM post_reads) SELECT p.id FROM posts p WHERE EXISTS(SELECT * FROM watched w WHERE w.post_id=p.id) AND EXISTS(SELECT 1 UNION SELECT 2);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/raw/coverage-tail.sql",
+          "line": 5,
+          "message": "proof-controls/raw/coverage-tail.sql:5: [distinct-over-unique-key] catalog uniqueness proves the projected DISTINCT key is unique across grouping sets; remove DISTINCT and preserve GROUP BY and its subtotal rows (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT slug /* CASE: tail-reverse-equality-rollup */ FROM nullable_equal_slugs WHERE $1::text=slug GROUP BY ROLLUP(slug);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/coverage-tail.sql",
+          "line": 9,
+          "message": "proof-controls/raw/coverage-tail.sql:9: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (SQL column 18)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "WITH watched AS (SELECT DISTINCT post_id /* CASE: tail-consumer-unrelated-no-from */ FROM post_reads) SELECT p.id FROM posts p WHERE EXISTS(SELECT * FROM watched w WHERE w.post_id=p.id) AND EXISTS(SELECT 1);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/raw/existence-filters.sql",
+          "line": 1,
+          "message": "proof-controls/raw/existence-filters.sql:1: [aggregate-existence-test] COUNT is used only as a boolean existence test; use EXISTS or NOT EXISTS with the same filters (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT /* CASE nested-count */ ((COUNT(1))) > 0 FROM post_reads;",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "proof-controls/raw/existence-filters.sql",
+          "line": 2,
+          "message": "proof-controls/raw/existence-filters.sql:2: [aggregate-existence-test] COUNT is used only as a boolean existence test; use EXISTS or NOT EXISTS with the same filters (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT /* CASE nonnull-guard */ COUNT(slug)>0 FROM nullable_slugs WHERE slug IS NOT NULL;",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "proof-controls/raw/existence-filters.sql",
+          "line": 23,
+          "message": "proof-controls/raw/existence-filters.sql:23: [distinct-join-filter] duplicates do not affect membership or existence; remove DISTINCT from the membership subquery (SQL column 43)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT p.id FROM posts p WHERE p.id = ANY(SELECT /* CASE any-distinct-filter */ DISTINCT post_id FROM post_reads);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/raw/existence-filters.sql",
+          "line": 3,
+          "message": "proof-controls/raw/existence-filters.sql:3: [aggregate-existence-test] COUNT is used only as a boolean existence test; use EXISTS or NOT EXISTS with the same filters (SQL column 13)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT 0 < (SELECT /* CASE reversed-count */ COUNT(*) FROM post_reads);",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "proof-controls/raw/grouping-safety.sql",
+          "line": 13,
+          "message": "proof-controls/raw/grouping-safety.sql:13: [distinct-over-unique-key] catalog uniqueness proves the projected DISTINCT key is unique across grouping sets; remove DISTINCT and preserve GROUP BY and its subtotal rows (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT slug /* CASE: grouping-singleton-nullable */ FROM nullable_equal_slugs GROUP BY GROUPING SETS((slug));",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/grouping-safety.sql",
+          "line": 15,
+          "message": "proof-controls/raw/grouping-safety.sql:15: [distinct-over-unique-key] catalog uniqueness proves the projected DISTINCT key is unique across grouping sets; remove DISTINCT and preserve GROUP BY and its subtotal rows (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT slug /* CASE: grouping-rollup-filter-nonnull */ FROM nullable_equal_slugs WHERE slug IS NOT NULL GROUP BY ROLLUP(slug);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/grouping-safety.sql",
+          "line": 17,
+          "message": "proof-controls/raw/grouping-safety.sql:17: [distinct-over-unique-key] catalog uniqueness proves the projected DISTINCT key is unique across grouping sets; remove DISTINCT and preserve GROUP BY and its subtotal rows (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT slug /* CASE: grouping-cube-strict-equality */ FROM nullable_equal_slugs WHERE slug=$1::text GROUP BY CUBE(slug);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/grouping-safety.sql",
+          "line": 19,
+          "message": "proof-controls/raw/grouping-safety.sql:19: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT slug /* CASE: grouping-singleton-removal */ FROM nullable_equal_slugs WHERE slug=$1::text GROUP BY GROUPING SETS((slug));",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 12,
+          "message": "proof-controls/raw/keys-union.sql:12: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT item_id /* CASE: coverage-any-ordered-distinct-tag */",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 12,
+          "message": "proof-controls/raw/keys-union.sql:12: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT item_id /* CASE: coverage-any-ordered-distinct-tag */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 122,
+          "message": "proof-controls/raw/keys-union.sql:122: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT physical.id /* CASE: coverage-qualified-physical-table */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 135,
+          "message": "proof-controls/raw/keys-union.sql:135: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT slug /* CASE: coverage-nullable-unique-is-not-null */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 139,
+          "message": "proof-controls/raw/keys-union.sql:139: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT live.topic_id /* CASE: coverage-partial-index-foreign-predicate */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 156,
+          "message": "proof-controls/raw/keys-union.sql:156: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT COUNT(DISTINCT id) FILTER (WHERE author_id IS NOT NULL) /* CASE: coverage-filtered-count-distinct */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 160,
+          "message": "proof-controls/raw/keys-union.sql:160: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT (id) /* CASE: coverage-parenthesized-key */ FROM posts;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 169,
+          "message": "proof-controls/raw/keys-union.sql:169: [distinct-join-filter] joined DISTINCT rows are used only to test membership; replace the filter join with EXISTS (SQL column 7)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "JOIN (SELECT DISTINCT post_id AS target_id /* CASE: coverage-derived-output-alias */ FROM post_reads) AS reads",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 17,
+          "message": "proof-controls/raw/keys-union.sql:17: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT candidate.item_id /* CASE: coverage-nested-union-candidate */",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 183,
+          "message": "proof-controls/raw/keys-union.sql:183: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT id /* CASE: coverage-cast-pinned-key */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 187,
+          "message": "proof-controls/raw/keys-union.sql:187: [distinct-over-unique-key] catalog uniqueness proves the projected DISTINCT key is unique across grouping sets; remove DISTINCT and preserve GROUP BY and its subtotal rows (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT id /* CASE: coverage-grouping-set-distinct */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 190,
+          "message": "proof-controls/raw/keys-union.sql:190: [distinct-over-unique-key] catalog uniqueness proves the projected DISTINCT key is unique across grouping sets; remove DISTINCT and preserve GROUP BY and its subtotal rows (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT id /* CASE: coverage-single-grouping-set-key */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 193,
+          "message": "proof-controls/raw/keys-union.sql:193: [distinct-over-unique-key] catalog uniqueness proves the projected DISTINCT key is unique across grouping sets; remove DISTINCT and preserve GROUP BY and its subtotal rows (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT id /* CASE: coverage-single-cube-key */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 2,
+          "message": "proof-controls/raw/keys-union.sql:2: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT item_id /* CASE: coverage-any-reverse-threshold */",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 201,
+          "message": "proof-controls/raw/keys-union.sql:201: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT COUNT(DISTINCT id ORDER BY id) /* CASE: coverage-ordered-count-distinct */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 28,
+          "message": "proof-controls/raw/keys-union.sql:28: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT candidate.item_id /* CASE: coverage-wrapped-union-candidate */",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 57,
+          "message": "proof-controls/raw/keys-union.sql:57: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT candidate.item_id /* CASE: coverage-limited-candidate-union */",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 69,
+          "message": "proof-controls/raw/keys-union.sql:69: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT * /* CASE: coverage-union-values-wildcard */",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 7,
+          "message": "proof-controls/raw/keys-union.sql:7: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT item_id /* CASE: coverage-any-distinct-tag */",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 7,
+          "message": "proof-controls/raw/keys-union.sql:7: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT item_id /* CASE: coverage-any-distinct-tag */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 73,
+          "message": "proof-controls/raw/keys-union.sql:73: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT unioned.subject_id /* CASE: coverage-union-aliased-output */",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 80,
+          "message": "proof-controls/raw/keys-union.sql:80: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT unioned.* /* CASE: coverage-union-qualified-wildcard */",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 88,
+          "message": "proof-controls/raw/keys-union.sql:88: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT topic_id /* CASE: coverage-union-query-wrapped-cte */ FROM unioned;",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 91,
+          "message": "proof-controls/raw/keys-union.sql:91: [distinct-over-union] UNION removes duplicate arm rows; remove the redundant arm DISTINCT (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT topic_id /* CASE: coverage-union-arm-left */ FROM ratings",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/raw/keys-union.sql",
+          "line": 93,
+          "message": "proof-controls/raw/keys-union.sql:93: [distinct-over-union] UNION removes duplicate arm rows; remove the redundant arm DISTINCT (SQL column 2)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "(SELECT DISTINCT topic_id /* CASE: coverage-union-arm-right */ FROM ratings);",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/raw/lexical-order.sql",
+          "line": 1,
+          "message": "proof-controls/raw/lexical-order.sql:1: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 16)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "WITH posts AS (SELECT DISTINCT id /* CASE: order-self-physical-key */ FROM posts) SELECT id FROM posts;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/lexical-order.sql",
+          "line": 11,
+          "message": "proof-controls/raw/lexical-order.sql:11: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT id /* CASE: order-evidence-self-physical */ FROM (WITH posts AS (SELECT id FROM posts) SELECT id FROM current_posts UNION SELECT id FROM archived_posts) pool;",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/raw/lexical-order.sql",
+          "line": 13,
+          "message": "proof-controls/raw/lexical-order.sql:13: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT id /* CASE: order-evidence-forward-physical */ FROM (WITH earlier AS (SELECT id FROM posts), posts(id) AS (VALUES(NULL::uuid)) SELECT id FROM current_posts UNION SELECT id FROM archived_posts) pool;",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/raw/lexical-order.sql",
+          "line": 14,
+          "message": "proof-controls/raw/lexical-order.sql:14: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (SQL column 21)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "WITH post_reads AS (SELECT DISTINCT post_id /* CASE: order-self-physical-exists */ FROM post_reads) SELECT p.id FROM posts p WHERE EXISTS(SELECT * FROM post_reads r WHERE r.post_id=p.id);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/raw/lexical-order.sql",
+          "line": 16,
+          "message": "proof-controls/raw/lexical-order.sql:16: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (SQL column 21)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "WITH post_reads AS (SELECT DISTINCT post_id /* CASE: order-self-physical-in */ FROM post_reads) SELECT p.id FROM posts p WHERE p.id IN(SELECT post_id FROM post_reads);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/raw/lexical-order.sql",
+          "line": 19,
+          "message": "proof-controls/raw/lexical-order.sql:19: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (SQL column 64)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "WITH early AS (SELECT post_id FROM post_reads), post_reads AS (SELECT DISTINCT post_id /* CASE: order-consumer-forward-physical */ FROM post_reads) SELECT p.id FROM posts p WHERE EXISTS(SELECT * FROM post_reads r WHERE r.post_id=p.id);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/raw/lexical-order.sql",
+          "line": 21,
+          "message": "proof-controls/raw/lexical-order.sql:21: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (SQL column 18)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "WITH watched AS (SELECT DISTINCT post_id /* CASE: order-consumer-nested-shadow */ FROM post_reads) SELECT p.id FROM posts p WHERE EXISTS(SELECT * FROM watched w WHERE w.post_id=p.id) AND EXISTS(WITH watched AS (SELECT NULL::uuid AS post_id) SELECT COUNT(*) FROM watched);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/raw/lexical-order.sql",
+          "line": 25,
+          "message": "proof-controls/raw/lexical-order.sql:25: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (SQL column 18)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "WITH watched AS (SELECT DISTINCT post_id /* CASE: order-consumer-recursive-shadow */ FROM post_reads) SELECT p.id FROM posts p WHERE EXISTS(SELECT * FROM watched w WHERE w.post_id=p.id) AND EXISTS(WITH RECURSIVE watched AS (SELECT NULL::uuid AS post_id UNION ALL SELECT post_id FROM watched WHERE false) SELECT COUNT(*) FROM watched);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/raw/lexical-order.sql",
+          "line": 27,
+          "message": "proof-controls/raw/lexical-order.sql:27: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (SQL column 18)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "WITH watched AS (SELECT DISTINCT post_id /* CASE: order-consumer-recursive-unrelated */ FROM post_reads) SELECT p.id FROM posts p WHERE EXISTS(WITH RECURSIVE walk(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM walk WHERE n<2) SELECT * FROM watched);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/raw/lexical-order.sql",
+          "line": 3,
+          "message": "proof-controls/raw/lexical-order.sql:3: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (SQL column 16)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "WITH early AS (SELECT DISTINCT id /* CASE: order-forward-physical-key */ FROM posts), posts(id) AS (VALUES(NULL::uuid)) SELECT * FROM early;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/raw/lexical-order.sql",
+          "line": 9,
+          "message": "proof-controls/raw/lexical-order.sql:9: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (SQL column 108)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "WITH ratings AS (SELECT topic_id FROM topic_memberships UNION SELECT topic_id FROM live_topics), early AS (SELECT DISTINCT topic_id /* CASE: order-prior-union-lineage */ FROM ratings) SELECT * FROM early;",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/raw/lexical-scopes.sql",
+          "line": 16,
+          "message": "proof-controls/raw/lexical-scopes.sql:16: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT /* CASE: scope-candidate-unrelated-with */ item_id FROM (WITH ignored AS (VALUES(1)) SELECT item_id,tag_id FROM direct_tags UNION SELECT item_id,tag_id FROM alias_tags) pool GROUP BY item_id HAVING COUNT(*)=$1;",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/raw/lexical-scopes.sql",
+          "line": 18,
+          "message": "proof-controls/raw/lexical-scopes.sql:18: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT /* CASE: scope-candidate-qualified-physical */ item_id FROM ((WITH direct_tags AS (VALUES(1)) SELECT item_id,tag_id FROM public.direct_tags) UNION (WITH alias_tags AS (VALUES(1)) SELECT item_id,tag_id FROM public.alias_tags)) pool GROUP BY item_id HAVING COUNT(*)=$1;",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/raw/lexical-scopes.sql",
+          "line": 20,
+          "message": "proof-controls/raw/lexical-scopes.sql:20: [distinct-over-union] UNION removes duplicate arm rows; remove the redundant arm DISTINCT (SQL column 30)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "(WITH ignored AS (VALUES(1)) SELECT /* CASE: scope-union-arm-unrelated-with */ DISTINCT post_id FROM post_reads) UNION SELECT NULL::uuid;",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/raw/lexical-scopes.sql",
+          "line": 22,
+          "message": "proof-controls/raw/lexical-scopes.sql:22: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT /* CASE: scope-union-outer-qualified-physical */ DISTINCT id FROM (WITH current_posts(id) AS (VALUES(NULL::uuid)) SELECT id FROM public.current_posts UNION SELECT NULL::uuid) pool;",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/raw/lexical-scopes.sql",
+          "line": 24,
+          "message": "proof-controls/raw/lexical-scopes.sql:24: [distinct-join-filter] duplicates do not affect membership or existence; remove DISTINCT from the membership subquery (SQL column 68)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT p.id FROM posts p WHERE EXISTS (WITH ignored AS (VALUES(1)) SELECT /* CASE: scope-membership-unrelated-with */ DISTINCT post_id FROM post_reads);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/raw/lexical-scopes.sql",
+          "line": 26,
+          "message": "proof-controls/raw/lexical-scopes.sql:26: [aggregate-existence-test] COUNT is used only as a boolean existence test; use EXISTS or NOT EXISTS with the same filters (SQL column 37)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT (WITH ignored AS (VALUES(1)) SELECT /* CASE: scope-scalar-unrelated-with */ COUNT(post_id) FROM post_reads)>0;",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "proof-controls/src/consumers.ts",
+          "line": 3,
+          "message": "proof-controls/src/consumers.ts:3: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (source column 36)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "await query(sql`WITH watched AS (SELECT DISTINCT post_id FROM post_reads) -- CASE exists-star",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/src/consumers.ts",
+          "line": 6,
+          "message": "proof-controls/src/consumers.ts:6: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (source column 36)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "await query(sql`WITH watched AS (SELECT DISTINCT post_id FROM post_reads) -- CASE not-exists-qualified-star",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/src/consumers.ts",
+          "line": 9,
+          "message": "proof-controls/src/consumers.ts:9: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (source column 36)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "await query(sql`WITH watched AS (SELECT DISTINCT post_id FROM post_reads) -- CASE membership-column",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/src/coverage-tail.ts",
+          "line": 10,
+          "message": "proof-controls/src/coverage-tail.ts:10: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (source column 28)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`WITH watched AS (SELECT DISTINCT post_id /* CASE: tail-consumer-unrelated-no-from */ FROM post_reads) SELECT p.id FROM posts p WHERE EXISTS(SELECT * FROM watched w WHERE w.post_id=p.id) AND EXISTS(SELECT 1)`);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/src/coverage-tail.ts",
+          "line": 12,
+          "message": "proof-controls/src/coverage-tail.ts:12: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (source column 28)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`WITH watched AS (SELECT DISTINCT post_id /* CASE: tail-consumer-unrelated-values */ FROM post_reads) SELECT p.id FROM posts p WHERE EXISTS(SELECT * FROM watched w WHERE w.post_id=p.id) AND EXISTS(SELECT 1 FROM (VALUES(1))v(n))`);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/src/coverage-tail.ts",
+          "line": 14,
+          "message": "proof-controls/src/coverage-tail.ts:14: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (source column 28)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`WITH watched AS (SELECT DISTINCT post_id /* CASE: tail-consumer-unrelated-union */ FROM post_reads) SELECT p.id FROM posts p WHERE EXISTS(SELECT * FROM watched w WHERE w.post_id=p.id) AND EXISTS(SELECT 1 UNION SELECT 2)`);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/src/coverage-tail.ts",
+          "line": 6,
+          "message": "proof-controls/src/coverage-tail.ts:6: [distinct-over-unique-key] catalog uniqueness proves the projected DISTINCT key is unique across grouping sets; remove DISTINCT and preserve GROUP BY and its subtotal rows (source column 11)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT DISTINCT slug /* CASE: tail-reverse-equality-rollup */ FROM nullable_equal_slugs WHERE $1::text=slug GROUP BY ROLLUP(slug)`);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/existence-filters.ts",
+          "line": 2,
+          "message": "proof-controls/src/existence-filters.ts:2: [aggregate-existence-test] COUNT is used only as a boolean existence test; use EXISTS or NOT EXISTS with the same filters (source column 11)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT /* CASE nested-count */ ((COUNT(1))) > 0 FROM post_reads`);",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "proof-controls/src/existence-filters.ts",
+          "line": 24,
+          "message": "proof-controls/src/existence-filters.ts:24: [distinct-join-filter] duplicates do not affect membership or existence; remove DISTINCT from the membership subquery (source column 53)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT p.id FROM posts p WHERE p.id = ANY(SELECT /* CASE any-distinct-filter */ DISTINCT post_id FROM post_reads)`);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/src/existence-filters.ts",
+          "line": 3,
+          "message": "proof-controls/src/existence-filters.ts:3: [aggregate-existence-test] COUNT is used only as a boolean existence test; use EXISTS or NOT EXISTS with the same filters (source column 11)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT /* CASE nonnull-guard */ COUNT(slug)>0 FROM nullable_slugs WHERE slug IS NOT NULL`);",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "proof-controls/src/existence-filters.ts",
+          "line": 4,
+          "message": "proof-controls/src/existence-filters.ts:4: [aggregate-existence-test] COUNT is used only as a boolean existence test; use EXISTS or NOT EXISTS with the same filters (source column 23)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT 0 < (SELECT /* CASE reversed-count */ COUNT(*) FROM post_reads)`);",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "proof-controls/src/grouping-safety.ts",
+          "line": 10,
+          "message": "proof-controls/src/grouping-safety.ts:10: [distinct-over-unique-key] catalog uniqueness proves the projected DISTINCT key is unique across grouping sets; remove DISTINCT and preserve GROUP BY and its subtotal rows (source column 11)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT DISTINCT slug /* CASE: grouping-cube-strict-equality */ FROM nullable_equal_slugs WHERE slug=$1::text GROUP BY CUBE(slug)`);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/grouping-safety.ts",
+          "line": 11,
+          "message": "proof-controls/src/grouping-safety.ts:11: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 11)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT slug /* CASE: grouping-singleton-removal */ FROM nullable_equal_slugs WHERE slug=$1::text GROUP BY GROUPING SETS((slug))`);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/grouping-safety.ts",
+          "line": 8,
+          "message": "proof-controls/src/grouping-safety.ts:8: [distinct-over-unique-key] catalog uniqueness proves the projected DISTINCT key is unique across grouping sets; remove DISTINCT and preserve GROUP BY and its subtotal rows (source column 11)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT DISTINCT slug /* CASE: grouping-singleton-nullable */ FROM nullable_equal_slugs GROUP BY GROUPING SETS((slug))`);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/grouping-safety.ts",
+          "line": 9,
+          "message": "proof-controls/src/grouping-safety.ts:9: [distinct-over-unique-key] catalog uniqueness proves the projected DISTINCT key is unique across grouping sets; remove DISTINCT and preserve GROUP BY and its subtotal rows (source column 11)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT DISTINCT slug /* CASE: grouping-rollup-filter-nonnull */ FROM nullable_equal_slugs WHERE slug IS NOT NULL GROUP BY ROLLUP(slug)`);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 124,
+          "message": "proof-controls/src/keys-union-parity.ts:124: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT physical.id /* CASE: coverage-qualified-physical-table */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 137,
+          "message": "proof-controls/src/keys-union-parity.ts:137: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT slug /* CASE: coverage-nullable-unique-is-not-null */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 14,
+          "message": "proof-controls/src/keys-union-parity.ts:14: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT item_id /* CASE: coverage-any-ordered-distinct-tag */",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 14,
+          "message": "proof-controls/src/keys-union-parity.ts:14: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT item_id /* CASE: coverage-any-ordered-distinct-tag */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 141,
+          "message": "proof-controls/src/keys-union-parity.ts:141: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT live.topic_id /* CASE: coverage-partial-index-foreign-predicate */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 158,
+          "message": "proof-controls/src/keys-union-parity.ts:158: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT COUNT(DISTINCT id) FILTER (WHERE author_id IS NOT NULL) /* CASE: coverage-filtered-count-distinct */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 162,
+          "message": "proof-controls/src/keys-union-parity.ts:162: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT (id) /* CASE: coverage-parenthesized-key */ FROM posts`);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 171,
+          "message": "proof-controls/src/keys-union-parity.ts:171: [distinct-join-filter] joined DISTINCT rows are used only to test membership; replace the filter join with EXISTS (source column 7)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "JOIN (SELECT DISTINCT post_id AS target_id /* CASE: coverage-derived-output-alias */ FROM post_reads) AS reads",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 185,
+          "message": "proof-controls/src/keys-union-parity.ts:185: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT id /* CASE: coverage-cast-pinned-key */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 189,
+          "message": "proof-controls/src/keys-union-parity.ts:189: [distinct-over-unique-key] catalog uniqueness proves the projected DISTINCT key is unique across grouping sets; remove DISTINCT and preserve GROUP BY and its subtotal rows (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT id /* CASE: coverage-grouping-set-distinct */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 19,
+          "message": "proof-controls/src/keys-union-parity.ts:19: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT candidate.item_id /* CASE: coverage-nested-union-candidate */",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 192,
+          "message": "proof-controls/src/keys-union-parity.ts:192: [distinct-over-unique-key] catalog uniqueness proves the projected DISTINCT key is unique across grouping sets; remove DISTINCT and preserve GROUP BY and its subtotal rows (source column 11)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT DISTINCT id /* CASE: coverage-single-grouping-set-key */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 195,
+          "message": "proof-controls/src/keys-union-parity.ts:195: [distinct-over-unique-key] catalog uniqueness proves the projected DISTINCT key is unique across grouping sets; remove DISTINCT and preserve GROUP BY and its subtotal rows (source column 11)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT DISTINCT id /* CASE: coverage-single-cube-key */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 203,
+          "message": "proof-controls/src/keys-union-parity.ts:203: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT COUNT(DISTINCT id ORDER BY id) /* CASE: coverage-ordered-count-distinct */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 30,
+          "message": "proof-controls/src/keys-union-parity.ts:30: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT candidate.item_id /* CASE: coverage-wrapped-union-candidate */",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 4,
+          "message": "proof-controls/src/keys-union-parity.ts:4: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT item_id /* CASE: coverage-any-reverse-threshold */",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 59,
+          "message": "proof-controls/src/keys-union-parity.ts:59: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT candidate.item_id /* CASE: coverage-limited-candidate-union */",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 71,
+          "message": "proof-controls/src/keys-union-parity.ts:71: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT * /* CASE: coverage-union-values-wildcard */",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 75,
+          "message": "proof-controls/src/keys-union-parity.ts:75: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT unioned.subject_id /* CASE: coverage-union-aliased-output */",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 82,
+          "message": "proof-controls/src/keys-union-parity.ts:82: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT unioned.* /* CASE: coverage-union-qualified-wildcard */",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 9,
+          "message": "proof-controls/src/keys-union-parity.ts:9: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT item_id /* CASE: coverage-any-distinct-tag */",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 9,
+          "message": "proof-controls/src/keys-union-parity.ts:9: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT item_id /* CASE: coverage-any-distinct-tag */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 90,
+          "message": "proof-controls/src/keys-union-parity.ts:90: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT topic_id /* CASE: coverage-union-query-wrapped-cte */ FROM unioned`);",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 93,
+          "message": "proof-controls/src/keys-union-parity.ts:93: [distinct-over-union] UNION removes duplicate arm rows; remove the redundant arm DISTINCT (source column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT topic_id /* CASE: coverage-union-arm-left */ FROM ratings",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/src/keys-union-parity.ts",
+          "line": 95,
+          "message": "proof-controls/src/keys-union-parity.ts:95: [distinct-over-union] UNION removes duplicate arm rows; remove the redundant arm DISTINCT (source column 2)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "(SELECT DISTINCT topic_id /* CASE: coverage-union-arm-right */ FROM ratings)`);",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/src/keys-union.ts",
+          "line": 10,
+          "message": "proof-controls/src/keys-union.ts:10: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT item_id /* CASE: coverage-embedded-any-distinct-tag */",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/src/keys-union.ts",
+          "line": 10,
+          "message": "proof-controls/src/keys-union.ts:10: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT item_id /* CASE: coverage-embedded-any-distinct-tag */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/keys-union.ts",
+          "line": 15,
+          "message": "proof-controls/src/keys-union.ts:15: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT unioned.subject_id /* CASE: coverage-embedded-union-alias */",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/src/keys-union.ts",
+          "line": 22,
+          "message": "proof-controls/src/keys-union.ts:22: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT unioned.* /* CASE: coverage-embedded-union-wildcard */",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/src/keys-union.ts",
+          "line": 29,
+          "message": "proof-controls/src/keys-union.ts:29: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT slug /* CASE: coverage-embedded-unique-is-not-null */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/keys-union.ts",
+          "line": 35,
+          "message": "proof-controls/src/keys-union.ts:35: [distinct-join-filter] joined DISTINCT rows are used only to test membership; replace the filter join with EXISTS (source column 11)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "JOIN (SELECT DISTINCT post_id AS target_id /* CASE: coverage-derived-output-alias */ FROM post_reads) AS reads",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/src/keys-union.ts",
+          "line": 39,
+          "message": "proof-controls/src/keys-union.ts:39: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT DISTINCT live.topic_id /* CASE: coverage-embedded-partial-index-foreign */",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/keys-union.ts",
+          "line": 5,
+          "message": "proof-controls/src/keys-union.ts:5: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (source column 5)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT item_id /* CASE: coverage-embedded-any-reverse-threshold */",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/src/keys-union.ts",
+          "line": 55,
+          "message": "proof-controls/src/keys-union.ts:55: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (source column 25)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const candidate = sql`SELECT item_id /* CASE: coverage-append-any-distinct-tag */ FROM direct_tags `;",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/src/keys-union.ts",
+          "line": 55,
+          "message": "proof-controls/src/keys-union.ts:55: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 25)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const candidate = sql`SELECT item_id /* CASE: coverage-append-any-distinct-tag */ FROM direct_tags `;",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/keys-union.ts",
+          "line": 60,
+          "message": "proof-controls/src/keys-union.ts:60: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (source column 21)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const union = sql`SELECT DISTINCT unioned.* /* CASE: coverage-append-union-wildcard */ FROM (`;",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/src/keys-union.ts",
+          "line": 66,
+          "message": "proof-controls/src/keys-union.ts:66: [distinct-join-filter] joined DISTINCT rows are used only to test membership; replace the filter join with EXISTS (source column 22)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "derived.append(sql`SELECT DISTINCT post_id AS target_id /* CASE: coverage-append-derived-output-alias */ FROM post_reads`);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/src/keys-union.ts",
+          "line": 77,
+          "message": "proof-controls/src/keys-union.ts:77: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 19)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "await query(sql`SELECT COUNT(DISTINCT id ORDER BY id) /* CASE: coverage-embedded-ordered-count-distinct */ FROM posts`);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/lexical-order.ts",
+          "line": 10,
+          "message": "proof-controls/src/lexical-order.ts:10: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (source column 118)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`WITH ratings AS (SELECT topic_id FROM topic_memberships UNION SELECT topic_id FROM live_topics), early AS (SELECT DISTINCT topic_id /* CASE: order-prior-union-lineage */ FROM ratings) SELECT * FROM early`);",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/src/lexical-order.ts",
+          "line": 12,
+          "message": "proof-controls/src/lexical-order.ts:12: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (source column 11)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT DISTINCT id /* CASE: order-evidence-self-physical */ FROM (WITH posts AS (SELECT id FROM posts) SELECT id FROM current_posts UNION SELECT id FROM archived_posts) pool`);",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/src/lexical-order.ts",
+          "line": 14,
+          "message": "proof-controls/src/lexical-order.ts:14: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (source column 11)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT DISTINCT id /* CASE: order-evidence-forward-physical */ FROM (WITH earlier AS (SELECT id FROM posts), posts(id) AS (VALUES(NULL::uuid)) SELECT id FROM current_posts UNION SELECT id FROM archived_posts) pool`);",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/src/lexical-order.ts",
+          "line": 15,
+          "message": "proof-controls/src/lexical-order.ts:15: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (source column 31)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`WITH post_reads AS (SELECT DISTINCT post_id /* CASE: order-self-physical-exists */ FROM post_reads) SELECT p.id FROM posts p WHERE EXISTS(SELECT * FROM post_reads r WHERE r.post_id=p.id)`);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/src/lexical-order.ts",
+          "line": 17,
+          "message": "proof-controls/src/lexical-order.ts:17: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (source column 31)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`WITH post_reads AS (SELECT DISTINCT post_id /* CASE: order-self-physical-in */ FROM post_reads) SELECT p.id FROM posts p WHERE p.id IN(SELECT post_id FROM post_reads)`);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/src/lexical-order.ts",
+          "line": 2,
+          "message": "proof-controls/src/lexical-order.ts:2: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 26)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`WITH posts AS (SELECT DISTINCT id /* CASE: order-self-physical-key */ FROM posts) SELECT id FROM posts`);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/lexical-order.ts",
+          "line": 20,
+          "message": "proof-controls/src/lexical-order.ts:20: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (source column 74)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`WITH early AS (SELECT post_id FROM post_reads), post_reads AS (SELECT DISTINCT post_id /* CASE: order-consumer-forward-physical */ FROM post_reads) SELECT p.id FROM posts p WHERE EXISTS(SELECT * FROM post_reads r WHERE r.post_id=p.id)`);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/src/lexical-order.ts",
+          "line": 22,
+          "message": "proof-controls/src/lexical-order.ts:22: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (source column 28)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`WITH watched AS (SELECT DISTINCT post_id /* CASE: order-consumer-nested-shadow */ FROM post_reads) SELECT p.id FROM posts p WHERE EXISTS(SELECT * FROM watched w WHERE w.post_id=p.id) AND EXISTS(WITH watched AS (SELECT NULL::uuid AS post_id) SELECT COUNT(*) FROM watched)`);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/src/lexical-order.ts",
+          "line": 26,
+          "message": "proof-controls/src/lexical-order.ts:26: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (source column 28)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`WITH watched AS (SELECT DISTINCT post_id /* CASE: order-consumer-recursive-shadow */ FROM post_reads) SELECT p.id FROM posts p WHERE EXISTS(SELECT * FROM watched w WHERE w.post_id=p.id) AND EXISTS(WITH RECURSIVE watched AS (SELECT NULL::uuid AS post_id UNION ALL SELECT post_id FROM watched WHERE false) SELECT COUNT(*) FROM watched)`);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/src/lexical-order.ts",
+          "line": 28,
+          "message": "proof-controls/src/lexical-order.ts:28: [distinct-join-filter] every CTE consumer tests membership or existence; remove the CTE DISTINCT (source column 28)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`WITH watched AS (SELECT DISTINCT post_id /* CASE: order-consumer-recursive-unrelated */ FROM post_reads) SELECT p.id FROM posts p WHERE EXISTS(WITH RECURSIVE walk(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM walk WHERE n<2) SELECT * FROM watched)`);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/src/lexical-order.ts",
+          "line": 4,
+          "message": "proof-controls/src/lexical-order.ts:4: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 26)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`WITH early AS (SELECT DISTINCT id /* CASE: order-forward-physical-key */ FROM posts), posts(id) AS (VALUES(NULL::uuid)) SELECT * FROM early`);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "proof-controls/src/lexical-scopes.ts",
+          "line": 17,
+          "message": "proof-controls/src/lexical-scopes.ts:17: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (source column 11)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT /* CASE: scope-candidate-unrelated-with */ item_id FROM (WITH ignored AS (VALUES(1)) SELECT item_id,tag_id FROM direct_tags UNION SELECT item_id,tag_id FROM alias_tags) pool GROUP BY item_id HAVING COUNT(*)=$1`);",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/src/lexical-scopes.ts",
+          "line": 19,
+          "message": "proof-controls/src/lexical-scopes.ts:19: [all-of-candidate-pool] GROUP BY counts candidate matches rather than aggregating a result; use one ANDed EXISTS predicate per required term (source column 11)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT /* CASE: scope-candidate-qualified-physical */ item_id FROM ((WITH direct_tags AS (VALUES(1)) SELECT item_id,tag_id FROM public.direct_tags) UNION (WITH alias_tags AS (VALUES(1)) SELECT item_id,tag_id FROM public.alias_tags)) pool GROUP BY item_id HAVING COUNT(*)=$1`);",
+          "target": "all-of-candidate-pool"
+        },
+        {
+          "file": "proof-controls/src/lexical-scopes.ts",
+          "line": 21,
+          "message": "proof-controls/src/lexical-scopes.ts:21: [distinct-over-union] UNION removes duplicate arm rows; remove the redundant arm DISTINCT (source column 40)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`(WITH ignored AS (VALUES(1)) SELECT /* CASE: scope-union-arm-unrelated-with */ DISTINCT post_id FROM post_reads) UNION SELECT NULL::uuid`);",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/src/lexical-scopes.ts",
+          "line": 23,
+          "message": "proof-controls/src/lexical-scopes.ts:23: [distinct-over-union] UNION already deduplicates the same projection; remove the redundant DISTINCT (source column 11)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT /* CASE: scope-union-outer-qualified-physical */ DISTINCT id FROM (WITH current_posts(id) AS (VALUES(NULL::uuid)) SELECT id FROM public.current_posts UNION SELECT NULL::uuid) pool`);",
+          "target": "distinct-over-union"
+        },
+        {
+          "file": "proof-controls/src/lexical-scopes.ts",
+          "line": 25,
+          "message": "proof-controls/src/lexical-scopes.ts:25: [distinct-join-filter] duplicates do not affect membership or existence; remove DISTINCT from the membership subquery (source column 78)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT p.id FROM posts p WHERE EXISTS (WITH ignored AS (VALUES(1)) SELECT /* CASE: scope-membership-unrelated-with */ DISTINCT post_id FROM post_reads)`);",
+          "target": "distinct-join-filter"
+        },
+        {
+          "file": "proof-controls/src/lexical-scopes.ts",
+          "line": 27,
+          "message": "proof-controls/src/lexical-scopes.ts:27: [aggregate-existence-test] COUNT is used only as a boolean existence test; use EXISTS or NOT EXISTS with the same filters (source column 47)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "query(sql`SELECT (WITH ignored AS (VALUES(1)) SELECT /* CASE: scope-scalar-unrelated-with */ COUNT(post_id) FROM post_reads)>0`);",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "src/suppress-file.ts",
+          "line": 1,
+          "message": "directive for `postgres-grouping-not-aggregation` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-grouping-not-aggregation",
+          "target": "postgres-grouping-not-aggregation"
+        },
+        {
+          "file": "src/suppress-line.ts",
+          "line": 4,
+          "message": "directive for `postgres-grouping-not-aggregation` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "return query(sql`SELECT DISTINCT post_id FROM topic_memberships WHERE topic_id = ${topicId}`); // no-mistakes-disable-line postgres-grouping-not-aggregation",
+          "target": "postgres-grouping-not-aggregation"
+        },
+        {
+          "file": "src/suppress-next-line-append.ts",
+          "line": 4,
+          "message": "directive for `postgres-grouping-not-aggregation` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-grouping-not-aggregation",
+          "target": "postgres-grouping-not-aggregation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

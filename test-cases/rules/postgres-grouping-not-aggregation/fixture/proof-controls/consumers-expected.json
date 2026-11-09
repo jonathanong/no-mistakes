@@ -1,0 +1,32 @@
+[
+  {
+    "file": "proof-controls/raw/consumers.sql",
+    "marker": "CASE exists-star",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/src/consumers.ts",
+    "marker": "CASE exists-star",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/raw/consumers.sql",
+    "marker": "CASE not-exists-qualified-star",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/src/consumers.ts",
+    "marker": "CASE not-exists-qualified-star",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/raw/consumers.sql",
+    "marker": "CASE membership-column",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/src/consumers.ts",
+    "marker": "CASE membership-column",
+    "code": "distinct-join-filter"
+  }
+]

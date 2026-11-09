@@ -5,3 +5,5 @@ SELECT * FROM orders WHERE id = $1;
 SELECT id FROM events WHERE kind = 'login';
 -- postgres-no-transformed-uuid-predicates: cast the parameter instead of the catalog UUID key.
 SELECT id FROM accounts WHERE CAST(id AS text) = $1 LIMIT 1;
+-- postgres-grouping-not-aggregation: catalog proves the DISTINCT is a no-op for live topic ids.
+SELECT DISTINCT topic_id FROM live_topics WHERE deleted_at IS NULL;

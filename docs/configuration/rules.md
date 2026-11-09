@@ -565,3 +565,10 @@ of an already materialized pool retain the source obligation without repeating
 it. It uses the same scoped
 SQL inputs, catalog and `columnBounds` declarations as the parent rule. See the
 [rule examples](../rules/postgres-bounded-statements.md#independent-candidate-bodies).
+
+[`postgres-grouping-not-aggregation`](../rules/postgres-grouping-not-aggregation.md)
+is opt-in and always advisory, even when severity is omitted. Explicit severity
+must be `advisory`; `error`, `fail`, and `options.fail` are rejected. Set
+`schemaCatalogPath` to enable all five shapes; without a catalog every shape
+stays silent. Its advisory `target` identifies the shape. Use ordinary disable
+comments for source exceptions supported by a plan and benchmark.

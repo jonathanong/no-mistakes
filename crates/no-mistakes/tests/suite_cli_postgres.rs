@@ -72,6 +72,8 @@ mod cli_postgres_snapshot_generated_column_writes;
 mod cli_postgres_snapshot_generated_identifier_returns;
 #[path = "cli_postgres_snapshot_generated_identifiers.rs"]
 mod cli_postgres_snapshot_generated_identifiers;
+#[path = "cli_postgres_snapshot_grouping_not_aggregation.rs"]
+mod cli_postgres_snapshot_grouping_not_aggregation;
 #[path = "cli_postgres_snapshot_idempotent_insert.rs"]
 mod cli_postgres_snapshot_idempotent_insert;
 #[path = "cli_postgres_snapshot_identifier_builders.rs"]
@@ -287,3 +289,16 @@ mod cli_postgres_transformed_sites;
 
 #[path = "cli_postgres_site_identity.rs"]
 mod cli_postgres_site_identity;
+
+#[path = "cli_postgres_snapshot_grouping_recall.rs"]
+mod cli_postgres_snapshot_grouping_recall;
+#[path = "cli_postgres_snapshot_grouping_review.rs"]
+mod cli_postgres_snapshot_grouping_review;
+
+#[path = "cli_postgres_snapshot_grouping_parameter_collision.rs"]
+mod cli_postgres_snapshot_grouping_parameter_collision;
+#[path = "cli_postgres_snapshot_grouping_recovery.rs"]
+mod cli_postgres_snapshot_grouping_recovery;
+
+#[path = "cli_postgres_snapshot_grouping_coverage.rs"]
+mod cli_postgres_snapshot_grouping_coverage;

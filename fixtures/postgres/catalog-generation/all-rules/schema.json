@@ -175,6 +175,321 @@
         }
       }
     },
+    "alias_tags": {
+      "checkConstraints": {},
+      "columns": {
+        "item_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "tag_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "alias_tags_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX alias_tags_pkey ON catalog_demo.alias_tags USING btree (item_id, tag_id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "item_id",
+              "descending": false,
+              "expression": "item_id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            },
+            {
+              "collation": null,
+              "column": "tag_id",
+              "descending": false,
+              "expression": "tag_id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "item_id",
+          "tag_id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "archived_posts": {
+      "checkConstraints": {},
+      "columns": {
+        "id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "archived_posts_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX archived_posts_pkey ON catalog_demo.archived_posts USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "blocked_posts": {
+      "checkConstraints": {},
+      "columns": {
+        "active": {
+          "comment": null,
+          "dataType": "boolean",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "post_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "blocked_posts_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX blocked_posts_pkey ON catalog_demo.blocked_posts USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "current_posts": {
+      "checkConstraints": {},
+      "columns": {
+        "id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "current_posts_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX current_posts_pkey ON catalog_demo.current_posts USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "direct_tags": {
+      "checkConstraints": {},
+      "columns": {
+        "item_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "tag_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "direct_tags_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX direct_tags_pkey ON catalog_demo.direct_tags USING btree (item_id, tag_id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "item_id",
+              "descending": false,
+              "expression": "item_id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            },
+            {
+              "collation": null,
+              "column": "tag_id",
+              "descending": false,
+              "expression": "tag_id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "item_id",
+          "tag_id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
     "events": {
       "checkConstraints": {},
       "columns": {
@@ -532,6 +847,63 @@
       "triggers": {},
       "uniqueConstraints": {}
     },
+    "live_topics": {
+      "checkConstraints": {},
+      "columns": {
+        "deleted_at": {
+          "comment": null,
+          "dataType": "timestamp with time zone",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "topic_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "live_topics_topic_id_live_key": {
+          "accessMethod": "btree",
+          "constraintBacked": false,
+          "definition": "CREATE UNIQUE INDEX live_topics_topic_id_live_key ON catalog_demo.live_topics USING btree (topic_id) WHERE (deleted_at IS NULL)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "topic_id",
+              "descending": false,
+              "expression": "topic_id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": "(deleted_at IS NULL)",
+          "primary": false,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": null,
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
     "local_key_leaf": {
       "checkConstraints": {},
       "columns": {
@@ -739,6 +1111,59 @@
       "relationKind": "partitioned table",
       "triggers": {},
       "uniqueConstraints": {}
+    },
+    "nullable_slugs": {
+      "checkConstraints": {},
+      "columns": {
+        "slug": {
+          "comment": null,
+          "dataType": "text",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "nullable_slugs_slug_key": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX nullable_slugs_slug_key ON catalog_demo.nullable_slugs USING btree (slug)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": "pg_catalog.\"default\"",
+              "column": "slug",
+              "descending": false,
+              "expression": "slug",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.text_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": false,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": null,
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {
+        "nullable_slugs_slug_key": {
+          "columns": [
+            "slug"
+          ]
+        }
+      }
     },
     "order_history": {
       "checkConstraints": {},
@@ -1034,6 +1459,453 @@
           "definition": "CREATE TRIGGER trigger_orders_no_delete BEFORE DELETE ON catalog_demo.orders FOR EACH ROW EXECUTE FUNCTION fn_reject_order_delete()"
         }
       },
+      "uniqueConstraints": {}
+    },
+    "post_reads": {
+      "checkConstraints": {},
+      "columns": {
+        "created_at": {
+          "comment": null,
+          "dataType": "timestamp with time zone",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "post_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "reader_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "post_reads_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX post_reads_pkey ON catalog_demo.post_reads USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "post_tags": {
+      "checkConstraints": {},
+      "columns": {
+        "created_at": {
+          "comment": null,
+          "dataType": "timestamp with time zone",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "post_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "tag_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "post_tags_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX post_tags_pkey ON catalog_demo.post_tags USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "posts": {
+      "checkConstraints": {},
+      "columns": {
+        "author_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "created_at": {
+          "comment": null,
+          "dataType": "timestamp with time zone",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "parent_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": true,
+          "ordinalPosition": 5
+        },
+        "slug": {
+          "comment": null,
+          "dataType": "text",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "posts_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX posts_pkey ON catalog_demo.posts USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        },
+        "posts_slug_key": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX posts_slug_key ON catalog_demo.posts USING btree (slug)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": "pg_catalog.\"default\"",
+              "column": "slug",
+              "descending": false,
+              "expression": "slug",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.text_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": false,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {
+        "posts_slug_key": {
+          "columns": [
+            "slug"
+          ]
+        }
+      }
+    },
+    "ratings": {
+      "checkConstraints": {},
+      "columns": {
+        "score": {
+          "comment": null,
+          "dataType": "integer",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "topic_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {},
+      "physicalPartition": null,
+      "primaryKey": null,
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "request_items": {
+      "checkConstraints": {},
+      "columns": {
+        "input_order": {
+          "comment": null,
+          "dataType": "integer",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "slug": {
+          "comment": null,
+          "dataType": "text",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "request_items_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX request_items_pkey ON catalog_demo.request_items USING btree (input_order)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "input_order",
+              "descending": false,
+              "expression": "input_order",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.int4_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "input_order"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    },
+    "topic_memberships": {
+      "checkConstraints": {},
+      "columns": {
+        "post_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "topic_id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "topic_memberships_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX topic_memberships_pkey ON catalog_demo.topic_memberships USING btree (post_id, topic_id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "post_id",
+              "descending": false,
+              "expression": "post_id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            },
+            {
+              "collation": null,
+              "column": "topic_id",
+              "descending": false,
+              "expression": "topic_id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "post_id",
+          "topic_id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
       "uniqueConstraints": {}
     }
   },

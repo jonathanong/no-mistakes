@@ -1,0 +1,79 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppress-file.ts",
+          "line": 1,
+          "message": "directive names disabled or out-of-scope rule `postgres-grouping-not-aggregation`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-grouping-not-aggregation",
+          "target": "postgres-grouping-not-aggregation"
+        },
+        {
+          "file": "src/suppress-line.ts",
+          "line": 4,
+          "message": "directive names disabled or out-of-scope rule `postgres-grouping-not-aggregation`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "return query(sql`SELECT DISTINCT post_id FROM topic_memberships WHERE topic_id = ${topicId}`); // no-mistakes-disable-line postgres-grouping-not-aggregation",
+          "target": "postgres-grouping-not-aggregation"
+        },
+        {
+          "file": "src/suppress-next-line-append.ts",
+          "line": 4,
+          "message": "directive names disabled or out-of-scope rule `postgres-grouping-not-aggregation`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-grouping-not-aggregation",
+          "target": "postgres-grouping-not-aggregation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppress-file.ts",
+          "line": 1,
+          "message": "directive for `postgres-grouping-not-aggregation` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-grouping-not-aggregation",
+          "target": "postgres-grouping-not-aggregation"
+        },
+        {
+          "file": "src/suppress-line.ts",
+          "line": 4,
+          "message": "directive for `postgres-grouping-not-aggregation` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "return query(sql`SELECT DISTINCT post_id FROM topic_memberships WHERE topic_id = ${topicId}`); // no-mistakes-disable-line postgres-grouping-not-aggregation",
+          "target": "postgres-grouping-not-aggregation"
+        },
+        {
+          "file": "src/suppress-next-line-append.ts",
+          "line": 4,
+          "message": "directive for `postgres-grouping-not-aggregation` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-grouping-not-aggregation",
+          "target": "postgres-grouping-not-aggregation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "file": "proof-controls/raw/coverage-tail.sql",
+    "marker": "tail-reverse-equality-rollup",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/coverage-tail.ts",
+    "marker": "tail-reverse-equality-rollup",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/raw/coverage-tail.sql",
+    "marker": "tail-consumer-unrelated-no-from",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/src/coverage-tail.ts",
+    "marker": "tail-consumer-unrelated-no-from",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/raw/coverage-tail.sql",
+    "marker": "tail-consumer-unrelated-values",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/src/coverage-tail.ts",
+    "marker": "tail-consumer-unrelated-values",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/raw/coverage-tail.sql",
+    "marker": "tail-consumer-unrelated-union",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/src/coverage-tail.ts",
+    "marker": "tail-consumer-unrelated-union",
+    "code": "distinct-join-filter"
+  }
+]

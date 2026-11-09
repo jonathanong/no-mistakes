@@ -259,3 +259,27 @@ fn bounded_statement_body_policy_is_documented_for_cli_and_node() {
         );
     }
 }
+
+#[test]
+fn grouping_advice_documents_all_codes_and_advisory_contract() {
+    let rule = no_mistakes::codebase::rules::POSTGRES_GROUPING_NOT_AGGREGATION;
+    assert_eq!(rule, "postgres-grouping-not-aggregation");
+    assert!(rule_ids_from_source(&repo_root()).contains(rule));
+    let page = read(&repo_root().join(format!("docs/rules/{rule}.md")));
+    for contract in [
+        "all-of-candidate-pool",
+        "distinct-over-unique-key",
+        "distinct-over-union",
+        "distinct-join-filter",
+        "aggregate-existence-test",
+        "advisories",
+        "target",
+        "schemaCatalogPath",
+        "options.fail",
+        "no-mistakes-disable-next-line",
+        "every shape",
+        "benchmark",
+    ] {
+        assert!(page.contains(contract), "missing {contract}");
+    }
+}

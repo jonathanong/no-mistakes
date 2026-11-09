@@ -31,6 +31,7 @@ fn validate_rules(source: &str, path: &Path, rules: &[Value], fragment: bool) ->
         let Value::Mapping(entry) = rule else {
             continue;
         };
+        validate_advisory_rule(entry, path, index)?;
         for key in entry.keys() {
             let name = key
                 .as_str()
@@ -63,6 +64,26 @@ fn validate_rules(source: &str, path: &Path, rules: &[Value], fragment: bool) ->
                 RuleDef::SUPPORTED_KEYS.join(", ")
             );
         }
+    }
+    Ok(())
+}
+
+fn validate_advisory_rule(entry: &serde_yaml::Mapping, path: &Path, index: usize) -> Result<()> {
+    if entry.get("rule").and_then(Value::as_str) != Some("postgres-grouping-not-aggregation") {
+        return Ok(());
+    }
+    if entry
+        .get("severity")
+        .is_some_and(|value| value.as_str() != Some("advisory"))
+    {
+        anyhow::bail!("{}: rules[{index}] postgres-grouping-not-aggregation is advisory only; omit severity or use severity: advisory", path.display());
+    }
+    if entry
+        .get("options")
+        .and_then(Value::as_mapping)
+        .is_some_and(|options| options.contains_key("fail"))
+    {
+        anyhow::bail!("{}: rules[{index}] postgres-grouping-not-aggregation option fail is not supported; remove it because this rule cannot fail a run", path.display());
     }
     Ok(())
 }

@@ -17,8 +17,10 @@ pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
         None,
         SqlLocationDemand::None,
         StatementProjection::Complete,
-        true,
-        false,
+        super::StatementPolicySources {
+            collect_json_writes: true,
+            ..Default::default()
+        },
     )
 }
 
@@ -33,8 +35,7 @@ pub(crate) fn extract_sql_statement_facts_with_bounds(
         None,
         SqlLocationDemand::None,
         StatementProjection::Complete,
-        false,
-        false,
+        Default::default(),
     )
 }
 
@@ -50,8 +51,7 @@ pub(crate) fn extract_sql_statement_facts_with_recovered_placeholders(
         Some(recovered_placeholder_positions),
         SqlLocationDemand::None,
         StatementProjection::Complete,
-        false,
-        false,
+        Default::default(),
     )
 }
 
@@ -66,8 +66,7 @@ pub(crate) fn extract_sql_variant_statement_facts(
         Some(positions),
         SqlLocationDemand::Full,
         StatementProjection::Complete,
-        false,
-        false,
+        Default::default(),
     )
 }
 
@@ -83,8 +82,7 @@ pub(crate) fn extract_sql_statement_facts_with_location_demand(
         Some(positions),
         demand,
         StatementProjection::Complete,
-        false,
-        false,
+        Default::default(),
     )
 }
 
@@ -107,8 +105,11 @@ pub(crate) fn extract_sql_statement_facts_with_json_writes(
         } else {
             StatementProjection::Complete
         },
-        collect_json_writes,
-        collect_index_probes,
+        super::StatementPolicySources {
+            collect_json_writes,
+            collect_index_probes,
+            ..Default::default()
+        },
     )
 }
 
@@ -131,8 +132,11 @@ pub(crate) fn extract_sql_lock_scope_facts(
         } else {
             StatementProjection::LockScope
         },
-        collect_json_writes,
-        collect_index_probes,
+        super::StatementPolicySources {
+            collect_json_writes,
+            collect_index_probes,
+            ..Default::default()
+        },
     )
 }
 
@@ -147,8 +151,7 @@ pub(crate) fn extract_sql_conflict_policy_facts(
         Some(positions),
         SqlLocationDemand::Conflicts,
         StatementProjection::ConflictPolicy,
-        false,
-        false,
+        Default::default(),
     )
 }
 
@@ -177,21 +180,21 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
         placeholder_positions,
     )
 }
-
-#[cfg(test)]
-mod location_demand_tests;
-
-#[cfg(test)]
-mod mapped_demand_tests;
-
-#[cfg(test)]
-mod policy_projection_tests;
-
-#[cfg(test)]
-mod json_write_demand_tests;
-
 #[cfg(test)]
 mod index_probe_demand_tests;
-
+#[cfg(test)]
+mod json_write_demand_tests;
+#[cfg(test)]
+mod location_demand_tests;
+#[cfg(test)]
+mod mapped_demand_tests;
+mod policy;
+#[cfg(test)]
+mod policy_projection_tests;
+pub(crate) use policy::extract_sql_statement_facts_with_policy;
 mod bind_values;
+#[cfg(test)]
+mod grouping_demand_tests;
 pub(crate) use bind_values::extract_with_bound_values;
+#[cfg(test)]
+mod grouping_recovery_tests;

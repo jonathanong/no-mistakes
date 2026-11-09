@@ -39,7 +39,10 @@ pub(crate) fn rebase_embedded_lines(
             );
             position.source_line = source_line(position.sql_line, position.sql_column);
             position.source_offset = (variant
-                || matches!(site, SqlFactSite::TransformedExpression(_)))
+                || matches!(
+                    site,
+                    SqlFactSite::TransformedExpression(_) | SqlFactSite::Grouping(_, _)
+                ))
             .then(|| {
                 call.source_offset_at_sql_position(sql, position.sql_line, position.sql_column)
             })

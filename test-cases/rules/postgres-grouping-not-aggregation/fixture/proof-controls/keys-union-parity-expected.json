@@ -1,0 +1,127 @@
+[
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-any-reverse-threshold",
+    "code": "all-of-candidate-pool"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-any-distinct-tag",
+    "code": "all-of-candidate-pool"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-any-distinct-tag",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-nested-union-candidate",
+    "code": "all-of-candidate-pool"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-wrapped-union-candidate",
+    "code": "all-of-candidate-pool"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-limited-candidate-union",
+    "code": "all-of-candidate-pool"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-union-values-wildcard",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-union-aliased-output",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-union-qualified-wildcard",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-union-query-wrapped-cte",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-union-arm-left",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-union-arm-right",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-qualified-physical-table",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-nullable-unique-is-not-null",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-partial-index-foreign-predicate",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-filtered-count-distinct",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-parenthesized-key",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-derived-output-alias",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-grouping-set-distinct",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-single-grouping-set-key",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-single-cube-key",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-cast-pinned-key",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-ordered-count-distinct",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-any-ordered-distinct-tag",
+    "code": "all-of-candidate-pool"
+  },
+  {
+    "file": "proof-controls/src/keys-union-parity.ts",
+    "marker": "coverage-any-ordered-distinct-tag",
+    "code": "distinct-over-unique-key"
+  }
+]

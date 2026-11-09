@@ -1,3 +1,4 @@
+pub(crate) use super::collect::dml::embedded_call_facts_with_policy;
 use super::{
     extract_create_table_metadata, extract_dml_write_targets, extract_embedded_sql_from_source,
     extract_locking_select_metadata, extract_migration_facts, EmbeddedSqlOptions,

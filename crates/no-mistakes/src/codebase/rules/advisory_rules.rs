@@ -1,6 +1,9 @@
 use super::{analysis_policy::AnalysisDiagnostics, RuleFinding};
 
-pub const ADVISORY_RULE_IDS: &[&str] = &[super::POSTGRES_JSON_RELATION_IDS];
+pub const ADVISORY_RULE_IDS: &[&str] = &[
+    super::POSTGRES_JSON_RELATION_IDS,
+    super::POSTGRES_GROUPING_NOT_AGGREGATION,
+];
 
 /// Route findings from always-advisory rules without treating uncertainty as advice.
 #[doc(hidden)]

@@ -1,0 +1,5 @@
+rules:
+  - rule: postgres-grouping-not-aggregation
+    scope: repository
+    enabled: true
+    options: {}

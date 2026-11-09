@@ -15,8 +15,9 @@ pub(crate) fn collect_calls<'a>(
     scoped: &'a ScopedExecutors,
     provisional: &'a [PendingRelativeSpan],
     options: &EmbeddedSqlOptions,
-    head_calls_only: bool,
+    demand: (bool, bool),
 ) -> CollectedCalls {
+    let (head_calls_only, exact_sql_origins) = demand;
     let track_order = !provisional.is_empty();
     let imported_namespace_names =
         super::super::namespace_imports::configured_namespaces(program, options);
@@ -45,6 +46,7 @@ pub(crate) fn collect_calls<'a>(
         stable_parameter_fields: Default::default(),
         scalar_literals: Default::default(),
         head_calls_only,
+        exact_sql_origins,
         source,
         configured_module: options.import_specifier.clone(),
         executor_options: options,

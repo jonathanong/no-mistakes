@@ -1,0 +1,2 @@
+- rule: postgres-grouping-not-aggregation
+  options: {fail: true}

@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 mod generated_predicates;
+mod grouping;
 mod naming;
 mod prepared_schema;
 mod schema;
@@ -63,6 +64,7 @@ fn run_schema_rules(
     facts: Option<&CheckFactMap>,
 ) -> Option<Result<Vec<RuleFinding>>> {
     Some(match rule_id {
+        POSTGRES_GROUPING_NOT_AGGREGATION => grouping::check(root, config, files, sources, facts),
         POSTGRES_JSON_RELATION_IDS => match facts {
             Some(facts) => postgres_json_relation_ids::check_with_files_sources_and_facts(
                 root, config, files, sources, facts,

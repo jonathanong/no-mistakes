@@ -15,9 +15,15 @@ fn finding(rule: &str) -> RuleFinding {
 #[test]
 fn partitions_advisories_and_preserves_equal_findings_in_both_channels() {
     let json_relation = finding(super::super::POSTGRES_JSON_RELATION_IDS);
+    let grouping = finding(super::super::POSTGRES_GROUPING_NOT_AGGREGATION);
     let ordinary = finding("ordinary-rule");
     let diagnostics = AnalysisDiagnostics {
-        findings: vec![ordinary.clone(), json_relation.clone(), ordinary.clone()],
+        findings: vec![
+            ordinary.clone(),
+            json_relation.clone(),
+            grouping.clone(),
+            ordinary.clone(),
+        ],
         advisories: vec![finding("existing-advisory"), finding("existing-advisory")],
         ..Default::default()
     };
@@ -27,6 +33,7 @@ fn partitions_advisories_and_preserves_equal_findings_in_both_channels() {
     assert_eq!(actual.findings, vec![ordinary.clone(), ordinary]);
     let mut expected_advisories = vec![
         json_relation,
+        grouping,
         finding("existing-advisory"),
         finding("existing-advisory"),
     ];

@@ -299,3 +299,9 @@ secret names, rather than individual finding exceptions. Secret inventory's
 own contract; it does not audit built-in exemptions. Boolean policy switches,
 root/file exclusions, and include filters also remain outside allow-entry
 accounting.
+
+`postgres-grouping-not-aggregation` supports the standard file, line, and next-line
+directives in raw SQL and embedded source. Its five shape codes appear in advisory
+`target` fields for consumer filtering, not as additional disable-comment rule IDs.
+Retain a grouping optimization with a location-scoped directive and measured
+explain-analyze and benchmark evidence; see the [rule examples](../rules/postgres-grouping-not-aggregation.md).

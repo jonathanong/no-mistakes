@@ -12,3 +12,9 @@ pub(crate) fn statement_extraction() {}
 pub(crate) fn general_fact_collection() {}
 #[inline]
 pub(crate) fn json_key_walk() {}
+
+#[inline(always)]
+pub(crate) fn grouping_root() {}
+
+#[inline(always)]
+pub(crate) fn grouping_parameter_copy() {}

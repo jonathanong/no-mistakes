@@ -28,13 +28,16 @@ test("JSON relation ID rule configuration is exported with named option types", 
   assert.match(exports, /export type \* from "\.\/postgres-json-relation-ids-types"/);
 });
 
-test("JSON relation ID configuration and async check compile from the package root", () => {
+test("PostgreSQL advisory configuration and async checks compile from the package root", () => {
   const { createRequire } = require("node:module");
   const dependencyRequire = createRequire(require.resolve("@storybook/react"));
   const ts = dependencyRequire("typescript");
   const repositoryRoot = join(packageRoot, "..", "..");
   const program = ts.createProgram(
-    [join(repositoryRoot, "fixtures/node-api/postgres-json-relation-ids/public.mts")],
+    [
+      join(repositoryRoot, "fixtures/node-api/postgres-json-relation-ids/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/postgres-grouping-not-aggregation/public.mts"),
+    ],
     {
       noEmit: true,
       strict: true,

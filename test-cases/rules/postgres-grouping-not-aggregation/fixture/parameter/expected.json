@@ -1,0 +1,5 @@
+[
+  {"file":"parameter/raw/parameters.sql","marker":"raw-real-nullable-unique","code":"distinct-over-unique-key"},
+  {"file":"parameter/src/parameters.ts","marker":"embedded-real-nullable-unique","code":"distinct-over-unique-key"},
+  {"file":"parameter/src/parameters.ts","marker":"append-real-nullable-unique","code":"distinct-over-unique-key"}
+]

@@ -1,0 +1,11 @@
+WITH pool AS (
+  SELECT DISTINCT id FROM items
+  UNION
+  SELECT id FROM archive
+)
+SELECT DISTINCT id FROM pool
+WHERE EXISTS (SELECT 1 FROM tags WHERE tags.item_id = pool.id);
+UPDATE items SET score = (SELECT MAX(score) FROM ratings);
+INSERT INTO archive SELECT id FROM items;
+EXPLAIN SELECT DISTINCT id FROM items;
+EXPLAIN ANALYZE SELECT DISTINCT id FROM items;

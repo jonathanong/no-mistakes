@@ -19,7 +19,7 @@ fn disabled_lock_profile_skips_helper_summary_construction() {
                 &scoped.executors,
                 &scoped.spans,
                 &options,
-                false,
+                (false, false),
             );
             assert_eq!(collected.lock_summary_passes, expected_passes);
             assert!(!collected.calls.is_empty());

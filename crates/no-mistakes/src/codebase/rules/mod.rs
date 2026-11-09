@@ -78,6 +78,7 @@ pub mod postgres_finite_text_columns;
 pub mod postgres_fk_index;
 mod postgres_function_name;
 pub mod postgres_generated_column_predicates;
+pub mod postgres_grouping_not_aggregation;
 pub mod postgres_idempotent_insert;
 pub mod postgres_identifier_length;
 pub mod postgres_json_relation_ids;

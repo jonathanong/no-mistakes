@@ -1,0 +1,112 @@
+[
+  {
+    "file": "proof-controls/raw/lexical-order.sql",
+    "marker": "order-self-physical-key",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/lexical-order.ts",
+    "marker": "order-self-physical-key",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/raw/lexical-order.sql",
+    "marker": "order-forward-physical-key",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/lexical-order.ts",
+    "marker": "order-forward-physical-key",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/raw/lexical-order.sql",
+    "marker": "order-prior-union-lineage",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "proof-controls/src/lexical-order.ts",
+    "marker": "order-prior-union-lineage",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "proof-controls/raw/lexical-order.sql",
+    "marker": "order-evidence-self-physical",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "proof-controls/src/lexical-order.ts",
+    "marker": "order-evidence-self-physical",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "proof-controls/raw/lexical-order.sql",
+    "marker": "order-evidence-forward-physical",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "proof-controls/src/lexical-order.ts",
+    "marker": "order-evidence-forward-physical",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "proof-controls/raw/lexical-order.sql",
+    "marker": "order-self-physical-exists",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/src/lexical-order.ts",
+    "marker": "order-self-physical-exists",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/raw/lexical-order.sql",
+    "marker": "order-self-physical-in",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/src/lexical-order.ts",
+    "marker": "order-self-physical-in",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/raw/lexical-order.sql",
+    "marker": "order-consumer-forward-physical",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/src/lexical-order.ts",
+    "marker": "order-consumer-forward-physical",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/raw/lexical-order.sql",
+    "marker": "order-consumer-nested-shadow",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/src/lexical-order.ts",
+    "marker": "order-consumer-nested-shadow",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/raw/lexical-order.sql",
+    "marker": "order-consumer-recursive-shadow",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/raw/lexical-order.sql",
+    "marker": "order-consumer-recursive-unrelated",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/src/lexical-order.ts",
+    "marker": "order-consumer-recursive-shadow",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/src/lexical-order.ts",
+    "marker": "order-consumer-recursive-unrelated",
+    "code": "distinct-join-filter"
+  }
+]

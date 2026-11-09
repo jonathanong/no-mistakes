@@ -11,6 +11,7 @@ require("./api-tests/declarations-mutable");
 require("./api-tests/declarations-test-state-mutation");
 require("./api-tests/declarations-live-repository-scan");
 require("./api-tests/declarations-postgres");
+require("./api-tests/declarations-grouping");
 require("./api-tests/declarations-graph");
 require("./api-tests/declarations-executor-diagnostics");
 require("./api-tests/declarations-analysis");
@@ -279,6 +280,7 @@ test("PostgreSQL executor options expose additive selection and final exclusions
     "executed-postgres-sql-types.d.ts",
     "postgres-mutable-sql-registry-types.d.ts",
     "postgres-json-relation-ids-types.d.ts",
+    "postgres-grouping-not-aggregation-types.d.ts",
     "postgres-uuid-predicate-types.d.ts",
     "postgres-unbounded-identifier-types.d.ts",
   ]) {

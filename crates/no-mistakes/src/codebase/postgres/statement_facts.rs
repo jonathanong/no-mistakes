@@ -1,5 +1,6 @@
 mod bounds;
 mod debug;
+mod grouping;
 mod iteration;
 mod json_writes;
 mod locations;
@@ -12,6 +13,7 @@ pub use bounds::{
     SqlBoundOutput, SqlBoundPin, SqlBoundQuery, SqlPinSource, SqlPossibleTemporary,
     SqlQualifiedRead, SqlQualifiedScope, SqlScalarReads,
 };
+pub(crate) use grouping::SqlGroupingQuery;
 pub use iteration::{SqlConjunctFact, SqlCursorBound, SqlLimitFact, SqlLimitValue, SqlSweepFact};
 pub use json_writes::SqlJsonWriteFact;
 pub(crate) use locations::SqlLocationDemand;
@@ -45,6 +47,7 @@ pub struct SqlStatementFileFacts {
     /// Syntactic write targets; catalog resolution happens after preparation.
     pub writes: Vec<SqlWriteFact>,
     pub json_writes: Vec<SqlJsonWriteFact>,
+    pub(crate) grouping_queries: Vec<SqlGroupingQuery>,
     pub inserts: Vec<SqlInsertFact>,
     pub selects: Vec<SqlSelectFact>,
     pub(crate) index_probes: std::collections::BTreeMap<(usize, usize), Vec<String>>,

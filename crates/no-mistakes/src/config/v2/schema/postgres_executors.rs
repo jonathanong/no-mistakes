@@ -40,6 +40,7 @@ pub(crate) const ALL_RULE_IDS: &[&str] = &[
     "postgres-require-query-annotation",
     "postgres-sql-statement-policy",
     "postgres-json-relation-ids",
+    "postgres-grouping-not-aggregation",
 ];
 
 pub(super) fn validate(rule: &RuleDef) -> Result<()> {

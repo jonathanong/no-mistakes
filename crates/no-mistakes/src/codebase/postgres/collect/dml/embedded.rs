@@ -4,18 +4,16 @@ use super::rebase::rebase_embedded_lines;
 use crate::codebase::postgres::embedded::{EmbeddedSqlFileFacts, EmbeddedSqlKind};
 use crate::codebase::postgres::statement_facts::{SqlLocationDemand, SqlStatementFileFacts};
 use crate::codebase::postgres::statements::{
-    extract_sql_conflict_policy_facts, extract_sql_statement_facts_with_json_writes,
-    extract_sql_statement_facts_with_location_demand,
+    extract_sql_conflict_policy_facts, extract_sql_statement_facts_with_location_demand,
+    extract_sql_statement_facts_with_policy,
 };
 
-pub(super) fn embedded_call_facts_with_json_writes(
+pub(super) fn embedded_call_facts_with_policy(
     file: &EmbeddedSqlFileFacts,
     collect_bounds: bool,
     variants_only: bool,
     demand: SqlLocationDemand,
-    collect_json_writes: bool,
-    collect_index_probes: bool,
-    collect_body_bounds: bool,
+    policy: crate::codebase::postgres::statements::StatementPolicySources<'_>,
 ) -> Vec<SqlStatementFileFacts> {
     let exact_locations = demand != SqlLocationDemand::None;
     file.calls
@@ -63,33 +61,34 @@ pub(super) fn embedded_call_facts_with_json_writes(
                     call.lock_scope_analysis,
                     crate::codebase::postgres::statements::StatementPolicySources {
                         bind_values: binds,
-                        collect_json_writes,
-                        collect_index_probes,
-                        collect_body_bounds,
-                        ..Default::default()
+                        ..policy.clone()
                     },
                 )
             } else if conflict_only {
                 extract_sql_conflict_policy_facts(sql, &call.recovered_placeholder_positions)
-            } else if call.lock_scope_analysis {
+            } else if call.lock_scope_analysis && !policy.collect_grouping {
                 crate::codebase::postgres::statements::extract_sql_lock_scope_facts(
                     sql,
                     collect_bounds,
                     &call.recovered_placeholder_positions,
                     projection,
-                    collect_json_writes,
-                    collect_index_probes,
-                    collect_body_bounds,
+                    policy.collect_json_writes,
+                    policy.collect_index_probes,
+                    policy.collect_body_bounds,
                 )
-            } else if collect_json_writes || collect_index_probes || collect_body_bounds {
-                extract_sql_statement_facts_with_json_writes(
+            } else if call.lock_scope_analysis
+                || policy.collect_json_writes
+                || policy.collect_index_probes
+                || policy.collect_body_bounds
+                || policy.collect_grouping
+            {
+                extract_sql_statement_facts_with_policy(
                     sql,
                     collect_bounds,
                     Some(&call.recovered_placeholder_positions),
                     projection,
-                    collect_json_writes,
-                    collect_index_probes,
-                    collect_body_bounds,
+                    policy.clone(),
+                    call.lock_scope_analysis,
                 )
             } else {
                 extract_sql_statement_facts_with_location_demand(

@@ -16,34 +16,12 @@ pub(super) fn extract(
     placeholder_positions: PlaceholderPositions<'_>,
     locations: SqlLocationDemand,
     projection: StatementProjection,
-    collect_json_writes: bool,
-    collect_index_probes: bool,
+    mut policy: super::super::StatementPolicySources<'_>,
 ) -> SqlStatementFileFacts {
-    extract_with_bind_values(
-        sql,
-        collect_bounds,
-        placeholder_positions,
-        locations,
+    policy.collect_body_bounds = matches!(
         projection,
-        super::super::StatementPolicySources {
-            collect_json_writes,
-            collect_index_probes,
-            ..Default::default()
-        },
-    )
-}
-
-pub(super) fn extract_with_bind_values(
-    sql: &str,
-    collect_bounds: bool,
-    placeholder_positions: PlaceholderPositions<'_>,
-    locations: SqlLocationDemand,
-    projection: StatementProjection,
-    policy: super::super::StatementPolicySources<'_>,
-) -> SqlStatementFileFacts {
-    let collect_json_writes = policy.collect_json_writes;
-    let collect_index_probes = policy.collect_index_probes;
-    let bind_values = policy.bind_values;
+        StatementProjection::BodyBounds | StatementProjection::BodyBoundsLockScope
+    );
     super::super::locations::work::statement_extraction();
     let prepared = PreparedSql::new(sql);
     let parsed = prepared.parse_policy();
@@ -56,16 +34,7 @@ pub(super) fn extract_with_bind_values(
             super::super::StatementSources {
                 projection,
                 locations,
-                policy: super::super::StatementPolicySources {
-                    bind_values: bind_values.clone(),
-                    collect_json_writes,
-                    collect_index_probes,
-                    collect_body_bounds: matches!(
-                        projection,
-                        StatementProjection::BodyBounds | StatementProjection::BodyBoundsLockScope
-                    ),
-                    ..Default::default()
-                },
+                policy,
                 ..Default::default()
             },
             false,
@@ -108,17 +77,10 @@ pub(super) fn extract_with_bind_values(
                     tokens: Some(&sources),
                     recovery: Some(&recovery),
                     policy: super::super::StatementPolicySources {
-                        bind_values,
-                        collect_json_writes,
-                        collect_index_probes,
-                        collect_body_bounds: matches!(
-                            projection,
-                            StatementProjection::BodyBounds
-                                | StatementProjection::BodyBoundsLockScope
-                        ),
                         tokens: Some(&policy_sources),
                         schema: None,
                         functions: &functions,
+                        ..policy
                     },
                 },
                 parse_failed,
@@ -127,4 +89,22 @@ pub(super) fn extract_with_bind_values(
             )
         }
     }
+}
+
+pub(super) fn extract_with_bind_values(
+    sql: &str,
+    collect_bounds: bool,
+    positions: PlaceholderPositions<'_>,
+    locations: SqlLocationDemand,
+    projection: StatementProjection,
+    policy: super::super::StatementPolicySources<'_>,
+) -> SqlStatementFileFacts {
+    extract(
+        sql,
+        collect_bounds,
+        positions,
+        locations,
+        projection,
+        policy,
+    )
 }

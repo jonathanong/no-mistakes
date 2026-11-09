@@ -1,0 +1,227 @@
+[
+  {
+    "file": "recall/raw/recall.sql",
+    "marker": "recall-nullable-count-distinct",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/raw/recall.sql",
+    "marker": "recall-union-star",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "recall/raw/recall.sql",
+    "marker": "recall-union-extra-expression",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "embedded-recall-nullable-count-distinct",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "embedded-recall-union-star",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "embedded-recall-union-extra-expression",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "append-recall-nullable-count-distinct",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "append-recall-union-star",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "append-recall-union-extra-expression",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "recall/raw/recall.sql",
+    "marker": "recall-composite-count-distinct",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/raw/recall.sql",
+    "marker": "recall-one-to-one-join-count",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/raw/recall.sql",
+    "marker": "recall-fanout-count-distinct",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "recall/raw/recall.sql",
+    "marker": "recall-having-distinct-id",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/raw/recall.sql",
+    "marker": "recall-filtered-distinct-id",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "embedded-recall-composite-count-distinct",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "embedded-recall-one-to-one-join-count",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "embedded-recall-fanout-count-distinct",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "embedded-recall-having-distinct-id",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "embedded-recall-filtered-distinct-id",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "append-recall-composite-count-distinct",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "append-recall-one-to-one-join-count",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "append-recall-fanout-count-distinct",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "append-recall-having-distinct-id",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "append-recall-filtered-distinct-id",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/raw/same-line.sql",
+    "marker": "raw-same-line-first",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/raw/same-line.sql",
+    "marker": "raw-same-line-second",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/same-line.ts",
+    "marker": "embedded-same-line-first",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/same-line.ts",
+    "marker": "embedded-same-line-second",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/same-line.ts",
+    "marker": "append-same-line-first",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/same-line.ts",
+    "marker": "append-same-line-second",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/raw/recall.sql",
+    "marker": "recall-count-distinct-existence",
+    "code": "aggregate-existence-test"
+  },
+  {
+    "file": "recall/raw/recall.sql",
+    "marker": "recall-grouped-key-projection",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "embedded-recall-count-distinct-existence",
+    "code": "aggregate-existence-test"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "embedded-recall-grouped-key-projection",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "append-recall-count-distinct-existence",
+    "code": "aggregate-existence-test"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "append-recall-grouped-key-projection",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/raw/recall.sql",
+    "marker": "recall-recursive-unrelated-key",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "embedded-recall-recursive-unrelated-key",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "append-recall-recursive-unrelated-key",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/raw/recall.sql",
+    "marker": "recall-any-distinct-tag-pool",
+    "code": "all-of-candidate-pool"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "embedded-recall-any-distinct-tag-pool",
+    "code": "all-of-candidate-pool"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "append-recall-any-distinct-tag-pool",
+    "code": "all-of-candidate-pool"
+  },
+  {
+    "file": "recall/raw/recall.sql",
+    "marker": "recall-any-distinct-tag-pool",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "embedded-recall-any-distinct-tag-pool",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "recall/src/recall.ts",
+    "marker": "append-recall-any-distinct-tag-pool",
+    "code": "distinct-over-unique-key"
+  }
+]

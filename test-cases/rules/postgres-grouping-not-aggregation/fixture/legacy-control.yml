@@ -1,0 +1,11 @@
+rules:
+  - rule: postgres-explicit-columns
+    scope: repository
+    severity: advisory
+    options:
+      importSpecifier: db
+      schemaCatalogPath: schema.json
+      include: ["src/**/*.ts"]
+      sqlInclude: ["raw/**/*.sql"]
+      executorNames: [query]
+      trustedSqlTags: [{ module: db, name: sql }]
