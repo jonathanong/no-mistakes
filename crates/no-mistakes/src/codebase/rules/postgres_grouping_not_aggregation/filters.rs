@@ -68,7 +68,7 @@ pub(super) fn select_filters(
             };
             if projected.iter().any(|expr| used(expr))
                 || groups(select).iter().any(&used)
-                || select.having.as_ref().is_some_and(&used)
+                || select.having.as_ref().is_some_and(used)
                 || select.selection.as_ref().is_some_and(used)
             {
                 continue;

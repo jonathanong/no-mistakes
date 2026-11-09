@@ -23,6 +23,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "aggregate-existence-test"
         },
         {
+          "file": "review/raw/review-controls.sql",
+          "line": 88,
+          "message": "review/raw/review-controls.sql:88: [aggregate-existence-test] MAX is a boolean absence test; preserve the original NOT EXISTS disjunct and replace MAX < threshold with threshold IS NOT NULL AND EXISTS for rows with a non-NULL MAX input AND NOT EXISTS for rows at or above the threshold; both new probes must read the physical outer table and correlate every grouping key, independently of the original absence filters, to preserve the HAVING rowset (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT t.topic_id FROM live_topics AS t GROUP BY t.topic_id",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "review/src/review-controls.ts",
+          "line": 124,
+          "message": "review/src/review-controls.ts:124: [aggregate-existence-test] MAX is a boolean absence test; preserve the original NOT EXISTS disjunct and replace MAX < threshold with threshold IS NOT NULL AND EXISTS for rows with a non-NULL MAX input AND NOT EXISTS for rows at or above the threshold; both new probes must read the physical outer table and correlate every grouping key, independently of the original absence filters, to preserve the HAVING rowset (source column 19)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "await query(sql`SELECT t.topic_id FROM live_topics AS t GROUP BY t.topic_id",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "review/src/review-controls.ts",
+          "line": 128,
+          "message": "review/src/review-controls.ts:128: [aggregate-existence-test] MAX is a boolean absence test; preserve the original NOT EXISTS disjunct and replace MAX < threshold with threshold IS NOT NULL AND EXISTS for rows with a non-NULL MAX input AND NOT EXISTS for rows at or above the threshold; both new probes must read the physical outer table and correlate every grouping key, independently of the original absence filters, to preserve the HAVING rowset (source column 27)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "const nullableMax = sql`SELECT t.topic_id FROM live_topics AS t GROUP BY t.topic_id `;",
+          "target": "aggregate-existence-test"
+        },
+        {
           "file": "review/src/review-controls.ts",
           "line": 68,
           "message": "review/src/review-controls.ts:68: [aggregate-existence-test] MAX is a boolean absence test; preserve the original NOT EXISTS disjunct and replace MAX < threshold with threshold IS NOT NULL AND NOT EXISTS for rows at or above the threshold (source column 5)",

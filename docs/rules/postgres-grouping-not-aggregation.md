@@ -195,8 +195,8 @@ AND NOT EXISTS (SELECT 1 FROM live_topics x
                 WHERE x.topic_id = t.topic_id AND x.deleted_at >= $1)
 ```
 
-These guards preserve the HAVING rowset; they need not preserve UNKNOWN versus
-FALSE as a standalone boolean value. This additional null-aware guidance requires
+These guards preserve the rows retained by HAVING; they need not preserve
+UNKNOWN versus FALSE as a standalone boolean value. This additional null-aware guidance requires
 a catalog-known input column; the literal anti-threshold proof does not require
 column nullability metadata.
 If the original absence subquery already tests `created_at >= $1`, retain that
