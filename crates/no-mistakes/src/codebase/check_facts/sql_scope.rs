@@ -26,7 +26,6 @@ mod work_tests;
 pub(super) fn eligible(plan: &CheckFactPlan, playwright: Option<&PlaywrightFactPlan>) -> bool {
     reject_broad_control!();
     plan.embedded_sql
-        && !plan.postgres_sql_audit
         && !plan.embedded_sql_options.is_empty()
         && plan.query_annotation_catalog.is_some()
         && !plan.query_annotation
@@ -34,7 +33,7 @@ pub(super) fn eligible(plan: &CheckFactPlan, playwright: Option<&PlaywrightFactP
             .embedded_sql_rule_ids
             .values()
             .flatten()
-            .any(|scan| scan.unrestricted())
+            .any(|scan| scan.suppression_audit || scan.unrestricted())
         && !plan.query_annotation_heads
         && plan.embedded_sql_head_calls_only.is_empty()
         && plan.sql_identifier_profiles.is_empty()

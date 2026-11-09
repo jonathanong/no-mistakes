@@ -10,7 +10,7 @@ impl SharedCheckContext {
         workspace: std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
     ) -> Result<Self> {
         use crate::check_runner::enabled::{
-            ConfiguredChecks, EnabledChecks, fact_plan, integration_configured,
+            fact_plan, integration_configured, ConfiguredChecks, EnabledChecks,
         };
         use crate::check_tasks::{
             filesystem_rules_configured, queues_configured, unique_exports_configured,
@@ -98,7 +98,7 @@ impl SharedCheckContext {
                 prepared.visible_paths.paths_for(&root).as_ref(),
             )?;
         plan.graph.imports |= !plan.production_import_paths.is_empty();
-        configure_shared_family_scopes(&root, &prepared, config, &mut plan)?;
+        configure_scopes((&session, &root), &prepared, config, &mut plan)?;
         crate::codebase::postgres::configure_prepared_postgres_plan(&root, config, &mut plan)?;
         let prepare_runner_configs = if deadlines {
             crate::integration_tests::prepare_runner_configs_with_deadline_evidence

@@ -10,6 +10,8 @@ mod vitest_project_policy;
 #[derive(Default)]
 pub(super) struct CheckOutcomes {
     partial: AtomicBool,
+    pub(super) integration_discovery:
+        std::sync::OnceLock<crate::codebase::check_facts::FamilyPathScope>,
     vitest_project_policy: std::sync::OnceLock<
         std::sync::Arc<crate::codebase::rules::vitest_project_policy::Diagnostics>,
     >,

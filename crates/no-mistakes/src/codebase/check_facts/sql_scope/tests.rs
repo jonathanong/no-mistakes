@@ -138,6 +138,7 @@ fn batch_mixed_graph_demand_preserves_other_variants_and_disabled_work_is_zero()
     let session = AnalysisSession::disabled();
     let sources = session.visible_paths(&root).source_store_for(&root);
     let request = |plan| BatchCheckFactRequest {
+        integration_discovery: crate::codebase::check_facts::FamilyPathScope::All,
         root: root.clone(),
         files: files.clone(),
         graph_files: files.clone(),
@@ -235,6 +236,7 @@ fn direct_annotation_low_and_ambiguous_requests_keep_broad_demand() {
         "non-source-only inputs must not recurse through batch assembly"
     );
     let request = || BatchCheckFactRequest {
+        integration_discovery: crate::codebase::check_facts::FamilyPathScope::All,
         root: root.clone(),
         files: files.clone(),
         graph_files: vec![],
@@ -374,6 +376,7 @@ fn all_selected_payload_classifies_once_and_retains_no_seed_set() {
     let selected = crate::diagnostics::with_observer(Some(session.clone()), || {
         seeds::select(
             &BatchCheckFactRequest {
+                integration_discovery: crate::codebase::check_facts::FamilyPathScope::All,
                 root,
                 files: files.clone(),
                 graph_files: vec![],
@@ -421,6 +424,7 @@ fn middle_exclusion_retains_selected_prefix_and_required_excluded_support() {
     let selected = crate::diagnostics::with_observer(Some(observer.clone()), || {
         seeds::select(
             &BatchCheckFactRequest {
+                integration_discovery: crate::codebase::check_facts::FamilyPathScope::All,
                 root: root.clone(),
                 files: files.clone(),
                 graph_files: vec![],

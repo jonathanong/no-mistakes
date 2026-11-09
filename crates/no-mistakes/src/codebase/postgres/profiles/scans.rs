@@ -8,6 +8,7 @@ use std::sync::Arc;
 pub struct EmbeddedSqlRuleScan {
     pub(crate) rule_id: String,
     pub(crate) annotation_seed: bool,
+    pub(crate) suppression_audit: bool,
     include: Vec<String>,
     exclude: Vec<String>,
     pub(crate) paths: Arc<crate::codebase::rules::RuleGlobFilter>,
@@ -18,6 +19,7 @@ impl EmbeddedSqlRuleScan {
         Ok(Self {
             rule_id: rule_id.to_string(),
             annotation_seed: false,
+            suppression_audit: false,
             include: include.to_vec(),
             exclude: exclude.to_vec(),
             paths: Arc::new(crate::codebase::rules::RuleGlobFilter::new(
@@ -75,5 +77,13 @@ pub(super) fn include(rule_id: &str, options: &super::EmbeddedSqlRuleOptions) ->
             .collect()
     } else {
         options.include.clone()
+    }
+}
+
+pub(super) fn configure_suppression_audit(scans: &mut EmbeddedSqlRuleScans, active: bool) {
+    if active {
+        for scan in scans.values_mut().flatten() {
+            scan.suppression_audit = true;
+        }
     }
 }

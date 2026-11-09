@@ -22,11 +22,11 @@ pub use entrypoints::{
     collect_check_facts_with_graph_files_playwright_and_sources,
     collect_check_facts_with_graph_files_playwright_sources_and_session,
     collect_check_facts_with_playwright, collect_check_facts_with_playwright_and_session,
-    collect_check_facts_with_supplemental_call_sites,
+    collect_check_facts_with_supplemental_call_sites, collect_prepared_check_facts,
 };
 
 fn collect_check_facts_inner(
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    session: super::FactRequest<'_>,
     root: &Path,
     file_scope: (Vec<PathBuf>, Vec<PathBuf>, bool),
     plan: CheckFactPlan,
@@ -100,7 +100,7 @@ fn collect_check_facts_inner(
         .filter(|facts| facts.parse_error.is_some())
         .count();
     let unproven_member_query_sql = super::relative_scope::project_relative_executor_scopes(
-        session,
+        session.session,
         root,
         &sources,
         plan.query_annotation_catalog.as_deref(),

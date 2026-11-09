@@ -83,6 +83,13 @@ pub(super) fn build(
         root, config, prepared.visible_paths.paths_for(root).as_ref(),
     )?;
     plan.graph.imports |= !plan.production_import_paths.is_empty();
+    if integration_enabled {
+        session.prepare_integration_fact_discovery(
+            root,
+            prepared.visible_paths.paths_for(root).as_ref(),
+            config,
+        );
+    }
     no_mistakes::codebase::check_facts::configure_family_path_scopes(
         root,
         prepared.visible_paths.paths_for(root).as_ref(),

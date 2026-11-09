@@ -243,6 +243,7 @@ fn batched_graph_only_files_keep_scoped_argument_demand() {
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let sources = crate::codebase::rules::source_store_for_files(&files);
     let request = BatchCheckFactRequest {
+        integration_discovery: crate::codebase::check_facts::FamilyPathScope::All,
         root: root.into(),
         // Batch planning has a separate graph-only projection. No primary
         // files may accidentally carry the missing scoped argument demand.

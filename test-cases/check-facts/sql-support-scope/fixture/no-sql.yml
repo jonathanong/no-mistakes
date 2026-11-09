@@ -1,0 +1,7 @@
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [src/caller.mts]
+      forbiddenFiles: [helpers/paging.mts]
+      relationships: [import]

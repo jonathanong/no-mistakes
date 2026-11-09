@@ -1,5 +1,5 @@
 fn collect_file_facts_from_source(
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    session: super::FactRequest<'_>,
     root: &Path,
     path: &Path,
     plan: &CheckFactPlan,
@@ -111,7 +111,7 @@ fn collect_file_facts_from_source(
                         };
                     }
                     // Fatal parser results always carry a diagnostic and return above.
-                    collect_file_facts_from_program(
+                    program::collect_file_facts_from_program_with_discovery(
                         root,
                         path,
                         plan,
@@ -121,6 +121,7 @@ fn collect_file_facts_from_source(
                         (should_store_source(plan, path)
                             || sql_identifier::policy_selected(root, path, plan))
                         .then(|| Arc::clone(&source)),
+                        session.collect_tests(plan, path),
                     )
                 };
                 let collected = if legacy_symbols {

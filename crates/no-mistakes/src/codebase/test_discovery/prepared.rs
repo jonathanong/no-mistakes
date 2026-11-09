@@ -84,6 +84,7 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
         sources,
     );
     let runner_fact_plan = crate::integration_tests::runner_config::RunnerConfigFactPlan {
+        integration_discovery: Default::default(),
         root: root.to_path_buf(),
         primary_files: std::collections::HashSet::new(),
         graph_files: graph_indexable_files.iter().cloned().collect(),

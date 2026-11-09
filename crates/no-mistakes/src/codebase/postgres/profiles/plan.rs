@@ -4,15 +4,15 @@ pub fn assign_prepared_embedded_sql_options(
     config: &NoMistakesConfig,
     plan: &mut crate::codebase::check_facts::CheckFactPlan,
 ) -> Result<()> {
-    let (options, annotation, rule_ids) = super::configured_embedded_sql_options_with_annotation(
+    let (options, annotation, mut ids) = super::configured_embedded_sql_options_with_annotation(
         config,
         super::PREPARED_EMBEDDED_SQL_RULE_IDS,
     )?;
     plan.embedded_sql = !options.is_empty();
-    plan.postgres_sql_audit |= config.audits_disable_directives();
-    plan.embedded_sql_head_calls_only = head_calls_only_profiles(&options, &annotation, &rule_ids);
+    super::scans::configure_suppression_audit(&mut ids, config.audits_disable_directives());
+    plan.embedded_sql_head_calls_only = head_calls_only_profiles(&options, &annotation, &ids);
     plan.embedded_sql_options = options;
-    plan.embedded_sql_rule_ids = rule_ids;
+    plan.embedded_sql_rule_ids = ids;
     Ok(())
 }
 include!("plan/head_calls.rs");

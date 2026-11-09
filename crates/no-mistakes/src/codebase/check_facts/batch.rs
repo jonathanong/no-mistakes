@@ -8,6 +8,7 @@ pub(crate) struct BatchCheckFactRequest {
     pub(crate) files: Vec<PathBuf>,
     pub(crate) graph_files: Vec<PathBuf>,
     pub(crate) plan: CheckFactPlan,
+    pub(crate) integration_discovery: super::FamilyPathScope,
     pub(crate) playwright: Option<PlaywrightFactPlan>,
     pub(crate) sources: Arc<crate::codebase::ts_source::SourceStore>,
 }
@@ -96,7 +97,10 @@ pub(in crate::codebase::check_facts) fn collect_check_fact_batch_with_sql_seeds(
         .zip(precollected)
         .map(|(request, facts)| {
             super::collect::collect_check_facts_with_precollected_file_facts(
-                session,
+                super::FactRequest {
+                    session,
+                    discovery: &request.integration_discovery,
+                },
                 &request.root,
                 (request.files, request.graph_files),
                 request.plan,
@@ -121,6 +125,8 @@ pub(super) fn collect_demand(
                 .map(|demand| {
                     let request = &requests[demand.request];
                     super::file::CheckFactVariant {
+                        collect_tests: !demand.plan.integration
+                            || super::family_scope::applies(&request.integration_discovery, &path),
                         root: &request.root,
                         plan: &demand.plan,
                         playwright: request.playwright.as_ref(),

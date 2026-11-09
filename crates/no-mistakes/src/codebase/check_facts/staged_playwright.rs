@@ -25,7 +25,7 @@ pub(super) struct PrecollectedFacts {
     >,
 }
 pub(super) fn collect_with_sources_and_session(
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    session: crate::codebase::check_facts::FactRequest<'_>,
     root: &Path,
     file_scope: (Vec<PathBuf>, Vec<PathBuf>, bool),
     mut plan: CheckFactPlan,
@@ -67,7 +67,7 @@ pub(super) fn collect_with_sources_and_session(
     )
 }
 pub(super) fn collect_with_precollected_ts_sources_and_session(
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    session: crate::codebase::check_facts::FactRequest<'_>,
     root: &Path,
     file_scope: (Vec<PathBuf>, Vec<PathBuf>, bool),
     mut plan: CheckFactPlan,
@@ -160,7 +160,7 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         integration_runner_configs
     });
     let unproven_member_query_sql = super::relative_scope::project_relative_executor_scopes(
-        session,
+        session.session,
         root,
         &sources,
         plan.query_annotation_catalog.as_deref(),

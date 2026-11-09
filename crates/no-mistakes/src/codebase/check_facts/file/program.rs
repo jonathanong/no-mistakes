@@ -5,7 +5,12 @@ use super::should_store_source;
 use std::path::Path;
 use std::sync::Arc;
 
-pub(crate) fn collect_file_facts_from_program(
+#[cfg(test)]
+mod compatibility;
+#[cfg(test)]
+pub(crate) use compatibility::collect_file_facts_from_program;
+
+pub(crate) fn collect_file_facts_from_program_with_discovery(
     root: &Path,
     path: &Path,
     plan: &CheckFactPlan,
@@ -13,6 +18,7 @@ pub(crate) fn collect_file_facts_from_program(
     source: &str,
     program: &oxc_ast::ast::Program<'_>,
     owned_source: Option<Arc<str>>,
+    collect_tests: bool,
 ) -> CheckFileFacts {
     let embedded_sql = prepared_embedded_sql(root, path, source, program, plan);
     let mut head_candidates = heads::candidates(plan, &embedded_sql);
@@ -83,7 +89,7 @@ pub(crate) fn collect_file_facts_from_program(
             path,
             program,
             source,
-            crate::codebase::check_facts::family_scope::applies(&plan.integration_test_paths, path),
+            collect_tests,
         )
     });
     let integration_runner_config = plan

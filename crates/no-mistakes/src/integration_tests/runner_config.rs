@@ -25,6 +25,7 @@ pub(crate) struct RunnerConfigFactPlan {
     pub(crate) primary_files: HashSet<PathBuf>,
     pub(crate) graph_files: HashSet<PathBuf>,
     pub(crate) primary_plan: crate::codebase::check_facts::CheckFactPlan,
+    pub(crate) integration_discovery: crate::codebase::check_facts::FamilyPathScope,
     pub(crate) graph_plan: crate::codebase::check_facts::CheckFactPlan,
     pub(crate) playwright: Option<crate::codebase::check_facts::PlaywrightFactPlan>,
 }

@@ -31,8 +31,8 @@ fn fixture() -> PathBuf {
     )
 }
 
-fn selected_for_discovery(plan: &CheckFactPlan, path: &std::path::Path) -> bool {
-    match &plan.integration_test_paths {
+fn selected_for_discovery(scope: &FamilyPathScope, path: &std::path::Path) -> bool {
+    match scope {
         FamilyPathScope::All => true,
         FamilyPathScope::Only(paths) => paths.contains(path),
     }
@@ -62,7 +62,8 @@ fn explicit_suite_scope_preserves_helper_and_collision_findings_and_skips_walks(
     };
     let full = collect_check_facts(&root, files.clone(), plan.clone());
     configure_family_path_scopes(&root, &files, &config, &sources, &mut plan).unwrap();
-    let scoped = collect_check_facts(&root, files.clone(), plan.clone());
+    let scope = config::test_discovery_scope(&root, &files, &config);
+    let scoped = collect_scoped(&root, files.clone(), plan.clone(), &config);
     let suites = test_support::configured_suites(&root, &config).unwrap();
     let session = crate::codebase::analysis_session::AnalysisSession::new(None);
     let report = |facts: &crate::codebase::check_facts::CheckFactMap| {
@@ -127,7 +128,7 @@ fn explicit_suite_scope_preserves_helper_and_collision_findings_and_skips_walks(
         let path = root.join(relative);
         let narrow = scoped.ts[&path].integration.as_ref().unwrap();
         assert!(
-            discovery_visits(&path, selected_for_discovery(&plan, &path))
+            discovery_visits(&path, selected_for_discovery(&scope, &path))
                 < discovery_visits(&path, true),
             "{relative}"
         );
@@ -155,13 +156,13 @@ fn explicit_suite_scope_preserves_helper_and_collision_findings_and_skips_walks(
             )
         {
             assert!(
-                discovery_visits(&path, selected_for_discovery(&plan, &path))
+                discovery_visits(&path, selected_for_discovery(&scope, &path))
                     > discovery_visits(&path, true),
                 "compatibility fallback must execute full discovery: {relative}"
             );
         } else {
             assert_eq!(
-                discovery_visits(&path, selected_for_discovery(&plan, &path)),
+                discovery_visits(&path, selected_for_discovery(&scope, &path)),
                 discovery_visits(&path, true),
                 "{relative}"
             );
@@ -174,12 +175,12 @@ fn explicit_suite_scope_preserves_helper_and_collision_findings_and_skips_walks(
         ..Default::default()
     };
     direct.include(plan.clone());
-    assert_eq!(direct.integration_test_paths, FamilyPathScope::All);
+    assert_eq!(direct.integration_paths, FamilyPathScope::All);
     plan.include(CheckFactPlan {
         integration: true,
         ..Default::default()
     });
-    assert_eq!(plan.integration_test_paths, FamilyPathScope::All);
+    assert_eq!(plan.integration_paths, FamilyPathScope::All);
 }
 
 #[test]
@@ -268,7 +269,7 @@ fn test_discovery_scope_keeps_out_of_suite_parse_error_facts() {
         };
         let full = collect_check_facts(&root, files.clone(), plan.clone());
         configure_family_path_scopes(&root, &files, &config, &sources, &mut plan).unwrap();
-        let scoped = collect_check_facts(&root, files, plan);
+        let scoped = collect_scoped(&root, files, plan, &config);
         let suites = test_support::configured_suites(&root, &config).unwrap();
         assert!(scoped.ts[&root.join(expected)].parse_error.is_some());
         assert_eq!(
@@ -409,7 +410,7 @@ fn existing_configured_fixtures_keep_full_discovery_findings_and_errors() {
         };
         let full = collect_check_facts(&root, files.clone(), plan.clone());
         configure_family_path_scopes(&root, &files, &config, &sources, &mut plan).unwrap();
-        let scoped = collect_check_facts(&root, files, plan);
+        let scoped = collect_scoped(&root, files, plan, &config);
         let report = |facts: &crate::codebase::check_facts::CheckFactMap| -> Result<_, String> {
             let suites = test_support::configured_suites(&root, &config)
                 .map_err(|error| error.to_string())?;
@@ -439,3 +440,6 @@ fn existing_configured_fixtures_keep_full_discovery_findings_and_errors() {
 }
 
 mod all_families;
+
+mod request_scope;
+use request_scope::collect_scoped;

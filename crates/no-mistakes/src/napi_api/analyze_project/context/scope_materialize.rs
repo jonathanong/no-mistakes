@@ -1,7 +1,13 @@
 impl PreparedScopePlan {
     fn fact_requests(&self) -> [crate::codebase::check_facts::BatchCheckFactRequest; 3] {
         [
-            self.primary.batch_request(&self.root),
+            self.primary.batch_request_with_discovery(
+                &self.root,
+                self.check
+                    .as_ref()
+                    .filter(|_| self.primary.plan.integration)
+                    .map(|check| check.session.integration_fact_discovery()),
+            ),
             self.supplemental.batch_request(&self.root),
             self.supplemental_call_sites.batch_request(&self.root),
         ]
@@ -21,9 +27,10 @@ impl PreparedScopePlan {
         self.traversal.seed_cached_program_facts(&self.configs);
         let graph_fact_files = graph_facts.graph_file_universe();
         let incomplete_value_flow = graph_fact_files.iter().any(|file| {
-            graph_facts.ts.get(file).is_some_and(|facts| {
-                facts.ts.value_flow.incomplete_reason.is_some()
-            })
+            graph_facts
+                .ts
+                .get(file)
+                .is_some_and(|facts| facts.ts.value_flow.incomplete_reason.is_some())
         });
         let partial_check_plan = incomplete_value_flow
             .then(|| {
@@ -114,7 +121,15 @@ impl PreparedScopePlan {
 
 impl ScopeFactPlan {
     fn batch_request(&self, root: &Path) -> crate::codebase::check_facts::BatchCheckFactRequest {
+        self.batch_request_with_discovery(root, None)
+    }
+    fn batch_request_with_discovery(
+        &self,
+        root: &Path,
+        discovery: Option<&crate::codebase::check_facts::FamilyPathScope>,
+    ) -> crate::codebase::check_facts::BatchCheckFactRequest {
         crate::codebase::check_facts::BatchCheckFactRequest {
+            integration_discovery: discovery.cloned().unwrap_or_default(),
             root: root.to_path_buf(),
             files: self.files.clone(),
             graph_files: self.graph_files.clone(),

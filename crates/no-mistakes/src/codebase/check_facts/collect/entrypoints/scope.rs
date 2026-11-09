@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 pub(super) fn collect_with_scope(
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    session: crate::codebase::check_facts::FactRequest<'_>,
     root: &Path,
     file_scope: (Vec<PathBuf>, Vec<PathBuf>, bool),
     mut plan: CheckFactPlan,
@@ -44,8 +44,9 @@ pub(super) fn collect_with_scope(
     };
     if let Some(sql_seeds) = sql_seeds {
         let mut map = crate::codebase::check_facts::batch::collect_check_fact_batch_with_sql_seeds(
-            session,
+            session.session,
             vec![crate::codebase::check_facts::batch::BatchCheckFactRequest {
+                integration_discovery: session.discovery.clone(),
                 root: root.to_path_buf(),
                 files,
                 graph_files,

@@ -65,6 +65,8 @@ fn runner_graph_helpers_retain_scoped_call_sites_and_richer_imports() {
                     collect_check_fact_batch_with_session(
                         &session,
                         vec![BatchCheckFactRequest {
+                            integration_discovery:
+                                crate::codebase::check_facts::FamilyPathScope::All,
                             root: root.clone(),
                             files: vec![config.clone()],
                             graph_files: vec![helper.clone()],

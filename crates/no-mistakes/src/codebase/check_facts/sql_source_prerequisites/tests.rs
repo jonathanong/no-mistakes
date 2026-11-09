@@ -100,6 +100,7 @@ fn failed_parse_and_read_preserve_planned_profile_and_application_membership() {
         assert_membership(&files, &path);
         let session = AnalysisSession::disabled();
         let variant = CheckFactVariant {
+            collect_tests: true,
             root: &root,
             plan: &plan,
             playwright: None,
@@ -136,6 +137,7 @@ fn unsupported_missing_source_is_not_a_sql_catalog_prerequisite() {
     let path = root.join("missing.json");
     let session = AnalysisSession::disabled();
     let variant = CheckFactVariant {
+        collect_tests: true,
         root: &root,
         plan: &plan,
         playwright: None,

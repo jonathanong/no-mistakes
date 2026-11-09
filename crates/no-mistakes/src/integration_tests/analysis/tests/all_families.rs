@@ -56,7 +56,7 @@ fn all_ts_and_primary_check_families_keep_full_integration_findings() {
     };
     let full = collect_check_facts(&root, files.clone(), plan.clone());
     configure_family_path_scopes(&root, &files, &config, &sources, &mut plan).unwrap();
-    let scoped = collect_check_facts(&root, files, plan);
+    let scoped = collect_scoped(&root, files, plan, &config);
     let report = |facts: &crate::codebase::check_facts::CheckFactMap| {
         let analyses = facts
             .ts

@@ -33,7 +33,7 @@ pub(super) fn collect_helper_facts(path: &Path, program: &oxc_ast::ast::Program<
             graph_only
         });
     let plan = graph_only_plan.as_ref().unwrap_or(plan);
-    let facts = crate::codebase::check_facts::collect_file_facts_from_program(
+    let facts = crate::codebase::check_facts::file_program_with_discovery(
         &request.root,
         &path,
         plan,
@@ -41,6 +41,11 @@ pub(super) fn collect_helper_facts(path: &Path, program: &oxc_ast::ast::Program<
         source,
         program,
         None,
+        !plan.integration
+            || crate::codebase::check_facts::discovery_applies(
+                &request.integration_discovery,
+                &path,
+            ),
     );
     REQUEST_CACHES.with(|caches| {
         if let Some(cache) = caches.borrow_mut().last_mut() {

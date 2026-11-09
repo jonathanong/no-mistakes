@@ -3,7 +3,7 @@ use crate::codebase::ts_source::FileIdMap;
 use std::path::{Path, PathBuf};
 
 pub(super) fn collect_test_partition(
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    session: crate::codebase::check_facts::FactRequest<'_>,
     root: &Path,
     files: &[PathBuf],
     plan: CheckFactPlan,

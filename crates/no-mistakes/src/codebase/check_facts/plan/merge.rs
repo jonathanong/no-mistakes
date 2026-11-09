@@ -83,7 +83,6 @@ impl CheckFactPlan {
         self.raw_source |= other.raw_source;
         self.postgres_schema |= other.postgres_schema;
         self.embedded_sql |= other.embedded_sql;
-        self.postgres_sql_audit |= other.postgres_sql_audit;
         self.embedded_sql_options.extend(other.embedded_sql_options);
         self.embedded_sql_options.sort();
         self.embedded_sql_options.dedup();

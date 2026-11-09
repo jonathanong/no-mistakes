@@ -8,7 +8,7 @@ pub(crate) type RunnerConfigFacts = std::collections::BTreeMap<
 >;
 
 pub(crate) fn collect_prepared_runner_facts(
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    session: crate::codebase::check_facts::FactRequest<'_>,
     root: &Path,
     file_scope: (&[PathBuf], &[PathBuf]),
     plans: (&CheckFactPlan, &CheckFactPlan),
@@ -46,7 +46,9 @@ pub(crate) fn collect_prepared_runner_facts(
                 if configs.contains_key(path) {
                     continue;
                 }
-                if let Some(config) = runner_plan.parse_path_for_facts_with_session(session, path) {
+                if let Some(config) =
+                    runner_plan.parse_path_for_facts_with_session(session.session, path)
+                {
                     configs.insert(path.clone(), config);
                 }
             }
@@ -60,6 +62,7 @@ pub(crate) fn collect_prepared_runner_facts(
         );
     };
     let fact_plan = crate::integration_tests::runner_config::RunnerConfigFactPlan {
+        integration_discovery: session.discovery.clone(),
         root: root.to_path_buf(),
         primary_files: files
             .iter()
@@ -85,10 +88,11 @@ pub(crate) fn collect_prepared_runner_facts(
             if let Ok(source) = sources.read_path(path) {
                 let mut results = [Some(std::mem::take(helper))];
                 super::file::production_imports::project(
-                    session,
+                    session.session,
                     path,
                     &source,
                     &[super::file::CheckFactVariant {
+                        collect_tests: session.collect_tests(plan, path),
                         root,
                         plan,
                         playwright,
