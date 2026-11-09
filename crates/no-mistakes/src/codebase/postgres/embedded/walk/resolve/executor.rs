@@ -3,7 +3,6 @@ use super::{classify_init, BindingState, ScopeVisitor};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression};
 mod variants;
-
 fn legacy_executor_call(
     visitor: &ScopeVisitor<'_>,
     call: &CallExpression<'_>,
@@ -95,7 +94,12 @@ fn legacy_executor_call(
             {
                 sql_source_positions = positions;
             }
-            super::exact_origins::fill(visitor, argument, sql.as_deref(), &mut sql_source_offsets);
+            super::exact_origins::fill(
+                visitor,
+                argument,
+                sql.as_deref(),
+                (line, &sql_source_positions, &mut sql_source_offsets),
+            );
             let (sql_text, recovered_placeholder_positions) = sql
                 .map(super::super::super::placeholders::publish_placeholders_with_positions)
                 .map_or_else(
@@ -121,7 +125,6 @@ fn legacy_executor_call(
         }
     }
 }
-
 pub(crate) fn executor_call(
     visitor: &ScopeVisitor<'_>,
     call: &CallExpression<'_>,
@@ -154,7 +157,6 @@ pub(crate) fn executor_call(
     }
     recovered
 }
-
 pub(in crate::codebase::postgres::embedded::walk) fn executor_call_from_binding(
     visitor: &ScopeVisitor<'_>,
     call: &CallExpression<'_>,
