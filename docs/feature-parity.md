@@ -53,7 +53,7 @@ case/hook/fixture deadline evidence through Rust, CLI
 failures, absent/known/unknown slots and source/inheritance provenance. Absence
 does not supply SDK defaults, and this evidence does not prove runtime timeout
 enforcement. See [declared runner evidence](cli/check.md#declared-runner-config-evidence)
-and the [agent reference](../skills/no-mistakes/references/tests.md).
+and the [agent reference](../plugins/no-mistakes/skills/no-mistakes/references/tests.md).
 
 TypeScript/JavaScript route coverage includes opt-in registered Vitest integration
 sources for exact canonical Next.js page routes. These retain Vitest ownership and share

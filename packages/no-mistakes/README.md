@@ -204,7 +204,7 @@ The optional [Vitest timeout policy](../../docs/test-timeout-policy.md) provides
 See the full documentation in [docs/](../../docs/README.md), the
 [CLI command index](../../docs/cli/README.md), and the
 [Node/N-API guide](../../docs/node-api.md). Agents can use the compact
-[packaged skill](../../skills/no-mistakes/SKILL.md).
+[packaged skill](../../plugins/no-mistakes/skills/no-mistakes/SKILL.md).
 
 The async `effects()` report keeps one row per physical call occurrence. Multiple
 configured callable/category matches appear in optional `alternatives` using the

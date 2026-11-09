@@ -2,7 +2,7 @@
 """Generate the no-mistakes eval suite.
 
     python3 evals/generate.py
-        Regenerate the main suite under evals/, pointed at skills/no-mistakes.
+        Regenerate the main suite under evals/, pointed at plugins/no-mistakes/skills/no-mistakes.
 
     python3 evals/generate.py --variant <name>
         Emit the same cases under evals-variants/<name>/, pointed at the variant
@@ -31,7 +31,7 @@ if "--variant" in sys.argv:
 else:
     VARIANT = None
     ROOT = _HERE
-    PLUGIN_PATH = "../../skills/no-mistakes"
+    PLUGIN_PATH = "../../plugins/no-mistakes/skills/no-mistakes"
 
 PREAMBLE = """Context: the `auto-harness` monorepo. pnpm workspaces under `actions/*`, `modules/*`
 (client, shared, ui) and `services/*` (api, cdk, host-daemon, host-pane, web).

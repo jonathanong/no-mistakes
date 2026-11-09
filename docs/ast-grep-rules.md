@@ -8,7 +8,7 @@ source).
 
 ## Why `ast-grep`, not a native `no-mistakes check` rule
 
-`skills/no-mistakes/references/limits-and-fallbacks.md` draws the line:
+`plugins/no-mistakes/skills/no-mistakes/references/limits-and-fallbacks.md` draws the line:
 
 > `no-mistakes` answers **graph-aware** and **config-aware** queries. It does
 > not ship a structural pattern matcher. For a pure structural blast-radius

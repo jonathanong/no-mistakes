@@ -144,8 +144,8 @@ in that PR.
   fix, suppression, new options), `docs/eslint-rules/*` for lint rules,
   `docs/graph-edges.md` for new edge kinds or filters, `docs/configuration/*`
   for new config knobs, `docs/feature-parity.md` when language or framework
-  surface changes, and `skills/no-mistakes` references for agent-facing
-  commands.
+  surface changes, and `plugins/no-mistakes/skills/no-mistakes` references
+  for agent-facing commands.
 - **Tests** — fixture-backed behavior, plus declaration locks in
   `packages/no-mistakes/scripts/api.test.js` when `.d.ts` contracts change,
   plus `crates/no-mistakes/tests/docs_coverage.rs` when adding a CLI command

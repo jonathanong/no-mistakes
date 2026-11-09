@@ -27,7 +27,7 @@ case read while tuning is no longer held out.
 
 ### 2. Skill surface no case exercises
 
-The skill's [quick command table](../skills/no-mistakes/SKILL.md) routes to
+The skill's [quick command table](../plugins/no-mistakes/skills/no-mistakes/SKILL.md) routes to
 commands that no prompt or grader mentions today:
 
 | surface | example question | why it may be worth a flow |

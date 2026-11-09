@@ -1,0 +1,18 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "no-mistakes",
+  "description": "no-mistakes agent plugins",
+  "owner": {
+    "name": "Jonathan Ong",
+    "email": "jonathanrichardong@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "no-mistakes",
+      "description": "Deterministic impact maps, test plans, Playwright coverage, and repository checks for coding agents",
+      "source": "./plugins/no-mistakes",
+      "category": "development",
+      "homepage": "https://github.com/jonathanong/no-mistakes"
+    }
+  ]
+}

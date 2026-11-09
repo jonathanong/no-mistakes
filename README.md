@@ -233,6 +233,22 @@ the output feeds another shell command, and `--timings` when explaining analysis
 cost. For repeated in-process queries, prefer the async Node API so one agent
 workflow can avoid subprocess overhead.
 
+### Agent plugin
+
+This repository is a plugin marketplace for Claude Code and Codex. The
+`no-mistakes` plugin ships the [packaged agent skill](plugins/no-mistakes/skills/no-mistakes/SKILL.md),
+which calls the `no-mistakes` CLI, so the CLI must be on `PATH` (for example
+`npm install --global no-mistakes`).
+
+```sh
+# Claude Code
+claude plugin marketplace add jonathanong/no-mistakes
+claude plugin install no-mistakes@no-mistakes
+
+# Codex (then enable the no-mistakes plugin)
+codex plugin marketplace add jonathanong/no-mistakes
+```
+
 ### Example recipes
 
 | Goal | Command |
@@ -256,7 +272,7 @@ workflow can avoid subprocess overhead.
 - [no-mistakes rules](docs/rules/README.md)
 - [ESLint rules](docs/eslint-rules/README.md)
 - [Agent guide](docs/agent-guide.md)
-- [Packaged agent skill](skills/no-mistakes/SKILL.md)
+- [Packaged agent skill](plugins/no-mistakes/skills/no-mistakes/SKILL.md)
 - [AST analysis behavior](docs/ast-analysis.md)
 
 ## Contributing

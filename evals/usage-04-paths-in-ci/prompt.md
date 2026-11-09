@@ -4,7 +4,7 @@ runs: 3
 max_turns: 10
 timeout_seconds: 300
 allowed_tools: [Read, Glob, Grep, Skill]
-plugins: [../../skills/no-mistakes]
+plugins: [../../plugins/no-mistakes/skills/no-mistakes]
 tags: [usage]
 append_system_prompt: |
   You are in plan mode. You must not make any edits or other side-effecting

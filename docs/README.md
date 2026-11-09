@@ -12,7 +12,7 @@ the job you have; the rest of this index is reference.
 | Humans | Install, first queries, and what config unlocks | [README](../README.md#install-and-first-queries), [Configuration](configuration/README.md) |
 | Humans | Repository checks and file-local lint rules | [no-mistakes rules](rules/README.md), [ESLint rules](eslint-rules/README.md) |
 | Agents | Change lifecycle and command selection | [Agent guide](agent-guide.md) |
-| Agents | Compact skill to install in a harness | [Packaged agent skill](../skills/no-mistakes/SKILL.md) |
+| Agents | Compact skill to install in a harness | [Packaged agent skill](../plugins/no-mistakes/skills/no-mistakes/SKILL.md) |
 | Either | Pick a CLI command or async Node API | [CLI commands](cli/README.md), [Node/N-API guide](node-api.md) |
 | Either | Diagnose analysis cost without changing output | [Performance diagnostics](cli/diagnostics.md) |
 | Either | Static-analysis limits | [AST analysis behavior](ast-analysis.md) |
@@ -38,5 +38,5 @@ the job you have; the rest of this index is reference.
 ## Validation
 
 ```sh
-lychee --no-progress --exclude-path '^fixtures/' README.md 'docs/**/*.md' 'skills/**/*.md' 'packages/*/README.md' 'crates/*/README.md' AGENTS.md
+lychee --no-progress --exclude-path '^fixtures/' README.md 'docs/**/*.md' 'plugins/no-mistakes/skills/**/*.md' 'packages/*/README.md' 'crates/*/README.md' AGENTS.md
 ```

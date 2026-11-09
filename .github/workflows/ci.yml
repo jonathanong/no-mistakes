@@ -268,7 +268,7 @@ jobs:
             --exclude-path ^fixtures/
             README.md
             docs/**/*.md
-            skills/**/*.md
+            plugins/no-mistakes/skills/**/*.md
             packages/*/README.md
             crates/*/README.md
             AGENTS.md
