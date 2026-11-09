@@ -1,0 +1,22 @@
+{
+  "raw": [
+    [
+      38,
+      "aggregate-existence-test"
+    ],
+    [
+      46,
+      "aggregate-existence-test"
+    ]
+  ],
+  "embedded": [
+    [
+      49,
+      "aggregate-existence-test"
+    ],
+    [
+      58,
+      "aggregate-existence-test"
+    ]
+  ]
+}
