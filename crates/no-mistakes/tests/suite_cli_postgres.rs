@@ -290,3 +290,5 @@ mod cli_postgres_site_identity;
 
 #[path = "cli_postgres_snapshot_grouping_review.rs"]
 mod cli_postgres_snapshot_grouping_review;
+#[path = "cli_postgres_snapshot_grouping_recall.rs"]
+mod cli_postgres_snapshot_grouping_recall;

@@ -1,0 +1,11 @@
+[
+  {"file":"recall/raw/recall.sql","marker":"recall-nullable-count-distinct","code":"distinct-over-unique-key"},
+  {"file":"recall/raw/recall.sql","marker":"recall-union-star","code":"distinct-over-union"},
+  {"file":"recall/raw/recall.sql","marker":"recall-union-extra-expression","code":"distinct-over-union"},
+  {"file":"recall/src/recall.ts","marker":"embedded-recall-nullable-count-distinct","code":"distinct-over-unique-key"},
+  {"file":"recall/src/recall.ts","marker":"embedded-recall-union-star","code":"distinct-over-union"},
+  {"file":"recall/src/recall.ts","marker":"embedded-recall-union-extra-expression","code":"distinct-over-union"},
+  {"file":"recall/src/recall.ts","marker":"append-recall-nullable-count-distinct","code":"distinct-over-unique-key"},
+  {"file":"recall/src/recall.ts","marker":"append-recall-union-star","code":"distinct-over-union"},
+  {"file":"recall/src/recall.ts","marker":"append-recall-union-extra-expression","code":"distinct-over-union"}
+]
