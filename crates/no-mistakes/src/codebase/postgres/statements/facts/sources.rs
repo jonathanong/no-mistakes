@@ -6,6 +6,7 @@ pub(crate) struct StatementPolicySources<'a> {
     pub(crate) bind_values: super::super::bounds::BindValues,
     pub(crate) collect_json_writes: bool,
     pub(crate) collect_grouping: bool,
+    pub(crate) grouping_complete: Option<&'a [bool]>,
     pub(crate) collect_index_probes: bool,
     pub(crate) collect_body_bounds: bool,
     pub(crate) tokens: Option<&'a [Option<Arc<[TokenWithSpan]>>]>,
@@ -52,6 +53,15 @@ impl StatementProjection {
 }
 
 impl<'a> StatementSources<'a> {
+    pub(super) fn grouping_requested(&self, index: usize) -> bool {
+        self.policy.collect_grouping
+            && self
+                .recovery
+                .map(|recovery| recovery.complete)
+                .or(self.policy.grouping_complete)
+                .is_none_or(|complete| complete.get(index) == Some(&true))
+    }
+
     pub(super) fn location_tokens(
         &self,
         index: usize,

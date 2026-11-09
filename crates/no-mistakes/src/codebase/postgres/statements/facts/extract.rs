@@ -71,7 +71,7 @@ pub(super) fn extract_from_parsed_and_sources(
                 locations.collect(statement);
             }
             writes::collect(statement, &mut writes);
-            grouping::collect(statement, &mut groups, sources.policy.collect_grouping);
+            grouping::collect(statement, &mut groups, sources.grouping_requested(index));
             if sources.policy.collect_json_writes {
                 super::super::json_writes::collect(statement, &mut json_writes);
             }

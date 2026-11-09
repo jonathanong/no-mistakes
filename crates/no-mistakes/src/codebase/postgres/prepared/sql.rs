@@ -36,8 +36,8 @@ pub(super) fn collect(
                 let prepared = crate::codebase::postgres::parse::PreparedSql::new(source);
                 let parsed = prepared.parse_policy();
                 let failed = parsed.is_err();
-                let (statements, functions, failures, statement_sources) = match parsed {
-                    Ok(statements) => (statements, Vec::new(), Vec::new(), Vec::new()),
+                let (statements, functions, failures, statement_sources, grouping_complete) = match parsed {
+                    Ok(statements) => (statements, Vec::new(), Vec::new(), Vec::new(), None),
                     Err(_) => {
                         let recovered = crate::codebase::postgres::parse::parse_postgres_sql_lenient_with_sources(
                             source,
@@ -46,18 +46,19 @@ pub(super) fn collect(
                         let failures = crate::codebase::postgres::migration::recovery_failures(&recovered);
                         let (mut located, functions) = crate::codebase::postgres::parse::partition_function_sources(recovered);
                         prepared.adopt_recovered_arbiters(&mut located);
+                        let grouping_complete = plan.postgres_grouping.then(|| located.iter().map(|statement| statement.complete).collect::<Vec<_>>());
                         {
                             let sources: Vec<_> = located.iter().map(|located| located.source.clone().or_else(|| located.chunk_tokens.clone())).collect();
-                            (located.into_iter().map(|located| located.statement).collect(), functions, failures, sources)
+                            (located.into_iter().map(|located| located.statement).collect(), functions, failures, sources, grouping_complete)
                         }
                     }
                 };
-                (statements, functions, failures, failed, prepared, statement_sources)
+                (statements, functions, failures, failed, prepared, statement_sources, grouping_complete)
             });
             let schema = (plan.postgres_schema && schema_set.contains(path)).then(|| {
                 parsed
                     .as_ref()
-                    .map(|(statements, functions, failures, _, prepared, statement_sources)| {
+                    .map(|(statements, functions, failures, _, prepared, statement_sources, _)| {
                         let mut functions = functions.clone();
                         functions.extend_from_slice(&prepared.functions());
                         let tokens: Vec<_> = statements.iter().enumerate().map(|(index, _)| statement_sources.get(index).and_then(|source| source.as_deref()).unwrap_or_else(|| prepared.tokens())).collect();
@@ -82,7 +83,7 @@ pub(super) fn collect(
             let statements = plan.postgres_dml.then(|| {
                 parsed
                     .as_ref()
-                    .map(|(statements, functions, failures, failed, prepared, statement_sources)| {
+                    .map(|(statements, functions, failures, failed, prepared, statement_sources, grouping_complete)| {
                         let mut value = crate::codebase::postgres::statements::extract_from_parsed_with_recovered_placeholders(
                             source.as_ref().unwrap(),
                             prepared,
@@ -97,6 +98,7 @@ pub(super) fn collect(
                                 functions,
                                 collect_json_writes: plan.postgres_json_writes,
                                 collect_grouping: plan.postgres_grouping,
+                                grouping_complete: grouping_complete.as_deref(),
                                 collect_index_probes: plan.postgres_index_probes,
                                 collect_body_bounds: plan.postgres_body_bounds,
                             },

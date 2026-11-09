@@ -197,3 +197,6 @@ pub(crate) use policy::extract_sql_statement_facts_with_policy;
 mod grouping_demand_tests;
 mod bind_values;
 pub(crate) use bind_values::extract_with_bound_values;
+
+#[cfg(test)]
+mod grouping_recovery_tests;
