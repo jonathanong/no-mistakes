@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const { isAbsolute, join, relative, resolve, sep } = require("node:path");
 const test = globalThis.test || require("node:test").test;
+const { fixtureRelativePath } = require("./fixture-relative-path.js");
 
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 const root = join(__dirname, "../../../test-cases/rules/test-no-live-repository-scan/fixture");
@@ -312,11 +313,7 @@ for (const [name, expected, incomplete = []] of [
             .sort();
           assert.deepEqual(findings, expected, name);
           assert.deepEqual(
-            (report.incomplete || [])
-              .map(({ file }) =>
-                (isAbsolute(file) ? relative(fixture, file) : file).split(sep).join("/"),
-              )
-              .sort(),
+            (report.incomplete || []).map(({ file }) => fixtureRelativePath(file, fixture)).sort(),
             incomplete,
             name,
           );
@@ -421,13 +418,13 @@ for (const [label, reports] of [
                 : ["qa.runner.ts", "src/config-client.ts"];
           const reverse = before.reports.find(({ id }) => id === "reverse" || id === "explicit");
           assert.deepEqual(
-            reverse.result.files.map(({ path }) => path),
+            reverse.result.files.map(({ path }) => fixtureRelativePath(path, fixture)),
             expected,
           );
           if (label === "ordinary graph") {
             assert.deepEqual(before.reports[0].result.directImporters, ["qa.runner.ts"]);
             assert.deepEqual(
-              before.reports[1].result.files.map(({ path }) => path),
+              before.reports[1].result.files.map(({ path }) => fixtureRelativePath(path, fixture)),
               ["qa.runner.ts", "settings.ts"],
             );
             assert.deepEqual(before.reports[3].result.files, []);
@@ -469,7 +466,9 @@ for (const [label, type, file, diagnostics] of [
             label,
           );
           assert.deepEqual(
-            before.reports[0].result.diagnostics.map(({ file }) => file),
+            before.reports[0].result.diagnostics.map(({ file }) =>
+              fixtureRelativePath(file, fixture),
+            ),
             diagnostics,
           );
           assert.deepEqual(

@@ -5,7 +5,7 @@
     "target": "ES2022",
     "composite": true
   },
-  "include": [
+  "files": [
     "../../qa.runner.ts"
   ]
 }

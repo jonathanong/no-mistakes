@@ -1,0 +1,60 @@
+{
+  "accepted": [
+    {
+      "root": "D:\\a\\no-mistakes\\fixture",
+      "file": "//?/D:/a/no-mistakes/fixture/setup.ts",
+      "expected": "setup.ts"
+    },
+    {
+      "root": "D:\\a\\no-mistakes\\fixture",
+      "file": "\\\\?\\D:\\a\\no-mistakes\\fixture\\setup.ts",
+      "expected": "setup.ts"
+    },
+    {
+      "root": "D:\\a\\no-mistakes\\fixture",
+      "file": "src\\config-client.ts",
+      "expected": "src/config-client.ts"
+    },
+    {
+      "root": "\\\\server\\share\\fixture",
+      "file": "\\\\?\\UNC\\server\\share\\fixture\\setup.ts",
+      "expected": "setup.ts"
+    },
+    {
+      "root": "/tmp/no-mistakes/fixture",
+      "file": "/tmp/no-mistakes/fixture/setup.ts",
+      "expected": "setup.ts"
+    },
+    {
+      "root": "/tmp/no-mistakes/fixture",
+      "file": "src/entry.ts",
+      "expected": "src/entry.ts"
+    }
+  ],
+  "rejected": [
+    {
+      "root": "D:\\a\\no-mistakes\\fixture",
+      "file": "\\\\?\\D:\\a\\no-mistakes\\outside.ts"
+    },
+    {
+      "root": "D:\\a\\no-mistakes\\fixture",
+      "file": "E:\\other\\setup.ts"
+    },
+    {
+      "root": "/tmp/no-mistakes/fixture",
+      "file": "/tmp/no-mistakes/outside.ts"
+    },
+    {
+      "root": "D:\\a\\no-mistakes\\fixture",
+      "file": "\\\\?\\Volume{unknown}\\setup.ts"
+    },
+    {
+      "root": "/tmp/no-mistakes/fixture",
+      "file": ".."
+    },
+    {
+      "root": "D:\\a\\no-mistakes\\fixture",
+      "file": "..\\outside.ts"
+    }
+  ]
+}
