@@ -77,6 +77,18 @@ fn coverage_producer_assertion_owner_builtins_json_matches_snapshot() {
 }
 
 #[test]
+fn coverage_producer_assertion_owner_external_stars_json_matches_snapshot() {
+    let dir = "coverage-producer-assertion-owner-external-stars/fixture";
+    assert_saved_fixture(
+        "coverage_producer_assertion_owner_external_stars",
+        &[
+            rule("enabled", dir, ".no-mistakes.yml"),
+            rule("disabled", dir, "disabled.yml"),
+        ],
+    );
+}
+
+#[test]
 fn coverage_producer_assertion_owner_json_matches_snapshot() {
     let dir = "coverage-producer-assertion-owner/fixture";
     assert_saved_fixture(

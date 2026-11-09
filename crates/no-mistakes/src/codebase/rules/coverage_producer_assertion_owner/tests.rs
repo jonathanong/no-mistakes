@@ -213,3 +213,5 @@ mod partial;
 mod cause_diagnostics;
 
 mod reexports;
+
+mod external_stars;

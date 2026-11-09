@@ -1,0 +1,20 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/producers.mts, symbol: plainStar }
+        - { file: src/producers.mts, symbol: chainedStar }
+        - { file: src/producers.mts, symbol: localExportShadow }
+        - { file: src/producers.mts, symbol: localParameterShadow }
+        - { file: src/producers.mts, symbol: competingStars }
+        - { file: src/producers.mts, symbol: competingLocalStar }
+        - { file: src/producers.mts, symbol: cycle }
+        - { file: src/producers.mts, symbol: missingSource }
+        - { file: src/producers.mts, symbol: defaultImport }
+        - { file: src/producers.mts, symbol: dottedMember }
+        - { file: src/producers.mts, symbol: assertionStar }
+        - { file: src/producers.mts, symbol: fsStar }
+        - { file: src/producers.mts, symbol: fsDirect }
+      assertions: [{ module: "node:assert/strict", export: ok }]
