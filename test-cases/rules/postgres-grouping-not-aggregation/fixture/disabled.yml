@@ -1,0 +1,12 @@
+rules:
+  - rule: postgres-grouping-not-aggregation
+    scope: repository
+    enabled: false
+    severity: advisory
+    options:
+      importSpecifier: db
+      schemaCatalogPath: schema.json
+      include: ["src/**/*.ts"]
+      sqlInclude: ["raw/**/*.sql"]
+      executorNames: [query]
+      trustedSqlTags: [{ module: db, name: sql }]

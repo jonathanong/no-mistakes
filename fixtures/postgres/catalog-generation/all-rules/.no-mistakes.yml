@@ -118,3 +118,13 @@ rules:
     scope: repository
     options:
       schemaCatalogPath: schema.json
+
+  - rule: postgres-grouping-not-aggregation
+    scope: repository
+    severity: advisory
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: "@example/db"
+      include: ["src/**/*.ts"]
+      sqlInclude: ["sql/**/*.sql"]
+      executorNames: [query]

@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-grouping-not-aggregation
+    scope: repository
+    severity: advisory
+    options:
+      schemaCatalogPath: schema.json
+      fail: true

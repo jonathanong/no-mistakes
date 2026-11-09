@@ -66,6 +66,8 @@ mod cli_postgres_snapshot_fk_index;
 mod cli_postgres_snapshot_fk_on_delete;
 #[path = "cli_postgres_snapshot_generated_column_predicates.rs"]
 mod cli_postgres_snapshot_generated_column_predicates;
+#[path = "cli_postgres_snapshot_grouping_not_aggregation.rs"]
+mod cli_postgres_snapshot_grouping_not_aggregation;
 #[path = "cli_postgres_snapshot_generated_column_writes.rs"]
 mod cli_postgres_snapshot_generated_column_writes;
 #[path = "cli_postgres_snapshot_generated_identifier_returns.rs"]
