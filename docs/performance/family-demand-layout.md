@@ -23,6 +23,6 @@ marks every consuming scan and any marked scan prevents SQL narrowing. Matching
 scan applications coalesce and retain the audit requirement by logical OR. A
 consumer with no declared SQL scans contributes no SQL suppression inventory.
 
-This prototype reorganizes request ownership. It does not establish the cause of
-small control timing differences or claim a performance improvement. Paired
-profiling and the full consuming/control measurement gate remain necessary.
+These ownership boundaries preserve independent request projections. Work-count
+tests establish which collectors run; matched consuming and control measurements
+separately establish runtime and memory effects.
