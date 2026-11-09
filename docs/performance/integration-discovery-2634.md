@@ -67,7 +67,7 @@ wall clock includes process startup through exit, including rendering.
 separate cells. Each cell has 12 alternating forward/reverse balanced blocks
 (24 samples per arm), followed by same-binary calibration blocks. No clocks
 are paused and no reporting overhead is subtracted. Fresh cohorts separately
-record four untimed ABBA warmup processes per cell and recheck both executable
+record four ABBA warmup processes outside measurement in each cell and recheck both executable
 hashes after sampling. Builds/tests stay idle
 under the shared lock while sampling.
 
