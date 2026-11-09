@@ -1,0 +1,34 @@
+{
+  "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42661762209",
+  "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42661762209/job/129314869428",
+  "headSha": "fd37930b8f68e9c43798c35e4ff33521b3261b19",
+  "event": "pull_request",
+  "conclusion": "cancelled",
+  "startedAt": "2026-11-09T17:09:02Z",
+  "completedAt": "2026-11-09T17:21:10Z",
+  "steps": [
+    {
+      "name": "Build native CLI and N-API addon",
+      "conclusion": "success",
+      "startedAt": "2026-11-09T17:09:46Z",
+      "completedAt": "2026-11-09T17:14:41Z"
+    },
+    {
+      "name": "Run real N-API API test",
+      "conclusion": "cancelled",
+      "startedAt": "2026-11-09T17:18:10Z",
+      "completedAt": "2026-11-09T17:21:07Z"
+    }
+  ],
+  "observedLogLines": [
+    "2026-11-09T17:21:07.0355386Z       Tests  828 passed (828)",
+    "2026-11-09T17:21:07.0356157Z    Duration  175.36s (tests 100%)",
+    "2026-11-09T17:21:07.0790052Z ##[error]The operation was canceled."
+  ],
+  "reportedTestDurationSeconds": 175.36,
+  "completedTests": 828,
+  "startupTeardownReserveSeconds": 30,
+  "postJobReserveSeconds": 120,
+  "apiStepTimeoutSeconds": 180,
+  "note": "All assertions passed before the job cancelled during API finalization; the step and job outcomes remain censored."
+}

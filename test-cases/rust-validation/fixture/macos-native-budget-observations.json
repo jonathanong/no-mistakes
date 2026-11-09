@@ -1,0 +1,238 @@
+{
+  "source": "Supplied Test CI runs, gh run view --json jobs and job logs",
+  "buildReserveSeconds": 60,
+  "platformReserveSeconds": 120,
+  "postJobReserveSeconds": 120,
+  "observations": [
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42661544370",
+      "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42661544370/job/129314116106",
+      "headSha": "4a946263597fbe5fe07276f55c0fdcce3d4f83b9",
+      "event": "pull_request",
+      "conclusion": "failure",
+      "startedAt": "2026-11-09T17:07:42Z",
+      "completedAt": "2026-11-09T17:19:37Z",
+      "steps": [
+        {
+          "name": "Build native CLI and N-API addon",
+          "conclusion": "failure",
+          "startedAt": "2026-11-09T17:09:03Z",
+          "completedAt": "2026-11-09T17:19:16Z"
+        },
+        {
+          "name": "Run platform-specific Rust tests",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-09T17:19:16Z",
+          "completedAt": "2026-11-09T17:19:16Z"
+        },
+        {
+          "name": "Run real N-API API test",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-09T17:19:16Z",
+          "completedAt": "2026-11-09T17:19:16Z"
+        }
+      ],
+      "observedLogLines": [
+        "2026-11-09T17:19:16.4204350Z ##[error]The action 'Build native CLI and N-API addon' has timed out after 10 minutes."
+      ]
+    },
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42648642756",
+      "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42648642756/job/129268661284",
+      "headSha": "f12b23325985dd3ceb09322447ef768b3ffaf252",
+      "event": "pull_request",
+      "conclusion": "failure",
+      "startedAt": "2026-11-09T15:50:15Z",
+      "completedAt": "2026-11-09T16:02:04Z",
+      "steps": [
+        {
+          "name": "Build native CLI and N-API addon",
+          "conclusion": "failure",
+          "startedAt": "2026-11-09T15:51:29Z",
+          "completedAt": "2026-11-09T16:01:42Z"
+        },
+        {
+          "name": "Run platform-specific Rust tests",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-09T16:01:42Z",
+          "completedAt": "2026-11-09T16:01:42Z"
+        },
+        {
+          "name": "Run real N-API API test",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-09T16:01:42Z",
+          "completedAt": "2026-11-09T16:01:42Z"
+        }
+      ],
+      "observedLogLines": [
+        "2026-11-09T16:01:42.3715170Z ##[error]The action 'Build native CLI and N-API addon' has timed out after 10 minutes."
+      ]
+    },
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42632295936",
+      "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42632295936/job/129211389495",
+      "headSha": "41837bc819b55c87f0845716e71635389b07bcce",
+      "event": "push",
+      "conclusion": "success",
+      "startedAt": "2026-11-09T14:11:53Z",
+      "completedAt": "2026-11-09T14:38:05Z",
+      "steps": [
+        {
+          "name": "Build native CLI and N-API addon",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T14:12:51Z",
+          "completedAt": "2026-11-09T14:20:18Z"
+        },
+        {
+          "name": "Run platform-specific Rust tests",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T14:20:18Z",
+          "completedAt": "2026-11-09T14:34:03Z"
+        },
+        {
+          "name": "Run real N-API API test",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T14:34:03Z",
+          "completedAt": "2026-11-09T14:37:53Z"
+        }
+      ],
+      "observedLogLines": [
+        "2026-11-09T14:37:53.7461640Z       Tests  629 passed | 2 skipped (631)",
+        "2026-11-09T14:37:53.7463590Z    Duration  227.67s (tests 100%)"
+      ]
+    },
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42637458882",
+      "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42637458882/job/129229319236",
+      "headSha": "2666b84aa6cac3c477eb000bb064a53b1962a4b2",
+      "event": "push",
+      "conclusion": "success",
+      "startedAt": "2026-11-09T14:43:31Z",
+      "completedAt": "2026-11-09T15:08:40Z",
+      "steps": [
+        {
+          "name": "Build native CLI and N-API addon",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T14:44:32Z",
+          "completedAt": "2026-11-09T14:52:21Z"
+        },
+        {
+          "name": "Run platform-specific Rust tests",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T14:52:21Z",
+          "completedAt": "2026-11-09T15:05:05Z"
+        },
+        {
+          "name": "Run real N-API API test",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T15:05:05Z",
+          "completedAt": "2026-11-09T15:08:29Z"
+        }
+      ],
+      "observedLogLines": [
+        "2026-11-09T15:08:29.3290210Z       Tests  629 passed | 2 skipped (631)",
+        "2026-11-09T15:08:29.3333080Z    Duration  201.29s (tests 100%)"
+      ]
+    },
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42651566212",
+      "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42651566212/job/129278991057",
+      "headSha": "388c26baec37a454610887a3b2d0e4c6ccd979fb",
+      "event": "pull_request",
+      "conclusion": "success",
+      "startedAt": "2026-11-09T16:07:40Z",
+      "completedAt": "2026-11-09T16:36:37Z",
+      "steps": [
+        {
+          "name": "Build native CLI and N-API addon",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:08:47Z",
+          "completedAt": "2026-11-09T16:18:28Z"
+        },
+        {
+          "name": "Run platform-specific Rust tests",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:18:28Z",
+          "completedAt": "2026-11-09T16:32:41Z"
+        },
+        {
+          "name": "Run real N-API API test",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:32:42Z",
+          "completedAt": "2026-11-09T16:36:20Z"
+        }
+      ],
+      "observedLogLines": [
+        "2026-11-09T16:36:20.2746710Z       Tests  629 passed | 2 skipped (631)",
+        "2026-11-09T16:36:20.2747990Z    Duration  216.22s (tests 100%)"
+      ]
+    },
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42603917247",
+      "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42603917247/job/129114854983",
+      "headSha": "527b21f1739371ab0f4c2c034e0963c0cc37ade2",
+      "event": "push",
+      "conclusion": "success",
+      "startedAt": "2026-11-09T10:48:40Z",
+      "completedAt": "2026-11-09T11:08:04Z",
+      "steps": [
+        {
+          "name": "Build native CLI and N-API addon",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T10:49:27Z",
+          "completedAt": "2026-11-09T10:55:15Z"
+        },
+        {
+          "name": "Run platform-specific Rust tests",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T10:55:15Z",
+          "completedAt": "2026-11-09T11:05:08Z"
+        },
+        {
+          "name": "Run real N-API API test",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T11:05:08Z",
+          "completedAt": "2026-11-09T11:07:55Z"
+        }
+      ],
+      "observedLogLines": [
+        "2026-11-09T11:07:55.0847860Z       Tests  629 passed | 2 skipped (631)",
+        "2026-11-09T11:07:55.0849610Z    Duration  165.14s (tests 100%)"
+      ]
+    },
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42599931154",
+      "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42599931154/job/129101597007",
+      "headSha": "e355824462a628edf53c55d4d072ac5b793322b8",
+      "event": "push",
+      "conclusion": "success",
+      "startedAt": "2026-11-09T10:18:38Z",
+      "completedAt": "2026-11-09T10:45:23Z",
+      "steps": [
+        {
+          "name": "Build native CLI and N-API addon",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T10:19:35Z",
+          "completedAt": "2026-11-09T10:28:26Z"
+        },
+        {
+          "name": "Run platform-specific Rust tests",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T10:28:26Z",
+          "completedAt": "2026-11-09T10:41:38Z"
+        },
+        {
+          "name": "Run real N-API API test",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T10:41:38Z",
+          "completedAt": "2026-11-09T10:45:14Z"
+        }
+      ],
+      "observedLogLines": [
+        "2026-11-09T10:45:14.3470060Z       Tests  629 passed | 2 skipped (631)",
+        "2026-11-09T10:45:14.3472020Z    Duration  214.00s (tests 100%)"
+      ]
+    }
+  ],
+  "note": "Successful steps are uncensored. Failed build deadlines are censored; their elapsed time is not a completed runtime or tail guarantee. Per-step maxima from different runs are not summed."
+}

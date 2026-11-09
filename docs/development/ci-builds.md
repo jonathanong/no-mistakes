@@ -66,17 +66,34 @@ the `cli_rrb_snapshot_` subset in the package-config suite, so
 those jobs do not also compile `suite_cli_rules` inside the bounded native step.
 Linux runs the same cases in the full Rust coverage suite.
 
-Native macOS and Windows jobs have a 30-minute aggregate deadline and a
-15-minute platform Rust step; the real-addon API step retains its five-minute
-limit. One observed Windows run spent about nine minutes eighteen seconds on
-setup and builds, then reached the former ten-minute Rust-step limit after
-42 PostgreSQL and ten markdown/Rust/file snapshots passed, with eleven of
-eighteen package-config snapshots complete. The step and aggregate job were
-cancelled without a test or compiler failure. An earlier Windows run passed,
-so this censored observation shows hosted timing variation rather than a
-completed-runtime guarantee. The additional bounded capacity retains every
-native test command and allows room for remaining snapshots, API checks, and
-cleanup.
+Native macOS and Windows jobs have a 35-minute aggregate deadline, a
+12-minute build step, and an 18-minute platform Rust step. The real-addon API
+step has a shared seven-minute literal deadline on Windows and macOS, so
+the repository checks can prove its bound. The Linux
+JavaScript job has 16 minutes overall and four minutes for its real-addon step.
+These deadlines retain every validation command.
+
+Saved observations in `test-cases/rust-validation/fixture` record job metadata
+and log excerpts from the supplied hosted runs. Five green macOS builds took
+348–581 seconds, while two builds reached the former ten-minute deadline.
+Completed platform Rust steps reached 853 seconds. Build and Rust budgets
+reserve 60 and 120 seconds respectively beyond those completed observations.
+A green macOS job spent 1,502 seconds before starting its API step; adding its
+420-second API budget and 120 seconds for reporting and cleanup requires
+2,042 seconds. This justifies the native job's narrow 35-minute exception to
+the repository's 30-minute CI job cap; the pre-existing benchmark build
+retains its separate 60-minute cap. Each job remains below its step sum,
+and every step remains within its job deadline.
+
+Windows run `42660408988` passed 629 tests in 357.59 seconds but reached the
+six-minute API-step deadline. Its separate fixture requires 30 seconds for
+startup and teardown beyond the reported test duration, within a seven-minute
+cap. JavaScript run `42661762209` passed 828 tests in 175.36 seconds before
+the 12-minute job cancelled. Its observed 548 seconds before the API step,
+new 240-second API budget and 120-second post-job reserve require 908 seconds,
+within the new 16-minute job cap. Timeout observations remain censored failures;
+they are not completed-runtime guarantees. Independent step maxima are not
+summed to estimate aggregate runtime.
 
 Compiled Vitest workers use independent invocation locks. Linux keeps a private
 `XDG_RUNTIME_DIR`; macOS and Windows use the existing Cargo test marker
@@ -99,7 +116,12 @@ unchanged; no test retries are configured.
 
 Name independent fixture cases separately in real-addon parity matrices. Each case
 retains all job/API variants and assertions; the per-test timing gate and
-five-minute API-step limit continue to apply. Reports then identify the slow case.
+platform API-step deadlines continue to apply. Reports then identify the slow case.
+The annotation append case previously bundled twelve analyses across report,
+advise and ignore policies; main run `42637458882` took 5,073.4 ms and failed
+the 5,000 ms gate. Registering each policy independently retains all twelve
+analyses, CJS/ESM and CLI parity checks, suppressions and work-count assertions.
+The timing threshold and enforcement modes are unchanged.
 
 Test CI cancels superseded in-progress runs only for pull requests. An active
 main run can finish and upload Rust coverage when another merge lands. GitHub's

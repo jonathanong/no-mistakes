@@ -1,0 +1,37 @@
+{
+  "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42637458882",
+  "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42637458882/job/129229319211",
+  "headSha": "2666b84aa6cac3c477eb000bb064a53b1962a4b2",
+  "event": "push",
+  "conclusion": "failure",
+  "startedAt": "2026-11-09T14:43:30Z",
+  "completedAt": "2026-11-09T14:55:17Z",
+  "steps": [
+    {
+      "name": "Build native CLI and N-API addon",
+      "conclusion": "success",
+      "startedAt": "2026-11-09T14:44:02Z",
+      "completedAt": "2026-11-09T14:48:39Z"
+    },
+    {
+      "name": "Run real N-API API test",
+      "conclusion": "success",
+      "startedAt": "2026-11-09T14:52:13Z",
+      "completedAt": "2026-11-09T14:55:13Z"
+    }
+  ],
+  "observedLogLines": [
+    "2026-11-09T14:55:13.1720527Z | 5073.4 | passed | compiled low annotation keeps append heads, policies, suppressions and CLI parity | /home/runner/work/no-mistakes/no-mistakes/packages/no-mistakes/scripts/real-napi-api.test.js |",
+    "2026-11-09T14:55:13.1739637Z 1 passed real N-API test(s) reached 5000 ms"
+  ],
+  "testName": "compiled low annotation keeps append heads, policies, suppressions and CLI parity",
+  "durationMs": 5073.4,
+  "limitMs": 5000,
+  "policies": [
+    "report",
+    "advise",
+    "ignore"
+  ],
+  "analysesPerPolicy": 4,
+  "note": "One Vitest case bundled three independent policies, each with CJS, ESM, and two CLI analyses. Split registrations retain all twelve analyses and every assertion; the 5000ms timing gate stays enforced."
+}

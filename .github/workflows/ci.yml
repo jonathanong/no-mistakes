@@ -332,7 +332,7 @@ jobs:
     name: JavaScript tests
     runs-on: ubuntu-latest
     # Native build, both test phases, reporting and cache cleanup share this budget.
-    timeout-minutes: 12
+    timeout-minutes: 16
     permissions:
       contents: read
       id-token: write
@@ -381,7 +381,7 @@ jobs:
 
       # real-napi-api.test.js already registers mutable receiver cases; list that suite only once.
       - name: Run real N-API API test
-        timeout-minutes: 3
+        timeout-minutes: 4
         id: real-napi
         run: >-
           NO_MISTAKES_TEST_NAPI_ADDON_PATH="$GITHUB_WORKSPACE/target/debug/no-mistakes.node"
@@ -482,7 +482,7 @@ jobs:
     name: Native tests (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
     # Native builds, snapshot replay, API tests and cleanup share this budget.
-    timeout-minutes: 30
+    timeout-minutes: 35
     permissions:
       contents: read
       actions: read
@@ -560,7 +560,7 @@ jobs:
       # and Node cdylib. Do not commit that crate-type: Linux coverage should
       # not also link a cdylib.
       - name: Build native CLI and N-API addon
-        timeout-minutes: 10
+        timeout-minutes: 12
         shell: bash
         run: |
           set -euo pipefail
@@ -579,7 +579,7 @@ jobs:
           cp "${{ matrix.addon }}" target/debug/no-mistakes.node
 
       - name: Run platform-specific Rust tests
-        timeout-minutes: 15
+        timeout-minutes: 18
         shell: bash
         env:
           # Match the preceding build's N-API setting; Cargo may still
@@ -609,7 +609,7 @@ jobs:
         run: '"${{ matrix.binary }}" --version'
 
       - name: Run real N-API API test
-        timeout-minutes: ${{ runner.os == 'Windows' && 7 || 5 }}
+        timeout-minutes: 7
         id: real-napi
         shell: bash
         run: |
@@ -793,6 +793,7 @@ jobs:
           cargo crap --lcov target/llvm-cov/lcov.info --fail-above --threshold 30 --missing skip 2>&1 | tee target/llvm-cov/crap-report.txt
 
       - name: Upload Rust quality diagnostics
+        timeout-minutes: 2
         if: ${{ !cancelled() && hashFiles('target/llvm-cov/lcov.info') != '' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:

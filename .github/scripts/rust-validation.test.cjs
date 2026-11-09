@@ -285,9 +285,9 @@ test("native API timeout leaves startup and teardown room after the observed Win
   const seconds = stepBudgetSeconds(native, "Run real N-API API test", "Windows");
   assert.ok(seconds >= required, "native API step must include launcher/teardown reserve");
   assert.ok(seconds <= 420, "keep the correction bounded rather than removing its deadline");
-  assert.match(native, /\n    timeout-minutes: 30\n/);
+  assert.match(native, /\n    timeout-minutes: 35\n/);
   const linux = workflow.split("\n  native-tests:\n")[0];
-  assert.match(linux, /name: Run real N-API API test\n\s+timeout-minutes: 3\n/);
+  assert.match(linux, /name: Run real N-API API test\n\s+timeout-minutes: 4\n/);
 });
 
 const workflowJob = (name) => {
@@ -302,9 +302,7 @@ function stepBudgetSeconds(job, name, platform = "Windows") {
   assert.ok(step, `job must retain ${name}`);
   const value = step.match(/^\s+timeout-minutes: (.+)$/m)?.[1]?.trim();
   if (/^\d+$/.test(value)) return Number(value) * 60;
-  const conditional = value?.match(
-    /^\$\{\{ runner\.os == '([^']+)' && (\d+) \|\| (\d+) \}\}$/,
-  );
+  const conditional = value?.match(/^\$\{\{ runner\.os == '([^']+)' && (\d+) \|\| (\d+) \}\}$/);
   assert.ok(conditional, `${name} must have a bounded literal or platform timeout`);
   return Number(platform === conditional[1] ? conditional[2] : conditional[3]) * 60;
 }
@@ -387,7 +385,7 @@ test("native Rust and historical aggregate deadlines retain censored Windows pro
     rust >= elapsedRust + observed.remainingSnapshotReserveSeconds,
     "platform step must leave room for remaining snapshots after the censored passing progress",
   );
-  assert.ok(rust <= 900, "keep the native Rust step bounded to fifteen minutes");
+  assert.ok(rust <= 1080, "keep the native Rust step bounded to eighteen minutes");
   const required =
     elapsedBeforeRust +
     elapsedRust +
@@ -398,7 +396,7 @@ test("native Rust and historical aggregate deadlines retain censored Windows pro
     jobBudgetSeconds(job) >= required,
     "native aggregate deadline must include setup, Rust progress, remaining snapshots, API and cleanup",
   );
-  assert.ok(jobBudgetSeconds(job) <= 1800, "retain a job deadline of at most thirty minutes");
+  assert.ok(jobBudgetSeconds(job) <= 2100, "retain the native job cap of thirty-five minutes");
   for (const command of [
     "--test windows_job_object -- --exact --test-threads=1",
     "--test macos_invocation",
@@ -412,8 +410,15 @@ test("native Rust and historical aggregate deadlines retain censored Windows pro
 });
 
 test("current native API budgets fit completed Windows setup and Rust work", () => {
-  const observed = JSON.parse(readFileSync(path.join(root,
-    "test-cases/rust-validation/fixture/windows-native-api-completed-timing.json"), "utf8"));
+  const observed = JSON.parse(
+    readFileSync(
+      path.join(
+        root,
+        "test-cases/rust-validation/fixture/windows-native-api-completed-timing.json",
+      ),
+      "utf8",
+    ),
+  );
   const job = workflowJob("native-tests");
   const api = stepBudgetSeconds(job, "Run real N-API API test", "Windows");
   const beforeApi = (Date.parse(observed.apiStartedAt) - Date.parse(observed.jobStartedAt)) / 1000;
@@ -426,16 +431,23 @@ test("current native API budgets fit completed Windows setup and Rust work", () 
   assert.ok(observed.reportedTestDurationSeconds > observed.apiStepTimeoutSeconds);
   assert.ok(api >= observed.reportedTestDurationSeconds + observed.startupTeardownReserveSeconds);
   assert.ok(api <= 420, "keep the Windows API phase bounded to seven minutes");
-  assert.equal(stepBudgetSeconds(job, "Run real N-API API test", "macOS"), 300);
+  assert.equal(stepBudgetSeconds(job, "Run real N-API API test", "macOS"), 420);
   assert.ok(jobBudgetSeconds(job) >= beforeApi + api + observed.postJobReserveSeconds);
-  assert.ok(jobBudgetSeconds(job) <= 1800);
+  assert.ok(jobBudgetSeconds(job) <= 2100);
   assert.match(job, /node \.github\/scripts\/report-native-api-tests\.cjs/);
   assert.match(job, /Upload real N-API test durations/);
 });
 
 test("Windows API deadline includes startup and teardown for the expanded suite", () => {
-  const observed = JSON.parse(readFileSync(path.join(root,
-    "test-cases/rust-validation/fixture/windows-native-api-grown-suite-timing.json"), "utf8"));
+  const observed = JSON.parse(
+    readFileSync(
+      path.join(
+        root,
+        "test-cases/rust-validation/fixture/windows-native-api-grown-suite-timing.json",
+      ),
+      "utf8",
+    ),
+  );
   const job = workflowJob("native-tests");
   const api = stepBudgetSeconds(job, "Run real N-API API test", "Windows");
   const beforeApi = (Date.parse(observed.apiStartedAt) - Date.parse(observed.jobStartedAt)) / 1000;
@@ -447,8 +459,10 @@ test("Windows API deadline includes startup and teardown for the expanded suite"
   assert.ok(observed.reportedTestDurationSeconds >= observed.apiStepTimeoutSeconds - 2);
   assert.ok(api >= observed.reportedTestDurationSeconds + observed.startupTeardownReserveSeconds);
   assert.ok(api <= 420, "retain a bounded seven-minute API phase");
-  assert.equal(stepBudgetSeconds(job, "Run real N-API API test", "macOS"), 300);
+  assert.equal(stepBudgetSeconds(job, "Run real N-API API test", "macOS"), 420);
   assert.ok(jobBudgetSeconds(job) >= beforeApi + api + observed.postJobReserveSeconds);
-  assert.ok(jobBudgetSeconds(job) <= 1800);
+  assert.ok(jobBudgetSeconds(job) <= 2100);
   assert.match(job, /report-native-api-tests\.cjs target\/native-api-tests\.json target/);
 });
+
+require("./ci-budget-calibration.test.cjs");
