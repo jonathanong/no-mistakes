@@ -1,0 +1,15 @@
+{
+  "numTotalTests": 1,
+  "testResults": [
+    {
+      "name": "packages/no-mistakes/scripts/real-napi-api.test.js",
+      "assertionResults": [
+        {
+          "fullName": "compiled low annotation keeps append heads, policies, suppressions and CLI parity",
+          "status": "passed",
+          "duration": 5073.4
+        }
+      ]
+    }
+  ]
+}

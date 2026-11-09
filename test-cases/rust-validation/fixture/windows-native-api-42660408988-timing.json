@@ -1,0 +1,41 @@
+{
+  "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42660408988",
+  "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42660408988/job/129310142108",
+  "headSha": "11e2405a9daed4ff48f9c534f4e9c02325a151f1",
+  "event": "pull_request",
+  "conclusion": "failure",
+  "startedAt": "2026-11-09T17:00:39Z",
+  "completedAt": "2026-11-09T17:24:51Z",
+  "steps": [
+    {
+      "name": "Build native CLI and N-API addon",
+      "conclusion": "success",
+      "startedAt": "2026-11-09T17:01:59Z",
+      "completedAt": "2026-11-09T17:06:33Z"
+    },
+    {
+      "name": "Run platform-specific Rust tests",
+      "conclusion": "success",
+      "startedAt": "2026-11-09T17:06:33Z",
+      "completedAt": "2026-11-09T17:18:31Z"
+    },
+    {
+      "name": "Run real N-API API test",
+      "conclusion": "failure",
+      "startedAt": "2026-11-09T17:18:31Z",
+      "completedAt": "2026-11-09T17:24:32Z"
+    }
+  ],
+  "observedLogLines": [
+    "2026-11-09T17:24:32.3946188Z       Tests  629 passed | 2 skipped (631)",
+    "2026-11-09T17:24:32.3953955Z    Duration  357.59s (tests 100%)",
+    "2026-11-09T17:24:32.4870122Z ##[error]The action 'Run real N-API API test' has timed out after 6 minutes."
+  ],
+  "reportedTestDurationSeconds": 357.59,
+  "completedTests": 629,
+  "skippedTests": 2,
+  "apiStepTimeoutSeconds": 360,
+  "startupTeardownReserveSeconds": 30,
+  "postJobReserveSeconds": 120,
+  "note": "All selected assertions passed and JSON was written before the six-minute step timed out; retain the failed/censored outcome."
+}

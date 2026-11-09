@@ -115,3 +115,21 @@ rules:
     options:
       maxLines: 200
       maxChars: 12000
+
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      include: &ci_budget_workflows [.github/workflows/ci.yml]
+      maxMinutes: 30
+  - rule: github-actions-job-timeouts
+    scope: repository
+    options:
+      include: *ci_budget_workflows
+      maxMinutes: 30
+      rejectStepExceedingJob: true
+      rejectJobAtOrAboveStepSum: true
+      allow:
+        - job: .github/workflows/ci.yml#native-tests
+          maxMinutes: 35
+        - job: .github/workflows/ci.yml#bench
+          maxMinutes: 60
