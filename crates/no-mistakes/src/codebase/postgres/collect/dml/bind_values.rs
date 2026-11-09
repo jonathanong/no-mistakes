@@ -30,3 +30,7 @@ pub(super) fn collect(call: &EmbeddedSqlCall, file: &std::path::Path) -> BindVal
 #[cfg(test)]
 #[path = "bind_values_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "bind_values_scope_tests.rs"]
+mod scope_tests;

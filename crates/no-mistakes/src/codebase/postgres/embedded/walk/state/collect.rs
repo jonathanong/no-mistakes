@@ -42,6 +42,7 @@ pub(crate) fn collect_calls<'a>(
         incomplete_transaction_owners: Default::default(),
         exited_functions: Default::default(),
         stable_primitives: Default::default(),
+        stable_parameter_fields: Default::default(),
         scalar_literals: Default::default(),
         head_calls_only,
         source,

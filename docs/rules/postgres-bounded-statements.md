@@ -95,9 +95,15 @@ with the same parameter or literal on both sides (`user_id >= $2 AND user_id <= 
 counts as equality for key matching. When a trusted SQL template interpolates
 only primitive literals and unchanged parameters declared as `string`, `number`,
 `bigint`, or `boolean`, repeated reads of a parameter retain their identity.
-Different parameters, object/member reads, calls, assignments, and intervening
-effects do not establish a shared bound; use an explicit equality or a single
-stable primitive value instead. The [saved template controls](../../test-cases/rules/postgres-bounded-statements/issue-3151-embedded/)
+Function parameter fields have a plain-data contract: repeated direct static
+reads such as `user.id` share one binding identity, independently of named,
+imported, inline, or absent type annotations. Callers must supply data values;
+getters and Proxies are outside this contract. Known own data fields initialized
+from an unchanged primitive parameter also qualify. Observed writes, aliases or
+escapes, getters, Proxies, unrelated calls or suspensions, computed reads, and
+interpolations with side effects retain the finding.
+Different parameters do not share an identity; use an explicit equality or a
+single stable primitive value when a field cannot satisfy the contract. The [saved template controls](../../test-cases/rules/postgres-bounded-statements/issue-3151-embedded/)
 cover repeated parameters and the unsafe alternatives.
 For a unique key `(group_id, user_id)`,
 `group_id = $1 AND user_id >= $2 AND user_id <= $2` therefore proves a bounded
@@ -488,6 +494,12 @@ partial-index control also covers a boolean scalar inside `COALESCE`, combined
 with an independent `EXISTS` in a SELECT list without an outer FROM. A nested
 LATERAL lookup may complete a composite key using columns from different
 visible ancestor rows; every key column must still have a finite source.
+UNION ALL arms inside that LATERAL source inherit the same visible ancestors,
+including nested JOIN LATERAL and LEFT JOIN LATERAL lookups. Ordinary derived
+queries and CTEs keep their own scope boundaries. The
+[saved embedded controls](../../test-cases/rules/postgres-bounded-statements/issue-3151-real/)
+exercise fragment-built SQL and SQL-language catalog functions, together with
+missing composite-key halves that must still report.
 
 The [saved key-proof cases](../../test-cases/rules/postgres-bounded-statements/issue-3114/)
 pair these accepted forms with still-reported controls. Each shape has a

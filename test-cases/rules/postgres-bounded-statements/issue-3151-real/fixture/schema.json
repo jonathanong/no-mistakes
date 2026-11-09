@@ -1,0 +1,302 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "group_members": {
+      "relationKind": "table",
+      "columns": {
+        "group_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "role": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "removed_at": {
+          "dataType": "integer",
+          "nullable": true,
+          "ordinalPosition": 4
+        }
+      },
+      "indexes": {
+        "group_members_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "removed_at IS NULL",
+          "definition": "CREATE UNIQUE INDEX group_members_unique ON group_members (group_id, user_id) WHERE removed_at IS NULL",
+          "keys": [
+            {
+              "column": "group_id",
+              "expression": "group_id"
+            },
+            {
+              "column": "user_id",
+              "expression": "user_id"
+            }
+          ]
+        }
+      }
+    },
+    "groups": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "name": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "deleted_at": {
+          "dataType": "integer",
+          "nullable": true,
+          "ordinalPosition": 3
+        }
+      },
+      "indexes": {
+        "groups_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX groups_unique ON groups (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    },
+    "notice_targets": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "notice_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "placement_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "activation_revision": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "member_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 5
+        }
+      },
+      "indexes": {
+        "notice_targets_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX notice_targets_unique ON notice_targets (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    },
+    "placements": {
+      "relationKind": "table",
+      "columns": {
+        "placement_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "kind": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {
+        "placements_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX placements_unique ON placements (placement_id)",
+          "keys": [
+            {
+              "column": "placement_id",
+              "expression": "placement_id"
+            }
+          ]
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "placement_id"
+        ]
+      }
+    },
+    "placement_activations": {
+      "relationKind": "table",
+      "columns": {
+        "placement_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "placement_revision": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "state": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "bound_by_admin": {
+          "dataType": "boolean",
+          "nullable": false,
+          "ordinalPosition": 4
+        }
+      },
+      "indexes": {
+        "placement_activations_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX placement_activations_unique ON placement_activations (placement_id, placement_revision)",
+          "keys": [
+            {
+              "column": "placement_id",
+              "expression": "placement_id"
+            },
+            {
+              "column": "placement_revision",
+              "expression": "placement_revision"
+            }
+          ]
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "placement_id",
+          "placement_revision"
+        ]
+      }
+    },
+    "placement_members": {
+      "relationKind": "table",
+      "columns": {
+        "placement_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "member_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {
+        "placement_members_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX placement_members_unique ON placement_members (placement_id, member_id)",
+          "keys": [
+            {
+              "column": "placement_id",
+              "expression": "placement_id"
+            },
+            {
+              "column": "member_id",
+              "expression": "member_id"
+            }
+          ]
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "placement_id",
+          "member_id"
+        ]
+      }
+    }
+  },
+  "functions": {
+    "public.notice_target_states(integer, integer[])": {
+      "definition": "CREATE FUNCTION public.notice_target_states(integer, integer[]) RETURNS TABLE (target_id integer, state text) LANGUAGE sql AS $$ SELECT target.id, party.state\nFROM notice_targets target\nCROSS JOIN LATERAL (\n  SELECT surface.kind AS state\n  FROM placements surface\n  WHERE surface.placement_id = target.placement_id\n  UNION ALL\n  SELECT recorded.state AS state\n  FROM placement_activations recorded\n  WHERE recorded.placement_id = target.placement_id\n    AND recorded.placement_revision = target.activation_revision\n  UNION ALL\n  SELECT g.name AS state\n  FROM groups g WHERE g.id = target.notice_id\n  UNION ALL\n  SELECT activation.state AS state\n  FROM placements surface\n  JOIN LATERAL (\n    SELECT recorded.state, recorded.bound_by_admin\n    FROM placement_activations recorded\n    WHERE recorded.placement_id = surface.placement_id\n      AND recorded.placement_revision = target.activation_revision\n  ) activation ON true\n  WHERE surface.placement_id = target.placement_id\n    AND surface.kind IN ('comment', 'media')\n    AND TRUE AND (FALSE OR activation.bound_by_admin = FALSE)\n  UNION ALL\n  SELECT activation.state AS state\n  FROM placements surface\n  LEFT JOIN LATERAL (\n    SELECT recorded.state, recorded.bound_by_admin\n    FROM placement_activations recorded\n    WHERE recorded.placement_id = surface.placement_id\n      AND recorded.placement_revision = target.activation_revision\n  ) activation ON true\n  JOIN placement_members member\n    ON member.placement_id = surface.placement_id\n    AND member.member_id = target.member_id\n  WHERE surface.placement_id = target.placement_id\n    AND surface.kind IN ('comment', 'media')\n    AND TRUE AND (FALSE OR activation.bound_by_admin = FALSE)\n) party\nWHERE target.notice_id = $1\n  AND target.id = ANY($2);\n $$",
+      "returnsSet": true
+    }
+  }
+}

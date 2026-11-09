@@ -9,6 +9,7 @@ use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 
 mod apply;
+mod stable_members;
 
 type Members = HashMap<String, String>;
 
@@ -21,6 +22,7 @@ pub(super) struct Splice {
 #[derive(Default)]
 pub(super) struct LiteralObjects {
     frames: Vec<HashMap<String, Members>>,
+    stable_members: stable_members::StableMembers,
     text_consts: Vec<HashSet<String>>,
     pub(in crate::codebase::postgres::embedded::walk) fragment_consts: Vec<HashSet<String>>,
     poisoned: HashSet<String>,
@@ -32,11 +34,13 @@ pub(super) struct LiteralObjects {
 impl LiteralObjects {
     pub(super) fn push_frame(&mut self) {
         self.frames.push(HashMap::new());
+        self.stable_members.push_frame();
         self.text_consts.push(HashSet::new());
         self.fragment_consts.push(HashSet::new());
     }
     pub(super) fn pop_frame(&mut self) {
         self.frames.pop();
+        self.stable_members.pop_frame();
         self.text_consts.pop();
         self.fragment_consts.pop();
     }
@@ -53,6 +57,7 @@ impl LiteralObjects {
         false
     }
     fn poison_id(&mut self, scopes: &[HashMap<String, BindingState>], name: &str) {
+        self.stable_members.poison(scopes, name);
         if self.object(scopes, name).is_some() { self.poisoned.insert(name.to_string()); }
     }
 }
@@ -79,6 +84,7 @@ fn object_members(expr: &Expression<'_>) -> Option<Members> {
 #[rustfmt::skip]
 impl ScopeVisitor<'_> {
     pub(super) fn note_const_object(&mut self, init: &Expression<'_>, scope_index: usize, name: &str) {
+        self.note_stable_members(init, scope_index, name);
         let Some(members) = object_members(init) else { return };
         if let Some(frame) = self.literal_objects.frames.get_mut(scope_index) {
             frame.insert(name.to_string(), members);
@@ -151,7 +157,7 @@ impl ScopeVisitor<'_> {
     }
     pub(super) fn exempt_literal_read(&mut self, object: &Expression<'_>) {
         let Expression::Identifier(ident) = unwrap_ts_wrappers(object) else { return };
-        if self.literal_objects.object(&self.scopes, ident.name.as_str()).is_some() {
+        if self.literal_objects.object(&self.scopes, ident.name.as_str()).is_some() || self.literal_objects.stable_members.has(&self.scopes, ident.name.as_str()) {
             self.literal_objects.read_spans.push(ident.span.start);
         }
     }

@@ -42,6 +42,8 @@ impl<'a> ScopeVisitor<'a> {
         }
         self.stable_primitives
             .extend(writes.parameters(&function.params));
+        self.stable_parameter_fields
+            .extend(writes.fields(&function.params));
         self.enter_plain_function(declaration_name, function.span.start);
         self.push_scope();
         self.record_params(&function.params);
@@ -109,6 +111,8 @@ impl<'a> ScopeVisitor<'a> {
         oxc_ast_visit::Visit::visit_arrow_function_body(&mut writes, &arrow.body);
         self.stable_primitives
             .extend(writes.parameters(&arrow.params));
+        self.stable_parameter_fields
+            .extend(writes.fields(&arrow.params));
         self.push_scope();
         self.record_params(&arrow.params);
         self.enter_function();

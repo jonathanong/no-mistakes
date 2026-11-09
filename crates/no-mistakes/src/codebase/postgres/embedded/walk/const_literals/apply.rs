@@ -7,6 +7,8 @@ struct Outcome {
 }
 
 pub(super) fn apply_call(objects: &LiteralObjects, call: &mut EmbeddedSqlCall) {
+    call.bound_value_origins
+        .retain(|(_, _, identity)| !objects.stable_members.poisoned(*identity));
     let mut poisoned = apply_optional(
         objects,
         &mut call.sql_text,

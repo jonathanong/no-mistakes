@@ -22,6 +22,7 @@ impl SqlBoundItem {
             lateral: false,
             lateral_reads: Vec::new(),
             lateral_qualified_reads: Vec::new(),
+            set_operation_arm: false,
         }
     }
 }

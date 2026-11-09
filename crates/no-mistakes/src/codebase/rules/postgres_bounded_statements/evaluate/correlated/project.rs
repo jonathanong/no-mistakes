@@ -27,6 +27,12 @@ pub(in super::super) fn project<'a>(
                 );
             }
             SqlBoundItemKind::Query(nested) => {
+                if item.set_operation_arm {
+                    if let Cow::Owned(nested) = project(nested, outer_reads, catalog, views) {
+                        projected.to_mut().items[item_index].kind = SqlBoundItemKind::Query(nested);
+                    }
+                    continue;
+                }
                 // Only LATERAL items carry these reads. Strip inherited drivers at
                 // their own boundary, then let the child resolve its nearer drivers.
                 let inherited: Vec<_> = item

@@ -28,14 +28,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "table:members"
         },
         {
-          "file": "member-bounds.ts",
-          "line": 4,
-          "message": "member-bounds.ts:4: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "return query(sql`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM members m",
-          "target": "table:members"
-        },
-        {
           "file": "mutable-bounds.ts",
           "line": 4,
           "message": "mutable-bounds.ts:4: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
@@ -92,14 +84,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "intervening-mutation.ts",
           "line": 5,
           "message": "intervening-mutation.ts:5: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "return query(sql`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM members m",
-          "target": "table:members"
-        },
-        {
-          "file": "member-bounds.ts",
-          "line": 4,
-          "message": "member-bounds.ts:4: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(sql`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM members m",
           "target": "table:members"
@@ -173,14 +157,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "intervening-mutation.ts",
           "line": 5,
           "message": "intervening-mutation.ts:5: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "return query(sql`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM members m",
-          "target": "table:members"
-        },
-        {
-          "file": "member-bounds.ts",
-          "line": 4,
-          "message": "member-bounds.ts:4: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(sql`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM members m",
           "target": "table:members"

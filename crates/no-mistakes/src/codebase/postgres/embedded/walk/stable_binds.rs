@@ -2,66 +2,9 @@ use super::ScopeVisitor;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::*;
-use oxc_ast_visit::{walk, Visit};
 
-#[derive(Default)]
-pub(super) struct Writes {
-    names: FxHashSet<String>,
-    opaque: bool,
-}
-
-impl<'a> Visit<'a> for Writes {
-    fn visit_binding_identifier(&mut self, id: &BindingIdentifier<'a>) {
-        self.names.insert(id.name.to_string());
-    }
-    fn visit_assignment_target(&mut self, target: &AssignmentTarget<'a>) {
-        if let AssignmentTarget::AssignmentTargetIdentifier(id) = target {
-            self.names.insert(id.name.to_string());
-        }
-        walk::walk_assignment_target(self, target);
-    }
-    fn visit_assignment_target_property_identifier(
-        &mut self,
-        property: &AssignmentTargetPropertyIdentifier<'a>,
-    ) {
-        self.names.insert(property.binding.name.to_string());
-        walk::walk_assignment_target_property_identifier(self, property);
-    }
-    fn visit_update_expression(&mut self, update: &UpdateExpression<'a>) {
-        if let SimpleAssignmentTarget::AssignmentTargetIdentifier(id) = &update.argument {
-            self.names.insert(id.name.to_string());
-        }
-        walk::walk_update_expression(self, update);
-    }
-    fn visit_identifier_reference(&mut self, id: &IdentifierReference<'a>) {
-        self.opaque |= matches!(id.name.as_str(), "eval" | "arguments");
-    }
-}
-
-impl Writes {
-    pub(super) fn parameters(&self, params: &FormalParameters<'_>) -> Vec<u32> {
-        params
-            .items
-            .iter()
-            .filter_map(|param| {
-                let BindingPattern::BindingIdentifier(id) = &param.pattern else {
-                    return None;
-                };
-                let primitive = param.type_annotation.as_ref().is_some_and(|ty| {
-                    matches!(
-                        ty.type_annotation,
-                        TSType::TSStringKeyword(_)
-                            | TSType::TSNumberKeyword(_)
-                            | TSType::TSBigIntKeyword(_)
-                            | TSType::TSBooleanKeyword(_)
-                    )
-                });
-                (primitive && !self.opaque && !self.names.contains(id.name.as_str()))
-                    .then_some(id.span.start)
-            })
-            .collect()
-    }
-}
+mod writes;
+pub(super) use writes::{ParameterFields, Writes};
 
 fn origins(visitor: &ScopeVisitor<'_>, call: &CallExpression<'_>) -> Vec<(u32, u32)> {
     let Some(Expression::TaggedTemplateExpression(tag)) = call
@@ -76,17 +19,22 @@ fn origins(visitor: &ScopeVisitor<'_>, call: &CallExpression<'_>) -> Vec<(u32, u
     for expr in &tag.quasi.expressions {
         match expr {
             Expression::Identifier(id) => {
-                let Some(identity) = visitor
-                    .lookup(id.name.as_str())
-                    .and_then(|binding| binding.value_identity)
+                let Some(binding) = visitor.lookup(id.name.as_str()) else {
+                    return Vec::new();
+                };
+                if let Some(identity) = binding.value_identity {
+                    let declaration = identity.get() - 1;
+                    if visitor.stable_primitives.contains(&declaration) {
+                        origins.push((id.span.start, declaration));
+                    }
+                }
+            }
+            Expression::StaticMemberExpression(member) => {
+                let Some(identity) = visitor.stable_member_identity(member, call.span, tag.span)
                 else {
                     return Vec::new();
                 };
-                let declaration = identity.get() - 1;
-                if !visitor.stable_primitives.contains(&declaration) {
-                    return Vec::new();
-                }
-                origins.push((id.span.start, declaration));
+                origins.push((member.span.start, identity));
             }
             Expression::StringLiteral(_)
             | Expression::NumericLiteral(_)

@@ -1,0 +1,641 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "embedded": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "embedded.ts",
+          "line": 103,
+          "message": "embedded.ts:103: SELECT can return every row of placement_activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from embedded.ts:70)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "table:placement_activations"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 103,
+          "message": "embedded.ts:103: subquery can build an unbounded candidate pool from placement_activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (includes SQL appended from embedded.ts:70)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "table:placement_activations"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 103,
+          "message": "embedded.ts:103: subquery can build an unbounded candidate pool from placement_activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (includes SQL appended from embedded.ts:80)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "table:placement_activations"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 146,
+          "message": "embedded.ts:146: SELECT can return every row of placement_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from embedded.ts:139)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "table:placement_members"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 146,
+          "message": "embedded.ts:146: subquery can build an unbounded candidate pool from placement_members; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (includes SQL appended from embedded.ts:139)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "table:placement_members"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 189,
+          "message": "embedded.ts:189: SELECT can return every row of placement_activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from embedded.ts:155)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "table:placement_activations"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 189,
+          "message": "embedded.ts:189: subquery can build an unbounded candidate pool from placement_activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (includes SQL appended from embedded.ts:155)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "table:placement_activations"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 189,
+          "message": "embedded.ts:189: subquery can build an unbounded candidate pool from placement_activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (includes SQL appended from embedded.ts:165)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "table:placement_activations"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 194,
+          "message": "embedded.ts:194: SELECT can return every row of notice_targets; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of placement_activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM placement_activations recorded)",
+          "target": "table:notice_targets, table:placement_activations"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded-advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "embedded.ts",
+          "line": 103,
+          "message": "embedded.ts:103: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from placement_activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (includes SQL appended from embedded.ts:70)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "materialized-body"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 103,
+          "message": "embedded.ts:103: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from placement_activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (includes SQL appended from embedded.ts:80)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "materialized-body"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 146,
+          "message": "embedded.ts:146: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from placement_members; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (includes SQL appended from embedded.ts:139)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "materialized-body"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 189,
+          "message": "embedded.ts:189: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from placement_activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (includes SQL appended from embedded.ts:155)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "materialized-body"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 189,
+          "message": "embedded.ts:189: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from placement_activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body (includes SQL appended from embedded.ts:165)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "materialized-body"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "embedded.ts",
+          "line": 103,
+          "message": "embedded.ts:103: SELECT can return every row of placement_activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from embedded.ts:70)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "table:placement_activations"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 146,
+          "message": "embedded.ts:146: SELECT can return every row of placement_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from embedded.ts:139)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "table:placement_members"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 189,
+          "message": "embedded.ts:189: SELECT can return every row of placement_activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from embedded.ts:155)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "table:placement_activations"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 194,
+          "message": "embedded.ts:194: SELECT can return every row of notice_targets; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of placement_activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM placement_activations recorded)",
+          "target": "table:notice_targets, table:placement_activations"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded-ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "embedded.ts",
+          "line": 103,
+          "message": "embedded.ts:103: SELECT can return every row of placement_activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from embedded.ts:70)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "table:placement_activations"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 146,
+          "message": "embedded.ts:146: SELECT can return every row of placement_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from embedded.ts:139)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "table:placement_members"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 189,
+          "message": "embedded.ts:189: SELECT can return every row of placement_activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (includes SQL appended from embedded.ts:155)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(statement);",
+          "target": "table:placement_activations"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 194,
+          "message": "embedded.ts:194: SELECT can return every row of notice_targets; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of placement_activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM placement_activations recorded)",
+          "target": "table:notice_targets, table:placement_activations"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded-off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "member-advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "member-accessor-declaration-control.ts",
+          "line": 5,
+          "message": "member-accessor-declaration-control.ts:5: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-alias-control.ts",
+          "line": 6,
+          "message": "member-alias-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-computed-control.ts",
+          "line": 5,
+          "message": "member-computed-control.ts:5: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-constructor-control.ts",
+          "line": 8,
+          "message": "member-constructor-control.ts:8: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-direct-mutation-control.ts",
+          "line": 6,
+          "message": "member-direct-mutation-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-distinct-control.ts",
+          "line": 5,
+          "message": "member-distinct-control.ts:5: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-external-call-control.ts",
+          "line": 8,
+          "message": "member-external-call-control.ts:8: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-external-tag-control.ts",
+          "line": 8,
+          "message": "member-external-tag-control.ts:8: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-getter-control.ts",
+          "line": 6,
+          "message": "member-getter-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-mutation-control.ts",
+          "line": 6,
+          "message": "member-mutation-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-own-data-escape-control.ts",
+          "line": 7,
+          "message": "member-own-data-escape-control.ts:7: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-proxy-control.ts",
+          "line": 6,
+          "message": "member-proxy-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-volatile-control.ts",
+          "line": 5,
+          "message": "member-volatile-control.ts:5: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-wrapped-mutation-control.ts",
+          "line": 6,
+          "message": "member-wrapped-mutation-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "member-ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "member-accessor-declaration-control.ts",
+          "line": 5,
+          "message": "member-accessor-declaration-control.ts:5: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-alias-control.ts",
+          "line": 6,
+          "message": "member-alias-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-computed-control.ts",
+          "line": 5,
+          "message": "member-computed-control.ts:5: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-constructor-control.ts",
+          "line": 8,
+          "message": "member-constructor-control.ts:8: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-direct-mutation-control.ts",
+          "line": 6,
+          "message": "member-direct-mutation-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-distinct-control.ts",
+          "line": 5,
+          "message": "member-distinct-control.ts:5: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-external-call-control.ts",
+          "line": 8,
+          "message": "member-external-call-control.ts:8: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-external-tag-control.ts",
+          "line": 8,
+          "message": "member-external-tag-control.ts:8: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-getter-control.ts",
+          "line": 6,
+          "message": "member-getter-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-mutation-control.ts",
+          "line": 6,
+          "message": "member-mutation-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-own-data-escape-control.ts",
+          "line": 7,
+          "message": "member-own-data-escape-control.ts:7: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-proxy-control.ts",
+          "line": 6,
+          "message": "member-proxy-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-volatile-control.ts",
+          "line": 5,
+          "message": "member-volatile-control.ts:5: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-wrapped-mutation-control.ts",
+          "line": 6,
+          "message": "member-wrapped-mutation-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "member-off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "member-report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "member-accessor-declaration-control.ts",
+          "line": 5,
+          "message": "member-accessor-declaration-control.ts:5: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-alias-control.ts",
+          "line": 6,
+          "message": "member-alias-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-computed-control.ts",
+          "line": 5,
+          "message": "member-computed-control.ts:5: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-constructor-control.ts",
+          "line": 8,
+          "message": "member-constructor-control.ts:8: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-direct-mutation-control.ts",
+          "line": 6,
+          "message": "member-direct-mutation-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-distinct-control.ts",
+          "line": 5,
+          "message": "member-distinct-control.ts:5: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-external-call-control.ts",
+          "line": 8,
+          "message": "member-external-call-control.ts:8: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-external-tag-control.ts",
+          "line": 8,
+          "message": "member-external-tag-control.ts:8: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-getter-control.ts",
+          "line": 6,
+          "message": "member-getter-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-mutation-control.ts",
+          "line": 6,
+          "message": "member-mutation-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-own-data-escape-control.ts",
+          "line": 7,
+          "message": "member-own-data-escape-control.ts:7: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-proxy-control.ts",
+          "line": 6,
+          "message": "member-proxy-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-volatile-control.ts",
+          "line": 5,
+          "message": "member-volatile-control.ts:5: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        },
+        {
+          "file": "member-wrapped-mutation-control.ts",
+          "line": 6,
+          "message": "member-wrapped-mutation-control.ts:6: SELECT can return every row of group_members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(SQL`SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM group_members m",
+          "target": "table:group_members"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "raw": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "cte-driver.sql",
+          "line": 3,
+          "message": "cte-driver.sql:3: SELECT can return every row of notice_targets; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM notice_targets target",
+          "target": "table:notice_targets"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -32,10 +32,19 @@ const cases = [
   ["../issue-3151-scopes/fixture", "report.yml", 31],
   ["../issue-3151-scopes/fixture", "ignore.yml", 22],
   ["../issue-3151-scopes/fixture", "off.yml", 0],
-  ["../issue-3151-embedded/fixture", "advise.yml", 7],
-  ["../issue-3151-embedded/fixture", "report.yml", 7],
-  ["../issue-3151-embedded/fixture", "ignore.yml", 7],
+  ["../issue-3151-embedded/fixture", "advise.yml", 6],
+  ["../issue-3151-embedded/fixture", "report.yml", 6],
+  ["../issue-3151-embedded/fixture", "ignore.yml", 6],
   ["../issue-3151-embedded/fixture", "off.yml", 0],
+  ["../issue-3151-real/fixture", "member-advise.yml", 14],
+  ["../issue-3151-real/fixture", "member-report.yml", 14],
+  ["../issue-3151-real/fixture", "member-ignore.yml", 14],
+  ["../issue-3151-real/fixture", "member-off.yml", 0],
+  ["../issue-3151-real/fixture", "embedded.yml", 9],
+  ["../issue-3151-real/fixture", "embedded-advise.yml", 4],
+  ["../issue-3151-real/fixture", "embedded-ignore.yml", 4],
+  ["../issue-3151-real/fixture", "embedded-off.yml", 0],
+  ["../issue-3151-real/fixture", "raw.yml", 1],
   ["../materialized-bodies/owners", "updates.yml", 3],
   ["../materialized-bodies/owners", "deletes.yml", 3],
   ["../materialized-bodies/owners", "selects.yml", 1],
@@ -118,6 +127,21 @@ for (const [directory, config, expected] of cases) {
         assert.ok(standalone.advisories.every((row) => row.target === "materialized-body"));
         assert.deepEqual((await cjs.check({ root, config })).advisories, standalone.advisories);
       }
+      if (directory === "../issue-3151-real/fixture") {
+        assert.ok(standalone.rules.every((row) => row.file !== "raw-catalog.sql"));
+        assert.ok(
+          standalone.rules.every(
+            (row) => row.file !== "embedded.ts" || ![6, 60].includes(row.line),
+          ),
+        );
+        if (config === "embedded-ignore.yml") {
+          assert.deepEqual(
+            standalone.rules.map((row) => row.line).sort((a, b) => a - b),
+            [103, 146, 189, 194],
+          );
+          assert.deepEqual(standalone.advisories, []);
+        }
+      }
       if (directory === "../issue-3151-embedded/fixture") {
         assert.deepEqual(
           standalone.rules.map((row) => row.file).sort(),
@@ -126,7 +150,6 @@ for (const [directory, config, expected] of cases) {
             : [
                 "distinct-bounds.ts",
                 "intervening-mutation.ts",
-                "member-bounds.ts",
                 "mutable-bounds.ts",
                 "object-binding.ts",
                 "unbounded-scalar.ts",

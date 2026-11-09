@@ -284,7 +284,6 @@ fn issue_3151_embedded_ranges_require_the_same_stable_value() {
             [
                 "distinct-bounds.ts",
                 "intervening-mutation.ts",
-                "member-bounds.ts",
                 "mutable-bounds.ts",
                 "object-binding.ts",
                 "unbounded-scalar.ts",
@@ -297,4 +296,63 @@ fn issue_3151_embedded_ranges_require_the_same_stable_value() {
             "{report}"
         );
     }
+}
+
+#[test]
+fn issue_3151_real_templates_check_json_snapshot() {
+    let root = repo_rel("test-cases/rules/postgres-bounded-statements/issue-3151-real/fixture");
+    let cases = [
+        "embedded",
+        "embedded-advise",
+        "embedded-ignore",
+        "embedded-off",
+        "raw",
+        "member-advise",
+        "member-report",
+        "member-ignore",
+        "member-off",
+    ]
+    .map(|name| (name, root.clone(), root.join(format!("{name}.yml"))));
+    assert_saved_fixture("postgres_bounded_issue_3151_real_templates", &cases);
+}
+
+#[test]
+fn issue_3151_member_contract_keeps_unsafe_controls() {
+    let root = repo_rel("test-cases/rules/postgres-bounded-statements/issue-3151-real/fixture");
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join("member-ignore.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let mut files: Vec<_> = report["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| finding["file"].as_str().unwrap())
+        .collect();
+    files.sort_unstable();
+    assert_eq!(
+        files,
+        [
+            "member-accessor-declaration-control.ts",
+            "member-alias-control.ts",
+            "member-computed-control.ts",
+            "member-constructor-control.ts",
+            "member-direct-mutation-control.ts",
+            "member-distinct-control.ts",
+            "member-external-call-control.ts",
+            "member-external-tag-control.ts",
+            "member-getter-control.ts",
+            "member-mutation-control.ts",
+            "member-own-data-escape-control.ts",
+            "member-proxy-control.ts",
+            "member-volatile-control.ts",
+            "member-wrapped-mutation-control.ts",
+        ],
+        "{report}"
+    );
 }

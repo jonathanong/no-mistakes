@@ -19,6 +19,7 @@ mod issue_2961;
 mod issue_2961_remainder;
 mod issue_3116;
 mod issue_3151;
+mod issue_3151_real;
 mod json_function_outputs;
 mod legacy_single_column;
 mod multi_table_arms;
