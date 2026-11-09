@@ -95,6 +95,23 @@ within the new 16-minute job cap. Timeout observations remain censored failures;
 they are not completed-runtime guarantees. Independent step maxima are not
 summed to estimate aggregate runtime.
 
+The standalone library job keeps its 20-minute aggregate deadline and raises
+the library test step from 10 minutes to 12. Dependency bumps missed the exact
+Rust cache key and restored only the shared prefix. Three completed cold-cache
+steps took 334, 540, and 562 seconds. The longest, run `42661544370`,
+compiled in 4 minutes 27 seconds and passed 13,311 tests in 294.18 seconds.
+Rust run `42689557466` compiled in 4 minutes 12 seconds and passed 13,319 tests
+in 287.54 seconds. npm run `42675707910` restored a full cache match, compiled
+in 5 minutes 1 second, and passed 13,319 tests in 298.63 seconds, then the
+10-minute step timed out before the process could exit. That censored outcome
+is not a completed step. Reserving 120 seconds beyond both the longest
+completed cold-cache step and that compile-plus-test work requires 720 seconds.
+The slowest observed setup before the step was 42 seconds. Adding the
+720-second step and 120 seconds for cache cleanup requires 882 seconds, which
+the existing 20-minute job still covers. The job remains below the sum of its
+step deadlines, and the step remains within the job. These observations do not
+guarantee future runner runtime.
+
 Compiled Vitest workers use independent invocation locks. Linux keeps a private
 `XDG_RUNTIME_DIR`; macOS and Windows use the existing Cargo test marker
 `CARGO_BIN_EXE_no-mistakes` to select a lock keyed by process ID. Calls within

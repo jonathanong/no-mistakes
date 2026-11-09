@@ -465,4 +465,90 @@ test("Windows API deadline includes startup and teardown for the expanded suite"
   assert.match(job, /report-native-api-tests\.cjs target\/native-api-tests\.json target/);
 });
 
+test("standalone library deadline reserves cold-cache time beyond the censored passing suite", () => {
+  const data = JSON.parse(
+    readFileSync(
+      path.join(root, "test-cases/rust-validation/fixture/standalone-lib-budget-observations.json"),
+      "utf8",
+    ),
+  );
+  const stepName = "Test standalone Rust library without a CLI build";
+  const elapsed = (start, end) => (Date.parse(end) - Date.parse(start)) / 1000;
+  const stepOf = (entry) => entry.steps.find((item) => item.name === stepName);
+  const logs = (entry) => entry.observedLogLines.join("\n");
+  const cargoSeconds = (text) => {
+    const match = text.match(
+      /Finished `test` profile \[unoptimized\] target\(s\) in (?:(\d+)m )?(\d+)s/,
+    );
+    assert.ok(match, "log must include the cargo finished line");
+    return Number(match[1] || 0) * 60 + Number(match[2]);
+  };
+  const suite = (text) => {
+    const match = text.match(
+      /test result: ok\. (\d+) passed; 0 failed; (\d+) ignored;[\s\S]*finished in (\d+\.\d+)s/,
+    );
+    assert.ok(match, "log must include the library suite result");
+    return { passed: Number(match[1]), ignored: Number(match[2]), seconds: Number(match[3]) };
+  };
+
+  assert.equal(data.coldCacheObservations.length, 3);
+  const passedCounts = [];
+  const coldDurations = data.coldCacheObservations.map((entry) => {
+    assert.equal(entry.cacheFullMatch, false);
+    assert.equal(entry.jobConclusion, "success");
+    assert.equal(stepOf(entry).conclusion, "success");
+    assert.match(logs(entry), /full match: false/);
+    const result = suite(logs(entry));
+    assert.equal(result.ignored, 3);
+    passedCounts.push(result.passed);
+    const wall = elapsed(stepOf(entry).startedAt, stepOf(entry).completedAt);
+    const work = cargoSeconds(logs(entry)) + result.seconds;
+    assert.ok(Math.abs(wall - work) <= 3, `${entry.runUrl} wall ${wall} work ${work}`);
+    return wall;
+  });
+  assert.deepEqual(passedCounts, [13311, 13319, 13311]);
+  assert.equal(Math.max(...coldDurations), 562);
+  const coldRequired = Math.max(...coldDurations) + data.coldCacheReserveSeconds;
+  assert.equal(coldRequired, 682);
+
+  const censored = data.censoredObservation;
+  assert.equal(censored.cacheFullMatch, true);
+  assert.equal(censored.jobConclusion, "failure");
+  assert.equal(stepOf(censored).conclusion, "failure");
+  assert.match(logs(censored), /full match: true/);
+  assert.match(logs(censored), /timed out after 10 minutes/);
+  const censoredSuite = suite(logs(censored));
+  assert.equal(censoredSuite.passed, 13319);
+  assert.equal(censoredSuite.ignored, 3);
+  assert.equal(cargoSeconds(logs(censored)), 301);
+  assert.equal(censoredSuite.seconds, 298.63);
+  const censoredWork = cargoSeconds(logs(censored)) + censoredSuite.seconds;
+  assert.ok(censoredWork > 590);
+  assert.ok(censoredWork < elapsed(stepOf(censored).startedAt, stepOf(censored).completedAt));
+  const censoredRequired = censoredWork + data.coldCacheReserveSeconds;
+  assert.ok(censoredRequired > 600, "the former ten-minute step cannot hold the reserve");
+
+  const job = workflowJob("tests-standalone-lib");
+  const stepBudget = stepBudgetSeconds(job, stepName);
+  assert.ok(stepBudget >= coldRequired, "step must clear the longest completed cold-cache run");
+  assert.ok(stepBudget >= censoredRequired, "step must clear the censored compile and suite");
+  assert.equal(stepBudget, 720, "keep the library step bounded to twelve minutes");
+  const beforeStep = [...data.coldCacheObservations, censored].map((entry) =>
+    elapsed(entry.startedAt, stepOf(entry).startedAt),
+  );
+  assert.equal(Math.max(...beforeStep), 42);
+  const requiredJob = Math.max(...beforeStep) + stepBudget + data.postJobReserveSeconds;
+  assert.equal(requiredJob, 882);
+  assert.ok(jobBudgetSeconds(job) >= requiredJob);
+  assert.equal(jobBudgetSeconds(job), 1200, "retain the existing twenty-minute standalone job");
+  const budgets = [...job.matchAll(/^        timeout-minutes: (\d+)$/gm)].map(
+    (match) => Number(match[1]) * 60,
+  );
+  assert.ok(budgets.length >= 2);
+  assert.ok(Math.max(...budgets) <= jobBudgetSeconds(job));
+  assert.ok(jobBudgetSeconds(job) < budgets.reduce((sum, value) => sum + value, 0));
+  assert.match(job, /env -u CARGO_BIN_EXE_no-mistakes cargo test --locked -p no-mistakes --lib/);
+  assert.match(job, /test ! -e "\$CARGO_TARGET_DIR\/debug\/no-mistakes"/);
+});
+
 require("./ci-budget-calibration.test.cjs");

@@ -1,0 +1,109 @@
+{
+  "source": "gh run view --json jobs and standalone job logs",
+  "stepName": "Test standalone Rust library without a CLI build",
+  "coldCacheReserveSeconds": 120,
+  "postJobReserveSeconds": 120,
+  "coldCacheObservations": [
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42661544370",
+      "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42661544370/job/129314116303",
+      "headSha": "4a946263597fbe5fe07276f55c0fdcce3d4f83b9",
+      "event": "pull_request",
+      "cacheFullMatch": false,
+      "jobConclusion": "success",
+      "startedAt": "2026-11-09T17:07:40Z",
+      "completedAt": "2026-11-09T17:17:54Z",
+      "steps": [
+        {
+          "name": "Test standalone Rust library without a CLI build",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T17:08:22Z",
+          "completedAt": "2026-11-09T17:17:44Z"
+        }
+      ],
+      "observedLogLines": [
+        "2026-11-09T17:07:58.2066204Z Cache hit for restore-key: v0-rust-standalone-lib-Linux-x64-c0bb2213-a0a54446",
+        "2026-11-09T17:08:01.6043018Z Restored from cache key \"v0-rust-standalone-lib-Linux-x64-c0bb2213-a0a54446\" full match: false.",
+        "2026-11-09T17:12:50.2595752Z Finished `test` profile [unoptimized] target(s) in 4m 27s",
+        "2026-11-09T17:17:44.4897168Z test result: ok. 13311 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 294.18s"
+      ],
+      "note": "oxc dependency bump. The exact cache key missed. The standalone job succeeded; sibling jobs are outside this budget."
+    },
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42689557466",
+      "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42689557466/job/129405363371",
+      "headSha": "6f89da9da838c0d55913d88333c255f06f8f440c",
+      "event": "pull_request",
+      "cacheFullMatch": false,
+      "jobConclusion": "success",
+      "startedAt": "2026-11-09T20:05:24Z",
+      "completedAt": "2026-11-09T20:15:09Z",
+      "steps": [
+        {
+          "name": "Test standalone Rust library without a CLI build",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T20:05:58Z",
+          "completedAt": "2026-11-09T20:14:58Z"
+        }
+      ],
+      "observedLogLines": [
+        "2026-11-09T20:05:38.0403274Z Cache hit for restore-key: v0-rust-standalone-lib-Linux-x64-c0bb2213-a0a54446",
+        "2026-11-09T20:05:42.4829069Z Restored from cache key \"v0-rust-standalone-lib-Linux-x64-c0bb2213-a0a54446\" full match: false.",
+        "2026-11-09T20:10:11.1015853Z Finished `test` profile [unoptimized] target(s) in 4m 12s",
+        "2026-11-09T20:14:58.7034457Z test result: ok. 13319 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 287.54s"
+      ],
+      "note": "Rust dependency bump. The exact cache key missed and this job completed."
+    },
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42661762209",
+      "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42661762209/job/129314869399",
+      "headSha": "fd37930b8f68e9c43798c35e4ff33521b3261b19",
+      "event": "pull_request",
+      "cacheFullMatch": false,
+      "jobConclusion": "success",
+      "startedAt": "2026-11-09T17:09:02Z",
+      "completedAt": "2026-11-09T17:15:14Z",
+      "steps": [
+        {
+          "name": "Test standalone Rust library without a CLI build",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T17:09:32Z",
+          "completedAt": "2026-11-09T17:15:06Z"
+        }
+      ],
+      "observedLogLines": [
+        "2026-11-09T17:09:13.5872780Z Cache hit for restore-key: v0-rust-standalone-lib-Linux-x64-c0bb2213-a0a54446",
+        "2026-11-09T17:09:16.9175965Z Restored from cache key \"v0-rust-standalone-lib-Linux-x64-c0bb2213-a0a54446\" full match: false.",
+        "2026-11-09T17:12:21.7303261Z Finished `test` profile [unoptimized] target(s) in 2m 48s",
+        "2026-11-09T17:15:06.2453475Z test result: ok. 13311 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 164.47s"
+      ],
+      "note": "Earlier Rust dependency bump. This job completed before the workflow was cancelled."
+    }
+  ],
+  "censoredObservation": {
+    "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42675707910",
+    "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/42675707910/job/129356369182",
+    "headSha": "1f28acced77a12d08dbde471fcc8083b818dcc0b",
+    "event": "pull_request",
+    "cacheFullMatch": true,
+    "jobConclusion": "failure",
+    "startedAt": "2026-11-09T18:37:55Z",
+    "completedAt": "2026-11-09T18:48:33Z",
+    "steps": [
+      {
+        "name": "Test standalone Rust library without a CLI build",
+        "conclusion": "failure",
+        "startedAt": "2026-11-09T18:38:30Z",
+        "completedAt": "2026-11-09T18:48:31Z"
+      }
+    ],
+    "observedLogLines": [
+      "2026-11-09T18:38:10.0798623Z Cache hit for: v0-rust-standalone-lib-Linux-x64-c0bb2213-a0a54446",
+      "2026-11-09T18:38:13.8471228Z Restored from cache key \"v0-rust-standalone-lib-Linux-x64-c0bb2213-a0a54446\" full match: true.",
+      "2026-11-09T18:43:32.7814044Z Finished `test` profile [unoptimized] target(s) in 5m 01s",
+      "2026-11-09T18:48:31.4669744Z test result: ok. 13319 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 298.63s",
+      "2026-11-09T18:48:31.5893807Z ##[error]The action 'Test standalone Rust library without a CLI build' has timed out after 10 minutes."
+    ],
+    "note": "npm dependency bump on a full cache match. The suite printed ok and the 10-minute step then timed out. Retain the failed, censored outcome."
+  }
+}
