@@ -112,16 +112,18 @@ fn collect_file_facts_from_source(
                     }
                     // Fatal parser results always carry a diagnostic and return above.
                     program::collect_file_facts_from_program_with_discovery(
-                        root,
+                        &CheckFactVariant {
+                            root,
+                            plan,
+                            playwright,
+                            collect_tests: session.collect_tests(plan, path),
+                        },
                         path,
-                        plan,
-                        playwright,
                         parsed_source,
                         program,
                         (should_store_source(plan, path)
                             || sql_identifier::policy_selected(root, path, plan))
                         .then(|| Arc::clone(&source)),
-                        session.collect_tests(plan, path),
                     )
                 };
                 let collected = if legacy_symbols {

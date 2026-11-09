@@ -144,3 +144,5 @@ mod head_calls_only_tests;
 
 pub(crate) use family_scope::applies as discovery_applies;
 pub(crate) use file::collect_file_facts_from_program_with_discovery as file_program_with_discovery;
+
+pub(crate) use file::CheckFactVariant;

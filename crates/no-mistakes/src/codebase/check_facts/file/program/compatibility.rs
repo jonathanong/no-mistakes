@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::check_facts::{CheckFactPlan, PlaywrightFactPlan};
 
 pub(crate) fn collect_file_facts_from_program(
     root: &Path,
@@ -10,13 +11,15 @@ pub(crate) fn collect_file_facts_from_program(
     owned_source: Option<Arc<str>>,
 ) -> CheckFileFacts {
     collect_file_facts_from_program_with_discovery(
-        root,
+        &CheckFactVariant {
+            root,
+            plan,
+            playwright,
+            collect_tests: true,
+        },
         path,
-        plan,
-        playwright,
         source,
         program,
         owned_source,
-        true,
     )
 }
