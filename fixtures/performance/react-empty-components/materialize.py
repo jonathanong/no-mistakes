@@ -9,7 +9,9 @@ root = pathlib.Path(sys.argv[1]).resolve()
 root.mkdir()
 (root / 'source').mkdir()
 (root / 'shared').mkdir()
-shutil.copytree(source / 'configs', root / 'configs')
+(root / 'configs').mkdir()
+for name in ['default.yml', 'import-only.yml']:
+    shutil.copy(source / 'configs' / name, root / 'configs' / name)
 shutil.copy(source / 'helper.mts', root / 'shared/helper.mts')
 seed = (source / 'seed.mts').read_text()
 for index in range(256):
