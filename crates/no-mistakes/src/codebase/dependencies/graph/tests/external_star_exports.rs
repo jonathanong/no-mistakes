@@ -179,7 +179,7 @@ fn hidden_existing_baseurl_source_keeps_ownership_over_an_installed_package() {
         .iter()
         .any(|(node, kind)| *kind == EdgeKind::SymbolImportUnknown
             && matches!(node, NodeId::Module(name) if name.ends_with("barrel.mts#Queue"))));
-    assert!(!edges
-        .iter()
-        .any(|(_, kind)| *kind == EdgeKind::SymbolImport));
+    let barrel = NodeId::symbol(dir.path().join("src/barrel.mts"), "Queue");
+    assert!(!graph.dependencies_of_node(&barrel).into_iter().flatten().any(|(node, kind)|
+        *kind == EdgeKind::SymbolReexport && matches!(node, NodeId::Module(name) if name.replace('\\', "/").contains("node_modules/local-owned/entry.js#Queue"))));
 }
