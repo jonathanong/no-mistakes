@@ -17,7 +17,6 @@ const options: PostgresGroupingNotAggregationOptions = {
   include: ["src/**/*.ts"],
   exclude: ["src/generated/**"],
   sqlInclude: ["db/**/*.sql"],
-  sqlIncludeLocked: false,
   importSpecifier: "db",
   executorNames: ["query"],
   excludeExecutorNames: [],

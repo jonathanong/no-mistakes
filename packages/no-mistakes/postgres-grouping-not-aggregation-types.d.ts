@@ -13,8 +13,6 @@ export interface PostgresGroupingNotAggregationOptions {
   include?: string[];
   exclude?: string[];
   sqlInclude?: string[];
-  /** Internal resolved-scope flag; defaults to false. */
-  sqlIncludeLocked?: boolean;
   importSpecifier?: string;
   /** Replaces query/read/write; mutually exclusive with extraExecutorNames. */
   executorNames?: string[];

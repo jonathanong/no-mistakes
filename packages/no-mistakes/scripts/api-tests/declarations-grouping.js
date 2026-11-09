@@ -21,7 +21,6 @@ test("grouping advice exports named options and all five target codes", () => {
     "include?: string[];",
     "exclude?: string[];",
     "sqlInclude?: string[];",
-    "sqlIncludeLocked?: boolean;",
     "importSpecifier?: string;",
     "executorNames?: string[];",
     "extraExecutorNames?: string[];",
@@ -34,7 +33,7 @@ test("grouping advice exports named options and all five target codes", () => {
   ]) {
     assert.ok(declaration.includes(field), field);
   }
-  assert.doesNotMatch(declaration, /fail\?:/);
+  assert.doesNotMatch(declaration, /fail\?:|sqlIncludeLocked/);
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export type \* from "\.\/postgres-grouping-not-aggregation-types"/,

@@ -252,8 +252,7 @@ non-unique keys. The analyzer reports only the shapes it can prove.
 | --- | --- | --- |
 | `schemaCatalogPath` | unset | Catalog JSON path relative to root; unset or empty disables every shape. |
 | `include`, `exclude` | `[]` | Additional source include and exclude globs inside the selected application scope. |
-| `sqlInclude` | shared PostgreSQL scope | Explicit SQL paths/globs; project PostgreSQL scope can supply these. Without a locked scope, an empty list uses the shared `**/*.sql` fallback. |
-| `sqlIncludeLocked` | `false` | Resolved SQL scope is already fixed by the caller. |
+| `sqlInclude` | shared PostgreSQL scope | Explicit SQL paths/globs; project PostgreSQL scope can supply these. An empty list uses the shared PostgreSQL fallback within the selected application scope. |
 | `importSpecifier` | empty | Module exporting configured executors. |
 | `executorNames` | `query`, `read`, `write` | Replaces executor names; mutually exclusive with extras. |
 | `extraExecutorNames` | unset | Adds names to the defaults. |
