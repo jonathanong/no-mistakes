@@ -646,6 +646,10 @@ needed.
 
 `materializedBodies` excludes existence and scalar subquery probes. Unbounded
 uncorrelated scalar reads remain ordinary SELECT findings even with `ignore`.
+Scalar checks retain catalog-resolved unqualified outer references, ancestor
+LATERAL scopes, partial unique-index predicate proofs and enclosing CTE caps.
+An unqualified outer reference must complete a key; non-unique bare-correlated
+reads remain findings.
 Pool-building IN/array/derived bodies and explicit MATERIALIZED CTEs remain
 independent obligations. A consumer of an existing materialized pool retains
 that source obligation without repeating it; new unbounded scans still report.

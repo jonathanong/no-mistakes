@@ -20,6 +20,7 @@ mod predicate;
 mod query;
 mod returning;
 mod scalar_limit;
+mod scalar_scope;
 mod table;
 mod temporary;
 pub(in crate::codebase::postgres) use table::TableTokenCursor;
@@ -48,6 +49,7 @@ pub(super) struct Scope {
     table_tokens: Option<Rc<RefCell<TableTokenCursor>>>,
     limit_columns: limit_columns::Relations,
     scalar_functions: std::sync::Arc<BTreeSet<Vec<String>>>,
+    scalar_scope: Rc<scalar_scope::ScalarScope>,
 }
 
 /// Immutable parent frames retain visible CTEs without copying their bound trees.
@@ -124,6 +126,7 @@ fn collect_query(
         statement_start: None,
         query: query::bound_body(query, &scope, positions),
         target: None,
+        scalar_reads: None,
     });
 }
 

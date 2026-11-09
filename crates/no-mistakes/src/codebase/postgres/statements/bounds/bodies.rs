@@ -1,5 +1,5 @@
 use super::{Scope, SqlBoundFact, SqlBoundKind, SqlBoundQuery};
-use crate::codebase::postgres::statements::SqlBoundItem;
+use crate::codebase::postgres::statements::{SqlBoundItem, SqlScalarReads};
 use std::{
     cell::RefCell,
     collections::{BTreeMap, BTreeSet},
@@ -22,7 +22,7 @@ impl Scope {
         &self,
         bound: &SqlBoundQuery,
         query: &sqlparser::ast::Query,
-        scalar: bool,
+        scalar_reads: Option<SqlScalarReads>,
     ) {
         use sqlparser::ast::Spanned;
         self.record_fact(
@@ -38,7 +38,8 @@ impl Scope {
                         .map_or((1, 1), |item| (item.line, item.column))
                 }
             },
-            (!scalar).then(|| "subquery".into()),
+            scalar_reads.is_none().then(|| "subquery".into()),
+            scalar_reads,
         );
     }
 
@@ -65,7 +66,7 @@ impl Scope {
             .as_ref()
             .is_some_and(|bodies| bodies.borrow().materialized)
         {
-            self.record_fact(query, at, Some(name()));
+            self.record_fact(query, at, Some(name()), None);
         }
     }
 
@@ -74,6 +75,7 @@ impl Scope {
         query: &SqlBoundQuery,
         at: impl FnOnce() -> (usize, usize),
         body: Option<String>,
+        scalar_reads: Option<SqlScalarReads>,
     ) {
         if let Some(bodies) = &self.bodies {
             let at = at();
@@ -94,6 +96,7 @@ impl Scope {
                 statement_start: None,
                 query,
                 target: None,
+                scalar_reads,
             });
         }
     }

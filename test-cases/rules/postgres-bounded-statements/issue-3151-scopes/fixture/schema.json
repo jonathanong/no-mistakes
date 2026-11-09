@@ -1,0 +1,675 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "attachments": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "parent_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "kind_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "note": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 4
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "attachments_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX attachments_unique ON attachments (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "attachments_parent": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX attachments_parent ON attachments (parent_id)",
+          "keys": [
+            {
+              "column": "parent_id",
+              "expression": "parent_id"
+            }
+          ]
+        }
+      }
+    },
+    "kinds": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "label": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "kinds_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX kinds_unique ON kinds (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "owners": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "placement_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "owners_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX owners_unique ON owners (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "placements": {
+      "relationKind": "table",
+      "columns": {
+        "placement_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "link_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "placement_id"
+        ]
+      },
+      "indexes": {
+        "placements_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX placements_unique ON placements (placement_id)",
+          "keys": [
+            {
+              "column": "placement_id",
+              "expression": "placement_id"
+            }
+          ]
+        }
+      }
+    },
+    "links": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "links_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX links_unique ON links (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "members": {
+      "relationKind": "table",
+      "columns": {
+        "group_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "role": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "removed_at": {
+          "dataType": "integer",
+          "nullable": true,
+          "ordinalPosition": 4
+        }
+      },
+      "indexes": {
+        "members_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "removed_at IS NULL",
+          "definition": "CREATE UNIQUE INDEX members_unique ON members (group_id, user_id) WHERE removed_at IS NULL",
+          "keys": [
+            {
+              "column": "group_id",
+              "expression": "group_id"
+            },
+            {
+              "column": "user_id",
+              "expression": "user_id"
+            }
+          ]
+        }
+      }
+    },
+    "versions": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "sha": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "item_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "versions_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX versions_unique ON versions (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "items": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "deleted_at": {
+          "dataType": "integer",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "sha": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "items_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX items_unique ON items (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "members_nested": {
+      "relationKind": "table",
+      "columns": {
+        "group_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "role": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "removed_at": {
+          "dataType": "integer",
+          "nullable": true,
+          "ordinalPosition": 4
+        }
+      },
+      "indexes": {
+        "members_nested_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "(removed_at) IS NULL",
+          "definition": "CREATE UNIQUE INDEX members_nested_unique ON members_nested (group_id, user_id) WHERE (removed_at) IS NULL",
+          "keys": [
+            {
+              "column": "group_id",
+              "expression": "group_id"
+            },
+            {
+              "column": "user_id",
+              "expression": "user_id"
+            }
+          ]
+        }
+      }
+    },
+    "kind_shadows": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "label": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "kind_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "kind_shadows_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX kind_shadows_unique ON kind_shadows (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "members_quoted": {
+      "relationKind": "table",
+      "columns": {
+        "group_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "role": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "removed_at": {
+          "dataType": "integer",
+          "nullable": true,
+          "ordinalPosition": 4
+        }
+      },
+      "indexes": {
+        "members_quoted_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "(\"removed_at\") IS NULL",
+          "definition": "CREATE UNIQUE INDEX members_quoted_unique ON members_quoted (group_id, user_id) WHERE (\"removed_at\") IS NULL",
+          "keys": [
+            {
+              "column": "group_id",
+              "expression": "group_id"
+            },
+            {
+              "column": "user_id",
+              "expression": "user_id"
+            }
+          ]
+        }
+      }
+    },
+    "members_mixed_case": {
+      "relationKind": "table",
+      "columns": {
+        "group_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "role": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "removed_at": {
+          "dataType": "integer",
+          "nullable": true,
+          "ordinalPosition": 4
+        },
+        "Removed_At": {
+          "dataType": "integer",
+          "nullable": true,
+          "ordinalPosition": 5
+        }
+      },
+      "indexes": {
+        "members_mixed_case_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "(\"Removed_At\") IS NULL",
+          "definition": "CREATE UNIQUE INDEX members_mixed_case_unique ON members_mixed_case (group_id, user_id) WHERE (\"Removed_At\") IS NULL",
+          "keys": [
+            {
+              "column": "group_id",
+              "expression": "group_id"
+            },
+            {
+              "column": "user_id",
+              "expression": "user_id"
+            }
+          ]
+        }
+      }
+    },
+    "members_mixed_key": {
+      "relationKind": "table",
+      "columns": {
+        "group_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "role": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "removed_at": {
+          "dataType": "integer",
+          "nullable": true,
+          "ordinalPosition": 4
+        },
+        "User_Id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 5
+        }
+      },
+      "indexes": {
+        "members_mixed_key_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "removed_at IS NULL",
+          "definition": "CREATE UNIQUE INDEX members_mixed_key_unique ON members_mixed_key (group_id, \"User_Id\") WHERE removed_at IS NULL",
+          "keys": [
+            {
+              "column": "group_id",
+              "expression": "group_id"
+            },
+            {
+              "column": "User_Id",
+              "expression": "\"User_Id\""
+            }
+          ]
+        }
+      }
+    },
+    "number_kinds": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "other_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "label": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "number_kinds_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX number_kinds_unique ON number_kinds (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

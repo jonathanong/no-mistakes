@@ -56,7 +56,13 @@ independent pool diagnostics. Scalar subqueries, including SELECT-list and
 regardless of correlation. Their ordinary relation-bound checks still apply: an
 unbounded uncorrelated scalar read remains a SELECT finding, including when
 `materializedBodies` is `ignore`. Known correlated probes keep their existing
-per-row treatment. `IN`, `ANY`, array subqueries and derived tables retain their
+per-row treatment. Unqualified outer columns need catalog ownership and a
+complete key proof: a bare correlated equality on a non-unique inner column
+still reports. Ancestor references inside LATERAL select lists retain their
+scope. A local column with the same name remains local and supplies no
+correlation proof. An ordinary CTE retains
+its own `ORDER BY ... LIMIT` input bound when its predicate contains a scalar
+probe. `IN`, `ANY`, array subqueries and derived tables retain their
 body obligations. Materialized CTEs and pool-building bodies nested inside a
 probe are still checked. Scalar reads inside UPDATE or DELETE retain the owning
 statement selection while reporting SELECT read bounds.
@@ -462,8 +468,15 @@ An ambiguous bare column supplies no proof; qualify it with the intended
 relation alias. Catalog indexes include plain unique keys such as
 `receipt_id`, partial unique keys whose predicates the query establishes,
 and matching functional keys such as `LOWER(username) = LOWER($1)`.
+Redundant predicate parentheses and quoted lowercase identifiers preserve the
+same partial-index proof, including inside scalar closed-range lookups.
 A missing partial predicate or a different expression still reports;
 repeat the predicate and match the indexed expression, or cap the query.
+
+The [saved scalar-scope controls](../../test-cases/rules/postgres-bounded-statements/issue-3151-scopes/)
+cover unqualified and LATERAL correlation, partial-index predicates, CTE limits,
+and unbounded scalar reads that must still report. The attachment fixture gives
+the outer `parent_id` lookup its own unique key to isolate the scalar proof.
 
 The [saved key-proof cases](../../test-cases/rules/postgres-bounded-statements/issue-3114/)
 pair these accepted forms with still-reported controls. Each shape has a

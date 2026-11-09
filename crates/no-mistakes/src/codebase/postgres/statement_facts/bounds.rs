@@ -16,6 +16,7 @@ pub struct SqlBoundFact {
     /// Original outer SQL statement position, including WITH or an executing wrapper.
     pub statement_start: Option<(usize, usize)>,
     pub query: SqlBoundQuery,
+    pub scalar_reads: Option<SqlScalarReads>,
     /// For `UPDATE` and `DELETE`: the index in `query.items` of the relation being changed.
     pub target: Option<usize>,
 }
@@ -124,7 +125,6 @@ pub struct SqlQualifiedScope {
 }
 
 mod item;
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SqlBoundItemKind {
     /// A base relation, as written and normalized.
@@ -195,3 +195,6 @@ pub use input_mode::SqlBoundInputMode;
 use sqlparser::ast::Expr;
 mod debug;
 mod row_inputs;
+
+mod scalar;
+pub use scalar::SqlScalarReads;

@@ -84,7 +84,7 @@ impl TemporaryRelations {
         self.lifecycle(statement, catalog);
         // SELECT INTO's source is resolved before its destination is created.
         for fact in facts {
-            self.query(&mut fact.query);
+            self.project_fact(fact);
         }
         match statement {
             Statement::CreateTable(table) if table.temporary || temporary_name(&table.name) => {

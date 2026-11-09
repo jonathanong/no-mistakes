@@ -1,0 +1,440 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "correlated-local-alias-control.sql",
+          "line": 4,
+          "message": "correlated-local-alias-control.sql:4: SELECT can return every row of number_kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM number_kinds AS n(id, kind_id, label) WHERE id = kind_id",
+          "target": "table:number_kinds"
+        },
+        {
+          "file": "correlated-nonunique-control.sql",
+          "line": 1,
+          "message": "correlated-nonunique-control.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT label FROM kinds WHERE label = note) AS label",
+          "target": "table:kinds"
+        },
+        {
+          "file": "correlated-or-control.sql",
+          "line": 1,
+          "message": "correlated-or-control.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT label FROM kinds WHERE id = kind_id OR id > 0) AS label",
+          "target": "table:kinds"
+        },
+        {
+          "file": "correlated-volatile-control.sql",
+          "line": 1,
+          "message": "correlated-volatile-control.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT label FROM kinds",
+          "target": "table:kinds"
+        },
+        {
+          "file": "partial-missing-predicate.sql",
+          "line": 1,
+          "message": "partial-missing-predicate.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM members m",
+          "target": "table:members"
+        },
+        {
+          "file": "partial-mixed-case-control.sql",
+          "line": 1,
+          "message": "partial-mixed-case-control.sql:1: SELECT can return every row of members_mixed_case; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM members_mixed_case m",
+          "target": "table:members_mixed_case"
+        },
+        {
+          "file": "partial-mixed-key-control.sql",
+          "line": 1,
+          "message": "partial-mixed-key-control.sql:1: SELECT can return every row of members_mixed_key; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM members_mixed_key m",
+          "target": "table:members_mixed_key"
+        },
+        {
+          "file": "partial-wrong-predicate.sql",
+          "line": 1,
+          "message": "partial-wrong-predicate.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM members m",
+          "target": "table:members"
+        },
+        {
+          "file": "temporary-inner-control.sql",
+          "line": 2,
+          "message": "temporary-inner-control.sql:2: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT k.label FROM kinds k CROSS JOIN versions t WHERE k.id = kind_id) AS label",
+          "target": "table:kinds"
+        },
+        {
+          "file": "temporary-outer-control.sql",
+          "line": 2,
+          "message": "temporary-outer-control.sql:2: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT label FROM kinds), 'missing') FROM attachments LIMIT 1;",
+          "target": "table:kinds"
+        },
+        {
+          "file": "unbounded-lateral.sql",
+          "line": 2,
+          "message": "unbounded-lateral.sql:2: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "CROSS JOIN LATERAL (SELECT (SELECT k.label FROM kinds k) AS label) x",
+          "target": "table:kinds"
+        },
+        {
+          "file": "unbounded-scalar.sql",
+          "line": 1,
+          "message": "unbounded-scalar.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT k.label FROM kinds k), 'missing');",
+          "target": "table:kinds"
+        },
+        {
+          "file": "unbounded-shadowed-column.sql",
+          "line": 1,
+          "message": "unbounded-shadowed-column.sql:1: SELECT can return every row of kind_shadows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT label FROM kind_shadows WHERE id = kind_id) AS label",
+          "target": "table:kind_shadows"
+        },
+        {
+          "file": "uncapped-cte-control.sql",
+          "line": 2,
+          "message": "uncapped-cte-control.sql:2: SELECT can return every row of versions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT v.id FROM versions v",
+          "target": "table:versions"
+        },
+        {
+          "file": "unknown-inner-control.sql",
+          "line": 1,
+          "message": "unknown-inner-control.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT k.label FROM kinds k CROSS JOIN unknown_kinds u WHERE k.id = kind_id) AS label",
+          "target": "table:kinds"
+        },
+        {
+          "file": "unknown-outer-control.sql",
+          "line": 1,
+          "message": "unknown-outer-control.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT o.id, (SELECT label FROM kinds WHERE id = kind_id) AS label",
+          "target": "table:kinds"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "correlated-local-alias-control.sql",
+          "line": 4,
+          "message": "correlated-local-alias-control.sql:4: SELECT can return every row of number_kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM number_kinds AS n(id, kind_id, label) WHERE id = kind_id",
+          "target": "table:number_kinds"
+        },
+        {
+          "file": "correlated-nonunique-control.sql",
+          "line": 1,
+          "message": "correlated-nonunique-control.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT label FROM kinds WHERE label = note) AS label",
+          "target": "table:kinds"
+        },
+        {
+          "file": "correlated-or-control.sql",
+          "line": 1,
+          "message": "correlated-or-control.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT label FROM kinds WHERE id = kind_id OR id > 0) AS label",
+          "target": "table:kinds"
+        },
+        {
+          "file": "correlated-volatile-control.sql",
+          "line": 1,
+          "message": "correlated-volatile-control.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT label FROM kinds",
+          "target": "table:kinds"
+        },
+        {
+          "file": "partial-missing-predicate.sql",
+          "line": 1,
+          "message": "partial-missing-predicate.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM members m",
+          "target": "table:members"
+        },
+        {
+          "file": "partial-mixed-case-control.sql",
+          "line": 1,
+          "message": "partial-mixed-case-control.sql:1: SELECT can return every row of members_mixed_case; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM members_mixed_case m",
+          "target": "table:members_mixed_case"
+        },
+        {
+          "file": "partial-mixed-key-control.sql",
+          "line": 1,
+          "message": "partial-mixed-key-control.sql:1: SELECT can return every row of members_mixed_key; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM members_mixed_key m",
+          "target": "table:members_mixed_key"
+        },
+        {
+          "file": "partial-wrong-predicate.sql",
+          "line": 1,
+          "message": "partial-wrong-predicate.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM members m",
+          "target": "table:members"
+        },
+        {
+          "file": "temporary-inner-control.sql",
+          "line": 2,
+          "message": "temporary-inner-control.sql:2: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT k.label FROM kinds k CROSS JOIN versions t WHERE k.id = kind_id) AS label",
+          "target": "table:kinds"
+        },
+        {
+          "file": "temporary-outer-control.sql",
+          "line": 2,
+          "message": "temporary-outer-control.sql:2: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT label FROM kinds), 'missing') FROM attachments LIMIT 1;",
+          "target": "table:kinds"
+        },
+        {
+          "file": "unbounded-lateral.sql",
+          "line": 2,
+          "message": "unbounded-lateral.sql:2: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "CROSS JOIN LATERAL (SELECT (SELECT k.label FROM kinds k) AS label) x",
+          "target": "table:kinds"
+        },
+        {
+          "file": "unbounded-scalar.sql",
+          "line": 1,
+          "message": "unbounded-scalar.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT k.label FROM kinds k), 'missing');",
+          "target": "table:kinds"
+        },
+        {
+          "file": "unbounded-shadowed-column.sql",
+          "line": 1,
+          "message": "unbounded-shadowed-column.sql:1: SELECT can return every row of kind_shadows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT label FROM kind_shadows WHERE id = kind_id) AS label",
+          "target": "table:kind_shadows"
+        },
+        {
+          "file": "uncapped-cte-control.sql",
+          "line": 2,
+          "message": "uncapped-cte-control.sql:2: SELECT can return every row of versions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT v.id FROM versions v",
+          "target": "table:versions"
+        },
+        {
+          "file": "unknown-inner-control.sql",
+          "line": 1,
+          "message": "unknown-inner-control.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT k.label FROM kinds k CROSS JOIN unknown_kinds u WHERE k.id = kind_id) AS label",
+          "target": "table:kinds"
+        },
+        {
+          "file": "unknown-outer-control.sql",
+          "line": 1,
+          "message": "unknown-outer-control.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT o.id, (SELECT label FROM kinds WHERE id = kind_id) AS label",
+          "target": "table:kinds"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "correlated-local-alias-control.sql",
+          "line": 4,
+          "message": "correlated-local-alias-control.sql:4: SELECT can return every row of number_kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM number_kinds AS n(id, kind_id, label) WHERE id = kind_id",
+          "target": "table:number_kinds"
+        },
+        {
+          "file": "correlated-nonunique-control.sql",
+          "line": 1,
+          "message": "correlated-nonunique-control.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT label FROM kinds WHERE label = note) AS label",
+          "target": "table:kinds"
+        },
+        {
+          "file": "correlated-or-control.sql",
+          "line": 1,
+          "message": "correlated-or-control.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT label FROM kinds WHERE id = kind_id OR id > 0) AS label",
+          "target": "table:kinds"
+        },
+        {
+          "file": "correlated-volatile-control.sql",
+          "line": 1,
+          "message": "correlated-volatile-control.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT label FROM kinds",
+          "target": "table:kinds"
+        },
+        {
+          "file": "partial-missing-predicate.sql",
+          "line": 1,
+          "message": "partial-missing-predicate.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM members m",
+          "target": "table:members"
+        },
+        {
+          "file": "partial-mixed-case-control.sql",
+          "line": 1,
+          "message": "partial-mixed-case-control.sql:1: SELECT can return every row of members_mixed_case; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM members_mixed_case m",
+          "target": "table:members_mixed_case"
+        },
+        {
+          "file": "partial-mixed-key-control.sql",
+          "line": 1,
+          "message": "partial-mixed-key-control.sql:1: SELECT can return every row of members_mixed_key; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM members_mixed_key m",
+          "target": "table:members_mixed_key"
+        },
+        {
+          "file": "partial-wrong-predicate.sql",
+          "line": 1,
+          "message": "partial-wrong-predicate.sql:1: SELECT can return every row of members; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT m.role IN ('owner','moderator') FROM members m",
+          "target": "table:members"
+        },
+        {
+          "file": "temporary-inner-control.sql",
+          "line": 2,
+          "message": "temporary-inner-control.sql:2: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT k.label FROM kinds k CROSS JOIN versions t WHERE k.id = kind_id) AS label",
+          "target": "table:kinds"
+        },
+        {
+          "file": "temporary-outer-control.sql",
+          "line": 2,
+          "message": "temporary-outer-control.sql:2: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT label FROM kinds), 'missing') FROM attachments LIMIT 1;",
+          "target": "table:kinds"
+        },
+        {
+          "file": "unbounded-lateral.sql",
+          "line": 2,
+          "message": "unbounded-lateral.sql:2: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "CROSS JOIN LATERAL (SELECT (SELECT k.label FROM kinds k) AS label) x",
+          "target": "table:kinds"
+        },
+        {
+          "file": "unbounded-scalar.sql",
+          "line": 1,
+          "message": "unbounded-scalar.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT COALESCE((SELECT k.label FROM kinds k), 'missing');",
+          "target": "table:kinds"
+        },
+        {
+          "file": "unbounded-shadowed-column.sql",
+          "line": 1,
+          "message": "unbounded-shadowed-column.sql:1: SELECT can return every row of kind_shadows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT label FROM kind_shadows WHERE id = kind_id) AS label",
+          "target": "table:kind_shadows"
+        },
+        {
+          "file": "uncapped-cte-control.sql",
+          "line": 2,
+          "message": "uncapped-cte-control.sql:2: SELECT can return every row of versions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT v.id FROM versions v",
+          "target": "table:versions"
+        },
+        {
+          "file": "unknown-inner-control.sql",
+          "line": 1,
+          "message": "unknown-inner-control.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, (SELECT k.label FROM kinds k CROSS JOIN unknown_kinds u WHERE k.id = kind_id) AS label",
+          "target": "table:kinds"
+        },
+        {
+          "file": "unknown-outer-control.sql",
+          "line": 1,
+          "message": "unknown-outer-control.sql:1: SELECT can return every row of kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT o.id, (SELECT label FROM kinds WHERE id = kind_id) AS label",
+          "target": "table:kinds"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

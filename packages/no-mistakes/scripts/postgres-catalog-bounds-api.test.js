@@ -34,6 +34,10 @@ test(
       ["../issue-3151/fixture", "off.yml", 0],
       ["../issue-3151/fixture", "dml-update.yml", 1],
       ["../issue-3151/fixture", "dml-delete.yml", 1],
+      ["../issue-3151-scopes/fixture", "advise.yml", 16],
+      ["../issue-3151-scopes/fixture", "report.yml", 16],
+      ["../issue-3151-scopes/fixture", "ignore.yml", 16],
+      ["../issue-3151-scopes/fixture", "off.yml", 0],
       ["../materialized-bodies/owners", "updates.yml", 3],
       ["../materialized-bodies/owners", "deletes.yml", 3],
       ["../materialized-bodies/owners", "selects.yml", 1],
@@ -175,6 +179,34 @@ test(
         assert.equal(standalone.advisories.length, 17);
         assert.ok(standalone.advisories.every((row) => row.file !== "probes.sql"));
         assert.deepEqual((await cjs.check({ root, config })).advisories, standalone.advisories);
+      }
+
+      if (directory === "../issue-3151-scopes/fixture") {
+        assert.deepEqual(
+          standalone.rules.map((row) => row.file).sort(),
+          config === "off.yml"
+            ? []
+            : [
+                "correlated-local-alias-control.sql",
+                "correlated-nonunique-control.sql",
+                "correlated-or-control.sql",
+                "correlated-volatile-control.sql",
+                "partial-missing-predicate.sql",
+                "partial-mixed-case-control.sql",
+                "partial-mixed-key-control.sql",
+                "partial-wrong-predicate.sql",
+                "temporary-inner-control.sql",
+                "temporary-outer-control.sql",
+                "unbounded-lateral.sql",
+                "unbounded-scalar.sql",
+                "unbounded-shadowed-column.sql",
+                "uncapped-cte-control.sql",
+                "unknown-inner-control.sql",
+                "unknown-outer-control.sql",
+              ],
+          config,
+        );
+        assert.deepEqual(standalone.advisories, [], config);
       }
       const relationTargets = {
         "key-resolution.yml": ["table:public.ambiguous_left", "table:public.ambiguous_right"],

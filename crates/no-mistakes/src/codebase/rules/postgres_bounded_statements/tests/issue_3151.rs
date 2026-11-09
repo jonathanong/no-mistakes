@@ -113,3 +113,66 @@ fn dml_scalar_reads_keep_statement_selection_and_read_only_obligations() {
         }
     }
 }
+
+#[test]
+fn scalar_scope_and_partial_predicate_controls_keep_outer_bounds() {
+    use crate::codebase::postgres::statements::{
+        extract_sql_statement_facts_with_json_writes, SqlLocationDemand,
+    };
+    let root = super::fixture_root().join("../issue-3151-scopes/fixture");
+    let sources = crate::codebase::rules::source_store_for_files(&[root.join("schema.json")]);
+    let catalog = SchemaCatalog::load(&root, "schema.json", &sources).unwrap();
+    for (name, expected) in [
+        ("correlated-unqualified.sql", 0),
+        ("correlated-lateral.sql", 0),
+        ("partial-closed-range.sql", 0),
+        ("correlated-cte-limit.sql", 0),
+        ("correlated-lateral-cte-limit.sql", 0),
+        ("partial-nested-predicate.sql", 0),
+        ("partial-quoted-predicate.sql", 0),
+        ("correlated-derived-column.sql", 0),
+        ("correlated-base-aliases.sql", 0),
+        ("correlated-partial-base-aliases.sql", 0),
+        ("correlated-unnest.sql", 0),
+        ("partial-mixed-case-control.sql", 1),
+        ("partial-mixed-key-control.sql", 1),
+        ("partial-mixed-key-lookup.sql", 0),
+        ("partial-mixed-predicate-lookup.sql", 0),
+        ("unknown-outer-control.sql", 1),
+        ("unknown-inner-control.sql", 1),
+        ("temporary-inner-control.sql", 1),
+        ("temporary-outer-control.sql", 1),
+        ("uncapped-cte-control.sql", 1),
+        ("partial-missing-predicate.sql", 1),
+        ("partial-wrong-predicate.sql", 1),
+        ("unbounded-scalar.sql", 1),
+        ("unbounded-lateral.sql", 1),
+        ("unbounded-shadowed-column.sql", 1),
+        ("correlated-nonunique-control.sql", 1),
+        ("correlated-local-alias-control.sql", 1),
+        ("correlated-or-control.sql", 1),
+        ("correlated-volatile-control.sql", 1),
+        ("correlated-redundant-key.sql", 0),
+    ] {
+        let sql = std::fs::read_to_string(root.join(name)).unwrap();
+        for materialized in [false, true] {
+            let facts = extract_sql_statement_facts_with_json_writes(
+                &sql,
+                true,
+                None,
+                SqlLocationDemand::None,
+                false,
+                false,
+                materialized,
+            );
+            assert!(!facts.parse_failed, "{name}");
+            assert!(!facts.bounds.is_empty(), "{name}: missing statement bounds");
+            let count: usize = facts
+                .bounds
+                .iter()
+                .map(|fact| super::super::evaluate::offenders(fact, &catalog).len())
+                .sum();
+            assert_eq!(count, expected, "{name}, materialized={materialized}");
+        }
+    }
+}

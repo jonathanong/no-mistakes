@@ -80,6 +80,7 @@ fn push(
             outputs: Vec::new(),
         },
         target: Some(0),
+        scalar_reads: None,
     });
 }
 

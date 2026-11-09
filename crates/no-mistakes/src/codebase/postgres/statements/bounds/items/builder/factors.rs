@@ -44,14 +44,18 @@ impl<'a> Builder<'a> {
                 alias,
                 ..
             } => {
-                let mut scope = self.scope.clone();
+                let mut scope = if *lateral {
+                    self.scope.with_scalar_scope(&self.items)
+                } else {
+                    self.scope.clone()
+                };
                 scope.limit_columns = if *lateral {
                     self.limit_columns.visible(self.positions).clone()
                 } else {
                     Default::default()
                 };
                 let bound = query::bound_query(subquery, &scope, self.positions);
-                scope.record_subquery(&bound, subquery, false);
+                scope.record_subquery(&bound, subquery, None);
                 let mut item = SqlBoundItem::new(
                     SqlBoundItemKind::Query(bound),
                     alias_key(alias),

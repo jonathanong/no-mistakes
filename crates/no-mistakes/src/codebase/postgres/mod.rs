@@ -139,8 +139,8 @@ pub use statements::{
     SqlConflictArbiter, SqlConflictWhereProof, SqlConjunctFact, SqlCountExistenceFact,
     SqlCursorBound, SqlExistsSetOpFact, SqlInsertFact, SqlLimitFact, SqlLimitValue,
     SqlOnConflictAction, SqlOnConflictFact, SqlPinSource, SqlQualifiedRead, SqlQualifiedScope,
-    SqlRelationPredicateFact, SqlSelectFact, SqlStatementFileFacts, SqlSweepFact, SqlTriggerEvent,
-    SqlTriggerFact, SqlTriggerPeriod, SqlValueForm, SqlWriteColumns, SqlWriteFact,
+    SqlRelationPredicateFact, SqlScalarReads, SqlSelectFact, SqlStatementFileFacts, SqlSweepFact,
+    SqlTriggerEvent, SqlTriggerFact, SqlTriggerPeriod, SqlValueForm, SqlWriteColumns, SqlWriteFact,
 };
 pub use types::{
     PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlAddColumnMetadata,

@@ -190,5 +190,6 @@ pub(super) fn reads_items(
     scope: &Scope,
     positions: super::super::value::PlaceholderPositions<'_>,
 ) -> Reads {
-    Resolver::new(items, scope.names(), positions).reads(subquery)
+    Resolver::new(items, scope.names(), positions)
+        .reads_with_outer(subquery, &scope.scalar_scope.names)
 }
