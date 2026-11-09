@@ -71,10 +71,12 @@ fn same_root_scoped_and_direct_batch_requests_keep_their_projections_in_both_ord
         let scoped = collect_scoped(&root, files.clone(), plan.clone(), &config);
         let scope = config::test_discovery_scope(&root, &files, &config);
         let expected = findings(&root, &config, &full);
-        if case == "discovery-scope" {
-            assert_eq!(expected.as_ref().unwrap().len(), 7);
-        } else {
-            assert!(expected.is_err(), "{case}");
+        match case {
+            "discovery-scope" => assert_eq!(expected.as_ref().unwrap().len(), 7),
+            "discovery-scope-errors" => assert!(expected.is_err()),
+            _ => assert!(expected.as_ref().unwrap().is_empty()),
+        }
+        if case != "discovery-scope" {
             assert!(full.ts.values().any(|facts| facts.parse_error.is_some()));
         }
         for reverse in [false, true] {
