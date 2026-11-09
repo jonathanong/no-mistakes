@@ -267,6 +267,7 @@ for (const [name, expected] of [
   ],
   ["no-caller", []],
   ["disabled", []],
+  ["unknown-setup", ["src/pb.mts:5"]],
 ]) {
   test(
     `compiled caller-owned roots ${name} preserve async and prepared parity`,

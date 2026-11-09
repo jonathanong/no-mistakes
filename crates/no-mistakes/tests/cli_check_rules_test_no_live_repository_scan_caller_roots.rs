@@ -62,6 +62,7 @@ fn caller_proven_roots_match_small_and_large_projects() {
         "large",
         "no-caller",
         "disabled",
+        "unknown-setup",
     ]
     .into_iter()
     .map(|name| {
@@ -94,6 +95,8 @@ fn owned_callers_clear_without_clearing_controls() {
         let found = locations(&report(name));
         assert!(found.is_empty(), "{name}: {found:?}");
     }
+
+    assert_eq!(locations(&report("unknown-setup")), ["src/pb.mts:5"]);
 
     let found = locations(&report("large"));
     for owned in [
