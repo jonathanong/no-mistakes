@@ -85,3 +85,70 @@ fn sparse_holes_and_mutated_empty_arrays_keep_callback_proof_sound() {
         assert_eq!(outer_positions(&source, call, &facts), None, "{call}");
     }
 }
+
+#[test]
+fn conditional_array_aliases_and_callback_receivers_propagate_instability() {
+    let source = proof_source("review-array-aliases.mts");
+    let facts = proven_facts(&source);
+    for call in [
+        "selected.forEach",
+        "sourceTarget.forEach",
+        "holes.map",
+        "namedHoles.map",
+        "escapingHoles.map",
+        "capturedHoles.map",
+        "restHoles.map",
+        "argumentsHoles.map",
+        "destructuredHoles.map",
+    ] {
+        assert_eq!(outer_positions(&source, call, &facts), None, "{call}");
+    }
+    for call in [
+        "fresh.forEach",
+        "stableChoice.forEach",
+        "zero.find",
+        "zero.map",
+        "skipped.map",
+        "pureHoles.map",
+        "pureNamedHoles.map",
+        "sharedPure.map",
+        "shadowedHoles.map",
+        "shadowedArrowHoles.map",
+        "unusedRest.map",
+        "unusedDestructured.map",
+    ] {
+        assert_eq!(
+            outer_positions(&source, call, &facts),
+            Some(Some(vec![])),
+            "{call}"
+        );
+    }
+    for call in [
+        "pureHoles.find",
+        "pureNamedHoles.find",
+        "sharedPure.find",
+        "shadowedHoles.find",
+        "shadowedArrowHoles.find",
+        "unusedRest.find",
+        "unusedDestructured.find",
+        "importedHoles.find",
+        "unknownHoles.find",
+    ] {
+        assert_eq!(
+            outer_positions(&source, call, &facts),
+            Some(Some(vec![0])),
+            "{call}"
+        );
+    }
+}
+
+#[cfg(feature = "test-instrumentation")]
+#[test]
+fn array_callback_summaries_skip_unrelated_bodies_and_empty_candidates() {
+    let source = proof_source("review-array-aliases.mts");
+    let _ = proven_facts(&source);
+    assert_eq!(super::super::super::array_escapes::callback_summaries(), 3);
+    let source = proof_source("review-no-array-candidates.mts");
+    let _ = proven_facts(&source);
+    assert_eq!(super::super::super::array_escapes::callback_summaries(), 0);
+}

@@ -80,6 +80,42 @@ fn native_callback_projection_keeps_file_roots_and_external_alias_metadata() {
 }
 
 #[test]
+fn storage_constructor_does_not_project_instance_callback_edges() {
+    let (root, graph) = fixture_graph(false);
+    let source = root.join("src/storage-constructor.mts");
+    let owner = root.join("src/owner.mts");
+    for caller in ["staticRun", "staticExit"] {
+        assert!(
+            !graph.assertion_call_sites().iter().any(|site| {
+                site.file == source
+                    && site.caller.as_deref() == Some(caller)
+                    && site
+                        .target_nodes()
+                        .any(|target| target.as_file() == Some(owner.as_path()))
+            }),
+            "{caller}"
+        );
+    }
+    for caller in [
+        "instanceRun",
+        "instanceExit",
+        "newInstanceRun",
+        "typedInstanceRun",
+    ] {
+        assert!(
+            graph.assertion_call_sites().iter().any(|site| {
+                site.file == source
+                    && site.caller.as_deref() == Some(caller)
+                    && site
+                        .target_nodes()
+                        .any(|target| target.as_file() == Some(owner.as_path()))
+            }),
+            "{caller}"
+        );
+    }
+}
+
+#[test]
 fn native_callback_projection_retains_failed_import_prerequisite() {
     let (root, graph) = fixture_graph(true);
     let source = root.join("src/projection-branches.mts");

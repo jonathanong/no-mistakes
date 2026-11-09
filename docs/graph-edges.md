@@ -842,7 +842,7 @@ it does not mean the referenced object is frozen or its members cannot change.
 
 ### `assertion-owner`
 
-Opt-in coverage dispatch → assertion-owner callable. Includes explicit configured dispatch contracts and callbacks executed by proven Array, String, Promise, and AsyncLocalStorage receivers in the exact originating callable. The receiver family must support the callback method; method names alone are insufficient. Separate from `call`; ordinary call traversal is unchanged. Request with `--relationship assertion-owner` / Node `relationships: ["assertion-owner"]`. Excluded from default and `all` relationship sets. Rule options are described in [coverage-producer-assertion-owner](rules/coverage-producer-assertion-owner.md).
+Opt-in coverage dispatch → assertion-owner callable. Includes explicit configured dispatch contracts and callbacks executed by proven Array, String, Promise, and AsyncLocalStorage receivers in the exact originating callable. The receiver family must support the callback method; method names alone are insufficient. Callbacks invoked by proven global `JSON.parse` and `JSON.stringify` calls also produce these edges. Separate from `call`; ordinary call traversal is unchanged. Request with `--relationship assertion-owner` / Node `relationships: ["assertion-owner"]`. Excluded from default and `all` relationship sets. Rule options are described in [coverage-producer-assertion-owner](rules/coverage-producer-assertion-owner.md).
 
 ```sh
 no-mistakes dependencies 'tests/coverage.mts#produceCoverage' --root . --relationship assertion-owner --symbols --format json

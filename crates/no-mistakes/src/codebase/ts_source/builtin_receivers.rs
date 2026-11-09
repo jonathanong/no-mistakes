@@ -125,7 +125,7 @@ impl<'a> Visit<'a> for Decls {
         let builtin = self.hooks && node.imported.name() == "AsyncLocalStorage";
         self.declare(
             node.local.name.as_str(),
-            builtin.then_some(ValueKind::AsyncStorage),
+            builtin.then_some(ValueKind::Builtin),
         );
         if builtin {
             self.next

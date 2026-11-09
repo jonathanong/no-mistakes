@@ -2,6 +2,8 @@ use super::names::{Names, ValueKind};
 use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::*;
 use oxc_ast_visit::{walk, Visit};
+#[path = "array_callback_aliases.rs"]
+mod callback_aliases;
 pub(super) fn literal_length(array: &ArrayExpression<'_>) -> Option<usize> {
     (!array
         .elements
@@ -35,7 +37,9 @@ pub(super) fn preserve_empty_array(
 }
 
 pub(super) fn invalidate(names: &mut Names, program: &Program<'_>) {
-    let candidates = names
+    #[cfg(feature = "test-instrumentation")]
+    callback_aliases::reset_summaries();
+    let candidates: FxHashSet<_> = names
         .map
         .iter()
         .filter(|(_, values)| {
@@ -52,50 +56,17 @@ pub(super) fn invalidate(names: &mut Names, program: &Program<'_>) {
         })
         .map(|(name, _)| name.clone())
         .collect();
+    if candidates.is_empty() {
+        return;
+    }
     let mut uses = ArrayUses {
         candidates,
         global_array: names.global("Array"),
         ..ArrayUses::default()
     };
     uses.visit_program(program);
-    let mut unstable = uses
-        .references
-        .into_iter()
-        .filter(|(span, _)| !uses.safe.contains(span))
-        .map(|(_, name)| name)
-        .collect::<FxHashSet<_>>();
-    loop {
-        let before = unstable.len();
-        for (left, right) in &uses.aliases {
-            if unstable.contains(left) || unstable.contains(right) {
-                unstable.insert(left.clone());
-                unstable.insert(right.clone());
-            }
-        }
-        if unstable.len() == before {
-            break;
-        }
-    }
-    names.unstable_array_lengths = unstable;
-}
-
-#[derive(Default)]
-struct ArrayUses {
-    candidates: FxHashSet<String>,
-    references: FxHashMap<u32, String>,
-    safe: FxHashSet<u32>,
-    aliases: Vec<(String, String)>,
-    global_array: bool,
-}
-
-impl ArrayUses {
-    fn safe_identifier(&mut self, expression: &Expression<'_>) {
-        if let Expression::Identifier(id) = expression.without_parentheses() {
-            if self.candidates.contains(id.name.as_str()) {
-                self.safe.insert(id.span.start);
-            }
-        }
-    }
+    callback_aliases::collect(names, program, &mut uses);
+    names.unstable_array_lengths = uses.instability();
 }
 
 pub(super) fn source_array<'e>(expression: &'e Expression<'_>) -> Option<&'e str> {
@@ -136,60 +107,9 @@ pub(super) fn source_array<'e>(expression: &'e Expression<'_>) -> Option<&'e str
     }
 }
 
-impl<'a> Visit<'a> for ArrayUses {
-    fn visit_variable_declarator(&mut self, node: &VariableDeclarator<'a>) {
-        if let (BindingPattern::BindingIdentifier(id), Some(init)) = (&node.id, node.init.as_ref())
-        {
-            if self.candidates.contains(id.name.as_str()) {
-                if let Some(source) = source_array(init) {
-                    if self.candidates.contains(source) {
-                        if matches!(init.without_parentheses(), Expression::Identifier(_)) {
-                            self.safe_identifier(init);
-                        }
-                        self.aliases.push((id.name.to_string(), source.to_owned()));
-                    }
-                }
-            }
-        }
-        walk::walk_variable_declarator(self, node);
-    }
+include!("array_uses.rs");
 
-    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        if let Expression::StaticMemberExpression(member) = call.callee.without_parentheses() {
-            let method = member.property.name.as_str();
-            if matches!(
-                method,
-                "forEach"
-                    | "map"
-                    | "filter"
-                    | "flatMap"
-                    | "reduce"
-                    | "reduceRight"
-                    | "some"
-                    | "every"
-                    | "find"
-                    | "findIndex"
-                    | "findLast"
-                    | "findLastIndex"
-            ) {
-                self.safe_identifier(&member.object);
-            }
-            if self.global_array
-                && method == "from"
-                && matches!(&member.object, Expression::Identifier(id) if id.name == "Array")
-            {
-                if let Some(iterable) = call.arguments.first().and_then(Argument::as_expression) {
-                    self.safe_identifier(iterable);
-                }
-            }
-        }
-        walk::walk_call_expression(self, call);
-    }
-
-    fn visit_identifier_reference(&mut self, node: &IdentifierReference<'a>) {
-        if self.candidates.contains(node.name.as_str()) {
-            self.references
-                .insert(node.span.start, node.name.to_string());
-        }
-    }
+#[cfg(all(test, feature = "test-instrumentation"))]
+pub(super) fn callback_summaries() -> usize {
+    callback_aliases::last_summaries()
 }

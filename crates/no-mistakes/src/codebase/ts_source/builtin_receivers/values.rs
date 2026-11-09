@@ -86,7 +86,7 @@ pub(super) fn call_result(
         if names.global(&id.name) && FACTORIES.contains(&(id.name.as_str(), method)) {
             let mut result = factory_kind(id.name.as_str(), method);
             if id.name == "Array" && method == "from" {
-                if let Some(ValueKind::Array { empty, length, .. }) = call
+                if let Some(ValueKind::Array { length, .. }) = call
                     .arguments
                     .first()
                     .and_then(Argument::as_expression)
@@ -94,7 +94,7 @@ pub(super) fn call_result(
                 {
                     result = ValueKind::Array {
                         element: None,
-                        empty: length == Some(0) || empty && length.is_none(),
+                        empty: length == Some(0),
                         length,
                     };
                 }

@@ -222,5 +222,7 @@ mod builtin_callback_coverage_tests;
 mod builtin_callbacks;
 #[path = "tests/json_reviver_tests.rs"]
 mod json_reviver_tests;
+#[path = "tests/storage_constructor_tests.rs"]
+mod storage_constructor_tests;
 #[path = "tests/timer_owner.rs"]
 mod timer_owner;

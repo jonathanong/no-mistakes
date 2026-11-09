@@ -198,7 +198,8 @@ unresolved dispatch.
   never make it a definitive no-owner error. Annotate the binding (`path: string`)
   to make the proof explicit.
 - `AsyncLocalStorage` `getStore`, `enterWith`, `disable`, `run`, and `exit`,
-  in files which import it from `async_hooks` or `node:async_hooks`.
+  on constructed or typed instances in files which import it from `async_hooks`
+  or `node:async_hooks`. The imported constructor itself is not an instance.
 - Synchronous Node modules `path`, `url`, `os`, `querystring`, `buffer`, and
   `string_decoder` (with or without the `node:` prefix). Other external modules,
   such as an error reporter, remain `external call has no ownership model`.
@@ -245,6 +246,10 @@ Zero-length arrays execute no iteration callbacks. Sparse arrays still execute
 the `find` family and `Array.from` callbacks for holes. Mutating or escaping an
 array invalidates its length proof and retains dispatch uncertainty. Known empty
 results from `slice` and `splice` still execute no callbacks, including on sparse arrays.
+Conditional aliases share this invalidation with their source arrays. Writes or
+escapes through a known callback's array parameter also invalidate length evidence;
+the native receiver family remains proven. An `Array.from` result is empty only
+when its input length is proven zero.
 
 An explicit array element type also supplies context for inline callback parameters:
 `rows: number[]` makes `rows.map(r => r.toFixed(1)).join(',')` ordinary built-in

@@ -1,0 +1,10 @@
+import { AsyncLocalStorage as Store } from 'node:async_hooks';
+const callback = () => {};
+const instance = new Store<string>();
+declare const typed: Store<string>;
+Store.run('id', callback);
+Store.exit(callback);
+instance.run('id', callback);
+instance.exit(callback);
+new Store<string>().run('id', callback);
+typed.run('id', callback);

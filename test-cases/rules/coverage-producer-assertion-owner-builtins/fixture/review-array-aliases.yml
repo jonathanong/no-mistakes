@@ -1,0 +1,29 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/review-array-aliases.mts, symbol: conditionalSource }
+        - { file: src/review-array-aliases.mts, symbol: conditionalTarget }
+        - { file: src/review-array-aliases.mts, symbol: freshConditional }
+        - { file: src/review-array-aliases.mts, symbol: stableConditional }
+        - { file: src/review-array-aliases.mts, symbol: findMutates }
+        - { file: src/review-array-aliases.mts, symbol: findZeroLength }
+        - { file: src/review-array-aliases.mts, symbol: skippingHoles }
+        - { file: src/review-array-aliases.mts, symbol: pureSparse }
+        - { file: src/review-array-aliases.mts, symbol: namedMutates }
+        - { file: src/review-array-aliases.mts, symbol: importedOwner }
+        - { file: src/review-array-aliases.mts, symbol: unknownCallback }
+        - { file: src/review-array-aliases.mts, symbol: escapeReceiver }
+        - { file: src/review-array-aliases.mts, symbol: restMutates }
+        - { file: src/review-array-aliases.mts, symbol: argumentsMutates }
+        - { file: src/review-array-aliases.mts, symbol: destructuredEscapes }
+        - { file: src/review-array-aliases.mts, symbol: pureNamedSparse }
+        - { file: src/review-array-aliases.mts, symbol: sharedFormalPure }
+        - { file: src/review-array-aliases.mts, symbol: unusedRestPure }
+        - { file: src/review-array-aliases.mts, symbol: unusedDestructuredPure }
+        - { file: src/review-array-aliases.mts, symbol: shadowedFormalPure }
+        - { file: src/review-array-aliases.mts, symbol: shadowedArrowPure }
+        - { file: src/review-array-aliases.mts, symbol: capturedMutates }
+      assertions: [{ module: "node:assert", export: strictEqual }]
