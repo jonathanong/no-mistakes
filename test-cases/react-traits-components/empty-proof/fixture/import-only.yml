@@ -1,0 +1,8 @@
+reportUnusedDisableDirectives: ignore
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [src/Parent.tsx]
+      forbiddenFiles: [src/Child.tsx]
+      relationships: [import]

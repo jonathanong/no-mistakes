@@ -109,3 +109,40 @@ fn default_forbidden_dependency_graph_retains_render_edges_and_skips_empty_react
         "{children:#?}"
     );
 }
+
+#[test]
+fn import_only_check_keeps_its_finding_without_collecting_react_details() {
+    let saved = crate::test_support::materialize_saved_fixture(&fixture(
+        "react-traits-components",
+        "empty-proof",
+    ));
+    let root = crate::codebase::ts_resolver::normalize_path(saved.path());
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join("import-only.yml"))).unwrap();
+    let plan = crate::codebase::rules::forbidden_dependencies::try_graph_plan(&config)
+        .unwrap()
+        .unwrap();
+    assert!(plan.imports);
+    assert!(!plan.react);
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let report = crate::diagnostics::with_observer(Some(observer.clone()), || {
+        crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+            serde_json::json!({"root":root,"config":root.join("import-only.yml")}),
+        ))
+        .unwrap()
+    });
+    let report: serde_json::Value = serde_json::from_str(&report).unwrap();
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{report:#}");
+    assert_eq!(findings[0]["rule"], "forbidden-dependencies");
+    assert_eq!(findings[0]["file"], "src/Parent.tsx");
+    assert_eq!(
+        observer
+            .snapshot()
+            .work
+            .get("react.detail_passes")
+            .copied()
+            .unwrap_or(0),
+        0
+    );
+}
