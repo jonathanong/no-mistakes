@@ -5,6 +5,8 @@ pub(crate) struct SharedTraversalContext {
     tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
     tsconfig_build_diagnostics: Vec<crate::codebase::ts_resolver::TsConfigDiagnostic>,
     graph_files: graph::GraphFiles,
+    ordinary_excluded_files: std::collections::HashSet<PathBuf>,
+    ordinary_retained_roots: std::collections::HashSet<PathBuf>,
     dataset: std::sync::Arc<crate::codebase::analysis_dataset::AnalysisDataset>,
     config: crate::config::v2::NoMistakesConfig,
     config_path: Option<PathBuf>,

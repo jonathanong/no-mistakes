@@ -242,8 +242,10 @@ reached from a file root; when a method's enumeration root depends on an
 unresolved parameter or expression, the rule reports an unresolved-root
 advisory at that call.
 
-Callers are the selected tests' reachable call sites in the canonical call graph;
-production-only callers do not widen that set. Only calls
+Callers include the selected tests and their selected `setupFiles` execution,
+using the canonical call graph. A setup-only scan is checked, and a setup call
+with a live root prevents an otherwise owned test caller from clearing it.
+Production-only callers do not widen that set. Only calls
 through imported bindings or same-file named functions record their argument roots.
 A function reached only through `import()` or a namespace is not scanned at all unless a resolved call
 reaches it.
@@ -314,10 +316,16 @@ or any write naming a repository path also retains the advisory.
 An owned root is only owned below itself: a path that climbs out of it with
 `..` (`join(dir, "..", "src")`) keeps the finding for both parameters and env
 vars. A temporary-root write is owned only while its value stays inside the
-temp directory. A statically anchored fixture path is also owned when its
+temp directory. A fixture write is also owned when its
 normalized segments retain a configured `fixtureDirs` entry; for example,
 `join(import.meta.dirname, "../samples")` is bounded when `samples` is configured. `process.env.X = join(mkdtempSync(...), "..", "..", "..")` is not an
-owned write, and that write does not dominate the call.
+owned write, and that write does not dominate the call. The configured segment
+allowance also applies when the prefix is unresolved; a segment outside that list
+does not establish ownership.
+
+A named helper can receive `process.env.X` as an argument when the value is
+proven owned at that argument read. The same dominance and poison checks apply
+to direct calls and named forwarding helpers.
 
 The env read must happen at the call: a value captured into a module- or
 function-level `const` (`const dir = process.env.X ?? "."`) keeps the finding, as
@@ -388,8 +396,9 @@ by themselves.
 
 A computed object key poisons when its text is the literal `unstubEnvs` or
 `unstubAllEnvs` (a string or a template with no substitutions). Any other
-computed key whose text is not a literal poisons when the file is
-`vitest.config.*`, `vitest.workspace.*`, `vitest.projects.*`, or `vite.config.*`.
+computed key whose text is not a literal poisons in a selected project config
+or its imported modules, including custom-named configs. Unknown config or
+setup selection retains the conservative fallback to the graph file inventory.
 A literal key with different text, such as `"include"`, does not. The same two
 names poison wherever they appear in a Vitest JSON or JSONC config: each path in
 `tests.vitest.configs`, plus `vitest.workspace.json`, `vitest.workspace.jsonc`,
@@ -410,7 +419,7 @@ The key poisons whatever its value is, including `false`.
 - `vi.stubEnv` / `jest` stub helpers whose name is not a string literal
 - `unstubAllEnvs`, `unstubEnvs`, and `createRequire` wherever those names appear
 - `stubGlobal("process")` and `stubGlobal` with a non-literal first argument
-- a computed `unstubEnvs` / `unstubAllEnvs` key, and an opaque computed key in a Vitest or Vite config file
+- a computed `unstubEnvs` / `unstubAllEnvs` key, and an opaque computed key in a selected config or its imports
 - `unstubEnvs` or `unstubAllEnvs` in a Vitest JSON or JSONC config, as above
 - `.constructor` / `.__proto__`, a computed key that spells them or is built from strings, templates, or calls, and the strings `"constructor"` and `"__proto__"`
 - `eval` and `Function`
@@ -428,8 +437,14 @@ of unrelated file made an otherwise owned parameter appear unresolved.
 
 The proof now uses the selected test execution scope and keys local function
 escapes by file. A selected test file without calls still contributes its writes
-and module loads. Imports, reexports, runner settings and setup modules retain
+and module loads. Selected setup calls count as callers, and config evidence
+comes from the prepared project selection and its imports rather than filename
+conventions. Imports, reexports, runner settings and setup modules retain
 their conservative checks; an unknown consumer in that scope keeps the finding.
+Selected setup and config sources must parse successfully. Otherwise, `check`
+reports incomplete analysis; fix the reported source parse error before relying
+on caller ownership.
+
 Long call chains use a cycle-safe traversal of the canonical graph without a
 fixed caller-state cutoff. Cycles need an independently owned entry argument.
 

@@ -1,0 +1,6 @@
+tests:
+  vitest:
+    configs: qa.runner.ts
+rules:
+  - rule: test-no-live-repository-scan
+    scope: repository

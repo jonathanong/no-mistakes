@@ -8,7 +8,7 @@ mod escapes;
 mod imports;
 mod local_env;
 mod parameters;
-mod setups;
+pub(super) mod setups;
 pub(crate) use consumers::Resolution;
 
 use crate::codebase::dependencies::extract::InvocationKind;
@@ -57,11 +57,11 @@ pub(super) struct Owners<'g> {
 impl<'g> Owners<'g> {
     pub(super) fn new(
         graph: &'g DepGraph,
-        reachable: &FxHashSet<NodeId>,
-        evidence_files: &FxHashSet<PathBuf>,
+        scope: &super::reachable::Scope,
         facts: &dyn TsFactLookup,
         graph_files: &[PathBuf],
         resolution: &Resolution<'_>,
+        setups: setups::ConfiguredSetups,
         environment: Environment<'g>,
     ) -> Self {
         let mut callers: FxHashMap<NodeId, Vec<&ResolvedCallSite>> = FxHashMap::default();
@@ -84,25 +84,18 @@ impl<'g> Owners<'g> {
                 }
             }
             if site.invocation == InvocationKind::Call
-                && reachable.contains(&site_source_node(site))
+                && scope.sources.contains(&site_source_node(site))
             {
                 if let Some(target) = &site.target_node {
                     callers.entry(target.clone()).or_default().push(site);
                 }
             }
         }
-        let mut relevant_files = evidence_files.clone();
-        let setups = setups::ConfiguredSetups::new(environment.root, environment.vitest);
-        if let Some(setup_files) = setups.setup_files() {
-            let setup_files: Vec<PathBuf> = setup_files.into_iter().collect();
-            relevant_files.extend(super::reachable::module_files(graph, &setup_files));
-        } else {
-            relevant_files.extend(graph_files.iter().cloned());
-        }
-        let escaped = escapes::Escapes::new(facts, graph_files, &relevant_files);
+        let relevant_files = &scope.files;
+        let escaped = escapes::Escapes::new(facts, graph_files, relevant_files);
         let consumed =
-            consumers::Consumed::new(graph, facts, graph_files, &relevant_files, resolution);
-        let escape_unknown = escaped.unknown() || consumed.unknown();
+            consumers::Consumed::new(graph, facts, graph_files, relevant_files, resolution);
+        let escape_unknown = !setups.known() || escaped.unknown() || consumed.unknown();
         Self {
             callers,
             nodes,
@@ -110,10 +103,11 @@ impl<'g> Owners<'g> {
             env: env::EnvWrites::new(
                 facts,
                 graph_files,
-                &relevant_files,
+                relevant_files,
                 environment.root,
                 environment.config,
                 &environment.fixture_dirs,
+                scope.config_files.as_ref(),
             ),
             setups,
             fixture_dirs: environment.fixture_dirs,
@@ -186,6 +180,5 @@ impl<'g> Owners<'g> {
 pub(super) struct Environment<'a> {
     pub(super) root: &'a std::path::Path,
     pub(super) config: &'a crate::config::v2::NoMistakesConfig,
-    pub(super) vitest: Option<&'a crate::codebase::rules::PreparedVitestProjectCatalog>,
     pub(super) fixture_dirs: Vec<String>,
 }

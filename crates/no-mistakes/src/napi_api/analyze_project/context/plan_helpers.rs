@@ -58,6 +58,34 @@ fn framework_preparation_plan(
     Ok(plan)
 }
 
+fn with_vitest_check_framework(
+    mut plan: crate::codebase::test_discovery::FrameworkPreparationPlan,
+    check_config: Option<&crate::config::v2::NoMistakesConfig>,
+    root: &Path,
+    visible_paths: &[PathBuf],
+    has_non_check_report: bool,
+) -> (
+    crate::codebase::test_discovery::FrameworkPreparationPlan,
+    std::collections::HashSet<PathBuf>,
+) {
+    let Some(config) = check_config.filter(|config| {
+        crate::codebase::rules::test_no_live_repository_scan::vitest_roots_configured(config)
+    }) else {
+        return (plan, Default::default());
+    };
+    let mut excluded = if has_non_check_report {
+        plan.excluded_config_paths(root, config, visible_paths)
+    } else {
+        Default::default()
+    };
+    plan.include_framework_names(["vitest"]);
+    if !excluded.is_empty() {
+        let still_excluded = plan.excluded_config_paths(root, config, visible_paths);
+        excluded.retain(|path| !still_excluded.contains(path));
+    }
+    (plan, excluded)
+}
+
 fn check_fact_plan(
     options: &AnalyzeProjectOptions,
     traversal: &SharedTraversalContext,

@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "composite": true
+  },
+  "include": [
+    "../../qa.runner.ts"
+  ]
+}

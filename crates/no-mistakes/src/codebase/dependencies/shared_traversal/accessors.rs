@@ -21,6 +21,15 @@ impl SharedTraversalContext {
         &self.graph_files
     }
 
+    pub(crate) fn set_ordinary_excluded_files(
+        &mut self,
+        files: std::collections::HashSet<PathBuf>,
+        retained_roots: &[PathBuf],
+    ) {
+        self.ordinary_excluded_files = files;
+        self.ordinary_retained_roots = retained_roots.iter().cloned().collect();
+    }
+
     pub(crate) fn visible_paths(&self) -> &crate::codebase::ts_source::VisiblePathSnapshot {
         self.dataset.visible_paths()
     }

@@ -1,0 +1,1 @@
+{"compilerOptions":{"module":"nodenext","target":"esnext","moduleResolution":"nodenext"},"include":["src","tests","setup.ts","qa.runner.ts"]}

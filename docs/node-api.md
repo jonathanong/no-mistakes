@@ -612,6 +612,10 @@ Node-origin `module.require` and imported `createRequire` loads use conservative
 unresolved-root findings in these same async APIs, including computed module
 arguments and simple loader aliases. They add no public module-fact fields.
 
+Adding a `check` report to `analyzeProject()` retains ordinary traversal and
+importer results, including config ownership diagnostics. Both projections
+reuse the request inventory, sources, fact pass, and canonical graph.
+
 ## PostgreSQL query annotation
 
 For PostgreSQL query annotation checks, low effort recognizes direct `.text`/`.values` reads from a safe local builder tagged by the exact `sql-template-strings` import. The asynchronous check API also projects one direct immutable string export through the prepared resolver.

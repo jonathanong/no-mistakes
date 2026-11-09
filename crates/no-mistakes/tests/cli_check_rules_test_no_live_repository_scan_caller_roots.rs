@@ -63,6 +63,20 @@ fn caller_proven_roots_match_small_and_large_projects() {
         "no-caller",
         "disabled",
         "unknown-setup",
+        "unparsed-setup",
+        "unparsed-config-import",
+        "env-argument-fixture",
+        "env-argument-poison",
+        "env-argument-captured",
+        "env-segment-contract",
+        "setup-caller",
+        "setup-hook-caller",
+        "setup-only-live",
+        "setup-only-owned",
+        "custom-config-unstub",
+        "imported-config-unstub",
+        "projection-config-diagnostics",
+        "unrelated-conventional-config",
     ]
     .into_iter()
     .map(|name| {
@@ -97,6 +111,46 @@ fn owned_callers_clear_without_clearing_controls() {
     }
 
     assert_eq!(locations(&report("unknown-setup")), ["src/pb.mts:5"]);
+
+    for name in [
+        "setup-caller",
+        "setup-hook-caller",
+        "setup-only-live",
+        "custom-config-unstub",
+        "imported-config-unstub",
+        "projection-config-diagnostics",
+    ] {
+        assert_eq!(locations(&report(name)), ["src/list.ts:4"], "{name}");
+    }
+    for name in ["setup-only-owned", "unrelated-conventional-config"] {
+        assert!(locations(&report(name)).is_empty(), "{name}");
+    }
+    assert_eq!(
+        locations(&report("env-argument-fixture")),
+        ["src/scan.mts:13", "src/scan.mts:17"]
+    );
+    assert_eq!(
+        locations(&report("env-argument-poison")),
+        ["src/scan.mts:5"]
+    );
+    assert_eq!(
+        locations(&report("env-argument-captured")),
+        ["src/scan.mts:5", "src/scan.mts:9"]
+    );
+    assert_eq!(
+        locations(&report("env-segment-contract")),
+        ["src/scan.mts:9"]
+    );
+
+    for name in ["unparsed-setup", "unparsed-config-import"] {
+        let report = report(name);
+        assert!(
+            report["incomplete"]
+                .as_array()
+                .is_some_and(|items| !items.is_empty()),
+            "{name}: {report}"
+        );
+    }
 
     let found = locations(&report("large"));
     for owned in [

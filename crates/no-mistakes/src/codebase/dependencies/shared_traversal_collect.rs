@@ -62,6 +62,7 @@ pub(crate) fn collect_and_filter_entries_prepared(
         .iter()
         .map(|entrypoint| entrypoint.node.clone())
         .collect();
+    let ordinary_excluded = ordinary_exclusions(shared, &entrypoints);
     let import_only = !args.include_symbols && relationships_are_import_only(&args.relationships);
     let any_symbol = entrypoints
         .iter()
@@ -152,38 +153,7 @@ pub(crate) fn collect_and_filter_entries_prepared(
     shared
         .session
         .record_work("traversal.nodes", entries.len() as u64);
-    let diagnostics = shared
-        .tsconfig_build_diagnostics
-        .iter()
-        .cloned()
-        .chain(runtime_diagnostics)
-        .map(|mut diagnostic| {
-            let root_text = shared.root.to_string_lossy();
-            diagnostic.detail = diagnostic.detail.replace(&format!("{root_text}/"), "");
-            diagnostic.config = diagnostic.config.map(|config| {
-                config
-                    .strip_prefix(&shared.root)
-                    .unwrap_or(&config)
-                    .to_path_buf()
-            });
-            diagnostic.file = diagnostic.file.map(|file| {
-                file.strip_prefix(&shared.root)
-                    .unwrap_or(&file)
-                    .to_path_buf()
-            });
-            diagnostic.candidates = diagnostic
-                .candidates
-                .into_iter()
-                .map(|candidate| {
-                    candidate
-                        .strip_prefix(&shared.root)
-                        .unwrap_or(&candidate)
-                        .to_path_buf()
-                })
-                .collect();
-            diagnostic
-        })
-        .collect();
+    let diagnostics = ordinary_report_diagnostics(shared, runtime_diagnostics, ordinary_excluded.as_ref());
     Ok(TraversalResult {
         entries,
         root: shared.root.clone(),

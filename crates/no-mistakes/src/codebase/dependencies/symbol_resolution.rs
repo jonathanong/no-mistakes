@@ -5,6 +5,7 @@ fn resolve_symbol_dependents(
     allowed: Option<&std::collections::HashSet<EdgeKind>>,
     graph: &graph::DepGraph,
     symbol_index: &graph::SymbolIndex,
+    excluded: Option<&std::collections::HashSet<PathBuf>>,
 ) -> Vec<graph::NodeEntry> {
     let mut all_entries: HashMap<NodeId, graph::NodeEntry> = HashMap::new();
     let plain_roots: Vec<_> = entrypoints
@@ -13,7 +14,11 @@ fn resolve_symbol_dependents(
         .map(|ep| ep.node.clone())
         .collect();
     if !plain_roots.is_empty() {
-        let entries = graph.dependents_of(&plain_roots, depth, allowed);
+        let entries = if let Some(excluded) = excluded {
+            graph.dependents_of_excluding_files(&plain_roots, depth, allowed, excluded)
+        } else {
+            graph.dependents_of(&plain_roots, depth, allowed)
+        };
         merge_node_entries(&mut all_entries, entries);
     }
     for ep in entrypoints {
@@ -21,7 +26,18 @@ fn resolve_symbol_dependents(
             if matches!(ep.node, graph::NodeId::Module(_)) {
                 continue;
             }
-            let entries = graph.dependents_of_symbol(&ep.file, sym, depth, allowed, symbol_index);
+            let entries = if let Some(excluded) = excluded {
+                graph.dependents_of_symbol_excluding_files(
+                    &ep.file,
+                    sym,
+                    depth,
+                    allowed,
+                    symbol_index,
+                    excluded,
+                )
+            } else {
+                graph.dependents_of_symbol(&ep.file, sym, depth, allowed, symbol_index)
+            };
             merge_node_entries(&mut all_entries, entries);
         }
     }

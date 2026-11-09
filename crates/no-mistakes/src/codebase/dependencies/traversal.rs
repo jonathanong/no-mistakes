@@ -120,6 +120,7 @@ pub(super) fn dependents_entries(
             ctx.allowed,
             &graph,
             &symbol_index,
+            None,
         ))
     } else {
         Ok(graph.dependents_of(roots, depth, ctx.allowed))

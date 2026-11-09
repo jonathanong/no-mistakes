@@ -44,6 +44,7 @@ include!("shared_traversal_collect_cache.rs");
 include!("shared_traversal_collect_roots.rs");
 include!("shared_traversal_provenance.rs");
 include!("shared_traversal_uncached.rs");
+include!("shared_traversal_uncached_helpers.rs");
 include!("output_args.rs");
 include!("collect_standalone.rs");
 include!("run.rs");

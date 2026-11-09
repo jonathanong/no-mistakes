@@ -26,6 +26,7 @@ impl EnvWrites {
         root: &Path,
         config: &NoMistakesConfig,
         fixture_dirs: &[String],
+        selected_configs: Option<&FxHashSet<PathBuf>>,
     ) -> Self {
         let mut writes = Self::default();
         // A file with no path facts was outside the rule's scope; a file whose
@@ -45,11 +46,12 @@ impl EnvWrites {
                 continue;
             }
             let provenance = path_provenance(ts);
+            let runner_config = selected_configs.is_none_or(|configs| configs.contains(file));
             writes.poisoned |= provenance.is_none_or(|found| found.env_unknown_write);
             writes.locally_poisoned |= provenance.is_none_or(|found| found.env_opaque_write)
-                || (runner_config(file) && provenance.is_some_and(|found| found.opaque_config_key));
+                || (runner_config && provenance.is_some_and(|found| found.opaque_config_key));
             writes.poisoned |=
-                runner_config(file) && provenance.is_some_and(|found| found.opaque_config_key);
+                runner_config && provenance.is_some_and(|found| found.opaque_config_key);
             for write in provenance.iter().flat_map(|found| &found.env_writes) {
                 let entry = writes.owned.entry(write.name.clone()).or_insert(true);
                 *entry &= owned_origin(&write.origin, fixture_dirs);
@@ -103,13 +105,6 @@ pub(in super::super) fn owned_origin(origin: &PathOrigin, fixture_dirs: &[String
         .segments
         .iter()
         .any(|segment| fixture_dirs.iter().any(|dir| dir == segment))
-}
-
-pub(in super::super) fn runner_config(path: &Path) -> bool {
-    matches!(
-        path.file_stem().and_then(|stem| stem.to_str()),
-        Some("vitest.config" | "vitest.workspace" | "vitest.projects" | "vite.config")
-    )
 }
 
 pub(in super::super) fn json_configs_poison(root: &Path, config: &NoMistakesConfig) -> bool {

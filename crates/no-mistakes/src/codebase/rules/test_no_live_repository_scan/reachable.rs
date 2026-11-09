@@ -9,11 +9,26 @@ pub(super) fn sources(
     roots: &[NodeId],
     root_files: &[PathBuf],
     graph_files: &[PathBuf],
+    setups: &super::owned::setups::ConfiguredSetups,
 ) -> anyhow::Result<Scope> {
+    let setup_files: Vec<PathBuf> = setups
+        .setup_files()
+        .unwrap_or_default()
+        .into_iter()
+        .collect();
+    let config_roots = setups
+        .config_files()
+        .map(|files| files.into_iter().collect::<Vec<_>>());
+    let required: Vec<NodeId> = root_files
+        .iter()
+        .chain(&setup_files)
+        .chain(config_roots.iter().flatten())
+        .map(NodeId::file)
+        .collect();
     super::super::graph_source_prerequisites::require_import_sources(
         super::RULE_ID,
         graph,
-        &root_files.iter().map(NodeId::file).collect::<Vec<_>>(),
+        &required,
         None,
     )?;
     let entries: Vec<NodeId> = root_files.iter().map(NodeId::file).collect();
@@ -26,31 +41,49 @@ pub(super) fn sources(
         .filter_map(|entry| entry.node.as_file().map(std::path::Path::to_path_buf))
         .collect();
     let modules: Vec<CallRoot> = test_modules.iter().cloned().map(CallRoot::Module).collect();
+    let setup_modules = module_files(graph, &setup_files);
     let mut all = roots.to_vec();
     all.extend(graph.expand_call_roots(&modules));
+    all.extend(
+        graph.expand_call_roots(
+            &setup_modules
+                .iter()
+                .cloned()
+                .map(CallRoot::Module)
+                .collect::<Vec<_>>(),
+        ),
+    );
     all.sort();
     all.dedup();
     let sources = graph.call_source_nodes(&all, CallTraversal::Transitive, None);
     let mut files: FxHashSet<PathBuf> = root_files.iter().cloned().collect();
     files.extend(test_modules);
+    files.extend(setup_modules);
     files.extend(
         sources
             .iter()
             .filter_map(NodeId::as_file)
             .map(std::path::Path::to_path_buf),
     );
-    let configs: Vec<PathBuf> = graph_files
-        .iter()
-        .filter(|file| super::owned::env::runner_config(file))
-        .cloned()
-        .collect();
-    files.extend(module_files(graph, &configs));
-    Ok(Scope { sources, files })
+    let config_files = config_roots
+        .as_ref()
+        .map(|configs| module_files(graph, configs));
+    if let Some(configs) = &config_files {
+        files.extend(configs.iter().cloned());
+    } else {
+        files.extend(graph_files.iter().cloned());
+    }
+    Ok(Scope {
+        sources,
+        files,
+        config_files,
+    })
 }
 
 pub(super) struct Scope {
     pub(super) sources: FxHashSet<NodeId>,
     pub(super) files: FxHashSet<PathBuf>,
+    pub(super) config_files: Option<FxHashSet<PathBuf>>,
 }
 
 pub(super) fn module_files(graph: &DepGraph, roots: &[PathBuf]) -> FxHashSet<PathBuf> {

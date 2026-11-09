@@ -18,6 +18,19 @@ fn bfs_skipping_symbol_owner_files<A>(
 where
     A: AsRef<[(NodeId, EdgeKind)]>,
 {
+    bfs_skipping_symbol_owner_files_excluding_files(starts, edges, max_depth, allowed, &HashSet::new())
+}
+
+fn bfs_skipping_symbol_owner_files_excluding_files<A>(
+    starts: &[NodeId],
+    edges: &FxHashMap<NodeId, A>,
+    max_depth: Option<usize>,
+    allowed: Option<&HashSet<EdgeKind>>,
+    excluded: &HashSet<PathBuf>,
+) -> Vec<NodeEntry>
+where
+    A: AsRef<[(NodeId, EdgeKind)]>,
+{
     let mut visited: FxHashSet<(NodeId, Option<Arc<Path>>)> = fx_set();
     let mut queue: VecDeque<(NodeId, usize, Option<Arc<Path>>)> = VecDeque::new();
     let mut result: Vec<NodeEntry> = Vec::new();
@@ -35,6 +48,9 @@ where
         .collect();
 
     for s in starts {
+        if excluded_node(s, excluded) {
+            continue;
+        }
         let state = (s.clone(), None);
         if !visited.contains(&state) {
             visited.insert(state);
@@ -79,6 +95,9 @@ where
                 if !allowed.is_none_or(|a| a.contains(kind)) {
                     continue;
                 }
+                if excluded_node(neighbor, excluded) {
+                    continue;
+                }
 
                 let next_depth = depth + 1;
                 let next_owner_context = match (&node, neighbor) {
@@ -110,6 +129,10 @@ where
     }
 
     result
+}
+
+fn excluded_node(node: &NodeId, excluded: &HashSet<PathBuf>) -> bool {
+    node.as_file().is_some_and(|path| excluded.contains(path))
 }
 
 fn symbol_importer_files_by_owner<A>(
