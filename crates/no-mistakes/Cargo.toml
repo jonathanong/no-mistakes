@@ -25,13 +25,13 @@ directories = "6"
 globset = "0.4"
 granit-parser = "2.0"
 git2 = "0.21"
-hcl-rs = "0.19"
+hcl-rs = "0.20"
 ignore = "0.4"
 is-terminal = "0.4"
 jsonc-parser = { version = "0.34", features = ["serde", "serde_json"] }
 memchr = "2"
 # Merman 0.8 requires explicit diagram selection; validation supports every family.
-merman-analysis = { version = "=0.9.2", optional = true, features = ["all-diagrams"] }
+merman-analysis = { version = "=0.9.3", optional = true, features = ["all-diagrams"] }
 napi = { version = "3.9.0", features = ["napi8"] }
 napi-derive = "3.5.6"
 num_cpus = "1.16"
