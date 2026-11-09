@@ -1,6 +1,7 @@
 use crate::codebase::postgres::statement_facts::SqlGroupingQuery;
 use sqlparser::ast::{
-    Expr, GroupByExpr, ObjectNamePart, Query, Select, SetExpr, Statement, Visit, Visitor,
+    DuplicateTreatment, Expr, FunctionArguments, GroupByExpr, ObjectNamePart, Query, Select,
+    SetExpr, Statement, Value, Visit, Visitor,
 };
 use std::{ops::ControlFlow, sync::Arc};
 
@@ -18,6 +19,8 @@ pub(super) fn collect(
         parameter_sites,
         sites: Vec::new(),
         candidate: false,
+        count: false,
+        zero: false,
     });
 }
 
@@ -27,6 +30,8 @@ struct Roots<'a> {
     parameter_sites: &'a Arc<[(u32, u32)]>,
     sites: Vec<(usize, usize)>,
     candidate: bool,
+    count: bool,
+    zero: bool,
 }
 
 impl Visitor for Roots<'_> {
@@ -36,6 +41,8 @@ impl Visitor for Roots<'_> {
         if self.depth == 0 {
             self.sites.clear();
             self.candidate = false;
+            self.count = false;
+            self.zero = false;
         }
         self.depth += 1;
         select_sites(&query.body, &mut self.sites);
@@ -44,7 +51,7 @@ impl Visitor for Roots<'_> {
 
     fn post_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
         self.depth -= 1;
-        if self.depth == 0 && self.candidate {
+        if self.depth == 0 && (self.candidate || self.count && self.zero) {
             super::locations::work::grouping_root();
             self.out.push(SqlGroupingQuery {
                 query: Arc::new(query.clone()),
@@ -63,9 +70,19 @@ impl Visitor for Roots<'_> {
     }
 
     fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
-        if let Expr::Function(function) = expr {
-            self.candidate |= matches!(function.name.0.last(), Some(ObjectNamePart::Identifier(name))
-                if name.value.eq_ignore_ascii_case("count"));
+        match expr {
+            Expr::Function(function)
+                if matches!(function.name.0.last(),
+                Some(ObjectNamePart::Identifier(name)) if name.value.eq_ignore_ascii_case("count")) =>
+            {
+                self.count = true;
+                self.candidate |= matches!(&function.args, FunctionArguments::List(args)
+                    if args.duplicate_treatment == Some(DuplicateTreatment::Distinct));
+            }
+            Expr::Value(value) => {
+                self.zero |= matches!(&value.value, Value::Number(number, _) if number == "0")
+            }
+            _ => {}
         }
         ControlFlow::Continue(())
     }
