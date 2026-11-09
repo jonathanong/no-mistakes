@@ -1,0 +1,27 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "default_relationships": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/Parent.tsx",
+          "import": "import,react-render",
+          "line": 1,
+          "message": "src/Parent.tsx reaches forbidden file 'src/Child.tsx' via import,react-render. Reproduce: no-mistakes dependencies 'src/Parent.tsx' --filter 'src/Child.tsx' --relationship all --format json",
+          "rule": "forbidden-dependencies",
+          "sourceLine": "import { Child } from './Child';",
+          "target": "src/Child.tsx"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

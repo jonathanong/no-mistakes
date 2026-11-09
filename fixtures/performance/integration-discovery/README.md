@@ -31,7 +31,11 @@ includes process startup/reporting, and checks full stdout/exit parity. It
 keeps stderr hashes and separately checks non-diagnostic stderr, excluding only
 the declared timing/CPU/memory/hot-path/work lines in observer-on runs. Each
 cell has 12 alternating forward/reverse blocks (24 samples per arm) followed by one
-AAAA and one BBBB same-binary calibration block.
+AAAA and one BBBB same-binary calibration block. Before each cell, four fresh
+untimed ABBA invocations warm both executables and verify their reports. These
+runs are retained separately in `.warmups.jsonl`; no duration is subtracted from
+measured invocations. The driver refuses to overwrite an existing cohort and
+records its own SHA-256 plus executable hashes before and after sampling.
 
 The provenance input identifies exact revisions, compiler/features/release flags,
 dependency lock digest, expected corpus SHA-256, `policies` (the six names

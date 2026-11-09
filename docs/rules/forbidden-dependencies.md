@@ -24,7 +24,11 @@ Directory roots select source files recursively from the request's discovered
 graph, within the rule's project, include, and exclude filters. File roots remain
 valid, missing roots are skipped, and overlapping roots select each source once.
 Each finding names its source file and includes a query for that file.
-Reachability may follow dependencies outside the origin directory.
+Reachability may follow dependencies outside the origin directory. Default
+relationships retain that support across configured source boundaries. React
+render analysis skips its detailed walks only when the existing component
+extractor proves the complete file result is empty; exported components keep
+full analysis. Explicit `relationships: [import]` requests no React facts.
 
 ```yaml
 rules:
