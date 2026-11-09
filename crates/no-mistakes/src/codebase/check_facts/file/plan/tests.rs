@@ -55,7 +55,7 @@ fn graph_source_with_scoped_raw_source_reuses_owned_text_on_success_and_error() 
     };
     for (index, path) in files.iter().enumerate() {
         let original = sources.read_path(path).unwrap();
-        let facts = super::super::collect_file_facts_with_session_and_sources(
+        let facts = crate::codebase::check_facts::tests::compatibility::collect_file_facts_with_session_and_sources(
             &session, &root, path, &plan, None, &sources, false,
         )
         .unwrap();
@@ -68,7 +68,7 @@ fn graph_source_with_scoped_raw_source_reuses_owned_text_on_success_and_error() 
         raw_source: false,
         ..plan
     };
-    let facts = super::super::collect_file_facts_with_session_and_sources(
+    let facts = crate::codebase::check_facts::tests::compatibility::collect_file_facts_with_session_and_sources(
         &session,
         &root,
         &files[0],
@@ -403,15 +403,16 @@ fn playwright_const_urls_share_module_binding_projection_across_variants() {
             None,
             None,
         );
-        let combined = super::super::program::collect_file_facts_from_program(
-            root,
-            &file,
-            &plan,
-            Some(&playwright),
-            source,
-            program,
-            None,
-        );
+        let combined =
+            crate::codebase::check_facts::tests::compatibility::collect_file_facts_from_program(
+                root,
+                &file,
+                &plan,
+                Some(&playwright),
+                source,
+                program,
+                None,
+            );
         assert_eq!(
             serde_json::to_value(baseline.module_bindings).unwrap(),
             serde_json::to_value(&combined.ts.module_bindings).unwrap(),

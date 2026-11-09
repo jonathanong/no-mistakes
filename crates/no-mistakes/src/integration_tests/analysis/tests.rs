@@ -352,15 +352,16 @@ fn disabled_integration_collects_no_discovery_work() {
     MODE_DECISIONS.with(|count| count.set(0));
     DISCOVERY_VISITS.with(|count| count.set(0));
     crate::ast::with_program(&path, &source, |program, source| {
-        let facts = crate::codebase::check_facts::collect_file_facts_from_program(
-            &fixture(),
-            &path,
-            &CheckFactPlan::default(),
-            None,
-            source,
-            program,
-            None,
-        );
+        let facts =
+            crate::codebase::check_facts::tests::compatibility::collect_file_facts_from_program(
+                &fixture(),
+                &path,
+                &CheckFactPlan::default(),
+                None,
+                source,
+                program,
+                None,
+            );
         assert!(facts.integration.is_none());
         assert!(facts.react.is_none());
         assert!(facts.react_usages.is_none());

@@ -114,10 +114,6 @@ pub use family_scope::{
     configure_nextjs_caching_scope, FamilyPathScope,
 };
 pub(crate) use file::is_mdx_file;
-#[cfg(test)]
-pub(crate) use file::{
-    collect_file_facts_from_program, collect_file_facts_with_session_and_sources,
-};
 pub use map::{CheckFactMap, SqlApplicationFacts, SqlFactContext};
 pub(crate) use map::{CheckFileFacts, PlaywrightTestFilesByProject};
 pub use plan::CheckFactPlan;

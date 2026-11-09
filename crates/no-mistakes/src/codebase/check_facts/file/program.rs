@@ -6,11 +6,6 @@ use super::CheckFactVariant;
 use std::path::Path;
 use std::sync::Arc;
 
-#[cfg(test)]
-mod compatibility;
-#[cfg(test)]
-pub(crate) use compatibility::collect_file_facts_from_program;
-
 pub(crate) fn collect_file_facts_from_program_with_discovery(
     variant: &CheckFactVariant<'_>,
     path: &Path,

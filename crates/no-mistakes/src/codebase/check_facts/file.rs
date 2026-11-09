@@ -13,13 +13,7 @@ mod program_walk;
 mod sql_identifier;
 mod variants;
 use plan::{requires_parse, should_store_source, ts_source};
-#[cfg(test)]
-pub(crate) use program::collect_file_facts_from_program;
 pub(crate) use program::collect_file_facts_from_program_with_discovery;
-#[cfg(test)]
-mod compatibility;
-#[cfg(test)]
-pub(crate) use compatibility::collect_file_facts_with_session_and_sources;
 pub(crate) use variants::{
     collect_file_fact_variants_from_source_with_session, collect_file_fact_variants_with_session,
     CheckFactVariant,
