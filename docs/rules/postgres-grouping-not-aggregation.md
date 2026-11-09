@@ -32,9 +32,12 @@ This does not add a separate severity or suppression syntax per shape.
 
 All shapes require a configured schema catalog. With no `schemaCatalogPath`,
 the rule stays silent for every shape. It uses primary keys, unique constraints,
-and unique indexes, including partial indexes only when the query implies their
-predicate. Unknown relations, ambiguous ownership, incomplete SQL, and unsupported
-expressions are left silent when the necessary proof is unavailable.
+and unique indexes. Partial indexes require an exact normalized predicate
+conjunct in the query (with the supported equality/non-null evidence); this is
+not a general predicate-implication solver. For example, `WHERE deleted_at IS
+NULL` can prove that partial predicate, while `WHERE deleted_at IS NULL OR
+other_condition` cannot. Unknown relations, ambiguous ownership, incomplete SQL,
+and unsupported expressions are left silent when the necessary proof is unavailable.
 
 The rule analyzes selected raw SQL and statically recovered SQL passed to configured
 executors, including template literals and `.append` fragments. It borrows the
@@ -72,7 +75,9 @@ SELECT DISTINCT post_id FROM post_topics WHERE topic_id = $1;
 
 Fix: drop `DISTINCT`; equality pins the other key column. The same proof can
 apply to `DISTINCT ON`, grouping keys, or a distinct aggregate. A partial unique
-index requires its predicate to be proven by the query.
+index requires its predicate to be proven by an exact supported query conjunct.
+Nullable unique keys also need non-null proof unless the index declares `NULLS
+NOT DISTINCT`; ordinary uniqueness permits repeated NULL values.
 
 ```sql
 SELECT post_id FROM post_topics WHERE topic_id = $1;
@@ -120,8 +125,15 @@ WHERE EXISTS (SELECT 1 FROM tags t WHERE t.item_id = i.id);
 
 The advisory also covers proven anti-join/existence consumers and distinct
 aggregates repairing filter-only join fan-out. It stays silent when the
-multiplied side supplies projected or aggregated values. Suppression: retain a
-measured grouped filter with the normal disable comment.
+multiplied side supplies projected or aggregated values, including ordering
+expressions. The join predicate must cover the derived distinct projection;
+otherwise the join can still multiply rows.
+
+For membership operators, the safe change is to remove `DISTINCT` while keeping
+the original `IN`, `NOT IN`, `ANY`, or `ALL` operator. Do not turn `NOT IN` or
+`<> ALL` into `NOT EXISTS` unless non-null keys or explicit guards preserve
+SQL's NULL behavior. Duplicate removal alone does not remove NULL values.
+Suppression: retain a measured grouped filter with the normal disable comment.
 
 ### `aggregate-existence-test`
 
@@ -140,14 +152,93 @@ SELECT i.id FROM items i
 WHERE EXISTS (SELECT 1 FROM tags t WHERE t.item_id = i.id);
 ```
 
+For grouped `MAX` tests, preserve both the original absence condition and
+three-valued comparisons. When the timestamp column is proven `NOT NULL`, this:
+
+```sql
+SELECT r.post_id FROM post_reads r GROUP BY r.post_id
+HAVING NOT EXISTS (
+  SELECT 1 FROM post_reads x WHERE x.post_id = r.post_id
+) OR MAX(r.created_at) < $1;
+```
+
+can use a guarded anti-existence test:
+
+```sql
+SELECT r.post_id FROM post_reads r GROUP BY r.post_id
+HAVING NOT EXISTS (
+  SELECT 1 FROM post_reads x WHERE x.post_id = r.post_id
+) OR ($1 IS NOT NULL AND NOT EXISTS (
+  SELECT 1 FROM post_reads x
+  WHERE x.post_id = r.post_id AND x.created_at >= $1
+));
+```
+
+Keep the original `NOT EXISTS` disjunct, especially for nullable grouping keys.
+The threshold guard is necessary because `MAX(...) < NULL` is unknown, while
+`NOT EXISTS (... >= NULL)` is true. Without non-null timestamp proof, the bare
+absence shape stays silent: an all-NULL group needs additional handling.
+If the original absence subquery already tests `created_at >= $1`, retain that
+original `NOT EXISTS` and remove the redundant `MAX` disjunct instead; its NULL
+behavior is already represented by the existing predicate.
+
 A count returned to the caller remains valid. Suppression: use a normal disable
 comment when an explain-analyze scenario and benchmark justify the aggregate.
 
-## Valid example
+## Counterexample
 
-Real aggregation is valid:
+These named files use the configuration above. The catalog's composite primary
+key and equality pin prove that `DISTINCT` is redundant:
+
+```json
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "post_topics": {
+      "columns": {
+        "post_id": {"dataType": "uuid", "nullable": false},
+        "topic_id": {"dataType": "uuid", "nullable": false}
+      },
+      "primaryKey": {"columns": ["post_id", "topic_id"]}
+    }
+  }
+}
+```
 
 ```sql
+-- db/queries/post-topics.sql
+SELECT DISTINCT post_id FROM post_topics WHERE topic_id = $1;
+```
+
+Fix: remove `DISTINCT`; the remaining primary-key column is already unique in
+this result. This example produces an advisory whose `target` is
+`distinct-over-unique-key` and does not fail the run.
+
+## Valid example
+
+Real aggregation is valid. These named files provide its catalog and selected
+query using the same configuration:
+
+```json
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "ratings": {
+      "columns": {
+        "topic_id": {"dataType": "uuid", "nullable": false},
+        "score": {"dataType": "integer", "nullable": false}
+      }
+    }
+  }
+}
+```
+
+```sql
+-- db/queries/ratings.sql
 SELECT topic_id, COUNT(*) AS n, SUM(score) AS score
 FROM ratings GROUP BY topic_id;
 ```
