@@ -710,7 +710,7 @@ jobs:
 
       - name: Install cargo-llvm-cov
         timeout-minutes: 5
-        uses: taiki-e/install-action@5488ac5a951645ce95062214902ac4b6bc1a1037 # v2.87.32
+        uses: taiki-e/install-action@682ce6c3c696a4cd5168a05f98e51aa02b877941 # v2.89.1
         with:
           # The profile-reuse helper depends on the 0.9.0 report glob and reuse behavior.
           tool: cargo-llvm-cov@0.9.0
@@ -781,7 +781,7 @@ jobs:
 
       - name: Install cargo-crap
         timeout-minutes: 5
-        uses: taiki-e/install-action@5488ac5a951645ce95062214902ac4b6bc1a1037 # v2.87.32
+        uses: taiki-e/install-action@682ce6c3c696a4cd5168a05f98e51aa02b877941 # v2.89.1
         with:
           tool: cargo-crap
 
@@ -1294,7 +1294,7 @@ jobs:
         # A cache hit finishes quickly. The first run on this runner, and the
         # first run after a libc6 update, installs valgrind and libc6-dbg.
         timeout-minutes: 6
-        uses: CodSpeedHQ/action@78102a468f96d8e0ccb92d0ec49425753fc42062 # v5.6.0
+        uses: CodSpeedHQ/action@61efe07e57e55bedeab750c434504de272a56e8c # v5.6.1
         with:
           mode: ${{ matrix.mode }}
           # actions/cache versions entries by path, so this also keys the cache by libc6.
@@ -1314,7 +1314,7 @@ jobs:
       - name: Run unique frontend lifecycle memory controls
         if: ${{ env.BENCHMARK_SELECTED == 'true' && matrix.mode == 'memory' && matrix.benchmark-shard == 'language-frontends' }}
         timeout-minutes: 6
-        uses: CodSpeedHQ/action@78102a468f96d8e0ccb92d0ec49425753fc42062 # v5.6.0
+        uses: CodSpeedHQ/action@61efe07e57e55bedeab750c434504de272a56e8c # v5.6.1
         with:
           mode: memory
           runner-version: "5.4.0"
@@ -1393,7 +1393,7 @@ jobs:
       - name: Measure the declared eight fresh processes
         id: samples
         timeout-minutes: 6
-        uses: CodSpeedHQ/action@78102a468f96d8e0ccb92d0ec49425753fc42062 # v5.6.0
+        uses: CodSpeedHQ/action@61efe07e57e55bedeab750c434504de272a56e8c # v5.6.1
         env:
           TMPDIR: ${{ runner.temp }}/frontend-lifecycle-smoke/profiles
           CODSPEED_SKIP_UPLOAD: "true"
