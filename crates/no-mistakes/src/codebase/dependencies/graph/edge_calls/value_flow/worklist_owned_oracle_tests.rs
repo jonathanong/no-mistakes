@@ -129,10 +129,11 @@ pub(in super::super::super) fn refine_value_calls(
     super::super::super::value_flow_metrics::record(visits.values().sum());
     let mut processed: Vec<_> = visits.into_keys().collect();
     processed.sort_unstable();
-    replace_call_edges(&mut pass.edges, &base, &pass.sites, &processed, |site| {
-        site_source(inputs, site)
-    });
-    #[cfg(all(test, feature = "test-instrumentation"))]
+    replace_call_edges(
+        &mut pass.edges,
+        processed.iter().map(|index| (&base[*index], &pass.sites[*index])),
+        |site| site_source(inputs, site),
+    );
     pass.parameter_cache.site_storage.finish();
     #[cfg(feature = "test-instrumentation")]
     {

@@ -70,7 +70,8 @@ fn collect_and_merge_all_edges(
             module_files,
         );
         merge_edges(forward, reverse, pass.edges);
-        resolved_call_sites.extend(pass.sites);
+        debug_assert!(resolved_call_sites.is_empty());
+        *resolved_call_sites = pass.sites;
         opaque_external_members.extend(pass.opaque_external_members);
         call_prerequisites.extend(pass.call_prerequisites);
         class_declarations.extend(pass.classes);

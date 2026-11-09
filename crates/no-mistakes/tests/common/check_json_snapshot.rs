@@ -31,7 +31,16 @@ pub fn assert_saved_fixture_with_env(
     cases: &[(&str, PathBuf, PathBuf)],
     envs: &[(&str, &str)],
 ) {
-    assert_saved_fixture_checked(name, cases, envs, false);
+    assert_saved_fixture_with_env_and_args(name, cases, envs, &[]);
+}
+
+pub fn assert_saved_fixture_with_env_and_args(
+    name: &str,
+    cases: &[(&str, PathBuf, PathBuf)],
+    envs: &[(&str, &str)],
+    args: &[&str],
+) {
+    assert_saved_fixture_checked(name, cases, envs, false, args);
 }
 
 pub(super) fn assert_saved_fixture_checked(
@@ -39,11 +48,12 @@ pub(super) fn assert_saved_fixture_checked(
     cases: &[(&str, PathBuf, PathBuf)],
     envs: &[(&str, &str)],
     clean: bool,
+    args: &[&str],
 ) {
     let mut document = serde_json::Map::new();
     for (label, root, config) in cases {
-        let jobs_one = run_normalized(root, config, 1, envs);
-        let jobs_two = run_normalized(root, config, 2, envs);
+        let jobs_one = run_normalized(root, config, 1, envs, args);
+        let jobs_two = run_normalized(root, config, 2, envs, args);
         assert_eq!(
             jobs_one, jobs_two,
             "{label} changed between --jobs 1 and --jobs 2"
@@ -81,7 +91,13 @@ pub(super) fn assert_saved_fixture_checked(
     });
 }
 
-fn run_normalized(root: &Path, config: &Path, jobs: usize, envs: &[(&str, &str)]) -> Value {
+fn run_normalized(
+    root: &Path,
+    config: &Path,
+    jobs: usize,
+    envs: &[(&str, &str)],
+    args: &[&str],
+) -> Value {
     let jobs_arg = jobs.to_string();
     let mut command = Command::new(env!("CARGO_BIN_EXE_no-mistakes"));
     command
@@ -89,7 +105,8 @@ fn run_normalized(root: &Path, config: &Path, jobs: usize, envs: &[(&str, &str)]
         .env_remove("RAYON_NUM_THREADS")
         .envs(envs.iter().copied())
         .args(["--jobs", &jobs_arg, "check", "--root"])
-        .arg(root);
+        .arg(root)
+        .args(args);
     if !config.as_os_str().is_empty() {
         command.arg("--config").arg(config);
     }

@@ -17,12 +17,12 @@ pub(in super::super::super) fn refine_value_calls(
     if pass.parameter_cache.site_storage.cloning() || pass.parameter_cache.site_storage.original() {
         return owned_worklist::refine_value_calls(inputs, facts, resolver, indexes, pass);
     }
-    let base = pass.sites.clone();
-    let mut incoming = incoming_inputs(&base, &pass.constructor_routes, indexes, facts);
+    let total_sites = pass.sites.len();
+    let mut incoming = incoming_inputs(&pass.sites, &pass.constructor_routes, indexes, facts);
     let replacements = replacement_catalog::ReplacementCatalog::prepare(
         inputs, facts, resolver, indexes, pass, &incoming,
     );
-    let pending = base.iter().enumerate().filter(|(_, site)| {
+    let pending = pass.sites.iter().enumerate().filter(|(_, site)| {
         site.invocation != InvocationKind::Construct
             && (site.target_node.is_none()
                 || site.invocation == InvocationKind::Call
@@ -44,7 +44,8 @@ pub(in super::super::super) fn refine_value_calls(
             .admission_probe
             .admission(site.target_node.is_some())
     });
-    let mut pending: FxHashSet<usize> = pending.map(|(index, _)| index).collect();
+    let (admitted, base) = initial_sites(&pass.sites, pending.map(|(index, _)| index));
+    let mut pending: FxHashSet<usize> = (0..base.len()).collect();
     let mut dependencies: FxHashMap<FunctionKey, FxHashSet<usize>> = fx_map();
     let mut previous_dependencies: FxHashMap<usize, FxHashSet<FunctionKey>> = fx_map();
     let mut visits: FxHashMap<usize, usize> = fx_map();
@@ -56,11 +57,11 @@ pub(in super::super::super) fn refine_value_calls(
         }
         // This projection belongs to one immutable incoming-call generation.
         let module_writer_phases = execution_phases::ModuleWriterPhases::default();
-        let selected = selected_sites(&mut pass.sites, &batch);
+        let selected = selected_sites(&mut pass.sites, &batch, &admitted);
         let results: Vec<_> = selected
             .into_par_iter()
             .map(|(index, site)| {
-                let enabled = visits[&index] <= base.len() + 1;
+                let enabled = visits[&index] <= total_sites + 1;
                 let previous = reset_resolution(site, &base[index]);
                 let used = refine_site_in_place(
                     inputs,
@@ -82,7 +83,7 @@ pub(in super::super::super) fn refine_value_calls(
             .collect();
         let mut changed = fx_set();
         for (index, mut previous, used) in results {
-            let site = &mut pass.sites[index];
+            let site = &mut pass.sites[admitted[index]];
             for key in previous_dependencies.remove(&index).into_iter().flatten() {
                 if let Some(users) = dependencies.get_mut(&key) {
                     users.remove(&index);
@@ -125,7 +126,7 @@ pub(in super::super::super) fn refine_value_calls(
                     users
                         .iter()
                         .copied()
-                        .filter(|index| visits[index] <= base.len() + 1),
+                        .filter(|index| visits[index] <= total_sites + 1),
                 );
             }
         }
@@ -134,9 +135,11 @@ pub(in super::super::super) fn refine_value_calls(
     super::super::super::value_flow_metrics::record(visits.values().sum());
     let mut processed: Vec<_> = visits.into_keys().collect();
     processed.sort_unstable();
-    replace_call_edges(&mut pass.edges, &base, &pass.sites, &processed, |site| {
-        site_source(inputs, site)
-    });
+    replace_call_edges(
+        &mut pass.edges,
+        processed.iter().map(|index| (&base[*index], &pass.sites[admitted[*index]])),
+        |site| site_source(inputs, site),
+    );
     #[cfg(all(test, feature = "test-instrumentation"))]
     pass.parameter_cache.site_storage.finish();
     #[cfg(feature = "test-instrumentation")]
@@ -155,35 +158,8 @@ pub(in super::super::super) fn refine_value_calls(
 include!("worklist_edges.rs");
 include!("site_ownership.rs");
 
-fn function_keys(site: &ResolvedCallSite) -> impl Iterator<Item = FunctionKey> + '_ {
-    site.target_nodes().filter_map(move |node| {
-        if site.invocation == InvocationKind::Membership {
-            return None;
-        }
-        match node {
-            NodeId::Symbol {
-                file,
-                callable_id: Some(id),
-                ..
-            } => Some((file.to_path_buf(), *id)),
-            _ => None,
-        }
-    })
-}
-fn site_argument(
-    site: &ResolvedCallSite,
-    indexes: &CallableResolutionIndexes,
-    facts: &dyn TsFactLookup,
-) -> ParameterInput {
-    ParameterInput::from_site(site, indexes, facts)
-}
-
-fn site_source(inputs: &GraphEdgeBuildInputs<'_>, site: &ResolvedCallSite) -> NodeId {
-    site.caller.as_deref().map_or_else(
-        || NodeId::file_in(&inputs.interner, &site.file),
-        |caller| NodeId::scoped_in(&inputs.interner, &site.file, caller, site.caller_id),
-    )
-}
+include!("worklist_keys.rs");
+include!("initial_sites.rs");
 
 #[cfg(test)]
 #[path = "replacement_edges_tests.rs"]
@@ -192,3 +168,7 @@ mod tests;
 #[cfg(all(test, feature = "test-instrumentation"))]
 #[path = "worklist_owned_oracle_tests.rs"]
 mod owned_worklist;
+
+#[cfg(test)]
+#[path = "initial_sites_tests.rs"]
+mod initial_sites_tests;

@@ -150,3 +150,7 @@ pub(super) fn nonzero_seconds(seconds: u64) -> Option<Duration> {
 #[cfg(test)]
 #[path = "invocation/tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "invocation/deadline/tests/worker_process.rs"]
+mod test_worker_process;

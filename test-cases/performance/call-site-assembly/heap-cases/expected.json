@@ -1,0 +1,5 @@
+{
+  "clean": {"duplicates": 0, "unknown": 0, "addresses": 0, "bound": 0, "rss": 12288, "live": 10},
+  "future-collision": {"duplicates": 1, "unknown": 0, "addresses": 1, "bound": 60, "rss": 16384, "live": 10},
+  "unknown-free": {"duplicates": 0, "unknown": 1, "addresses": 1, "bound": 0, "rss": 12288, "live": 10}
+}
