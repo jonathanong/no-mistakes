@@ -212,3 +212,39 @@ The `check_json_snapshot` golden was generated on main before this fix. At
 jobs 1 and 2 it retains the unknown callback finding, the configured timer
 finding, and the empty rule-off report. These are work-bound and compatibility
 guards, independent of any measured runtime improvement.
+
+### Matched development-binary observations
+
+The baseline is `69bbcc411a68f0657f079ebde92b3cef8c1b305d`; the measured
+candidate is `456564b47f6c3b65c9f740999174e69698fc3ad0`. Both frozen binaries
+are version 0.109.31, Rust 1.99.1, development profile (`debug = 0`,
+unoptimized), with default features and `test-instrumentation`, at jobs 1.
+Each cell uses one warmup per binary followed by two balanced ABBA blocks:
+four measured samples per binary. Fresh CLI processes include startup and
+reporting; no time is subtracted. The shared heavy-work lock serializes builds,
+tests, and measurements. CPU and RSS come from Linux `wait4` child usage.
+
+These observations predate the version-only rebase onto
+`53f81b1d99f24ecd37dd4407cb1ae0681b33b2d6` (0.109.32). Analyzer source,
+fixture bytes, and every third-party Cargo package record were verified
+unchanged. The exact measured revisions and binary hashes remain in the
+[raw samples](admitted-visit-cap-results.json); these figures do not describe a
+new optimized release build or establish a general runtime gain.
+
+Medians are baseline → candidate. The larger assembly control uses the same
+source density and configured thirteen-policy payload described above.
+
+| Workload | Rule | Diagnostics | Wall s | User CPU s | System CPU s | Peak RSS MiB |
+|---|---|---|---:|---:|---:|---:|
+| sparse | on | off | 0.05020 → 0.04857 | 0.02247 → 0.01799 | 0.02938 → 0.03121 | 102.8 → 103.1 |
+| sparse | on | on | 0.05121 → 0.04891 | 0.02464 → 0.02186 | 0.02727 → 0.02724 | 105.7 → 105.3 |
+| sparse | off | off | 0.02016 → 0.01951 | 0.00748 → 0.00630 | 0.01278 → 0.01306 | 78.1 → 77.8 |
+| sparse | off | on | 0.02105 → 0.02054 | 0.00844 → 0.00712 | 0.01238 → 0.01270 | 82.2 → 82.2 |
+| assembly | on | off | 17.46941 → 17.04631 | 16.82462 → 16.34771 | 0.61360 → 0.65766 | 1493.1 → 1492.8 |
+| assembly | off | off | 0.02457 → 0.02438 | 0.00849 → 0.00836 | 0.01669 → 0.01575 | 78.7 → 78.4 |
+
+All sixty invocations, including warmups, preserve byte-identical complete
+JSON reports and exit statuses within each cell. Sparse rule-on retains two
+findings; assembly rule-on retains one. Both rule-off controls retain empty
+reports and exit 0. Diagnostics-on samples keep the same reports. Rule-off CPU
+observations are dominated by startup; no rule-off speedup is claimed.
