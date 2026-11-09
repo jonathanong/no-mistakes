@@ -51,6 +51,7 @@ pub(crate) fn from_raw_maps(
         callable_export_resolutions: fx_map(),
         module_files: fx_map(),
         resolved_call_sites: Vec::new(),
+        assertion_call_sites: Vec::new(),
         opaque_external_members: fx_map(),
         call_prerequisites: fx_map(),
         class_declarations: Vec::new(),
@@ -75,6 +76,7 @@ pub(crate) fn from_typed_maps(root: PathBuf, forward: EdgeMap, reverse: EdgeMap)
         callable_export_resolutions: fx_map(),
         module_files: fx_map(),
         resolved_call_sites: Vec::new(),
+        assertion_call_sites: Vec::new(),
         opaque_external_members: fx_map(),
         call_prerequisites: fx_map(),
         class_declarations: Vec::new(),
@@ -191,13 +193,4 @@ pub(crate) fn ts_fact_context_for_plan(root: &Path, plan: GraphBuildPlan) -> TsF
     ts_fact_context_from_options(root, plan, options.as_ref())
 }
 
-pub(super) fn graph_config_options_for_plan(
-    root: &Path,
-    plan: GraphBuildPlan,
-) -> Option<GraphConfigOptions> {
-    if graph_plan_needs_config(plan) {
-        graph_config_options(root)
-    } else {
-        None
-    }
-}
+include!("test_support/config_plan.rs");

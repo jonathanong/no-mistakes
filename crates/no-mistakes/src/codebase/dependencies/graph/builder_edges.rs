@@ -12,6 +12,7 @@ struct EdgeMaps<'a> {
     callable_export_resolutions: &'a mut FxHashMap<(PathBuf, String), ExportedCallableResolution>,
     module_files: &'a mut FxHashMap<String, FxHashSet<PathBuf>>,
     resolved_call_sites: &'a mut Vec<ResolvedCallSite>,
+    assertion_call_sites: &'a mut Vec<ResolvedCallSite>,
     opaque_external_members: &'a mut FxHashMap<PathBuf, OpaqueExternalMembers>,
     call_prerequisites: &'a mut FxHashMap<PathBuf, FailedCallSources>,
     class_declarations: &'a mut Vec<ClassDeclaration>,
@@ -40,6 +41,7 @@ fn collect_and_merge_all_edges(
         callable_export_resolutions,
         module_files,
         resolved_call_sites,
+        assertion_call_sites,
         opaque_external_members,
         call_prerequisites,
         class_declarations,
@@ -70,8 +72,10 @@ fn collect_and_merge_all_edges(
             module_files,
         );
         merge_edges(forward, reverse, pass.edges);
+        merge_edges(forward, reverse, pass.assertion_edges);
         debug_assert!(resolved_call_sites.is_empty());
         *resolved_call_sites = pass.sites;
+        *assertion_call_sites = pass.assertion_sites;
         opaque_external_members.extend(pass.opaque_external_members);
         call_prerequisites.extend(pass.call_prerequisites);
         class_declarations.extend(pass.classes);
@@ -91,6 +95,7 @@ fn collect_and_merge_all_edges(
             callable_export_resolutions,
             module_files,
             resolved_call_sites,
+            assertion_call_sites,
             opaque_external_members,
             call_prerequisites,
             class_declarations,

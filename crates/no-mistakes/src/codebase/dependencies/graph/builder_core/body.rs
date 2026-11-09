@@ -103,7 +103,7 @@
             (PathBuf, String),
             ExportedCallableResolution,
         > = fx_map();
-        let mut resolved_call_sites = Vec::new();
+        let (mut resolved_call_sites, mut assertion_call_sites) = (Vec::new(), Vec::new());
         let mut opaque_external_members = fx_map();
         let mut call_prerequisites = fx_map();
         let mut class_declarations = Vec::new();
@@ -163,6 +163,7 @@
                 callable_export_resolutions: &mut callable_export_resolutions,
                 module_files: &mut module_files,
                 resolved_call_sites: &mut resolved_call_sites,
+                assertion_call_sites: &mut assertion_call_sites,
                 opaque_external_members: &mut opaque_external_members,
                 call_prerequisites: &mut call_prerequisites,
                 class_declarations: &mut class_declarations,
@@ -180,7 +181,6 @@
         } else {
             Default::default()
         };
-
         if plan.extends {
             class_declarations.extend(class_ancestry.classes.iter().cloned());
             for ((path, id), target) in &class_ancestry.targets {

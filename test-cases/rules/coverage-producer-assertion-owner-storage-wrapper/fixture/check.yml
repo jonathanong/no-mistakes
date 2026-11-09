@@ -1,0 +1,16 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/producers.mts, symbol: checked }
+        - { file: src/wrapper.mts, symbol: withOwner }
+        - { file: src/wrapper.mts, symbol: unresolved }
+        - { file: src/producers.mts, symbol: checkedSecond }
+        - { file: src/producers.mts, symbol: unknown }
+        - { file: src/producers.mts, symbol: missingArgument }
+        - { file: src/producers.mts, symbol: noOwner }
+        - { file: src/producers.mts, symbol: namespaceInput }
+        - { file: src/producers.mts, symbol: onlyNamespace }
+      assertions: [{ module: "node:assert", export: strictEqual }]

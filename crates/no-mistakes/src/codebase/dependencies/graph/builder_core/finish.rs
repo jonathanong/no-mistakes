@@ -72,6 +72,7 @@
             callable_export_resolutions,
             module_files,
             resolved_call_sites,
+            assertion_call_sites,
             opaque_external_members,
             call_prerequisites,
             class_declarations,

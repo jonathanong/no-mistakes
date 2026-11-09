@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/review-array.mts, symbol: emptyStable }
+        - { file: src/review-array.mts, symbol: sparseSkip }
+        - { file: src/review-array.mts, symbol: emptySparseSlice }
+        - { file: src/review-array.mts, symbol: emptySparseSplice }
+      assertions: [{ module: "node:assert", export: strictEqual }]
+      unanalyzable: ignore

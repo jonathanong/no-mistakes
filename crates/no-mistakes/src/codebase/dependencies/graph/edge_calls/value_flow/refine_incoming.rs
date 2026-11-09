@@ -4,6 +4,15 @@ pub(super) fn incoming_inputs(
     indexes: &CallableResolutionIndexes,
     facts: &dyn TsFactLookup,
 ) -> ParameterInputs {
+    incoming_inputs_iter(sites.iter(), constructors, indexes, facts)
+}
+
+pub(super) fn incoming_inputs_iter<'a>(
+    sites: impl Iterator<Item = &'a ResolvedCallSite>,
+    constructors: &ConstructorRoutes,
+    indexes: &CallableResolutionIndexes,
+    facts: &dyn TsFactLookup,
+) -> ParameterInputs {
     let mut incoming: ParameterInputs = fx_map();
     for site in sites {
         if site.invocation == InvocationKind::Membership {

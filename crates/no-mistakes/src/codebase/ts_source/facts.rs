@@ -13,7 +13,6 @@ use crate::react_traits::report::types::ComponentFacts;
 use crate::server_routes::model::FileFacts as ServerRouteFileFacts;
 use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
-
 #[doc(hidden)]
 pub mod ancestry;
 mod ancestry_declarations;
@@ -30,7 +29,6 @@ mod map;
 mod map_iter;
 pub use map_iter::{TsFactMapIntoIter, TsFactMapIter, TsFactMapIterMut};
 mod plan;
-
 pub use call_sites::CallSiteFact;
 pub(crate) use collect::{
     collect_file_facts_from_program, collect_file_facts_from_program_with_semantic,
@@ -42,7 +40,6 @@ pub use collect::{
     collect_ts_facts_with_session_and_context,
 };
 pub use domain::{BackendRouteFact, EffectCallFact, RscEnvironmentFact, TsFactContext};
-
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct TsFactPlan {
     pub module_bindings: bool,
@@ -77,11 +74,13 @@ pub struct TsFactPlan {
     pub trpc_router: bool,
     pub trpc_calls: bool,
 }
-
 #[derive(Debug, Clone, Default)]
 pub struct TsFileFacts {
     /// Call start offsets whose receiver is a provable built-in value.
     pub builtin_receiver_calls: crate::fx::FxHashSet<u32>,
+    /// Exact callback positions proved by the receiver's built-in family.
+    pub builtin_callback_calls: crate::fx::FxHashMap<(u32, u32), Option<&'static [usize]>>,
+    pub known_nonbuiltin_receiver_calls: crate::fx::FxHashSet<(u32, u32)>,
     pub module_bindings: Option<Arc<super::module_facts::TypeScriptModuleFacts>>,
     /// A source read or collector failure. Consumers that need a complete
     /// answer must surface this instead of treating the empty facts as a

@@ -1,4 +1,6 @@
 use super::*;
+#[path = "callback_candidates.rs"]
+mod callback_candidates;
 
 impl ValueFlowResolution<'_, '_> {
     pub(super) fn compute_parameter(
@@ -142,7 +144,11 @@ impl ValueFlowResolution<'_, '_> {
         if provenance_only {
             values = values.into_iter().map(executor_provenance).collect();
         }
-        agreed_value(values)
+        if self.cache.ownership_callbacks && !provenance_only {
+            callback_candidates::select(values)
+        } else {
+            agreed_value(values)
+        }
     }
 }
 

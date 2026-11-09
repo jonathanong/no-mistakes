@@ -7,25 +7,31 @@ pub(super) struct Outcome {
     pub(super) source_failures: std::collections::BTreeMap<std::path::PathBuf, String>,
 }
 
-struct Context<'a> {
+struct Context<'a, 'f> {
     options: &'a Options,
     graph: &'a DepGraph,
-    facts: &'a dyn TsFactLookup,
+    facts: &'f dyn TsFactLookup,
+    calls: &'a builtins::CallIndex<'f>,
     contracts: &'a [ownership::Contract],
 }
 
-pub(super) fn analyze(
+pub(super) fn analyze<'f>(
     root: &NodeId,
     options: &Options,
     graph: &DepGraph,
-    facts: &dyn TsFactLookup,
-    sites: &FxHashMap<NodeId, Vec<&ResolvedCallSite>>,
+    facts: &'f dyn TsFactLookup,
+    site_inputs: (
+        &FxHashMap<NodeId, Vec<&ResolvedCallSite>>,
+        &builtins::CallIndex<'f>,
+    ),
     contracts: &[ownership::Contract],
 ) -> Outcome {
+    let (sites, calls) = site_inputs;
     let cx = Context {
         options,
         graph,
         facts,
+        calls,
         contracts,
     };
     let mut out = Outcome::default();
@@ -52,7 +58,7 @@ pub(super) fn analyze(
 }
 
 fn visit_node(
-    cx: &Context<'_>,
+    cx: &Context<'_, '_>,
     node: &NodeId,
     node_sites: &[&ResolvedCallSite],
     out: &mut Outcome,
@@ -78,7 +84,7 @@ fn visit_node(
 }
 
 fn visit_site<'a>(
-    cx: &Context<'_>,
+    cx: &Context<'_, '_>,
     (node, node_sites): (&NodeId, &[&'a ResolvedCallSite]),
     site: &'a ResolvedCallSite,
     (targets, live_fs): (&mut FxHashSet<NodeId>, &mut Vec<&'a ResolvedCallSite>),
@@ -111,9 +117,9 @@ fn visit_site<'a>(
     // External calls are opaque boundaries unless explicitly modeled. Node `fs`
     // is modeled I/O; known globals remain syntactically classified, while
     // dynamic targets abstain.
-    if let Some(callbacks) = builtins::classify(site, node_sites, cx.facts) {
+    if let Some(callbacks) = builtins::classify(site, node_sites, cx.calls, cx.facts) {
         for callback in callbacks.executed {
-            targets.extend(callback.target_nodes().cloned());
+            visit_site(cx, (node, node_sites), callback, (targets, live_fs), out);
         }
         for callback in callbacks.unresolved {
             out.dispatch(
@@ -135,7 +141,7 @@ fn visit_site<'a>(
 }
 
 fn model_contracts<'c>(
-    cx: &Context<'c>,
+    cx: &Context<'c, '_>,
     node: &NodeId,
     site: &ResolvedCallSite,
     out: &mut Outcome,
@@ -161,7 +167,7 @@ fn model_contracts<'c>(
 type Frontier<'a> = (&'a mut FxHashSet<NodeId>, &'a mut VecDeque<(NodeId, usize)>);
 
 fn enqueue(
-    cx: &Context<'_>,
+    cx: &Context<'_, '_>,
     (node, depth): (&NodeId, usize),
     targets: &FxHashSet<NodeId>,
     (seen, queue): Frontier<'_>,

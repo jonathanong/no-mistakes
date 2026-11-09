@@ -1,0 +1,18 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/storage-forwarded.mts, symbol: forwardedRun }
+        - { file: src/storage-forwarded.mts, symbol: forwardedExit }
+        - { file: src/storage-forwarded.mts, symbol: forwardedConflict }
+        - { file: src/storage-forwarded.mts, symbol: forwardedSpread }
+        - { file: src/storage-forwarded.mts, symbol: missingAlternate }
+        - { file: src/storage-forwarded.mts, symbol: promiseAlternate }
+        - { file: src/storage-forwarded.mts, symbol: arrayAlternate }
+        - { file: src/storage-forwarded.mts, symbol: timerAlternate }
+        - { file: src/storage-forwarded.mts, symbol: ordinaryArrayAlternate }
+        - { file: src/storage-forwarded.mts, symbol: ordinaryPromiseAlternate }
+        - { file: src/storage-forwarded.mts, symbol: ordinaryTimerAlternate }
+      assertions: [{ module: "node:assert", export: strictEqual }]

@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/producers.mts, symbol: arrayImported }
+        - { file: src/producers.mts, symbol: promiseImported }
+        - { file: src/producers.mts, symbol: arrayInline }
+        - { file: src/producers.mts, symbol: callerProven }
+        - { file: src/producers.mts, symbol: unknown }
+      assertions: [{ module: "node:assert", export: strictEqual }]

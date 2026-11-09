@@ -184,21 +184,23 @@ unresolved dispatch.
   `Buffer`, `URL`, `performance`; plus `parseInt`, `parseFloat`, `isNaN`,
   `isFinite`, `encodeURIComponent`, `decodeURIComponent`, `structuredClone`.
 - Prototype methods (`trim`, `slice`, `split`, `join`, `push`, `has`, `get`, `set`,
-  `test`, `getTime`, `log`, ...) only on a receiver which is provably built-in
+  `test`, `getTime`, `log`, ...) on a receiver which is provably built-in
   in the same file: a string, number, regular expression, template, or array
   literal; an object literal without a member of that name; `new` of a built-in
   constructor (`Map`, `Set`, `Date`, `RegExp`, `Promise`, `AsyncLocalStorage`,
   ...); a built-in factory such as `Array.from` or `Object.keys`; a chain of
   result-preserving methods on such a receiver (`text.trim().split(',')`); or a
   name whose every declaration is built-in, through an annotation (`string`,
-  `T[]`, `Map<...>`, ...) or a `const` initializer of the kinds above. A receiver
-  whose type is unknown stays `callee target is unknown`, even when the method
-  name matches a built-in: a repository `Sink.push` is never mistaken for
-  `Array.prototype.push`. A name collision can only keep a producer uncertain,
-  never make it a definitive no-owner error. Annotate the binding (`path: string`)
-  to make the proof explicit.
+  `T[]`, `Map<...>`, ...) or a `const` initializer of the kinds above, including
+  an `as const` assertion on a literal array. A receiver
+  whose type cannot be established also admits a method-name fallback for these
+  non-callback leaves, such as `amount.toFixed(2)`. This fallback supplies no
+  assertion evidence. Resolved repository methods are still traversed, and known
+  custom or incompatible receiver types retain dispatch uncertainty. Callback-taking
+  methods require the receiver proof described below.
 - `AsyncLocalStorage` `getStore`, `enterWith`, `disable`, `run`, and `exit`,
-  in files which import it from `async_hooks` or `node:async_hooks`.
+  on constructed or typed instances in files which import it from `async_hooks`
+  or `node:async_hooks`. The imported constructor itself is not an instance.
 - Synchronous Node modules `path`, `url`, `os`, `querystring`, `buffer`, and
   `string_decoder` (with or without the `node:` prefix). Other external modules,
   such as an error reporter, remain `external call has no ownership model`.
@@ -220,15 +222,61 @@ re-export, or add an assertion-bearing owner or genuine ownership contract.
 Modeled Node I/O through a proven star still requires an assertion owner.
 
 A built-in that invokes a callback keeps the proof: `map`, `filter`, `forEach`,
-`flatMap`, `reduce`, `some`, `every`, `find`, `findIndex`, `sort`, `then`,
+`flatMap`, `reduce`, `some`, `every`, `find`, `findIndex`, `findLast`, `findLastIndex`, `sort`, `then`,
 `catch`, `finally`, `replace` / `replaceAll` (second argument), `Array.from` (second argument), `AsyncLocalStorage.run` /
-`exit`, and the timers `setTimeout`, `setInterval`, and `setImmediate`. The built-in executes the callback, so an inline function or a
-named function the call graph resolves in the same callable is traversed and can
-reach an assertion. An argument which is a parameter, a member read, a call
-result, or a function imported from another module (outside `map`-family
-iteration) is reported as `built-in callback `name` is not statically resolved`
-at the built-in call. Inline the callback or pass a function declared in the
-same file.
+`exit`, `JSON.parse` (reviver) and `JSON.stringify` (function replacer) in the
+second argument on the proven global `JSON`,
+and the timers `setTimeout`, `setInterval`, and `setImmediate`. The built-in executes the callback, so an inline function or a
+named function the call graph resolves at that exact argument occurrence is
+traversed and can reach an assertion. This includes imported helpers, local
+aliases, and callback parameters when the canonical call graph proves the
+callers' arguments. For ownership callback resolution, known callable arguments
+from any caller are followed even when another caller supplies an unknown value.
+The callback remains unresolved when no caller supplies a resolvable function.
+Ordinary call reports retain their existing parameter-agreement behavior.
+Direct assertion imports passed as callbacks also count as
+executed assertions. Promise continuations (`then` / `finally`) and
+`AsyncLocalStorage.run` use the same resolution as array iteration. Imported
+aliases of the Node `AsyncLocalStorage` constructor retain receiver provenance.
+Proven `run` / `exit` calls also forward their trailing arguments into the
+callback for assertion ownership. Unknown or spread arguments retain uncertainty.
+Actual built-in invocations still contribute uncertainty to values passed into
+the callback; an unrelated direct caller cannot prove those invocation arguments.
+
+The receiver family must support the callback method: `new Map().then(owner)`
+and `(1).map(owner)` supply no ownership evidence. Callback execution is represented
+by opt-in `assertion-owner` edges; enabling the rule leaves ordinary `call` queries
+and call-site reports unchanged.
+Zero-length arrays execute no iteration callbacks. Sparse arrays still execute
+the `find` family and `Array.from` callbacks for holes. Mutating or escaping an
+array invalidates its length proof and retains dispatch uncertainty. Read-only
+calls such as `join` do not invalidate a later `find` callback proof. Known empty
+results from `slice` and `splice` still execute no callbacks, including on sparse arrays.
+Conditional aliases share this invalidation with their source arrays. Writes or
+escapes through a known callback's array parameter also invalidate length evidence;
+the native receiver family remains proven. An `Array.from` result is empty only
+when its input length is proven zero.
+
+An explicit array element type also supplies context for inline callback parameters:
+`rows: number[]` makes `rows.map(r => r.toFixed(1)).join(',')` ordinary built-in
+work. Declared string properties retain their type through a member read, and a
+global `Date.UTC(...)` result is numeric when `Date` is not shadowed. Unknown
+elements and stored function elements do not acquire callable identities from an
+array annotation.
+Both `sort` / `toSorted` comparator parameters receive the element type.
+Parameter writes invalidate that context. Proven numeric `toExponential` and
+`toPrecision` calls are ordinary built-in work and still require an assertion owner.
+
+An argument with no resolved callable identity (including an unbound parameter,
+a conditional expression, a member read, or a call result) remains ``built-in callback `name` is not
+statically resolved``. Pass a statically resolvable function or configure a real
+ownership contract. A callback occurrence elsewhere in the producer, even one
+with the same name, supplies no evidence for this argument. Chained calls retain
+each invocation’s argument positions: `Promise.resolve(owner).finally(noop)`
+does not execute `owner`, while `Promise.resolve().then(owner).finally(noop)`
+reaches it through `then`.
+Calls sharing a start offset and spelling must each have their own complete
+span proof; an unproven call in that group retains dispatch uncertainty.
 
 ```ts
 export function owned(items: number[]) { items.map((item) => assertItem(item)); } // reaches assertItem

@@ -52,3 +52,16 @@ pub(super) fn record_module_provider_checks(count: usize) {
 pub fn module_provider_checks() -> usize {
     LAST_MODULE_PROVIDER_CHECKS.get()
 }
+
+thread_local! { static LAST_BUILTIN_CALLBACK_SITES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
+pub(super) fn record_builtin_callback_sites(count: usize) {
+    LAST_BUILTIN_CALLBACK_SITES.set(count);
+}
+#[cfg(test)]
+#[path = "value_flow_metrics_tests.rs"]
+pub(crate) mod tests;
+
+thread_local! { static LAST_CALLBACK_OWNERSHIP_CACHE: std::cell::Cell<bool> = const { std::cell::Cell::new(false) }; }
+pub(super) fn record_callback_ownership_cache(initialized: bool) {
+    LAST_CALLBACK_OWNERSHIP_CACHE.set(initialized);
+}

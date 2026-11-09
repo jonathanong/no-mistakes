@@ -31,9 +31,36 @@ pub(crate) fn check(
     let mut diagnostics = AnalysisDiagnostics::default();
     // Group existing occurrences once; each producer only visits its reachable owners.
     let mut sites: FxHashMap<NodeId, Vec<&ResolvedCallSite>> = FxHashMap::default();
-    for site in graph.resolved_call_sites() {
+    let replaced: FxHashSet<_> = graph
+        .assertion_call_sites()
+        .iter()
+        .map(|site| {
+            (
+                &site.file,
+                site.caller_id,
+                site.offset,
+                site.invocation,
+                &site.source_callee,
+            )
+        })
+        .collect();
+    for site in graph
+        .resolved_call_sites()
+        .iter()
+        .filter(|site| {
+            !replaced.contains(&(
+                &site.file,
+                site.caller_id,
+                site.offset,
+                site.invocation,
+                &site.source_callee,
+            ))
+        })
+        .chain(graph.assertion_call_sites())
+    {
         sites.entry(source(site)).or_default().push(site);
     }
+    let call_index = builtins::CallIndex::new(&sites, facts);
     for application in config.rule_applications(RULE_ID) {
         let options: Options = application.try_rule_options()?;
         options.validate()?;
@@ -45,7 +72,14 @@ pub(crate) fn check(
             if !filter.is_match(node.as_file().expect("callable file")) {
                 continue;
             }
-            let outcome = traversal::analyze(&node, &options, graph, facts, &sites, &contracts);
+            let outcome = traversal::analyze(
+                &node,
+                &options,
+                graph,
+                facts,
+                (&sites, &call_index),
+                &contracts,
+            );
             source_failures::require_sources(&root, &outcome)?;
             let reason = if outcome.uncertain() {
                 outcome.reason(&root)
