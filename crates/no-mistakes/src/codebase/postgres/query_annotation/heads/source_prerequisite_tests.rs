@@ -1,6 +1,6 @@
 use crate::codebase::check_facts::{
-    collect_file_facts_from_program,
     sql_source_prerequisites::{SqlProjection, SqlSourceKey},
+    tests::compatibility::collect_file_facts_from_program,
     CheckFactPlan, CheckFileFacts,
 };
 use crate::codebase::postgres::EmbeddedSqlOptions;

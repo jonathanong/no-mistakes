@@ -55,7 +55,9 @@ fn async_projection_skips_headless_files_and_unresolved_factory_targets() {
 
 #[test]
 fn failed_second_hop_effect_is_reported_and_unresolved_effect_stays_unproven() {
-    use crate::codebase::check_facts::{collect_file_facts_from_program, CheckFactPlan};
+    use crate::codebase::check_facts::{
+        tests::compatibility::collect_file_facts_from_program, CheckFactPlan,
+    };
     use crate::codebase::postgres::EmbeddedSqlOptions;
     let root = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
         .join("heads-source-prerequisites");
