@@ -112,7 +112,7 @@ fn noncanonical_single_inventories_keep_broad_collection_and_findings() {
     );
     assert_eq!(actual_findings.len(), 1);
     assert_eq!(actual_findings[0].rule, "postgres-no-offset");
-    assert_eq!(actual_findings[0].file, "src/caller.mts");
+    assert_eq!(actual_findings[0].file, "helpers/paging.mts");
     assert!(actual_findings[0].message.contains("OFFSET"));
     let broken = root.join("unrelated/broken.mts");
     assert!(actual.ts[&broken].parse_error.is_some());
