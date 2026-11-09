@@ -92,7 +92,7 @@ with output.with_suffix('.jsonl').open('w') as trace:
                         assert not value.get('incomplete'), row
                         if scope.startswith('sql-'):
                             assert value['rules'][0]['rule'] == 'postgres-no-offset', row
-                            assert 'OFFSET' in value['rules'][0]['message'], row
+                            assert value['rules'][0]['target'] == 'offset', row
                 cell = [r for r in rows if (r['mode'], r['scope'], r['jobs']) == (mode, scope, jobs)]
                 assert len({(r['exit'], r['sha256']) for r in cell}) == 1, (mode, scope, jobs)
                 assert len({r['authoritative_stderr_sha256'] for r in cell}) == 1, (mode, scope, jobs)
