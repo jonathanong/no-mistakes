@@ -24,3 +24,49 @@ export async function recallAppend() {
   await query(star);
   await query(expression);
 }
+
+export async function recallAggregates() {
+  await query(sql`
+    SELECT topic_id, COUNT(DISTINCT post_id) /* CASE: embedded-recall-composite-count-distinct */
+    FROM topic_memberships GROUP BY topic_id
+  `);
+  await query(sql`
+    SELECT COUNT(DISTINCT r.input_order) /* CASE: embedded-recall-one-to-one-join-count */
+    FROM request_items AS r JOIN posts AS p ON p.slug = r.slug
+  `);
+  await query(sql`
+    SELECT m.topic_id, COUNT(DISTINCT m.post_id) /* CASE: embedded-recall-fanout-count-distinct */
+    FROM topic_memberships AS m JOIN post_tags AS t ON t.post_id = m.post_id
+    GROUP BY m.topic_id
+  `);
+  await query(sql`
+    SELECT id /* CASE: embedded-recall-having-distinct-id */ FROM posts
+    GROUP BY id HAVING COUNT(DISTINCT id) = 1
+  `);
+  await query(sql`SELECT COUNT(DISTINCT id) FILTER (WHERE author_id IS NOT NULL) /* CASE: embedded-recall-filtered-distinct-id */ FROM posts`);
+  await query(sql`
+    SELECT p.id /* CASE: embedded-recall-negative-scalar-author-count */ FROM posts AS p
+    WHERE (SELECT COUNT(DISTINCT author_id) FROM posts) > 0
+  `);
+}
+
+export async function recallAggregateAppend() {
+  const composite = sql`SELECT topic_id, COUNT(DISTINCT post_id) /* CASE: append-recall-composite-count-distinct */ `;
+  composite.append(sql`FROM topic_memberships GROUP BY topic_id`);
+  const joined = sql`SELECT COUNT(DISTINCT r.input_order) /* CASE: append-recall-one-to-one-join-count */ `;
+  joined.append(sql`FROM request_items AS r JOIN posts AS p ON p.slug = r.slug`);
+  const fanout = sql`SELECT m.topic_id, COUNT(DISTINCT m.post_id) /* CASE: append-recall-fanout-count-distinct */ `;
+  fanout.append(sql`FROM topic_memberships AS m JOIN post_tags AS t ON t.post_id = m.post_id GROUP BY m.topic_id`);
+  const having = sql`SELECT id /* CASE: append-recall-having-distinct-id */ FROM posts `;
+  having.append(sql`GROUP BY id HAVING COUNT(DISTINCT id) = 1`);
+  const filtered = sql`SELECT COUNT(DISTINCT id) FILTER (WHERE author_id IS NOT NULL) /* CASE: append-recall-filtered-distinct-id */ `;
+  filtered.append(sql`FROM posts`);
+  const negative = sql`SELECT p.id /* CASE: append-recall-negative-scalar-author-count */ FROM posts AS p `;
+  negative.append(sql`WHERE (SELECT COUNT(DISTINCT author_id) FROM posts) > 0`);
+  await query(composite);
+  await query(joined);
+  await query(fanout);
+  await query(having);
+  await query(filtered);
+  await query(negative);
+}
