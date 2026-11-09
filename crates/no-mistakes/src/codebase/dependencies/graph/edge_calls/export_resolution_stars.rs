@@ -26,7 +26,15 @@ fn resolve_star_export(
             // a visible non-callable source does; treating it as absent
             // would manufacture an unsound call edge.
             let Some(target_path) = resolver.resolve(specifier, path) else {
-                has_unknown_candidate = true;
+                if indexes.external_namespaces
+                    && file.stars.len() == 1
+                    && !export.contains('.')
+                    && external_module_specifier(specifier)
+                {
+                    external.push((specifier.clone(), export.to_string()));
+                } else {
+                    has_unknown_candidate = true;
+                }
                 continue;
             };
             let Some(target_path) = edge_inputs.graph_files.visible_path(&target_path) else {

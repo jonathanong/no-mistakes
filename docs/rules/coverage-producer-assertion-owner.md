@@ -207,6 +207,18 @@ unresolved dispatch.
   imported namespace; matching a package or method name alone supplies no
   provenance. Shadowed receivers remain uncertain.
 
+Named imports through a sole plain `export * from 'ext-pkg'` source also retain
+the external package/export identity, including through local star barrels.
+For example, `import { work } from './barrel.mjs'; work()` reports
+`external call has no ownership model` when that barrel only stars `ext-pkg`.
+The fallback requires an unresolved external package specifier and a simple
+named export. Explicit local exports take precedence; opaque local shadows,
+competing stars, cycles, excluded resolved sources and default imports remain
+unknown. Static members on the imported value use the same external-call model
+as direct imports. Rewrite an ambiguous barrel to an explicit named
+re-export, or add an assertion-bearing owner or genuine ownership contract.
+Modeled Node I/O through a proven star still requires an assertion owner.
+
 A built-in that invokes a callback keeps the proof: `map`, `filter`, `forEach`,
 `flatMap`, `reduce`, `some`, `every`, `find`, `findIndex`, `sort`, `then`,
 `catch`, `finally`, `replace` / `replaceAll` (second argument), `Array.from` (second argument), `AsyncLocalStorage.run` /

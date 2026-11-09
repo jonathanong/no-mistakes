@@ -574,6 +574,10 @@ the field is omitted when all configured matchers can be analyzed. Import
 
 `check()` also runs configured [coverage-producer-assertion-owner](rules/coverage-producer-assertion-owner.md) applications, returning ordinary `rules` findings or `advisories`. Its exported option types are `CoverageProducerAssertionOwnerOptions`, `CoverageProducerFunction`, `CoverageAssertionImport`, and `CoverageAssertionOwnership`. The existing asynchronous `check` → `checkJson` binding remains the runtime entrypoint. Uncertainty messages in `rules` and `advisories` name the unresolved call site and callee or the traversal option, limit value, and last module. Required source failures stay in `incomplete`, with the file and original error in the message. The CLI and async Node API return the same cause details. Those findings also carry an optional `causes` array (`FindingCause`: `kind`, `file`, `line?`, `callee?`, `detail`) capped at 25 entries; the message lists at most five and ends with `+N more`. `RuleFinding.causes` is omitted for ordinary findings, and option types are unchanged.
 
+Assertion-owner checks preserve external package/export identity for named
+imports through a sole plain external star re-export, using the same resolver
+as the CLI. Local shadows, competing stars and unresolved cycles stay unknown.
+
 `check()` and batched `analyzeProject()` check reports also run configured
 [forbidden-lint-suppressions](rules/forbidden-lint-suppressions.md) applications.
 Import `ForbiddenLintSuppressionsOptions` and
