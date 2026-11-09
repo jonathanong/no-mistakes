@@ -1,5 +1,5 @@
 use super::analyze;
-use crate::codebase::postgres::statement_facts::SqlLocationDemand;
+use crate::codebase::postgres::statements::SqlLocationDemand;
 use crate::codebase::postgres::statements::{
     extract_sql_statement_facts_with_policy, SqlFactSite, StatementPolicySources,
 };
@@ -93,7 +93,7 @@ fn embedded_review_controls_only_report_guarded_absence_rewrites() {
     ]);
     let embedded = extract_embedded_sql_from_source(&path, source, &options);
     assert_eq!(embedded.calls.len(), 12);
-    let records = crate::codebase::postgres::collect::dml::embedded_call_facts_with_policy(
+    let records = crate::codebase::postgres::embedded_call_facts_with_policy(
         &embedded,
         false,
         false,

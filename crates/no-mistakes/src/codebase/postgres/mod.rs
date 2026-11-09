@@ -166,3 +166,6 @@ pub(crate) use on_conflict::{judge_file_with_prepared_triggers, InstalledTrigger
 pub use embedded::undeclared::summarize_unresolved_executor_receivers;
 
 pub(crate) use catalog::canonical_bound_expr;
+
+#[cfg(test)]
+pub(crate) use collect::dml::embedded_call_facts_with_policy;

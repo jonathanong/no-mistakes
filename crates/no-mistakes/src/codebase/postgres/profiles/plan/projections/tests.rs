@@ -1,4 +1,3 @@
-use super::*;
 use crate::codebase::check_facts::CheckFactPlan;
 
 fn plan(name: &str) -> CheckFactPlan {
