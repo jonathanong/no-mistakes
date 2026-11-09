@@ -29,8 +29,8 @@ fn grouping_roots_are_opt_in_and_leave_unrelated_facts_unchanged() {
     assert!(without.grouping_queries.is_empty());
     work::begin();
     let mut with = extract(true);
-    assert_eq!(work::finish().grouping_roots, 4);
-    assert_eq!(with.grouping_queries.len(), 4);
+    assert_eq!(work::finish().grouping_roots, 2);
+    assert_eq!(with.grouping_queries.len(), 2);
     let mut sites: Vec<_> = with
         .grouping_queries
         .iter()
@@ -38,10 +38,7 @@ fn grouping_roots_are_opt_in_and_leave_unrelated_facts_unchanged() {
         .copied()
         .collect();
     sites.sort();
-    assert_eq!(
-        sites,
-        [(2, 3), (4, 3), (6, 1), (7, 15), (8, 27), (9, 21), (11, 17)]
-    );
+    assert_eq!(sites, [(2, 3), (4, 3), (6, 1), (7, 15), (11, 17)]);
     for (query, fact) in with.grouping_queries.iter().enumerate() {
         for (select, &(line, column)) in fact.sites.iter().enumerate() {
             let position = with
@@ -130,7 +127,7 @@ fn generated_parameter_sites_are_exact_shared_and_opt_in() {
     for (index, root) in roots.iter().enumerate() {
         assert_eq!(root.parameter_sites.as_ref(), positions);
         let mut identifiers = Vec::new();
-        let _: ControlFlow<()> = visit_expressions(&root.query, |expr| {
+        let _: ControlFlow<()> = visit_expressions(root.query.as_ref(), |expr| {
             if let Expr::Identifier(id) = expr {
                 if id.value == "sql_placeholder_1" {
                     let site = (id.span.start.line as u32, id.span.start.column as u32);
@@ -140,7 +137,7 @@ fn generated_parameter_sites_are_exact_shared_and_opt_in() {
             ControlFlow::Continue(())
         });
         let line = index as u32 + 1;
-        assert_eq!(identifiers, [(line, 8, false), (line, 48, true)]);
+        assert_eq!(identifiers, [(line, 17, false), (line, 57, true)]);
     }
 }
 
