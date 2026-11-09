@@ -19,3 +19,11 @@ integration discovery driver. Keep this corpus separate, verify binary source
 provenance, and compare complete normalized reports and exit statuses. The saved
 fixtures and work counters prove the negative path; no timing improvement is
 claimed until the matched consuming and control measurements pass.
+
+For a positive component control, also run the unchanged integration-discovery
+materializer into a third fresh corpus, copy this directory's
+`configs/component-control.yml` into that corpus, and record its separate
+immutable hash. This config uses default relationship selection and an absent
+forbidden path, so it reports zero findings with status 0 while exercising
+files that do contain React components. Keep this corpus separate from both
+the integration-discovery and empty-component corpora.
