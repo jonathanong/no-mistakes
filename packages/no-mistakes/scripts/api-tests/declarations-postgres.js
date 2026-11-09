@@ -28,13 +28,16 @@ test("JSON relation ID rule configuration is exported with named option types", 
   assert.match(exports, /export type \* from "\.\/postgres-json-relation-ids-types"/);
 });
 
-test("JSON relation ID configuration and async check compile from the package root", () => {
+test("PostgreSQL advisory configuration and async checks compile from the package root", () => {
   const { createRequire } = require("node:module");
   const dependencyRequire = createRequire(require.resolve("@storybook/react"));
   const ts = dependencyRequire("typescript");
   const repositoryRoot = join(packageRoot, "..", "..");
   const program = ts.createProgram(
-    [join(repositoryRoot, "fixtures/node-api/postgres-json-relation-ids/public.mts")],
+    [
+      join(repositoryRoot, "fixtures/node-api/postgres-json-relation-ids/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/postgres-grouping-not-aggregation/public.mts"),
+    ],
     {
       noEmit: true,
       strict: true,
@@ -193,5 +196,46 @@ test("parsePostgresSql exposes named pure-source contracts and async batch overl
   assert.match(
     procedural,
     /export type PostgresSqlProceduralOccurrenceKind =\n {2}\| "utility"\n {2}\| "controlFlow"\n {2}\| "dml"\n {2}\| "dynamicExecute"\n {2}\| "unknown";/,
+  );
+});
+
+test("grouping advice exports named options and all five target codes", () => {
+  const declaration = readFileSync(
+    join(packageRoot, "postgres-grouping-not-aggregation-types.d.ts"),
+    "utf8",
+  );
+  assert.match(declaration, /export interface PostgresGroupingNotAggregationOptions/);
+  assert.match(declaration, /export type PostgresGroupingNotAggregationCode/);
+  for (const code of [
+    "all-of-candidate-pool",
+    "distinct-over-unique-key",
+    "distinct-over-union",
+    "distinct-join-filter",
+    "aggregate-existence-test",
+  ]) {
+    assert.ok(declaration.includes(`"${code}"`), code);
+  }
+  for (const field of [
+    "schemaCatalogPath?: string;",
+    "include?: string[];",
+    "exclude?: string[];",
+    "sqlInclude?: string[];",
+    "sqlIncludeLocked?: boolean;",
+    "importSpecifier?: string;",
+    "executorNames?: string[];",
+    "extraExecutorNames?: string[];",
+    "excludeExecutorNames?: string[];",
+    "executorFactoryNames?: string[];",
+    "executorTypeNames?: string[];",
+    "executorOptionProperties?: string[];",
+    "trustedSqlTags?: { module: string; name: string }[];",
+    "sqlLiteralHelpers?: string[];",
+  ]) {
+    assert.ok(declaration.includes(field), field);
+  }
+  assert.doesNotMatch(declaration, /fail\?:/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/postgres-grouping-not-aggregation-types"/,
   );
 });

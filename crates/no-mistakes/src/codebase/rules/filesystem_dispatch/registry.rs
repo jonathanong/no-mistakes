@@ -95,6 +95,7 @@ macro_rules! filesystem_rules {
             POSTGRES_STATUS_WITH_LIFECYCLE_TIMESTAMPS => postgres_status_with_lifecycle_timestamps::check_with_files => include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/rules/filesystem-dispatch/all-rules/status-lifecycle-options.yml")),
             POSTGRES_TABLE_SHAPE => postgres_table_shape::check_with_files => "",
             POSTGRES_IDEMPOTENT_INSERT => postgres_idempotent_insert::check_with_files => "",
+            POSTGRES_GROUPING_NOT_AGGREGATION => postgres_grouping_not_aggregation::check_with_files => "",
             POSTGRES_JSON_RELATION_IDS => postgres_json_relation_ids::check_with_files => "",
             LOCKFILE_ALLOWLIST => lockfile_allowlist::check_with_files => "",
             DOC_CONSISTENCY => doc_consistency::check_with_files => "",

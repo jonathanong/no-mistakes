@@ -1157,3 +1157,9 @@ and prepared `analyzeProject()` check reports. Column patterns, integer types,
 and the required predicate are explicit. Standard error severity applies;
 `severity: advisory` is recommended for adoption. Unsupported CHECK expressions
 leave the required proof missing.
+
+The opt-in [grouping advice](rules/postgres-grouping-not-aggregation.md) shares
+prepared catalog and statement facts between selected raw PostgreSQL and embedded
+TS/JS SQL, including recovered template and `.append` fragments. All five shape
+codes are always advisory and require a catalog; unsupported or unproven shapes
+stay silent. CLI `check` and async Node `check` / `analyzeProject` share output.

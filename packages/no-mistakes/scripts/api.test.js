@@ -279,6 +279,7 @@ test("PostgreSQL executor options expose additive selection and final exclusions
     "executed-postgres-sql-types.d.ts",
     "postgres-mutable-sql-registry-types.d.ts",
     "postgres-json-relation-ids-types.d.ts",
+    "postgres-grouping-not-aggregation-types.d.ts",
     "postgres-uuid-predicate-types.d.ts",
     "postgres-unbounded-identifier-types.d.ts",
   ]) {

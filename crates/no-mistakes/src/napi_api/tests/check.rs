@@ -437,3 +437,6 @@ mod check_postgres_utility;
 
 #[path = "check_vitest_project_policy.rs"]
 mod check_vitest_project_policy;
+
+#[path = "check_grouping_not_aggregation.rs"]
+mod check_grouping_not_aggregation;

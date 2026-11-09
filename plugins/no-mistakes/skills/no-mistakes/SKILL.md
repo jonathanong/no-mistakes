@@ -353,3 +353,10 @@ Use `postgres-materialized-view-shape` to require refresh and read indexes and
 bounded base-table reads. Adopt with application-level `severity: advisory`;
 the default severity is `error`. See the catalog configuration and examples in
 [PostgreSQL source analysis](references/postgres-source.md).
+
+For catalog-backed grouping review, configure
+[`postgres-grouping-not-aggregation`](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-grouping-not-aggregation.md)
+and run `no-mistakes check --root <root> --format json`. Read `advisories` and
+filter their `target` by the five shape codes. No catalog means no findings.
+The rule is always advisory; use normal source disable directives for measured
+exceptions and async `check()` / `analyzeProject()` for repeated in-process work.
