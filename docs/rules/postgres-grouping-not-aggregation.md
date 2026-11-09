@@ -196,7 +196,9 @@ AND NOT EXISTS (SELECT 1 FROM live_topics x
 ```
 
 These guards preserve the HAVING rowset; they need not preserve UNKNOWN versus
-FALSE as a standalone boolean value. Unknown catalog columns remain silent.
+FALSE as a standalone boolean value. This additional null-aware guidance requires
+a catalog-known input column; the literal anti-threshold proof does not require
+column nullability metadata.
 If the original absence subquery already tests `created_at >= $1`, retain that
 original `NOT EXISTS` and remove the redundant `MAX` disjunct instead; its NULL
 behavior is already represented by the existing predicate.
