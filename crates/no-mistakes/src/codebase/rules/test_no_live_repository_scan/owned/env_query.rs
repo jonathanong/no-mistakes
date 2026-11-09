@@ -21,14 +21,22 @@ impl Owners<'_> {
                     .get_ts_facts(&entry.file)
                     .and_then(path_provenance)
                     .is_some_and(|provenance| {
-                        env::dominated(provenance, name, entry.offset)
-                            || self.imported.owns(&entry.file, name, facts, &self.consumed)
-                            || self
-                                .setups
-                                .get_or_init(|| {
-                                    super::setups::ConfiguredSetups::new(self.root, self.catalog)
-                                })
-                                .owns(&entry.file, name, facts, &self.imported, &self.consumed)
+                        env::dominated(provenance, name, entry.offset, &self.fixture_dirs)
+                            || self.imported.owns(
+                                &entry.file,
+                                name,
+                                facts,
+                                &self.consumed,
+                                &self.fixture_dirs,
+                            )
+                            || self.setups.owns(
+                                &entry.file,
+                                name,
+                                facts,
+                                &self.imported,
+                                &self.consumed,
+                                &self.fixture_dirs,
+                            )
                     })
             })
     }

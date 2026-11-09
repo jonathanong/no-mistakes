@@ -1,10 +1,12 @@
 //! Which `process.env` variables are only ever set to an owned temp root.
 use super::path_provenance;
 use crate::codebase::dependencies::graph::TsFactLookup;
-use crate::codebase::ts_source::module_facts::arguments::{PathAnchor, PathProvenance, WriteScope};
+use crate::codebase::ts_source::module_facts::arguments::{
+    PathAnchor, PathOrigin, PathProvenance, WriteScope,
+};
 use crate::config::v2::schema::StringOrList;
 use crate::config::v2::NoMistakesConfig;
-use crate::fx::FxHashMap;
+use crate::fx::{FxHashMap, FxHashSet};
 use std::path::{Path, PathBuf};
 
 #[derive(Default)]
@@ -20,13 +22,18 @@ impl EnvWrites {
     pub(super) fn new(
         facts: &dyn TsFactLookup,
         graph_files: &[PathBuf],
+        relevant_files: &FxHashSet<PathBuf>,
         root: &Path,
         config: &NoMistakesConfig,
+        fixture_dirs: &[String],
     ) -> Self {
         let mut writes = Self::default();
         // A file with no path facts was outside the rule's scope; a file whose
         // facts failed to build may hide writes.
-        for file in graph_files {
+        for file in graph_files
+            .iter()
+            .filter(|file| relevant_files.contains(*file))
+        {
             let Some(ts) = facts.get_ts_facts(file) else {
                 continue;
             };
@@ -45,8 +52,7 @@ impl EnvWrites {
                 runner_config(file) && provenance.is_some_and(|found| found.opaque_config_key);
             for write in provenance.iter().flat_map(|found| &found.env_writes) {
                 let entry = writes.owned.entry(write.name.clone()).or_insert(true);
-                *entry &= write.origin.anchor == PathAnchor::Temp
-                    && !write.origin.segments.iter().any(|segment| segment == "..");
+                *entry &= owned_origin(&write.origin, fixture_dirs);
             }
         }
         let json_poison = json_configs_poison(root, config);
@@ -65,15 +71,16 @@ impl EnvWrites {
 }
 
 /// An unconditional owned write of `name` that must have run before `offset`.
-pub(in super::super) fn dominated(provenance: &PathProvenance, name: &str, offset: u32) -> bool {
+pub(in super::super) fn dominated(
+    provenance: &PathProvenance,
+    name: &str,
+    offset: u32,
+    fixture_dirs: &[String],
+) -> bool {
     provenance
         .env_writes
         .iter()
-        .filter(|write| {
-            write.name == name
-                && write.origin.anchor == PathAnchor::Temp
-                && !write.origin.segments.iter().any(|segment| segment == "..")
-        })
+        .filter(|write| write.name == name && owned_origin(&write.origin, fixture_dirs))
         .any(|write| match write.scope {
             WriteScope::Program => write.end <= offset,
             WriteScope::Function(start, end) => {
@@ -88,7 +95,17 @@ pub(in super::super) fn dominated(provenance: &PathProvenance, name: &str, offse
         })
 }
 
-fn runner_config(path: &Path) -> bool {
+pub(in super::super) fn owned_origin(origin: &PathOrigin, fixture_dirs: &[String]) -> bool {
+    if origin.anchor == PathAnchor::Temp {
+        return !origin.segments.iter().any(|segment| segment == "..");
+    }
+    origin
+        .segments
+        .iter()
+        .any(|segment| fixture_dirs.iter().any(|dir| dir == segment))
+}
+
+pub(in super::super) fn runner_config(path: &Path) -> bool {
     matches!(
         path.file_stem().and_then(|stem| stem.to_str()),
         Some("vitest.config" | "vitest.workspace" | "vitest.projects" | "vite.config")

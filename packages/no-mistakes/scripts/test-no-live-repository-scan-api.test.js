@@ -248,3 +248,56 @@ for (const [name, advisories] of [
     },
   );
 }
+
+for (const [name, expected] of [
+  ["minimal", []],
+  ["production-only", []],
+  ["large-unknown", []],
+  ["large-collision", []],
+  ["small", ["src/scan.ts:21", "src/scan.ts:25", "src/scan.ts:29", "src/scan.ts:33"]],
+  [
+    "large",
+    [
+      "src/long-chain.ts:260",
+      "src/scan.ts:21",
+      "src/scan.ts:25",
+      "src/scan.ts:29",
+      "src/scan.ts:33",
+    ],
+  ],
+  ["no-caller", []],
+  ["disabled", []],
+]) {
+  test(
+    `compiled caller-owned roots ${name} preserve async and prepared parity`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const fixture = join(root, "../caller-roots", name);
+      let first;
+      for (const jobs of [1, 2]) {
+        const options = { root: fixture, config: join(fixture, ".no-mistakes.yml"), jobs };
+        const request = { ...options, reports: [{ type: "check" }] };
+        for (const [index, call] of [
+          () => cjs.check(options),
+          () => esm.check(options),
+          () => cjs.analyzeProject(request),
+          () => esm.analyzeProject(request),
+        ].entries()) {
+          const pending = call();
+          assert.equal(typeof pending.then, "function");
+          const result = await pending;
+          const report = withoutPoolWarning(index < 2 ? result : result.reports[0].result);
+          if (first) assert.deepEqual(report, first, `${name}: API ${index}, jobs ${jobs}`);
+          else first = report;
+          const findings = [...report.rules, ...report.advisories]
+            .filter((finding) => finding.rule === rule)
+            .map(({ file, line }) => `${file}:${line}`)
+            .sort();
+          assert.deepEqual(findings, expected, name);
+        }
+      }
+    },
+  );
+}

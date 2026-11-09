@@ -37,7 +37,7 @@ pub(super) fn unresolved(
         application,
         site,
         format!(
-            "unresolved root: `{}` enumerates a directory, but {why}, so it cannot be shown to be bounded. Fix: pass a temporary root the test owns (mkdtemp) as a parameter or via vi.stubEnv, or use a `const` path under a fixtures directory. As a last option, add `no-mistakes-disable-next-line {RULE_ID}` with a reason.",
+            "unresolved root: `{}` enumerates a directory, but {why}, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line {RULE_ID}` with a reason.",
             site.source_callee
         ),
         "unresolved root",

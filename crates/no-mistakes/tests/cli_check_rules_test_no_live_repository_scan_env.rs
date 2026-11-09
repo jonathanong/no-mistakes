@@ -102,10 +102,16 @@ fn env_provenance_preserves_unknown_roots_and_actionable_hints() {
         );
         for advisory in report["advisories"].as_array().unwrap() {
             let message = advisory["message"].as_str().unwrap();
-            let parameter = message.find("as a parameter").unwrap();
-            let stub = message.find("via vi.stubEnv").unwrap();
+            let local = message.find("inside the enumerating function").unwrap();
+            let callers = message
+                .find("every statically resolved test caller")
+                .unwrap();
+            let stub = message.find("vi.stubEnv").unwrap();
             let suppression = message.find("no-mistakes-disable-next-line").unwrap();
-            assert!(parameter < stub && stub < suppression, "{message}");
+            assert!(
+                local < callers && callers < stub && stub < suppression,
+                "{message}"
+            );
         }
     }
 }

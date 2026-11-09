@@ -23,7 +23,7 @@ impl Owners<'_> {
             if !seen.insert((source.clone(), index, member.clone())) {
                 continue;
             }
-            if seen.len() > 128 || self.escape_unknown || !self.proven_target(&source) {
+            if self.escape_unknown || !self.proven_target(&source) {
                 return false;
             }
             let Some(callers) = self
@@ -43,7 +43,11 @@ impl Owners<'_> {
                 let Some(argument) = argument else {
                     return false;
                 };
-                if argument.segments.iter().any(|part| part == "..") {
+                if argument.segments.iter().any(|part| part == "..")
+                    && (argument.param.is_some()
+                        || argument.env.is_some()
+                        || argument.anchor == crate::codebase::ts_source::module_facts::arguments::PathAnchor::Temp)
+                {
                     return false;
                 }
                 if classify(Some(argument), fixture_dirs) == Verdict::Allowed {

@@ -4,6 +4,7 @@
 mod consumers;
 pub(super) mod env;
 mod env_query;
+mod escapes;
 mod imports;
 mod local_env;
 mod parameters;
@@ -42,12 +43,11 @@ pub(super) struct Owners<'g> {
     callers: FxHashMap<NodeId, Vec<&'g ResolvedCallSite>>,
     env: env::EnvWrites,
     imported: imports::ImportedWrites<'g>,
-    setups: std::cell::OnceCell<setups::ConfiguredSetups>,
-    root: &'g std::path::Path,
-    catalog: Option<&'g crate::codebase::rules::PreparedVitestProjectCatalog>,
+    setups: setups::ConfiguredSetups,
+    fixture_dirs: Vec<String>,
     nodes: FxHashMap<PathBuf, FxHashMap<u32, NodeId>>,
-    /// Names of functions referenced other than as a direct callee, anywhere.
-    escaped: FxHashSet<String>,
+    /// Functions referenced other than as a direct callee in reachable code.
+    escaped: escapes::Escapes,
     /// Files consumed other than by named static imports used only as calls.
     consumed: consumers::Consumed,
     /// A file whose facts failed, or a module load that cannot be read, may hide a consumer.
@@ -58,6 +58,7 @@ impl<'g> Owners<'g> {
     pub(super) fn new(
         graph: &'g DepGraph,
         reachable: &FxHashSet<NodeId>,
+        evidence_files: &FxHashSet<PathBuf>,
         facts: &dyn TsFactLookup,
         graph_files: &[PathBuf],
         resolution: &Resolution<'_>,
@@ -90,30 +91,32 @@ impl<'g> Owners<'g> {
                 }
             }
         }
-        let mut escaped = FxHashSet::default();
-        let mut escape_unknown = false;
-        for ts in graph_files
-            .iter()
-            .filter_map(|file| facts.get_ts_facts(file))
-        {
-            match path_provenance(ts) {
-                Some(provenance) => {
-                    escaped.extend(provenance.value_refs.iter().cloned());
-                    escape_unknown |= provenance.modules_unknown;
-                }
-                None => escape_unknown |= ts.module_bindings.is_some(),
-            }
+        let mut relevant_files = evidence_files.clone();
+        let setups = setups::ConfiguredSetups::new(environment.root, environment.vitest);
+        if let Some(setup_files) = setups.setup_files() {
+            let setup_files: Vec<PathBuf> = setup_files.into_iter().collect();
+            relevant_files.extend(super::reachable::module_files(graph, &setup_files));
+        } else {
+            relevant_files.extend(graph_files.iter().cloned());
         }
-        let consumed = consumers::Consumed::new(graph, facts, graph_files, resolution);
-        escape_unknown |= consumed.unknown();
+        let escaped = escapes::Escapes::new(facts, graph_files, &relevant_files);
+        let consumed =
+            consumers::Consumed::new(graph, facts, graph_files, &relevant_files, resolution);
+        let escape_unknown = escaped.unknown() || consumed.unknown();
         Self {
             callers,
             nodes,
             imported: imports::ImportedWrites::new(graph),
-            env: env::EnvWrites::new(facts, graph_files, environment.root, environment.config),
-            setups: std::cell::OnceCell::new(),
-            root: environment.root,
-            catalog: environment.vitest,
+            env: env::EnvWrites::new(
+                facts,
+                graph_files,
+                &relevant_files,
+                environment.root,
+                environment.config,
+                &environment.fixture_dirs,
+            ),
+            setups,
+            fixture_dirs: environment.fixture_dirs,
             escaped,
             consumed,
             escape_unknown,
@@ -129,7 +132,12 @@ impl<'g> Owners<'g> {
         fixture_dirs: &[&str],
     ) -> bool {
         // An owned root is only owned below itself; `..` climbs out of it.
-        if origin.segments.iter().any(|segment| segment == "..") {
+        if origin.segments.iter().any(|segment| segment == "..")
+            && (origin.param.is_some()
+                || origin.env.is_some()
+                || origin.anchor
+                    == crate::codebase::ts_source::module_facts::arguments::PathAnchor::Temp)
+        {
             return false;
         }
         match (&origin.env, origin.param) {
@@ -146,11 +154,7 @@ impl<'g> Owners<'g> {
             return false;
         };
         let name: &str = symbol;
-        !self.escaped.contains(name)
-            && !self
-                .escaped
-                .contains(name.rsplit('.').next().unwrap_or(name))
-            && !self.consumed.contains(file)
+        !self.escaped.contains(file, name) && !self.consumed.contains(file)
     }
 
     /// Call sites that start a chain reaching `target`: sites whose own
@@ -183,4 +187,5 @@ pub(super) struct Environment<'a> {
     pub(super) root: &'a std::path::Path,
     pub(super) config: &'a crate::config::v2::NoMistakesConfig,
     pub(super) vitest: Option<&'a crate::codebase::rules::PreparedVitestProjectCatalog>,
+    pub(super) fixture_dirs: Vec<String>,
 }
