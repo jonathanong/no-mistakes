@@ -25,7 +25,7 @@ struct Value {
 
 pub(super) struct Collector<'s, 'a> {
     semantic: &'s Semantic<'a>,
-    bindings: FxHashMap<SymbolId, Option<Value>>,
+    bindings: FxHashMap<(SymbolId, usize), Option<Value>>,
 }
 
 impl<'s, 'a> Collector<'s, 'a> {
@@ -159,10 +159,11 @@ impl<'s, 'a> Collector<'s, 'a> {
         if identifier.span.start < declaration.span.end {
             return None;
         }
-        if let Some(value) = self.bindings.get(&symbol) {
+        let key = (symbol, depth);
+        if let Some(value) = self.bindings.get(&key) {
             return value.clone();
         }
-        self.bindings.insert(symbol, None);
+        self.bindings.insert(key, None);
         if !scoping.symbol_flags(symbol).is_const_variable()
             || !scoping.symbol_redeclarations(symbol).is_empty()
             || scoping
@@ -178,7 +179,7 @@ impl<'s, 'a> Collector<'s, 'a> {
         if value.object {
             return None;
         }
-        self.bindings.insert(symbol, Some(value.clone()));
+        self.bindings.insert(key, Some(value.clone()));
         Some(value)
     }
 }

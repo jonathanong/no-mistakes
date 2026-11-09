@@ -51,6 +51,19 @@ fn static_dynamic_runtime_controls_remain_uncertain() {
 }
 
 #[test]
+fn static_dynamic_depth_cache_is_independent_of_earlier_imports() {
+    let facts = module("depth-cache/consumer.mts").facts;
+    assert_eq!(facts.diagnostics.len(), 4);
+    assert_eq!(facts.importer_safe.len(), 2);
+    let folded: Vec<_> = facts
+        .folded_dynamic_imports
+        .iter()
+        .map(|import| import.source.as_str())
+        .collect();
+    assert_eq!(folded, ["target3", "target3"]);
+}
+
+#[test]
 fn static_dynamic_discarded_results_select_no_exports_without_hiding_escapes() {
     let facts = module("discarded.mts").facts;
     assert_eq!(facts.folded_dynamic_imports.len(), 6);

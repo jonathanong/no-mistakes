@@ -1,0 +1,46 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "consumer.mts",
+          "line": 36,
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import(target34);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "consumer.mts",
+          "line": 38,
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import(target34);",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

@@ -30,6 +30,53 @@ fn production_exports_issues_3175_3176_check_json_snapshot() {
     }
     assert_saved_fixture("production_exports_issues_3175_3176", &rows);
 
+    let mocks = rules_path(
+        "production-exports-only-used-by-tests",
+        "fixture",
+        "folded-mock-imports",
+    );
+    let mock_rows: Vec<_> = [
+        ("advise", ".no-mistakes.yml"),
+        ("report", "report.yml"),
+        ("ignore", "ignore.yml"),
+        ("off", "off.yml"),
+    ]
+    .into_iter()
+    .map(|(label, config)| (label, mocks.clone(), mocks.join(config)))
+    .collect();
+    assert_saved_fixture("production_exports_folded_mocks", &mock_rows);
+    let depth = rules_path(
+        "production-exports-only-used-by-tests",
+        "fixture",
+        "static-dynamic-facts/depth-cache",
+    );
+    assert_saved_fixture(
+        "production_exports_folded_depth",
+        &[
+            ("advise", depth.clone(), depth.join(".no-mistakes.yml")),
+            ("off", depth.clone(), depth.join("off.yml")),
+        ],
+    );
+    for (_, root, config) in mock_rows.iter().filter(|(label, _, _)| *label != "off") {
+        let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+            .args(["check", "--root"])
+            .arg(root)
+            .arg("--config")
+            .arg(config)
+            .args(["--format", "json"])
+            .output()
+            .unwrap();
+        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert!(
+            report["rules"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|finding| finding["target"] == "isolated"),
+            "{report}"
+        );
+    }
+
     let positive = rules_path(
         "production-exports-only-used-by-tests",
         "fixture",

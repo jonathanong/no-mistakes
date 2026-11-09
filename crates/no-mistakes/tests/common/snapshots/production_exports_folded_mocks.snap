@@ -1,0 +1,145 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "other/factory.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: symbol consumers of `selected` include an unknown import selector: other/factory.mts:3 `../src/factory.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.doMock(import(target), (actual) => actual());",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "other/runtime.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: symbol consumers of `selected` include an unknown import selector: other/runtime.mts:3 `../src/runtime.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.doMock(import(target), () => ({ selected: 0 })); console.log(await import(target));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "other/runtime.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: unresolved module selector `../src/runtime.mjs` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.doMock(import(target), () => ({ selected: 0 })); console.log(await import(target));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "other/same-line.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: unresolved module selector `../src/same-line.mjs` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.doMock(import(target), () => ({ selected: 0 })); console.log((await import(target)).selected);",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/isolated.mts",
+          "line": 1,
+          "message": "production export `isolated` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const isolated = 1;",
+          "target": "isolated"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/isolated.mts",
+          "line": 1,
+          "message": "production export `isolated` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const isolated = 1;",
+          "target": "isolated"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/factory.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: symbol consumers of `selected` include an unknown import selector: other/factory.mts:3 `../src/factory.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.doMock(import(target), (actual) => actual());",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "other/runtime.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: symbol consumers of `selected` include an unknown import selector: other/runtime.mts:3 `../src/runtime.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.doMock(import(target), () => ({ selected: 0 })); console.log(await import(target));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "other/runtime.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: unresolved module selector `../src/runtime.mjs` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.doMock(import(target), () => ({ selected: 0 })); console.log(await import(target));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "other/same-line.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: unresolved module selector `../src/same-line.mjs` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.doMock(import(target), () => ({ selected: 0 })); console.log((await import(target)).selected);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/isolated.mts",
+          "line": 1,
+          "message": "production export `isolated` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const isolated = 1;",
+          "target": "isolated"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

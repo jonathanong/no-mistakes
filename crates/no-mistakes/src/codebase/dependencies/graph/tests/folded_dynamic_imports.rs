@@ -1,9 +1,13 @@
 use super::*;
 
 fn fixture_graph(selectors: bool) -> (tempfile::TempDir, DepGraph) {
-    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-        "../../test-cases/rules/production-exports-only-used-by-tests/fixture/folded-dynamic-graph",
-    );
+    fixture_graph_named("folded-dynamic-graph", selectors)
+}
+
+fn fixture_graph_named(name: &str, selectors: bool) -> (tempfile::TempDir, DepGraph) {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/production-exports-only-used-by-tests/fixture")
+        .join(name);
     let dir = crate::test_support::materialize_saved_fixture(&source);
     crate::test_support::git_init(dir.path());
     crate::test_support::git_add_all(dir.path());
@@ -24,6 +28,34 @@ fn fixture_graph(selectors: bool) -> (tempfile::TempDir, DepGraph) {
     )
     .unwrap();
     (dir, graph)
+}
+
+#[test]
+fn folded_dynamic_mocks_preserve_isolation_and_same_line_runtime_imports() {
+    let (dir, graph) = fixture_graph_named("folded-mock-imports", true);
+    let edges = |name: &str| {
+        graph
+            .dependencies_of_node(&NodeId::file(dir.path().join(name)))
+            .unwrap()
+    };
+    assert!(
+        !edges("other/isolated.mts").iter().any(|(_, kind)| matches!(
+            kind,
+            EdgeKind::DynamicImport
+                | EdgeKind::ConditionalDynamicImport
+                | EdgeKind::SymbolImportUnknown
+        ))
+    );
+    for name in ["runtime", "factory"] {
+        assert!(edges(&format!("other/{name}.mts")).contains(&(
+            NodeId::file(dir.path().join(format!("src/{name}.mts"))),
+            EdgeKind::SymbolImportUnknown,
+        )));
+    }
+    assert!(edges("other/same-line.mts").contains(&(
+        NodeId::symbol(dir.path().join("src/same-line.mts"), "selected"),
+        EdgeKind::SymbolImport,
+    )));
 }
 
 #[test]

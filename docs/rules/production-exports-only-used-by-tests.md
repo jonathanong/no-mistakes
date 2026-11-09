@@ -476,6 +476,13 @@ limitations visible without failing the check, but applies to all uncertainty in
 the configured rule scope. Neither option proves that the unknown exports have a
 production consumer.
 
+Folded imports preserve the isolated Vitest mock handling used for literal
+imports. An inert `vi.mock` or `vi.doMock` module-promise argument does not consume
+the original exports. Factories that can load the original and real imports on
+the same line retain their ordinary analysis. Alias resolution has a per-import
+depth limit; cached results include that depth so earlier imports cannot change
+whether a later import resolves.
+
 ## Incomplete analysis
 
 Dynamic or unresolved module/symbol relationships cannot prove exclusive test

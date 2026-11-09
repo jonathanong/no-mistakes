@@ -11,6 +11,11 @@ fn collect_folded_dynamic_imports<'a>(
     if module.folded_dynamic_imports.is_empty() {
         return fx_set();
     }
+    let mock_spans: FxHashSet<_> = module
+        .mock_import_spans
+        .iter()
+        .map(|span| (span.start, span.end))
+        .collect();
     let mut folded_counts: FxHashMap<(&str, u32), usize> = fx_map();
     let reachable = reachable_function_scopes(facts);
     let mut originals: FxHashMap<(&str, u32), Vec<&ExtractedImport>> = fx_map();
@@ -31,6 +36,12 @@ fn collect_folded_dynamic_imports<'a>(
         let load = &folded.load;
         let line =
             crate::codebase::ts_source::byte_offset_to_line(source, load.span.start as usize);
+        if mock_spans.contains(&(load.span.start, load.span.end)) {
+            *folded_counts
+                .entry((folded.source.as_str(), line))
+                .or_default() += 1;
+            continue;
+        }
         let specifier = if folded.relative_url {
             let Some(path) = url::Url::from_file_path(inputs.path)
                 .ok()
