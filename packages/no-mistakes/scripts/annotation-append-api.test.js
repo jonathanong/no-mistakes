@@ -5,28 +5,28 @@ const test = globalThis.test || require("node:test").test;
 const addon = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
 const { policyAdvisories } = require("./check-policy-test-helpers");
 
-test(
-  "compiled low annotation keeps append heads, policies, suppressions and CLI parity",
-  { skip: !addon?.endsWith(".node") },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const root = join(
-      __dirname,
-      "../../../test-cases/rules/postgres-require-query-annotation/fixture/low-heads",
-    );
-    const cli =
-      process.env.NO_MISTAKES_TEST_CLI_PATH ||
-      join(dirname(addon), process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes");
-    // These saved sites have no named head or an unsafe builder lifetime.
-    // The nested executor at line 29 must still be checked inside append's tail.
-    // The append receiver at 4, nested executor at 29, and safe local tagged
-    // builder at 47 all have a proven unnamed head; other rejected sites rely
-    // on policy-controlled unresolved behavior.
-    const definiteMissing = [4, 29, 47];
-    const unresolved = [6, 7, 11, 12, 14, 17, 19, 23, 27, 30, 35, 42, 55, 60, 66];
-    const lines = [...definiteMissing, ...unresolved].sort((left, right) => left - right);
-    for (const policy of ["report", "advise", "ignore"]) {
+for (const policy of ["report", "advise", "ignore"]) {
+  test(
+    `compiled low annotation keeps append heads, suppressions and CLI parity with ${policy} policy`,
+    { skip: !addon?.endsWith(".node") },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const root = join(
+        __dirname,
+        "../../../test-cases/rules/postgres-require-query-annotation/fixture/low-heads",
+      );
+      const cli =
+        process.env.NO_MISTAKES_TEST_CLI_PATH ||
+        join(dirname(addon), process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes");
+      // These saved sites have no named head or an unsafe builder lifetime.
+      // The nested executor at line 29 must still be checked inside append's tail.
+      // The append receiver at 4, nested executor at 29, and safe local tagged
+      // builder at 47 all have a proven unnamed head; other rejected sites rely
+      // on policy-controlled unresolved behavior.
+      const definiteMissing = [4, 29, 47];
+      const unresolved = [6, 7, 11, 12, 14, 17, 19, 23, 27, 30, 35, 42, 55, 60, 66];
+      const lines = [...definiteMissing, ...unresolved].sort((left, right) => left - right);
       const config = join(root, `.no-mistakes-append-${policy}.yml`);
       const pending = cjs.check({ root, config });
       assert.ok(pending instanceof Promise);
@@ -76,9 +76,9 @@ test(
           );
         }
       }
-    }
-  },
-);
+    },
+  );
+}
 
 test(
   "compiled async annotation APIs preserve imported builder heads and parameter uncertainty",
