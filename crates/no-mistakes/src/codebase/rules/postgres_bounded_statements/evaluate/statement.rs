@@ -9,6 +9,7 @@ pub(super) fn offenders_with_columns(
 ) -> Vec<Offender> {
     let temporary = possible_temporary::project(&fact.query, catalog);
     let query = scalar_reads::project(&temporary, fact.scalar_reads.as_ref(), catalog);
+    let query = super::body_reads::project(&query, &fact.lateral_qualified_reads, catalog, views);
     let evaluation = evaluate(&query, catalog, views, precise_columns, fact.target);
     let Some(target) = fact.target else {
         return evaluation.offenders;

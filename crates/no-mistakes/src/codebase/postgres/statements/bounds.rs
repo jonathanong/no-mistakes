@@ -5,7 +5,9 @@
 //! pure aggregate caps it. A rule decides, against a schema catalog, whether those pins make
 //! a relation single-row.
 mod aggregate;
+mod bind_values;
 mod bodies;
+pub(crate) use bind_values::BindValues;
 mod body_owner;
 mod catalog_functions;
 pub(super) use catalog_functions::needs_catalog;
@@ -50,6 +52,7 @@ pub(super) struct Scope {
     limit_columns: limit_columns::Relations,
     scalar_functions: std::sync::Arc<BTreeSet<Vec<String>>>,
     scalar_scope: Rc<scalar_scope::ScalarScope>,
+    bind_values: BindValues,
 }
 
 /// Immutable parent frames retain visible CTEs without copying their bound trees.
@@ -127,6 +130,7 @@ fn collect_query(
         query: query::bound_body(query, &scope, positions),
         target: None,
         scalar_reads: None,
+        lateral_qualified_reads: Vec::new(),
     });
 }
 

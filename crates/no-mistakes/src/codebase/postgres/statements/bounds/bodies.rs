@@ -1,5 +1,5 @@
 use super::{Scope, SqlBoundFact, SqlBoundKind, SqlBoundQuery};
-use crate::codebase::postgres::statements::{SqlBoundItem, SqlScalarReads};
+use crate::codebase::postgres::statements::{SqlBoundItem, SqlQualifiedRead, SqlScalarReads};
 use std::{
     cell::RefCell,
     collections::{BTreeMap, BTreeSet},
@@ -24,6 +24,16 @@ impl Scope {
         query: &sqlparser::ast::Query,
         scalar_reads: Option<SqlScalarReads>,
     ) {
+        self.record_subquery_with_reads(bound, query, scalar_reads, &[]);
+    }
+
+    pub(super) fn record_subquery_with_reads(
+        &self,
+        bound: &SqlBoundQuery,
+        query: &sqlparser::ast::Query,
+        scalar_reads: Option<SqlScalarReads>,
+        lateral_qualified_reads: &[SqlQualifiedRead],
+    ) {
         use sqlparser::ast::Spanned;
         self.record_fact(
             bound,
@@ -40,6 +50,7 @@ impl Scope {
             },
             scalar_reads.is_none().then(|| "subquery".into()),
             scalar_reads,
+            lateral_qualified_reads,
         );
     }
 
@@ -66,7 +77,7 @@ impl Scope {
             .as_ref()
             .is_some_and(|bodies| bodies.borrow().materialized)
         {
-            self.record_fact(query, at, Some(name()), None);
+            self.record_fact(query, at, Some(name()), None, &[]);
         }
     }
 
@@ -76,6 +87,7 @@ impl Scope {
         at: impl FnOnce() -> (usize, usize),
         body: Option<String>,
         scalar_reads: Option<SqlScalarReads>,
+        lateral_qualified_reads: &[SqlQualifiedRead],
     ) {
         if let Some(bodies) = &self.bodies {
             let at = at();
@@ -97,6 +109,7 @@ impl Scope {
                 query,
                 target: None,
                 scalar_reads,
+                lateral_qualified_reads: lateral_qualified_reads.to_vec(),
             });
         }
     }

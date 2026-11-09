@@ -17,6 +17,7 @@ pub(crate) use parse::{
     extract_sql_lock_scope_facts, extract_sql_statement_facts_with_bounds,
     extract_sql_statement_facts_with_json_writes, extract_sql_statement_facts_with_location_demand,
     extract_sql_statement_facts_with_recovered_placeholders, extract_sql_variant_statement_facts,
+    extract_with_bound_values,
 };
 use policy::table_keyword;
 pub(crate) use sources::StatementPolicySources;
@@ -83,12 +84,7 @@ fn extract_from_parsed_and_sources(
             });
         let table_tokens = source_index.map(|index| &*index).or(table_index.as_ref());
         let scope = collect_bounds
-            .then(|| {
-                table_tokens.map(|index| {
-                    bounds::Scope::with_table_tokens(index.cursor_at(source_statement.span().start))
-                        .with_bodies(sources.policy.collect_body_bounds)
-                })
-            })
+            .then(|| table_tokens.map(|index| sources.policy.scope(index, source_statement)))
             .flatten();
         let mut table_cursor = (has_table_token || source_has_table)
             .then(|| table_tokens.map(|index| index.cursor_at(source_statement.span().start)))

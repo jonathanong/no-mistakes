@@ -1,6 +1,5 @@
 mod kind;
 pub use kind::SqlBoundKind;
-
 /// One executed `SELECT`, `UPDATE` or `DELETE`, reduced to what decides its row count.
 ///
 /// The fact is syntactic: whether a pinned column set is a unique key is decided later,
@@ -17,10 +16,11 @@ pub struct SqlBoundFact {
     pub statement_start: Option<(usize, usize)>,
     pub query: SqlBoundQuery,
     pub scalar_reads: Option<SqlScalarReads>,
+    /// Qualified enclosing rows fixed for one explicitly LATERAL body invocation.
+    pub lateral_qualified_reads: Vec<SqlQualifiedRead>,
     /// For `UPDATE` and `DELETE`: the index in `query.items` of the relation being changed.
     pub target: Option<usize>,
 }
-
 /// A query body: its FROM items, and whether it caps its own row count.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct SqlBoundQuery {

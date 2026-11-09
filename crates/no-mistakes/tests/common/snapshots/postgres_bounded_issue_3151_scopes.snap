@@ -5,7 +5,80 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "advise": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "lateral-local-self-control.sql",
+          "line": 3,
+          "message": "lateral-local-self-control.sql:3: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from number_kinds; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT number_kinds.label FROM number_kinds",
+          "target": "materialized-body"
+        },
+        {
+          "file": "lateral-missing-composite-half.sql",
+          "line": 3,
+          "message": "lateral-missing-composite-half.sql:3: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT x.state FROM placements p",
+          "target": "materialized-body"
+        },
+        {
+          "file": "lateral-missing-composite-half.sql",
+          "line": 5,
+          "message": "lateral-missing-composite-half.sql:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activations recorded",
+          "target": "materialized-body"
+        },
+        {
+          "file": "lateral-nonunique-control.sql",
+          "line": 3,
+          "message": "lateral-nonunique-control.sql:3: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from activation_events; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT x.state FROM placements p",
+          "target": "materialized-body"
+        },
+        {
+          "file": "lateral-nonunique-control.sql",
+          "line": 5,
+          "message": "lateral-nonunique-control.sql:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from activation_events; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activation_events recorded",
+          "target": "materialized-body"
+        },
+        {
+          "file": "lateral-shadowed-enclosing-alias.sql",
+          "line": 3,
+          "message": "lateral-shadowed-enclosing-alias.sql:3: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body; subquery can build an unbounded candidate pool from number_kinds; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT x.state FROM placements p",
+          "target": "materialized-body"
+        },
+        {
+          "file": "lateral-shadowed-enclosing-alias.sql",
+          "line": 5,
+          "message": "lateral-shadowed-enclosing-alias.sql:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body; subquery can build an unbounded candidate pool from number_kinds; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activations recorded",
+          "target": "materialized-body"
+        },
+        {
+          "file": "nonlateral-sibling-control.sql",
+          "line": 3,
+          "message": "nonlateral-sibling-control.sql:3: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT x.state FROM placements p",
+          "target": "materialized-body"
+        },
+        {
+          "file": "nonlateral-sibling-control.sql",
+          "line": 5,
+          "message": "nonlateral-sibling-control.sql:5: postgres-bounded-statements application #0 reports an advisory violation for materialized-body: subquery can build an unbounded candidate pool from activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activations recorded",
+          "target": "materialized-body"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -42,6 +115,54 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT a.id, (SELECT label FROM kinds",
           "target": "table:kinds"
+        },
+        {
+          "file": "lateral-local-self-control.sql",
+          "line": 3,
+          "message": "lateral-local-self-control.sql:3: SELECT can return every row of number_kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT number_kinds.label FROM number_kinds",
+          "target": "table:number_kinds"
+        },
+        {
+          "file": "lateral-missing-composite-half.sql",
+          "line": 5,
+          "message": "lateral-missing-composite-half.sql:5: SELECT can return every row of activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activations recorded",
+          "target": "table:activations"
+        },
+        {
+          "file": "lateral-nonunique-control.sql",
+          "line": 5,
+          "message": "lateral-nonunique-control.sql:5: SELECT can return every row of activation_events; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activation_events recorded",
+          "target": "table:activation_events"
+        },
+        {
+          "file": "lateral-shadowed-enclosing-alias.sql",
+          "line": 5,
+          "message": "lateral-shadowed-enclosing-alias.sql:5: SELECT can return every row of activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of number_kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activations recorded",
+          "target": "table:activations, table:number_kinds"
+        },
+        {
+          "file": "lateral-unbounded-driver.sql",
+          "line": 1,
+          "message": "lateral-unbounded-driver.sql:1: SELECT can return every row of targets; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT t.id, a.state FROM targets t",
+          "target": "table:targets"
+        },
+        {
+          "file": "nonlateral-sibling-control.sql",
+          "line": 5,
+          "message": "nonlateral-sibling-control.sql:5: SELECT can return every row of activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activations recorded",
+          "target": "table:activations"
         },
         {
           "file": "partial-missing-predicate.sql",
@@ -183,6 +304,54 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT a.id, (SELECT label FROM kinds",
           "target": "table:kinds"
+        },
+        {
+          "file": "lateral-local-self-control.sql",
+          "line": 3,
+          "message": "lateral-local-self-control.sql:3: SELECT can return every row of number_kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT number_kinds.label FROM number_kinds",
+          "target": "table:number_kinds"
+        },
+        {
+          "file": "lateral-missing-composite-half.sql",
+          "line": 5,
+          "message": "lateral-missing-composite-half.sql:5: SELECT can return every row of activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activations recorded",
+          "target": "table:activations"
+        },
+        {
+          "file": "lateral-nonunique-control.sql",
+          "line": 5,
+          "message": "lateral-nonunique-control.sql:5: SELECT can return every row of activation_events; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activation_events recorded",
+          "target": "table:activation_events"
+        },
+        {
+          "file": "lateral-shadowed-enclosing-alias.sql",
+          "line": 5,
+          "message": "lateral-shadowed-enclosing-alias.sql:5: SELECT can return every row of activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of number_kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activations recorded",
+          "target": "table:activations, table:number_kinds"
+        },
+        {
+          "file": "lateral-unbounded-driver.sql",
+          "line": 1,
+          "message": "lateral-unbounded-driver.sql:1: SELECT can return every row of targets; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT t.id, a.state FROM targets t",
+          "target": "table:targets"
+        },
+        {
+          "file": "nonlateral-sibling-control.sql",
+          "line": 5,
+          "message": "nonlateral-sibling-control.sql:5: SELECT can return every row of activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activations recorded",
+          "target": "table:activations"
         },
         {
           "file": "partial-missing-predicate.sql",
@@ -336,6 +505,126 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT a.id, (SELECT label FROM kinds",
           "target": "table:kinds"
+        },
+        {
+          "file": "lateral-local-self-control.sql",
+          "line": 3,
+          "message": "lateral-local-self-control.sql:3: SELECT can return every row of number_kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT number_kinds.label FROM number_kinds",
+          "target": "table:number_kinds"
+        },
+        {
+          "file": "lateral-local-self-control.sql",
+          "line": 3,
+          "message": "lateral-local-self-control.sql:3: subquery can build an unbounded candidate pool from number_kinds; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT number_kinds.label FROM number_kinds",
+          "target": "table:number_kinds"
+        },
+        {
+          "file": "lateral-missing-composite-half.sql",
+          "line": 3,
+          "message": "lateral-missing-composite-half.sql:3: subquery can build an unbounded candidate pool from activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT x.state FROM placements p",
+          "target": "table:activations"
+        },
+        {
+          "file": "lateral-missing-composite-half.sql",
+          "line": 5,
+          "message": "lateral-missing-composite-half.sql:5: SELECT can return every row of activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activations recorded",
+          "target": "table:activations"
+        },
+        {
+          "file": "lateral-missing-composite-half.sql",
+          "line": 5,
+          "message": "lateral-missing-composite-half.sql:5: subquery can build an unbounded candidate pool from activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activations recorded",
+          "target": "table:activations"
+        },
+        {
+          "file": "lateral-nonunique-control.sql",
+          "line": 3,
+          "message": "lateral-nonunique-control.sql:3: subquery can build an unbounded candidate pool from activation_events; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT x.state FROM placements p",
+          "target": "table:activation_events"
+        },
+        {
+          "file": "lateral-nonunique-control.sql",
+          "line": 5,
+          "message": "lateral-nonunique-control.sql:5: SELECT can return every row of activation_events; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activation_events recorded",
+          "target": "table:activation_events"
+        },
+        {
+          "file": "lateral-nonunique-control.sql",
+          "line": 5,
+          "message": "lateral-nonunique-control.sql:5: subquery can build an unbounded candidate pool from activation_events; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activation_events recorded",
+          "target": "table:activation_events"
+        },
+        {
+          "file": "lateral-shadowed-enclosing-alias.sql",
+          "line": 3,
+          "message": "lateral-shadowed-enclosing-alias.sql:3: subquery can build an unbounded candidate pool from activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body; subquery can build an unbounded candidate pool from number_kinds; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT x.state FROM placements p",
+          "target": "table:activations, table:number_kinds"
+        },
+        {
+          "file": "lateral-shadowed-enclosing-alias.sql",
+          "line": 5,
+          "message": "lateral-shadowed-enclosing-alias.sql:5: SELECT can return every row of activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of number_kinds; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activations recorded",
+          "target": "table:activations, table:number_kinds"
+        },
+        {
+          "file": "lateral-shadowed-enclosing-alias.sql",
+          "line": 5,
+          "message": "lateral-shadowed-enclosing-alias.sql:5: subquery can build an unbounded candidate pool from activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body; subquery can build an unbounded candidate pool from number_kinds; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activations recorded",
+          "target": "table:activations, table:number_kinds"
+        },
+        {
+          "file": "lateral-unbounded-driver.sql",
+          "line": 1,
+          "message": "lateral-unbounded-driver.sql:1: SELECT can return every row of targets; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT t.id, a.state FROM targets t",
+          "target": "table:targets"
+        },
+        {
+          "file": "nonlateral-sibling-control.sql",
+          "line": 3,
+          "message": "nonlateral-sibling-control.sql:3: subquery can build an unbounded candidate pool from activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT x.state FROM placements p",
+          "target": "table:activations"
+        },
+        {
+          "file": "nonlateral-sibling-control.sql",
+          "line": 5,
+          "message": "nonlateral-sibling-control.sql:5: SELECT can return every row of activations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activations recorded",
+          "target": "table:activations"
+        },
+        {
+          "file": "nonlateral-sibling-control.sql",
+          "line": 5,
+          "message": "nonlateral-sibling-control.sql:5: subquery can build an unbounded candidate pool from activations; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT recorded.state FROM activations recorded",
+          "target": "table:activations"
         },
         {
           "file": "partial-missing-predicate.sql",

@@ -81,6 +81,7 @@ fn push(
         },
         target: Some(0),
         scalar_reads: None,
+        lateral_qualified_reads: Vec::new(),
     });
 }
 

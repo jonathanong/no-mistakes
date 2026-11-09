@@ -126,6 +126,8 @@ fn scalar_scope_and_partial_predicate_controls_keep_outer_bounds() {
         ("correlated-unqualified.sql", 0),
         ("correlated-lateral.sql", 0),
         ("partial-closed-range.sql", 0),
+        ("partial-coalesce-and-exists.sql", 0),
+        ("lateral-enclosing-composite.sql", 0),
         ("correlated-cte-limit.sql", 0),
         ("correlated-lateral-cte-limit.sql", 0),
         ("partial-nested-predicate.sql", 0),
@@ -173,6 +175,46 @@ fn scalar_scope_and_partial_predicate_controls_keep_outer_bounds() {
                 .map(|fact| super::super::evaluate::offenders(fact, &catalog).len())
                 .sum();
             assert_eq!(count, expected, "{name}, materialized={materialized}");
+        }
+    }
+}
+
+#[test]
+fn nested_lateral_controls_keep_incomplete_or_local_key_sources() {
+    let root = super::fixture_root().join("../issue-3151-scopes/fixture");
+    let sources = crate::codebase::rules::source_store_for_files(&[root.join("schema.json")]);
+    let catalog = SchemaCatalog::load(&root, "schema.json", &sources).unwrap();
+    for name in [
+        "lateral-missing-composite-half.sql",
+        "lateral-shadowed-enclosing-alias.sql",
+        "nonlateral-sibling-control.sql",
+        "lateral-unbounded-driver.sql",
+        "lateral-nonunique-control.sql",
+        "lateral-local-self-control.sql",
+    ] {
+        let sql = std::fs::read_to_string(root.join(name)).unwrap();
+        let facts =
+            crate::codebase::postgres::statements::extract_sql_statement_facts_with_json_writes(
+                &sql,
+                true,
+                None,
+                crate::codebase::postgres::statements::SqlLocationDemand::None,
+                false,
+                false,
+                true,
+            );
+        assert!(!facts.parse_failed, "{name}");
+        let offenders: Vec<_> = facts
+            .bounds
+            .iter()
+            .filter(|fact| !super::super::evaluate::offenders(fact, &catalog).is_empty())
+            .collect();
+        assert!(!offenders.is_empty(), "{name}");
+        if name != "lateral-unbounded-driver.sql" {
+            assert!(
+                offenders.iter().any(|fact| fact.body.is_some()),
+                "{name}: missing body obligation"
+            );
         }
     }
 }

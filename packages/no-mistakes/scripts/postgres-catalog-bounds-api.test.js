@@ -34,10 +34,14 @@ test(
       ["../issue-3151/fixture", "off.yml", 0],
       ["../issue-3151/fixture", "dml-update.yml", 1],
       ["../issue-3151/fixture", "dml-delete.yml", 1],
-      ["../issue-3151-scopes/fixture", "advise.yml", 16],
-      ["../issue-3151-scopes/fixture", "report.yml", 16],
-      ["../issue-3151-scopes/fixture", "ignore.yml", 16],
+      ["../issue-3151-scopes/fixture", "advise.yml", 22],
+      ["../issue-3151-scopes/fixture", "report.yml", 31],
+      ["../issue-3151-scopes/fixture", "ignore.yml", 22],
       ["../issue-3151-scopes/fixture", "off.yml", 0],
+      ["../issue-3151-embedded/fixture", "advise.yml", 7],
+      ["../issue-3151-embedded/fixture", "report.yml", 7],
+      ["../issue-3151-embedded/fixture", "ignore.yml", 7],
+      ["../issue-3151-embedded/fixture", "off.yml", 0],
       ["../materialized-bodies/owners", "updates.yml", 3],
       ["../materialized-bodies/owners", "deletes.yml", 3],
       ["../materialized-bodies/owners", "selects.yml", 1],
@@ -112,6 +116,23 @@ test(
         assert.ok(standalone.advisories.every((row) => row.target === "materialized-body"));
         assert.deepEqual((await cjs.check({ root, config })).advisories, standalone.advisories);
       }
+      if (directory === "../issue-3151-embedded/fixture") {
+        assert.deepEqual(
+          standalone.rules.map((row) => row.file).sort(),
+          config === "off.yml"
+            ? []
+            : [
+                "distinct-bounds.ts",
+                "intervening-mutation.ts",
+                "member-bounds.ts",
+                "mutable-bounds.ts",
+                "object-binding.ts",
+                "unbounded-scalar.ts",
+                "volatile-bounds.ts",
+              ],
+        );
+        assert.deepEqual(standalone.advisories, []);
+      }
       if (directory === "../issue-3151/fixture") {
         const ordinarySites = [
           "cast-mismatch.sql:1",
@@ -183,7 +204,13 @@ test(
 
       if (directory === "../issue-3151-scopes/fixture") {
         assert.deepEqual(
-          standalone.rules.map((row) => row.file).sort(),
+          [
+            ...new Set(
+              standalone.rules
+                .filter((row) => row.target !== "materialized-body")
+                .map((row) => row.file),
+            ),
+          ].sort(),
           config === "off.yml"
             ? []
             : [
@@ -191,6 +218,12 @@ test(
                 "correlated-nonunique-control.sql",
                 "correlated-or-control.sql",
                 "correlated-volatile-control.sql",
+                "lateral-local-self-control.sql",
+                "lateral-missing-composite-half.sql",
+                "lateral-nonunique-control.sql",
+                "lateral-shadowed-enclosing-alias.sql",
+                "lateral-unbounded-driver.sql",
+                "nonlateral-sibling-control.sql",
                 "partial-missing-predicate.sql",
                 "partial-mixed-case-control.sql",
                 "partial-mixed-key-control.sql",
@@ -206,7 +239,18 @@ test(
               ],
           config,
         );
-        assert.deepEqual(standalone.advisories, [], config);
+        assert.ok(
+          standalone.advisories.every((row) =>
+            [
+              "lateral-local-self-control.sql",
+              "lateral-missing-composite-half.sql",
+              "lateral-nonunique-control.sql",
+              "lateral-shadowed-enclosing-alias.sql",
+              "nonlateral-sibling-control.sql",
+            ].includes(row.file),
+          ),
+          config,
+        );
       }
       const relationTargets = {
         "key-resolution.yml": ["table:public.ambiguous_left", "table:public.ambiguous_right"],

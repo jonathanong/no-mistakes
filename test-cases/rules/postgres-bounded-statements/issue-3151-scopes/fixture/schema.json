@@ -670,6 +670,156 @@
           ]
         }
       }
+    },
+    "notes": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "notes_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX notes_pkey ON notes (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "targets": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "placement_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "activation_revision": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "targets_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX targets_pkey ON targets (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "activations": {
+      "relationKind": "table",
+      "columns": {
+        "placement_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "placement_revision": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "state": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "placement_id",
+          "placement_revision"
+        ]
+      },
+      "indexes": {
+        "activations_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX activations_pkey ON activations (placement_id, placement_revision)",
+          "keys": [
+            {
+              "column": "placement_id",
+              "expression": "placement_id"
+            },
+            {
+              "column": "placement_revision",
+              "expression": "placement_revision"
+            }
+          ]
+        }
+      }
+    },
+    "activation_events": {
+      "relationKind": "table",
+      "columns": {
+        "placement_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "placement_revision": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "state": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      }
     }
   }
 }

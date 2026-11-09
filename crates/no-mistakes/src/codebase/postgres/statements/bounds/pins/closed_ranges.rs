@@ -30,7 +30,7 @@ pub(in super::super) fn extract_all(
     let mut ranges = BTreeMap::new();
     for expr in conjuncts {
         extract_conjunct(expr, resolver, restricted, scope, positions, out);
-        collect(expr, resolver, &mut ranges);
+        collect(expr, resolver, &mut ranges, scope, positions);
     }
     for (_, (mask, column, value)) in ranges {
         if mask == 3 {
@@ -44,13 +44,19 @@ pub(in super::super) fn extract_all(
     }
 }
 
-fn collect<'a>(expr: &'a Expr, resolver: &Resolver, ranges: &mut Ranges<'a>) {
+fn collect<'a>(
+    expr: &'a Expr,
+    resolver: &Resolver,
+    ranges: &mut Ranges<'a>,
+    scope: &Scope,
+    positions: PlaceholderPositions<'_>,
+) {
     let Expr::BinaryOp { left, op, right } = unwrap_expr(expr) else {
         return;
     };
     if *op == BinaryOperator::And {
-        collect(left, resolver, ranges);
-        collect(right, resolver, ranges);
+        collect(left, resolver, ranges, scope, positions);
+        collect(right, resolver, ranges, scope, positions);
         return;
     }
     let mask = match op {
@@ -59,7 +65,8 @@ fn collect<'a>(expr: &'a Expr, resolver: &Resolver, ranges: &mut Ranges<'a>) {
         _ => return,
     };
     for (column, value, mask) in [(left, right, mask), (right, left, 3 ^ mask)] {
-        let (Some((item, name)), Some(value_key)) = (resolver.column(column), scalar_key(value))
+        let (Some((item, name)), Some(value_key)) =
+            (resolver.column(column), scalar_key(value, scope, positions))
         else {
             continue;
         };
@@ -70,8 +77,17 @@ fn collect<'a>(expr: &'a Expr, resolver: &Resolver, ranges: &mut Ranges<'a>) {
     }
 }
 
-fn scalar_key(expr: &Expr) -> Option<String> {
+fn scalar_key(expr: &Expr, scope: &Scope, positions: PlaceholderPositions<'_>) -> Option<String> {
     match unwrap_expr(expr) {
+        Expr::Identifier(ident)
+            if positions.is_some()
+                && super::super::super::value::is_placeholder_ident_at(ident, positions) =>
+        {
+            scope
+                .bind_values
+                .get(&(ident.span.start.line as u32, ident.span.start.column as u32))
+                .map(|id| format!("binding:{id}"))
+        }
         Expr::Value(value) => match &value.value {
             Value::Placeholder(name)
                 if !name.starts_with('$')

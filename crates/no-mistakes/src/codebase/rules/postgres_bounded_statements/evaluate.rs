@@ -4,6 +4,7 @@ use crate::codebase::postgres::statements::{
     SqlBoundFact, SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
 };
 use crate::codebase::postgres::{CatalogObjectRef, SchemaCatalog};
+mod body_reads;
 mod correlated;
 mod driven;
 mod keys;

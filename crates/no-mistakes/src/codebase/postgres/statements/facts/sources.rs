@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 #[derive(Default)]
 pub(crate) struct StatementPolicySources<'a> {
+    pub(crate) bind_values: super::super::bounds::BindValues,
     pub(crate) collect_json_writes: bool,
     pub(crate) collect_index_probes: bool,
     pub(crate) collect_body_bounds: bool,
@@ -75,4 +76,17 @@ pub(super) fn policy_tokens(
                 .or_else(|| located.chunk_tokens.clone())
         })
         .collect()
+}
+
+impl StatementPolicySources<'_> {
+    pub(super) fn scope(
+        &self,
+        index: &super::super::TableTokenIndex,
+        statement: &sqlparser::ast::Statement,
+    ) -> super::super::bounds::Scope {
+        use sqlparser::ast::Spanned;
+        super::super::bounds::Scope::with_table_tokens(index.cursor_at(statement.span().start))
+            .with_bodies(self.collect_body_bounds)
+            .with_bind_values(self.bind_values.clone())
+    }
 }

@@ -1,3 +1,5 @@
+#[path = "bind_values.rs"]
+mod bind_values;
 use super::rebase::rebase_embedded_lines;
 use crate::codebase::postgres::embedded::{EmbeddedSqlFileFacts, EmbeddedSqlKind};
 use crate::codebase::postgres::statement_facts::{SqlLocationDemand, SqlStatementFileFacts};
@@ -52,7 +54,22 @@ pub(super) fn embedded_call_facts_with_json_writes(
             } else {
                 demand
             };
-            let mut facts = if conflict_only {
+            let binds = collect_bounds.then(|| bind_values::collect(&call, &file.path));
+            let mut facts = if let Some(binds) = binds.filter(|binds| !binds.is_empty()) {
+                crate::codebase::postgres::statements::extract_with_bound_values(
+                    sql,
+                    &call.recovered_placeholder_positions,
+                    projection,
+                    call.lock_scope_analysis,
+                    crate::codebase::postgres::statements::StatementPolicySources {
+                        bind_values: binds,
+                        collect_json_writes,
+                        collect_index_probes,
+                        collect_body_bounds,
+                        ..Default::default()
+                    },
+                )
+            } else if conflict_only {
                 extract_sql_conflict_policy_facts(sql, &call.recovered_placeholder_positions)
             } else if call.lock_scope_analysis {
                 crate::codebase::postgres::statements::extract_sql_lock_scope_facts(

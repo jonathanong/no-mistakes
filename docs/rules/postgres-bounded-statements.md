@@ -92,7 +92,14 @@ SELECT id FROM (SELECT id FROM posts) candidates LIMIT 20;
 A body can instead restrict every relation by an existing primary/unique-key
 proof, or by equality / `= ANY` on a reviewed `columnBounds` key. A closed range
 with the same parameter or literal on both sides (`user_id >= $2 AND user_id <= $2`)
-counts as equality for key matching. For a unique key `(group_id, user_id)`,
+counts as equality for key matching. When a trusted SQL template interpolates
+only primitive literals and unchanged parameters declared as `string`, `number`,
+`bigint`, or `boolean`, repeated reads of a parameter retain their identity.
+Different parameters, object/member reads, calls, assignments, and intervening
+effects do not establish a shared bound; use an explicit equality or a single
+stable primitive value instead. The [saved template controls](../../test-cases/rules/postgres-bounded-statements/issue-3151-embedded/)
+cover repeated parameters and the unsafe alternatives.
+For a unique key `(group_id, user_id)`,
 `group_id = $1 AND user_id >= $2 AND user_id <= $2` therefore proves a bounded
 lookup. Different bounds (`>= $2 AND <= $3`), open ranges, and halves separated
 by `OR` do not establish that equality; rewrite a lookup as `user_id = $2` or
@@ -476,7 +483,11 @@ repeat the predicate and match the indexed expression, or cap the query.
 The [saved scalar-scope controls](../../test-cases/rules/postgres-bounded-statements/issue-3151-scopes/)
 cover unqualified and LATERAL correlation, partial-index predicates, CTE limits,
 and unbounded scalar reads that must still report. The attachment fixture gives
-the outer `parent_id` lookup its own unique key to isolate the scalar proof.
+the outer `parent_id` lookup its own unique key to isolate the scalar proof. The
+partial-index control also covers a boolean scalar inside `COALESCE`, combined
+with an independent `EXISTS` in a SELECT list without an outer FROM. A nested
+LATERAL lookup may complete a composite key using columns from different
+visible ancestor rows; every key column must still have a finite source.
 
 The [saved key-proof cases](../../test-cases/rules/postgres-bounded-statements/issue-3114/)
 pair these accepted forms with still-reported controls. Each shape has a

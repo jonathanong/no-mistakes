@@ -1,0 +1,91 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "members": {
+      "relationKind": "table",
+      "columns": {
+        "group_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "role": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "removed_at": {
+          "dataType": "integer",
+          "nullable": true,
+          "ordinalPosition": 4
+        }
+      },
+      "indexes": {
+        "members_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "removed_at IS NULL",
+          "definition": "CREATE UNIQUE INDEX members_unique ON members (group_id, user_id) WHERE removed_at IS NULL",
+          "keys": [
+            {
+              "column": "group_id",
+              "expression": "group_id"
+            },
+            {
+              "column": "user_id",
+              "expression": "user_id"
+            }
+          ]
+        }
+      }
+    },
+    "notes": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "notes_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX notes_pkey ON notes (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -32,6 +32,7 @@ pub(crate) struct SqlViewReads {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SqlFunctionBounds {
+    pub bind_values: super::super::statements::BindValues,
     pub positions: Option<Vec<(u32, u32)>>,
     pub(in crate::codebase::postgres) table_tokens:
         Option<super::super::statements::TableTokenCursor>,

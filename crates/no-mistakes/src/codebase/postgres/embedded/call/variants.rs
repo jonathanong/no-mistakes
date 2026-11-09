@@ -115,6 +115,8 @@ impl EmbeddedSqlCall {
                             executor_transaction_known: self.executor_transaction_known,
                             execution_unconditional: self.execution_unconditional,
                             bound_parameters: self.bound_parameters.clone(),
+                            bound_value_origins: self.bound_value_origins.clone(),
+                            bound_value_sql: self.bound_value_sql.clone(),
                             line: self.line,
                             callee: self.callee.clone(),
                             sql_text: Some(variant.sql_text.clone()),
