@@ -1,0 +1,8 @@
+{
+  "nodes": [],
+  "root": ["arguments", 1],
+  "objects": {"1": [["arguments", 1], ["prefix", 1, "/* deleted dense */ SELECT 1", true], ["primitive"]]},
+  "extras": {"1": {"50": ["prefix", 2, "/* deleted sparse */ SELECT 2", true]}},
+  "definite": [[1, 1], [1, 50]],
+  "expected": {}
+}

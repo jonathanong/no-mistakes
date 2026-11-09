@@ -91,6 +91,9 @@ fn prepared_fixture(name: &str, names: &[&str]) -> FileIdMap<CheckFileFacts> {
 
 #[path = "tests/demand_followups.rs"]
 mod demand_followups;
+#[cfg(feature = "test-instrumentation")]
+#[path = "tests/empty_before_source.rs"]
+mod empty_before_source;
 #[path = "tests/excluded_roots.rs"]
 mod excluded_roots;
 #[path = "tests/external_roots.rs"]

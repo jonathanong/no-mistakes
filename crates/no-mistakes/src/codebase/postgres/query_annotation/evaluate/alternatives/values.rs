@@ -60,6 +60,13 @@ fn compare<const OBSERVED: bool>(
     work: &mut Option<Walk>,
 ) {
     let previous = prefixes::collect::<OBSERVED>(before, before_arena, definite, work);
+    if previous.is_empty() {
+        if let Some(work) = work.as_mut() {
+            work.after_empty_skip();
+            work.complete();
+        }
+        return;
+    }
     let current = prefixes::collect::<OBSERVED>(after, after_arena, definite, work);
     if let Some(work) = work.as_mut() {
         work.complete();

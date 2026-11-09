@@ -265,6 +265,8 @@ mod cli_postgres_executor_names;
 #[path = "cli_postgres_snapshot_fixedpoint.rs"]
 mod cli_postgres_snapshot_fixedpoint;
 
+#[path = "cli_postgres_snapshot_empty_before_prefix_source.rs"]
+mod cli_postgres_snapshot_empty_before_prefix_source;
 #[path = "cli_postgres_snapshot_identifier_aliased_guards.rs"]
 mod cli_postgres_snapshot_identifier_aliased_guards;
 #[path = "cli_postgres_snapshot_imported_builders.rs"]

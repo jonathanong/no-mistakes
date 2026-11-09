@@ -12,7 +12,8 @@ pub(in super::super) struct Walk {
     containers: u64,
     comparisons: u64,
     completed: u64,
-    published: [u64; 4],
+    after_empty_skips: u64,
+    published: [u64; 5],
 }
 
 impl Walk {
@@ -25,8 +26,13 @@ impl Walk {
             containers: 0,
             comparisons: 0,
             completed: 0,
-            published: [0; 4],
+            after_empty_skips: 0,
+            published: [0; 5],
         })
+    }
+
+    pub(super) fn after_empty_skip(&mut self) {
+        self.after_empty_skips += 1;
     }
 
     pub(super) fn comparison(&mut self) {
@@ -62,6 +68,7 @@ impl Walk {
             self.completed,
             self.nodes,
             self.containers,
+            self.after_empty_skips,
         ];
         if totals == self.published {
             return;
@@ -71,6 +78,7 @@ impl Walk {
             "postgres.annotation.prefix_walks_completed",
             "postgres.annotation.prefix_nodes",
             "postgres.annotation.prefix_containers",
+            "postgres.annotation.prefix_after_empty_skips",
         ];
         for ((name, value), previous) in names.into_iter().zip(totals).zip(self.published) {
             self.observer.increment(name, value - previous);
