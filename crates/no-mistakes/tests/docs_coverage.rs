@@ -164,7 +164,8 @@ fn review_found_doc_regressions_stay_fixed() {
         assert!(body.contains("Suppression caveat:"), "{rule_doc}");
     }
 
-    let limits = read_root("plugins/no-mistakes/skills/no-mistakes/references/limits-and-fallbacks.md");
+    let limits =
+        read_root("plugins/no-mistakes/skills/no-mistakes/references/limits-and-fallbacks.md");
     assert!(limits.contains(r#"spawn("scripts/seed.mts", [])"#));
     assert!(limits.contains("spawn(scriptName, [])"));
     assert!(limits.contains(r#"page.locator('[data-testid="submit"]').click()"#));
