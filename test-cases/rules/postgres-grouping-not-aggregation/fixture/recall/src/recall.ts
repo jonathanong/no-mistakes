@@ -99,3 +99,20 @@ export async function recursiveUnrelatedKeyAppend(id: string) {
   statement.append(sql` SELECT DISTINCT id /* CASE: append-recall-recursive-unrelated-key */ FROM posts`);
   await query(statement);
 }
+
+export async function directAnyDistinctPool(tags: string[]) {
+  await query(sql`
+    SELECT item_id /* CASE: embedded-recall-any-distinct-tag-pool */
+    FROM direct_tags
+    WHERE tag_id = ANY(${tags}::uuid[])
+    GROUP BY item_id
+    HAVING COUNT(DISTINCT tag_id) = cardinality(${tags}::uuid[])
+  `);
+}
+
+export async function directAnyDistinctPoolAppend(tags: string[]) {
+  const statement = sql`SELECT item_id /* CASE: append-recall-any-distinct-tag-pool */ FROM direct_tags `;
+  statement.append(sql`WHERE tag_id = ANY(${tags}::uuid[]) GROUP BY item_id `);
+  statement.append(sql`HAVING COUNT(DISTINCT tag_id) = cardinality(${tags}::uuid[])`);
+  await query(statement);
+}

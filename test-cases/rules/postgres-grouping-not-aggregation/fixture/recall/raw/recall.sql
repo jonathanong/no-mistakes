@@ -60,3 +60,10 @@ WITH RECURSIVE walk AS (
   SELECT p.id, p.parent_id FROM posts AS p JOIN walk AS w ON p.id = w.parent_id
 )
 SELECT DISTINCT id /* CASE: recall-recursive-unrelated-key */ FROM posts;
+
+-- COUNT(DISTINCT tag_id) counts the requested tag candidates for each item.
+SELECT item_id /* CASE: recall-any-distinct-tag-pool */
+FROM direct_tags
+WHERE tag_id = ANY($1::uuid[])
+GROUP BY item_id
+HAVING COUNT(DISTINCT tag_id) = cardinality($1::uuid[]);
