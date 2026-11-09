@@ -3,6 +3,13 @@ use oxc_ast::ast::{Argument, CallExpression, Expression, Program};
 use oxc_span::SourceType;
 use std::path::Path;
 
+#[cfg(not(test))]
+macro_rules! record_embedded_collection {
+    () => {};
+}
+#[cfg(test)]
+#[macro_use]
+mod tests;
 mod bindings;
 mod call;
 pub use call::{EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS};
@@ -39,7 +46,6 @@ pub use options::{EmbeddedSqlOptions, TrustedSqlTag};
 pub(crate) use relative::{
     package_name, package_root_for_specifier, project_relative_scoped_facts, PendingRelativeScope,
 };
-/// Parse `source` and extract executor SQL call sites.
 pub fn extract_embedded_sql_from_source(
     path: &Path,
     source: &str,
@@ -50,7 +56,6 @@ pub fn extract_embedded_sql_from_source(
     let parsed = crate::ast::parse(path, &allocator, source, source_type);
     extract_embedded_sql_from_program(path, &parsed.program, source, options)
 }
-/// Extract executor SQL call sites from an already-parsed program.
 pub fn extract_embedded_sql_from_program(
     path: &Path,
     program: &Program<'_>,
@@ -67,6 +72,7 @@ pub(crate) fn extract_embedded_sql_from_program_with_demand(
     options: &EmbeddedSqlOptions,
     head_calls_only: bool,
 ) -> EmbeddedSqlFileFacts {
+    record_embedded_collection!();
     let bindings = executor_bindings(program, options);
     let mut executor_bindings: Vec<String> = bindings
         .iter()
@@ -165,7 +171,11 @@ mod const_splice_tests;
 #[cfg(test)]
 mod default_export_constants_tests;
 #[cfg(test)]
+mod detached_tests;
+#[cfg(test)]
 mod dml_kind_tests;
+#[cfg(test)]
+mod executor_obligations_tests;
 #[cfg(test)]
 mod head_demand_tests;
 #[cfg(test)]
@@ -179,20 +189,12 @@ mod resolution_gaps_tests;
 #[cfg(test)]
 mod scoped_bindings_tests;
 #[cfg(test)]
-mod tests;
-#[cfg(test)]
 mod trusted_sql_tag_tests;
+#[cfg(test)]
+mod undeclared_tests;
 #[cfg(test)]
 #[path = "embedded/variants/tests.rs"]
 mod variants_tests;
-
-#[cfg(test)]
-mod undeclared_tests;
-
-#[cfg(test)]
-mod detached_tests;
-#[cfg(test)]
-mod executor_obligations_tests;
 
 #[cfg(test)]
 mod transaction_tests;

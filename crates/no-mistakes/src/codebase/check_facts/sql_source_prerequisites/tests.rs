@@ -100,6 +100,7 @@ fn failed_parse_and_read_preserve_planned_profile_and_application_membership() {
         assert_membership(&files, &path);
         let session = AnalysisSession::disabled();
         let variant = CheckFactVariant {
+            collect_tests: true,
             root: &root,
             plan: &plan,
             playwright: None,
@@ -136,6 +137,7 @@ fn unsupported_missing_source_is_not_a_sql_catalog_prerequisite() {
     let path = root.join("missing.json");
     let session = AnalysisSession::disabled();
     let variant = CheckFactVariant {
+        collect_tests: true,
         root: &root,
         plan: &plan,
         playwright: None,
@@ -169,7 +171,7 @@ fn unsupported_saved_source_failure_keeps_an_explicit_empty_sql_catalog() {
     assert!(facts.ts.get(&path).is_none());
     let session = AnalysisSession::disabled();
     let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&path));
-    let file = crate::codebase::check_facts::file::collect_file_facts_with_session_and_sources(
+    let file = crate::codebase::check_facts::tests::compatibility::collect_file_facts_with_session_and_sources(
         &session, &root, &path, &plan, None, &sources, false,
     )
     .unwrap();

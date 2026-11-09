@@ -1,0 +1,9 @@
+reportUnusedDisableDirectives: ignore
+effort: max
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      include: ['**/*.mts']
+      exclude: ['**/never-generated.mts']
+      importSpecifier: '@example/db'

@@ -1,7 +1,4 @@
-use super::{
-    collect_file_facts_from_program, collect_file_facts_from_source, is_mdx_file, requires_parse,
-    should_store_source,
-};
+use super::{collect_file_facts_from_source, is_mdx_file, requires_parse, should_store_source};
 use crate::codebase::check_facts::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use std::path::Path;
 use std::sync::Arc;
@@ -18,6 +15,7 @@ pub(crate) struct CheckFactVariant<'a> {
     pub(crate) root: &'a Path,
     pub(crate) plan: &'a CheckFactPlan,
     pub(crate) playwright: Option<&'a PlaywrightFactPlan>,
+    pub(crate) collect_tests: bool,
 }
 
 pub(crate) fn collect_file_fact_variants_with_session(
@@ -58,7 +56,7 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session(
             || !requires_parse(variant.root, variant.plan, path, variant.playwright)
         {
             results[index] = collect_file_facts_from_source(
-                session,
+                session.into(),
                 variant.root,
                 path,
                 variant.plan,
@@ -141,11 +139,9 @@ fn collect_variant(
         );
     }
     // Fatal parser results always carry a diagnostic and return above.
-    let mut facts = collect_file_facts_from_program(
-        variant.root,
+    let mut facts = super::collect_file_facts_from_program_with_discovery(
+        variant,
         path,
-        variant.plan,
-        variant.playwright,
         parsed_source,
         program,
         should_store_source(variant.plan, path).then(|| Arc::clone(source)),

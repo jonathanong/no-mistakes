@@ -1,19 +1,22 @@
 use super::super::file_playwright::collect_playwright_facts;
-use super::super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
+use super::super::{CheckFactPlan, CheckFileFacts};
 use super::plan::ts_extract_plan;
 use super::should_store_source;
+use super::CheckFactVariant;
 use std::path::Path;
 use std::sync::Arc;
 
-pub(crate) fn collect_file_facts_from_program(
-    root: &Path,
+pub(crate) fn collect_file_facts_from_program_with_discovery(
+    variant: &CheckFactVariant<'_>,
     path: &Path,
-    plan: &CheckFactPlan,
-    playwright: Option<&PlaywrightFactPlan>,
     source: &str,
     program: &oxc_ast::ast::Program<'_>,
     owned_source: Option<Arc<str>>,
 ) -> CheckFileFacts {
+    let root = variant.root;
+    let plan = variant.plan;
+    let playwright = variant.playwright;
+    let collect_tests = variant.collect_tests;
     let embedded_sql = prepared_embedded_sql(root, path, source, program, plan);
     let mut head_candidates = heads::candidates(plan, &embedded_sql);
     let helpers = embedded_sql
@@ -78,7 +81,14 @@ pub(crate) fn collect_file_facts_from_program(
     });
     let integration = (plan.integration
         && crate::codebase::check_facts::family_scope::applies(&plan.integration_paths, path))
-    .then(|| crate::integration_tests::analysis::analyze_program(path, program, source));
+    .then(|| {
+        crate::integration_tests::analysis::analyze_program_with_test_discovery(
+            path,
+            program,
+            source,
+            collect_tests,
+        )
+    });
     let integration_runner_config = plan
         .integration_runner_configs
         .as_ref()

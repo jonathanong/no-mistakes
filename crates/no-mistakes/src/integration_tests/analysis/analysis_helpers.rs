@@ -1,10 +1,47 @@
-use super::{binding_name, AnalysisCollector};
+use super::{binding_name, module_export_name, AnalysisCollector};
 use crate::integration_tests::calls;
 use crate::integration_tests::types::{FunctionInfo, ImportBinding, ImportedName};
-use oxc_ast::ast::{ExportDefaultDeclarationKind, Expression, ImportDeclarationSpecifier};
+use oxc_ast::ast::{
+    ExportDefaultDeclarationKind, Expression, ImportDeclarationSpecifier, Statement,
+};
 use oxc_span::{GetSpan, Span};
 
 impl AnalysisCollector<'_, '_> {
+    pub(super) fn collect_statement_summary(&mut self, statement: &Statement<'_>) {
+        match statement {
+            Statement::FunctionDeclaration(function) => {
+                if let Some(id) = &function.id {
+                    self.collect_function(
+                        id.name.as_str(),
+                        function.span(),
+                        calls::collect_function_calls(function),
+                    );
+                }
+            }
+            Statement::VariableDeclaration(declaration) => {
+                for declarator in &declaration.declarations {
+                    let Some(name) = binding_name(&declarator.id) else {
+                        continue;
+                    };
+                    self.collect_init_function(name, declarator.init.as_ref());
+                }
+            }
+            Statement::ExportNamedDeclaration(export) => {
+                for specifier in &export.specifiers {
+                    self.result.exports.insert(
+                        module_export_name(&specifier.exported),
+                        module_export_name(&specifier.local),
+                    );
+                }
+            }
+            Statement::ExportDeclaration(export) => {
+                self.collect_export_declaration(&export.declaration);
+            }
+            Statement::ExportDefaultDeclaration(export) => self.collect_default_export(export),
+            _ => {}
+        }
+    }
+
     pub(super) fn collect_import(
         &mut self,
         specifier: &ImportDeclarationSpecifier<'_>,

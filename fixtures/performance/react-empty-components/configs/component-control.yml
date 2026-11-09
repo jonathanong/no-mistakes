@@ -1,0 +1,7 @@
+reportUnusedDisableDirectives: ignore
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [source]
+      forbiddenFiles: [absent.mts]

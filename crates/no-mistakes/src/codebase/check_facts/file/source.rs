@@ -1,5 +1,5 @@
 fn collect_file_facts_from_source(
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    session: super::FactRequest<'_>,
     root: &Path,
     path: &Path,
     plan: &CheckFactPlan,
@@ -111,11 +111,14 @@ fn collect_file_facts_from_source(
                         };
                     }
                     // Fatal parser results always carry a diagnostic and return above.
-                    collect_file_facts_from_program(
-                        root,
+                    program::collect_file_facts_from_program_with_discovery(
+                        &CheckFactVariant {
+                            root,
+                            plan,
+                            playwright,
+                            collect_tests: session.collect_tests(plan, path),
+                        },
                         path,
-                        plan,
-                        playwright,
                         parsed_source,
                         program,
                         (should_store_source(plan, path)

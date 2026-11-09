@@ -91,6 +91,12 @@ and [`postgres-required-predicates`](../rules/postgres-required-predicates.md#ef
 also support `low` with the bounded SQL helper subset. Unsupported shapes follow
 the shared unanalyzable policy; selected `.sql` files retain their existing
 analysis. See the [bounded helper contract](../postgres-facts/low-helper-recovery.md).
+For eligible bounded `postgres-no-offset` source selections with
+`reportUnusedDisableDirectives: ignore`, prepared SQL facts
+start at files selected by the rule and follow only resolved import/re-export
+support recorded by extracted SQL facts. Unsupported or unrestricted SQL
+requests retain broad fact preparation; this does not change rule findings.
+See the rule's [prepared SQL scope](../rules/postgres-no-offset.md#analysis).
 [`postgres-no-test-state-mutation`](../rules/postgres-no-test-state-mutation.md#effort)
 also supports `low` for selected test SQL, bounded source helpers, and finite
 inline Vitest row selections. Complete banned statements before
@@ -213,6 +219,21 @@ string interpolation remains executable and is checked at its source line.
 The opt-in [declared-payload-compatibility](../rules/declared-payload-compatibility.md)
 rule compares explicit directional HTTP request/response and queue payload schema
 declarations. Incompatible and unproven declarations fail this check.
+
+## Integration annotation discovery
+
+When every active `tests.vitest.projects` / `tests.playwright.projects`
+integration policy declares `include`, recursive test discovery uses the union
+of those includes minus each policy's own excludes. Projects without
+`integration_suites` add no discovery demand. Imported helper summaries and
+parse errors remain available outside that scope, so narrowing does not lose
+integration annotations reached from a selected test.
+
+Runner-derived includes and invalid glob configurations retain full discovery
+and the existing diagnostic order. Nested import containers and synthetic
+callback-name collisions also retain the historical walk. Disabling all
+integration policies requests no integration facts. Other enabled rules keep
+their independently declared fact demand.
 
 ## Declared runner config evidence
 

@@ -11,6 +11,7 @@ use std::sync::{Arc, OnceLock};
 
 mod check_outcomes;
 pub(crate) mod class_ancestry;
+mod fact_discovery;
 mod intern;
 mod io;
 mod lang_facts;

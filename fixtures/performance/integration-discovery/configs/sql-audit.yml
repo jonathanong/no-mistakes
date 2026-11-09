@@ -1,0 +1,8 @@
+effort: max
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      importSpecifier: '@benchmark/db'
+      include: [selected/sql-query.mts]
+      exclude: ['selected/**/*.skip.mts']

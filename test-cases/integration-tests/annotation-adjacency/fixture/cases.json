@@ -1,0 +1,93 @@
+[
+  {
+    "name": "valid",
+    "source": "/* no-mistakes: integration=openai */function target() {}",
+    "expected": "openai",
+    "scans": 1,
+    "empty": false
+  },
+  {
+    "name": "colon",
+    "source": "/* no-mistakes: integration: aws-sdk */\nfunction target() {}",
+    "expected": "aws-sdk",
+    "scans": 1,
+    "empty": false
+  },
+  {
+    "name": "jsdoc",
+    "source": "/**\n * no-mistakes: integration=service_2\n */\nfunction target() {}",
+    "expected": "service_2",
+    "scans": 1,
+    "empty": false
+  },
+  {
+    "name": "inactive",
+    "source": "/* guardrails: integration=openai */\nfunction target() {}",
+    "expected": null,
+    "scans": 1,
+    "empty": false
+  },
+  {
+    "name": "invalid_value",
+    "source": "/* no-mistakes: integration=two words */function target() {}",
+    "expected": null,
+    "scans": 1,
+    "empty": false
+  },
+  {
+    "name": "malformed_open",
+    "source": "*/function target() {}",
+    "expected": null,
+    "scans": 1,
+    "empty": false
+  },
+  {
+    "name": "unterminated",
+    "source": "/* no-mistakes: integration=openai\nfunction target() {}",
+    "expected": null,
+    "scans": 0,
+    "empty": false
+  },
+  {
+    "name": "stale",
+    "source": "/* no-mistakes: integration=openai */\nconst stale = 1;\nfunction target() {}",
+    "expected": null,
+    "scans": 0,
+    "empty": false
+  },
+  {
+    "name": "nonadjacent",
+    "source": "/* no-mistakes: integration=openai */\n// unrelated\nfunction target() {}",
+    "expected": null,
+    "scans": 0,
+    "empty": false
+  },
+  {
+    "name": "unicode",
+    "source": "/* no-mistakes: integration=openai */  \nfunction target() {}",
+    "expected": "openai",
+    "scans": 1,
+    "empty": false
+  },
+  {
+    "name": "last_opener",
+    "source": "/* stale /* no-mistakes: integration=last */function target() {}",
+    "expected": "last",
+    "scans": 1,
+    "empty": false
+  },
+  {
+    "name": "empty_span",
+    "source": "function target() {}",
+    "expected": null,
+    "scans": 0,
+    "empty": true
+  },
+  {
+    "name": "comment_free",
+    "source": "const earlier = 1;\nfunction target() {}",
+    "expected": null,
+    "scans": 0,
+    "empty": false
+  }
+]

@@ -5,7 +5,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 pub(super) fn cached_config_file_facts(
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    session: crate::codebase::check_facts::FactRequest<'_>,
     root: &Path,
     files: &[PathBuf],
     graph_files: &[PathBuf],
@@ -28,13 +28,17 @@ pub(super) fn cached_config_file_facts(
             .filter_map(|path| {
                 let source = sources.read_path(path).ok()?;
                 let variants = [super::super::file::CheckFactVariant {
+                    collect_tests: session.collect_tests(plan, path),
                     root,
                     plan,
                     playwright: Some(playwright),
                 }];
                 let facts =
                     super::super::file::collect_file_fact_variants_from_source_with_session(
-                        session, path, source, &variants,
+                        session.session,
+                        path,
+                        source,
+                        &variants,
                     )
                     .into_iter()
                     .next()

@@ -1,3 +1,11 @@
+macro_rules! record_embedded_collection {
+    () => {
+        if let Some(observer) = $crate::diagnostics::current() {
+            observer.increment("postgres.embedded.collections", 1);
+        }
+    };
+}
+
 use super::{
     executed_query_text, executor_bindings, extract_embedded_sql_from_source, is_database_call,
     sql_text, EmbeddedSqlOptions,

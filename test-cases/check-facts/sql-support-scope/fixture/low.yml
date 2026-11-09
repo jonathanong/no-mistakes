@@ -1,0 +1,8 @@
+reportUnusedDisableDirectives: ignore
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      include: [src/**/*.mts]
+      importSpecifier: '@example/db'
+effort: low

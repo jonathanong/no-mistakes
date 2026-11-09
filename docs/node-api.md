@@ -3,6 +3,12 @@
 The `no-mistakes` npm package exposes async functions backed by the same Rust
 analysis as the CLI. Use it for repeated structured queries without subprocess overhead.
 
+`check()` and check reports in `analyzeProject()` share the CLI's
+[integration annotation discovery scope](cli/check.md#integration-annotation-discovery).
+Explicit integration-policy includes/excludes narrow test discovery while
+retaining imported helper summaries and parse diagnostics. This preparation
+change adds no invocation option, runtime export, or report field.
+
 Configured `workflow-topology-policy.options.forbiddenActivityTypes` runs through
 async `check({ root, config })` and `analyzeProject()` check reports with the same
 exact matching, event filtering, `types` key locations, custom messages, and
@@ -235,6 +241,11 @@ unanalyzable policy, source locations, suppression, and SQL verdict controls as
 the CLI. Configured SQL-template interpolations are bind values; unsupported
 shapes follow the shared policy, and raw SQL files retain their existing
 analysis. See the [bounded helper contract](postgres-facts/low-helper-recovery.md).
+For eligible bounded selections with `reportUnusedDisableDirectives: ignore`,
+the prepared SQL facts also use the same
+selected-file seeds and resolved import/re-export support closure described in
+the rule's [analysis contract](rules/postgres-no-offset.md#analysis); unsupported
+requests retain broad preparation.
 The `postgres-required-predicates` bounded-index-probe exemption also applies to
 programmatic checks: it requires configured catalog index facts, a leading-column
 equality, and the SELECT's own constant or parameter LIMIT. See the

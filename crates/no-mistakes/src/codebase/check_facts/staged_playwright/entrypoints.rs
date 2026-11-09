@@ -43,7 +43,7 @@ pub(crate) fn collect_precollected_route_facts(
     sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> CheckFactMap {
     super::collect_with_precollected_ts_sources_and_session(
-        session,
+        session.into(),
         root,
         file_scope,
         plan,

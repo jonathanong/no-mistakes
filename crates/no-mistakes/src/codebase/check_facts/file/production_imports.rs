@@ -6,7 +6,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 pub(super) fn collect(
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    session: crate::codebase::check_facts::FactRequest<'_>,
     root: &Path,
     path: &Path,
     plan: &crate::codebase::check_facts::CheckFactPlan,
@@ -16,10 +16,11 @@ pub(super) fn collect(
 ) -> Option<CheckFileFacts> {
     let result = crate::ast::with_request_parse_cache(|| {
         super::collect_file_fact_variants_from_source_with_session(
-            session,
+            session.session,
             path,
             source,
             &[CheckFactVariant {
+                collect_tests: session.collect_tests(plan, path),
                 root,
                 plan,
                 playwright,

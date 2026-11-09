@@ -210,6 +210,7 @@ fn runner_config_request_cache_reuses_program_for_graph_facts() {
         ..Default::default()
     };
     let fact_plan = RunnerConfigFactPlan {
+        integration_discovery: crate::codebase::check_facts::FamilyPathScope::All,
         root: root.clone(),
         primary_files: [path.clone()].into(),
         graph_files: Default::default(),
@@ -245,6 +246,7 @@ fn runner_config_request_cache_skips_non_js_ts_paths_for_helper_facts() {
     );
     let prepared = prepare_vitest(&root, StringOrList::One("vitest.config.mts".to_string()));
     let fact_plan = RunnerConfigFactPlan {
+        integration_discovery: crate::codebase::check_facts::FamilyPathScope::All,
         root: root.clone(),
         primary_files: [path.clone()].into(),
         graph_files: Default::default(),

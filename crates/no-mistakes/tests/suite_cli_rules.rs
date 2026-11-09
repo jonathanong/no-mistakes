@@ -3,6 +3,9 @@
 #[path = "cli_diagnostics_fallback.rs"]
 mod cli_diagnostics_fallback;
 
+#[path = "cli_check_integration_discovery.rs"]
+mod cli_check_integration_discovery;
+
 #[path = "cli_check_partial.rs"]
 mod cli_check_partial;
 #[path = "cli_check_partial_input_scope.rs"]
@@ -36,6 +39,9 @@ mod cli_shellcheck_policy;
 mod check_json_case;
 #[path = "common/check_json_snapshot.rs"]
 mod check_json_snapshot;
+
+#[path = "cli_check_react_empty_components.rs"]
+mod cli_check_react_empty_components;
 #[path = "cli_postgres_snapshot_column_check_constraints.rs"]
 mod cli_postgres_snapshot_column_check_constraints;
 #[path = "common/git_tracked_rule.rs"]

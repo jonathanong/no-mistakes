@@ -40,6 +40,11 @@ import { setupServer } from 'msw/node';
 
 ## Analysis
 
+This rule's import checks retain their own configured file demand.
+Integration annotation policies under `tests.*.projects.*.integration_suites`
+independently [scope recursive test discovery](../cli/check.md#integration-annotation-discovery);
+that scope does not filter the import facts needed by this rule.
+
 ### Effort
 
 - Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.

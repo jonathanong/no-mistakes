@@ -1,3 +1,5 @@
+pub(crate) mod compatibility;
+
 use super::{
     collect_check_facts, collect_check_facts_with_graph_files_and_playwright,
     collect_check_facts_with_playwright, CheckFactMap, CheckFactPlan, PlaywrightFactPlan,
@@ -16,7 +18,7 @@ pub(crate) fn collect_file_facts(
         path.to_path_buf(),
     ]));
     let sources = crate::codebase::ts_source::SourceStore::new(inventory);
-    super::collect_file_facts_with_session_and_sources(
+    compatibility::collect_file_facts_with_session_and_sources(
         &session, root, path, plan, playwright, &sources, false,
     )
 }

@@ -42,6 +42,7 @@ fn requested_runner_helpers_keep_union_recovered_facts_and_parse_once() {
     let helper = root.join("setup.ts");
     let requests = vec![
         BatchCheckFactRequest {
+            integration_discovery: crate::codebase::check_facts::FamilyPathScope::All,
             root: root.clone(),
             files: files.clone(),
             graph_files: Vec::new(),
@@ -56,6 +57,7 @@ fn requested_runner_helpers_keep_union_recovered_facts_and_parse_once() {
             sources: sources.clone(),
         },
         BatchCheckFactRequest {
+            integration_discovery: crate::codebase::check_facts::FamilyPathScope::All,
             root: root.clone(),
             files,
             graph_files: Vec::new(),

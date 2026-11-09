@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 pub(super) fn collect_with_scope(
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    session: crate::codebase::check_facts::FactRequest<'_>,
     root: &Path,
     file_scope: (Vec<PathBuf>, Vec<PathBuf>, bool),
     mut plan: CheckFactPlan,
@@ -18,7 +18,6 @@ pub(super) fn collect_with_scope(
         facts: precollected,
         call_sites: supplemental_call_sites,
     } = supplemental;
-    session.record_work("check.fact_collections", 1);
     let (files, graph_files, graph_files_complete) = file_scope;
     let files = plan.with_production_files(files);
     if plan.graph_context.visible_files.is_none() {
@@ -29,6 +28,40 @@ pub(super) fn collect_with_scope(
         }
         plan.graph_context.set_visible_files(visible_files);
     }
+    let sql_seeds = if crate::codebase::check_facts::sql_scope::eligible(&plan, playwright.as_ref())
+        && precollected.is_empty()
+        && supplemental_call_sites.is_empty()
+        && session
+            .existing_sources_for(root)
+            .is_some_and(|existing| Arc::ptr_eq(&existing, &sources))
+        && files
+            .iter()
+            .any(|path| crate::codebase::dependencies::extract::is_indexable(path))
+    {
+        crate::codebase::check_facts::sql_scope::seeds::single(root, &files, &plan)
+    } else {
+        None
+    };
+    if let Some(sql_seeds) = sql_seeds {
+        let mut map = crate::codebase::check_facts::batch::collect_check_fact_batch_with_sql_seeds(
+            session.session,
+            vec![crate::codebase::check_facts::batch::BatchCheckFactRequest {
+                integration_discovery: session.discovery.clone(),
+                root: root.to_path_buf(),
+                files,
+                graph_files,
+                plan,
+                playwright,
+                sources,
+            }],
+            Some(sql_seeds),
+        )
+        .pop()
+        .expect("one requested fact map");
+        map.graph_files_complete = graph_files_complete;
+        return map;
+    }
+    session.record_work("check.fact_collections", 1);
     if let Some(playwright) = playwright {
         return crate::codebase::check_facts::staged_playwright::collect_with_sources_and_session(
             session,

@@ -361,3 +361,34 @@ fn forbidden_calls_max_depth_retains_failed_barrel_prerequisites() {
         }
     }
 }
+
+#[test]
+fn forbidden_calls_selected_provider_keeps_outside_incoming_caller_support() {
+    let fixture = root("incoming-provider");
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["--jobs", "1", "check", "--root"])
+        .arg(&fixture)
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{report:#}");
+    assert_eq!(findings[0]["rule"], "forbidden-calls");
+    assert_eq!(findings[0]["file"], "src/provider.mts");
+    assert_eq!(findings[0]["line"], 1);
+    assert_eq!(findings[0]["import"], "client.get");
+    assert_eq!(
+        findings[0]["target"],
+        "module export `@vendor/valkey#primary.get`"
+    );
+    assert_saved_fixture(
+        "forbidden_calls_incoming_support",
+        &[(
+            "selected_provider",
+            fixture.clone(),
+            fixture.join(".no-mistakes.yml"),
+        )],
+    );
+}

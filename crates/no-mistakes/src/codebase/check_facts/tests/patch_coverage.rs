@@ -220,6 +220,7 @@ fn collect_file_facts_retains_prepared_runner_config_parse_errors() {
         &session,
         &file,
         &[CheckFactVariant {
+            collect_tests: true,
             root: &root,
             plan: &plan,
             playwright: None,
@@ -251,6 +252,7 @@ fn batch_collection_covers_graph_only_files() {
     let maps = collect_check_fact_batch_with_session(
         &session,
         vec![BatchCheckFactRequest {
+            integration_discovery: crate::codebase::check_facts::FamilyPathScope::All,
             root,
             files: vec![file.clone()],
             graph_files: vec![file, extra.clone()],

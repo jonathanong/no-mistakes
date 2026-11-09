@@ -11,6 +11,7 @@ fn mixed_legacy_failure_preserves_standard_diagnostic_and_rejects_symbols() {
         ..CheckFactPlan::default()
     };
     let variant = CheckFactVariant {
+        collect_tests: true,
         root,
         plan: &plan,
         playwright: None,

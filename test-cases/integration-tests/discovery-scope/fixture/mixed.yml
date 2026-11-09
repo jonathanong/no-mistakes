@@ -1,0 +1,25 @@
+tests:
+  vitest:
+    configs: []
+    projects:
+      selected:
+        include: [selected/**/*.ts]
+        exclude: [selected/excluded.ts]
+        integration_suites:
+          selected: [aws]
+  playwright:
+    configs: []
+    projects:
+      selected:
+        include: [selected/**/*.spec.ts]
+        integration_suites:
+          selected: [aws]
+rules:
+  - rule: unique-exports
+    scope: repository
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [selected/suite.test.ts]
+      forbiddenModules: [unavailable-module]
+      relationships: [import]

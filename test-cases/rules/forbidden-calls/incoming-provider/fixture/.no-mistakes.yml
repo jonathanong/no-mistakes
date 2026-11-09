@@ -1,0 +1,12 @@
+effort: max
+reportUnusedDisableDirectives: ignore
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    include: [src/provider.mts]
+    options:
+      roots: [{file: src/provider.mts}]
+      traversal: file
+      unknownCalls: ignore
+      targets:
+        - moduleExport: {module: '@vendor/valkey', export: primary.get}

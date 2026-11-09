@@ -50,7 +50,7 @@ pub(crate) fn collect(
                 let fact_files = fact_demand.primary_files(discovered);
                 let supplemental_call_site_files =
                     fact_demand.supplemental_call_site_files(&fact_files, &graph_files);
-                let facts = no_mistakes::codebase::check_facts::collect_check_facts_with_supplemental_call_sites(
+                let facts = no_mistakes::codebase::check_facts::collect_prepared_check_facts(
                     session,
                     root,
                     (fact_files, graph_files),

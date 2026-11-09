@@ -81,6 +81,16 @@ can still produce findings when another retained root reaches them. Rule-level
 `include` and `exclude` continue to filter findings after traversal; they do
 not remove traversal roots.
 
+These filters also retain the prepared graph evidence needed to resolve calls.
+For example, a selected provider can return a callback that invokes
+`client.get()`, while a caller outside `include` supplies the concrete client.
+That incoming call still determines the provider's canonical target, including
+when `unknownCalls: ignore` is set. Restricting preparation to the provider or
+its forward imports would lose the definite finding. Foreign receiver writes
+and acquisition timing can likewise change whether a selected call is known or
+unknown; their evidence remains available even when their files cannot report
+findings under this application.
+
 `traversal` is `direct`, `file`, or `transitive`; `maxDepth`
 caps the selected traversal. `direct` always stops after one call hop. Call
 cycles are finite and each distinct reachable call occurrence is reported once.

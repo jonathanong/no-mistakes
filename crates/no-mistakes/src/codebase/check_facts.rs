@@ -3,6 +3,8 @@ mod batch;
 mod collect;
 mod collect_helpers;
 mod family_scope;
+mod request;
+pub(crate) use request::FactRequest;
 mod file;
 mod file_parse_error;
 mod file_playwright;
@@ -12,6 +14,7 @@ mod playwright_facts;
 mod playwright_plan;
 mod relative_scope;
 mod runner;
+mod sql_scope;
 mod staged_playwright;
 pub(crate) use staged_playwright::{collect_precollected_route_facts, PrecollectedRouteFacts};
 pub(crate) mod sql_source_prerequisites;
@@ -102,7 +105,7 @@ pub use collect::{
     collect_check_facts_with_graph_files_playwright_and_sources,
     collect_check_facts_with_graph_files_playwright_sources_and_session,
     collect_check_facts_with_playwright, collect_check_facts_with_playwright_and_session,
-    collect_check_facts_with_supplemental_call_sites,
+    collect_check_facts_with_supplemental_call_sites, collect_prepared_check_facts,
 };
 pub(crate) use collect::{collect_check_facts_with_precollected_graph_facts, graph_only_files};
 #[doc(hidden)]
@@ -110,9 +113,7 @@ pub use family_scope::{
     configure_family_path_scopes, configure_nextjs_api_route_source_scope,
     configure_nextjs_caching_scope, FamilyPathScope,
 };
-pub(crate) use file::{
-    collect_file_facts_from_program, collect_file_facts_with_session_and_sources, is_mdx_file,
-};
+pub(crate) use file::is_mdx_file;
 pub use map::{CheckFactMap, SqlApplicationFacts, SqlFactContext};
 pub(crate) use map::{CheckFileFacts, PlaywrightTestFilesByProject};
 pub use plan::CheckFactPlan;
@@ -136,3 +137,8 @@ pub(crate) mod tests;
 
 #[cfg(test)]
 mod head_calls_only_tests;
+
+pub(crate) use family_scope::applies as discovery_applies;
+pub(crate) use file::collect_file_facts_from_program_with_discovery as file_program_with_discovery;
+
+pub(crate) use file::CheckFactVariant;

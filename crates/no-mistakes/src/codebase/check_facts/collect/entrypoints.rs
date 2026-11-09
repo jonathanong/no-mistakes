@@ -5,7 +5,9 @@ use std::sync::Arc;
 mod scope;
 mod supplemental;
 use scope::collect_with_scope;
-pub use supplemental::collect_check_facts_with_supplemental_call_sites;
+pub use supplemental::{
+    collect_check_facts_with_supplemental_call_sites, collect_prepared_check_facts,
+};
 
 pub fn collect_check_facts(root: &Path, files: Vec<PathBuf>, plan: CheckFactPlan) -> CheckFactMap {
     collect_check_facts_with_playwright(root, files, plan, None)
@@ -141,7 +143,7 @@ pub fn collect_check_facts_with_playwright_and_session(
 ) -> CheckFactMap {
     let sources = super::request_sources(&files, &[], &plan, playwright.as_ref());
     collect_with_scope(
-        session,
+        session.into(),
         root,
         (files, Vec::new(), false),
         plan,
@@ -155,7 +157,7 @@ pub fn collect_check_facts_with_playwright_and_session(
 }
 
 pub(crate) fn collect_check_facts_with_precollected_file_facts(
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    session: super::super::FactRequest<'_>,
     root: &Path,
     file_scope: (Vec<PathBuf>, Vec<PathBuf>),
     plan: CheckFactPlan,

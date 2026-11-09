@@ -18,7 +18,18 @@ pub(crate) struct FileAnalysis {
     pub(crate) components: std::sync::Arc<Vec<ComponentFacts>>,
 }
 
+#[cfg(not(test))]
+macro_rules! allow_empty_component_return {
+    () => {
+        true
+    };
+}
+#[cfg(not(test))]
+macro_rules! record_react_detail_pass {
+    () => {};
+}
 #[cfg(test)]
+#[macro_use]
 mod tests;
 
 pub(crate) fn analyze_file(abs_path: &Path, root: &Path) -> Result<FileAnalysis> {
@@ -73,6 +84,13 @@ fn analyze_program_inner(
     program: &oxc_ast::ast::Program<'_>,
     visible_files: Option<&crate::fx::PathSet>,
 ) -> FileAnalysis {
+    let component_defs = extract_components(program);
+    if component_defs.is_empty() && allow_empty_component_return!() {
+        return FileAnalysis {
+            components: Arc::new(Vec::new()),
+        };
+    }
+    record_react_detail_pass!();
     let rel_path = relative_string(root, abs_path);
 
     let components = {
@@ -99,7 +117,6 @@ fn analyze_program_inner(
             FileEnvironment::Unknown => Environment::Unknown,
         };
         let dep_strings: Vec<String> = deps.iter().map(|p| relative_string(root, p)).collect();
-        let component_defs = extract_components(program);
         let spans: Vec<oxc_span::Span> = component_defs.iter().map(|def| def.span).collect();
         let dynamic_names = traits::suspense::collect_dynamic_names_for_spans(program, &spans);
         let hits = traits::file_walk::collect_file_trait_hits(

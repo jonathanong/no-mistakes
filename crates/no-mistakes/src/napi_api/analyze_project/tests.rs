@@ -494,3 +494,6 @@ mod check_graph_ownership;
 
 #[path = "tests/postgres_executor_warnings.rs"]
 mod postgres_executor_warnings;
+
+#[path = "tests/integration_discovery.rs"]
+mod integration_discovery;

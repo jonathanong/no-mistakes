@@ -63,7 +63,7 @@ pub(super) fn extend_missing_helper_facts(
 }
 
 pub(crate) fn collect_fact_map_with_sources(
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    session: crate::codebase::check_facts::FactRequest<'_>,
     root: &Path,
     files: &[PathBuf],
     plan: &CheckFactPlan,
@@ -88,7 +88,7 @@ pub(crate) fn collect_fact_map_with_sources(
         .iter()
         .take_while(|_| crate::invocation::check_timeout().is_ok())
         .filter_map(|path| {
-            super::collect_file_facts_with_session_and_sources(
+            super::file::collect_file_facts_with_request(
                 session, root, path, plan, playwright, sources, true,
             )
             .map(|facts| (path.clone(), facts))
@@ -103,7 +103,7 @@ pub(crate) fn collect_fact_map_with_sources(
         .map(|path| {
             crate::diagnostics::with_observer(observer.clone(), || {
                 crate::invocation::check_timeout().ok().map(|()| {
-                    super::collect_file_facts_with_session_and_sources(
+                    super::file::collect_file_facts_with_request(
                         session, root, path, plan, playwright, sources, false,
                     )
                     .map(|facts| (path.clone(), facts))
@@ -118,7 +118,7 @@ pub(crate) fn collect_fact_map_with_sources(
 }
 
 pub(super) fn collect_fact_map_sequential_with_sources(
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    session: crate::codebase::check_facts::FactRequest<'_>,
     root: &Path,
     files: &[PathBuf],
     plan: &CheckFactPlan,
@@ -135,7 +135,7 @@ pub(super) fn collect_fact_map_sequential_with_sources(
         .iter()
         .take_while(|_| crate::invocation::check_timeout().is_ok())
         .filter_map(|path| {
-            super::collect_file_facts_with_session_and_sources(
+            super::file::collect_file_facts_with_request(
                 session, root, path, plan, playwright, sources, true,
             )
             .map(|facts| (path.clone(), facts))

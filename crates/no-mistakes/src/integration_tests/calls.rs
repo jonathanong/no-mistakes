@@ -5,6 +5,13 @@ use oxc_ast_visit::Visit;
 use oxc_span::Span;
 
 mod visitor;
+#[cfg(not(test))]
+macro_rules! record_annotation_prefix_scan {
+    () => {};
+}
+#[cfg(test)]
+#[macro_use]
+mod tests;
 use visitor::CallCollector;
 
 pub(super) fn callback_argument<'a>(
@@ -104,14 +111,10 @@ pub(super) fn collect_arrow_calls(function: &ArrowFunctionExpression<'_>) -> Vec
 
 pub(super) fn integration_annotation_before(source: &str, span: Span) -> Option<String> {
     let prefix = source.get(..span.start as usize)?;
-    let trimmed_len = prefix.trim_end().len();
-    let trimmed = &prefix[..trimmed_len];
-    let end = trimmed.rfind("*/")?;
-    if end + 2 != trimmed.len() {
-        return None;
-    }
-    let start = trimmed[..end].rfind("/*")?;
-    let body = normalize_block_comment(&trimmed[start + 2..end]);
+    let adjacent = prefix.trim_end().strip_suffix("*/")?;
+    record_annotation_prefix_scan!();
+    let start = adjacent.rfind("/*")?;
+    let body = normalize_block_comment(&adjacent[start + 2..]);
     let directive = body.trim();
     let rest = directive.strip_prefix("no-mistakes:")?.trim();
     let value = rest

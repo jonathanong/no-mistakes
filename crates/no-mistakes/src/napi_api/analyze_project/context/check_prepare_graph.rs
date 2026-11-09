@@ -1,9 +1,17 @@
-fn configure_shared_family_scopes(
-    root: &Path,
+fn configure_scopes(
+    context: (&crate::codebase::analysis_session::AnalysisSession, &Path),
     prepared: &crate::check_runner::prepared::PreparedCheckInputs,
     config: &crate::config::v2::NoMistakesConfig,
     plan: &mut crate::codebase::check_facts::CheckFactPlan,
 ) -> Result<()> {
+    let (session, root) = context;
+    if plan.integration {
+        session.prepare_integration_fact_discovery(
+            root,
+            prepared.visible_paths.paths_for(root).as_ref(),
+            config,
+        );
+    }
     crate::codebase::check_facts::configure_family_path_scopes(
         root,
         prepared.visible_paths.paths_for(root).as_ref(),

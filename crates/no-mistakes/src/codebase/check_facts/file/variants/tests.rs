@@ -35,6 +35,7 @@ fn collect(root: &Path, path: &Path) -> Vec<Option<super::super::CheckFileFacts>
     let variants = plans
         .iter()
         .map(|plan| CheckFactVariant {
+            collect_tests: true,
             root,
             plan,
             playwright: None,
@@ -110,6 +111,7 @@ fn batch_legacy_failures_preserve_requested_boundary_facts() {
     let variants = plans
         .iter()
         .map(|plan| CheckFactVariant {
+            collect_tests: true,
             root: &root,
             plan,
             playwright: None,
@@ -151,6 +153,7 @@ fn unknown_extension_production_import_does_not_retain_unselected_raw_source() {
         &crate::codebase::analysis_session::AnalysisSession::disabled(),
         &path,
         &[CheckFactVariant {
+            collect_tests: true,
             root: &root,
             plan: &plan,
             playwright: None,
@@ -179,6 +182,7 @@ fn recovered_legacy_variant_keeps_symbols_and_source() {
     let facts = super::errors::recovered_error_facts(
         &path,
         &CheckFactVariant {
+            collect_tests: true,
             root: &root,
             plan: &plan,
             playwright: None,

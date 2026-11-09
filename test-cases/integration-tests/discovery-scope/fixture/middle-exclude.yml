@@ -1,0 +1,12 @@
+tests:
+  vitest:
+    configs: []
+    projects:
+      all:
+        include: ['**/*']
+        # Preserve matched paths before and after the first excluded helper.
+        exclude: [helpers/dependency.ts]
+        integration_suites:
+          external: [aws]
+  playwright:
+    configs: []

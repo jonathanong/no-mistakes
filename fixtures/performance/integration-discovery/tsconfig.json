@@ -1,0 +1,1 @@
+{"compilerOptions":{"baseUrl":".","paths":{"@sql/*":["sql-support/*"]}}}
