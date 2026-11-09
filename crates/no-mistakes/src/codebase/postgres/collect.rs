@@ -115,7 +115,11 @@ pub fn collect_postgres_facts(
             schema_options,
             &embedded,
             plan.postgres_bounds,
-            plan.postgres_json_writes,
+            crate::codebase::postgres::statements::StatementPolicySources {
+                collect_json_writes: plan.postgres_json_writes,
+                collect_grouping: plan.postgres_grouping,
+                ..Default::default()
+            },
         )?
     } else {
         Vec::new()

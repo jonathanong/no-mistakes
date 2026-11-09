@@ -96,6 +96,7 @@ pub(super) fn collect(
                                 schema: schema.as_ref().and_then(|entry| entry.as_ref().ok()).map(std::sync::Arc::as_ref),
                                 functions,
                                 collect_json_writes: plan.postgres_json_writes,
+                                collect_grouping: plan.postgres_grouping,
                                 collect_index_probes: plan.postgres_index_probes,
                                 collect_body_bounds: plan.postgres_body_bounds,
                             },

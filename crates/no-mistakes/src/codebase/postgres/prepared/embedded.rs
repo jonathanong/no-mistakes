@@ -60,16 +60,19 @@ pub(super) fn collect(
                     if let Some(observer) = &observer {
                         observer.increment("postgres.prepared.statement_projections", 1);
                     }
-                    let statements =
-                        super::super::collect::dml::embedded_call_facts_with_json_writes(
-                            file,
-                            plan.postgres_bounds,
-                            !plan.postgres_dml,
-                            demand,
-                            plan.postgres_json_writes,
-                            plan.postgres_index_probes,
-                            plan.postgres_body_bounds,
-                        );
+                    let statements = super::super::collect::dml::embedded_call_facts_with_policy(
+                        file,
+                        plan.postgres_bounds,
+                        !plan.postgres_dml,
+                        demand,
+                        crate::codebase::postgres::statements::StatementPolicySources {
+                            collect_json_writes: plan.postgres_json_writes,
+                            collect_index_probes: plan.postgres_index_probes,
+                            collect_body_bounds: plan.postgres_body_bounds,
+                            collect_grouping: plan.postgres_grouping,
+                            ..Default::default()
+                        },
+                    );
                     if let Some(observer) = &observer {
                         observer.increment(
                             "postgres.prepared.statement_records",

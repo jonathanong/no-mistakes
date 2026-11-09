@@ -3,6 +3,7 @@ use std::cell::Cell;
 #[derive(Clone, Copy, Default, Debug)]
 pub(crate) struct Counts {
     pub json_key_walks: usize,
+    pub grouping_roots: usize,
     pub full_walks: usize,
     pub general_fact_collections: usize,
     pub statement_extractions: usize,
@@ -44,4 +45,8 @@ pub(crate) fn general_fact_collection() {
 
 pub(crate) fn json_key_walk() {
     record(|counts| counts.json_key_walks += 1);
+}
+
+pub(crate) fn grouping_root() {
+    record(|counts| counts.grouping_roots += 1);
 }

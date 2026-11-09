@@ -2,7 +2,9 @@ use super::{compile_sql_include, matches_sql_include};
 use crate::codebase::postgres::embedded::EmbeddedSqlFileFacts;
 use crate::codebase::postgres::statement_facts::SqlLocationDemand;
 use crate::codebase::postgres::statement_facts::SqlStatementFileFacts;
-use crate::codebase::postgres::statements::extract_sql_statement_facts_with_json_writes;
+use crate::codebase::postgres::statements::{
+    extract_sql_statement_facts_with_policy, StatementPolicySources,
+};
 use crate::codebase::postgres::types::{PostgresFactError, PostgresSchemaOptions};
 use crate::codebase::ts_source::SourceStore;
 use rayon::prelude::*;
@@ -15,7 +17,7 @@ pub(super) fn collect(
     schema_options: &PostgresSchemaOptions,
     embedded: &[EmbeddedSqlFileFacts],
     collect_bounds: bool,
-    collect_json_writes: bool,
+    policy: StatementPolicySources<'_>,
 ) -> Result<Vec<SqlStatementFileFacts>, PostgresFactError> {
     let globs = compile_sql_include(&schema_options.sql_include)?;
     let mut facts = files
@@ -34,13 +36,12 @@ pub(super) fn collect(
                     ))
                 }
             };
-            let mut file = extract_sql_statement_facts_with_json_writes(
+            let mut file = extract_sql_statement_facts_with_policy(
                 &source,
                 collect_bounds,
                 None,
                 SqlLocationDemand::None,
-                collect_json_writes,
-                false,
+                policy.clone(),
                 false,
             );
             file.path = path.clone();
@@ -48,15 +49,17 @@ pub(super) fn collect(
         })
         .collect::<Result<Vec<_>, _>>()?;
     for file in embedded {
-        facts.extend(if collect_json_writes {
-            embedded_call_facts_with_json_writes(
+        facts.extend(if policy.collect_grouping || policy.collect_json_writes {
+            embedded_call_facts_with_policy(
                 file,
                 collect_bounds,
                 false,
-                SqlLocationDemand::None,
-                true,
-                false,
-                false,
+                if policy.collect_grouping {
+                    SqlLocationDemand::Full
+                } else {
+                    SqlLocationDemand::None
+                },
+                policy.clone(),
             )
         } else {
             embedded_call_facts(file, collect_bounds, false)
@@ -118,14 +121,17 @@ pub(crate) fn embedded_call_facts_with_json_writes(
     collect_index_probes: bool,
     collect_body_bounds: bool,
 ) -> Vec<SqlStatementFileFacts> {
-    embedded::embedded_call_facts_with_json_writes(
+    embedded_call_facts_with_policy(
         file,
         collect_bounds,
         variants_only,
         demand,
-        collect_json_writes,
-        collect_index_probes,
-        collect_body_bounds,
+        crate::codebase::postgres::statements::StatementPolicySources {
+            collect_json_writes,
+            collect_index_probes,
+            collect_body_bounds,
+            ..Default::default()
+        },
     )
 }
 
@@ -136,3 +142,13 @@ pub(crate) use rebase::rebase_embedded_lines;
 
 #[cfg(test)]
 mod tests;
+
+pub(crate) fn embedded_call_facts_with_policy(
+    file: &EmbeddedSqlFileFacts,
+    collect_bounds: bool,
+    variants_only: bool,
+    demand: SqlLocationDemand,
+    policy: crate::codebase::postgres::statements::StatementPolicySources<'_>,
+) -> Vec<SqlStatementFileFacts> {
+    embedded::embedded_call_facts_with_policy(file, collect_bounds, variants_only, demand, policy)
+}

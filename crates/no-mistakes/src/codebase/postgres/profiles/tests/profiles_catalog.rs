@@ -42,7 +42,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-no-test-state-mutation",
             "postgres-bounded-statements",
             "postgres-no-offset",
-        "postgres-no-transformed-uuid-predicates",
+            "postgres-no-transformed-uuid-predicates",
             "postgres-no-mutable-sql-registry",
             "postgres-no-unbounded-sql-identifier",
             "postgres-sql-shape-policy",
@@ -50,6 +50,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-no-generated-column-writes",
             "postgres-require-query-annotation",
             "postgres-json-relation-ids",
+            "postgres-grouping-not-aggregation",
         ]
     );
     assert_eq!(
@@ -74,6 +75,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-explicit-columns",
             "postgres-bounded-statements",
             "postgres-json-relation-ids",
+            "postgres-grouping-not-aggregation",
         ]
     );
 }

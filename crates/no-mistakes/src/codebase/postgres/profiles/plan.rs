@@ -135,27 +135,16 @@ pub fn configure_prepared_postgres_plan(
         "postgres-sql-shape-policy",
         "postgres-no-generated-column-writes",
         "postgres-json-relation-ids",
+        "postgres-grouping-not-aggregation",
     ];
     plan.postgres_dml |= dml_rules
         .iter()
         .any(|id| !config.rule_applications(id).is_empty())
         || !configured_embedded_sql_options(config, &["postgres-sql-statement-policy"])?.is_empty();
-    plan.postgres_bounds |= !config
-        .rule_applications("postgres-bounded-statements")
-        .is_empty();
-    configure_body_bounds(config, plan);
-    plan.postgres_index_probes |= !config
-        .rule_applications("postgres-required-predicates")
-        .is_empty();
-    plan.postgres_json_writes |= config
-        .rule_applications("postgres-json-relation-ids")
-        .iter()
-        .any(|rule| rule.options.get("idKeyPattern").is_some());
-    plan.postgres_fragments |= !config
-        .rule_applications("postgres-sql-shape-policy")
-        .is_empty();
+    projections::configure(config, plan);
     let schema_rules = [
         "postgres-no-transformed-uuid-predicates",
+        "postgres-grouping-not-aggregation",
         "postgres-idempotent-insert",
         "postgres-generated-column-predicates",
         "postgres-no-generated-column-writes",
@@ -198,3 +187,6 @@ pub fn configure_prepared_postgres_plan(
 }
 mod write_patterns;
 pub(super) use write_patterns::write_patterns;
+
+mod projections;
+pub(super) use projections::grouping_requested;

@@ -1,10 +1,11 @@
 use sqlparser::tokenizer::TokenWithSpan;
 use std::sync::Arc;
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(crate) struct StatementPolicySources<'a> {
     pub(crate) bind_values: super::super::bounds::BindValues,
     pub(crate) collect_json_writes: bool,
+    pub(crate) collect_grouping: bool,
     pub(crate) collect_index_probes: bool,
     pub(crate) collect_body_bounds: bool,
     pub(crate) tokens: Option<&'a [Option<Arc<[TokenWithSpan]>>]>,
