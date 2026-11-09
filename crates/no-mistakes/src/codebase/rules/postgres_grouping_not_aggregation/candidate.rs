@@ -49,7 +49,7 @@ pub(super) fn matches(select: &Select, catalog: &CatalogScope<'_>) -> bool {
         return false;
     }
     match &from.relation {
-        TableFactor::Derived { subquery, alias, .. } if alias.as_ref().is_none_or(|alias| alias.columns.is_empty()) => union_pool(&subquery.body, catalog),
+        TableFactor::Derived { subquery, alias, .. } if alias.as_ref().is_none_or(|alias| alias.columns.is_empty()) => catalog.in_query(subquery, |scope| union_pool(&subquery.body, scope)),
         factor => walk::relation(factor).is_some_and(|relation| catalog.relation(&relation.name).is_some()
             && conjuncts(select.selection.as_ref()).iter().any(|predicate| matches!(predicate,
                 Expr::AnyOp { left, compare_op: BinaryOperator::Eq, right, .. } if column(left).is_some_and(|(_, name)| counted.as_ref().is_none_or(|(_, counted)| *counted == name)) && !catalog.parameter(left) && array_parameter(right, catalog)))),
@@ -64,13 +64,16 @@ fn union_pool(body: &SetExpr, catalog: &CatalogScope<'_>) -> bool {
             ..
         } => arm(left, catalog) && arm(right, catalog),
         SetExpr::Query(query) if query.limit_clause.is_none() && query.fetch.is_none() => {
-            union_pool(&query.body, catalog)
+            catalog.in_query(query, |scope| union_pool(&query.body, scope))
         }
         _ => false,
     }
 }
 fn arm(body: &SetExpr, catalog: &CatalogScope<'_>) -> bool {
     match body {
+        SetExpr::Query(query) if query.limit_clause.is_none() && query.fetch.is_none() => {
+            catalog.in_query(query, |scope| arm(&query.body, scope))
+        }
         SetExpr::Select(select) => walk::table_columns(select).is_some_and(|relations| {
             relations
                 .iter()

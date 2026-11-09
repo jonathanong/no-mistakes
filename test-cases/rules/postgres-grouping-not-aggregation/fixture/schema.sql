@@ -56,3 +56,5 @@ CREATE TABLE ratings (
   topic_id uuid NOT NULL,
   score integer NOT NULL
 );
+
+CREATE TABLE nullable_equal_slugs (slug text UNIQUE NULLS NOT DISTINCT);

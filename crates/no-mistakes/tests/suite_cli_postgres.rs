@@ -297,3 +297,6 @@ mod cli_postgres_snapshot_grouping_review;
 mod cli_postgres_snapshot_grouping_parameter_collision;
 #[path = "cli_postgres_snapshot_grouping_recovery.rs"]
 mod cli_postgres_snapshot_grouping_recovery;
+
+#[path = "cli_postgres_snapshot_grouping_coverage.rs"]
+mod cli_postgres_snapshot_grouping_coverage;

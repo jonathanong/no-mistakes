@@ -112,30 +112,37 @@ pub(super) fn outer(
 }
 
 pub(super) fn arms(body: &SetExpr, scope: &super::scope::CatalogScope<'_>, out: &mut Vec<Finding>) {
-    if let SetExpr::SetOperation {
-        op: SetOperator::Union,
-        set_quantifier: SetQuantifier::None | SetQuantifier::Distinct,
-        left,
-        right,
-    } = body
-    {
-        for arm in [left.as_ref(), right.as_ref()] {
-            match arm {
-                SetExpr::Select(select)
-                    if select.distinct == Some(Distinct::Distinct)
-                        && super::evidence::catalogued(select, scope) =>
-                {
-                    out.push(finding(
-                        select,
-                        "distinct-over-union",
-                        "UNION removes duplicate arm rows; remove the redundant arm DISTINCT",
-                    ))
-                }
-                SetExpr::Query(query) if query.limit_clause.is_none() && query.fetch.is_none() => {
-                    arms(&query.body, scope, out)
-                }
-                _ => arms(arm, scope, out),
-            }
+    match body {
+        SetExpr::SetOperation {
+            op: SetOperator::Union,
+            set_quantifier: SetQuantifier::None | SetQuantifier::Distinct,
+            left,
+            right,
+        } => {
+            arm(left, scope, out);
+            arm(right, scope, out);
         }
+        SetExpr::Query(query) if query.limit_clause.is_none() && query.fetch.is_none() => {
+            scope.in_query(query, |scope| arms(&query.body, scope, out))
+        }
+        _ => {}
+    }
+}
+fn arm(body: &SetExpr, scope: &super::scope::CatalogScope<'_>, out: &mut Vec<Finding>) {
+    match body {
+        SetExpr::Select(select)
+            if select.distinct == Some(Distinct::Distinct)
+                && super::evidence::catalogued(select, scope) =>
+        {
+            out.push(finding(
+                select,
+                "distinct-over-union",
+                "UNION removes duplicate arm rows; remove the redundant arm DISTINCT",
+            ))
+        }
+        SetExpr::Query(query) if query.limit_clause.is_none() && query.fetch.is_none() => {
+            scope.in_query(query, |scope| arm(&query.body, scope, out))
+        }
+        _ => arms(body, scope, out),
     }
 }

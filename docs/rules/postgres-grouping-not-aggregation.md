@@ -40,6 +40,10 @@ not a general predicate-implication solver. For example, `WHERE deleted_at IS
 NULL` can prove that partial predicate, while `WHERE deleted_at IS NULL OR
 other_condition` cannot. Unknown relations, ambiguous ownership, incomplete SQL,
 and unsupported expressions are left silent when the necessary proof is unavailable.
+CTE names follow their query scope: a local CTE never borrows facts from a
+same-named table. Non-recursive definitions see only earlier CTEs, so later
+declarations do not hide physical tables. Schema-qualified physical table
+references retain their catalog facts.
 
 The rule analyzes selected raw SQL and statically recovered SQL passed to configured
 executors, including template literals and `.append` fragments. It borrows the
@@ -78,6 +82,8 @@ SELECT DISTINCT post_id FROM post_topics WHERE topic_id = $1;
 Fix: drop `DISTINCT`; equality pins the other key column. The same proof can
 apply to `DISTINCT ON`, grouping keys, or a distinct aggregate. A partial unique
 index requires its predicate to be proven by an exact supported query conjunct.
+A redundant row `DISTINCT` over grouping sets, `ROLLUP`, or `CUBE` can be removed
+while retaining `GROUP BY` and its subtotal rows.
 Nullable unique keys also need non-null proof unless the index declares `NULLS
 NOT DISTINCT`; ordinary uniqueness permits repeated NULL values.
 For `COUNT(DISTINCT expression)`, repeated NULL values do not prevent dropping

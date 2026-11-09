@@ -1,0 +1,42 @@
+[
+  {
+    "file": "proof-controls/raw/existence-filters.sql",
+    "marker": "CASE nested-count",
+    "code": "aggregate-existence-test"
+  },
+  {
+    "file": "proof-controls/raw/existence-filters.sql",
+    "marker": "CASE nonnull-guard",
+    "code": "aggregate-existence-test"
+  },
+  {
+    "file": "proof-controls/raw/existence-filters.sql",
+    "marker": "CASE reversed-count",
+    "code": "aggregate-existence-test"
+  },
+  {
+    "file": "proof-controls/raw/existence-filters.sql",
+    "marker": "CASE any-distinct-filter",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/src/existence-filters.ts",
+    "marker": "CASE nested-count",
+    "code": "aggregate-existence-test"
+  },
+  {
+    "file": "proof-controls/src/existence-filters.ts",
+    "marker": "CASE nonnull-guard",
+    "code": "aggregate-existence-test"
+  },
+  {
+    "file": "proof-controls/src/existence-filters.ts",
+    "marker": "CASE reversed-count",
+    "code": "aggregate-existence-test"
+  },
+  {
+    "file": "proof-controls/src/existence-filters.ts",
+    "marker": "CASE any-distinct-filter",
+    "code": "distinct-join-filter"
+  }
+]

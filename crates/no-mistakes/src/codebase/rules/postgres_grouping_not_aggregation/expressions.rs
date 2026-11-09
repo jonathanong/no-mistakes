@@ -65,8 +65,32 @@ pub(super) fn args(function: &Function) -> Option<&FunctionArgumentList> {
     }
     match &function.args {
         FunctionArguments::List(args) if args.clauses.is_empty() => Some(args),
+        FunctionArguments::List(args) if count_ordering_matches(function, args) => Some(args),
         _ => None,
     }
+}
+pub(super) fn count_ordering_matches(function: &Function, args: &FunctionArgumentList) -> bool {
+    if !function.name.to_string().eq_ignore_ascii_case("count")
+        || args.duplicate_treatment != Some(DuplicateTreatment::Distinct)
+    {
+        return false;
+    }
+    let [FunctionArg::Unnamed(FunctionArgExpr::Expr(argument))] = args.args.as_slice() else {
+        return false;
+    };
+    let Some(argument) = column(argument) else {
+        return false;
+    };
+    !args.clauses.is_empty()
+        && args.clauses.iter().all(|clause| match clause {
+            FunctionArgumentClause::OrderBy(ordering) => {
+                !ordering.is_empty()
+                    && ordering
+                        .iter()
+                        .all(|item| column(&item.expr) == Some(argument.clone()))
+            }
+            _ => false,
+        })
 }
 pub(super) fn function<'a>(expr: &'a Expr, name: &str) -> Option<&'a Function> {
     match bare(expr) {

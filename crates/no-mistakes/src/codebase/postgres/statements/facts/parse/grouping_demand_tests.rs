@@ -143,3 +143,24 @@ fn generated_parameter_sites_are_exact_shared_and_opt_in() {
         assert_eq!(identifiers, [(line, 8, false), (line, 48, true)]);
     }
 }
+
+#[test]
+fn grouping_facts_survive_shared_body_and_lock_projections() {
+    let expected = extract(true).grouping_queries;
+    for lock_scope in [false, true] {
+        let facts = extract_sql_statement_facts_with_policy(
+            SQL,
+            false,
+            None,
+            SqlLocationDemand::Full,
+            StatementPolicySources {
+                collect_grouping: true,
+                collect_body_bounds: true,
+                ..Default::default()
+            },
+            lock_scope,
+        );
+        assert!(!facts.parse_failed);
+        assert_eq!(facts.grouping_queries, expected);
+    }
+}

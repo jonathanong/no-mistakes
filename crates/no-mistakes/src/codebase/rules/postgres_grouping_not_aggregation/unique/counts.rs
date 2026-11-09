@@ -25,7 +25,10 @@ pub(super) fn arguments(select: &Select) -> Vec<Expr> {
                 {
                     if let FunctionArguments::List(args) = &function.args {
                         if args.duplicate_treatment == Some(DuplicateTreatment::Distinct)
-                            && args.clauses.is_empty()
+                            && (args.clauses.is_empty()
+                                || super::super::expressions::count_ordering_matches(
+                                    function, args,
+                                ))
                         {
                             if let [FunctionArg::Unnamed(FunctionArgExpr::Expr(expr))] =
                                 args.args.as_slice()

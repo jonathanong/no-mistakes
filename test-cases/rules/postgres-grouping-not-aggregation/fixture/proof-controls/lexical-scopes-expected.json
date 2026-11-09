@@ -1,0 +1,62 @@
+[
+  {
+    "file": "proof-controls/raw/lexical-scopes.sql",
+    "marker": "scope-candidate-unrelated-with",
+    "code": "all-of-candidate-pool"
+  },
+  {
+    "file": "proof-controls/src/lexical-scopes.ts",
+    "marker": "scope-candidate-unrelated-with",
+    "code": "all-of-candidate-pool"
+  },
+  {
+    "file": "proof-controls/raw/lexical-scopes.sql",
+    "marker": "scope-candidate-qualified-physical",
+    "code": "all-of-candidate-pool"
+  },
+  {
+    "file": "proof-controls/src/lexical-scopes.ts",
+    "marker": "scope-candidate-qualified-physical",
+    "code": "all-of-candidate-pool"
+  },
+  {
+    "file": "proof-controls/raw/lexical-scopes.sql",
+    "marker": "scope-union-arm-unrelated-with",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "proof-controls/src/lexical-scopes.ts",
+    "marker": "scope-union-arm-unrelated-with",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "proof-controls/raw/lexical-scopes.sql",
+    "marker": "scope-union-outer-qualified-physical",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "proof-controls/src/lexical-scopes.ts",
+    "marker": "scope-union-outer-qualified-physical",
+    "code": "distinct-over-union"
+  },
+  {
+    "file": "proof-controls/raw/lexical-scopes.sql",
+    "marker": "scope-membership-unrelated-with",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/src/lexical-scopes.ts",
+    "marker": "scope-membership-unrelated-with",
+    "code": "distinct-join-filter"
+  },
+  {
+    "file": "proof-controls/raw/lexical-scopes.sql",
+    "marker": "scope-scalar-unrelated-with",
+    "code": "aggregate-existence-test"
+  },
+  {
+    "file": "proof-controls/src/lexical-scopes.ts",
+    "marker": "scope-scalar-unrelated-with",
+    "code": "aggregate-existence-test"
+  }
+]

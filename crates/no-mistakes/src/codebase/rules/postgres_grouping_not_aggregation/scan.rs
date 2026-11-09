@@ -41,9 +41,11 @@ fn scan_file(
     for statement in statements {
         for (query_index, query) in statement.grouping_queries.iter().enumerate() {
             for finding in analyze::query(&query.query, catalog, &query.parameter_sites) {
-                let Some(site) = query.sites.iter().position(|site| *site == finding.site) else {
-                    continue;
-                };
+                let site = query
+                    .sites
+                    .iter()
+                    .position(|site| *site == finding.site)
+                    .expect("grouping query owns every recognized SELECT site");
                 let line = finding.site.0.max(1);
                 let site = SqlFactSite::Grouping(query_index, site);
                 let column = column::label(
@@ -77,3 +79,6 @@ fn scan_file(
     }
     Ok(findings)
 }
+
+#[cfg(test)]
+mod tests;

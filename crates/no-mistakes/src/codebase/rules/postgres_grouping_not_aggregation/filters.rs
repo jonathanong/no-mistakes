@@ -8,6 +8,7 @@ use std::collections::BTreeSet;
 use std::ops::ControlFlow;
 mod consumers;
 mod fanout;
+mod references;
 use fanout::fanout;
 mod join_keys;
 pub(super) use consumers::cte_consumers;
@@ -20,9 +21,9 @@ pub(super) fn select_filters(
 ) {
     for from in &select.from {
         for join in &from.joins {
-            if walk::on(join).is_none() {
+            let Some(on) = walk::on(join) else {
                 continue;
-            }
+            };
             let TableFactor::Derived {
                 subquery,
                 alias: Some(alias),
@@ -44,7 +45,7 @@ pub(super) fn select_filters(
                 || names
                     .iter()
                     .any(|col| order_owners.contains(&format!(":{col}")))
-                || !join_covers(join, subquery, &name)
+                || !join_covers(inner, on, &name)
             {
                 continue;
             }
@@ -73,11 +74,7 @@ pub(super) fn select_filters(
             {
                 continue;
             }
-            if walk::table_columns(inner).is_some_and(|relations| {
-                relations
-                    .iter()
-                    .all(|r| catalog.relation(&r.name).is_some())
-            }) {
+            if super::evidence::catalogued(subquery.as_ref(), catalog) {
                 out.push(finding(inner, "distinct-join-filter", "joined DISTINCT rows are used only to test membership; replace the filter join with EXISTS"));
             }
         }
@@ -88,7 +85,7 @@ pub(super) fn select_filters(
                 if inner.distinct == Some(Distinct::Distinct)
                     && query.limit_clause.is_none()
                     && query.fetch.is_none()
-                    && super::evidence::catalogued(inner, catalog)
+                    && super::evidence::catalogued(query, catalog)
                 {
                     out.push(finding(inner, "distinct-join-filter", "duplicates do not affect membership or existence; remove DISTINCT from the membership subquery"));
                 }

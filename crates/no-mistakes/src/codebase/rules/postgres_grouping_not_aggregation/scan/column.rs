@@ -34,3 +34,6 @@ pub(super) fn label(
     }
     Ok(format!("SQL column {sql_column}"))
 }
+
+#[cfg(test)]
+mod tests;

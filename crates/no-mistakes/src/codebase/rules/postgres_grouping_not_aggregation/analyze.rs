@@ -1,3 +1,5 @@
+mod lineage;
+use super::scope::definitions;
 use super::{candidate, existence, filters, union, unique};
 use crate::codebase::postgres::SchemaCatalog;
 use sqlparser::ast::*;
@@ -28,6 +30,8 @@ pub(super) fn query(
         recursive: Vec<bool>,
         shadowed: Vec<std::collections::BTreeSet<String>>,
         ctes: Vec<BTreeMap<String, union::Columns>>,
+        definition_names: definitions::Names,
+        definition_ctes: lineage::Overrides,
         order_owners: Vec<std::collections::BTreeSet<String>>,
         out: Vec<Finding>,
     }
@@ -37,32 +41,27 @@ pub(super) fn query(
             let recursive = self.recursive.last().copied().unwrap_or(false)
                 || query.with.as_ref().is_some_and(|with| with.recursive);
             self.recursive.push(recursive);
-            let mut shadowed = self.shadowed.last().cloned().unwrap_or_default();
-            if let Some(with) = &query.with {
-                for cte in &with.cte_tables {
-                    shadowed.insert(super::expressions::ident(&cte.alias.name));
-                }
-            }
+            let shadowed =
+                definitions::enter(query, self.shadowed.last(), &mut self.definition_names);
             self.shadowed.push(shadowed);
-            let mut ctes = self.ctes.last().cloned().unwrap_or_default();
+            let inherited_ctes = self
+                .definition_ctes
+                .remove(&definitions::key(query))
+                .unwrap_or_else(|| self.ctes.last().cloned().unwrap_or_default());
+            let scope = super::scope::CatalogScope {
+                catalog: self.catalog,
+                parameters: self.parameters,
+                shadowed: self.shadowed.last().unwrap(),
+            };
+            let ctes = lineage::projections(
+                query,
+                &scope,
+                recursive,
+                inherited_ctes,
+                &self.definition_names,
+                &mut self.definition_ctes,
+            );
             if !recursive {
-                if let Some(with) = &query.with {
-                    for cte in &with.cte_tables {
-                        ctes.remove(&super::expressions::ident(&cte.alias.name));
-                        if let Some(columns) = union::columns(&cte.query).filter(|_| {
-                            super::evidence::catalogued(
-                                &cte.query,
-                                &super::scope::CatalogScope {
-                                    catalog: self.catalog,
-                                    parameters: self.parameters,
-                                    shadowed: self.shadowed.last().unwrap(),
-                                },
-                            )
-                        }) {
-                            ctes.insert(super::expressions::ident(&cte.alias.name), columns);
-                        }
-                    }
-                }
                 union::arms(
                     &query.body,
                     &super::scope::CatalogScope {
@@ -77,7 +76,7 @@ pub(super) fn query(
                     parameters: self.parameters,
                     shadowed: self.shadowed.last().unwrap(),
                 };
-                filters::cte_consumers(query, &scope, &mut self.out);
+                filters::cte_consumers(query, &scope, &self.definition_names, &mut self.out);
             }
             let mut owners = std::collections::BTreeSet::new();
             let _: ControlFlow<()> = visit_expressions(&query.order_by, |expr| {
@@ -104,7 +103,16 @@ pub(super) fn query(
                 shadowed: self.shadowed.last().unwrap(),
             };
             if unique::redundant(select, &scope) {
-                self.out.push(finding(select, "distinct-over-unique-key", "catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates"));
+                let message = if select.distinct.is_some()
+                    && matches!(&select.group_by, GroupByExpr::Expressions(exprs, _) if exprs.iter().any(|expr| {
+                        matches!(expr, Expr::GroupingSets(_) | Expr::Rollup(_) | Expr::Cube(_))
+                    })) {
+                    "catalog uniqueness proves the projected DISTINCT key is unique across grouping sets; remove DISTINCT and preserve GROUP BY and its subtotal rows"
+                } else {
+                    "catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates"
+                };
+                self.out
+                    .push(finding(select, "distinct-over-unique-key", message));
             }
             if self.recursive.last() == Some(&true) {
                 return ControlFlow::Continue(());
@@ -135,6 +143,8 @@ pub(super) fn query(
         recursive: Vec::new(),
         shadowed: Vec::new(),
         ctes: Vec::new(),
+        definition_names: Default::default(),
+        definition_ctes: Default::default(),
         order_owners: Vec::new(),
         out: Vec::new(),
     };

@@ -4,6 +4,7 @@ use sqlparser::ast::*;
 use std::collections::BTreeSet;
 use std::ops::ControlFlow;
 mod counts;
+mod grouping;
 mod rows;
 pub(super) fn redundant(select: &Select, catalog: &super::scope::CatalogScope<'_>) -> bool {
     let Some(relations) = walk::table_columns(select) else {
@@ -18,20 +19,28 @@ pub(super) fn redundant(select: &Select, catalog: &super::scope::CatalogScope<'_
     let Some(projected) = projection(select) else {
         return false;
     };
+    let grouping_keys = grouping::removable_keys(select);
     let keys = match &select.distinct {
-        Some(Distinct::On(keys)) => Some(keys.iter().collect::<Vec<_>>()),
-        Some(Distinct::Distinct) if !projected.iter().any(|expr| aggregate(expr)) => {
-            Some(projected.clone())
+        Some(Distinct::On(keys)) => {
+            let keys = keys.iter().collect::<Vec<_>>();
+            grouping::preserves_key(select, &keys, catalog).then_some(keys)
         }
-        _ if !groups(select).is_empty()
+        Some(Distinct::Distinct) => (!projected.iter().any(|expr| aggregate(expr))
+            && grouping::preserves_key(select, &projected, catalog))
+        .then_some(projected.clone()),
+        None if grouping_keys.as_ref().is_some_and(|keys| !keys.is_empty())
             && select.having.is_none()
             && projected.iter().all(|expr| {
                 column(expr).is_some()
                     || catalog.pinned(expr)
-                    || groups(select).iter().any(|key| bare(key) == bare(expr))
+                    || grouping_keys
+                        .as_ref()
+                        .unwrap()
+                        .iter()
+                        .any(|key| bare(key) == bare(expr))
             }) =>
         {
-            Some(groups(select).iter().collect())
+            grouping_keys
         }
         _ => None,
     };

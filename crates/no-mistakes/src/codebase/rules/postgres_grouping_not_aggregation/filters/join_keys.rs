@@ -1,11 +1,5 @@
 use super::*;
-pub(super) fn join_covers(join: &Join, query: &Query, alias: &str) -> bool {
-    let Some(select) = super::super::expressions::select(query) else {
-        return false;
-    };
-    let Some(on) = walk::on(join) else {
-        return false;
-    };
+pub(super) fn join_covers(select: &Select, on: &Expr, alias: &str) -> bool {
     let predicates = conjuncts(Some(on));
     select.projection.iter().all(|item| {
         let name = match item {

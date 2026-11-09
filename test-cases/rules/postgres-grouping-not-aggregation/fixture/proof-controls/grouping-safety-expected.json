@@ -1,0 +1,42 @@
+[
+  {
+    "file": "proof-controls/raw/grouping-safety.sql",
+    "marker": "grouping-singleton-nullable",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/grouping-safety.ts",
+    "marker": "grouping-singleton-nullable",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/raw/grouping-safety.sql",
+    "marker": "grouping-rollup-filter-nonnull",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/grouping-safety.ts",
+    "marker": "grouping-rollup-filter-nonnull",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/raw/grouping-safety.sql",
+    "marker": "grouping-cube-strict-equality",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/grouping-safety.ts",
+    "marker": "grouping-cube-strict-equality",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/raw/grouping-safety.sql",
+    "marker": "grouping-singleton-removal",
+    "code": "distinct-over-unique-key"
+  },
+  {
+    "file": "proof-controls/src/grouping-safety.ts",
+    "marker": "grouping-singleton-removal",
+    "code": "distinct-over-unique-key"
+  }
+]

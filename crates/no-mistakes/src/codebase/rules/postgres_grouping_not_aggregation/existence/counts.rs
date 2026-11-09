@@ -30,9 +30,10 @@ pub(super) fn tests(
                         let Some(projected) = projection(inner) else {
                             continue;
                         };
-                        if matches!(projected.as_slice(), [expr] if counts_rows(expr, inner, catalog))
-                            && eligible(inner, catalog)
-                        {
+                        if catalog.in_query(query, |scope| {
+                            matches!(projected.as_slice(), [expr] if counts_rows(expr, inner, scope))
+                                && eligible(inner, scope)
+                        }) {
                             out.push(report(inner));
                         }
                     }
@@ -75,9 +76,7 @@ fn counts_rows(
     let Some(function) = function(expr, "count") else {
         return false;
     };
-    let Some(args) = args(function) else {
-        return false;
-    };
+    let args = args(function).expect("function() only accepts ordinary argument lists");
     match args.args.as_slice() {
         [FunctionArg::Unnamed(FunctionArgExpr::Wildcard)] => args.duplicate_treatment.is_none(),
         [FunctionArg::Unnamed(FunctionArgExpr::Expr(expr))] => {

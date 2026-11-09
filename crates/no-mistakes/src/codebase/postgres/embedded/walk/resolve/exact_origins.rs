@@ -148,3 +148,6 @@ fn compatible(
     }
     true
 }
+
+#[cfg(test)]
+mod tests;

@@ -152,3 +152,6 @@ pub(crate) fn embedded_call_facts_with_policy(
 ) -> Vec<SqlStatementFileFacts> {
     embedded::embedded_call_facts_with_policy(file, collect_bounds, variants_only, demand, policy)
 }
+
+#[cfg(test)]
+mod grouping_projection_tests;

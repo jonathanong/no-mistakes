@@ -2,6 +2,7 @@ use super::*;
 pub(in super::super) fn cte_consumers(
     query: &Query,
     catalog: &super::super::scope::CatalogScope<'_>,
+    names: &super::super::scope::definitions::Names,
     out: &mut Vec<Finding>,
 ) {
     let Some(with) = &query.with else { return };
@@ -9,7 +10,14 @@ pub(in super::super) fn cte_consumers(
         let Some(inner) = super::super::expressions::select(&cte.query) else {
             continue;
         };
-        if !super::super::evidence::catalogued(inner, catalog)
+        let definition_scope = super::super::scope::CatalogScope {
+            catalog: catalog.catalog,
+            parameters: catalog.parameters,
+            shadowed: names
+                .get(&super::super::scope::definitions::key(&cte.query))
+                .expect("CTE definition has a lexical scope"),
+        };
+        if !super::super::evidence::catalogued(cte.query.as_ref(), &definition_scope)
             || inner.distinct != Some(Distinct::Distinct)
             || !cte.alias.columns.is_empty()
             || cte.query.limit_clause.is_some()
@@ -17,8 +25,8 @@ pub(in super::super) fn cte_consumers(
         {
             continue;
         }
-        let name = ident(&cte.alias.name);
-        let total = references(query, &name);
+        let references = super::references::cte(query, cte);
+        let total = references.len();
         let mut safe = 0;
         let _: ControlFlow<()> = visit_expressions(query, |expr| {
             let mut inspect = |subquery: &Query| {
@@ -33,26 +41,37 @@ pub(in super::super) fn cte_consumers(
                 {
                     return;
                 }
-                let Some(exprs) = projection(select) else {
-                    return;
-                };
-                if exprs
-                    .iter()
-                    .any(|expr| column(expr).is_none() && !pinned_value(expr))
-                {
-                    return;
-                }
                 let [from] = select.from.as_slice() else {
                     return;
                 };
                 if !from.joins.is_empty() {
                     return;
                 }
-                if let Some(relation) = walk::relation(&from.relation) {
-                    if relation.cte.as_deref() == Some(&name) {
-                        safe += 1;
-                    }
+                let Some(relation) = walk::relation(&from.relation) else {
+                    return;
+                };
+                if !references.contains(&super::references::factor_key(&from.relation))
+                    || !select.projection.iter().all(|item| match item {
+                        SelectItem::Wildcard(options) => {
+                            *options == WildcardAdditionalOptions::default()
+                        }
+                        SelectItem::QualifiedWildcard(
+                            SelectItemQualifiedWildcardKind::ObjectName(owner),
+                            options,
+                        ) => {
+                            *options == WildcardAdditionalOptions::default()
+                                && crate::codebase::postgres::idents::object_name_key(owner)
+                                    == relation.alias
+                        }
+                        SelectItem::UnnamedExpr(expr) | SelectItem::ExprWithAlias { expr, .. } => {
+                            column(expr).is_some() || pinned_value(expr)
+                        }
+                        _ => false,
+                    })
+                {
+                    return;
                 }
+                safe += 1;
             };
             match expr {
                 Expr::InSubquery { subquery, .. } | Expr::Exists { subquery, .. } => {
@@ -62,12 +81,7 @@ pub(in super::super) fn cte_consumers(
             }
             ControlFlow::Continue(())
         });
-        let other_consumers = with
-            .cte_tables
-            .iter()
-            .filter(|other| other.alias.name != cte.alias.name)
-            .any(|other| references(&other.query, &name) != 0);
-        if total > 0 && total == safe && !other_consumers {
+        if total > 0 && total == safe {
             out.push(finding(
                 inner,
                 "distinct-join-filter",
@@ -75,24 +89,4 @@ pub(in super::super) fn cte_consumers(
             ));
         }
     }
-}
-fn references(node: &impl Visit, name: &str) -> usize {
-    struct Count<'a> {
-        name: &'a str,
-        count: usize,
-    }
-    impl Visitor for Count<'_> {
-        type Break = ();
-        fn pre_visit_table_factor(&mut self, factor: &TableFactor) -> ControlFlow<()> {
-            if walk::relation(factor)
-                .is_some_and(|relation| relation.cte.as_deref() == Some(self.name))
-            {
-                self.count += 1;
-            }
-            ControlFlow::Continue(())
-        }
-    }
-    let mut count = Count { name, count: 0 };
-    let _ = node.visit(&mut count);
-    count.count
 }

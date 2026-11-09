@@ -377,6 +377,59 @@
       "triggers": {},
       "uniqueConstraints": {}
     },
+    "nullable_equal_slugs": {
+      "checkConstraints": {},
+      "columns": {
+        "slug": {
+          "comment": null,
+          "dataType": "text",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "nullable_equal_slugs_slug_key": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX nullable_equal_slugs_slug_key ON public.nullable_equal_slugs USING btree (slug) NULLS NOT DISTINCT",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": "pg_catalog.\"default\"",
+              "column": "slug",
+              "descending": false,
+              "expression": "slug",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.text_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": false,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": null,
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {
+        "nullable_equal_slugs_slug_key": {
+          "columns": [
+            "slug"
+          ]
+        }
+      }
+    },
     "nullable_slugs": {
       "checkConstraints": {},
       "columns": {

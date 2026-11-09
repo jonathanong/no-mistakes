@@ -1,3 +1,4 @@
+pub(super) mod definitions;
 use crate::codebase::postgres::{CatalogTable, SchemaCatalog};
 use std::collections::BTreeSet;
 use std::ops::Deref;
@@ -7,6 +8,29 @@ pub(super) struct CatalogScope<'a> {
     pub shadowed: &'a BTreeSet<String>,
 }
 impl CatalogScope<'_> {
+    pub fn query_shadowed(&self, query: &sqlparser::ast::Query) -> BTreeSet<String> {
+        let mut shadowed = self.shadowed.clone();
+        if let Some(with) = &query.with {
+            shadowed.extend(
+                with.cte_tables
+                    .iter()
+                    .map(|cte| super::expressions::ident(&cte.alias.name)),
+            );
+        }
+        shadowed
+    }
+    pub fn in_query<T>(
+        &self,
+        query: &sqlparser::ast::Query,
+        inspect: impl FnOnce(&CatalogScope<'_>) -> T,
+    ) -> T {
+        let shadowed = self.query_shadowed(query);
+        inspect(&CatalogScope {
+            catalog: self.catalog,
+            parameters: self.parameters,
+            shadowed: &shadowed,
+        })
+    }
     pub fn parameter(&self, expr: &sqlparser::ast::Expr) -> bool {
         parameter(expr, self.parameters)
     }

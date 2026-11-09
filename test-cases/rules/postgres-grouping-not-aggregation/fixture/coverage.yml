@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-grouping-not-aggregation
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      include: ["proof-controls/src/**/*.ts"]
+      sqlInclude: ["proof-controls/raw/**/*.sql"]
+      importSpecifier: db
+      executorNames: [query]
+      trustedSqlTags: [{module: db, name: sql}]
