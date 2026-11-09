@@ -199,5 +199,5 @@ mod template_value_provenance;
 mod symbol_import_selectors;
 mod value_import_selectors;
 
-mod external_star_exports;
 mod call_pass;
+mod external_star_exports;

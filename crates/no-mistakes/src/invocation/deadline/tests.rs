@@ -6,8 +6,7 @@ use std::sync::Arc;
 #[path = "tests/cli.rs"]
 mod cli;
 
-#[path = "tests/worker_process.rs"]
-mod worker_process;
+use super::super::test_worker_process as worker_process;
 
 #[path = "tests/phase_owner.rs"]
 mod phase_owner;

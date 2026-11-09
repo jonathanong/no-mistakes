@@ -3,6 +3,8 @@ use std::io::{Read, Write};
 use std::process::Stdio;
 use wait_timeout::ChildExt;
 
+use super::super::test_worker_process as isolated_worker;
+
 // This exact test is also an isolated process whose stdin remains owned by its parent.
 #[test]
 fn watchdog_before_lock_path_subprocess_helper() {
@@ -209,58 +211,65 @@ fn shared_deadline_closes_a_real_term_resistant_registered_child_channel() {
 
 #[test]
 fn shared_invocation_budget_expires_while_waiting_without_changing_active_napi_holder() {
-    let _serial = deadline_test_lock()
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let _active =
-        DeadlineGuard::install_for_invocation(Some(Duration::from_secs(30)), None).unwrap();
-    let before = active_deadline().read().unwrap().unwrap();
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("invocation.lock");
-    let _holder = acquire_lock(&path, None, false).unwrap();
-    let result = InvocationGuard::acquire_at_path(
-        InvocationOptions {
-            timeout: Some(Duration::from_secs(30)),
-            invocation_timeout: Some(Duration::from_secs(1)),
-            lock_timeout: Some(Duration::from_secs(2)),
-            ..InvocationOptions::default()
+    isolated_worker::run_isolated(
+        module_path!(),
+        "shared_invocation_budget_expires_while_waiting_without_changing_active_napi_holder",
+        "NO_MISTAKES_SHARED_BUDGET_HOLDER_CONTROL",
+        || {
+            let _serial = deadline_test_lock()
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            let _active =
+                DeadlineGuard::install_for_invocation(Some(Duration::from_secs(30)), None).unwrap();
+            let before = active_deadline().read().unwrap().unwrap();
+            let directory = tempfile::tempdir().unwrap();
+            let path = directory.path().join("invocation.lock");
+            let _holder = acquire_lock(&path, None, false).unwrap();
+            let result = InvocationGuard::acquire_at_path(
+                InvocationOptions {
+                    timeout: Some(Duration::from_secs(30)),
+                    invocation_timeout: Some(Duration::from_secs(1)),
+                    lock_timeout: Some(Duration::from_secs(2)),
+                    ..InvocationOptions::default()
+                },
+                &path,
+                false,
+            );
+            let error = result
+                .err()
+                .expect("waiter must not acquire the held native lock");
+            assert_eq!(timeout_exit_code(&error), Some(124));
+            assert_eq!(
+                error.downcast_ref::<InvocationError>().unwrap().kind(),
+                InvocationErrorKind::CommandTimeout
+            );
+            let earlier_lock = InvocationGuard::acquire_at_path(
+                InvocationOptions {
+                    timeout: Some(Duration::from_secs(30)),
+                    invocation_timeout: Some(Duration::from_secs(1)),
+                    lock_timeout: Some(Duration::from_millis(1)),
+                    ..InvocationOptions::default()
+                },
+                &path,
+                false,
+            )
+            .err()
+            .expect("explicit shorter lock deadline must still apply");
+            assert_eq!(
+                earlier_lock
+                    .downcast_ref::<InvocationError>()
+                    .unwrap()
+                    .kind(),
+                InvocationErrorKind::LockTimeout
+            );
+            let after = active_deadline().read().unwrap().unwrap();
+            assert_eq!(before.expires_at, after.expires_at);
+            assert_eq!(before.timeout, after.timeout);
+            assert_eq!(before.owner, after.owner);
+            assert!(!after.committed);
+            check_timeout().unwrap();
         },
-        &path,
-        false,
     );
-    let error = result
-        .err()
-        .expect("waiter must not acquire the held native lock");
-    assert_eq!(timeout_exit_code(&error), Some(124));
-    assert_eq!(
-        error.downcast_ref::<InvocationError>().unwrap().kind(),
-        InvocationErrorKind::CommandTimeout
-    );
-    let earlier_lock = InvocationGuard::acquire_at_path(
-        InvocationOptions {
-            timeout: Some(Duration::from_secs(30)),
-            invocation_timeout: Some(Duration::from_secs(1)),
-            lock_timeout: Some(Duration::from_millis(1)),
-            ..InvocationOptions::default()
-        },
-        &path,
-        false,
-    )
-    .err()
-    .expect("explicit shorter lock deadline must still apply");
-    assert_eq!(
-        earlier_lock
-            .downcast_ref::<InvocationError>()
-            .unwrap()
-            .kind(),
-        InvocationErrorKind::LockTimeout
-    );
-    let after = active_deadline().read().unwrap().unwrap();
-    assert_eq!(before.expires_at, after.expires_at);
-    assert_eq!(before.timeout, after.timeout);
-    assert_eq!(before.owner, after.owner);
-    assert!(!after.committed);
-    check_timeout().unwrap();
 }
 
 #[test]
