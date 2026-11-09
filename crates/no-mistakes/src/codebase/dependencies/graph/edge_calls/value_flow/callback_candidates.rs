@@ -70,3 +70,7 @@ fn candidate(value: FlowValue) -> Option<FlowValue> {
         _ => return None,
     })
 }
+
+#[cfg(test)]
+#[path = "callback_candidates_tests.rs"]
+mod tests;

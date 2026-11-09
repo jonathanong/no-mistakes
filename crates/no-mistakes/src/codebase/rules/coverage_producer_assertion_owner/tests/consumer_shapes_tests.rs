@@ -56,4 +56,12 @@ fn untyped_known_method_leaves_preserve_typed_and_callback_uncertainty() {
             "{target}: {report}"
         );
     }
+    let dispatches = findings
+        .iter()
+        .map(|finding| finding["causes"].as_array().map_or(0, Vec::len))
+        .sum::<usize>();
+    assert_eq!(
+        dispatches, 8,
+        "rejected 73e1dd54 reports 19 unresolved dispatches on this saved fixture: {report}"
+    );
 }
