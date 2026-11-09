@@ -62,7 +62,7 @@ fn exact_inline_origins_are_opt_in_and_distinguish_same_line_unicode_calls() {
 }
 
 #[test]
-fn exact_origins_match_expanded_sql_and_preserve_opaque_prefixes() {
+fn exact_origins_match_expanded_sql_and_preserve_dynamic_templates() {
     let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/postgres-facts/grouping/fixture/exact-origin-splices.ts");
     let source = include_str!(concat!(
@@ -103,7 +103,28 @@ fn exact_origins_match_expanded_sql_and_preserve_opaque_prefixes() {
         assert!(!on.calls[0].sql_source_offsets.is_empty());
         let select_at = source.find("SELECT DISTINCT id FROM ${table}").unwrap();
         assert_eq!(on.calls[0].sql_source_offsets[0], select_at as u32);
-        assert!(on.calls.last().unwrap().sql_source_offsets.is_empty());
+        let dynamic = on.calls.last().unwrap();
+        let legacy_dynamic = off.calls.last().unwrap();
+        assert_eq!(dynamic.sql_text, legacy_dynamic.sql_text);
+        assert_eq!(dynamic.kind, legacy_dynamic.kind);
+        assert_eq!(
+            dynamic.sql_source_positions,
+            legacy_dynamic.sql_source_positions
+        );
+        if !legacy_dynamic.sql_source_offsets.is_empty() {
+            assert_eq!(
+                dynamic.sql_source_offsets,
+                legacy_dynamic.sql_source_offsets
+            );
+        } else {
+            let dynamic_at = source
+                .find("SELECT DISTINCT id FROM posts ${unresolved()}")
+                .unwrap();
+            assert_eq!(
+                dynamic.sql_source_offsets.first().copied(),
+                Some(dynamic_at as u32)
+            );
+        }
         let table_at = source.find("\"posts\"").unwrap() + 1;
         let call = &on.calls[0];
         let sql = call.sql_text.as_deref().unwrap();
@@ -112,6 +133,9 @@ fn exact_origins_match_expanded_sql_and_preserve_opaque_prefixes() {
             Some(table_at)
         );
         for (actual, original) in on.calls.iter().zip(&off.calls) {
+            if !original.sql_source_offsets.is_empty() {
+                assert_eq!(actual.sql_source_offsets, original.sql_source_offsets);
+            }
             if !actual.sql_source_offsets.is_empty() {
                 assert_eq!(
                     actual.sql_source_offsets.len(),
