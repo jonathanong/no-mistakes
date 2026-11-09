@@ -1,3 +1,22 @@
+thread_local! {
+    pub(super) static FULL_COMPONENT_ANALYSIS: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+macro_rules! allow_empty_component_return {
+    () => {
+        !$crate::react_traits::analyze::file::tests::FULL_COMPONENT_ANALYSIS
+            .with(std::cell::Cell::get)
+    };
+}
+
+macro_rules! record_react_detail_pass {
+    () => {
+        if let Some(observer) = $crate::diagnostics::current() {
+            observer.increment("react.detail_passes", 1);
+        }
+    };
+}
+
 use super::analyze_file;
 use std::path::PathBuf;
 
@@ -157,3 +176,5 @@ fn analyze_program_inner_fuses_per_component_trait_walks() {
         "per-component trait detectors must not walk the program again"
     );
 }
+
+mod empty_components;
