@@ -70,11 +70,22 @@ fn sparse_holes_and_mutated_empty_arrays_keep_callback_proof_sound() {
         "changed.forEach",
         "(changed as number[]).forEach",
         "changed!.find",
-        "Array.from(changed",
         "aliasSource.forEach",
         "escaped.forEach",
         "derived.forEach",
         "mutatedHoles.find",
+    ] {
+        assert_eq!(
+            outer_positions(&source, call, &facts),
+            Some(Some(vec![0])),
+            "{call}"
+        );
+    }
+    assert_eq!(
+        outer_positions(&source, "Array.from(changed", &facts),
+        Some(Some(vec![1])),
+    );
+    for call in [
         "unknownStart.find",
         "unknownCount.find",
         "infiniteStart.find",
@@ -103,7 +114,11 @@ fn conditional_array_aliases_and_callback_receivers_propagate_instability() {
         "argumentsHoles.map",
         "destructuredHoles.map",
     ] {
-        assert_eq!(outer_positions(&source, call, &facts), None, "{call}");
+        assert_eq!(
+            outer_positions(&source, call, &facts),
+            Some(Some(vec![0])),
+            "{call}"
+        );
     }
     for call in [
         "fresh.forEach",

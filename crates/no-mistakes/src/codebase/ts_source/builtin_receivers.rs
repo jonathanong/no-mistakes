@@ -4,13 +4,16 @@
 mod array_escapes;
 mod callback_arguments;
 mod contextual;
+mod dates;
+mod decls;
 mod known_wrong;
 mod names;
 mod proof;
+mod return_kinds;
 mod tables;
 mod values;
 use crate::fx::{FxHashMap, FxHashSet};
-use names::{Names, ValueKind};
+use names::Names;
 use oxc_ast::ast::*;
 use oxc_ast_visit::{walk, Visit};
 
@@ -26,13 +29,15 @@ pub(crate) struct ProvenCalls {
 
 pub(crate) fn collect(program: &Program<'_>) -> ProvenCalls {
     let mut names = Names::default();
+    let called = return_kinds::called_names(program);
     // Initializer proofs may read names declared later; iterate to settle them.
     for _ in 0..3 {
-        let mut decls = Decls {
+        let mut decls = decls::Decls {
             prior: names,
             next: Names::default(),
             kind: VariableDeclarationKind::Var,
             hooks: false,
+            called: &called,
         };
         decls.visit_program(program);
         names = decls.next;
@@ -44,109 +49,6 @@ pub(crate) fn collect(program: &Program<'_>) -> ProvenCalls {
     };
     calls.visit_program(program);
     calls.out
-}
-
-struct Decls {
-    prior: Names,
-    next: Names,
-    kind: VariableDeclarationKind,
-    hooks: bool,
-}
-
-impl Decls {
-    fn declare_properties(&mut self, name: &str, ty: &TSType<'_>) {
-        for (property, kind) in values::property_types(&self.prior, ty) {
-            self.next.record_property(name, &property, kind);
-        }
-    }
-}
-
-impl<'a> Visit<'a> for Decls {
-    fn visit_variable_declaration(&mut self, node: &VariableDeclaration<'a>) {
-        let outer = std::mem::replace(&mut self.kind, node.kind);
-        walk::walk_variable_declaration(self, node);
-        self.kind = outer;
-    }
-
-    fn visit_variable_declarator(&mut self, node: &VariableDeclarator<'a>) {
-        let BindingPattern::BindingIdentifier(id) = &node.id else {
-            return walk::walk_variable_declarator(self, node);
-        };
-        let kind = match (&node.type_annotation, &node.init) {
-            (Some(annotation), init) => {
-                let kind = self.prior.type_kind(&annotation.type_annotation);
-                array_escapes::preserve_empty_array(kind, init.as_ref(), self.kind)
-            }
-            (None, Some(init)) if self.kind == VariableDeclarationKind::Const => {
-                self.prior.value_kind(init, 0)
-            }
-            _ => None,
-        };
-        known_wrong::record_custom(
-            &mut self.next,
-            id.name.as_str(),
-            kind,
-            node.type_annotation.as_ref().map(|ty| &ty.type_annotation),
-            node.init.as_ref(),
-        );
-        self.next.record(id.name.as_str(), kind);
-        if let Some(annotation) = &node.type_annotation {
-            self.declare_properties(id.name.as_str(), &annotation.type_annotation);
-        }
-        if let Some(init) = &node.init {
-            self.visit_expression(init);
-        }
-    }
-
-    fn visit_formal_parameter(&mut self, node: &FormalParameter<'a>) {
-        let (BindingPattern::BindingIdentifier(id), Some(annotation)) =
-            (&node.pattern, &node.type_annotation)
-        else {
-            return walk::walk_formal_parameter(self, node);
-        };
-        let kind = self.prior.type_kind(&annotation.type_annotation);
-        known_wrong::record_custom(
-            &mut self.next,
-            id.name.as_str(),
-            kind,
-            Some(&annotation.type_annotation),
-            node.initializer.as_deref(),
-        );
-        self.next.record(id.name.as_str(), kind);
-        self.declare_properties(id.name.as_str(), &annotation.type_annotation);
-        if let Some(init) = &node.initializer {
-            self.visit_expression(init);
-        }
-    }
-
-    fn visit_import_declaration(&mut self, node: &ImportDeclaration<'a>) {
-        let outer = std::mem::replace(
-            &mut self.hooks,
-            matches!(
-                node.source.value.as_str(),
-                Some("async_hooks" | "node:async_hooks")
-            ),
-        );
-        walk::walk_import_declaration(self, node);
-        self.hooks = outer;
-    }
-
-    fn visit_import_specifier(&mut self, node: &ImportSpecifier<'a>) {
-        let builtin = self.hooks && node.imported.name() == "AsyncLocalStorage";
-        self.next.record(
-            node.local.name.as_str(),
-            builtin.then_some(ValueKind::Builtin),
-        );
-        if builtin {
-            self.next
-                .storage_constructors
-                .insert(node.local.name.to_string());
-        }
-    }
-
-    fn visit_binding_identifier(&mut self, node: &BindingIdentifier<'a>) {
-        self.next.record(node.name.as_str(), None);
-    }
 }
 
 struct Calls<'n> {

@@ -47,6 +47,10 @@ pub(super) struct Names {
     pub(super) storage_constructors: FxHashSet<String>,
     pub(super) custom_names: FxHashSet<String>,
     pub(super) unstable_array_lengths: FxHashSet<String>,
+    /// `true` when that declaration is a `Date`. Every declaration must agree.
+    pub(super) date_bindings: FxHashMap<String, Vec<bool>>,
+    /// Result of calling the name. Distinct from the function object's value.
+    pub(super) call_results: FxHashMap<String, Vec<Option<ValueKind>>>,
 }
 
 impl Names {
@@ -115,5 +119,34 @@ impl Names {
             return self.map.get(name).is_some_and(|all| all.len() == 1);
         }
         name != "AsyncLocalStorage" && CONSTRUCTORS.contains(&name) && self.global(name)
+    }
+
+    pub(super) fn note_date(&mut self, name: &str, date: bool) {
+        self.date_bindings
+            .entry(name.to_owned())
+            .or_default()
+            .push(date);
+    }
+
+    pub(super) fn date_name(&self, name: &str) -> bool {
+        self.date_bindings
+            .get(name)
+            .is_some_and(|flags| !flags.is_empty() && flags.iter().all(|date| *date))
+    }
+
+    pub(super) fn record_call_result(&mut self, name: &str, value: Option<ValueKind>) {
+        self.call_results
+            .entry(name.to_owned())
+            .or_default()
+            .push(value);
+    }
+
+    pub(super) fn function_result(&self, name: &str) -> Option<ValueKind> {
+        let values = self.call_results.get(name)?;
+        let first = values.first().copied().flatten()?;
+        values
+            .iter()
+            .all(|value| *value == Some(first))
+            .then_some(first)
     }
 }

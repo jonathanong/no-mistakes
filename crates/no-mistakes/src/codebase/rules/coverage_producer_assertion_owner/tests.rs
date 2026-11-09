@@ -226,6 +226,8 @@ mod consumer_shapes_tests;
 mod generic_shapes;
 #[path = "tests/json_reviver_tests.rs"]
 mod json_reviver_tests;
+#[path = "tests/receiver_results.rs"]
+mod receiver_results;
 #[path = "tests/storage_constructor_tests.rs"]
 mod storage_constructor_tests;
 #[path = "tests/timer_owner.rs"]

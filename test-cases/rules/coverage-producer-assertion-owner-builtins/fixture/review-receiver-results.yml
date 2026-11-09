@@ -1,0 +1,18 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/review-receiver-results.mts, symbol: shards }
+        - { file: src/review-receiver-results.mts, symbol: isoStamp }
+        - { file: src/review-receiver-results.mts, symbol: boundDate }
+        - { file: src/review-receiver-results.mts, symbol: asyncShutdown }
+        - { file: src/review-receiver-results.mts, symbol: localResults }
+        - { file: src/review-receiver-results.mts, symbol: boundRows }
+        - { file: src/review-receiver-results.mts, symbol: moduleFailures }
+        - { file: src/review-receiver-results.mts, symbol: localRows }
+        - { file: src/review-receiver-results.mts, symbol: untypedMap }
+        - { file: src/review-receiver-results.mts, symbol: unprovenCallback }
+        - { file: src/review-receiver-results.mts, symbol: provenCallback }
+      assertions: [{ module: "node:assert", export: strictEqual }]

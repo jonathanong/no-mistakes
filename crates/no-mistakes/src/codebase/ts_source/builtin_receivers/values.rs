@@ -1,8 +1,10 @@
 use super::names::{Names, ValueKind};
 use super::tables::{FACTORIES, PRESERVING};
 mod array_lengths;
+mod preserved;
 mod type_values;
 use oxc_ast::ast::*;
+use preserved::preserved_result;
 pub(super) use type_values::{property_types, value_kind_from_type};
 
 pub(super) const ARRAY_CALLBACKS: &[&str] = &[
@@ -65,7 +67,7 @@ pub(super) fn call_result(
     let Expression::StaticMemberExpression(member) = call.callee.without_parentheses() else {
         if let Expression::Identifier(id) = call.callee.without_parentheses() {
             if !names.global(&id.name) {
-                return None;
+                return names.function_result(id.name.as_str());
             }
             return match id.name.as_str() {
                 "String" => Some(ValueKind::String),
@@ -102,88 +104,14 @@ pub(super) fn call_result(
             return Some(result);
         }
     }
+    if method == "toISOString" && super::dates::receiver(names, &member.object) {
+        return Some(ValueKind::String);
+    }
     let receiver = names.value_kind(&member.object, depth + 1)?;
     if !PRESERVING.contains(&method) || !names.builtin(&member.object, Some(method), depth + 1) {
         return None;
     }
     preserved_result(receiver, method, call)
-}
-
-fn preserved_result(
-    receiver: ValueKind,
-    method: &str,
-    call: &CallExpression<'_>,
-) -> Option<ValueKind> {
-    match receiver {
-        ValueKind::Array { empty, length, .. }
-            if matches!(
-                method,
-                "map"
-                    | "filter"
-                    | "flatMap"
-                    | "flat"
-                    | "slice"
-                    | "sort"
-                    | "toSorted"
-                    | "reverse"
-                    | "splice"
-            ) =>
-        {
-            let result_length = array_lengths::result_length(method, length, empty, call);
-            Some(ValueKind::Array {
-                element: None,
-                empty: result_length == Some(0) || (empty && method != "toSorted"),
-                length: result_length,
-            })
-        }
-        ValueKind::Array { .. } if method == "concat" => Some(ValueKind::Array {
-            element: None,
-            empty: false,
-            length: None,
-        }),
-        ValueKind::Array { .. } if matches!(method, "join" | "toString") => Some(ValueKind::String),
-        ValueKind::Array { .. } if matches!(method, "keys" | "values" | "entries") => {
-            Some(ValueKind::Builtin)
-        }
-        ValueKind::Promise if matches!(method, "then" | "catch" | "finally") => {
-            Some(ValueKind::Promise)
-        }
-        ValueKind::String if method == "split" => Some(ValueKind::Array {
-            element: Some(super::names::PrimitiveKind::String),
-            empty: false,
-            length: None,
-        }),
-        ValueKind::String
-            if matches!(
-                method,
-                "trim"
-                    | "trimStart"
-                    | "trimEnd"
-                    | "slice"
-                    | "padStart"
-                    | "padEnd"
-                    | "toLowerCase"
-                    | "toUpperCase"
-                    | "substring"
-                    | "repeat"
-                    | "concat"
-                    | "normalize"
-                    | "replace"
-                    | "replaceAll"
-                    | "toString"
-            ) =>
-        {
-            Some(ValueKind::String)
-        }
-        ValueKind::String if method == "matchAll" => Some(ValueKind::Builtin),
-        ValueKind::Number | ValueKind::Boolean | ValueKind::BigInt if method == "toString" => {
-            Some(ValueKind::String)
-        }
-        ValueKind::Builtin if matches!(method, "set" | "add" | "keys" | "values" | "entries") => {
-            Some(ValueKind::Builtin)
-        }
-        _ => None,
-    }
 }
 
 fn factory_kind(owner: &str, method: &str) -> ValueKind {

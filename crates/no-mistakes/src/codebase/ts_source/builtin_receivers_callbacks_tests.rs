@@ -132,6 +132,12 @@ mod consumer_shapes_tests;
 #[path = "builtin_receivers_receiver_gap_tests.rs"]
 mod receiver_gap_tests;
 
+#[path = "builtin_receivers_receiver_results_tests.rs"]
+mod receiver_results_tests;
+
+#[path = "builtin_receivers_receiver_coverage_tests.rs"]
+mod receiver_coverage_tests;
+
 #[test]
 fn builtin_provenance_requires_explicit_ownership_demand() {
     use crate::codebase::ts_source::facts::{collect_ts_facts, TsFactPlan};
