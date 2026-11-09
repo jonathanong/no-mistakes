@@ -44,6 +44,25 @@ export async function reviewControls() {
     JOIN post_tags AS t ON t.post_id = p.id ORDER BY COUNT(t.id)
   `);
 
+  // quoted-cte-shadows-physical-primary-key
+  await query(sql`
+    WITH "posts" AS (SELECT post_id AS id FROM post_reads)
+    SELECT DISTINCT id FROM "posts"
+  `);
+
+  // uppercase-cte-shadows-physical-primary-key
+  await query(sql`
+    WITH POSTS AS (SELECT post_id AS id FROM post_reads)
+    SELECT DISTINCT id FROM POSTS
+  `);
+
+  // custom-aggregate-is-a-distinct-cte-consumer
+  await query(sql`
+    WITH watched AS (SELECT DISTINCT post_id FROM post_reads)
+    SELECT p.id FROM posts AS p
+    WHERE p.id IN (SELECT review_custom_aggregate(post_id) FROM watched)
+  `);
+
   // bare-absence-needs-null-threshold-guard
   await query(sql`
     SELECT r.post_id FROM post_reads AS r

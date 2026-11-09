@@ -34,6 +34,22 @@ SELECT COUNT(DISTINCT p.id) FROM posts AS p
 JOIN post_tags AS t ON t.post_id = p.id ORDER BY COUNT(t.id)
 ;
 
+-- quoted-cte-shadows-physical-primary-key
+WITH "posts" AS (SELECT post_id AS id FROM post_reads)
+SELECT DISTINCT id FROM "posts"
+;
+
+-- uppercase-cte-shadows-physical-primary-key
+WITH POSTS AS (SELECT post_id AS id FROM post_reads)
+SELECT DISTINCT id FROM POSTS
+;
+
+-- custom-aggregate-is-a-distinct-cte-consumer
+WITH watched AS (SELECT DISTINCT post_id FROM post_reads)
+SELECT p.id FROM posts AS p
+WHERE p.id IN (SELECT review_custom_aggregate(post_id) FROM watched)
+;
+
 -- bare-absence-needs-null-threshold-guard
 SELECT r.post_id FROM post_reads AS r
 GROUP BY r.post_id
