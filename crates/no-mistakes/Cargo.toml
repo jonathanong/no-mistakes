@@ -36,14 +36,14 @@ napi = { version = "3.9.0", features = ["napi8"] }
 napi-derive = "3.5.6"
 num_cpus = "1.16"
 # Keep OXC crates aligned; the oxc-dependencies Dependabot group updates them together.
-oxc_allocator = "0.155.0"
-oxc_ast = "0.155.0"
-oxc_ast_visit = "0.155.0"
-oxc_diagnostics = "0.155.0"
-oxc_parser = "0.155.0"
-oxc_span = "0.155.0"
-oxc_syntax = { version = "0.155.0", features = ["to_js_string"] }
-oxc_str = "0.155.0"
+oxc_allocator = "0.156.0"
+oxc_ast = "0.156.0"
+oxc_ast_visit = "0.156.0"
+oxc_diagnostics = "0.156.0"
+oxc_parser = "0.156.0"
+oxc_span = "0.156.0"
+oxc_syntax = { version = "0.156.0", features = ["to_js_string"] }
+oxc_str = "0.156.0"
 proc-macro2 = { version = "1", features = ["span-locations"] }
 percent-encoding = "2.3"
 url = "2.5"
@@ -64,7 +64,7 @@ unicode-id-start = "1.4.0"
 wait-timeout = "0.2"
 tempfile = "3"
 # Keep aligned with the OXC group above; its AST/string types are shared.
-oxc_semantic = "0.155.0"
+oxc_semantic = "0.156.0"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
