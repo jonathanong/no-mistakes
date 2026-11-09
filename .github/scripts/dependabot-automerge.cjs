@@ -41,6 +41,9 @@ function hasActiveApproval(reviews) {
   });
 
   for (const review of sortedReviews) {
+    if (!review.user?.login) {
+      continue;
+    }
     latestStateByUser.set(review.user.login, review.state);
   }
 

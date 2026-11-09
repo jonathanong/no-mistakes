@@ -140,6 +140,22 @@ test("skips a semver-major update from the title or body", async () => {
   assert.equal(hasMajorBump(pullRequest({ title: "bump left-pad from 1.2.3 to 1.3.0" })), false);
 });
 
+test("does not treat a deleted review author as an approval", async () => {
+  const reviews = [
+    { id: 7, user: null, state: "APPROVED", submitted_at: "2026-01-01T00:00:00Z" },
+  ];
+
+  assert.equal(hasActiveApproval(reviews), false);
+  assert.equal(hasActiveApproval([
+    ...reviews,
+    { id: 8, user: { login: "alice" }, state: "APPROVED", submitted_at: "2026-01-02T00:00:00Z" },
+  ]), true);
+  const result = await run(pullRequest(), [{ filename: "package.json" }], { reviews });
+
+  assert.equal(result.info.includes("Approving PR"), true);
+  assert.equal(result.calls.some((call) => Array.isArray(call) && call[0] === "review"), true);
+});
+
 test("approves and enables squash auto-merge", async () => {
   const result = await run(pullRequest(), [{ filename: "package.json" }]);
 
