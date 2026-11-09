@@ -14,6 +14,14 @@ struct Options {
     test_globs: Vec<String>,
     test_helper_roots: Vec<String>,
     ignore_exports_used_in_file: bool,
+    platform_consumed_exports: Vec<PlatformConsumedExports>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct PlatformConsumedExports {
+    file: String,
+    exports: Vec<String>,
 }
 
 pub(super) struct Selection {
@@ -22,6 +30,7 @@ pub(super) struct Selection {
     production_roots: Vec<PathBuf>,
     tests: GlobMatcher,
     helpers: Vec<PathBuf>,
+    platform_exports: std::collections::BTreeMap<PathBuf, std::collections::BTreeSet<String>>,
 }
 
 impl Selection {
@@ -49,13 +58,38 @@ impl Selection {
                 bail!("{RULE_ID}: configured roots must not be empty strings");
             }
         }
+        let mut platform_exports =
+            std::collections::BTreeMap::<_, std::collections::BTreeSet<_>>::new();
+        for entry in options.platform_consumed_exports {
+            if entry.file.trim().is_empty() || Path::new(&entry.file).has_root() {
+                bail!("{RULE_ID}: options.platformConsumedExports file must be a nonempty root-relative file path");
+            }
+            let file = normalize_path(&root.join(&entry.file));
+            if !file.starts_with(root) {
+                bail!("{RULE_ID}: options.platformConsumedExports file must stay within the root");
+            }
+            if entry.exports.is_empty() || entry.exports.iter().any(|name| name.trim().is_empty()) {
+                bail!("{RULE_ID}: options.platformConsumedExports exports must contain nonempty export names");
+            }
+            platform_exports
+                .entry(file)
+                .or_default()
+                .extend(entry.exports);
+        }
         Ok(Self {
+            platform_exports,
             ignore_exports_used_in_file: options.ignore_exports_used_in_file,
             root: root.to_path_buf(),
             production_roots: roots(root, options.production_roots),
             tests: GlobMatcher::new(&options.test_globs, &format!("{RULE_ID} options.testGlobs"))?,
             helpers: roots(root, options.test_helper_roots),
         })
+    }
+
+    pub(super) fn platform_consumed(&self, file: &Path, name: &str) -> bool {
+        self.platform_exports
+            .get(file)
+            .is_some_and(|names| names.contains(name))
     }
 
     pub(super) fn production(&self, file: &Path) -> bool {

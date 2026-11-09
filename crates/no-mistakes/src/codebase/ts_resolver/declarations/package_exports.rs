@@ -17,32 +17,10 @@ pub(super) fn targets(
     mode: ConditionMode,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<(bool, Vec<Target>), ()> {
-    let selected = if let Some(map) = exports.as_object() {
-        if map.keys().any(|key| key.starts_with('.')) {
-            if map.keys().any(|key| !key.starts_with('.')) {
-                return Err(());
-            }
-            let key = if subpath.is_empty() {
-                ".".to_string()
-            } else {
-                format!("./{subpath}")
-            };
-            map.get(&key).ok_or(())?
-        } else {
-            if !subpath.is_empty() {
-                return Err(());
-            }
-            exports
-        }
-    } else {
-        if !subpath.is_empty() {
-            return Err(());
-        }
-        exports
-    };
+    let selected = selected_export(exports, subpath)?;
     if !has_types(selected) {
         let mut targets = Vec::new();
-        runtime_targets(selected, true, mode, &mut targets)?;
+        runtime_targets(selected, true, mode, false, &mut targets)?;
         if targets.is_empty() {
             return Err(());
         }
@@ -69,10 +47,19 @@ fn runtime_targets(
     value: &Value,
     known: bool,
     mode: ConditionMode,
+    raw: bool,
     targets: &mut Vec<Target>,
 ) -> Result<(), ()> {
     if let Some(text) = value.as_str() {
-        let mut target = declaration_target(text, true)?;
+        let mut target = if raw {
+            Target {
+                path: text.to_owned(),
+                required: true,
+                known: true,
+            }
+        } else {
+            declaration_target(text, true)?
+        };
         target.known = known;
         targets.push(target);
         return Ok(());
@@ -86,7 +73,7 @@ fn runtime_targets(
         if applies == Some(false) {
             continue;
         }
-        runtime_targets(value, known && applies == Some(true), mode, targets)?;
+        runtime_targets(value, known && applies == Some(true), mode, raw, targets)?;
     }
     Ok(())
 }
@@ -151,4 +138,49 @@ fn declaration_target(text: &str, runtime: bool) -> Result<Target, ()> {
         }
     }
     Err(())
+}
+
+fn selected_export<'a>(exports: &'a Value, subpath: &str) -> Result<&'a Value, ()> {
+    Ok(if let Some(map) = exports.as_object() {
+        if map.keys().any(|key| key.starts_with('.')) {
+            if map.keys().any(|key| !key.starts_with('.')) {
+                return Err(());
+            }
+            let key = if subpath.is_empty() {
+                ".".to_string()
+            } else {
+                format!("./{subpath}")
+            };
+            map.get(&key).ok_or(())?
+        } else {
+            if !subpath.is_empty() {
+                return Err(());
+            }
+            exports
+        }
+    } else {
+        if !subpath.is_empty() {
+            return Err(());
+        }
+        exports
+    })
+}
+
+pub(super) fn source_targets(
+    exports: &Value,
+    subpath: &str,
+    mode: ConditionMode,
+) -> Result<Vec<Target>, ()> {
+    let mut targets = Vec::new();
+    runtime_targets(
+        selected_export(exports, subpath)?,
+        true,
+        mode,
+        true,
+        &mut targets,
+    )?;
+    if targets.is_empty() {
+        return Err(());
+    }
+    Ok(targets)
 }

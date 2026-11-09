@@ -171,6 +171,7 @@
   "PermissionSource",
   "PhaseResourceDiagnostic",
   "PlanningImpactArtifacts",
+  "PlatformConsumedExports",
   "PlaywrightCoverageReport",
   "PlaywrightOptions",
   "PlaywrightRelatedOptions",

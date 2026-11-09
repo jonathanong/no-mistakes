@@ -1,0 +1,161 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/many-sites.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `loneExport` include an unknown import selector: src/many-sites.mts:1 `./single.mjs` (dynamic or require selector), src/many-sites.mts:2 `./single.mjs` (dynamic or require selector), src/many-sites.mts:3 `./single.mjs` (dynamic or require selector), src/many-sites.mts:4 `./single.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import('./single.mjs');",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/shared-consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: production export consumers for `first`, `second`, `third` include unknown import selectors: src/shared-consumer.mts:1 `./shared.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as values from './shared.mjs';",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/tied-consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: production export consumers for `tiedFirst`, `tiedSecond` include unknown import selectors: src/tied-consumer.mts:1 `./tied.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import('./tied.mjs');",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/tied-consumer.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: production export consumers for `tiedFirst`, `tiedSecond` include unknown import selectors: src/tied-consumer.mts:2 `./tied.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import('./tied.mjs');",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unique-consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `first` include an unknown import selector: src/unique-consumer.mts:1 `./shared-a.mjs` (dynamic or require selector), src/unique-consumer.mts:2 `./shared-a.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import('./shared-a.mjs');",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/definite.mts",
+          "line": 1,
+          "message": "production export `onlyTests` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function onlyTests() { return 1; }",
+          "target": "onlyTests"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/definite.mts",
+          "line": 1,
+          "message": "production export `onlyTests` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function onlyTests() { return 1; }",
+          "target": "onlyTests"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/definite.mts",
+          "line": 1,
+          "message": "production export `onlyTests` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function onlyTests() { return 1; }",
+          "target": "onlyTests"
+        },
+        {
+          "file": "src/many-sites.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `loneExport` include an unknown import selector: src/many-sites.mts:1 `./single.mjs` (dynamic or require selector), src/many-sites.mts:2 `./single.mjs` (dynamic or require selector), src/many-sites.mts:3 `./single.mjs` (dynamic or require selector), src/many-sites.mts:4 `./single.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import('./single.mjs');",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/shared-consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: production export consumers for `first`, `second`, `third` include unknown import selectors: src/shared-consumer.mts:1 `./shared.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as values from './shared.mjs';",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/tied-consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: production export consumers for `tiedFirst`, `tiedSecond` include unknown import selectors: src/tied-consumer.mts:1 `./tied.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import('./tied.mjs');",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/tied-consumer.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: production export consumers for `tiedFirst`, `tiedSecond` include unknown import selectors: src/tied-consumer.mts:2 `./tied.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import('./tied.mjs');",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unique-consumer.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `first` include an unknown import selector: src/unique-consumer.mts:1 `./shared-a.mjs` (dynamic or require selector), src/unique-consumer.mts:2 `./shared-a.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import('./shared-a.mjs');",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

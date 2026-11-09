@@ -20,7 +20,8 @@ fn collect_created_require_selectors(
     sites: &mut SelectorImportSites,
 ) {
     let source = file_facts.source.as_deref().unwrap_or_default();
-    let line_of = |start: u32| crate::codebase::ts_source::byte_offset_to_line(source, start as usize);
+    let line_of =
+        |start: u32| crate::codebase::ts_source::byte_offset_to_line(source, start as usize);
     let known: FxHashSet<_> = file_facts
         .imports
         .iter()
@@ -44,4 +45,17 @@ fn collect_created_require_selectors(
             );
         }
     }
+}
+
+fn selector_has_local_candidate(
+    resolver: &dyn ImportResolution,
+    graph_files: &GraphFiles,
+    source: &str,
+    from: &Path,
+) -> bool {
+    resolver.matches_paths_alias(source, from)
+        || resolver
+            .resolution_candidates(source, from)
+            .iter()
+            .any(|path| graph_files.visible_path(path).is_some() || path.is_file())
 }

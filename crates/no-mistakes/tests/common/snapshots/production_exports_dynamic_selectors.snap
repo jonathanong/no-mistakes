@@ -38,23 +38,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ [key]: work }] = await Promise.all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ [key]: work }] = await Promise.all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const [{ [key]: work }] = await Promise.all([import(\"./worker.mjs\")]);",
           "target": "unanalyzable"
@@ -75,23 +59,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "consume(await Promise.all([import(\"./worker.mjs\")]));",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "consume(await Promise.all([import(\"./worker.mjs\")]));",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "consume(await Promise.all([import(\"./worker.mjs\")]));",
           "target": "unanalyzable"
@@ -112,23 +80,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ work }] = await all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ work }] = await all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const [{ work }] = await all([import(\"./worker.mjs\")]);",
           "target": "unanalyzable"
@@ -149,23 +101,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ work }] = await Promise.all([import(\"./worker.mjs\")], extra);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ work }] = await Promise.all([import(\"./worker.mjs\")], extra);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const [{ work }] = await Promise.all([import(\"./worker.mjs\")], extra);",
           "target": "unanalyzable"
@@ -252,23 +188,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [, ...rest] = await Promise.all([import(\"./worker.mjs\"), import(\"./other.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [, ...rest] = await Promise.all([import(\"./worker.mjs\"), import(\"./other.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const [, ...rest] = await Promise.all([import(\"./worker.mjs\"), import(\"./other.mjs\")]);",
           "target": "unanalyzable"
@@ -289,23 +209,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const modules = [import(\"./worker.mjs\")];",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const modules = [import(\"./worker.mjs\")];",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const modules = [import(\"./worker.mjs\")];",
           "target": "unanalyzable"
@@ -326,23 +230,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [m] = await Promise.all([import(\"./worker.mjs\")]); consume(m);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [m] = await Promise.all([import(\"./worker.mjs\")]); consume(m);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const [m] = await Promise.all([import(\"./worker.mjs\")]); consume(m);",
           "target": "unanalyzable"
@@ -363,23 +251,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ work }] = Promise.all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ work }] = Promise.all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const [{ work }] = Promise.all([import(\"./worker.mjs\")]);",
           "target": "unanalyzable"
@@ -400,23 +272,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ work }] = await Promise.all?.([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ work }] = await Promise.all?.([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const [{ work }] = await Promise.all?.([import(\"./worker.mjs\")]);",
           "target": "unanalyzable"
@@ -437,23 +293,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ work }] = await other.all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ work }] = await other.all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const [{ work }] = await other.all([import(\"./worker.mjs\")]);",
           "target": "unanalyzable"
@@ -474,23 +314,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [...m] = await Promise.all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [...m] = await Promise.all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const [...m] = await Promise.all([import(\"./worker.mjs\")]);",
           "target": "unanalyzable"
@@ -540,23 +364,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ work }] = await getPromise().all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ work }] = await getPromise().all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const [{ work }] = await getPromise().all([import(\"./worker.mjs\")]);",
           "target": "unanalyzable"
@@ -577,23 +385,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ ...rest }] = await Promise.all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ ...rest }] = await Promise.all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const [{ ...rest }] = await Promise.all([import(\"./worker.mjs\")]);",
           "target": "unanalyzable"
@@ -614,23 +406,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "async function run(Promise) { const [{ work }] = await Promise.all([import(\"./worker.mjs\")]); }",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "async function run(Promise) { const [{ work }] = await Promise.all([import(\"./worker.mjs\")]); }",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "async function run(Promise) { const [{ work }] = await Promise.all([import(\"./worker.mjs\")]); }",
           "target": "unanalyzable"
@@ -651,23 +427,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [] = await Promise.all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [] = await Promise.all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const [] = await Promise.all([import(\"./worker.mjs\")]);",
           "target": "unanalyzable"
@@ -688,23 +448,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ work }] = await Promise.all([...values, import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const [{ work }] = await Promise.all([...values, import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const [{ work }] = await Promise.all([...values, import(\"./worker.mjs\")]);",
           "target": "unanalyzable"
@@ -725,23 +469,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const modules = await Promise.all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const modules = await Promise.all([import(\"./worker.mjs\")]);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const modules = await Promise.all([import(\"./worker.mjs\")]);",
           "target": "unanalyzable"
@@ -791,23 +519,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -828,23 +540,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -865,23 +561,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = [() => import(\"./worker.mjs\")];",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = [() => import(\"./worker.mjs\")];",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = [() => import(\"./worker.mjs\")];",
           "target": "unanalyzable"
@@ -902,23 +582,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: async () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: async () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: async () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -939,23 +603,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => { return import(\"./worker.mjs\"); } };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => { return import(\"./worker.mjs\"); } };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => { return import(\"./worker.mjs\"); } };",
           "target": "unanalyzable"
@@ -976,23 +624,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1013,23 +645,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1050,23 +666,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { [\"x\"]: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { [\"x\"]: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { [\"x\"]: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1087,23 +687,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\"), x: other };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\"), x: other };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\"), x: other };",
           "target": "unanalyzable"
@@ -1124,23 +708,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1161,23 +729,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "export const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "export const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export const registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1198,23 +750,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1235,23 +771,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "let registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "let registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "let registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1272,23 +792,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x() { return import(\"./worker.mjs\"); } };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x() { return import(\"./worker.mjs\"); } };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x() { return import(\"./worker.mjs\"); } };",
           "target": "unanalyzable"
@@ -1309,23 +813,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1375,23 +863,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { group: { x: () => import(\"./worker.mjs\") } };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { group: { x: () => import(\"./worker.mjs\") } };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { group: { x: () => import(\"./worker.mjs\") } };",
           "target": "unanalyzable"
@@ -1412,23 +884,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1449,23 +905,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1486,23 +926,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1523,23 +947,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: (unused) => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: (unused) => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: (unused) => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1560,23 +968,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const { registry } = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const { registry } = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const { registry } = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1626,23 +1018,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\"), expose: function () { return this; } };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\"), expose: function () { return this; } };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\"), expose: function () { return this; } };",
           "target": "unanalyzable"
@@ -1663,23 +1039,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1700,23 +1060,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1737,23 +1081,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1774,23 +1102,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1811,23 +1123,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { ...other, x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { ...other, x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { ...other, x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1848,23 +1144,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -1922,23 +1202,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\"), y: () => import(\"./other.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\"), y: () => import(\"./other.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\"), y: () => import(\"./other.mjs\") };",
           "target": "unanalyzable"
@@ -1959,23 +1223,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\"), y: () => import(\"./other.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\"), y: () => import(\"./other.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\"), y: () => import(\"./other.mjs\") };",
           "target": "unanalyzable"
@@ -1996,23 +1244,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\"), y: () => import(\"./other.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\"), y: () => import(\"./other.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\"), y: () => import(\"./other.mjs\") };",
           "target": "unanalyzable"
@@ -2070,23 +1302,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "const registry = { x: () => import(\"./worker.mjs\") };",
           "target": "unanalyzable"
@@ -2128,23 +1344,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => { const alias = m; m.work(); });",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => { const alias = m; m.work(); });",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import(\"./worker.mjs\").then(m => { const alias = m; m.work(); });",
           "target": "unanalyzable"
@@ -2252,23 +1452,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => m.work(m));",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => m.work(m));",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import(\"./worker.mjs\").then(m => m.work(m));",
           "target": "unanalyzable"
@@ -2289,23 +1473,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => m[key]());",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => m[key]());",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import(\"./worker.mjs\").then(m => m[key]());",
           "target": "unanalyzable"
@@ -2355,23 +1523,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => delete m.work);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => delete m.work);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import(\"./worker.mjs\").then(m => delete m.work);",
           "target": "unanalyzable"
@@ -2392,23 +1544,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => { m.work(); consume(m); });",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => { m.work(); consume(m); });",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import(\"./worker.mjs\").then(m => { m.work(); consume(m); });",
           "target": "unanalyzable"
@@ -2429,23 +1565,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => { m = other; m.work(); });",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => { m = other; m.work(); });",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import(\"./worker.mjs\").then(m => { m = other; m.work(); });",
           "target": "unanalyzable"
@@ -2466,23 +1586,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => m);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => m);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import(\"./worker.mjs\").then(m => m);",
           "target": "unanalyzable"
@@ -2503,23 +1607,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => { const f = (m) => m.work(); });",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => { const f = (m) => m.work(); });",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import(\"./worker.mjs\").then(m => { const f = (m) => m.work(); });",
           "target": "unanalyzable"
@@ -2540,23 +1628,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => m.work());",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => m.work());",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import(\"./worker.mjs\").then(m => m.work());",
           "target": "unanalyzable"
@@ -2577,23 +1649,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => 42);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => 42);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import(\"./worker.mjs\").then(m => 42);",
           "target": "unanalyzable"
@@ -2614,23 +1670,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/consumer.mts",
           "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `main` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => m.work = other);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
-          "rule": "production-exports-only-used-by-tests",
-          "sourceLine": "import(\"./worker.mjs\").then(m => m.work = other);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "src/consumer.mts",
-          "line": 1,
-          "message": "cannot analyze production export importers: symbol consumers of `work` include an unknown import selector: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly`, `work` include unknown import selectors: src/consumer.mts:1 `./worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "import(\"./worker.mjs\").then(m => m.work = other);",
           "target": "unanalyzable"

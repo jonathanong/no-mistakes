@@ -1,4 +1,3 @@
-//! Narrow declaration-only lookup for supplemental ancestry facts.
 use crate::codebase::ts_source::{JsonLoadError, SourceStore};
 use std::io::ErrorKind;
 use std::path::{Component, Path, PathBuf};
@@ -13,6 +12,9 @@ mod exports;
 mod mode;
 #[path = "package_paths.rs"]
 mod paths;
+#[path = "package_source.rs"]
+mod source;
+pub(crate) use source::resolve_source;
 
 pub(crate) fn resolve_in_context(
     specifier: &str,
@@ -189,7 +191,7 @@ fn required(path: &Path, sources: &SourceStore) -> Result<Option<PathBuf>, ()> {
 #[path = "package_tests.rs"]
 mod tests;
 
-pub(super) fn lookup_context(
+pub(crate) fn lookup_context(
     specifier: &str,
     importer: &Path,
     consumer_root: &Path,

@@ -278,6 +278,16 @@ Node loader findings.
 - `testGlobs`: explicit root-relative test-file globs; defaults to an empty list.
 - `testHelperRoots`: explicit root-relative test-only helper directories or files;
   defaults to an empty list. At least one test glob or helper root is required.
+- `platformConsumedExports`: optional explicit platform-consumption entries. Each
+  entry has an exact root-relative `file` and a nonempty `exports` list of exact
+  exported names; use `default` for the default export. File paths are normalized
+  before matching. Each listed name counts as a production consumer only in that
+  file. Other exports in the same file remain independently analyzed, including
+  their unknown consumers and uncertainty advisories. An entry applies only to
+  a non-forwarded export declared in that exact file; it can settle an otherwise
+  unknown namespace consumer for that named export, but it does not infer which
+  names a platform reads. Forwarded exports, including external star exports,
+  remain outside this rule's candidates.
 - `unanalyzable`: shared `report` (default), `advise`, or `ignore` policy. Rule-level
   configuration overrides the repository policy.
 
@@ -500,9 +510,35 @@ For an export with only known test consumers, an attached unknown selector follo
 `unanalyzable`. The diagnostic points to the importing file and import line, names
 the module specifier, and explains why that selector prevents proof of exclusive
 test consumption. When one importer selects several modules, each diagnostic
-retains the corresponding selector's specifier and line. Multiple uncertain
-importers of the same export share one diagnostic listing all matching import
-sites, with the first site in deterministic order as its primary location.
+retains the corresponding selector's specifier and line. Each uncertain import
+site produces one diagnostic, even when it affects many exports; separate sites
+remain separate diagnostics in deterministic order.
+
+External package star re-exports use the package's exact public `exports` entry
+when a concrete declaration or runtime source establishes its exported names.
+Those external definitions remain outside the configured production candidates.
+Nonexistent `baseUrl` candidates do not shadow an installed package; declared
+paths aliases and existing local files retain ownership.
+Missing or blocked entries, ambiguous or unsupported condition maps, unresolved
+forwarded members, cycles, and external hops back into visible project sources
+retain uncertainty advisories. This does not guess
+`main`/`index` targets or add installed packages to the production file universe.
+
+Passing a namespace to a helper remains uncertain, including a helper whose
+parameters use `typeof templates` and `keyof typeof templates` and whose body
+calls `t[name]()`. The rule does not trace namespace arguments through helper
+parameters or infer the selected member from a string argument. The affected
+module's exports remain uncertain. A site repeated across several exports can
+share one diagnostic listing those export names. Other uncertain sites stay
+grouped per export, with every site and the export name in the message. If
+site grouping would not reduce the per-export diagnostic count, all sites stay
+grouped per export. The final choice compares deduplicated diagnostics across
+the whole check, including repeated evidence through alias barrels, and neither
+the finding count nor the advisory count may increase. A module with one export
+and many plain dynamic imports therefore emits one diagnostic, not one per
+import. Rewrite the helper to accept explicitly named functions to establish
+the consumer relationship.
+
 Rewrite that import or re-export with explicit names. A literal import in
 `vi.mock(import("./module"), factory)` with an imported Vitest `vi` binding and
 a static replacement factory is an erased module-promise type carrier. It does
@@ -521,6 +557,24 @@ properties, can establish a static replacement when it has no parameters and is
 not a generator. The return must be the arrow expression or the sole return statement in a block;
 captured replacement values and member reads retain uncertainty.
 An unrelated plain export with only test consumers still produces its ordinary finding.
+
+For platform entry points consumed through deployment metadata, declare only the
+exports the platform reads:
+
+```yaml
+options:
+  productionRoots: [src]
+  testGlobs: ["tests/**"]
+  platformConsumedExports:
+    - file: src/worker.mts
+      exports: [Worker, default]
+```
+
+The file must be nonempty, root-relative, and remain within the analysis root;
+`exports` must contain at least one nonempty name. No filenames or platform
+conventions are inferred. Omit the option (or use `[]`) to retain the default
+behavior. This declaration does not suppress findings for another file exporting
+`Worker`, or for unlisted exports of `src/worker.mts`.
 
 ## Suppression and custom messages
 

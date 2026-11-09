@@ -267,20 +267,25 @@ fn manual_unknown_edges_without_source_evidence_report_the_missing_provenance() 
         path("consumer.mts"),
         NodeId::file(path("source.mts")),
     )]);
-    let (file, line, reason) =
-        super::super::selector_advisories::for_export(root, &graph, &unknown, "value").unwrap();
-    assert_eq!(file, path("consumer.mts"));
-    assert_eq!(line, 1);
+    let mut groups = super::super::selector_advisories::SelectorAdvisories::default();
+    groups.insert(&graph, &path("source.mts"), "example", "example", &unknown);
+    let sites = groups.finish(root).baseline;
+    assert_eq!(sites.len(), 1);
+    let (file, line, reason) = &sites[0];
+    assert_eq!(file, &path("consumer.mts"));
+    assert_eq!(*line, 1);
     assert!(reason.contains("consumer.mts"));
     assert!(reason.contains("missing prepared selector provenance"));
     assert!(reason.contains("import line, module specifier, and selector reason"));
     assert!(reason.contains("rebuild analysis with symbol import selector facts"));
     assert!(reason.contains("replace the import/re-export with explicit names"));
-    assert!(super::super::selector_advisories::for_export(
-        root,
+    let mut empty = super::super::selector_advisories::SelectorAdvisories::default();
+    empty.insert(
         &graph,
+        &path("source.mts"),
+        "example",
+        "example",
         &Default::default(),
-        "value"
-    )
-    .is_none());
+    );
+    assert!(empty.finish(root).baseline.is_empty());
 }

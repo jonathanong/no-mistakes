@@ -1,0 +1,271 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  ".no-mistakes.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/helper.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: production export consumers for `DefaultWorker`, `Worker`, `testOnly` include unknown import selectors: tests/helper.mts:1 `../src/worker.mts` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function loadWorker() { return import('../src/worker.mts'); }",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/declared.mts",
+          "line": 1,
+          "message": "production export `Ready` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export class Ready {}",
+          "target": "Ready"
+        },
+        {
+          "file": "src/declared.mts",
+          "line": 2,
+          "message": "production export `ReadyDefault` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export default class ReadyDefault {}",
+          "target": "ReadyDefault"
+        },
+        {
+          "file": "src/declared.mts",
+          "line": 3,
+          "message": "production export `stillTestOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const stillTestOnly = 1;",
+          "target": "stillTestOnly"
+        },
+        {
+          "file": "src/other.mts",
+          "line": 1,
+          "message": "production export `Worker` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export class Worker {}",
+          "target": "Worker"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/helper.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: production export consumers for `DefaultWorker`, `Worker`, `testOnly` include unknown import selectors: tests/helper.mts:1 `../src/worker.mts` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function loadWorker() { return import('../src/worker.mts'); }",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/declared.mts",
+          "line": 1,
+          "message": "production export `Ready` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export class Ready {}",
+          "target": "Ready"
+        },
+        {
+          "file": "src/declared.mts",
+          "line": 2,
+          "message": "production export `ReadyDefault` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export default class ReadyDefault {}",
+          "target": "ReadyDefault"
+        },
+        {
+          "file": "src/declared.mts",
+          "line": 3,
+          "message": "production export `stillTestOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const stillTestOnly = 1;",
+          "target": "stillTestOnly"
+        },
+        {
+          "file": "src/other.mts",
+          "line": 1,
+          "message": "production export `Worker` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export class Worker {}",
+          "target": "Worker"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "enabled.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/helper.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `testOnly` include an unknown import selector: tests/helper.mts:1 `../src/worker.mts` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function loadWorker() { return import('../src/worker.mts'); }",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/declared.mts",
+          "line": 3,
+          "message": "production export `stillTestOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const stillTestOnly = 1;",
+          "target": "stillTestOnly"
+        },
+        {
+          "file": "src/other.mts",
+          "line": 1,
+          "message": "production export `Worker` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export class Worker {}",
+          "target": "Worker"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid-absolute.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "production-exports-only-used-by-tests",
+          "message": "production-exports-only-used-by-tests: options.platformConsumedExports file must be a nonempty root-relative file path"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid-field.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "production-exports-only-used-by-tests",
+          "message": "invalid options for rule `production-exports-only-used-by-tests` at options.platformConsumedExports[0].extra: unknown field `extra`, expected `file` or `exports`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid-file.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "production-exports-only-used-by-tests",
+          "message": "production-exports-only-used-by-tests: options.platformConsumedExports file must be a nonempty root-relative file path"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid-name.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "production-exports-only-used-by-tests",
+          "message": "production-exports-only-used-by-tests: options.platformConsumedExports exports must contain nonempty export names"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid-names.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "production-exports-only-used-by-tests",
+          "message": "production-exports-only-used-by-tests: options.platformConsumedExports exports must contain nonempty export names"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid-parent.yml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "production-exports-only-used-by-tests",
+          "message": "production-exports-only-used-by-tests: options.platformConsumedExports file must stay within the root"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "off.yml": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}
