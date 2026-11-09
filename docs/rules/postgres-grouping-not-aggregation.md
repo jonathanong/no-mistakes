@@ -292,6 +292,54 @@ FROM ratings GROUP BY topic_id;
 So are legitimate duplicated-input deduplication and latest-row selection over
 non-unique keys. The analyzer reports only the shapes it can prove.
 
+## Memory usage
+
+Enabling this rule requests additional SQL context in the shared, request-owned
+facts: candidate query trees, SELECT sites, generated parameter positions, full
+SQL locations, and exact embedded source origins. Those facts remain live until
+the check request ends. Query trees can be substantially larger than the compact
+statement facts used by other SQL checks.
+
+The existing AST walk retains a query root only when it contains `DISTINCT`,
+grouping syntax, `COUNT(DISTINCT ...)`, or both `COUNT` and a numeric zero. These
+are conservative prerequisites for the current five recognizers, including
+nested queries and data-modifying CTEs; they do not themselves establish a
+finding. Other roots are discarded before an owned tree is created. Retained
+trees are shared when statement facts are cloned, and no SQL is parsed again.
+
+Catalog metadata is already shared once per request. Temporary uniqueness proof
+vectors and CTE scope maps are released after query analysis. Candidate trees and
+source provenance still have a request-lifetime cost. Their size depends on the
+selected SQL scope and the size and number of complete alternatives.
+The rule remains disabled by default.
+
+Measure production release builds with timing and progress observers off. Match
+the catalog, source scope, executor profiles, and worker count, and compare both
+rule-enabled and rule-disabled controls. Peak RSS includes shared retained facts
+and temporary parallel work; a worker-local map is not necessarily its cause.
+
+A representative measurement used 12,195 selected source files (43.8 MB), a
+563-table catalog, and existing SQL checks plus this rule toggled off/on. Four
+fresh processes per revision/mode/worker setting were interleaved in balanced
+order (48 runs total), using Rust 1.99.1 default release settings and observers
+off. Median measurements follow; RSS is MiB and CPU is user seconds.
+
+| Workers | Rule | RSS before | RSS after | CPU before | CPU after |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 1 | Off | 1,451 | 1,451 | 8.64 | 8.65 |
+| 1 | On | 1,986 | 1,679 | 11.83 | 11.70 |
+| 4 | Off | 1,463 | 1,463 | 8.88 | 8.91 |
+| 4 | On | 1,999 | 1,690 | 12.11 | 12.01 |
+| Default | Off | 1,484 | 1,485 | 9.75 | 9.74 |
+| Default | On | 2,024 | 1,714 | 13.50 | 13.25 |
+
+At default workers, enabled peak RSS fell by 310 MiB (15%); the increment over
+the disabled control fell from 540 to 229 MiB (58%). Median enabled wall time
+was 4.92s before and 4.68s after. All runs had identical JSON and stderr for each
+mode, including all 17 grouping advisories when enabled. These executor profiles
+and selected checks differ from the original report, so its total RSS and
+percentage overhead are not directly comparable.
+
 ## Options and defaults
 
 | Option | Default | Meaning |
