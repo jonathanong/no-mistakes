@@ -5,6 +5,7 @@ mod all;
 mod loader;
 mod member;
 mod registry;
+mod returned;
 
 type Parent<'a> = (NodeId, AstKind<'a>);
 
@@ -29,6 +30,7 @@ pub(super) fn proven(
                 .or_else(|| loader::default(id, function, semantic))
         }
         AstKind::ArrayExpression(array) => all::selected(node, id, array, semantic),
+        AstKind::ReturnStatement(_) => returned::selected(id, semantic),
         _ => None,
     }
 }
