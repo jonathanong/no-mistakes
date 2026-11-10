@@ -39,40 +39,39 @@ fn hole(
     source: &NodeId,
     facts: &dyn TsFactLookup,
 ) -> Cause {
-    if let Some((file, line)) = at {
-        return Cause::new(kind, file.clone(), *line, "");
-    }
-    let (file, line) = function_site(facts, source);
+    let (file, line) = at.cloned().unwrap_or_else(|| function_site(facts, source));
     Cause::new(kind, file, line, "")
 }
 
 fn local_route(owners: &Owners<'_>, source: &NodeId, facts: &dyn TsFactLookup) -> Cause {
     let NodeId::Symbol { file, symbol, .. } = source else {
-        let (path, line) = function_site(facts, source);
-        return Cause::new(CauseKind::NotNamedFunction, path, line, "");
+        return hole(CauseKind::NotNamedFunction, None, source, facts);
     };
     if owners.escaped.contains(file, symbol) {
-        if let Some((path, line, name)) = owners.escaped.reference(file, symbol) {
-            return Cause::new(CauseKind::NonDirectReference, path, line, name);
-        }
-        let (path, line) = function_site(facts, source);
-        return Cause::new(
-            CauseKind::NonDirectReference,
-            path,
-            line,
-            symbol.to_string(),
-        );
+        let found = owners.escaped.reference(file, symbol);
+        let (path, line, name) = found.unwrap_or_else(|| named_site(facts, source, symbol));
+        return Cause::new(CauseKind::NonDirectReference, path, line, name);
     }
-    if owners.consumed.contains(file) {
-        if let Some(hit) = owners.consumed.route(file) {
-            return Cause::new(
-                kind_of(hit.kind),
-                hit.file.clone(),
-                hit.line,
-                hit.detail.clone(),
-            );
-        }
+    let route = owners
+        .consumed
+        .route(file)
+        .filter(|_| owners.consumed.contains(file));
+    match route {
+        Some(hit) => Cause::new(
+            kind_of(hit.kind),
+            hit.file.clone(),
+            hit.line,
+            hit.detail.clone(),
+        ),
+        None => hole(CauseKind::UnreadModule, None, source, facts),
     }
+}
+
+fn named_site(
+    facts: &dyn TsFactLookup,
+    source: &NodeId,
+    name: &str,
+) -> (std::path::PathBuf, u32, String) {
     let (path, line) = function_site(facts, source);
-    Cause::new(CauseKind::UnreadModule, path, line, "")
+    (path, line, name.to_string())
 }

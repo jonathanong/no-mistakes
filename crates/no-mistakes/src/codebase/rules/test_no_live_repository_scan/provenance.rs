@@ -52,18 +52,14 @@ pub(super) enum ArgBlock {
     Forwarded,
 }
 
-pub(super) fn arg_block(
-    argument: Option<&PathOrigin>,
-    present: bool,
-    fixture_dirs: &[&str],
-) -> Option<ArgBlock> {
-    let Some(argument) = argument else {
-        return Some(if present {
-            ArgBlock::Variable
-        } else {
-            ArgBlock::Omitted
-        });
-    };
+pub(super) fn missing_block(present: bool) -> ArgBlock {
+    match present {
+        true => ArgBlock::Variable,
+        false => ArgBlock::Omitted,
+    }
+}
+
+pub(super) fn arg_block(argument: &PathOrigin, fixture_dirs: &[&str]) -> Option<ArgBlock> {
     let climbs = argument.segments.iter().any(|part| part == "..")
         && (argument.param.is_some()
             || argument.env.is_some()
@@ -81,8 +77,12 @@ pub(super) fn arg_block(
     {
         return None;
     }
-    Some(match classify(Some(argument), fixture_dirs) {
+    Some(live_or_variable(argument, fixture_dirs))
+}
+
+pub(super) fn live_or_variable(argument: &PathOrigin, fixture_dirs: &[&str]) -> ArgBlock {
+    match classify(Some(argument), fixture_dirs) {
         Verdict::Live(_) => ArgBlock::Live,
-        Verdict::Allowed | Verdict::Unresolved(_) => ArgBlock::Variable,
-    })
+        _ => ArgBlock::Variable,
+    }
 }

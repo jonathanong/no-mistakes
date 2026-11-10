@@ -2,6 +2,50 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "anonymous-callback": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "root.mts",
+          "import": "readdirSync",
+          "line": 2,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because root.mts:2 is not a named function. Fix: declare the helper as a named function and pass an owned root from each caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "['a'].forEach((root: string) => readdirSync(root))",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "climbing-argument": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "root.mts",
+          "import": "readdirSync",
+          "line": 5,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.mts:7 passes `join(mkdtempSync(join(tmpdir(), 'case-')), '..')`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root)",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "default-import": {
     "exitCode": 0,
     "report": {
@@ -33,6 +77,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "import": "readdirSync",
           "line": 3,
           "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because root.mts:7 imports `./list.mts` through a dynamic import(). Fix: import the helper with a named static import and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root)",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "forwarded-anonymous": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "root.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because root.mts:5 is not a named function. Fix: declare the helper as a named function and pass an owned root from each caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(root)",
           "target": "unresolved root"
@@ -236,6 +302,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unresolved root"
         }
       ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "temp-climbs": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],

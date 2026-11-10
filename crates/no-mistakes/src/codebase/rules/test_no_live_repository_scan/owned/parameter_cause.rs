@@ -4,9 +4,9 @@ use super::parameters::{argument_path, argument_present, argument_text, unproven
 use super::{path_provenance, Owners};
 use crate::codebase::dependencies::graph::{NodeId, ResolvedCallSite, TsFactLookup};
 use crate::codebase::rules::test_no_live_repository_scan::provenance::{
-    arg_block, classify, ArgBlock, Verdict,
+    arg_block, classify, live_or_variable, missing_block, ArgBlock, Verdict,
 };
-use crate::codebase::ts_source::module_facts::arguments::{PathAnchor, PathOrigin};
+use crate::codebase::ts_source::module_facts::arguments::{PathAnchor, PathOrigin, PathProvenance};
 use crate::fx::FxHashSet;
 
 impl Owners<'_> {
@@ -64,14 +64,9 @@ impl Owners<'_> {
         facts: &dyn TsFactLookup,
         fixture_dirs: &[&str],
     ) -> Result<(), Cause> {
-        let Some(source) = self.parameter_source(origin, site) else {
-            return Err(Cause::new(
-                CauseKind::NotNamedFunction,
-                site.file.clone(),
-                origin.owner_line.unwrap_or(1),
-                "",
-            ));
-        };
+        let source = self
+            .parameter_source(origin, site)
+            .ok_or_else(|| not_named(site, origin))?;
         let start = source.clone();
         let declared = origin.owner_line.unwrap_or(1);
         let mut pending = vec![(source, index, origin.param_member.clone(), declared)];
@@ -129,15 +124,11 @@ impl Owners<'_> {
         facts: &dyn TsFactLookup,
         fixture_dirs: &[&str],
     ) -> Step {
-        let provenance = facts.get_ts_facts(&caller.file).and_then(path_provenance);
-        let Some(provenance) = provenance else {
-            return Step::Block(Cause::new(
-                CauseKind::UnreadModule,
-                caller.file.clone(),
-                caller.line,
-                "",
-            ));
-        };
+        let empty = PathProvenance::default();
+        let provenance = facts
+            .get_ts_facts(&caller.file)
+            .and_then(path_provenance)
+            .unwrap_or(&empty);
         let argument = argument_path(provenance, caller.offset, index, member);
         let present = argument_present(provenance, caller.offset, index);
         let text = argument_text(provenance, caller.offset, index);
@@ -148,39 +139,33 @@ impl Owners<'_> {
                 }
             }
         }
-        if let Some(block) = arg_block(argument, present, fixture_dirs) {
+        let Some(argument) = argument else {
+            return Step::Block(caller_cause(caller, missing_block(present), text));
+        };
+        if let Some(block) = arg_block(argument, fixture_dirs) {
             return Step::Block(caller_cause(caller, block, text));
         }
-        let Some(argument) = argument else {
-            return Step::Block(caller_cause(caller, ArgBlock::Omitted, text));
-        };
         if classify(Some(argument), fixture_dirs) == Verdict::Allowed {
             return Step::Seed;
         }
         if let Some(name) = argument.env.as_deref() {
             if !self.env_argument_owned(name, caller, facts) {
-                let block = if matches!(classify(Some(argument), fixture_dirs), Verdict::Live(_)) {
-                    ArgBlock::Live
-                } else {
-                    ArgBlock::Variable
-                };
+                let block = live_or_variable(argument, fixture_dirs);
                 return Step::Block(caller_cause(caller, block, text));
             }
             return Step::Seed;
         }
-        if let Some(next_index) = argument.param {
-            let Some(next) = self.parameter_source(argument, caller) else {
-                return Step::Block(caller_cause(caller, ArgBlock::Forwarded, text));
-            };
-            return Step::Follow(
-                next,
-                next_index,
-                argument.param_member.clone(),
-                caller_cause(caller, ArgBlock::Forwarded, text),
-                argument.owner_line.unwrap_or(caller.line),
-            );
-        }
-        Step::Block(caller_cause(caller, ArgBlock::Variable, text))
+        let source = argument.param.zip(self.parameter_source(argument, caller));
+        let Some((next_index, next)) = source else {
+            return Step::Block(caller_cause(caller, ArgBlock::Forwarded, text));
+        };
+        Step::Follow(
+            next,
+            next_index,
+            argument.param_member.clone(),
+            caller_cause(caller, ArgBlock::Forwarded, text),
+            argument.owner_line.unwrap_or(caller.line),
+        )
     }
 }
 
@@ -192,4 +177,9 @@ fn caller_cause(caller: &ResolvedCallSite, block: ArgBlock, text: String) -> Cau
         ArgBlock::Forwarded => CauseKind::ForwardedParameter,
     };
     Cause::new(kind, caller.file.clone(), caller.line, text)
+}
+
+fn not_named(site: &ResolvedCallSite, origin: &PathOrigin) -> Cause {
+    let line = origin.owner_line.unwrap_or(1);
+    Cause::new(CauseKind::NotNamedFunction, site.file.clone(), line, "")
 }

@@ -12,7 +12,6 @@ mod parameter_cause;
 mod parameters;
 mod route_cause;
 mod route_index;
-mod route_setup;
 pub(super) mod setups;
 pub(super) use cause::{Cause, Ownership};
 pub(crate) use consumers::Resolution;
@@ -104,13 +103,7 @@ impl<'g> Owners<'g> {
         let consumed =
             consumers::Consumed::new(graph, facts, graph_files, relevant_files, resolution);
         let escape_unknown = !setups.known() || escaped.unknown() || consumed.unknown();
-        let setup_hole = (!setups.known())
-            .then(|| {
-                setups
-                    .hole()
-                    .or_else(|| route_setup::setup_hole(facts, graph_files))
-            })
-            .flatten();
+        let setup_hole = setups.hole();
         Self {
             callers,
             nodes,
