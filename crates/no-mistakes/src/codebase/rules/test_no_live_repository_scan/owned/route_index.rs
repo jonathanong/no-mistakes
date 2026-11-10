@@ -62,25 +62,30 @@ pub(super) fn note_nondirect(
             continue;
         }
         for import in &module.imports {
-            let matched = import.bindings.iter().any(|binding| {
-                !binding.type_only
-                    && binding.kind == "named"
-                    && (binding.local == site.detail || binding.imported == site.detail)
-            });
-            if !matched {
+            let Some(detail) = import
+                .bindings
+                .iter()
+                .find_map(|binding| {
+                    (binding.kind == "named" && !binding.type_only && binding.local == site.detail)
+                        .then_some(binding.imported.as_str())
+                })
+                .or_else(|| {
+                    import
+                        .bindings
+                        .iter()
+                        .any(|binding| {
+                            binding.kind == "named"
+                                && !binding.type_only
+                                && binding.imported == site.detail
+                        })
+                        .then_some(site.detail.as_str())
+                })
+            else {
                 continue;
-            }
+            };
             let class = resolver.classify_import(&import.specifier, file, workspace, visible);
             if let Some(target) = class.preferred_path() {
-                push(
-                    hits,
-                    file,
-                    site.start,
-                    site.line,
-                    site.kind,
-                    &site.detail,
-                    target,
-                );
+                push(hits, file, site.start, site.line, site.kind, detail, target);
             }
         }
     }

@@ -271,6 +271,7 @@ the call graph cannot see may pass anything:
   import, a default import, `import()`, `require`, an unsupported re-export,
   and `vi.mock`/`vi.importActual` of the module make its consumers unknowable.
   A named value import that is not a call blocks only the export it names.
+  A rename (`import { fn as alias }`) still names that export.
   A named static barrel re-export can preserve the route when all consumers
   remain named direct calls. A load through a `const` string specifier is
   attributed to that module. A specifier that cannot be resolved statically,

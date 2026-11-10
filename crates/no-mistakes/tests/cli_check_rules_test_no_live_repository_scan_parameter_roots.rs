@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 const RULE: &str = "test-no-live-repository-scan";
-const CASES: [&str; 18] = [
+const CASES: [&str; 19] = [
     "derived-join",
     "helper-return",
     "defaulted-param",
@@ -13,6 +13,7 @@ const CASES: [&str; 18] = [
     "imported-cjs",
     "setup-spread",
     "sibling-const",
+    "import-alias",
     "reaching-alias",
     "recursive-helper",
     "path-only-cjs",
