@@ -17,6 +17,8 @@ fn origins_follow_getters_owned_lets_and_parameters_but_nothing_else() {
         "readdirSync(argArrow())",
         "readdirSync(noReturn())",
         "readdirSync(notFunction())",
+        "readdirSync(resty())",
+        "readdirSync(restArrow())",
         "readdirSync(\"x\" && process.env.I)",
         "readdirSync(process.env[String(1)])",
         "readdirSync(process.env.J && \"x\")",
@@ -67,6 +69,25 @@ fn origins_follow_getters_owned_lets_and_parameters_but_nothing_else() {
             .as_deref(),
         Some("root")
     );
+    assert_eq!(param("readdirSync(kept)"), Some(0));
+    assert_eq!(
+        read.origin("readdirSync(kept)").param_member.as_deref(),
+        Some("kept")
+    );
+    for unresolved in [
+        "readdirSync(computedDir)",
+        "readdirSync(memberRest)",
+        "readdirSync(nestedRest)",
+        "readdirSync(arrayFirst)",
+        "readdirSync(arrayRest)",
+        "readdirSync(nestedMember)",
+    ] {
+        assert_eq!(
+            read.origin(unresolved),
+            PathOrigin::unknown(),
+            "{unresolved}"
+        );
+    }
 }
 
 #[test]

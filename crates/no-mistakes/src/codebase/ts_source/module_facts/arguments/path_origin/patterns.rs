@@ -44,10 +44,7 @@ pub(super) fn direct_property_member(
         if property.computed {
             return None;
         }
-        let (binding, _) = direct_binding(&property.value)?;
-        if binding.symbol_id.get() != Some(symbol) {
-            return None;
-        }
+        direct_binding(&property.value)?;
         let key = crate::ast::property_key_name(&property.key)?;
         return Some(key.into_owned());
     }

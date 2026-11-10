@@ -94,3 +94,26 @@ export function memberOfPattern({ opts }) {
 export function memberOfBinding(binding) {
   readdirSync(binding.root);
 }
+export function computedMember({ kept, ["dir"]: computedDir }) {
+  readdirSync(kept);
+  readdirSync(computedDir);
+}
+export function restMember({ namedDir, ...memberRest }) {
+  readdirSync(memberRest);
+}
+export function objectRest({ outer: { ...nestedRest } }) {
+  readdirSync(nestedRest);
+}
+export function arrayMember({ items: [arrayFirst, ...arrayRest] }) {
+  readdirSync(arrayFirst);
+  readdirSync(arrayRest);
+}
+export function nestedPattern({ dir: { nestedMember } = {} }) {
+  readdirSync(nestedMember);
+}
+function resty(...parts) {
+  return mkdtempSync("case-");
+}
+const restArrow = (...parts) => mkdtempSync("case-");
+readdirSync(resty());
+readdirSync(restArrow());

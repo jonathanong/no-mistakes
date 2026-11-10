@@ -11,6 +11,8 @@ fn immutable_owned_members_and_awaited_object_returns_are_paths() {
         "readdirSync(absent)",
         "readdirSync(fallback)",
         "readdirSync(ownedMember)",
+        "readdirSync(workspace().root)",
+        "readdirSync(chainedRoot)",
     ] {
         assert_eq!(read.origin(needle).anchor, PathAnchor::Temp, "{needle}");
     }
@@ -41,6 +43,15 @@ fn mutable_escaping_and_unrepresentable_members_stay_unknown() {
         "readdirSync(shadowed)",
         "readdirSync(fromUnknown)",
         "readdirSync(assignedRoot)",
+        "readdirSync(spreadDefault)",
+        "readdirSync(computedDefault)",
+        "readdirSync(methodDefault)",
+        "readdirSync(getterDefault)",
+        "readdirSync(nestedDefault)",
+        "readdirSync(fromParam)",
+        "readdirSync(choice)",
+        "readdirSync(unbound)",
+        "readdirSync(tooDeep)",
     ] {
         assert_eq!(read.origin(needle), PathOrigin::unknown(), "{needle}");
     }

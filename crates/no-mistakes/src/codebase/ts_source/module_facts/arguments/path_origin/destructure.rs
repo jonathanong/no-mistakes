@@ -1,7 +1,7 @@
 //! Object destructuring, including defaults that apply only when the key is absent.
 use super::patterns::{accept_parameterized, direct_binding, object_member, proven, Supplied};
 use super::{PathOrigin, Projector};
-use oxc_ast::{ast::*, AstKind};
+use oxc_ast::ast::*;
 
 impl<'a> Projector<'a, '_> {
     pub(super) fn destructured_origin(
@@ -15,9 +15,7 @@ impl<'a> Projector<'a, '_> {
         }
         let semantic = self.semantic;
         let node = semantic.scoping().symbol_declaration(symbol);
-        let AstKind::VariableDeclarator(declaration) = semantic.nodes().kind(node) else {
-            return None;
-        };
+        let declaration = semantic.nodes().kind(node).as_variable_declarator()?;
         let BindingPattern::ObjectPattern(pattern) = &declaration.id else {
             return None;
         };

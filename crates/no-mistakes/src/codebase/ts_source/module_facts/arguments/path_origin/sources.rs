@@ -78,10 +78,21 @@ impl<'a> Projector<'a, '_> {
         // oxc records the formal parameter as the symbol declaration, not the
         // inner binding identifier, so the property is found by scanning that pattern.
         let mut node = semantic.scoping().symbol_declaration(symbol);
-        let mut parameter_node = None;
+        let mut located = None;
         for _ in 0..8 {
-            if matches!(semantic.nodes().kind(node), AstKind::FormalParameter(_)) {
-                parameter_node = Some(node);
+            if let AstKind::FormalParameter(parameter) = semantic.nodes().kind(node) {
+                let member = match &parameter.pattern {
+                    BindingPattern::BindingIdentifier(binding)
+                        if binding.symbol_id.get() == Some(symbol) =>
+                    {
+                        None
+                    }
+                    BindingPattern::ObjectPattern(pattern) => {
+                        Some(super::patterns::direct_property_member(pattern, symbol)?)
+                    }
+                    _ => return None,
+                };
+                located = Some((parameter.span, member, node));
                 break;
             }
             let parent = semantic.nodes().parent_id(node);
@@ -90,24 +101,7 @@ impl<'a> Projector<'a, '_> {
             }
             node = parent;
         }
-        let parameter_node = parameter_node?;
-        let (parameter_span, member) = {
-            let AstKind::FormalParameter(parameter) = semantic.nodes().kind(parameter_node) else {
-                return None;
-            };
-            let member = match &parameter.pattern {
-                BindingPattern::BindingIdentifier(binding)
-                    if binding.symbol_id.get() == Some(symbol) =>
-                {
-                    None
-                }
-                BindingPattern::ObjectPattern(pattern) => {
-                    Some(super::patterns::direct_property_member(pattern, symbol)?)
-                }
-                _ => return None,
-            };
-            (parameter.span, member)
-        };
+        let (parameter_span, member, parameter_node) = located?;
         let list = semantic.nodes().parent_node(parameter_node);
         let list_kind = list.kind().as_formal_parameters()?;
         let index = list_kind
