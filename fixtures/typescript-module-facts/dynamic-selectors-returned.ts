@@ -82,6 +82,12 @@ let rebound = function () {
 const { default: letBound } = await rebound();
 letBound;
 
+const { destructured } = () => {
+  return import("./destructured");
+};
+const { default: fromDestructured } = await destructured();
+fromDestructured;
+
 function uncalled() {
   return import("./n");
 }

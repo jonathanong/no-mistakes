@@ -5,23 +5,9 @@ use super::*;
 /// One same-file local function, whose only return is this literal import, and
 /// whose every reference is an awaited call destructured by static keys.
 /// Documented in `docs/rules/production-exports-only-used-by-tests.md`.
-pub(super) fn selected(
-    import: NodeId,
-    return_id: NodeId,
-    semantic: &Semantic<'_>,
-) -> Option<Vec<String>> {
-    let AstKind::ReturnStatement(statement) = semantic.nodes().kind(return_id) else {
-        return None;
-    };
-    let argument = statement.argument.as_ref()?;
-    if !argument
-        .span()
-        .contains_inclusive(semantic.nodes().kind(import).span())
-    {
-        return None;
-    }
+pub(super) fn selected(return_id: NodeId, semantic: &Semantic<'_>) -> Option<Vec<String>> {
     let (function, symbol) = local_symbol(return_id, semantic)?;
-    if !only_this_return(function, statement.span, semantic) {
+    if !only_this_return(function, semantic.nodes().kind(return_id).span(), semantic) {
         return None;
     }
     let mut names = Vec::new();
@@ -71,17 +57,13 @@ fn local_symbol(
 }
 
 fn const_symbol(function: NodeId, semantic: &Semantic<'_>) -> Option<oxc_syntax::symbol::SymbolId> {
-    let (declarator_id, AstKind::VariableDeclarator(declarator)) = parent(function, semantic)?
-    else {
-        return None;
-    };
+    let (declarator_id, kind) = parent(function, semantic)?;
+    let declarator = kind.as_variable_declarator()?;
     let BindingPattern::BindingIdentifier(binding) = &declarator.id else {
         return None;
     };
-    let (declaration, AstKind::VariableDeclaration(variable)) = parent(declarator_id, semantic)?
-    else {
-        return None;
-    };
+    let (declaration, declaration_kind) = parent(declarator_id, semantic)?;
+    let variable = declaration_kind.as_variable_declaration()?;
     if variable.kind != VariableDeclarationKind::Const || exported(declaration, semantic) {
         return None;
     }
@@ -104,15 +86,7 @@ fn only_this_return(
     return_span: oxc_span::Span,
     semantic: &Semantic<'_>,
 ) -> bool {
-    let Some(body_span) = (match semantic.nodes().kind(function) {
-        AstKind::Function(function) => function.body.as_ref().map(|body| body.span),
-        AstKind::ArrowFunctionExpression(arrow) => {
-            arrow.body.as_function_body().map(|body| body.span)
-        }
-        _ => None,
-    }) else {
-        return false;
-    };
+    let body_span = body_span(function, semantic);
     let mut found = false;
     for node in semantic.nodes().iter() {
         let AstKind::ReturnStatement(statement) = node.kind() else {
@@ -131,19 +105,36 @@ fn only_this_return(
     found
 }
 
-fn belongs_to(node: NodeId, function: NodeId, semantic: &Semantic<'_>) -> bool {
-    for ancestor in semantic.nodes().ancestors(node) {
-        if ancestor.id() == function {
-            return true;
-        }
-        if matches!(
-            ancestor.kind(),
-            AstKind::Function(_) | AstKind::ArrowFunctionExpression(_)
-        ) {
-            return false;
-        }
+/// The owner is the nearest function of a `return`, so it has a block body.
+fn body_span(function: NodeId, semantic: &Semantic<'_>) -> oxc_span::Span {
+    let kind = semantic.nodes().kind(function);
+    if let Some(function) = kind.as_function() {
+        return function
+            .body
+            .as_ref()
+            .expect("function return has a body")
+            .span;
     }
-    false
+    kind.as_arrow_function_expression()
+        .expect("return owner is a function or arrow")
+        .body
+        .as_function_body()
+        .expect("arrow return has a block body")
+        .span
+}
+
+fn belongs_to(node: NodeId, function: NodeId, semantic: &Semantic<'_>) -> bool {
+    semantic
+        .nodes()
+        .ancestors(node)
+        .find(|ancestor| {
+            ancestor.id() == function
+                || matches!(
+                    ancestor.kind(),
+                    AstKind::Function(_) | AstKind::ArrowFunctionExpression(_)
+                )
+        })
+        .is_some_and(|ancestor| ancestor.id() == function)
 }
 
 fn awaited_keys(reference: NodeId, semantic: &Semantic<'_>) -> Option<Vec<String>> {

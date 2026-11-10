@@ -30,7 +30,7 @@ pub(super) fn proven(
                 .or_else(|| loader::default(id, function, semantic))
         }
         AstKind::ArrayExpression(array) => all::selected(node, id, array, semantic),
-        AstKind::ReturnStatement(_) => returned::selected(node, id, semantic),
+        AstKind::ReturnStatement(_) => returned::selected(id, semantic),
         _ => None,
     }
 }
