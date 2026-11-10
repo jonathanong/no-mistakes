@@ -59,7 +59,7 @@ pub(super) fn recovered(call: &SqlCall, proof: &Recovered) -> EmbeddedSqlCall {
             .map(|sql| EmbeddedSqlVariant {
                 invocations: sql.invocations.clone(),
                 sql_text: sql.sql.clone(),
-                sql_source_offsets: sql.origins.clone(),
+                sql_source_offsets: sql.origins.clone().into(),
                 line: sql.line,
                 sql_source_positions: sql.positions.clone(),
                 recovered_placeholder_positions: Vec::new(),

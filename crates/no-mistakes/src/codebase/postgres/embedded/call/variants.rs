@@ -1,3 +1,4 @@
+use super::super::SqlByteOrigins;
 use super::{EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlSourcePosition};
 use std::borrow::Cow;
 
@@ -9,7 +10,7 @@ pub const MAX_EMBEDDED_SQL_VARIANTS: usize = 16;
 pub struct EmbeddedSqlVariant {
     pub sql_text: String,
     /// Physical source byte origin for each byte of `sql_text`.
-    pub sql_source_offsets: Vec<u32>,
+    pub sql_source_offsets: SqlByteOrigins,
     pub(crate) invocations: super::super::site_identity::Invocations,
     pub line: u32,
     pub sql_source_positions: Vec<EmbeddedSqlSourcePosition>,
@@ -71,11 +72,11 @@ impl EmbeddedSqlCall {
                 || {
                     self.sql_source_offsets
                         .get(offset)
-                        .filter(|offset| **offset != 0)
+                        .filter(|offset| *offset != 0)
                 },
                 |variant| variant.sql_source_offsets.get(offset),
             )
-            .map(|offset| *offset as usize)
+            .map(|offset| offset as usize)
     }
     pub(crate) fn source_offset_at_sql_position(
         &self,
@@ -127,7 +128,7 @@ impl EmbeddedSqlCall {
                             },
                             declaration_line: Some(variant.line),
                             sql_source_positions: variant.sql_source_positions.clone(),
-                            sql_source_offsets: Vec::new(),
+                            sql_source_offsets: SqlByteOrigins::default(),
                             recovered_placeholder_positions: variant
                                 .recovered_placeholder_positions
                                 .clone(),

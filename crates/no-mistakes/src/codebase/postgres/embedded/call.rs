@@ -1,4 +1,4 @@
-use super::EmbeddedSqlSourcePosition;
+use super::{EmbeddedSqlSourcePosition, SqlByteOrigins};
 mod variants;
 pub use variants::{EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS};
 
@@ -28,7 +28,7 @@ pub struct EmbeddedSqlCall {
     /// Compact physical-line mapping for literal and template recovery.
     pub sql_source_positions: Vec<EmbeddedSqlSourcePosition>,
     #[doc(hidden)]
-    pub sql_source_offsets: Vec<u32>,
+    pub sql_source_offsets: SqlByteOrigins,
     /// SQL line and column of each generated interpolation marker, before any user-authored
     /// identifier with the same spelling can be confused for it.
     pub recovered_placeholder_positions: Vec<(u32, u32)>,

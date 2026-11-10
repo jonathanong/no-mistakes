@@ -119,7 +119,7 @@ fn deterministic_singleton_helper_recovery_keeps_suffix_and_provenance() {
     assert_eq!(variant.recovered_placeholder_positions.len(), 3);
     assert!(!sentinel::contains(&variant.sql_text));
     let helper_at = variant.sql_text.find("helper").expect("helper");
-    assert_eq!(variant.sql_source_offsets[helper_at], 700);
+    assert_eq!(variant.sql_source_offsets.at(helper_at), 700);
     assert!(variant
         .sql_source_positions
         .iter()
@@ -127,7 +127,7 @@ fn deterministic_singleton_helper_recovery_keeps_suffix_and_provenance() {
             == Some(std::path::Path::new("/helper.ts"))
             && position.source_line == 30));
     let suffix_at = variant.sql_text.find("suffix").expect("suffix");
-    assert_ne!(variant.sql_source_offsets[suffix_at], 700);
+    assert_ne!(variant.sql_source_offsets.at(suffix_at), 700);
     assert_eq!(
         super::origin_at(
             &variant.sql_source_positions,

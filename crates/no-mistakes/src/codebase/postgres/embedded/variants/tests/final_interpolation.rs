@@ -65,13 +65,16 @@ fn final_bind_renumbering_preserves_branch_fragment_and_outer_byte_origins() {
     for (variant, (branch, count)) in call.variants.iter().zip(branches) {
         assert_eq!(variant.recovered_placeholder_positions.len(), count);
         assert_eq!(
-            variant.sql_source_offsets[variant.sql_text.find("sql_placeholder_1").unwrap()]
-                as usize,
+            variant
+                .sql_source_offsets
+                .at(variant.sql_text.find("sql_placeholder_1").unwrap()) as usize,
             source.find(branch).unwrap() + 2
         );
         let last = format!("sql_placeholder_{count}");
         assert_eq!(
-            variant.sql_source_offsets[variant.sql_text.find(&last).unwrap()] as usize,
+            variant
+                .sql_source_offsets
+                .at(variant.sql_text.find(&last).unwrap()) as usize,
             source.find("${limit}").unwrap() + 2
         );
     }

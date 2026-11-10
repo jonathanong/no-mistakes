@@ -1,4 +1,5 @@
 use crate::codebase::postgres::embedded::placeholders::{INTERNAL_PLACEHOLDER, PLACEHOLDER_MARKER};
+use crate::codebase::postgres::embedded::SqlByteOrigins;
 
 /// A published marker found at a recorded position: where it starts and how
 /// many digits follow `sql_placeholder_`.
@@ -31,7 +32,7 @@ pub(crate) fn unpublish(text: &str, placeholders: &[(u32, u32)]) -> Option<Strin
 pub(crate) fn unpublish_origins(
     text: &str,
     placeholders: &[(u32, u32)],
-    origins: &[u32],
+    origins: &SqlByteOrigins,
 ) -> Option<Vec<u32>> {
     if origins.len() != text.len() {
         return None;
@@ -39,13 +40,17 @@ pub(crate) fn unpublish_origins(
     let mut out = Vec::with_capacity(origins.len());
     let mut at = 0;
     for marker in locate(text, placeholders)? {
-        out.extend_from_slice(&origins[at..marker.start]);
+        push_range(&mut out, origins, at, marker.start);
         let width = INTERNAL_PLACEHOLDER.len() + marker.digits;
-        out.extend(std::iter::repeat_n(origins[marker.start], width));
+        out.extend(std::iter::repeat_n(origins.at(marker.start), width));
         at = marker.start + PLACEHOLDER_MARKER.len() + marker.digits;
     }
-    out.extend_from_slice(&origins[at..]);
+    push_range(&mut out, origins, at, origins.len());
     Some(out)
+}
+
+fn push_range(out: &mut Vec<u32>, origins: &SqlByteOrigins, from: usize, to: usize) {
+    out.extend((from..to).map(|index| origins.at(index)));
 }
 
 pub(crate) fn unpublish_invocations(

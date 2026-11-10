@@ -46,7 +46,7 @@ impl<'a> Executed<'a> {
                 fragment
                     .append_site
                     .is_some_and(|site| version.append_sites.contains(&site))
-                    && version.sql_source_offsets.as_slice() == fragment.origins
+                    && &version.sql_source_offsets == fragment.origins
             })
         })
     }

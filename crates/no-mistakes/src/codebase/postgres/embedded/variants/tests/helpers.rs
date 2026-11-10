@@ -16,7 +16,7 @@ fn direct_parameter_helpers_keep_append_origins_and_renumbered_bind_positions() 
         assert_eq!(variant.recovered_placeholder_positions.len(), count);
         let offset = variant.sql_text.find(marker).unwrap();
         assert_eq!(
-            variant.sql_source_offsets[offset] as usize,
+            variant.sql_source_offsets.at(offset) as usize,
             source.find("${owner}").unwrap() + 2
         );
     }
@@ -103,7 +103,9 @@ fn static_helper_append_forms_keep_cooked_and_raw_physical_origins() {
         (r"\\n", r"\\n"),
     ] {
         assert_eq!(
-            version.sql_source_offsets[version.sql_text.find(sql_token).unwrap()] as usize,
+            version
+                .sql_source_offsets
+                .at(version.sql_text.find(sql_token).unwrap()) as usize,
             source.find(source_token).unwrap()
         );
     }

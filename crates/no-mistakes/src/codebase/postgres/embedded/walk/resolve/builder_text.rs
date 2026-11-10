@@ -1,6 +1,6 @@
 //! Executor calls shaped ``read(`... ${b.text}`, b.values)``.
 
-use super::super::super::{EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlVariant};
+use super::super::super::{EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlVariant, SqlByteOrigins};
 use super::super::variants::ValueKind;
 use super::super::ScopeVisitor;
 use crate::codebase::ts_source::byte_offset_to_line;
@@ -36,7 +36,7 @@ pub(super) fn executor_call(
                 sql_source_offsets: if variant.append_sites.is_empty() {
                     std::mem::take(&mut variant.sql_source_offsets)
                 } else {
-                    Vec::new()
+                    SqlByteOrigins::default()
                 },
                 recovered_placeholder_positions: variant.recovered_placeholder_positions.clone(),
                 variants: (!variant.append_sites.is_empty())

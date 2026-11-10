@@ -46,14 +46,15 @@ fn independent_final_effects_keep_placeholder_and_physical_branch_provenance() {
     {
         assert_eq!(variant.recovered_placeholder_positions.len(), count);
         assert_eq!(
-            variant.sql_source_offsets[variant.sql_text.find("sql_placeholder_1").unwrap()]
-                as usize,
+            variant
+                .sql_source_offsets
+                .at(variant.sql_text.find("sql_placeholder_1").unwrap()) as usize,
             source.find(first).unwrap() + 2
         );
         let last = format!("sql_placeholder_{count}");
         let sql_offset = variant.sql_text.find(&last).unwrap();
         assert_eq!(
-            variant.sql_source_offsets[sql_offset] as usize,
+            variant.sql_source_offsets.at(sql_offset) as usize,
             source.find("${(locationOther").unwrap() + 2
         );
     }

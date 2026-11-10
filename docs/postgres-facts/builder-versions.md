@@ -148,7 +148,8 @@ remain recoverable within that handler.
 Each `EmbeddedSqlVariant` records `sql_text`, `line`,
 `sql_source_positions`, and `recovered_placeholder_positions`. Its source map
 also records `sql_source_offsets`, one physical byte origin per recovered SQL
-byte, including decoded escapes and renumbered generated placeholders. This
+byte, including decoded escapes and renumbered generated placeholders. The map
+is stored as canonical affine runs, so a plain literal keeps one run. This
 identity distinguishes separate clauses on the same source line and deduplicates
 a shared clause even when an optional earlier fragment changes its SQL column.
 The mapping

@@ -1,4 +1,4 @@
-use crate::codebase::postgres::EmbeddedSqlFileFacts;
+use crate::codebase::postgres::{EmbeddedSqlFileFacts, SqlByteOrigins};
 mod executed;
 
 pub(super) struct Input<'a> {
@@ -7,7 +7,7 @@ pub(super) struct Input<'a> {
     pub append_site: Option<u32>,
     pub sql: &'a str,
     pub binds: &'a [(u32, u32)],
-    pub origins: &'a [u32],
+    pub origins: &'a SqlByteOrigins,
     pub enumerated: bool,
 }
 
@@ -31,8 +31,8 @@ pub(super) fn collect(file: &EmbeddedSqlFileFacts) -> Vec<Input<'_>> {
                     })
                 })
                 .flatten()
-                .map(|variant| variant.sql_source_offsets.as_slice())
-                .unwrap_or_default();
+                .map(|variant| &variant.sql_source_offsets)
+                .unwrap_or(SqlByteOrigins::empty());
             out.push(Input {
                 line: fragment.line,
                 original_line: fragment.line,

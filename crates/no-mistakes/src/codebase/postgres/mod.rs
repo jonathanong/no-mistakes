@@ -81,8 +81,8 @@ pub use embedded::{
     extract_embedded_sql_from_source, is_database_call, sql_text,
     summarize_undeclared_executor_types, EmbeddedSqlCall, EmbeddedSqlFileFacts,
     EmbeddedSqlFragment, EmbeddedSqlKind, EmbeddedSqlOptions, EmbeddedSqlSourcePosition,
-    EmbeddedSqlVariant, TrustedSqlTag, UndeclaredExecutorType, UndeclaredExecutorTypeSummary,
-    MAX_EMBEDDED_SQL_VARIANTS,
+    EmbeddedSqlVariant, SqlByteOrigins, TrustedSqlTag, UndeclaredExecutorType,
+    UndeclaredExecutorTypeSummary, MAX_EMBEDDED_SQL_VARIANTS,
 };
 pub(crate) use embedded::{
     package_name, package_root_for_specifier, project_relative_scoped_facts, retain_unproven_spans,
