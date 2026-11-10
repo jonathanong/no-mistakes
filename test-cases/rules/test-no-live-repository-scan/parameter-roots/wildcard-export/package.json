@@ -1,0 +1,5 @@
+{
+  "name": "wildcard-export-fixture",
+  "private": true,
+  "workspaces": ["packages/*"]
+}

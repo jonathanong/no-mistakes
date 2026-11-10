@@ -2,9 +2,15 @@
 //!
 //! Recall first: an unreadable module that a test root can use to reach the
 //! function keeps the finding. A module outside that closure does not.
+mod caller_escape;
 mod cause;
 mod closure;
+mod closure_path;
 mod consumers;
+#[cfg(test)]
+#[path = "owned/coverage/tests.rs"]
+mod coverage;
+mod entry_memo;
 pub(super) mod env;
 mod env_query;
 mod escapes;
@@ -15,6 +21,7 @@ mod parameters;
 mod route_cause;
 mod route_index;
 pub(super) mod setups;
+mod symbol_block;
 pub(super) use cause::{Cause, Ownership};
 pub(crate) use consumers::Resolution;
 
@@ -61,12 +68,12 @@ pub(super) struct Owners<'g> {
     graph: &'g DepGraph,
     /// Test files, setupFiles, globalSetup, and their import closure.
     test_closure: FxHashSet<PathBuf>,
-    /// Modules whose loads or path facts this pass cannot read.
-    unknown_files: FxHashSet<PathBuf>,
+    /// Test files, `setupFiles`, and `globalSetup` before the closure expands.
+    gate_roots: Vec<PathBuf>,
     /// Per enumerating module: whether an unreadable file can reach it.
     reached: RefCell<FxHashMap<PathBuf, bool>>,
-    /// `setupFiles` in a config this pass could not resolve.
-    setup_hole: Option<(PathBuf, u32)>,
+    /// Caller-entry walks memoized by the symbol they start from.
+    entry_memo: RefCell<entry_memo::EntryMemo<'g>>,
 }
 
 impl<'g> Owners<'g> {
@@ -110,16 +117,14 @@ impl<'g> Owners<'g> {
         let escaped = escapes::Escapes::new(facts, graph_files, relevant_files);
         let consumed =
             consumers::Consumed::new(graph, facts, graph_files, relevant_files, resolution);
-        let mut unknown_files = escaped.unknown_files().clone();
-        unknown_files.extend(consumed.unknown_files().iter().cloned());
-        let setup_hole = setups.hole();
         Self {
             callers,
             nodes,
             graph,
             test_closure: scope.test_closure.clone(),
-            unknown_files,
+            gate_roots: scope.gate_roots.clone(),
             reached: RefCell::new(FxHashMap::default()),
+            entry_memo: RefCell::new(entry_memo::EntryMemo::default()),
             imported: imports::ImportedWrites::new(graph),
             env: env::EnvWrites::new(
                 facts,
@@ -134,7 +139,6 @@ impl<'g> Owners<'g> {
             fixture_dirs: environment.fixture_dirs,
             escaped,
             consumed,
-            setup_hole,
         }
     }
 
@@ -148,29 +152,16 @@ impl<'g> Owners<'g> {
         !self.escaped.contains(file, name) && !self.consumed.contains(file)
     }
 
-    /// Call sites that start a chain reaching `target`: sites whose own
-    /// callable nothing calls. `None` when `target` itself has no caller.
-    fn entries(&self, target: NodeId) -> Option<Vec<&'g ResolvedCallSite>> {
-        let mut seen = FxHashSet::default();
-        let mut stack = vec![target.clone()];
-        let mut entries = Vec::new();
-        while let Some(node) = stack.pop() {
-            if !seen.insert(node.clone()) {
-                continue;
-            }
-            let callers = self.callers.get(&node)?;
-            for caller in callers {
-                let source = site_source_node(caller);
-                if self.callers.contains_key(&source) {
-                    stack.push(source);
-                } else {
-                    entries.push(*caller);
-                }
-            }
+    pub(super) fn report_scan_stats(&self) {
+        if std::env::var_os("NO_MISTAKES_SCAN_RESOLVE_DEBUG").is_none() {
+            return;
         }
-        entries.sort_by(|a, b| (&a.file, a.offset).cmp(&(&b.file, b.offset)));
-        entries.dedup_by(|a, b| a.file == b.file && a.offset == b.offset);
-        Some(entries)
+        let entries = self.entry_memo.borrow();
+        eprintln!(
+            "scan-resolve entries walks={} hits={}",
+            entries.walks, entries.hits
+        );
+        self.consumed.report_targeting();
     }
 }
 

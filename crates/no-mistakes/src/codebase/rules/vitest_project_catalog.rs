@@ -106,3 +106,6 @@ pub(crate) fn config_projects_required(
         &config.tests.vitest.projects,
     )
 }
+
+#[cfg(test)]
+mod tests;

@@ -3,6 +3,9 @@ use serde_json::Value;
 use std::cell::OnceCell;
 use std::path::Path;
 
+#[path = "package_exports_pattern.rs"]
+mod pattern;
+
 pub(super) struct Target {
     pub(super) path: String,
     pub(super) required: bool,
@@ -18,9 +21,10 @@ pub(super) fn targets(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<(bool, Vec<Target>), ()> {
     let selected = selected_export(exports, subpath)?;
-    if !has_types(selected) {
+    if !has_types(selected.value) {
         let mut targets = Vec::new();
-        runtime_targets(selected, true, mode, false, &mut targets)?;
+        runtime_targets(selected.value, true, mode, false, &mut targets)?;
+        pattern::apply_capture(&mut targets, selected.capture.as_deref())?;
         if targets.is_empty() {
             return Err(());
         }
@@ -29,7 +33,8 @@ pub(super) fn targets(
     let version = OnceCell::new();
     let compiler = || *version.get_or_init(|| conditions::compiler_version(consumer_root, sources));
     let mut targets = Vec::new();
-    select(selected, true, true, mode, &compiler, &mut targets)?;
+    select(selected.value, true, true, mode, &compiler, &mut targets)?;
+    pattern::apply_capture(&mut targets, selected.capture.as_deref())?;
     if targets.is_empty() {
         return Err(());
     }
@@ -140,30 +145,31 @@ fn declaration_target(text: &str, runtime: bool) -> Result<Target, ()> {
     Err(())
 }
 
-fn selected_export<'a>(exports: &'a Value, subpath: &str) -> Result<&'a Value, ()> {
-    Ok(if let Some(map) = exports.as_object() {
-        if map.keys().any(|key| key.starts_with('.')) {
-            if map.keys().any(|key| !key.starts_with('.')) {
-                return Err(());
-            }
-            let key = if subpath.is_empty() {
-                ".".to_string()
-            } else {
-                format!("./{subpath}")
-            };
-            map.get(&key).ok_or(())?
-        } else {
-            if !subpath.is_empty() {
-                return Err(());
-            }
-            exports
-        }
-    } else {
+fn selected_export<'a>(exports: &'a Value, subpath: &str) -> Result<pattern::Selection<'a>, ()> {
+    let Some(map) = exports.as_object() else {
         if !subpath.is_empty() {
             return Err(());
         }
-        exports
-    })
+        return Ok(pattern::exact(exports));
+    };
+    if !map.keys().any(|key| key.starts_with('.')) {
+        if !subpath.is_empty() {
+            return Err(());
+        }
+        return Ok(pattern::exact(exports));
+    }
+    if map.keys().any(|key| !key.starts_with('.')) {
+        return Err(());
+    }
+    let key = if subpath.is_empty() {
+        ".".to_string()
+    } else {
+        format!("./{subpath}")
+    };
+    if let Some(value) = map.get(&key) {
+        return Ok(pattern::exact(value));
+    }
+    pattern::pattern_export(map, &key).ok_or(())
 }
 
 pub(super) fn source_targets(
@@ -171,16 +177,16 @@ pub(super) fn source_targets(
     subpath: &str,
     mode: ConditionMode,
 ) -> Result<Vec<Target>, ()> {
+    let selected = selected_export(exports, subpath)?;
     let mut targets = Vec::new();
-    runtime_targets(
-        selected_export(exports, subpath)?,
-        true,
-        mode,
-        true,
-        &mut targets,
-    )?;
+    runtime_targets(selected.value, true, mode, true, &mut targets)?;
+    pattern::apply_capture(&mut targets, selected.capture.as_deref())?;
     if targets.is_empty() {
         return Err(());
     }
     Ok(targets)
 }
+
+#[cfg(test)]
+#[path = "package_exports_pattern_tests.rs"]
+mod pattern_tests;

@@ -808,7 +808,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/dir.ts",
           "import": "readdirSync",
           "line": 8,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/t.test.ts:10 imports `../src/dir` through a require(). Fix: import the helper with a named static import and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/t.test.ts:11 references `list` other than as a direct call. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((entry) => `${user}:${entry}`);",
           "target": "unresolved root"

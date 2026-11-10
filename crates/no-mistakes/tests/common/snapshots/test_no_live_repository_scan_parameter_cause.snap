@@ -98,7 +98,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "root.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because root.mts:5 is not a named function. Fix: declare the helper as a named function and pass an owned root from each caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.mts:5 passes `root`, a value forwarded through another parameter. Fix: pass an owned root from the caller that supplies that parameter. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(root)",
           "target": "unresolved root"

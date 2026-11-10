@@ -95,7 +95,8 @@ pub(super) fn collect(
                             prepared_vitest_projects,
                             shared.graph_file_universe(),
                             shared,
-                            &Resolution::new(tsconfig_catalog, prepared_graph),
+                            &Resolution::new(tsconfig_catalog, prepared_graph)
+                                .with_session(session),
                         )
                     })?;
                 findings.extend(diagnostics.findings);

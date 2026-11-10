@@ -1,10 +1,9 @@
 //! Where an unsafe import or reference sits. The consumed-file set is unchanged.
-use crate::codebase::ts_resolver::{normalize_path, ImportResolver};
+use crate::codebase::ts_resolver::{normalize_path, ImportResolution, VisiblePathLookup};
 use crate::codebase::ts_source::module_facts::arguments::PathProvenance;
 use crate::codebase::ts_source::module_facts::arguments::RouteKind;
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 use crate::codebase::workspaces::IndexedWorkspaceMap;
-use crate::fx::PathSet;
 use std::path::{Path, PathBuf};
 
 pub(super) struct RouteHit {
@@ -38,20 +37,35 @@ pub(super) fn note_resolved(
     }
 }
 
-pub(super) fn note_unknown(
-    slot: &mut Option<(PathBuf, u32)>,
-    file: &Path,
+/// Line of the import that names `specifier`. Recorded lines survive a dropped source.
+pub(super) fn specifier_line(
     provenance: &PathProvenance,
+    imports: &[crate::codebase::ts_source::module_facts::ModuleImport],
+    source: &str,
     specifier: &str,
-) {
-    let start = provenance
+) -> u32 {
+    if let Some(line) = provenance.import_lines.get(specifier).copied() {
+        return line;
+    }
+    if !source.is_empty() {
+        if let Some(line) = imports
+            .iter()
+            .filter(|import| import.specifier == specifier)
+            .map(|import| {
+                crate::codebase::ts_source::byte_offset_to_line(source, import.span.start as usize)
+            })
+            .min()
+        {
+            return line;
+        }
+    }
+    provenance
         .route_sites
         .iter()
         .filter(|site| site.detail == specifier)
         .map(|site| site.line)
         .min()
-        .unwrap_or(1);
-    remember(slot, file, start);
+        .unwrap_or(1)
 }
 
 pub(super) fn note_nondirect(
@@ -59,34 +73,39 @@ pub(super) fn note_nondirect(
     file: &Path,
     provenance: &PathProvenance,
     module: &TypeScriptModuleFacts,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     workspace: &IndexedWorkspaceMap,
-    visible: &PathSet,
+    visible: &dyn VisiblePathLookup,
 ) {
     for site in &provenance.route_sites {
         if site.kind != RouteKind::NonDirect {
             continue;
         }
         for import in &module.imports {
-            let matched = import.bindings.iter().any(|binding| {
-                !binding.type_only
-                    && binding.kind == "named"
-                    && (binding.local == site.detail || binding.imported == site.detail)
-            });
-            if !matched {
+            let Some(detail) = import
+                .bindings
+                .iter()
+                .find_map(|binding| {
+                    (binding.kind == "named" && !binding.type_only && binding.local == site.detail)
+                        .then_some(binding.imported.as_str())
+                })
+                .or_else(|| {
+                    import
+                        .bindings
+                        .iter()
+                        .any(|binding| {
+                            binding.kind == "named"
+                                && !binding.type_only
+                                && binding.imported == site.detail
+                        })
+                        .then_some(site.detail.as_str())
+                })
+            else {
                 continue;
-            }
+            };
             let class = resolver.classify_import(&import.specifier, file, workspace, visible);
             if let Some(target) = class.preferred_path() {
-                push(
-                    hits,
-                    file,
-                    site.start,
-                    site.line,
-                    site.kind,
-                    &site.detail,
-                    target,
-                );
+                push(hits, file, site.start, site.line, site.kind, detail, target);
             }
         }
     }
@@ -101,11 +120,20 @@ pub(super) fn link(via: &mut Vec<(PathBuf, PathBuf)>, child: &Path, barrel: &Pat
     }
 }
 
-pub(super) fn earliest<'a>(
-    hits: &'a [RouteHit],
+pub(super) fn targeting_indexes(
+    hits: &[RouteHit],
     via: &[(PathBuf, PathBuf)],
     file: &Path,
-) -> Option<&'a RouteHit> {
+) -> Vec<usize> {
+    let accepted = reachable_forms(via, file);
+    hits.iter()
+        .enumerate()
+        .filter(|(_, hit)| accepted.iter().any(|path| path == &hit.target))
+        .map(|(index, _)| index)
+        .collect()
+}
+
+fn reachable_forms(via: &[(PathBuf, PathBuf)], file: &Path) -> Vec<PathBuf> {
     let mut accepted = Vec::new();
     let mut pending = forms(file);
     while let Some(path) = pending.pop() {
@@ -119,20 +147,7 @@ pub(super) fn earliest<'a>(
         }
         accepted.push(path);
     }
-    hits.iter()
-        .filter(|hit| accepted.iter().any(|path| path == &hit.target))
-        .min_by(|left, right| (&left.file, left.start).cmp(&(&right.file, right.start)))
-}
-
-pub(super) fn note_escape(slot: &mut Option<(PathBuf, u32)>, file: &Path, start: u32) {
-    remember(slot, file, start);
-}
-
-fn remember(slot: &mut Option<(PathBuf, u32)>, file: &Path, start: u32) {
-    let next = (file.to_path_buf(), start);
-    if slot.as_ref().is_none_or(|prev| next < *prev) {
-        *slot = Some(next);
-    }
+    accepted
 }
 
 fn push(
@@ -177,3 +192,7 @@ fn is_import(kind: RouteKind) -> bool {
             | RouteKind::ViMock
     )
 }
+
+#[cfg(test)]
+#[path = "route_index/tests.rs"]
+mod tests;

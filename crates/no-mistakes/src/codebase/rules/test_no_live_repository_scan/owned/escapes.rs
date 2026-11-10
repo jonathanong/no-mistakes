@@ -1,7 +1,9 @@
 use super::path_provenance;
-use super::route_index;
 use crate::codebase::dependencies::graph::TsFactLookup;
+use crate::codebase::ts_source::byte_offset_to_line;
+use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::ts_source::module_facts::arguments::RouteKind;
+use crate::codebase::ts_source::module_facts::{ModuleDiagnostic, TypeScriptModuleFacts};
 use crate::fx::{FxHashMap, FxHashSet};
 use std::path::{Path, PathBuf};
 
@@ -10,8 +12,7 @@ pub(super) struct Escapes {
     local: FxHashMap<PathBuf, FxHashSet<String>>,
     refs: Vec<(PathBuf, u32, u32, String)>,
     /// Files whose path facts failed, or that load a module this pass cannot name.
-    unknown_files: FxHashSet<PathBuf>,
-    unknown_at: Option<(PathBuf, u32)>,
+    unknown_sites: Vec<(PathBuf, u32)>,
 }
 
 impl Escapes {
@@ -31,12 +32,7 @@ impl Escapes {
             match path_provenance(ts) {
                 Some(paths) => {
                     if paths.modules_unknown {
-                        escapes.unknown_files.insert(file.clone());
-                        route_index::note_escape(
-                            &mut escapes.unknown_at,
-                            file,
-                            paths.unknown_load.unwrap_or(1),
-                        );
+                        escapes.mark_unknown(file, paths.unknown_load.unwrap_or(1));
                     }
                     for site in &paths.route_sites {
                         if site.kind == RouteKind::NonDirect {
@@ -50,22 +46,24 @@ impl Escapes {
                     }
                     escapes.local.insert(file.clone(), paths.value_refs.clone());
                 }
-                None if ts.module_bindings.is_some() => {
-                    escapes.unknown_files.insert(file.clone());
-                    route_index::note_escape(&mut escapes.unknown_at, file, 1);
+                // A dropped gate is not an unreadable import. A load the collector
+                // already marked unknown still is, at that load's line.
+                None => {
+                    if let Some(line) = dropped_unreadable_load(ts) {
+                        escapes.mark_unknown(file, line);
+                    }
                 }
-                None => {}
             }
         }
         escapes
     }
 
-    pub(super) fn unknown_files(&self) -> &FxHashSet<PathBuf> {
-        &self.unknown_files
+    pub(super) fn unknown_sites(&self) -> &[(PathBuf, u32)] {
+        &self.unknown_sites
     }
 
-    pub(super) fn unknown_at(&self) -> Option<&(PathBuf, u32)> {
-        self.unknown_at.as_ref()
+    fn mark_unknown(&mut self, file: &Path, line: u32) {
+        self.unknown_sites.push((file.to_path_buf(), line));
     }
 
     pub(super) fn contains(&self, file: &Path, name: &str) -> bool {
@@ -84,3 +82,49 @@ impl Escapes {
             .map(|(path, _, line, detail)| (path.clone(), *line, detail.clone()))
     }
 }
+
+/// Provenance the gate rejected can still name a load that cannot be read.
+fn dropped_unreadable_load(ts: &TsFileFacts) -> Option<u32> {
+    let module = ts.module_bindings.as_deref()?;
+    if let Some(provenance) = module.path_provenance.as_deref() {
+        if provenance.modules_unknown {
+            return Some(provenance.unknown_load.unwrap_or(1));
+        }
+    }
+    unreadable_diagnostic_line(ts, module)
+}
+
+fn unreadable_diagnostic_line(ts: &TsFileFacts, module: &TypeScriptModuleFacts) -> Option<u32> {
+    let source = ts.source.as_deref();
+    let mut found: Option<u32> = None;
+    for diagnostic in &module.diagnostics {
+        if !is_unreadable_load(diagnostic) {
+            continue;
+        }
+        let line = diagnostic
+            .span
+            .as_ref()
+            .and_then(|span| source.map(|text| byte_offset_to_line(text, span.start as usize)))
+            .unwrap_or(1);
+        found = Some(match found {
+            Some(prior) => prior.min(line),
+            None => line,
+        });
+    }
+    found
+}
+
+fn is_unreadable_load(diagnostic: &ModuleDiagnostic) -> bool {
+    diagnostic.kind == "unsupported"
+        && matches!(
+            diagnostic.message.as_str(),
+            "Non-literal dynamic import specifier"
+                | "Shadowed require is not a module loader"
+                | "Non-literal or unsupported require specifier"
+                | "Indirect require reference is unsupported"
+        )
+}
+
+#[cfg(test)]
+#[path = "escapes/tests.rs"]
+mod tests;

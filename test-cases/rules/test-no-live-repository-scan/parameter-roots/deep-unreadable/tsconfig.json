@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "baseUrl": ".",
+    "paths": {
+      "@scope/shallow-unread": ["missing/shallow.mts"],
+      "@scope/deep-unread": ["missing/deep.mts"]
+    }
+  }
+}
