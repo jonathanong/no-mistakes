@@ -46,10 +46,16 @@ fn exact_inline_origins_are_opt_in_and_distinguish_same_line_unicode_calls() {
             let sql = call.sql_text.as_deref().unwrap();
             assert_eq!(call.sql_source_offsets.len(), sql.len());
             assert_eq!(call.sql_source_offsets.at(0), expected[index]);
-            assert!(call.sql_source_offsets.stored_runs() < sql.len());
+            assert!(super::byte_origins::tests::stored_runs(&call.sql_source_offsets) < sql.len());
             if index < 2 {
-                assert_eq!(call.sql_source_offsets.stored_runs(), 1);
-                assert_eq!(call.sql_source_offsets.stored_heap_bytes(), 0);
+                assert_eq!(
+                    super::byte_origins::tests::stored_runs(&call.sql_source_offsets),
+                    1
+                );
+                assert_eq!(
+                    super::byte_origins::tests::stored_heap_bytes(&call.sql_source_offsets),
+                    0
+                );
             }
             assert_eq!(
                 call.source_offset_at_sql_position(sql, 1, 1),
@@ -108,9 +114,9 @@ fn exact_origins_match_expanded_sql_and_preserve_dynamic_templates() {
         assert!(!on.calls[0].sql_source_offsets.is_empty());
         let select_at = source.find("SELECT DISTINCT id FROM ${table}").unwrap();
         assert_eq!(on.calls[0].sql_source_offsets.at(0), select_at as u32);
-        assert!(on.calls[0].sql_source_offsets.stored_runs() <= 4);
+        assert!(super::byte_origins::tests::stored_runs(&on.calls[0].sql_source_offsets) <= 4);
         assert!(
-            on.calls[0].sql_source_offsets.stored_heap_bytes()
+            super::byte_origins::tests::stored_heap_bytes(&on.calls[0].sql_source_offsets)
                 < on.calls[0].sql_text.as_deref().unwrap().len() * 4
         );
         let dynamic = on.calls.last().unwrap();

@@ -77,24 +77,6 @@ impl SqlByteOrigins {
         self.get(0)
     }
 
-    #[cfg(test)]
-    pub(crate) fn stored_runs(&self) -> usize {
-        match &self.kind {
-            Kind::Empty => 0,
-            Kind::Affine { .. } => 1,
-            Kind::Runs(runs) => runs.len(),
-        }
-    }
-
-    /// Heap bytes of the retained map. An affine literal stays inline.
-    #[cfg(test)]
-    pub(crate) fn stored_heap_bytes(&self) -> usize {
-        match &self.kind {
-            Kind::Empty | Kind::Affine { .. } => 0,
-            Kind::Runs(runs) => runs.capacity() * size_of::<Run>(),
-        }
-    }
-
     fn compress(values: &[u32]) -> Self {
         if values.is_empty() {
             return Self::default();
@@ -155,4 +137,4 @@ fn lookup(runs: &[Run], index: usize) -> Option<u32> {
 
 #[cfg(test)]
 #[path = "byte_origins_tests.rs"]
-mod tests;
+pub(crate) mod tests;
