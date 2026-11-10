@@ -1,6 +1,8 @@
 # `no-mistakes dependents` — full reference
 
 Find every file that transitively imports the given file or named export.
+`related` is an alias of `dependents`, accepted by the CLI and as an
+`analyzeProject` report type.
 
 ## When to use a different tool
 
@@ -14,7 +16,7 @@ Find every file that transitively imports the given file or named export.
 no-mistakes dependents <FILE[#SYMBOL]>... [--root <PATH>] [--tsconfig <FILE>] [--depth <N>]
            [--filter <GLOB>]... [--test <FRAMEWORK>]...
            [--target-module <GLOB>]...
-           [--relationship <KIND>]...
+           [--relationship <KIND>]... [--symbols]
            [--format <FORMAT>] [--json] [--timings] [-j <N>]
 ```
 
@@ -56,11 +58,14 @@ no-mistakes dependents src/utils.mts --root /path/to/project --tsconfig backend/
 | `--filter <GLOB>` | none | Include only matching files (repeatable, OR) |
 | `--target-module <GLOB>` | none | Include only matching external module nodes (repeatable, OR) |
 | `--test <FRAMEWORK>` | none | Expand to well-known test globs: `vitest`, `playwright`, `cargo`, `dotnet`, `swift` (repeatable) |
-| `--relationship <KIND>` | all | Follow only edges of this kind (repeatable, OR). Values: `call`, `import`, `import-static`, `import-dynamic`, `import-type`, `import-require`, `route-import`, `workspace`, `package`, `test`, `route`, `queue`, `md`, `ci`, `workflow`, `workflow-job`, `workflow-step`, `workflow-needs`, `workflow-uses`, `workflow-run`, `workflow-artifact`, `http`, `process`, `asset`, `react`, `dotnet`, `swift`, `terraform`, `python`, `go`, `rust`, `ruby`, `php`, `java`, `kotlin`, `elixir`, `dart`, `resource`, `trpc`, `all` |
+| `--relationship <KIND>` | all | Follow only edges of this kind (repeatable, OR). Values: `call`, `assertion-owner`, `import`, `import-static`, `import-dynamic`, `import-type`, `import-require`, `route-import`, `workspace`, `package`, `test`, `route`, `queue`, `md`, `ci`, `workflow`, `workflow-job`, `workflow-step`, `workflow-needs`, `workflow-uses`, `workflow-run`, `workflow-artifact`, `http`, `process`, `asset`, `react`, `dotnet`, `swift`, `terraform`, `python`, `go`, `rust`, `ruby`, `php`, `java`, `kotlin`, `elixir`, `dart`, `resource`, `trpc`, `all` |
+| `--symbols` | false | Walk symbol nodes in the dependency graph. Without it, `FILE#SYMBOL` still narrows through the export symbol index. |
 | `--format <FORMAT>` | human (TTY) / json (pipe) | Output format: `json`, `md`, `yml`, `paths`, `human` |
 | `--json` | false | Shorthand for `--format json` |
 | `--timings` | false | Emit phase timings on stderr |
 | `-j / --jobs <N>` | all cores | Worker threads. `0` or omitted = all cores. Honors `RAYON_NUM_THREADS`. |
+
+`--candidate-include` / `--candidate-exclude` and `--projection paths` are invalid on `dependents` and `related`; they are import-only inputs or `dependencies`-only projections.
 
 Discovery is git-aware: tracked files plus untracked non-ignored files are considered, and `.gitignore`d files are skipped. Relationship filters also gate graph construction so unrelated edge producers are not run. Invalid relationship values fail at argument parsing.
 

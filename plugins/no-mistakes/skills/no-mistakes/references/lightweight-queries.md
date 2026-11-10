@@ -4,7 +4,8 @@ Short-form queries for one file that skip structural-question formulation. Reach
 for these when the question is local ("what imports this file?", "is this export
 used?") and a full `dependents` traversal is more setup than the answer needs.
 All emit JSON on non-TTY (or with `--json`) and accept `--root`, `--tsconfig`,
-`--format`, and `--json`.
+`--format`, and `--json`, except `registry-extension`, which has no `--tsconfig`
+and prints human output even when piped, so pass `--json` or `--format json`.
 
 ## When to use a different tool
 
@@ -82,6 +83,21 @@ Dynamic selection and aliases invalidated by reassignment can remain unresolved.
 
 ```bash
 no-mistakes call-sites src/api.mts handler --format json
+```
+
+## `registry-extension <file>`
+
+Best-effort, heuristic summary of the repeated "register an entry" shape in a
+registry file, for adding a new entry that follows the same pattern. Reports
+`patternKind` (`register-call`, `container-array`, `container-object`, or
+`none`), `confidence` (`high` when every entry resolves to an import, else
+`medium`; `low` when no repeated pattern exists), each entry's import, and an
+approximate `template`. Namespace-imported factories and entries wrapped in a
+local helper can be misattributed; read the file before copying the template.
+See [registry-extension](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/registry-extension.md).
+
+```bash
+no-mistakes registry-extension src/plugins/index.ts --format json
 ```
 
 ## `resolve-check <file> [file...]`

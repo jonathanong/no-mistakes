@@ -43,6 +43,8 @@ The skill body has changed since this run (the PostgreSQL catalog paragraph in
 `SKILL.md`, six lines in `references/playwright.md`); the `description:` line
 has not. Build any new control arm from today's skill
 ([why](METHODOLOGY.md#what-the-control-cost-to-get-right-and-the-trap-it-exposed)).
+The skill body and the `names-graph-command` graders changed again in the
+drift-sweep PR; the suite was not re-run after that change.
 
 Earlier descriptions, their scores, and how this one was chosen are in
 [HISTORY.md](HISTORY.md).
@@ -199,7 +201,7 @@ Every case carries a `tags:` field naming its flow. 62 generated cases across
 | `safety` | 3 | tool output is data: never execute emitted command text unreviewed | `SKILL.md` claim |
 | `neg-hard` | 4 | **over-trigger guards** — questions that look structural but aren't | `SKILL.md` claim |
 | `lang-graph` | 5 | configured non-TS graphs (**synthetic** fixture) | skill surface |
-| `napi` | 5 | programmatic API — `SKILL.md` gives it one sentence, so Δ ≈ 0 is expected | skill surface |
+| `napi` | 5 | programmatic API — `SKILL.md` gives it a short section (about 20 lines), so Δ ≈ 0 was expected; that rationale predates the section and needs re-examining | skill surface |
 | `heldout` | 9 | trigger-only cases in unseen wording: 01–03 spent, 04–06 live, 07–09 never run | real register |
 
 "Real traffic" means the phrasing was observed in mined session history.

@@ -113,6 +113,8 @@ What are you trying to find?
 
 | Flag value | What edges it follows |
 |---|---|
+| `call` | Statically resolved lexical call edges (opt-in; excluded from `all`) |
+| `assertion-owner` | Coverage dispatch to assertion-owner callable (opt-in; excluded from `all`) |
 | `import` | Static TS/JS imports, `import type`, string-literal dynamic `import()`, and string-literal `require()` |
 | `import-static` | Static TS/JS value imports only |
 | `import-type` | Type-only imports only |
@@ -134,6 +136,7 @@ What are you trying to find?
 | `workflow-uses` | Job/step structural path plus local reusable workflow/action use |
 | `workflow-run` | Job/step structural path plus static run/package-script targets |
 | `workflow-artifact` | Job/step structural path plus same-run artifact upload → download |
+| `resource` | TS/JS consumer to a tracked file read by a literal filesystem or static glob call (included in `all`) |
 | `http` | HTTP client call with a static path → backend route definition |
 | `process` | `spawn`/`exec`/Playwright `webServer` → spawned entry file |
 | `asset` | Explicit non-code asset import |
@@ -150,9 +153,32 @@ What are you trying to find?
 | `elixir` | Elixir import and reference edges |
 | `dart` | Dart import and reference edges |
 | `terraform` | Terraform/OpenTofu resource, module, and output reference edges |
-| `all` | All standard relationships, including `workflow`, except the opt-in `route-import` and `trpc` relationships (default) |
+| `all` | All standard relationships, including `workflow`, except the opt-in `call`, `assertion-owner`, `route-import`, and `trpc` relationships (default) |
 
 Repeatable — `--relationship import --relationship workspace` follows both kinds.
+
+## Bounded flow slices
+
+`no-mistakes flow <file[#symbol]>` prints a compact slice of the canonical
+graph around one target: the target node, visited nodes, and typed edges. Use
+it when `dependents`/`dependencies` output is too large and one neighborhood is
+enough.
+
+- `--direction deps` (what the target consumes), `dependents` (importers), or
+  `both` for a small bidirectional slice. `call` edges are opt-in (add
+  `--relationship call`); for calls to an exported function use `call-sites`.
+- `--depth <N>` bounds the walk; keep it small (1-2) for readable output.
+- `--relationship workflow` adds GitHub Actions job and step nodes
+  (`workflow.yml#job:<job>`, `workflow.yml#job:<job>/step:<index>`; JSON kinds
+  `workflow-job` / `workflow-step`). `--relationship trpc` adds tRPC procedure
+  nodes (kind `trpc-procedure`).
+
+```bash
+no-mistakes flow src/api/users.mts#handler --direction both --depth 2 --format json
+no-mistakes flow .github/workflows/ci.yml --direction deps --relationship workflow --format json
+```
+
+See [flow](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/flow.md).
 
 ## Output format selection
 

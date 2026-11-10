@@ -196,6 +196,34 @@ Use the results as:
   `WORKFLOW#job:<job>` and `WORKFLOW#job:<job>/step:<zero-based-index>`;
   remote `uses` and `workflow_run` remain outside that graph.
 
+For a bounded neighborhood of one workflow, job, or script rather than every
+dependent, use `flow` with `--relationship workflow`; see
+[bounded flow slices](decision-tree.md#bounded-flow-slices).
+
+## RSC caller impact
+
+Which server components and App Router pages render a component without
+crossing a client boundary:
+
+```bash
+no-mistakes rsc-callers app/ui/Button.tsx --root . --format json
+```
+
+- Traversal walks the reverse runtime-import graph and stops at `"use client"`
+  files: they are not reported and nothing above them is followed.
+- Callers are `kind: "page"` (`page`, `route`, `layout`, `template`, `default`,
+  `loading`, `error`, `not-found`) or `kind: "component"`. The page
+  classification is a filename heuristic.
+- A file with no directive counts as a server component, so tests, stories, and
+  helpers outside the App Router appear as `environment: unknown`. Keep `--root` at the workspace
+  root and filter those files from the output: a narrower root drops callers and
+  resolves the component path as `app/app/...`.
+- Conditional dynamic imports are not followed, so a page that imports the
+  component only conditionally may be missing from `callers`.
+- A missing component path is an error; an unimported one gives empty `callers`.
+
+See [rsc-callers](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/rsc-callers.md).
+
 ## Diff test impact planning
 
 For "which tests should run for everything changed in this diff?", pass the
