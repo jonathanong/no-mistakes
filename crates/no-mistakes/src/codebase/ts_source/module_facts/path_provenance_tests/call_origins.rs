@@ -42,9 +42,23 @@ fn origins_follow_getters_owned_lets_and_parameters_but_nothing_else() {
     let owner = read.source.find("function param(").unwrap() as u32;
     assert_eq!(read.origin("readdirSync(second);").param_owner, Some(owner));
     assert_eq!(read.origin("readdirSync(second)]").param_owner, Some(owner));
-    assert_eq!(param("readdirSync(a)"), None);
+    assert_eq!(param("readdirSync(a)"), Some(0));
+    assert_eq!(
+        read.origin("readdirSync(a)").param_member.as_deref(),
+        Some("a")
+    );
     assert_eq!(param("readdirSync(b)"), None);
     assert_eq!(param("readdirSync(join(c"), Some(2));
+    assert_eq!(read.origin("readdirSync(prefixed").anchor, PathAnchor::Temp);
+    assert_eq!(read.origin("readdirSync(climbed"), PathOrigin::unknown());
+    assert_eq!(param("readdirSync(dir)"), Some(0));
+    assert_eq!(
+        read.origin("readdirSync(dir)").param_member.as_deref(),
+        Some("dir")
+    );
+    assert_eq!(param("readdirSync(plain)"), Some(1));
+    assert_eq!(read.origin("readdirSync(plain)").param_member, None);
+    assert_eq!(param("readdirSync(inner)"), None);
 }
 
 #[test]

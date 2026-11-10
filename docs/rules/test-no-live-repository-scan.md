@@ -216,8 +216,28 @@ a recursive call cannot establish ownership by itself. A call that omits the
 argument resolves to the default, so one omitting caller keeps the finding. The callee
 must not reassign the parameter. Derived paths, nested helpers capturing the
 parameter, and an options parameter read through a static property such as
-`options.root` can retain the caller proof. An object argument must expose the
-requested property in a literal object, without mutation or escape. Method and
+`options.root` can retain the caller proof. `join(repoRoot, ".x/a")` and
+`resolve(source)` keep that parameter. `fn(join(root, "rules"))` is an owned root
+when `root` is an owned temporary directory. A self-recursive enumerator stays
+proven when every external entry is owned.
+
+A same-file helper may return that owned root, including a helper whose parameter
+is only the `mkdtemp` prefix. The returned origin must stay a non-dynamic temporary
+directory and must not climb out of it with `..`. A dynamic return that drops a
+parameter, including `join(mkdtempSync(...), suffix)`, stays unresolved. The test
+may destructure the returned object (`const { source } = mkFixture()`). An
+object-pattern parameter (`function ensure({ source } = {})`) uses the same
+literal-object caller proof as `options.source`. A destructured default is ignored
+while the property's own origin is proven. When a literal object omits the key and
+has no spread, the default expression is the origin. An unknown object, a spread,
+or a present property with an unknown value stays unresolved, so a live default
+that might still apply keeps the finding. A reachable caller that omits a defaulted
+argument also keeps the finding. A direct object property is one key deep: nested
+patterns, computed keys, and rest elements stay unresolved. Production modules that
+no selected test imports do not add callers.
+
+An object argument must expose the requested property in a literal object, without
+mutation or escape. Method and
 constructor calls on that object prevent this proof because they may mutate its
 properties. A member written through an object or array assignment target,
 including nested patterns, rest elements, defaults, and loop targets, also

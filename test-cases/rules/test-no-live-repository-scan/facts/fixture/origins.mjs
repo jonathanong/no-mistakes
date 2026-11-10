@@ -73,3 +73,18 @@ const notFunction = "x";
 readdirSync(argArrow());
 readdirSync(noReturn());
 readdirSync(notFunction());
+function prefixed(prefix) {
+  return mkdtempSync(join(tmpdir(), prefix));
+}
+function climbed(suffix) {
+  return join(mkdtempSync(join(tmpdir(), "p-")), suffix);
+}
+readdirSync(prefixed("x"));
+readdirSync(climbed(".."));
+export function objectParam({ dir = "fallback" }, plain) {
+  readdirSync(dir);
+  readdirSync(plain);
+}
+export function nestedParam({ outer: { inner } }) {
+  readdirSync(inner);
+}

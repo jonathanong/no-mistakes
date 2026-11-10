@@ -76,3 +76,17 @@ function getter17() { return getter16() }
 function getter18() { return getter17() }
 function getter19() { return getter18() }
 readdirSync(getter19().root)
+const { absent = mkdtempSync('case-') } = {}
+readdirSync(absent)
+const { omitted = '/repository' } = {}
+readdirSync(omitted)
+function empty() { return {} }
+const { fallback = mkdtempSync('case-') } = empty()
+readdirSync(fallback)
+function opaque() { return { root: notAPath } }
+const notAPath = {}
+const { root: shadowed = mkdtempSync('case-') } = opaque()
+readdirSync(shadowed)
+let unknownObject = { root: mkdtempSync('case-') }
+const { root: fromUnknown = mkdtempSync('case-') } = unknownObject
+readdirSync(fromUnknown)

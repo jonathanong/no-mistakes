@@ -2,11 +2,15 @@
 use super::{PathAnchor, PathOrigin, Projector};
 use oxc_ast::{ast::*, AstKind};
 
+fn parameterized(params: &FormalParameters<'_>) -> bool {
+    !params.items.is_empty()
+}
+
 fn returned<'b, 'a>(
     params: &FormalParameters<'a>,
     body: &'b FunctionBody<'a>,
 ) -> Option<&'b Expression<'a>> {
-    if !params.items.is_empty() || params.rest.is_some() || body.statements.is_empty() {
+    if params.rest.is_some() || body.statements.is_empty() {
         return None;
     }
     if !body.statements[..body.statements.len() - 1]
@@ -77,59 +81,69 @@ impl<'a> Projector<'a, '_> {
         })
     }
 
-    /// `getDir()` for a same-file zero-argument function with one returned expression.
+    /// `getDir()` / `mkTmp(prefix)` for a same-file function with one returned expression.
     pub(super) fn getter_origin(
         &mut self,
         call: &CallExpression<'a>,
         depth: usize,
     ) -> Option<PathOrigin> {
-        let expression = self.getter_expression(call)?;
-        Some(self.origin(expression, depth + 1))
+        let (expression, has_parameters) = self.getter_expression(call)?;
+        super::patterns::accept_parameterized(has_parameters, self.origin(expression, depth + 1))
     }
 
+    /// The returned expression and whether the callee declares parameters.
     pub(super) fn getter_expression(
         &mut self,
         call: &CallExpression<'a>,
-    ) -> Option<&'a Expression<'a>> {
+    ) -> Option<(&'a Expression<'a>, bool)> {
         let semantic = self.semantic;
         let Expression::Identifier(callee) = call.callee.get_inner_expression() else {
             return None;
         };
-        if !call.arguments.is_empty() {
-            return None;
-        }
         let symbol = self.binding_symbol(callee)?;
         for reference in semantic.scoping().get_resolved_references(symbol) {
             if !self.take() || reference.flags().is_write() {
                 return None;
             }
         }
-        let expression = match semantic
+        match semantic
             .nodes()
             .kind(semantic.scoping().symbol_declaration(symbol))
         {
             AstKind::Function(function) if !function.generator => {
-                returned(&function.params, function.body.as_ref()?)?
+                let body = function.body.as_ref()?;
+                Some((
+                    returned(&function.params, body)?,
+                    parameterized(&function.params),
+                ))
             }
             AstKind::VariableDeclarator(declaration) if self.immutable_binding(symbol) => {
-                match declaration.init.as_ref()?.get_inner_expression() {
-                    Expression::ArrowFunctionExpression(arrow) => {
-                        if !arrow.params.items.is_empty() || arrow.params.rest.is_some() {
-                            return None;
-                        }
-                        match &arrow.body {
-                            ArrowFunctionBody::FunctionBody(body) => returned(&arrow.params, body)?,
-                            other => other.as_expression()?,
-                        }
-                    }
-                    Expression::FunctionExpression(function) if !function.generator => {
-                        returned(&function.params, function.body.as_ref()?)?
-                    }
-                    _ => return None,
-                }
+                function_value(declaration.init.as_ref()?)
             }
-            _ => return None,
-        };
-        Some(expression)
+            _ => None,
+        }
+    }
+}
+
+fn function_value<'a>(init: &'a Expression<'a>) -> Option<(&'a Expression<'a>, bool)> {
+    match init.get_inner_expression() {
+        Expression::ArrowFunctionExpression(arrow) => {
+            if arrow.params.rest.is_some() {
+                return None;
+            }
+            let expression = match &arrow.body {
+                ArrowFunctionBody::FunctionBody(body) => returned(&arrow.params, body)?,
+                other => other.as_expression()?,
+            };
+            Some((expression, parameterized(&arrow.params)))
+        }
+        Expression::FunctionExpression(function) if !function.generator => {
+            let body = function.body.as_ref()?;
+            Some((
+                returned(&function.params, body)?,
+                parameterized(&function.params),
+            ))
+        }
+        _ => None,
     }
 }

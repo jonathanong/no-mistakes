@@ -6,7 +6,9 @@
 mod bindings;
 mod calls;
 mod composite;
+mod destructure;
 mod members;
+mod patterns;
 mod sources;
 
 pub(super) use self::composite::{callee_root, imported_locals};

@@ -1,3 +1,4 @@
+use super::patterns::accept_parameterized;
 use super::{PathAnchor, PathOrigin, Projector};
 use oxc_ast::{ast::*, AstKind};
 use oxc_span::GetSpan;
@@ -48,46 +49,15 @@ impl<'a> Projector<'a, '_> {
                 if key == "path" && disposable {
                     return Some(PathOrigin::anchored(PathAnchor::Temp));
                 }
-                let returned = self.getter_expression(call)?;
-                self.member_origin(returned, key, depth + 1)
+                let (returned, parameterized) = self.getter_expression(call)?;
+                let origin = self.member_origin(returned, key, depth + 1)?;
+                accept_parameterized(parameterized, origin)
             }
             Expression::AwaitExpression(awaited) => {
                 self.member_origin(&awaited.argument, key, depth + 1)
             }
             _ => None,
         }
-    }
-
-    pub(super) fn destructured_origin(
-        &mut self,
-        id: &IdentifierReference<'a>,
-        depth: usize,
-    ) -> Option<PathOrigin> {
-        let symbol = self.binding_symbol(id)?;
-        if !self.immutable_binding(symbol) {
-            return None;
-        }
-        let semantic = self.semantic;
-        let node = semantic.scoping().symbol_declaration(symbol);
-        let AstKind::VariableDeclarator(declaration) = semantic.nodes().kind(node) else {
-            return None;
-        };
-        let BindingPattern::ObjectPattern(pattern) = &declaration.id else {
-            return None;
-        };
-        if pattern.rest.is_some() || id.span.start < declaration.span.end {
-            return None;
-        }
-        for property in &pattern.properties {
-            let BindingPattern::BindingIdentifier(binding) = &property.value else {
-                continue;
-            };
-            if binding.symbol_id.get() == Some(symbol) && !property.computed {
-                let key = crate::ast::property_key_name(&property.key)?;
-                return self.member_origin(declaration.init.as_ref()?, &key, depth + 1);
-            }
-        }
-        None
     }
 
     fn member_reads_only(&mut self, symbol: oxc_semantic::SymbolId) -> bool {

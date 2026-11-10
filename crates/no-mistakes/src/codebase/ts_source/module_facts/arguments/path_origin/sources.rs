@@ -64,39 +64,61 @@ impl<'a> Projector<'a, '_> {
         }
     }
 
-    /// A never-reassigned parameter of the function that contains the reference.
+    /// A never-reassigned parameter, including one direct object-pattern property.
     pub(super) fn param_origin(&mut self, id: &IdentifierReference<'a>) -> Option<PathOrigin> {
         let semantic = self.semantic;
         let symbol = self.binding_symbol(id)?;
-        let mut declaration = semantic.scoping().symbol_declaration(symbol);
-        let mut parameter = None;
-        for _ in 0..3 {
-            if let AstKind::FormalParameter(found) = semantic.nodes().kind(declaration) {
-                parameter = Some(found);
-                break;
-            }
-            declaration = semantic.nodes().parent_id(declaration);
-        }
-        let parameter = parameter?;
-        if !matches!(parameter.pattern, BindingPattern::BindingIdentifier(_))
-            || semantic
-                .scoping()
-                .get_resolved_references(symbol)
-                .any(|reference| reference.flags().is_write())
+        if semantic
+            .scoping()
+            .get_resolved_references(symbol)
+            .any(|reference| reference.flags().is_write())
         {
             return None;
         }
-        let list = semantic.nodes().parent_node(declaration);
+        // oxc records the formal parameter as the symbol declaration, not the
+        // inner binding identifier, so the property is found by scanning that pattern.
+        let mut node = semantic.scoping().symbol_declaration(symbol);
+        let mut parameter_node = None;
+        for _ in 0..8 {
+            if matches!(semantic.nodes().kind(node), AstKind::FormalParameter(_)) {
+                parameter_node = Some(node);
+                break;
+            }
+            let parent = semantic.nodes().parent_id(node);
+            if parent == node {
+                break;
+            }
+            node = parent;
+        }
+        let parameter_node = parameter_node?;
+        let (parameter_span, member) = {
+            let AstKind::FormalParameter(parameter) = semantic.nodes().kind(parameter_node) else {
+                return None;
+            };
+            let member = match &parameter.pattern {
+                BindingPattern::BindingIdentifier(binding)
+                    if binding.symbol_id.get() == Some(symbol) =>
+                {
+                    None
+                }
+                BindingPattern::ObjectPattern(pattern) => {
+                    Some(super::patterns::direct_property_member(pattern, symbol)?)
+                }
+                _ => return None,
+            };
+            (parameter.span, member)
+        };
+        let list = semantic.nodes().parent_node(parameter_node);
         let list_kind = list.kind().as_formal_parameters()?;
         let index = list_kind
             .items
             .iter()
-            .position(|item| item.span == parameter.span)?;
+            .position(|item| item.span == parameter_span)?;
         let owner = semantic.nodes().parent_id(list.id());
-        use oxc_span::GetSpan;
         let start = semantic.nodes().kind(owner).span().start;
         Some(PathOrigin {
             param: Some(index),
+            param_member: member,
             param_owner: Some(start),
             owner_line: Some(super::super::line_in(semantic.source_text(), start)),
             ..PathOrigin::unknown()
