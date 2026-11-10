@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 const RULE: &str = "test-no-live-repository-scan";
-const CASES: [&str; 12] = [
+const CASES: [&str; 13] = [
     "live-path",
     "omitted-argument",
     "unproven-variable",
@@ -14,6 +14,7 @@ const CASES: [&str; 12] = [
     "non-direct-reference",
     "not-named-function",
     "reassigned-parameter",
+    "multibyte-argument",
 ];
 
 fn root(name: &str) -> PathBuf {

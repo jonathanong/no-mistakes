@@ -7,6 +7,9 @@ use oxc_span::GetSpan;
 /// Arguments after this index are never recorded.
 pub(super) const MAX_ARGUMENTS: usize = 8;
 
+/// Argument text is cut at this many bytes, on a char boundary.
+const ARG_TEXT_LIMIT: usize = 80;
+
 pub(super) fn record_arg_text(source: &str, call: &CallExpression<'_>, out: &mut PathProvenance) {
     let mut texts = Vec::new();
     for (index, argument) in call.arguments.iter().take(MAX_ARGUMENTS).enumerate() {
@@ -16,11 +19,11 @@ pub(super) fn record_arg_text(source: &str, call: &CallExpression<'_>, out: &mut
                 text.push(' ');
             }
             text.push_str(word);
-            if text.len() >= 80 {
+            if text.len() >= ARG_TEXT_LIMIT {
                 break;
             }
         }
-        text.truncate(80);
+        text.truncate(text.floor_char_boundary(ARG_TEXT_LIMIT));
         if !text.is_empty() {
             texts.push((index, text));
         }
