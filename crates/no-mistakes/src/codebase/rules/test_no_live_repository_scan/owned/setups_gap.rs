@@ -7,6 +7,9 @@ use crate::codebase::ts_resolver::normalize_path;
 use crate::integration_tests::types::{ConfigProject, VitestSetupField};
 use std::path::{Path, PathBuf};
 
+type SetupLists = (Vec<PathBuf>, Vec<PathBuf>);
+type SetupHoles = Vec<(PathBuf, u32)>;
+
 #[derive(Clone)]
 pub(crate) enum SetupGap {
     /// Matching projects left at least one `setupFiles` entry unresolved.
@@ -83,9 +86,7 @@ fn matches_root(filter: &ProjectTestFilter, root: &Path, root_files: &[PathBuf])
         .any(|file| filter.is_match(&crate::codebase::ts_source::relative_slash_path(root, file)))
 }
 
-fn project_setups(
-    project: &ConfigProject,
-) -> Result<(Vec<PathBuf>, Vec<PathBuf>), Vec<(PathBuf, u32)>> {
+fn project_setups(project: &ConfigProject) -> Result<SetupLists, SetupHoles> {
     let global_setups = project
         .vitest_setup
         .iter()
