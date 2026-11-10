@@ -74,3 +74,7 @@ impl Escapes {
             .map(|(path, _, line, detail)| (path.clone(), *line, detail.clone()))
     }
 }
+
+#[cfg(test)]
+#[path = "escapes/tests.rs"]
+mod tests;

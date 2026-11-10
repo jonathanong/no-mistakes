@@ -153,3 +153,7 @@ impl Consumed {
 fn external(resolver: &ImportResolver<'_>, specifier: &str) -> bool {
     !specifier.starts_with(['.', '/', '#']) && !resolver.matches_alias(specifier)
 }
+
+#[cfg(test)]
+#[path = "consumers/tests.rs"]
+mod tests;

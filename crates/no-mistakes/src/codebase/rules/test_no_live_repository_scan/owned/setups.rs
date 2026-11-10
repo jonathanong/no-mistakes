@@ -117,3 +117,7 @@ impl ConfiguredSetups {
         matched
     }
 }
+
+#[cfg(test)]
+#[path = "setups/tests.rs"]
+mod tests;

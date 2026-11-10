@@ -40,3 +40,7 @@ fn matches_symbol(symbol: &str, detail: &str) -> bool {
     let short = symbol.rsplit(['.', '/']).next().unwrap_or(symbol);
     detail == symbol || detail == short
 }
+
+#[cfg(test)]
+#[path = "symbol_block/tests.rs"]
+mod tests;

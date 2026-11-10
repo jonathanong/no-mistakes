@@ -81,3 +81,7 @@ impl Owners<'_> {
         super::super::reachable::module_files(self.graph, &seeds)
     }
 }
+
+#[cfg(test)]
+#[path = "closure/tests.rs"]
+mod tests;

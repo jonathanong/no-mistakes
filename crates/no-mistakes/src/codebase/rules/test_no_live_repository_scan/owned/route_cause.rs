@@ -105,3 +105,7 @@ fn named_site(
 #[cfg(test)]
 #[path = "route_cause_tests.rs"]
 mod route_cause_tests;
+
+#[cfg(test)]
+#[path = "route_cause/tests.rs"]
+mod tests;

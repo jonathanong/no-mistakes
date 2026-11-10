@@ -121,3 +121,7 @@ fn route(place: &str, specifier: &str, form: &str) -> String {
         format!("callers are unknowable because {place} imports `{specifier}` through {form}")
     }
 }
+
+#[cfg(test)]
+#[path = "cause_text/tests.rs"]
+mod tests;

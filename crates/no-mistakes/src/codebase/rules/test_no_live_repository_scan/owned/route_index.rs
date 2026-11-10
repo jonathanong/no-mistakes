@@ -170,3 +170,7 @@ fn is_import(kind: RouteKind) -> bool {
             | RouteKind::ViMock
     )
 }
+
+#[cfg(test)]
+#[path = "route_index/tests.rs"]
+mod tests;

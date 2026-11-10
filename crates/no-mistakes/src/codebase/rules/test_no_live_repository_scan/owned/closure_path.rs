@@ -61,3 +61,7 @@ pub(super) fn reach_path(
     chain.reverse();
     chain.join(" → ")
 }
+
+#[cfg(test)]
+#[path = "closure_path/tests.rs"]
+mod tests;

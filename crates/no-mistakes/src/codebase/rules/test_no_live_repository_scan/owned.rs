@@ -7,6 +7,9 @@ mod cause;
 mod closure;
 mod closure_path;
 mod consumers;
+#[cfg(test)]
+#[path = "owned/coverage/tests.rs"]
+mod coverage;
 pub(super) mod env;
 mod env_query;
 mod escapes;

@@ -71,3 +71,7 @@ fn symbol_cause(owners: &Owners<'_>, source: &NodeId, facts: &dyn TsFactLookup) 
         facts,
     ))
 }
+
+#[cfg(test)]
+#[path = "caller_escape/tests.rs"]
+mod tests;

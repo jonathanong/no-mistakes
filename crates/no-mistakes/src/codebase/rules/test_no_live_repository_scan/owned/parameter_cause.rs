@@ -189,3 +189,7 @@ fn not_named(site: &ResolvedCallSite, origin: &PathOrigin) -> Cause {
     let line = origin.owner_line.unwrap_or(1);
     Cause::new(CauseKind::NotNamedFunction, site.file.clone(), line, "")
 }
+
+#[cfg(test)]
+#[path = "parameter_cause/tests.rs"]
+mod tests;
