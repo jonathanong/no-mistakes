@@ -9,7 +9,7 @@ fn conditional_helper_appends_retain_each_literal_sql_origin() {
     assert_eq!(call.variants.len(), 2, "{call:#?}");
     for version in &call.variants {
         for (sql_offset, _) in version.sql_text.match_indices("SELECT *") {
-            let offset = version.sql_source_offsets[sql_offset] as usize;
+            let offset = version.sql_source_offsets.at(sql_offset) as usize;
             assert!(source[offset..].starts_with("SELECT *"));
         }
     }
@@ -41,7 +41,7 @@ fn conditional_helper_renumbered_bind_preserves_later_star_origins() {
         let stars: Vec<_> = version
             .sql_text
             .match_indices("SELECT *")
-            .map(|(sql_offset, _)| version.sql_source_offsets[sql_offset] as usize)
+            .map(|(sql_offset, _)| version.sql_source_offsets.at(sql_offset) as usize)
             .collect();
         assert_eq!(stars, [first, second]);
         let has_tenth_bind = version.sql_text.contains("sql_placeholder_10");
@@ -51,7 +51,7 @@ fn conditional_helper_renumbered_bind_preserves_later_star_origins() {
         );
         if has_tenth_bind {
             let offset = version.sql_text.find("sql_placeholder_10").unwrap();
-            assert_eq!(version.sql_source_offsets[offset] as usize, bound);
+            assert_eq!(version.sql_source_offsets.at(offset) as usize, bound);
         }
     }
     let facts = crate::codebase::postgres::collect::dml::embedded_call_facts(&file, true, false);

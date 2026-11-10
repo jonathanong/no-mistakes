@@ -30,7 +30,9 @@ fn deterministic_trusted_appends_keep_a_parseable_singleton_and_physical_binds()
         ("sql_placeholder_2", "${team}"),
     ] {
         assert_eq!(
-            direct.sql_source_offsets[direct.sql_text.find(marker).unwrap()] as usize,
+            direct
+                .sql_source_offsets
+                .at(direct.sql_text.find(marker).unwrap()) as usize,
             source.find(origin).unwrap() + 2
         );
     }

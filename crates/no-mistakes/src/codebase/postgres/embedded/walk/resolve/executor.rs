@@ -118,7 +118,7 @@ fn legacy_executor_call(
                 },
                 declaration_line: None,
                 sql_source_positions,
-                sql_source_offsets,
+                sql_source_offsets: sql_source_offsets.into(),
                 recovered_placeholder_positions,
                 ..Default::default()
             }

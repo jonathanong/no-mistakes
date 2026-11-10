@@ -340,6 +340,46 @@ mode, including all 17 grouping advisories when enabled. These executor profiles
 and selected checks differ from the original report, so its total RSS and
 percentage overhead are not directly comparable.
 
+The remaining enable cost on a large catalog is the exact embedded source-origin
+map. It is one physical source offset per recovered SQL byte, and grouping is
+what asks for it. Those maps used to stay as a dense `u32` vector on every
+embedded call until the request ended. They are now canonical affine runs: a
+plain literal is one run (`origin(i) = base + i`), and a template is one run per
+straight or repeated span. Lookups return the same offset as the dense vector,
+including a stored `0`, which still means the origin is missing. Raw `.sql`
+files do not build this map. Query trees stay pruned to grouping shapes.
+
+A second measurement compared baseline `7931e462745de54e984cc8adc071e6498cb68946`
+with the compact-origin build, using Rust 1.99.1 release builds, observers off,
+and the default worker count. Each of three 400-table arms had 160 statements
+whose SQL text was a 120,000-byte literal (19.2 MB of SQL). The plain and
+`DISTINCT` arms embedded that literal in TypeScript (about 19.2 MB of source).
+The files arm used raw `.sql` only. Both modes enabled `postgres-json-relation-ids`
+with the same executor options, so full SQL locations were present on both
+sides. Two fresh processes per arm and mode were interleaved off/on/on/off.
+Distinct binaries were verified by hash. JSON and stderr matched for each arm
+and mode. Median RSS is MiB and CPU is user seconds.
+
+| Arm | Rule | RSS before | RSS after | CPU before | CPU after |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Plain embedded | Off | 250.5 | 252.4 | 0.62 | 0.62 |
+| Plain embedded | On | 332.4 | 270.7 | 0.78 | 0.74 |
+| `DISTINCT` embedded | Off | 251.3 | 251.4 | 0.62 | 0.60 |
+| `DISTINCT` embedded | On | 350.6 | 289.4 | 0.86 | 0.89 |
+| Raw `.sql` `DISTINCT` | Off | 112.5 | 112.0 | 0.53 | 0.53 |
+| Raw `.sql` `DISTINCT` | On | 129.1 | 132.8 | 0.79 | 0.79 |
+
+On the plain arm, grouping keeps no query tree, and the enable increment fell
+from 81.9 MiB to 18.3 MiB. That drop matches the dense origin vectors
+(160 × 120,000 × 4 bytes is 73.2 MiB) after per-file construction stores the
+run map and drops the vector. The `DISTINCT` embedded increment fell from
+99.3 MiB to 38.0 MiB; the extra above the plain arm is the retained query text.
+The raw `.sql` arm has no embedded origin map, and its enable increment stayed
+near 17–21 MiB. Wall time stayed under a second and did not move. User CPU
+stayed within a few hundredths of a second. The plain-arm remainder is
+temporary origin scratch while a worker compresses one file, so it follows the
+largest in-flight statement.
+
 ## Options and defaults
 
 | Option | Default | Meaning |

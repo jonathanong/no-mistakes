@@ -130,7 +130,7 @@ impl Recovered {
             placeholders::publish_placeholders_with_positions(self.sql);
         EmbeddedSqlVariant {
             sql_text,
-            sql_source_offsets,
+            sql_source_offsets: sql_source_offsets.into(),
             invocations,
             line: self.line,
             sql_source_positions: self.positions,

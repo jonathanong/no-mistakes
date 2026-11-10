@@ -19,7 +19,7 @@ fn folded_append_choice_keeps_bind_origins_at_direct_and_spliced_executors() {
         );
         assert_eq!(variant.recovered_placeholder_positions.len(), 1);
         let bind = variant.sql_text.find("sql_placeholder_1").unwrap();
-        assert_eq!(variant.sql_source_offsets[bind] as usize, bind_origin);
+        assert_eq!(variant.sql_source_offsets.at(bind) as usize, bind_origin);
         let mut actual = variant.append_sites.clone();
         actual.sort_unstable();
         assert_eq!(actual, sites);

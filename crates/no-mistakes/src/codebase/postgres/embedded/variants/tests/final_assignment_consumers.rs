@@ -43,15 +43,16 @@ fn discarded_assignment_values_keep_fragment_origins_and_later_alias_reads() {
     {
         assert_eq!(variant.recovered_placeholder_positions.len(), count);
         assert_eq!(
-            variant.sql_source_offsets[variant.sql_text.find("sql_placeholder_1").unwrap()]
-                as usize,
+            variant
+                .sql_source_offsets
+                .at(variant.sql_text.find("sql_placeholder_1").unwrap()) as usize,
             source.find(branch).unwrap() + 2
         );
         assert_eq!(
-            variant.sql_source_offsets[variant
+            variant.sql_source_offsets.at(variant
                 .sql_text
                 .find(&format!("sql_placeholder_{count}"))
-                .unwrap()] as usize,
+                .unwrap()) as usize,
             source.find("${(other = unchanged, limit)}").unwrap() + 2
         );
     }

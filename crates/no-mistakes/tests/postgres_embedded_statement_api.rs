@@ -53,7 +53,7 @@ fn public_call_versions_are_readable_and_legacy_construction_is_explicit() {
         kind: call.kind,
         declaration_line: call.declaration_line,
         sql_source_positions: call.sql_source_positions.clone(),
-        sql_source_offsets: Vec::new(),
+        sql_source_offsets: Default::default(),
         recovered_placeholder_positions: call.recovered_placeholder_positions.clone(),
     };
     let defaulted = EmbeddedSqlCall {

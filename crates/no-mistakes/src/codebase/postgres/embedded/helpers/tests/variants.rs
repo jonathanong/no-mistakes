@@ -63,7 +63,7 @@ fn a_hole_after_a_conditional_is_kept_for_every_alternative() {
         assert_eq!(variant.recovered_placeholder_positions.len(), 2);
         // The helper's bytes keep the helper's origin, the caller's keep theirs.
         let at = variant.sql_text.find(" AND h").expect("hole text");
-        assert_eq!(variant.sql_source_offsets[at], 1000);
+        assert_eq!(variant.sql_source_offsets.at(at), 1000);
         assert!(variant
             .sql_source_positions
             .iter()
@@ -167,15 +167,15 @@ fn a_function_iife_recovers_the_returned_builder_and_rejects_unsafe_shapes() {
 
 #[test]
 fn unpublishing_origins_requires_matching_lengths() {
+    use super::super::super::SqlByteOrigins;
     use super::super::unpublish::unpublish_origins;
-    assert!(unpublish_origins("abc", &[], &[1, 2]).is_none());
-    assert_eq!(
-        unpublish_origins("abc", &[], &[1, 2, 3]),
-        Some(vec![1, 2, 3])
-    );
+    let short = SqlByteOrigins::from(vec![1, 2]);
+    assert!(unpublish_origins("abc", &[], &short).is_none());
+    let exact = SqlByteOrigins::from(vec![1, 2, 3]);
+    assert_eq!(unpublish_origins("abc", &[], &exact), Some(vec![1, 2, 3]));
     let (published, positions) =
         publish_placeholders_with_positions(format!("a{INTERNAL_PLACEHOLDER}1b"));
-    let origins = (0..published.len() as u32).collect::<Vec<_>>();
+    let origins = SqlByteOrigins::from((0..published.len() as u32).collect::<Vec<_>>());
     let restored = unpublish_origins(&published, &positions, &origins).expect("origins");
     assert_eq!(restored.len(), format!("a{INTERNAL_PLACEHOLDER}1b").len());
     assert_eq!(

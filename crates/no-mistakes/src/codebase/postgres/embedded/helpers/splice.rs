@@ -105,7 +105,7 @@ pub(crate) fn splice(template: &EmbeddedSqlCall, holes: &Holes) -> Option<Embedd
         kind: EmbeddedSqlKind::Composed,
         declaration_line: Some(joined.line),
         sql_source_positions: joined.positions,
-        sql_source_offsets,
+        sql_source_offsets: sql_source_offsets.into(),
         recovered_placeholder_positions,
         ..template.clone()
     })
@@ -145,7 +145,7 @@ fn publish_variant(joined: RecoveredSql, append_sites: Vec<u32>) -> EmbeddedSqlV
     EmbeddedSqlVariant {
         invocations,
         sql_text,
-        sql_source_offsets,
+        sql_source_offsets: sql_source_offsets.into(),
         line: joined.line,
         sql_source_positions: joined.positions,
         recovered_placeholder_positions,

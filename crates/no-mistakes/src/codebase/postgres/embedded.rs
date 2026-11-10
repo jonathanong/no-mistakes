@@ -11,7 +11,9 @@ macro_rules! record_embedded_collection {
 #[macro_use]
 mod tests;
 mod bindings;
+mod byte_origins;
 mod call;
+pub use byte_origins::SqlByteOrigins;
 pub use call::{EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS};
 mod dml_kind;
 pub(crate) mod helpers;
