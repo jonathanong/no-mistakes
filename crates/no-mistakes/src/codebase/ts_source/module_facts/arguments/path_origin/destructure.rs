@@ -35,9 +35,7 @@ impl<'a> Projector<'a, '_> {
             if binding.symbol_id.get() != Some(symbol) {
                 continue;
             }
-            let Some(key) = crate::ast::property_key_name(&property.key) else {
-                return None;
-            };
+            let key = crate::ast::property_key_name(&property.key)?;
             return self.bound_member(init, default, &key, depth);
         }
         None
