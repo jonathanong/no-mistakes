@@ -85,6 +85,23 @@ fn a_second_entry_lookup_is_a_cache_hit() {
     assert_eq!(memo.hits, 1);
 }
 
+#[test]
+fn scan_stats_print_when_resolve_debug_is_set() {
+    let previous = std::env::var_os("NO_MISTAKES_SCAN_RESOLVE_DEBUG");
+    std::env::set_var("NO_MISTAKES_SCAN_RESOLVE_DEBUG", "1");
+    let graph = empty_graph();
+    let owners = assemble(blank(&graph));
+    owners.report_scan_stats();
+    restore_debug(previous);
+}
+
+fn restore_debug(previous: Option<std::ffi::OsString>) {
+    match previous {
+        Some(value) => std::env::set_var("NO_MISTAKES_SCAN_RESOLVE_DEBUG", value),
+        None => std::env::remove_var("NO_MISTAKES_SCAN_RESOLVE_DEBUG"),
+    }
+}
+
 pub(super) fn assemble(fixture: Fixture<'_>) -> Owners<'_> {
     Owners {
         callers: fixture.callers,

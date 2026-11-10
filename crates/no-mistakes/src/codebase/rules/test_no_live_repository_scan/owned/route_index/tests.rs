@@ -46,6 +46,20 @@ fn specifier_line_names_the_import_statement() {
 }
 
 #[test]
+fn specifier_line_skips_an_import_that_names_a_different_specifier() {
+    let source = "import { missing } from \"@scope/other\";\n";
+    assert_eq!(
+        specifier_line(
+            &PathProvenance::default(),
+            &[import("@scope/other", 0)],
+            source,
+            "@scope/deep",
+        ),
+        1
+    );
+}
+
+#[test]
 fn specifier_line_falls_back_to_the_route_site() {
     let provenance = PathProvenance {
         route_sites: vec![RouteSite {

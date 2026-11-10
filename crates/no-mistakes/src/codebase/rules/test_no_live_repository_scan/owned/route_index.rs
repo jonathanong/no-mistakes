@@ -47,25 +47,24 @@ pub(super) fn specifier_line(
     if let Some(line) = provenance.import_lines.get(specifier).copied() {
         return line;
     }
-    if !source.is_empty() {
-        if let Some(line) = imports
+    let from_source = (!source.is_empty()).then(|| {
+        imports
             .iter()
             .filter(|import| import.specifier == specifier)
             .map(|import| {
                 crate::codebase::ts_source::byte_offset_to_line(source, import.span.start as usize)
             })
             .min()
-        {
-            return line;
-        }
-    }
-    provenance
-        .route_sites
-        .iter()
-        .filter(|site| site.detail == specifier)
-        .map(|site| site.line)
-        .min()
-        .unwrap_or(1)
+    });
+    from_source.flatten().unwrap_or_else(|| {
+        provenance
+            .route_sites
+            .iter()
+            .filter(|site| site.detail == specifier)
+            .map(|site| site.line)
+            .min()
+            .unwrap_or(1)
+    })
 }
 
 pub(super) fn note_nondirect(

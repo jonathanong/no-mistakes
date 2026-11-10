@@ -65,17 +65,18 @@ fn local_route(
         let (path, line, name) = found.unwrap_or_else(|| named_site(facts, source, symbol));
         return Cause::new(CauseKind::NonDirectReference, path, line, name);
     }
-    if super::symbol_block::blocks(&owners.consumed, file, symbol) {
-        if let Some(hit) = super::symbol_block::route(&owners.consumed, file, symbol) {
-            return Cause::new(
-                kind_of(hit.kind),
-                hit.file.clone(),
-                hit.line,
-                hit.detail.clone(),
-            );
-        }
+    let hit = super::symbol_block::blocks(&owners.consumed, file, symbol)
+        .then(|| super::symbol_block::route(&owners.consumed, file, symbol))
+        .flatten();
+    match hit {
+        Some(hit) => Cause::new(
+            kind_of(hit.kind),
+            hit.file.clone(),
+            hit.line,
+            hit.detail.clone(),
+        ),
+        None => function_fallback(&owners.callers, source, facts, param),
     }
-    function_fallback(&owners.callers, source, facts, param)
 }
 
 pub(super) fn function_fallback(
