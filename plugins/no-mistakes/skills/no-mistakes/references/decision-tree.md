@@ -164,8 +164,9 @@ graph around one target: the target node, visited nodes, and typed edges. Use
 it when `dependents`/`dependencies` output is too large and one neighborhood is
 enough.
 
-- `--direction deps` (what the target consumes), `dependents` (callers), or
-  `both` for a small bidirectional slice.
+- `--direction deps` (what the target consumes), `dependents` (importers), or
+  `both` for a small bidirectional slice. `call` edges are opt-in (add
+  `--relationship call`); for calls to an exported function use `call-sites`.
 - `--depth <N>` bounds the walk; keep it small (1-2) for readable output.
 - `--relationship workflow` adds GitHub Actions job and step nodes
   (`workflow.yml#job:<job>`, `workflow.yml#job:<job>/step:<index>`; JSON kinds

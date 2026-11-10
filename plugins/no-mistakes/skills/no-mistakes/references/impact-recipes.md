@@ -215,8 +215,11 @@ no-mistakes rsc-callers app/ui/Button.tsx --root . --format json
   `loading`, `error`, `not-found`) or `kind: "component"`. The page
   classification is a filename heuristic.
 - A file with no directive counts as a server component, so tests, stories, and
-  helpers outside the App Router appear as `environment: unknown`. Scope with
-  `--root app` or filter them out.
+  helpers outside the App Router appear as `environment: unknown`. Keep `--root` at the workspace
+  root and filter those files from the output: a narrower root drops callers and
+  resolves the component path as `app/app/...`.
+- Conditional dynamic imports are not followed, so a page that imports the
+  component only conditionally may be missing from `callers`.
 - A missing component path is an error; an unimported one gives empty `callers`.
 
 See [rsc-callers](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/rsc-callers.md).
