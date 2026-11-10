@@ -235,7 +235,10 @@ that might still apply keeps the finding. A `const` object is followed only when
 every other use is a non-mutating member read. A property assignment or any other
 escape stays unresolved. A reachable caller that omits a defaulted
 argument also keeps the finding. A direct object property is one key deep: nested
-patterns, computed keys, and rest bindings stay unresolved. A property beside a
+patterns, computed keys, and rest bindings stay unresolved. A member read of an
+object-pattern parameter, such as `function scan({ opts }) { readdirSync(opts.root) }`,
+stays unresolved too. The pattern key is not replaced by the accessed property, so
+an owned sibling `root` cannot clear a live `opts.root`. A property beside a
 rest binding can still be proven. Production modules that
 no selected test imports do not add callers.
 

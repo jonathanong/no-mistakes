@@ -20,6 +20,10 @@ impl<'a> Projector<'a, '_> {
                     return None;
                 }
                 if let Some(mut origin) = self.param_origin(id) {
+                    // Replacing the pattern key would read a sibling property.
+                    if origin.param_member.is_some() {
+                        return None;
+                    }
                     origin.param_member = Some(key.to_owned());
                     return Some(origin);
                 }

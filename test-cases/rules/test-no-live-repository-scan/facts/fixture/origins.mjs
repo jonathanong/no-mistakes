@@ -88,3 +88,9 @@ export function objectParam({ dir = "fallback" }, plain) {
 export function nestedParam({ outer: { inner } }) {
   readdirSync(inner);
 }
+export function memberOfPattern({ opts }) {
+  readdirSync(opts.root);
+}
+export function memberOfBinding(binding) {
+  readdirSync(binding.root);
+}

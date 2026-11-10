@@ -59,6 +59,14 @@ fn origins_follow_getters_owned_lets_and_parameters_but_nothing_else() {
     assert_eq!(param("readdirSync(plain)"), Some(1));
     assert_eq!(read.origin("readdirSync(plain)").param_member, None);
     assert_eq!(param("readdirSync(inner)"), None);
+    assert_eq!(read.origin("readdirSync(opts.root)"), PathOrigin::unknown());
+    assert_eq!(param("readdirSync(binding.root)"), Some(0));
+    assert_eq!(
+        read.origin("readdirSync(binding.root)")
+            .param_member
+            .as_deref(),
+        Some("root")
+    );
 }
 
 #[test]
