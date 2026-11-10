@@ -505,6 +505,18 @@ the configured `unanalyzable` policy until the reported line is suppressed.
 but applies to all uncertainty in the configured rule scope. A line suppression
 and `unanalyzable: advise` both leave the reached exports unproven.
 
+A runtime-resolved import is reported only when that file can contribute a
+production use. An importer inside `productionRoots` is always reported. An
+importer outside those roots is reported when a production file imports it,
+including transitively through a static import, `require`, or a resolved
+dynamic import. It is also reported when reachability is unknown: a
+runtime-resolved import already in that production closure might load the
+file, and the rule keeps the diagnostic rather than guessing the target. An
+importer that no production file can reach is omitted. A test or tooling
+import of that file does not put it in the production closure, so listing it
+in `testGlobs` is not what removes the diagnostic. Missing facts, unresolved
+symbols, and other incomplete analysis stay reported.
+
 Folded imports preserve the isolated Vitest mock handling used for literal
 imports. An inert `vi.mock` or `vi.doMock` module-promise argument does not consume
 the original exports. Factories that can load the original and real imports on

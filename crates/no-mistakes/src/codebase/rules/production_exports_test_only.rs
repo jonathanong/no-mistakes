@@ -2,6 +2,7 @@ mod config;
 mod extends;
 mod nextjs;
 mod prerequisites;
+mod runtime_reachability;
 mod script_entries;
 mod selector_advisories;
 mod selector_gaps;
@@ -31,6 +32,9 @@ pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     config.rule_configured(RULE_ID).then(|| GraphBuildPlan {
         symbol_import_selectors: true,
         extends: true,
+        // Side-effect and package loads are file edges, not symbol selectors.
+        imports: true,
+        workspace: true,
         ..Default::default()
     })
 }
