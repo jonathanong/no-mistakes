@@ -109,8 +109,10 @@ fn facts(proven: bool, param: Option<usize>) -> ArgFacts {
     } else {
         provenance.arg_unproven.insert(0, entry);
     }
-    let mut module = TypeScriptModuleFacts::default();
-    module.path_provenance = Some(Arc::new(provenance));
+    let module = TypeScriptModuleFacts {
+        path_provenance: Some(Arc::new(provenance)),
+        ..Default::default()
+    };
     ArgFacts(TsFileFacts {
         module_bindings: Some(Arc::new(module)),
         ..TsFileFacts::default()
