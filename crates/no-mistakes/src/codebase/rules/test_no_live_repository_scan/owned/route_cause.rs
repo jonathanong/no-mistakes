@@ -6,8 +6,22 @@ use crate::codebase::dependencies::graph::{NodeId, ResolvedCallSite, TsFactLooku
 use crate::codebase::rules::forbidden_calls::site_source_node;
 use crate::fx::FxHashMap;
 
+#[path = "route_cause_flow.rs"]
+mod flow;
+
 impl Owners<'_> {
     pub(super) fn route_cause(&self, source: &NodeId, facts: &dyn TsFactLookup) -> Cause {
+        self.route_for(source, facts, None)
+    }
+
+    /// `param` is the parameter being judged. The recursive-helper reason is
+    /// used only when that parameter flows into a recursive call.
+    pub(super) fn route_for(
+        &self,
+        source: &NodeId,
+        facts: &dyn TsFactLookup,
+        param: Option<usize>,
+    ) -> Cause {
         if !self.setups.known() {
             return setup_gap(self, source, facts);
         }
@@ -16,7 +30,7 @@ impl Owners<'_> {
                 return self.unread_cause(module, source, facts);
             }
         }
-        local_route(self, source, facts)
+        local_route(self, source, facts, param)
     }
 }
 
@@ -37,7 +51,12 @@ fn setup_gap(owners: &Owners<'_>, source: &NodeId, facts: &dyn TsFactLookup) -> 
     }
 }
 
-fn local_route(owners: &Owners<'_>, source: &NodeId, facts: &dyn TsFactLookup) -> Cause {
+fn local_route(
+    owners: &Owners<'_>,
+    source: &NodeId,
+    facts: &dyn TsFactLookup,
+    param: Option<usize>,
+) -> Cause {
     let NodeId::Symbol { file, symbol, .. } = source else {
         return hole(CauseKind::NotNamedFunction, source, facts);
     };
@@ -56,16 +75,17 @@ fn local_route(owners: &Owners<'_>, source: &NodeId, facts: &dyn TsFactLookup) -
             );
         }
     }
-    function_fallback(&owners.callers, source, facts)
+    function_fallback(&owners.callers, source, facts, param)
 }
 
 pub(super) fn function_fallback(
     callers: &FxHashMap<NodeId, Vec<&ResolvedCallSite>>,
     source: &NodeId,
     facts: &dyn TsFactLookup,
+    param: Option<usize>,
 ) -> Cause {
     let (file, line) = function_site(facts, source);
-    let kind = if recursive_helper(callers, source) {
+    let kind = if recursive_helper(callers, source, facts, param) {
         CauseKind::RecursiveHelper
     } else {
         CauseKind::CallersNotProven
@@ -73,12 +93,26 @@ pub(super) fn function_fallback(
     Cause::new(kind, file, line, "")
 }
 
-fn recursive_helper(callers: &FxHashMap<NodeId, Vec<&ResolvedCallSite>>, source: &NodeId) -> bool {
+/// A callee that recurses on its own argument does not make the outer
+/// function recursive. The judged parameter has to be passed into that call.
+fn recursive_helper(
+    callers: &FxHashMap<NodeId, Vec<&ResolvedCallSite>>,
+    source: &NodeId,
+    facts: &dyn TsFactLookup,
+    param: Option<usize>,
+) -> bool {
     if calls_self(callers, source) {
-        return true;
+        return param.is_none_or(|index| {
+            flow::parameter_flows(callers, source, source, facts, index).unwrap_or(true)
+        });
     }
-    callers.iter().any(|(target, sites)| {
-        sites.iter().any(|site| site_source_node(site) == *source) && calls_self(callers, target)
+    let Some(index) = param else {
+        return false;
+    };
+    callers.iter().any(|(target, _)| {
+        target != source
+            && calls_self(callers, target)
+            && flow::parameter_flows(callers, source, target, facts, index).unwrap_or(false)
     })
 }
 

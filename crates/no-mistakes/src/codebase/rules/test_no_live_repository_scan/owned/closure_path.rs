@@ -62,6 +62,46 @@ pub(super) fn reach_path(
     chain.join(" → ")
 }
 
+/// Load-edge distance from the nearest gate root. Zero when `target` is not reached.
+pub(super) fn hops(graph: &DepGraph, gate_roots: &[PathBuf], target: &Path) -> u32 {
+    let kinds = super::super::reachable::load_kinds();
+    let target = normalize_path(target);
+    let mut distance: FxHashMap<PathBuf, u32> = FxHashMap::default();
+    let mut queue = VecDeque::new();
+    for gate in gate_roots {
+        let gate = normalize_path(gate);
+        if distance.contains_key(&gate) {
+            continue;
+        }
+        distance.insert(gate.clone(), 0);
+        queue.push_back(gate);
+    }
+    while let Some(file) = queue.pop_front() {
+        let next_distance = distance[&file].saturating_add(1);
+        if file == target {
+            return distance[&file];
+        }
+        let Some(neighbors) = graph.dependencies_of_node(&NodeId::file(&file)) else {
+            continue;
+        };
+        for (node, kind) in neighbors {
+            if !kinds.contains(kind) {
+                continue;
+            }
+            let Some(next) = node.as_file() else {
+                continue;
+            };
+            let next = normalize_path(next);
+            if distance.contains_key(&next) {
+                continue;
+            }
+            distance.insert(next.clone(), next_distance);
+            queue.push_back(next);
+        }
+    }
+    0
+}
+
 #[cfg(test)]
 #[path = "closure_path/tests.rs"]
 mod tests;

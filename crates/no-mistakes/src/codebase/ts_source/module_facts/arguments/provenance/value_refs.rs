@@ -1,5 +1,6 @@
 //! Functions referenced other than as the callee of a direct call. A caller the
-//! graph cannot see (`.then(sync)`, `.call`, `export { sync }`) may pass anything.
+//! graph cannot see (`.then(sync)`, `.call`) may pass anything. A re-export
+//! specifier is not one of those references: importers of the barrel are judged.
 use super::super::{PathProvenance, RouteKind, RouteSite};
 use oxc_ast::{ast::*, AstKind};
 use oxc_semantic::{AstNodes, Semantic};
@@ -8,6 +9,11 @@ use oxc_syntax::node::NodeId;
 
 fn is_callee(nodes: &AstNodes<'_>, node: NodeId, span: Span) -> bool {
     matches!(nodes.parent_kind(node), AstKind::CallExpression(call) if call.callee.span() == span)
+}
+
+/// `export { name }` names the binding for importers. It does not call it.
+fn is_reexport(nodes: &AstNodes<'_>, node: NodeId) -> bool {
+    matches!(nodes.parent_kind(node), AstKind::ExportSpecifier(_))
 }
 
 /// A symbol that may hold a function, plus the property names it came from when
@@ -87,7 +93,7 @@ pub(super) fn from_identifier(
     id: &IdentifierReference<'_>,
     out: &mut PathProvenance,
 ) {
-    if is_callee(semantic.nodes(), node, id.span) {
+    if is_callee(semantic.nodes(), node, id.span) || is_reexport(semantic.nodes(), node) {
         return;
     }
     if let Some(keys) = function_like(semantic, id) {

@@ -100,6 +100,8 @@ pub(crate) struct PathProvenance {
     pub(crate) value_refs: crate::fx::FxHashSet<String>,
     /// Specifiers reached other than by named static imports used only as calls.
     pub(crate) unsafe_modules: crate::fx::FxHashSet<String>,
+    /// 1-based line of each static import, saved while the source text exists.
+    pub(crate) import_lines: FxHashMap<String, u32>,
     /// A `require`/`import()`/`vi.mock` whose module cannot be read.
     pub(crate) modules_unknown: bool,
     /// 1-based line of the first load that set `modules_unknown`.

@@ -81,7 +81,7 @@ impl Owners<'_> {
                 return Err(self.route_cause(&source, facts));
             };
             if self.closure_unknown(module) || !self.parameter_proven(&source) {
-                return Err(self.route_cause(&source, facts));
+                return Err(self.route_for(&source, facts, Some(index)));
             }
             if let Some(cause) = self.caller_blocked(&source, facts) {
                 return Err(cause);

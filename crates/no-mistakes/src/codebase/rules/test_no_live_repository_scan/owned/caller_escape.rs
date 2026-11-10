@@ -69,6 +69,7 @@ fn symbol_cause(owners: &Owners<'_>, source: &NodeId, facts: &dyn TsFactLookup) 
         &owners.callers,
         source,
         facts,
+        None,
     ))
 }
 

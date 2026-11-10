@@ -265,7 +265,10 @@ the call graph cannot see may pass anything:
   a class or object member.
 - Every reference to it, and to a function that reaches it, is a direct call.
   A non-call reference to a sibling const export, such as a string used in a
-  template literal, does not count.
+  template literal, does not count. A re-export specifier
+  (`export { enumerate, other }`) does not count either: importers of that
+  barrel, including through further re-export chains, are judged at their
+  call sites.
 - Every test-reachable file that consumes its module does so through named static imports
   (`import { sync } from "./sync"`) whose uses are all direct calls. A namespace
   import, a default import, `import()`, `require`, an unsupported re-export,
@@ -280,17 +283,24 @@ the call graph cannot see may pass anything:
   set is the `setupFiles`, `globalSetup`, and test files found by reverse
   load edges from the function's module, plus the import closure of those
   files. An unreadable module outside that closure does not block the proof.
-  An unreadable module inside it still does. The advisory names that module
-  and, when the load edges show one, the path from a test or setup root. A
-  path string, `require.resolve`, or a CLI invocation does not put a module
-  on that path. When no unreadable module is in the closure and caller proof
-  still fails at the function, the advisory names a self-recursive inner
-  helper or says the callers are not proven. It does not describe the
-  function declaration as an unreadable module.
+  An unreadable module inside it still does. The advisory names the deepest
+  import that could not be read, at that import's own file and line, not the
+  first edge of the importing module. A relative `.mts` import that resolves
+  is not that failure. When the load edges show a path, the advisory includes
+  it from a test or setup root. A path string, `require.resolve`, or a CLI
+  invocation does not put a module on that path. When no unreadable module is
+  in the closure and caller proof still fails at the function, the advisory
+  names a recursive inner helper only when the judged root itself flows
+  through the recursive argument. An outer parameter captured by an inner
+  helper, while that helper recurses on a relative suffix, is traced to the
+  outer function's callers. Otherwise the advisory says the callers are not
+  proven. It does not describe the function declaration as an unreadable
+  module.
 
 A consumer is matched to the callee by resolved file, not by specifier text: the
 resolver the dependency graph uses (relative paths, tsconfig `paths` aliases,
-workspace packages, `package.json` `exports`) maps each such specifier to a file,
+workspace packages, `package.json` `exports` including a single `*` subpath
+such as `"./*": "./*.mts"`) maps each such specifier to a file,
 so `import * as m from "@lib"` consumes the file `@lib` points at. A specifier
 that is neither a bare package nor resolvable to a file keeps the finding for
 every callee whose test-root closure includes the module that named it. A default import, an unsupported barrel re-export, and a type-only

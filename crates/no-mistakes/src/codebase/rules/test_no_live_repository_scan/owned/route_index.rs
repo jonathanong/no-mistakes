@@ -38,7 +38,28 @@ pub(super) fn note_resolved(
     }
 }
 
-pub(super) fn unknown_line(provenance: &PathProvenance, specifier: &str) -> u32 {
+/// Line of the import that names `specifier`. Recorded lines survive a dropped source.
+pub(super) fn specifier_line(
+    provenance: &PathProvenance,
+    imports: &[crate::codebase::ts_source::module_facts::ModuleImport],
+    source: &str,
+    specifier: &str,
+) -> u32 {
+    if let Some(line) = provenance.import_lines.get(specifier).copied() {
+        return line;
+    }
+    if !source.is_empty() {
+        if let Some(line) = imports
+            .iter()
+            .filter(|import| import.specifier == specifier)
+            .map(|import| {
+                crate::codebase::ts_source::byte_offset_to_line(source, import.span.start as usize)
+            })
+            .min()
+        {
+            return line;
+        }
+    }
     provenance
         .route_sites
         .iter()

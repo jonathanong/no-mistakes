@@ -29,7 +29,7 @@ impl Owners<'_> {
     ) -> Cause {
         let sites = self.blocking_sites(module);
         let Some((file, line)) = sites.first().cloned() else {
-            return super::route_cause::function_fallback(&self.callers, source, facts);
+            return super::route_cause::function_fallback(&self.callers, source, facts, None);
         };
         let extra = sites.len().saturating_sub(1) as u32;
         let reached = super::closure_path::reach_path(
@@ -58,6 +58,15 @@ impl Owners<'_> {
         }
         sites.sort();
         sites.dedup();
+        sites.sort_by(|left, right| {
+            super::closure_path::hops(self.graph, &self.gate_roots, &right.0)
+                .cmp(&super::closure_path::hops(
+                    self.graph,
+                    &self.gate_roots,
+                    &left.0,
+                ))
+                .then(left.cmp(right))
+        });
         sites
     }
 

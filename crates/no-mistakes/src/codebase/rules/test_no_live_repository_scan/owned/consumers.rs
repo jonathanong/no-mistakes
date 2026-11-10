@@ -50,7 +50,10 @@ impl Consumed {
             .iter()
             .filter(|file| reachable_files.contains(*file))
         {
-            let Some(provenance) = facts.get_ts_facts(file).and_then(path_provenance) else {
+            let Some(ts) = facts.get_ts_facts(file) else {
+                continue;
+            };
+            let Some(provenance) = path_provenance(ts) else {
                 continue;
             };
             let config = resolution.catalog.map_or(&empty, |c| c.config_for(file));
@@ -70,7 +73,17 @@ impl Consumed {
                     }
                     None if class.is_unresolved_external() && external(&resolver, specifier) => {}
                     None => {
-                        let line = super::route_index::unknown_line(provenance, specifier);
+                        let imports = ts
+                            .module_bindings
+                            .as_deref()
+                            .map(|module| module.imports.as_slice())
+                            .unwrap_or(&[]);
+                        let line = super::route_index::specifier_line(
+                            provenance,
+                            imports,
+                            ts.source.as_deref().unwrap_or(""),
+                            specifier,
+                        );
                         consumed.unknown_files.insert(file.clone());
                         consumed.unknown_sites.push((file.clone(), line));
                     }

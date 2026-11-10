@@ -98,6 +98,11 @@ pub(super) fn from_facts(
         if unsafe_binding {
             out.unsafe_modules.insert(import.specifier.clone());
         }
+        let line = line_in(source, import.span.start);
+        out.import_lines
+            .entry(import.specifier.clone())
+            .and_modify(|prior| *prior = (*prior).min(line))
+            .or_insert(line);
         for binding in &import.bindings {
             let kind = if binding.kind == "namespace" {
                 Some(RouteKind::Namespace)
