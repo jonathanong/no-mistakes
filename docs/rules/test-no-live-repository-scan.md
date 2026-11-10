@@ -233,7 +233,8 @@ has no spread, the default expression is the origin. An unknown object, a spread
 or a present property with an unknown value stays unresolved, so a live default
 that might still apply keeps the finding. A reachable caller that omits a defaulted
 argument also keeps the finding. A direct object property is one key deep: nested
-patterns, computed keys, and rest elements stay unresolved. Production modules that
+patterns, computed keys, and rest bindings stay unresolved. A property beside a
+rest binding can still be proven. Production modules that
 no selected test imports do not add callers.
 
 An object argument must expose the requested property in a literal object, without
