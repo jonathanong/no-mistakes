@@ -136,5 +136,5 @@ fn config_from_error(error: &anyhow::Error, root: &Path) -> PathBuf {
 }
 
 #[cfg(test)]
-#[path = "setups_gap_tests.rs"]
-mod setups_gap_tests;
+#[path = "setups_gap/tests.rs"]
+mod tests;

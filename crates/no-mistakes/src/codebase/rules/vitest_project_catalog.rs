@@ -108,13 +108,4 @@ pub(crate) fn config_projects_required(
 }
 
 #[cfg(test)]
-impl PreparedVitestProjectCatalog {
-    pub(crate) fn from_load_result(
-        config_projects: Result<Vec<ConfigProject>, CheckInputFailure>,
-    ) -> Self {
-        Self {
-            config_projects,
-            explicit_projects: Vec::new(),
-        }
-    }
-}
+mod tests;
