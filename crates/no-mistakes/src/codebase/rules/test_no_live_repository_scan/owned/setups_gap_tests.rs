@@ -86,7 +86,7 @@ fn catalog_error_without_a_file_uses_vitest_config() {
 
 #[test]
 fn config_failures_keep_the_earliest_path_over_setup_holes() {
-    let mut middle = project(Some("m.ts"), "[");
+    let middle = project(Some("m.ts"), "[");
     let mut earliest = project(Some("a.ts"), "**/*.mts");
     earliest.matcher_warnings.push("dynamic".to_string());
     let mut later = project(Some("z.ts"), "**/*.mts");
