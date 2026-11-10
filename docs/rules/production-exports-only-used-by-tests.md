@@ -116,6 +116,7 @@ consumer of the exports it provably reads. These forms are recognized:
 | `const registry = { x: () => import("./x") }; (await registry.x()).default()` | `default`, subject to receiver safety |
 | `import("./x").then(m => m.work())` (also block bodies and literal string member keys) | `work`, subject to receiver safety |
 | `const [{ work }] = await Promise.all([import("./x")])` | `work` |
+| `function load() { return import("./x") }` then `const { Name } = await load()` | `Name` |
 
 Stored loader maps must be local `const` object literals with unique static keys,
 plain expression-bodied arrows with no parameters, and no spreads, methods, or
@@ -159,6 +160,19 @@ import("./y")])` consumes only `work` from `./y`. Test imports of exports from
 `./x` remain eligible for findings. A missing element beyond the end of the
 pattern stays uncertain. A whole-module element binding, rest pattern, computed key,
 shadowed `Promise`, or stored result keeps uncertainty for that import.
+
+A same-file local function may return one literal `import("./x")`. When every
+reference to that function is `const { Name } = await load()`, the import
+consumes exactly those keys. The function may be a declaration or a `const`
+arrow or function expression. It is not exported and not a generator. Other
+statements, such as `vi.resetModules()`, may precede the return. The return is
+the import expression itself. Several such calls consume the union of their
+keys. A `let`, `var`, or destructured binding does not qualify.
+
+Any other use of that helper keeps the unknown selector: member access on an
+whole-module binding (`const m = await load(); m.Name`), a rest or computed
+key, passing the result or the function onward, a second return, or another
+function that only forwards the call.
 
 Other forms keep the "unknown import selector" advisory: computed nonliteral
 member reads (`m[key]`), optional reads on stored awaited bindings (`m?.Name`),

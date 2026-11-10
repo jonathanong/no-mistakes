@@ -134,6 +134,49 @@ fn dynamic_selectors_prove_members_and_preserve_escapes() {
 }
 
 #[test]
+fn returned_import_helper_proves_named_keys_only() {
+    for (case, unknown) in [("returned", false), ("returned-member", true)] {
+        let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+            .args(["check", "--root"])
+            .arg(root(case))
+            .args(["--format", "json"])
+            .output()
+            .unwrap();
+        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        let mut targets: Vec<_> = report["rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|row| row["target"].as_str().unwrap())
+            .collect();
+        targets.sort_unstable();
+        if unknown {
+            assert!(targets.is_empty(), "{case}: {report}");
+            assert_eq!(
+                report["advisories"].as_array().unwrap().len(),
+                1,
+                "{case}: {report}"
+            );
+        } else {
+            assert!(
+                report["advisories"].as_array().unwrap().is_empty(),
+                "{case}: {report}"
+            );
+            assert_eq!(targets, ["main"], "{case}: {report}");
+        }
+    }
+}
+
+#[test]
+fn returned_import_helper_check_json_snapshot() {
+    let cases: Vec<_> = ["returned", "returned-member"]
+        .into_iter()
+        .map(|case| (case, root(case), root(case).join(".no-mistakes.yml")))
+        .collect();
+    crate::check_json_snapshot::assert_saved_fixture("production_exports_returned_import", &cases);
+}
+
+#[test]
 fn dynamic_selectors_check_json_snapshot() {
     for (snapshot, config) in [
         ("production_exports_dynamic_selectors", ".no-mistakes.yml"),

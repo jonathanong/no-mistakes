@@ -31,6 +31,14 @@ fn loader_default_in_jsx_is_proven_and_mixed_use_is_not() {
 }
 
 #[test]
+fn returned_import_selectors_follow_one_local_return() {
+    assert_eq!(
+        selectors("dynamic-selectors-returned.ts"),
+        [vec!["default"], vec!["A", "B"], vec!["C", "D"]]
+    );
+}
+
+#[test]
 fn dynamic_import_selectors_record_only_proven_forms() {
     let names = selectors("dynamic-selectors.ts");
     let expected: Vec<Vec<&str>> = vec![
