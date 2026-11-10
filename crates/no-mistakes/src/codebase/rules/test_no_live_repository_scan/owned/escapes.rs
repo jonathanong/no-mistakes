@@ -1,12 +1,16 @@
 use super::path_provenance;
+use super::route_index;
 use crate::codebase::dependencies::graph::TsFactLookup;
+use crate::codebase::ts_source::module_facts::arguments::RouteKind;
 use crate::fx::{FxHashMap, FxHashSet};
 use std::path::{Path, PathBuf};
 
 #[derive(Default)]
 pub(super) struct Escapes {
     local: FxHashMap<PathBuf, FxHashSet<String>>,
+    refs: Vec<(PathBuf, u32, u32, String)>,
     unknown: bool,
+    unknown_at: Option<(PathBuf, u32)>,
 }
 
 impl Escapes {
@@ -25,10 +29,32 @@ impl Escapes {
             };
             match path_provenance(ts) {
                 Some(paths) => {
-                    escapes.unknown |= paths.modules_unknown;
+                    if paths.modules_unknown {
+                        escapes.unknown = true;
+                        route_index::note_escape(
+                            &mut escapes.unknown_at,
+                            file,
+                            paths.unknown_load.unwrap_or(1),
+                        );
+                    }
+                    for site in &paths.route_sites {
+                        if site.kind == RouteKind::NonDirect {
+                            escapes.refs.push((
+                                file.clone(),
+                                site.start,
+                                site.line,
+                                site.detail.clone(),
+                            ));
+                        }
+                    }
                     escapes.local.insert(file.clone(), paths.value_refs.clone());
                 }
-                None => escapes.unknown |= ts.module_bindings.is_some(),
+                None => {
+                    if ts.module_bindings.is_some() {
+                        escapes.unknown = true;
+                        route_index::note_escape(&mut escapes.unknown_at, file, 1);
+                    }
+                }
             }
         }
         escapes
@@ -38,10 +64,23 @@ impl Escapes {
         self.unknown
     }
 
+    pub(super) fn unknown_at(&self) -> Option<&(PathBuf, u32)> {
+        self.unknown_at.as_ref()
+    }
+
     pub(super) fn contains(&self, file: &Path, name: &str) -> bool {
         let short = name.rsplit('.').next().unwrap_or(name);
         self.local
             .get(file)
             .is_some_and(|names| names.contains(name) || names.contains(short))
+    }
+
+    pub(super) fn reference(&self, file: &Path, name: &str) -> Option<(PathBuf, u32, String)> {
+        let short = name.rsplit('.').next().unwrap_or(name);
+        self.refs
+            .iter()
+            .filter(|(path, _, _, detail)| path == file && (detail == name || detail == short))
+            .min_by_key(|(_, start, _, _)| *start)
+            .map(|(path, _, line, detail)| (path.clone(), *line, detail.clone()))
     }
 }

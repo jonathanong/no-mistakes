@@ -192,7 +192,15 @@ path. A generic helper such as
 reachable caller passes an owned root or a module- or `cwd`-anchored fixture
 path through a named call (see
 [Owned parameters and env vars](#owned-parameters-and-env-vars)); a caller that
-passes a relative literal, an unproven variable, or nothing keeps the finding. Otherwise
+passes a relative literal, an unproven variable, or nothing keeps the finding.
+When that proof fails, the advisory names the first blocker and where it is:
+the caller call site and its argument (a live path, an omitted argument, an
+unproven variable, or a value forwarded through another parameter), or the
+route that made callers unknowable (a namespace import, a default import,
+`import()`, `require`, `vi.mock`, a reference other than a direct call, a
+callee that is not a named function, or a reassigned parameter), with that
+file and line. The fix tells the caller to pass an owned root. It does not
+ask a production helper to build the root itself. Otherwise
 enumerate with a path the helper builds itself from a fixture root, or suppress
 the helper.
 
@@ -563,9 +571,11 @@ module's directory and a Vitest root reaches it.
 
 Move the repository-wide check into a released command that runs once in static
 CI, and keep the Vitest test for small supplied fixtures that exercise that
-check's evaluator. For an unresolved root, build a `const` fixture path or owned
-`mkdtemp` root inside the enumerating function, or supply it through every
-statically resolved test caller (`vi.stubEnv` for env roots). Configured
+check's evaluator. For an unresolved root that is not a parameter, build a
+`const` fixture path or owned `mkdtemp` root inside the enumerating function,
+or supply it through every statically resolved test caller (`vi.stubEnv` for
+env roots). For a parameter the proof cannot close, fix the caller or the
+route the advisory names, and pass an owned root from that caller. Configured
 `fixtureDirs` apply to caller arguments and env writes too. A mixed or unknown
 caller, escaping function, unsafe env write, or unowned reassignment must be
 rewritten or isolated before that proof succeeds.

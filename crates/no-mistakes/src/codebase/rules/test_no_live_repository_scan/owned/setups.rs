@@ -19,6 +19,8 @@ pub(in super::super) struct ConfiguredSetups {
     projects: Vec<Project>,
     known: bool,
     configs_known: bool,
+    /// Config declaration of a `setupFiles` entry this pass could not resolve.
+    hole: Option<(PathBuf, u32)>,
 }
 
 impl ConfiguredSetups {
@@ -28,15 +30,24 @@ impl ConfiguredSetups {
         root_files: &[PathBuf],
     ) -> Self {
         let projects = projects(catalog, root, root_files);
+        let known = catalog.is_none() || projects.is_some();
         let configs_known = projects.as_ref().is_some_and(|projects| {
             catalog.is_some() && projects.iter().all(|project| project.config.is_some())
         });
+        let hole = (!known)
+            .then(|| catalog.and_then(|catalog| unresolved_setup(catalog, root, root_files)))
+            .flatten();
         Self {
             root: root.to_path_buf(),
-            known: catalog.is_none() || projects.is_some(),
+            known,
             projects: projects.unwrap_or_default(),
             configs_known,
+            hole,
         }
+    }
+
+    pub(super) fn hole(&self) -> Option<(PathBuf, u32)> {
+        self.hole.clone()
     }
 
     pub(in super::super) fn setup_files(&self) -> Option<FxHashSet<PathBuf>> {
@@ -119,4 +130,36 @@ fn projects(
         });
     }
     (!selected.is_empty()).then_some(selected)
+}
+
+fn unresolved_setup(
+    catalog: &PreparedVitestProjectCatalog,
+    root: &Path,
+    root_files: &[PathBuf],
+) -> Option<(PathBuf, u32)> {
+    let mut best = None;
+    for project in catalog.merged_projects().ok()? {
+        let Ok(filter) = ProjectTestFilter::from_project_ref(&project) else {
+            continue;
+        };
+        if !root_files.iter().any(|file| {
+            filter.is_match(&crate::codebase::ts_source::relative_slash_path(root, file))
+        }) {
+            continue;
+        }
+        for setup in project.vitest_setup {
+            if setup.config_extends_provenance
+                || setup.field != VitestSetupField::SetupFiles
+                || setup.resolved_path.is_some()
+            {
+                continue;
+            }
+            let path = crate::codebase::ts_resolver::normalize_path(&setup.declaration_path);
+            let next = (path, setup.declaration_line.max(1));
+            if best.as_ref().is_none_or(|prev| next < *prev) {
+                best = Some(next);
+            }
+        }
+    }
+    best
 }

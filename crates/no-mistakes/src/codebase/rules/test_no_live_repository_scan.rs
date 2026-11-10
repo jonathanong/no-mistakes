@@ -106,9 +106,10 @@ pub(crate) fn check_with_graph(
                 }
                 Scan::Resolved => classify(origin, &fixture_dirs),
             };
-            let owned = matches!(verdict, Verdict::Unresolved(_))
-                && scan == Scan::Resolved
-                && origin.is_some_and(|origin| {
+            let ownership = (matches!(verdict, Verdict::Unresolved(_)) && scan == Scan::Resolved)
+                .then_some(origin)
+                .flatten()
+                .map(|origin| {
                     owners
                         .get_or_init(|| {
                             owned::Owners::new(
@@ -128,8 +129,9 @@ pub(crate) fn check_with_graph(
                                 },
                             )
                         })
-                        .owned(origin, site, facts, &fixture_dirs)
+                        .ownership(origin, site, facts, &fixture_dirs)
                 });
+            let owned = matches!(ownership.as_ref(), Some(owned::Ownership::Yes));
             match verdict {
                 Verdict::Allowed => {}
                 _ if owned => {}
@@ -152,7 +154,12 @@ pub(crate) fn check_with_graph(
                     }
                 }
                 Verdict::Unresolved(why) => {
-                    let finding = findings::unresolved(&root, application, site, why);
+                    let finding = match ownership {
+                        Some(owned::Ownership::Parameter(cause)) => {
+                            findings::parameter(&root, application, site, &cause)
+                        }
+                        _ => findings::unresolved(&root, application, site, why),
+                    };
                     unresolved_findings(&mut diagnostics, options.unresolved_root).push(finding);
                 }
             }

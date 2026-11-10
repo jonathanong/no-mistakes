@@ -2,6 +2,7 @@
 use super::{PathOrigin, Projector};
 use oxc_ast::{ast::*, AstKind};
 use oxc_semantic::Semantic;
+use oxc_span::GetSpan;
 
 /// True for the unshadowed global `process`.
 pub(in super::super) fn process_global(
@@ -93,10 +94,41 @@ impl<'a> Projector<'a, '_> {
             .position(|item| item.span == parameter.span)?;
         let owner = semantic.nodes().parent_id(list.id());
         use oxc_span::GetSpan;
+        let start = semantic.nodes().kind(owner).span().start;
         Some(PathOrigin {
             param: Some(index),
-            param_owner: Some(semantic.nodes().kind(owner).span().start),
+            param_owner: Some(start),
+            owner_line: Some(super::super::line_in(semantic.source_text(), start)),
             ..PathOrigin::unknown()
         })
+    }
+
+    /// 1-based line of a write to a simple parameter, when the binding is one.
+    pub(super) fn reassigned_parameter(&mut self, id: &IdentifierReference<'a>) -> Option<u32> {
+        let semantic = self.semantic;
+        let symbol = self.binding_symbol(id)?;
+        let mut declaration = semantic.scoping().symbol_declaration(symbol);
+        let mut parameter = None;
+        for _ in 0..3 {
+            if let AstKind::FormalParameter(found) = semantic.nodes().kind(declaration) {
+                parameter = Some(found);
+                break;
+            }
+            declaration = semantic.nodes().parent_id(declaration);
+        }
+        let parameter = parameter?;
+        if !matches!(parameter.pattern, BindingPattern::BindingIdentifier(_)) {
+            return None;
+        }
+        semantic
+            .scoping()
+            .get_resolved_references(symbol)
+            .find(|reference| reference.flags().is_write())
+            .map(|reference| {
+                super::super::line_in(
+                    semantic.source_text(),
+                    semantic.nodes().kind(reference.node_id()).span().start,
+                )
+            })
     }
 }

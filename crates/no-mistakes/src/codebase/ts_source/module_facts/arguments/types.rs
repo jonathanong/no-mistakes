@@ -50,6 +50,11 @@ pub(crate) struct PathOrigin {
     pub(crate) param: Option<usize>,
     pub(crate) param_member: Option<String>,
     pub(crate) param_owner: Option<u32>,
+    /// 1-based line of `param_owner`, recorded while the source is in hand.
+    pub(crate) owner_line: Option<u32>,
+    /// 1-based line of a write to a simple parameter. Set only while `param`
+    /// stays unset, so caller-proof acceptance is unchanged.
+    pub(crate) reassigned_at: Option<u32>,
 }
 
 /// Where a `process.env` write sits relative to the code it must dominate.
@@ -97,7 +102,50 @@ pub(crate) struct PathProvenance {
     pub(crate) unsafe_modules: crate::fx::FxHashSet<String>,
     /// A `require`/`import()`/`vi.mock` whose module cannot be read.
     pub(crate) modules_unknown: bool,
+    /// 1-based line of the first load that set `modules_unknown`.
+    pub(crate) unknown_load: Option<u32>,
     pub(crate) resolved_import_spans: Vec<(u32, u32)>,
+    /// Source text of each positional argument, including ones the proof ignores.
+    pub(crate) arg_text: FxHashMap<u32, Vec<(usize, String)>>,
+    /// Origins omitted from `arg_paths`. The caller proof does not read this.
+    pub(crate) arg_unproven: FxHashMap<u32, Vec<(usize, PathOrigin)>>,
+    /// Imports and references that can make a callee's callers unknowable.
+    pub(crate) route_sites: Vec<RouteSite>,
+}
+
+/// One import or reference that blocks a parameter-root proof.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct RouteSite {
+    pub(crate) start: u32,
+    pub(crate) line: u32,
+    pub(crate) kind: RouteKind,
+    pub(crate) detail: String,
+}
+
+pub(crate) fn line_in(source: &str, offset: u32) -> u32 {
+    crate::codebase::ts_source::byte_offset_to_line(source, offset as usize)
+}
+
+impl RouteSite {
+    pub(crate) fn at(source: &str, start: u32, kind: RouteKind, detail: impl Into<String>) -> Self {
+        Self {
+            start,
+            line: line_in(source, start),
+            kind,
+            detail: detail.into(),
+        }
+    }
+}
+
+/// Why a route into a parameter root cannot be enumerated.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum RouteKind {
+    Namespace,
+    Default,
+    Dynamic,
+    Require,
+    ViMock,
+    NonDirect,
 }
 
 impl PathProvenance {

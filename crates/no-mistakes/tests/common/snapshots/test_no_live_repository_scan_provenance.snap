@@ -398,7 +398,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/param-call.ts",
           "import": "readdirSync",
           "line": 4,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/param-call.test.ts:9 references `syncCalled` other than as a direct call. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((entry) => `${user}:${entry}`);",
           "target": "unresolved root"
@@ -407,7 +407,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/param-climb.ts",
           "import": "readdirSync",
           "line": 6,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but src/param-climb.ts:6 climbs above the caller-supplied root. Fix: do not traverse above the caller-supplied root; pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(join(dir, \"..\", \"..\"));",
           "target": "unresolved root"
@@ -416,7 +416,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/param-escape.ts",
           "import": "readdirSync",
           "line": 4,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/param-escape.test.ts:9 references `syncEscaped` other than as a direct call. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((entry) => `${user}:${entry}`);",
           "target": "unresolved root"
@@ -425,7 +425,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/param-mixed.ts",
           "import": "readdirSync",
           "line": 4,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/param-mixed.test.ts:8 passes `join(import.meta.dirname, \"..\", \"src\")`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((name) => `${user}:${name}`);",
           "target": "unresolved root"
@@ -434,7 +434,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/param-nested.ts",
           "import": "readdirSync",
           "line": 4,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because src/param-nested.ts:4 is not a named function. Fix: declare the helper as a named function and pass an owned root from each caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return dirs.flatMap((dir) => readdirSync(dir));",
           "target": "unresolved root"
@@ -443,7 +443,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/param-omitted.ts",
           "import": "readdirSync",
           "line": 6,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/param-omitted.test.ts:4 omits the root argument. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((name) => `${user}:${name}`);",
           "target": "unresolved root"
@@ -452,7 +452,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/param-reassigned.ts",
           "import": "readdirSync",
           "line": 5,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but src/param-reassigned.ts:4 reassigns the parameter. Fix: stop reassigning the parameter and pass an owned root from each caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir);",
           "target": "unresolved root"
@@ -632,7 +632,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/dir.ts",
           "import": "readdirSync",
           "line": 8,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/t.test.ts:10 imports `../src/dir` through a require(). Fix: import the helper with a named static import and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((entry) => `${user}:${entry}`);",
           "target": "unresolved root"
@@ -654,7 +654,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/dir.ts",
           "import": "readdirSync",
           "line": 8,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/t.test.ts:6 imports `@lib` through a namespace import. Fix: import the helper with a named static import and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((entry) => `${user}:${entry}`);",
           "target": "unresolved root"
@@ -676,7 +676,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/dir.ts",
           "import": "readdirSync",
           "line": 8,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/t.test.ts:10 imports `@lib` through a require(). Fix: import the helper with a named static import and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((entry) => `${user}:${entry}`);",
           "target": "unresolved root"
@@ -698,7 +698,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/dir.ts",
           "import": "readdirSync",
           "line": 8,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/t.test.ts:5 imports `../src/dir` through a default import. Fix: import the helper with a named static import and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((entry) => `${user}:${entry}`);",
           "target": "unresolved root"
@@ -720,7 +720,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/dir.ts",
           "import": "readdirSync",
           "line": 8,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/t.test.ts:9 imports `../src/dir` through a dynamic import(). Fix: import the helper with a named static import and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((entry) => `${user}:${entry}`);",
           "target": "unresolved root"
@@ -742,7 +742,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/dir.ts",
           "import": "readdirSync",
           "line": 8,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because src/dir.ts:11 references `list` other than as a direct call. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((entry) => `${user}:${entry}`);",
           "target": "unresolved root"
@@ -764,7 +764,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/dir.ts",
           "import": "readdirSync",
           "line": 8,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/t.test.ts:9 imports `../src/dir` through a dynamic import(). Fix: import the helper with a named static import and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((entry) => `${user}:${entry}`);",
           "target": "unresolved root"
@@ -786,7 +786,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/dir.ts",
           "import": "readdirSync",
           "line": 8,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/t.test.ts:6 imports `../src/dir` through a namespace import. Fix: import the helper with a named static import and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((entry) => `${user}:${entry}`);",
           "target": "unresolved root"
@@ -808,7 +808,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/dir.ts",
           "import": "readdirSync",
           "line": 8,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/t.test.ts:10 imports `../src/dir` through a require(). Fix: import the helper with a named static import and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((entry) => `${user}:${entry}`);",
           "target": "unresolved root"
@@ -1683,7 +1683,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/param-call.ts",
           "import": "readdirSync",
           "line": 4,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/param-call.test.ts:9 references `syncCalled` other than as a direct call. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((entry) => `${user}:${entry}`);",
           "target": "unresolved root"
@@ -1692,7 +1692,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/param-climb.ts",
           "import": "readdirSync",
           "line": 6,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but src/param-climb.ts:6 climbs above the caller-supplied root. Fix: do not traverse above the caller-supplied root; pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(join(dir, \"..\", \"..\"));",
           "target": "unresolved root"
@@ -1701,7 +1701,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/param-escape.ts",
           "import": "readdirSync",
           "line": 4,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/param-escape.test.ts:9 references `syncEscaped` other than as a direct call. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((entry) => `${user}:${entry}`);",
           "target": "unresolved root"
@@ -1710,7 +1710,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/param-mixed.ts",
           "import": "readdirSync",
           "line": 4,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/param-mixed.test.ts:8 passes `join(import.meta.dirname, \"..\", \"src\")`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((name) => `${user}:${name}`);",
           "target": "unresolved root"
@@ -1719,7 +1719,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/param-nested.ts",
           "import": "readdirSync",
           "line": 4,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because src/param-nested.ts:4 is not a named function. Fix: declare the helper as a named function and pass an owned root from each caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return dirs.flatMap((dir) => readdirSync(dir));",
           "target": "unresolved root"
@@ -1728,7 +1728,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/param-omitted.ts",
           "import": "readdirSync",
           "line": 6,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/param-omitted.test.ts:4 omits the root argument. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir).map((name) => `${user}:${name}`);",
           "target": "unresolved root"
@@ -1737,7 +1737,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/param-reassigned.ts",
           "import": "readdirSync",
           "line": 5,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but src/param-reassigned.ts:4 reassigns the parameter. Fix: stop reassigning the parameter and pass an owned root from each caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir);",
           "target": "unresolved root"

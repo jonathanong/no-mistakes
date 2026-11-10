@@ -1,6 +1,6 @@
 //! Functions referenced other than as the callee of a direct call. A caller the
 //! graph cannot see (`.then(sync)`, `.call`, `export { sync }`) may pass anything.
-use super::super::PathProvenance;
+use super::super::{PathProvenance, RouteKind, RouteSite};
 use oxc_ast::{ast::*, AstKind};
 use oxc_semantic::{AstNodes, Semantic};
 use oxc_span::{GetSpan, Span};
@@ -92,6 +92,12 @@ pub(super) fn from_identifier(
     }
     if let Some(keys) = function_like(semantic, id) {
         out.value_refs.insert(id.name.to_string());
+        out.route_sites.push(RouteSite::at(
+            semantic.source_text(),
+            id.span.start,
+            RouteKind::NonDirect,
+            id.name.to_string(),
+        ));
         out.value_refs.extend(keys);
     }
 }
@@ -100,10 +106,17 @@ pub(super) fn from_member(
     nodes: &AstNodes<'_>,
     node: NodeId,
     member: &StaticMemberExpression<'_>,
+    source: &str,
     out: &mut PathProvenance,
 ) {
     if !is_callee(nodes, node, member.span) {
         out.value_refs.insert(member.property.name.to_string());
+        out.route_sites.push(RouteSite::at(
+            source,
+            member.span.start,
+            RouteKind::NonDirect,
+            member.property.name.to_string(),
+        ));
     }
 }
 

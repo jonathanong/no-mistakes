@@ -42,3 +42,47 @@ pub(super) fn classify(origin: Option<&PathOrigin>, fixture_dirs: &[&str]) -> Ve
         ),
     }
 }
+
+/// Why one caller argument fails the parameter proof. `None` means the walk
+/// may still accept it (an owned root, an env root, or a parameter it can follow).
+pub(super) enum ArgBlock {
+    Live,
+    Omitted,
+    Variable,
+    Forwarded,
+}
+
+pub(super) fn missing_block(present: bool) -> ArgBlock {
+    match present {
+        true => ArgBlock::Variable,
+        false => ArgBlock::Omitted,
+    }
+}
+
+pub(super) fn arg_block(argument: &PathOrigin, fixture_dirs: &[&str]) -> Option<ArgBlock> {
+    let climbs = argument.segments.iter().any(|part| part == "..")
+        && (argument.param.is_some()
+            || argument.env.is_some()
+            || argument.anchor == PathAnchor::Temp);
+    if climbs {
+        return Some(if argument.param.is_some() {
+            ArgBlock::Forwarded
+        } else {
+            ArgBlock::Variable
+        });
+    }
+    if classify(Some(argument), fixture_dirs) == Verdict::Allowed
+        || argument.env.is_some()
+        || argument.param.is_some()
+    {
+        return None;
+    }
+    Some(live_or_variable(argument, fixture_dirs))
+}
+
+pub(super) fn live_or_variable(argument: &PathOrigin, fixture_dirs: &[&str]) -> ArgBlock {
+    match classify(Some(argument), fixture_dirs) {
+        Verdict::Live(_) => ArgBlock::Live,
+        _ => ArgBlock::Variable,
+    }
+}

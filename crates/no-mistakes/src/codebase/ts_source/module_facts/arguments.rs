@@ -11,7 +11,8 @@ mod path_origin;
 mod provenance;
 mod types;
 pub(crate) use types::{
-    ArgumentValue, ArgumentValues, EnvWrite, PathAnchor, PathOrigin, PathProvenance, WriteScope,
+    line_in, ArgumentValue, ArgumentValues, EnvWrite, PathAnchor, PathOrigin, PathProvenance,
+    RouteKind, RouteSite, WriteScope,
 };
 
 pub(super) fn collect(

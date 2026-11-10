@@ -616,7 +616,8 @@ the same rule contract. CLI and compiled CJS, ESM, and prepared API reports are
 locked by saved-fixture snapshots.
 Owned parameters and env roots follow every selected test caller through the same
 canonical graph. Configured fixture paths and `vi.stubEnv` writes participate in
-that proof. Mixed or unresolved callers remain reported, and unrelated production
+that proof. A failed parameter proof names the blocking caller or route in the
+advisory text. Mixed or unresolved callers remain reported, and unrelated production
 files do not invalidate ownership. CLI, CJS, ESM and prepared reports share these
 semantics.
 Node-origin `module.require` and imported `createRequire` loads use conservative

@@ -1,4 +1,5 @@
-use super::{PathOrigin, Projector, MAX_ARGUMENTS};
+use super::super::{PathOrigin, Projector};
+use super::call_args::MAX_ARGUMENTS;
 use oxc_ast::ast::*;
 
 pub(super) fn collect<'a>(

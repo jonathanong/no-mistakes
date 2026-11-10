@@ -2,6 +2,7 @@
 //!
 //! Syntactic only: a form this pass does not recognise is left out, and the
 //! rule that reads these facts then keeps its finding.
+mod call_args;
 mod config_keys;
 mod consumers;
 mod env_writes;
@@ -16,13 +17,10 @@ mod value_refs;
 mod vi_refs;
 
 use super::path_origin::callee_root;
-use super::{PathAnchor, PathOrigin, PathProvenance, Projector};
+use super::{PathProvenance, Projector};
 use crate::fx::FxHashSet;
-use oxc_ast::{ast::*, AstKind};
+use oxc_ast::AstKind;
 use oxc_semantic::Semantic;
-
-/// Arguments after this index are never recorded.
-const MAX_ARGUMENTS: usize = 8;
 
 pub(super) fn collect(
     semantic: &Semantic<'_>,
@@ -50,12 +48,13 @@ pub(super) fn collect(
                     result.pass_through.insert(call.span.start, spied);
                 }
                 consumers::from_call(&mut projector, call, &mut result);
-                if callee_root(&call.callee).is_some() && !rebinds_callee(&call.callee) {
+                if callee_root(&call.callee).is_some() && !call_args::rebinds_callee(&call.callee) {
                     let members = member_paths::collect(&mut projector, call);
                     if !members.is_empty() {
                         result.arg_member_paths.insert(call.span.start, members);
                     }
-                    let paths = argument_paths(&mut projector, call);
+                    call_args::record_arg_text(semantic.source_text(), call, &mut result);
+                    let paths = call_args::argument_paths(&mut projector, call, &mut result);
                     if !paths.is_empty() {
                         if paths.iter().any(|(_, path)| path.env.is_some())
                             && local_env::immediate_read(semantic, node.id())
@@ -65,7 +64,7 @@ pub(super) fn collect(
                         result.arg_paths.insert(call.span.start, paths);
                     }
                 }
-                if let Some(span) = test_callback(call) {
+                if let Some(span) = call_args::test_callback(call) {
                     result.test_callbacks.push(span);
                     local_env::test_calls(semantic, facts, call, &mut result);
                 }
@@ -90,11 +89,23 @@ pub(super) fn collect(
                 member_refs::from_computed(member, &mut result);
             }
             AstKind::StaticMemberExpression(member) => {
-                value_refs::from_member(semantic.nodes(), node.id(), member, &mut result);
+                value_refs::from_member(
+                    semantic.nodes(),
+                    node.id(),
+                    member,
+                    semantic.source_text(),
+                    &mut result,
+                );
             }
             AstKind::ImportExpression(import) => {
                 projector.call_offset = import.span.start;
-                if consumers::from_source(&mut projector, Some(&import.source), &mut result) {
+                if consumers::from_source(
+                    &mut projector,
+                    Some(&import.source),
+                    &mut result,
+                    import.span.start,
+                    crate::codebase::ts_source::module_facts::arguments::RouteKind::Dynamic,
+                ) {
                     result
                         .resolved_import_spans
                         .push((import.span.start, import.span.end));
@@ -116,53 +127,6 @@ pub(super) fn collect(
         }
     }
     value_refs::add_imported_names(facts, &mut result);
-    consumers::from_facts(facts, &mut result);
+    consumers::from_facts(facts, semantic.source_text(), &mut result);
     result
-}
-
-/// `sync.call(...)`, `.apply`, and `.bind` shift argument positions.
-fn rebinds_callee(callee: &Expression<'_>) -> bool {
-    matches!(callee.get_inner_expression(), Expression::StaticMemberExpression(member)
-        if matches!(member.property.name.as_str(), "call" | "apply" | "bind"))
-}
-
-/// Only anchors that can prove an owned or fixture root are kept, which bounds memory.
-fn argument_paths<'a>(
-    projector: &mut Projector<'a, '_>,
-    call: &CallExpression<'a>,
-) -> Vec<(usize, PathOrigin)> {
-    let mut paths = Vec::new();
-    for (index, argument) in call.arguments.iter().take(MAX_ARGUMENTS).enumerate() {
-        let Some(expression) = argument.as_expression() else {
-            break;
-        };
-        let origin = projector.path_of(expression);
-        if matches!(
-            origin.anchor,
-            PathAnchor::Temp | PathAnchor::Module | PathAnchor::Cwd
-        ) || origin.param.is_some()
-            || origin.env.is_some()
-        {
-            paths.push((index, origin));
-        }
-    }
-    paths
-}
-
-/// `it(...)` / `test(...)` (including `.only` / `.skip`) with a function body.
-fn test_callback(call: &CallExpression<'_>) -> Option<(u32, u32)> {
-    if !matches!(callee_root(&call.callee)?, "it" | "test") {
-        return None;
-    }
-    call.arguments.iter().find_map(|argument| {
-        match argument.as_expression()?.get_inner_expression() {
-            Expression::ArrowFunctionExpression(function) => {
-                Some((function.span.start, function.span.end))
-            }
-            Expression::FunctionExpression(function) => {
-                Some((function.span.start, function.span.end))
-            }
-            _ => None,
-        }
-    })
 }

@@ -1,0 +1,91 @@
+//! Argument text and path origins for one call.
+use super::super::path_origin::callee_root;
+use super::super::{PathAnchor, PathOrigin, PathProvenance, Projector};
+use oxc_ast::ast::*;
+use oxc_span::GetSpan;
+
+/// Arguments after this index are never recorded.
+pub(super) const MAX_ARGUMENTS: usize = 8;
+
+/// Argument text is cut at this many bytes, on a char boundary.
+const ARG_TEXT_LIMIT: usize = 80;
+
+pub(super) fn record_arg_text(source: &str, call: &CallExpression<'_>, out: &mut PathProvenance) {
+    let mut texts = Vec::new();
+    for (index, argument) in call.arguments.iter().take(MAX_ARGUMENTS).enumerate() {
+        let mut text = String::new();
+        for word in crate::ast::span_text(source, argument.span()).split_whitespace() {
+            if !text.is_empty() {
+                text.push(' ');
+            }
+            text.push_str(word);
+            if text.len() >= ARG_TEXT_LIMIT {
+                break;
+            }
+        }
+        text.truncate(text.floor_char_boundary(ARG_TEXT_LIMIT));
+        if !text.is_empty() {
+            texts.push((index, text));
+        }
+    }
+    if !texts.is_empty() {
+        out.arg_text.insert(call.span.start, texts);
+    }
+}
+
+/// `sync.call(...)`, `.apply`, and `.bind` shift argument positions.
+pub(super) fn rebinds_callee(callee: &Expression<'_>) -> bool {
+    matches!(callee.get_inner_expression(), Expression::StaticMemberExpression(member)
+        if matches!(member.property.name.as_str(), "call" | "apply" | "bind"))
+}
+
+/// Only anchors that can prove an owned or fixture root are kept, which bounds memory.
+pub(super) fn argument_paths<'a>(
+    projector: &mut Projector<'a, '_>,
+    call: &CallExpression<'a>,
+    out: &mut PathProvenance,
+) -> Vec<(usize, PathOrigin)> {
+    let mut paths = Vec::new();
+    let mut unproven = Vec::new();
+    for (index, argument) in call.arguments.iter().take(MAX_ARGUMENTS).enumerate() {
+        let Some(expression) = argument.as_expression() else {
+            break;
+        };
+        let origin = projector.path_of(expression);
+        if kept(&origin) {
+            paths.push((index, origin));
+        } else {
+            unproven.push((index, origin));
+        }
+    }
+    if !unproven.is_empty() {
+        out.arg_unproven.insert(call.span.start, unproven);
+    }
+    paths
+}
+
+fn kept(origin: &PathOrigin) -> bool {
+    matches!(
+        origin.anchor,
+        PathAnchor::Temp | PathAnchor::Module | PathAnchor::Cwd
+    ) || origin.param.is_some()
+        || origin.env.is_some()
+}
+
+/// `it(...)` / `test(...)` (including `.only` / `.skip`) with a function body.
+pub(super) fn test_callback(call: &CallExpression<'_>) -> Option<(u32, u32)> {
+    if !matches!(callee_root(&call.callee)?, "it" | "test") {
+        return None;
+    }
+    call.arguments.iter().find_map(|argument| {
+        match argument.as_expression()?.get_inner_expression() {
+            Expression::ArrowFunctionExpression(function) => {
+                Some((function.span.start, function.span.end))
+            }
+            Expression::FunctionExpression(function) => {
+                Some((function.span.start, function.span.end))
+            }
+            _ => None,
+        }
+    })
+}
