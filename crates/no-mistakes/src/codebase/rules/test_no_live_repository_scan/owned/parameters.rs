@@ -83,11 +83,11 @@ pub(super) fn argument_present(paths: &PathProvenance, offset: u32, index: usize
         .is_some_and(|args| args.iter().any(|(position, _)| *position == index))
 }
 
-pub(super) fn unproven_argument<'a>(
-    paths: &'a PathProvenance,
+pub(super) fn unproven_argument(
+    paths: &PathProvenance,
     offset: u32,
     index: usize,
-) -> Option<&'a PathOrigin> {
+) -> Option<&PathOrigin> {
     paths
         .arg_unproven
         .get(&offset)

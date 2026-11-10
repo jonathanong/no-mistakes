@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 #[derive(Default)]
 pub(super) struct Escapes {
     local: FxHashMap<PathBuf, FxHashSet<String>>,
-    refs: Vec<(PathBuf, u32, String)>,
+    refs: Vec<(PathBuf, u32, u32, String)>,
     unknown: bool,
     unknown_at: Option<(PathBuf, u32)>,
 }
@@ -34,14 +34,17 @@ impl Escapes {
                         route_index::note_escape(
                             &mut escapes.unknown_at,
                             file,
-                            paths.unknown_load.unwrap_or(0),
+                            paths.unknown_load.unwrap_or(1),
                         );
                     }
                     for site in &paths.route_sites {
                         if site.kind == RouteKind::NonDirect {
-                            escapes
-                                .refs
-                                .push((file.clone(), site.start, site.detail.clone()));
+                            escapes.refs.push((
+                                file.clone(),
+                                site.start,
+                                site.line,
+                                site.detail.clone(),
+                            ));
                         }
                     }
                     escapes.local.insert(file.clone(), paths.value_refs.clone());
@@ -49,7 +52,7 @@ impl Escapes {
                 None => {
                     if ts.module_bindings.is_some() {
                         escapes.unknown = true;
-                        route_index::note_escape(&mut escapes.unknown_at, file, 0);
+                        route_index::note_escape(&mut escapes.unknown_at, file, 1);
                     }
                 }
             }
@@ -76,8 +79,8 @@ impl Escapes {
         let short = name.rsplit('.').next().unwrap_or(name);
         self.refs
             .iter()
-            .filter(|(path, _, detail)| path == file && (detail == name || detail == short))
-            .min_by_key(|(_, start, _)| *start)
-            .map(|(path, start, detail)| (path.clone(), *start, detail.clone()))
+            .filter(|(path, _, _, detail)| path == file && (detail == name || detail == short))
+            .min_by_key(|(_, start, _, _)| *start)
+            .map(|(path, _, line, detail)| (path.clone(), *line, detail.clone()))
     }
 }

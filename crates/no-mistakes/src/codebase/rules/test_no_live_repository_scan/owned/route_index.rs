@@ -1,5 +1,4 @@
 //! Where an unsafe import or reference sits. The consumed-file set is unchanged.
-use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::ts_resolver::{normalize_path, ImportResolver};
 use crate::codebase::ts_source::module_facts::arguments::PathProvenance;
 use crate::codebase::ts_source::module_facts::arguments::RouteKind;
@@ -11,6 +10,7 @@ use std::path::{Path, PathBuf};
 pub(super) struct RouteHit {
     pub(super) file: PathBuf,
     pub(super) start: u32,
+    pub(super) line: u32,
     pub(super) kind: RouteKind,
     pub(super) detail: String,
     target: PathBuf,
@@ -25,7 +25,15 @@ pub(super) fn note_resolved(
 ) {
     for site in &provenance.route_sites {
         if site.detail == specifier && is_import(site.kind) {
-            push(hits, file, site.start, site.kind, &site.detail, target);
+            push(
+                hits,
+                file,
+                site.start,
+                site.line,
+                site.kind,
+                &site.detail,
+                target,
+            );
         }
     }
 }
@@ -40,9 +48,9 @@ pub(super) fn note_unknown(
         .route_sites
         .iter()
         .filter(|site| site.detail == specifier)
-        .map(|site| site.start)
+        .map(|site| site.line)
         .min()
-        .unwrap_or(0);
+        .unwrap_or(1);
     remember(slot, file, start);
 }
 
@@ -70,7 +78,15 @@ pub(super) fn note_nondirect(
             }
             let class = resolver.classify_import(&import.specifier, file, workspace, visible);
             if let Some(target) = class.preferred_path() {
-                push(hits, file, site.start, site.kind, &site.detail, target);
+                push(
+                    hits,
+                    file,
+                    site.start,
+                    site.line,
+                    site.kind,
+                    &site.detail,
+                    target,
+                );
             }
         }
     }
@@ -108,30 +124,6 @@ pub(super) fn earliest<'a>(
         .min_by(|left, right| (&left.file, left.start).cmp(&(&right.file, right.start)))
 }
 
-pub(super) fn setup_hole(facts: &dyn TsFactLookup, files: &[PathBuf]) -> Option<(PathBuf, u32)> {
-    let mut best = None;
-    for file in files {
-        let name = file
-            .file_name()
-            .and_then(|name| name.to_str())
-            .unwrap_or("");
-        if !name.contains("vitest.config") && !name.contains("vite.config") {
-            continue;
-        }
-        let Some(source) = facts
-            .get_ts_facts(file)
-            .and_then(|facts| facts.source.as_deref())
-        else {
-            continue;
-        };
-        let Some(index) = source.find("setupFiles") else {
-            continue;
-        };
-        remember(&mut best, file, index as u32);
-    }
-    best
-}
-
 pub(super) fn note_escape(slot: &mut Option<(PathBuf, u32)>, file: &Path, start: u32) {
     remember(slot, file, start);
 }
@@ -147,6 +139,7 @@ fn push(
     hits: &mut Vec<RouteHit>,
     file: &Path,
     start: u32,
+    line: u32,
     kind: RouteKind,
     detail: &str,
     target: &Path,
@@ -155,6 +148,7 @@ fn push(
         hits.push(RouteHit {
             file: file.to_path_buf(),
             start,
+            line,
             kind,
             detail: detail.to_string(),
             target,

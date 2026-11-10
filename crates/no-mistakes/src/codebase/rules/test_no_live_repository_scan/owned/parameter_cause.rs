@@ -1,5 +1,5 @@
 //! The parameter-root walk. A failure names the caller or route that stopped it.
-use super::cause::{function_site, line_at, Cause, CauseKind, Ownership};
+use super::cause::{missing_caller, Cause, CauseKind, Ownership};
 use super::parameters::{argument_path, argument_present, argument_text, unproven_argument};
 use super::{path_provenance, Owners};
 use crate::codebase::dependencies::graph::{NodeId, ResolvedCallSite, TsFactLookup};
@@ -33,20 +33,23 @@ impl Owners<'_> {
             return Ownership::No;
         }
         match (&origin.env, origin.param) {
-            (Some(name), _) => self
-                .env_owned(name, site, facts)
-                .then_some(Ownership::Yes)
-                .unwrap_or(Ownership::No),
+            (Some(name), _) => {
+                if self.env_owned(name, site, facts) {
+                    Ownership::Yes
+                } else {
+                    Ownership::No
+                }
+            }
             (None, Some(index)) => match self.param_cause(index, origin, site, facts, fixture_dirs)
             {
                 Ok(()) => Ownership::Yes,
                 Err(cause) => Ownership::Parameter(cause),
             },
-            (None, None) => origin.reassigned_at.map_or(Ownership::No, |at| {
+            (None, None) => origin.reassigned_at.map_or(Ownership::No, |line| {
                 Ownership::Parameter(Cause::new(
                     CauseKind::ReassignedParameter,
                     site.file.clone(),
-                    line_at(facts, &site.file, at),
+                    line,
                     "",
                 ))
             }),
@@ -65,16 +68,17 @@ impl Owners<'_> {
             return Err(Cause::new(
                 CauseKind::NotNamedFunction,
                 site.file.clone(),
-                line_at(facts, &site.file, origin.param_owner.unwrap_or(site.offset)),
+                origin.owner_line.unwrap_or(1),
                 "",
             ));
         };
         let start = source.clone();
-        let mut pending = vec![(source, index, origin.param_member.clone())];
+        let declared = origin.owner_line.unwrap_or(1);
+        let mut pending = vec![(source, index, origin.param_member.clone(), declared)];
         let mut seen = FxHashSet::default();
         let mut seeded = false;
         let mut forwarded = None;
-        while let Some((source, index, member)) = pending.pop() {
+        while let Some((source, index, member, line)) = pending.pop() {
             if !seen.insert((source.clone(), index, member.clone())) {
                 continue;
             }
@@ -86,19 +90,18 @@ impl Owners<'_> {
                 .get(&source)
                 .filter(|callers| !callers.is_empty())
             else {
-                let (file, line) = function_site(facts, &source);
-                return Err(Cause::new(CauseKind::NoCaller, file, line, ""));
+                return Err(missing_caller(facts, &source, line));
             };
             for caller in callers.iter().copied() {
                 let step = self.caller_step(caller, index, member.as_deref(), facts, fixture_dirs);
                 match step {
                     Step::Block(cause) => return Err(cause),
                     Step::Seed => seeded = true,
-                    Step::Follow(next, next_index, next_member, cause) => {
+                    Step::Follow(next, next_index, next_member, cause, next_line) => {
                         if forwarded.is_none() {
                             forwarded = Some(cause);
                         }
-                        pending.push((next, next_index, next_member));
+                        pending.push((next, next_index, next_member, next_line));
                     }
                 }
             }
@@ -106,10 +109,7 @@ impl Owners<'_> {
         if seeded {
             Ok(())
         } else {
-            Err(forwarded.unwrap_or_else(|| {
-                let (file, line) = function_site(facts, &start);
-                Cause::new(CauseKind::NoCaller, file, line, "")
-            }))
+            Err(forwarded.unwrap_or_else(|| missing_caller(facts, &start, declared)))
         }
     }
 }
@@ -117,7 +117,7 @@ impl Owners<'_> {
 enum Step {
     Block(Cause),
     Seed,
-    Follow(NodeId, usize, Option<String>, Cause),
+    Follow(NodeId, usize, Option<String>, Cause, u32),
 }
 
 impl Owners<'_> {
@@ -177,6 +177,7 @@ impl Owners<'_> {
                 next_index,
                 argument.param_member.clone(),
                 caller_cause(caller, ArgBlock::Forwarded, text),
+                argument.owner_line.unwrap_or(caller.line),
             );
         }
         Step::Block(caller_cause(caller, ArgBlock::Variable, text))

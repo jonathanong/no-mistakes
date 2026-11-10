@@ -1,0 +1,269 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "default-import": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "list.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because root.mts:4 imports `./list.mts` through a default import. Fix: import the helper with a named static import and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root)",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dynamic-import": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "list.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because root.mts:7 imports `./list.mts` through a dynamic import(). Fix: import the helper with a named static import and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root)",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "forwarded-parameter": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "root.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.mts:4 passes `root`, a value forwarded through another parameter. Fix: pass an owned root from the caller that supplies that parameter. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root)",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "live-path": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "root.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.mts:5 passes `process.cwd()`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root)",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "namespace-import": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "list.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because root.mts:4 imports `./list.mts` through a namespace import. Fix: import the helper with a named static import and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root)",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "non-direct-reference": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "root.mts",
+          "import": "readdirSync",
+          "line": 5,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because root.mts:7 references `list` other than as a direct call. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root)",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "not-named-function": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "root.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because root.mts:3 is not a named function. Fix: declare the helper as a named function and pass an owned root from each caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export default (root: string) => readdirSync(root)",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "omitted-argument": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "root.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.mts:5 omits the root argument. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root)",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reassigned-parameter": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "root.mts",
+          "import": "readdirSync",
+          "line": 6,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.mts:5 reassigns the parameter. Fix: stop reassigning the parameter and pass an owned root from each caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root)",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "require-import": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "list.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because root.mts:7 imports `./list.mts` through a require(). Fix: import the helper with a named static import and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root)",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unproven-variable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "root.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.mts:6 passes `dir`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root)",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "vi-mock": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "list.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because root.mts:6 imports `./list.mts` through vi.mock. Fix: do not vi.mock this module, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root)",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

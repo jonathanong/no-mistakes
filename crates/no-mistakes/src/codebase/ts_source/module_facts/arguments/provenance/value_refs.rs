@@ -92,11 +92,12 @@ pub(super) fn from_identifier(
     }
     if let Some(keys) = function_like(semantic, id) {
         out.value_refs.insert(id.name.to_string());
-        out.route_sites.push(RouteSite {
-            start: id.span.start,
-            kind: RouteKind::NonDirect,
-            detail: id.name.to_string(),
-        });
+        out.route_sites.push(RouteSite::at(
+            semantic.source_text(),
+            id.span.start,
+            RouteKind::NonDirect,
+            id.name.to_string(),
+        ));
         out.value_refs.extend(keys);
     }
 }
@@ -105,15 +106,17 @@ pub(super) fn from_member(
     nodes: &AstNodes<'_>,
     node: NodeId,
     member: &StaticMemberExpression<'_>,
+    source: &str,
     out: &mut PathProvenance,
 ) {
     if !is_callee(nodes, node, member.span) {
         out.value_refs.insert(member.property.name.to_string());
-        out.route_sites.push(RouteSite {
-            start: member.span.start,
-            kind: RouteKind::NonDirect,
-            detail: member.property.name.to_string(),
-        });
+        out.route_sites.push(RouteSite::at(
+            source,
+            member.span.start,
+            RouteKind::NonDirect,
+            member.property.name.to_string(),
+        ));
     }
 }
 

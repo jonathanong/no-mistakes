@@ -24,6 +24,7 @@ impl PathOrigin {
             param: None,
             param_member: None,
             param_owner: None,
+            owner_line: None,
             reassigned_at: None,
         }
     }
@@ -37,6 +38,7 @@ impl PathOrigin {
             param: None,
             param_member: None,
             param_owner: None,
+            owner_line: None,
             reassigned_at: None,
         }
     }
@@ -55,6 +57,7 @@ impl PathOrigin {
             param: None,
             param_member: None,
             param_owner: None,
+            owner_line: None,
             reassigned_at: None,
         };
         origin.extend(

@@ -1,4 +1,4 @@
-use super::super::{ArgumentValue, PathProvenance, Projector, RouteKind, RouteSite};
+use super::super::{line_in, ArgumentValue, PathProvenance, Projector, RouteKind, RouteSite};
 use oxc_ast::ast::*;
 
 const LOADERS: [&str; 8] = [
@@ -60,22 +60,25 @@ pub(super) fn from_source(
         Some(ArgumentValue::Scalar(serde_json::Value::String(text))) => {
             super::process_refs::poison_process_loads(&text, out);
             out.unsafe_modules.insert(text.clone());
-            out.route_sites.push(RouteSite {
+            out.route_sites.push(RouteSite::at(
+                projector.semantic.source_text(),
                 start,
                 kind,
-                detail: text,
-            });
+                text,
+            ));
             true
         }
         _ => {
             out.modules_unknown = true;
             out.poison_env();
-            out.unknown_load = Some(out.unknown_load.map_or(start, |prev| prev.min(start)));
-            out.route_sites.push(RouteSite {
+            let line = line_in(projector.semantic.source_text(), start);
+            out.unknown_load = Some(out.unknown_load.map_or(line, |prev| prev.min(line)));
+            out.route_sites.push(RouteSite::at(
+                projector.semantic.source_text(),
                 start,
                 kind,
-                detail: String::new(),
-            });
+                String::new(),
+            ));
             false
         }
     }
@@ -83,6 +86,7 @@ pub(super) fn from_source(
 
 pub(super) fn from_facts(
     facts: &super::super::super::TypeScriptModuleFacts,
+    source: &str,
     out: &mut PathProvenance,
 ) {
     for import in &facts.imports {
@@ -103,11 +107,12 @@ pub(super) fn from_facts(
                 None
             };
             if let Some(kind) = kind {
-                out.route_sites.push(RouteSite {
-                    start: binding.span.start,
+                out.route_sites.push(RouteSite::at(
+                    source,
+                    binding.span.start,
                     kind,
-                    detail: import.specifier.clone(),
-                });
+                    import.specifier.clone(),
+                ));
             }
         }
     }
@@ -124,11 +129,12 @@ pub(super) fn from_facts(
                 } else {
                     RouteKind::Default
                 };
-                out.route_sites.push(RouteSite {
-                    start: export.span.start,
+                out.route_sites.push(RouteSite::at(
+                    source,
+                    export.span.start,
                     kind,
-                    detail: specifier.clone(),
-                });
+                    specifier.clone(),
+                ));
             }
         }
     }

@@ -94,14 +94,16 @@ impl<'a> Projector<'a, '_> {
             .position(|item| item.span == parameter.span)?;
         let owner = semantic.nodes().parent_id(list.id());
         use oxc_span::GetSpan;
+        let start = semantic.nodes().kind(owner).span().start;
         Some(PathOrigin {
             param: Some(index),
-            param_owner: Some(semantic.nodes().kind(owner).span().start),
+            param_owner: Some(start),
+            owner_line: Some(super::super::line_in(semantic.source_text(), start)),
             ..PathOrigin::unknown()
         })
     }
 
-    /// Span of a write to a simple parameter, when the binding is one.
+    /// 1-based line of a write to a simple parameter, when the binding is one.
     pub(super) fn reassigned_parameter(&mut self, id: &IdentifierReference<'a>) -> Option<u32> {
         let semantic = self.semantic;
         let symbol = self.binding_symbol(id)?;
@@ -122,6 +124,11 @@ impl<'a> Projector<'a, '_> {
             .scoping()
             .get_resolved_references(symbol)
             .find(|reference| reference.flags().is_write())
-            .map(|reference| semantic.nodes().kind(reference.node_id()).span().start)
+            .map(|reference| {
+                super::super::line_in(
+                    semantic.source_text(),
+                    semantic.nodes().kind(reference.node_id()).span().start,
+                )
+            })
     }
 }

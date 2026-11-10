@@ -172,3 +172,22 @@ pub(super) fn function_site(facts: &dyn TsFactLookup, source: &NodeId) -> (PathB
     let line = line_at(facts, &path, callable_id.map(|id| id.0).unwrap_or(0));
     (path, line)
 }
+
+/// No direct caller. An anonymous or unnamed default export is not a named function.
+pub(super) fn missing_caller(facts: &dyn TsFactLookup, source: &NodeId, line: u32) -> Cause {
+    let (file, _) = function_site(facts, source);
+    let kind = if unnamed(source) {
+        CauseKind::NotNamedFunction
+    } else {
+        CauseKind::NoCaller
+    };
+    Cause::new(kind, file, line, "")
+}
+
+fn unnamed(source: &NodeId) -> bool {
+    let NodeId::Symbol { symbol, .. } = source else {
+        return true;
+    };
+    let name = symbol.rsplit(['/', '.']).next().unwrap_or(symbol);
+    name.starts_with("<anonymous") || name == "default"
+}

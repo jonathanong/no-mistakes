@@ -89,7 +89,13 @@ pub(super) fn collect(
                 member_refs::from_computed(member, &mut result);
             }
             AstKind::StaticMemberExpression(member) => {
-                value_refs::from_member(semantic.nodes(), node.id(), member, &mut result);
+                value_refs::from_member(
+                    semantic.nodes(),
+                    node.id(),
+                    member,
+                    semantic.source_text(),
+                    &mut result,
+                );
             }
             AstKind::ImportExpression(import) => {
                 projector.call_offset = import.span.start;
@@ -121,6 +127,6 @@ pub(super) fn collect(
         }
     }
     value_refs::add_imported_names(facts, &mut result);
-    consumers::from_facts(facts, &mut result);
+    consumers::from_facts(facts, semantic.source_text(), &mut result);
     result
 }

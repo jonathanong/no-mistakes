@@ -1,5 +1,5 @@
 //! The route that made a parameter's callers unknowable.
-use super::cause::{function_site, kind_of, line_at, Cause, CauseKind};
+use super::cause::{function_site, kind_of, Cause, CauseKind};
 use super::Owners;
 use crate::codebase::dependencies::graph::{NodeId, TsFactLookup};
 
@@ -39,8 +39,8 @@ fn hole(
     source: &NodeId,
     facts: &dyn TsFactLookup,
 ) -> Cause {
-    if let Some((file, start)) = at {
-        return Cause::new(kind, file.clone(), line_at(facts, file, *start), "");
+    if let Some((file, line)) = at {
+        return Cause::new(kind, file.clone(), *line, "");
     }
     let (file, line) = function_site(facts, source);
     Cause::new(kind, file, line, "")
@@ -52,13 +52,8 @@ fn local_route(owners: &Owners<'_>, source: &NodeId, facts: &dyn TsFactLookup) -
         return Cause::new(CauseKind::NotNamedFunction, path, line, "");
     };
     if owners.escaped.contains(file, symbol) {
-        if let Some((path, start, name)) = owners.escaped.reference(file, symbol) {
-            return Cause::new(
-                CauseKind::NonDirectReference,
-                path.clone(),
-                line_at(facts, &path, start),
-                name,
-            );
+        if let Some((path, line, name)) = owners.escaped.reference(file, symbol) {
+            return Cause::new(CauseKind::NonDirectReference, path, line, name);
         }
         let (path, line) = function_site(facts, source);
         return Cause::new(
@@ -73,7 +68,7 @@ fn local_route(owners: &Owners<'_>, source: &NodeId, facts: &dyn TsFactLookup) -
             return Cause::new(
                 kind_of(hit.kind),
                 hit.file.clone(),
-                line_at(facts, &hit.file, hit.start),
+                hit.line,
                 hit.detail.clone(),
             );
         }
