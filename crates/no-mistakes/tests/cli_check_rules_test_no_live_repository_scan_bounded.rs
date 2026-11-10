@@ -99,6 +99,8 @@ fn bounded_supported_forms_and_controls_stay_clean() {
         "control-direct",
         "control-imported",
         "control-wrapper",
+        "mutable-load",
+        "unknown-load",
     ] {
         let report = report(name);
         assert!(advisory_targets(&report).is_empty(), "{name}: {report}");
@@ -131,8 +133,6 @@ fn bounded_arbitrary_roots_and_escaped_callers_stay_advisory() {
         "mixed-live-callers",
         "arbitrary-hook-env",
         "arbitrary-rewritten-spread",
-        "mutable-load",
-        "unknown-load",
         "consumed-const-load",
         "recursive-parent",
         "captured-arbitrary",
