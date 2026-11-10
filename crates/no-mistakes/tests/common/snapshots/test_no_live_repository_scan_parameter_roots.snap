@@ -1,0 +1,171 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "defaulted-param": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "derived-join": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "helper-return": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "imported-cjs": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/fn.mts",
+          "import": "readdirSync",
+          "line": 5,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because src/unreadable.cjs:1 loads a module this analysis cannot read. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(repoRoot, \".x/a\"), { recursive: true });",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/fn.mts",
+          "import": "readdirSync",
+          "line": 6,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because src/unreadable.cjs:1 loads a module this analysis cannot read. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(repoRoot, \".x/b\"), { recursive: true });",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/unreadable.cjs",
+          "import": "require(<computed>)",
+          "line": 1,
+          "message": "unresolved root: `require(<computed>)` uses a computed module name that this analysis cannot resolve, so its roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under a fixtures or owned temporary directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "module.exports = require(process.env.UNREADABLE_MODULE);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "join-call": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "nested-member": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/scan.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(opts.root, { recursive: true });",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "omitted-default": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/fn.mts",
+          "import": "readdir",
+          "line": 8,
+          "message": "unresolved root: `readdir` enumerates a directory whose root is a parameter, but tests/fn.test.mts:9 omits the root argument. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdir(dir);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "options-map": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/list.mts",
+          "import": "readdirSync",
+          "line": 9,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/list.test.mts:13 passes `{ outputRoot: \"/var/empty/no-such-live-root\" }`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(join(dir, root), { withFileTypes: true }).map((entry) => {",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "outside-cjs": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

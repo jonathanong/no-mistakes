@@ -76,3 +76,69 @@ function getter17() { return getter16() }
 function getter18() { return getter17() }
 function getter19() { return getter18() }
 readdirSync(getter19().root)
+const { absent = mkdtempSync('case-') } = {}
+readdirSync(absent)
+const { omitted = '/repository' } = {}
+readdirSync(omitted)
+function empty() { return {} }
+const { fallback = mkdtempSync('case-') } = empty()
+readdirSync(fallback)
+function opaque() { return { root: notAPath } }
+const notAPath = {}
+const { root: shadowed = mkdtempSync('case-') } = opaque()
+readdirSync(shadowed)
+let unknownObject = { root: mkdtempSync('case-') }
+const { root: fromUnknown = mkdtempSync('case-') } = unknownObject
+readdirSync(fromUnknown)
+const ownedObject = { root: mkdtempSync('case-') }
+const { root: ownedMember = '/repository' } = ownedObject
+readdirSync(ownedMember)
+const assigned = {}
+assigned.root = '/repository'
+const { root: assignedRoot = mkdtempSync('case-') } = assigned
+readdirSync(assignedRoot)
+readdirSync(workspace().root)
+function ownedInner() { return { root: mkdtempSync('case-') } }
+function ownedOuter() { return ownedInner() }
+const { root: chainedRoot = '/repository' } = ownedOuter()
+readdirSync(chainedRoot)
+const { root: spreadDefault = mkdtempSync('case-') } = { ...workspace() }
+readdirSync(spreadDefault)
+const { root: computedDefault = mkdtempSync('case-') } = { ['root']: mkdtempSync('case-') }
+readdirSync(computedDefault)
+const { root: methodDefault = mkdtempSync('case-') } = { root() { return mkdtempSync('case-') } }
+readdirSync(methodDefault)
+const { root: getterDefault = mkdtempSync('case-') } = { get root() { return mkdtempSync('case-') } }
+readdirSync(getterDefault)
+const { outer: { inner: nestedDefault = mkdtempSync('case-') } = {} } = { outer: {} }
+readdirSync(nestedDefault)
+function take(opts) {
+  const { root: fromParam = mkdtempSync('case-') } = opts
+  readdirSync(fromParam)
+}
+take({})
+const flag = true
+const { root: choice = mkdtempSync('case-') } = flag ? { root: mkdtempSync('case-') } : {}
+readdirSync(choice)
+const { root: unbound = mkdtempSync('case-') } = missingBinding
+readdirSync(unbound)
+function deep1() { return { root: mkdtempSync('case-') } }
+function deep2() { return deep1() }
+function deep3() { return deep2() }
+function deep4() { return deep3() }
+function deep5() { return deep4() }
+function deep6() { return deep5() }
+function deep7() { return deep6() }
+function deep8() { return deep7() }
+function deep9() { return deep8() }
+function deep10() { return deep9() }
+function deep11() { return deep10() }
+function deep12() { return deep11() }
+function deep13() { return deep12() }
+function deep14() { return deep13() }
+function deep15() { return deep14() }
+function deep16() { return deep15() }
+function deep17() { return deep16() }
+function deep18() { return deep17() }
+const { root: tooDeep = mkdtempSync('case-') } = deep18()
+readdirSync(tooDeep)

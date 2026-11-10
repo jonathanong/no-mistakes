@@ -73,3 +73,47 @@ const notFunction = "x";
 readdirSync(argArrow());
 readdirSync(noReturn());
 readdirSync(notFunction());
+function prefixed(prefix) {
+  return mkdtempSync(join(tmpdir(), prefix));
+}
+function climbed(suffix) {
+  return join(mkdtempSync(join(tmpdir(), "p-")), suffix);
+}
+readdirSync(prefixed("x"));
+readdirSync(climbed(".."));
+export function objectParam({ dir = "fallback" }, plain) {
+  readdirSync(dir);
+  readdirSync(plain);
+}
+export function nestedParam({ outer: { inner } }) {
+  readdirSync(inner);
+}
+export function memberOfPattern({ opts }) {
+  readdirSync(opts.root);
+}
+export function memberOfBinding(binding) {
+  readdirSync(binding.root);
+}
+export function computedMember({ kept, ["dir"]: computedDir }) {
+  readdirSync(kept);
+  readdirSync(computedDir);
+}
+export function restMember({ namedDir, ...memberRest }) {
+  readdirSync(memberRest);
+}
+export function objectRest({ outer: { ...nestedRest } }) {
+  readdirSync(nestedRest);
+}
+export function arrayMember({ items: [arrayFirst, ...arrayRest] }) {
+  readdirSync(arrayFirst);
+  readdirSync(arrayRest);
+}
+export function nestedPattern({ dir: { nestedMember } = {} }) {
+  readdirSync(nestedMember);
+}
+function resty(...parts) {
+  return mkdtempSync("case-");
+}
+const restArrow = (...parts) => mkdtempSync("case-");
+readdirSync(resty());
+readdirSync(restArrow());

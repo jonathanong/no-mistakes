@@ -1,3 +1,4 @@
+use super::patterns::accept_parameterized;
 use super::{PathAnchor, PathOrigin, Projector};
 use oxc_ast::{ast::*, AstKind};
 use oxc_span::GetSpan;
@@ -19,6 +20,10 @@ impl<'a> Projector<'a, '_> {
                     return None;
                 }
                 if let Some(mut origin) = self.param_origin(id) {
+                    // Replacing the pattern key would read a sibling property.
+                    if origin.param_member.is_some() {
+                        return None;
+                    }
                     origin.param_member = Some(key.to_owned());
                     return Some(origin);
                 }
@@ -48,8 +53,9 @@ impl<'a> Projector<'a, '_> {
                 if key == "path" && disposable {
                     return Some(PathOrigin::anchored(PathAnchor::Temp));
                 }
-                let returned = self.getter_expression(call)?;
-                self.member_origin(returned, key, depth + 1)
+                let (returned, parameterized) = self.getter_expression(call)?;
+                let origin = self.member_origin(returned, key, depth + 1)?;
+                accept_parameterized(parameterized, origin)
             }
             Expression::AwaitExpression(awaited) => {
                 self.member_origin(&awaited.argument, key, depth + 1)
@@ -58,39 +64,24 @@ impl<'a> Projector<'a, '_> {
         }
     }
 
-    pub(super) fn destructured_origin(
-        &mut self,
-        id: &IdentifierReference<'a>,
-        depth: usize,
-    ) -> Option<PathOrigin> {
-        let symbol = self.binding_symbol(id)?;
-        if !self.immutable_binding(symbol) {
-            return None;
-        }
-        let semantic = self.semantic;
-        let node = semantic.scoping().symbol_declaration(symbol);
-        let AstKind::VariableDeclarator(declaration) = semantic.nodes().kind(node) else {
-            return None;
-        };
-        let BindingPattern::ObjectPattern(pattern) = &declaration.id else {
-            return None;
-        };
-        if pattern.rest.is_some() || id.span.start < declaration.span.end {
-            return None;
-        }
-        for property in &pattern.properties {
-            let BindingPattern::BindingIdentifier(binding) = &property.value else {
-                continue;
-            };
-            if binding.symbol_id.get() == Some(symbol) && !property.computed {
-                let key = crate::ast::property_key_name(&property.key)?;
-                return self.member_origin(declaration.init.as_ref()?, &key, depth + 1);
-            }
-        }
-        None
+    fn member_reads_only(&mut self, symbol: oxc_semantic::SymbolId) -> bool {
+        self.member_uses_stable(symbol, None)
     }
 
-    fn member_reads_only(&mut self, symbol: oxc_semantic::SymbolId) -> bool {
+    /// The object may be read by this destructure. Every other use must stay a
+    /// non-mutating member read, so a property write cannot hide behind a default.
+    pub(super) fn destructure_source_stable(&mut self, id: &IdentifierReference<'_>) -> bool {
+        let Some(symbol) = self.binding_symbol(id) else {
+            return false;
+        };
+        self.member_uses_stable(symbol, Some(id.span))
+    }
+
+    fn member_uses_stable(
+        &mut self,
+        symbol: oxc_semantic::SymbolId,
+        allow: Option<oxc_span::Span>,
+    ) -> bool {
         if self.exported.contains(&symbol.index()) {
             return false;
         }
@@ -99,7 +90,11 @@ impl<'a> Projector<'a, '_> {
             if !self.take() || reference.flags().is_write() {
                 return false;
             }
-            let member = semantic.nodes().parent_id(reference.node_id());
+            let node = reference.node_id();
+            if allow.is_some_and(|span| semantic.nodes().kind(node).span() == span) {
+                continue;
+            }
+            let member = semantic.nodes().parent_id(node);
             if !matches!(
                 semantic.nodes().kind(member),
                 AstKind::StaticMemberExpression(_)

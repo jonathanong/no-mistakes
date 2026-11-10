@@ -77,7 +77,10 @@ impl Owners<'_> {
             if !seen.insert((source.clone(), index, member.clone())) {
                 continue;
             }
-            if self.escape_unknown || !self.proven_target(&source) {
+            let Some(module) = source.as_file() else {
+                return Err(self.route_cause(&source, facts));
+            };
+            if self.closure_unknown(module) || !self.proven_target(&source) {
                 return Err(self.route_cause(&source, facts));
             }
             let Some(callers) = self

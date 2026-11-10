@@ -7,9 +7,19 @@ fn immutable_owned_members_and_awaited_object_returns_are_paths() {
         "readdirSync(awaited)",
         "readdirSync(fs.mkdtempDisposableSync('case-').path)",
         "readdirSync(disposable.path)",
+        "readdirSync(defaultRoot)",
+        "readdirSync(absent)",
+        "readdirSync(fallback)",
+        "readdirSync(ownedMember)",
+        "readdirSync(workspace().root)",
+        "readdirSync(chainedRoot)",
     ] {
         assert_eq!(read.origin(needle).anchor, PathAnchor::Temp, "{needle}");
     }
+    assert_eq!(
+        read.origin("readdirSync(omitted)").anchor,
+        PathAnchor::Absolute
+    );
 }
 
 #[test]
@@ -22,7 +32,6 @@ fn mutable_escaping_and_unrepresentable_members_stay_unknown() {
         "readdirSync(method.root)",
         "readdirSync(accessor.root)",
         "readdirSync(restRoot)",
-        "readdirSync(defaultRoot)",
         "readdirSync(computedRoot)",
         "readdirSync(arrayRoot)",
         "readdirSync(rewritten.root)",
@@ -31,6 +40,18 @@ fn mutable_escaping_and_unrepresentable_members_stay_unknown() {
         "readdirSync(missing().root)",
         "readdirSync(alias19.root)",
         "readdirSync(getter19().root)",
+        "readdirSync(shadowed)",
+        "readdirSync(fromUnknown)",
+        "readdirSync(assignedRoot)",
+        "readdirSync(spreadDefault)",
+        "readdirSync(computedDefault)",
+        "readdirSync(methodDefault)",
+        "readdirSync(getterDefault)",
+        "readdirSync(nestedDefault)",
+        "readdirSync(fromParam)",
+        "readdirSync(choice)",
+        "readdirSync(unbound)",
+        "readdirSync(tooDeep)",
     ] {
         assert_eq!(read.origin(needle), PathOrigin::unknown(), "{needle}");
     }

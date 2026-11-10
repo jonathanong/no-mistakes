@@ -216,8 +216,38 @@ a recursive call cannot establish ownership by itself. A call that omits the
 argument resolves to the default, so one omitting caller keeps the finding. The callee
 must not reassign the parameter. Derived paths, nested helpers capturing the
 parameter, and an options parameter read through a static property such as
-`options.root` can retain the caller proof. An object argument must expose the
-requested property in a literal object, without mutation or escape. Method and
+`options.root` can retain the caller proof. `join(repoRoot, ".x/a")` and
+`resolve(source)` keep that parameter. `fn(join(root, "rules"))` is an owned root
+when `root` is an owned temporary directory. A self-recursive enumerator stays
+proven when every external entry is owned.
+
+A same-file helper may return that owned root, including a helper whose parameter
+is only the `mkdtemp` prefix. The returned origin must stay a non-dynamic temporary
+directory and must not climb out of it with `..`. A dynamic return that drops a
+parameter, including `join(mkdtempSync(...), suffix)`, stays unresolved. The test
+may destructure the returned object (`const { source } = mkFixture()`). An
+object-pattern parameter (`function ensure({ source } = {})`) uses the same
+literal-object caller proof as `options.source`. A destructured default is ignored
+while the property's own origin is proven. When a literal object omits the key and
+has no spread, the default expression is the origin. An unknown object, a spread,
+or a present property with an unknown value stays unresolved, so a live default
+that might still apply keeps the finding. A `const` object is followed only when
+every other use is a non-mutating member read. A property assignment or any other
+escape stays unresolved. A reachable caller that omits a defaulted
+argument also keeps the finding. A direct object property is one key deep: nested
+patterns, computed keys, and rest bindings stay unresolved. A member read of an
+object-pattern parameter, such as `function scan({ opts }) { readdirSync(opts.root) }`,
+stays unresolved too. The pattern key is not replaced by the accessed property, so
+an owned sibling `root` cannot clear a live `opts.root`. A property beside a
+rest binding can still be proven. Production modules that
+no selected test imports do not add callers. An unreadable module that no
+test, `setupFiles`, or `globalSetup` reaches does not erase a caller proof,
+including a lint config such as `.dependency-cruiser.cjs` loaded only from the
+runner config. The same unreadable module imported by a test that reaches the
+function keeps the finding.
+
+An object argument must expose the requested property in a literal object, without
+mutation or escape. Method and
 constructor calls on that object prevent this proof because they may mutate its
 properties. A member written through an object or array assignment target,
 including nested patterns, rest elements, defaults, and loop targets, also
@@ -236,15 +266,20 @@ the call graph cannot see may pass anything:
   and `vi.mock`/`vi.importActual` of the module make its consumers unknowable.
   A named static barrel re-export can preserve the route when all consumers
   remain named direct calls. A load through a `const` string specifier is
-  attributed to that module; a specifier that cannot be resolved statically
-  makes consumers unknowable for every module in that test execution scope.
+  attributed to that module. A specifier that cannot be resolved statically,
+  or any other module whose loads this pass cannot read, blocks caller proof
+  only for enumerating functions that module can reach from a test root. That
+  set is the `setupFiles`, `globalSetup`, and test files found by reverse
+  load edges from the function's module, plus the import closure of those
+  files. An unreadable module outside that closure does not block the proof.
+  An unreadable module inside it still does.
 
 A consumer is matched to the callee by resolved file, not by specifier text: the
 resolver the dependency graph uses (relative paths, tsconfig `paths` aliases,
 workspace packages, `package.json` `exports`) maps each such specifier to a file,
 so `import * as m from "@lib"` consumes the file `@lib` points at. A specifier
 that is neither a bare package nor resolvable to a file keeps the finding for
-every callee in the selected test scope. A default import, an unsupported barrel re-export, and a type-only
+every callee whose test-root closure includes the module that named it. A default import, an unsupported barrel re-export, and a type-only
 import of the callee also keep the finding. Class and object-literal methods can be
 reached from a file root; when a method's enumeration root depends on an
 unresolved parameter or expression, the rule reports an unresolved-root

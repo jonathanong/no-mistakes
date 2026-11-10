@@ -26,8 +26,8 @@ impl<'a> Resolution<'a> {
 #[derive(Default)]
 pub(super) struct Consumed {
     files: FxHashSet<PathBuf>,
-    /// A specifier that might name a file but resolves to none.
-    unknown: bool,
+    /// Files whose specifier might name a module but resolves to none.
+    unknown_files: FxHashSet<PathBuf>,
     hits: Vec<super::route_index::RouteHit>,
     unknown_at: Option<(PathBuf, u32)>,
     via: Vec<(PathBuf, PathBuf)>,
@@ -70,7 +70,7 @@ impl Consumed {
                     }
                     None if class.is_unresolved_external() && external(&resolver, specifier) => {}
                     None => {
-                        consumed.unknown = true;
+                        consumed.unknown_files.insert(file.clone());
                         super::route_index::note_unknown(
                             &mut consumed.unknown_at,
                             file,
@@ -137,7 +137,11 @@ impl Consumed {
     }
 
     pub(super) fn unknown(&self) -> bool {
-        self.unknown
+        !self.unknown_files.is_empty()
+    }
+
+    pub(super) fn unknown_files(&self) -> &FxHashSet<PathBuf> {
+        &self.unknown_files
     }
 
     pub(super) fn contains(&self, file: &Path) -> bool {

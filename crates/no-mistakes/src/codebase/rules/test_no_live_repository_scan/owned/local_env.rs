@@ -12,7 +12,10 @@ impl Owners<'_> {
         facts: &dyn TsFactLookup,
     ) -> bool {
         let source = site_source_node(site);
-        if !self.env.local_known() || self.escape_unknown || !self.proven_target(&source) {
+        if !self.env.local_known()
+            || self.closure_unknown(&site.file)
+            || !self.proven_target(&source)
+        {
             return false;
         }
         let immediate = facts

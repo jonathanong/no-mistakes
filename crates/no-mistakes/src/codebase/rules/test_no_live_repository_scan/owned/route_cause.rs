@@ -13,18 +13,13 @@ impl Owners<'_> {
                 facts,
             );
         }
-        if self.escaped.unknown() {
+        if source
+            .as_file()
+            .is_some_and(|module| self.closure_unknown(module))
+        {
             return hole(
                 CauseKind::UnreadModule,
-                self.escaped.unknown_at(),
-                source,
-                facts,
-            );
-        }
-        if self.consumed.unknown() {
-            return hole(
-                CauseKind::UnreadModule,
-                self.consumed.unknown_at(),
+                self.escaped.unknown_at().or(self.consumed.unknown_at()),
                 source,
                 facts,
             );

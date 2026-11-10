@@ -509,17 +509,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "mutable-load": {
     "exitCode": 0,
     "report": {
-      "advisories": [
-        {
-          "file": "list.mts",
-          "import": "readdirSync",
-          "line": 2,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because load.test.mts:1 loads a module this analysis cannot read. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
-          "rule": "test-no-live-repository-scan",
-          "sourceLine": "export function list(root: string) { return readdirSync(root) }",
-          "target": "unresolved root"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -634,6 +624,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "exitCode": 0,
     "report": {
       "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reaching-dynamic": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "list.mts",
+          "import": "readdirSync",
+          "line": 2,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because root.test.mts:1 loads a module this analysis cannot read. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function list(root: string) { return readdirSync(root) }",
+          "target": "unresolved root"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -766,17 +778,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "unknown-load": {
     "exitCode": 0,
     "report": {
-      "advisories": [
-        {
-          "file": "list.mts",
-          "import": "readdirSync",
-          "line": 2,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because load.test.mts:1 loads a module this analysis cannot read. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
-          "rule": "test-no-live-repository-scan",
-          "sourceLine": "export function list(root: string) { return readdirSync(root) }",
-          "target": "unresolved root"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
