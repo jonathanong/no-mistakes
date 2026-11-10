@@ -23,30 +23,31 @@ pub(super) fn callable_positions(
             .and_then(Argument::as_expression)
             .and_then(source_array)
             .is_some_and(|name| names.unstable_array_lengths.contains(name));
-    if uncertain_receiver || uncertain_from {
-        return None;
-    }
-    let holes_visited = matches!(method, "find" | "findIndex" | "findLast" | "findLastIndex");
-    if let Some(ValueKind::Array { empty, length, .. }) = names.value_kind(receiver, 0) {
-        if length == Some(0) || (empty && !holes_visited) {
-            return Some(NONE);
-        }
-        if empty && length.is_none() && holes_visited {
-            return None;
-        }
-    }
-    if method == "from" {
-        if let Some(ValueKind::Array { empty, length, .. }) = call
-            .arguments
-            .first()
-            .and_then(Argument::as_expression)
-            .and_then(|iterable| names.value_kind(iterable, 0))
-        {
-            if length == Some(0) {
+    // A mutated array is still that array. Follow its callback instead of
+    // dropping the call; only a stable empty proof may skip it.
+    if !uncertain_receiver && !uncertain_from {
+        let holes_visited = matches!(method, "find" | "findIndex" | "findLast" | "findLastIndex");
+        if let Some(ValueKind::Array { empty, length, .. }) = names.value_kind(receiver, 0) {
+            if length == Some(0) || (empty && !holes_visited) {
                 return Some(NONE);
             }
-            if empty && length.is_none() {
+            if empty && length.is_none() && holes_visited {
                 return None;
+            }
+        }
+        if method == "from" {
+            if let Some(ValueKind::Array { empty, length, .. }) = call
+                .arguments
+                .first()
+                .and_then(Argument::as_expression)
+                .and_then(|iterable| names.value_kind(iterable, 0))
+            {
+                if length == Some(0) {
+                    return Some(NONE);
+                }
+                if empty && length.is_none() {
+                    return None;
+                }
             }
         }
     }

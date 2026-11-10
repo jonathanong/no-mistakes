@@ -192,9 +192,16 @@ unresolved dispatch.
   result-preserving methods on such a receiver (`text.trim().split(',')`); or a
   name whose every declaration is built-in, through an annotation (`string`,
   `T[]`, `Map<...>`, ...) or a `const` initializer of the kinds above, including
-  an `as const` assertion on a literal array. A receiver
-  whose type cannot be established also admits a method-name fallback for these
-  non-callback leaves, such as `amount.toFixed(2)`. This fallback supplies no
+  an `as const` assertion on a literal array. `find` on that tuple follows its
+  callback; `join` on the same receiver stays a leaf. `new Date().toISOString()`
+  and a `const` or parameter binding of `new Date()` or `Date` are strings, so a
+  later `replace` uses the string callback rule. A call of a same-file `async`
+  function is a promise. A call of a same-file function whose return type, or
+  every returned expression, is an array is an array, so `.finally` and `.map`
+  on those results follow the callback. An unannotated `let` binding stays
+  unresolved. A receiver whose type cannot be established also admits a
+  method-name fallback for these non-callback leaves, such as
+  `amount.toFixed(2)`. This fallback supplies no
   assertion evidence. Resolved repository methods are still traversed, and known
   custom or incompatible receiver types retain dispatch uncertainty. Callback-taking
   methods require the receiver proof described below.
@@ -249,7 +256,9 @@ by opt-in `assertion-owner` edges; enabling the rule leaves ordinary `call` quer
 and call-site reports unchanged.
 Zero-length arrays execute no iteration callbacks. Sparse arrays still execute
 the `find` family and `Array.from` callbacks for holes. Mutating or escaping an
-array invalidates its length proof and retains dispatch uncertainty. Read-only
+array invalidates its length proof, so the zero-length skip does not apply and
+the callback is followed. A callback argument that still cannot be resolved
+retains dispatch uncertainty. Read-only
 calls such as `join` do not invalidate a later `find` callback proof. Known empty
 results from `slice` and `splice` still execute no callbacks, including on sparse arrays.
 Conditional aliases share this invalidation with their source arrays. Writes or

@@ -70,6 +70,7 @@ fn coverage_producer_assertion_owner_builtins_json_matches_snapshot() {
         "review-generic-shapes",
         "review-generic-shapes-advise",
         "review-generic-shapes-ignore",
+        "review-receiver-results",
         "json-reviver",
         "member-callback",
         "namespace-all",
