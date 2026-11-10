@@ -4,7 +4,8 @@ Short-form queries for one file that skip structural-question formulation. Reach
 for these when the question is local ("what imports this file?", "is this export
 used?") and a full `dependents` traversal is more setup than the answer needs.
 All emit JSON on non-TTY (or with `--json`) and accept `--root`, `--tsconfig`,
-`--format`, and `--json`, except `registry-extension`, which has no `--tsconfig`.
+`--format`, and `--json`, except `registry-extension`, which has no `--tsconfig`
+and prints human output even when piped, so pass `--json` or `--format json`.
 
 ## When to use a different tool
 
