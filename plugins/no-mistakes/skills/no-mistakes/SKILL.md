@@ -80,6 +80,9 @@ configured scope, the check warns and falls back to `max` for that rule.
 JSON reports include `analysisFallbacks` for these partner fallbacks and omit
 the field when none occurred. A rule without a low implementation emits a
 named, non-failing warning when low was requested and stays at `max`.
+[`github-actions-job-timeouts`](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-job-timeouts.md#effort)
+is the example: `low` needs a covering `github-actions-step-timeouts` partner,
+and otherwise warns and falls back to `max`.
 
 For `github-actions-checkout-credentials`, uncertain persistence, permissions,
 custom tokens (including `secrets.GITHUB_TOKEN`), and invalid workflow YAML
@@ -188,7 +191,10 @@ For several related reports in one Node process, use the async N-API
 `analyzeProject({ root, reports: [...] })` rather than repeated CLI calls. It
 shares one request-scoped inventory, fact pass, and canonical graph. Dedicated
 API calls rebuild analysis; see the upstream Node API documentation linked from
-the repository docs.
+the repository docs. `analyzeProject` batches about 50 report types (see the
+`AnalyzeProjectReportType` export in `analyze-project-types.d.ts`), which covers
+almost every CLI command; see
+[getting started](https://github.com/jonathanong/no-mistakes/blob/main/docs/node-api/getting-started.md).
 
 ## Quick command selection
 

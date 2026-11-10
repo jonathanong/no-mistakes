@@ -323,7 +323,7 @@ CASES = [
                 """,
             ),
         ],
-        r"no-mistakes\s+(playwright|tests\s+plan\s+playwright)(?![\w-])",
+        r"no-mistakes\s+(playwright|tests\s+plan\s+playwright|server\s+routes|fetches|rsc-callers|dependents\b[^\n]*--relationship\s+route)(?![\w-])",
     ),
     (
         "07-neg-error-wording",
@@ -566,7 +566,7 @@ EXTRA_FLOWS = [
                 # client-call edges, so a plan proposing only that command
                 # cannot cross the outbox boundary this case is about. The four
                 # `queues-0*` cases now carry the same tightened form.
-                r"no-mistakes\s+queues\s+(related|edges)(?![\w-])",
+                r"no-mistakes\s+(queues\s+(related|edges|check)|dependents\b[^\n]*--relationship\s+queue)(?![\w-])",
             ),
             (
                 "heldout-06-two-copies",
@@ -738,7 +738,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+queues\s+(related|edges)(?![\w-])",
+                r"no-mistakes\s+(queues\s+(related|edges|check)|dependents\b[^\n]*--relationship\s+queue)(?![\w-])",
             ),
             (
                 "queues-02-consumers",
@@ -759,7 +759,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+queues\s+(related|edges)(?![\w-])",
+                r"no-mistakes\s+(queues\s+(related|edges|check)|dependents\b[^\n]*--relationship\s+queue)(?![\w-])",
             ),
             (
                 "queues-03-payload-change",
@@ -780,7 +780,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+queues\s+(related|edges)(?![\w-])",
+                r"no-mistakes\s+(queues\s+(related|edges|check)|dependents\b[^\n]*--relationship\s+queue)(?![\w-])",
             ),
             (
                 "queues-04-architecture",
@@ -800,7 +800,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+queues\s+(related|edges)(?![\w-])",
+                r"no-mistakes\s+(queues\s+(related|edges|check)|dependents\b[^\n]*--relationship\s+queue)(?![\w-])",
             ),
             (
                 "queues-05-neg-retry-comment",
@@ -1064,7 +1064,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+ci\s+(impact|topology)(?![\w-])",
+                r"no-mistakes\s+(ci\s+(impact|topology|topology-impact|env)|(dependents|flow)\b[^\n]*--relationship\s+workflow)(?![\w-])",
             ),
             (
                 "ci-02-why-ran",
@@ -1084,7 +1084,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+ci\s+(impact|topology)(?![\w-])",
+                r"no-mistakes\s+(ci\s+(impact|topology|topology-impact|env)|(dependents|flow)\b[^\n]*--relationship\s+workflow)(?![\w-])",
             ),
             (
                 "ci-03-topology",
@@ -1125,7 +1125,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+ci\s+(impact|topology)(?![\w-])",
+                r"no-mistakes\s+(ci\s+(impact|topology|topology-impact|env)|(dependents|flow)\b[^\n]*--relationship\s+workflow)(?![\w-])",
             ),
             (
                 "ci-05-neg-runs-on",
@@ -1560,7 +1560,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(check|symbols|exports-of|dead-exports|unique-exports)(?![\w-])",
+                r"no-mistakes\s+(check|symbols|exports-of|dead-exports)(?![\w-])",
             ),
             (
                 "duplication-02-agent-recreated",
@@ -1579,7 +1579,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(check|unique-exports)(?![\w-])",
+                r"no-mistakes\s+check(?![\w-])",
             ),
             (
                 "duplication-03-parallel-implementations",

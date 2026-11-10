@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
-no-mistakes\s+queues\s+(related|edges)(?![\w-])
+no-mistakes\s+(queues\s+(related|edges|check)|dependents\b[^\n]*--relationship\s+queue)(?![\w-])

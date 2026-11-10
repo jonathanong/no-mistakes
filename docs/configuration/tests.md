@@ -19,6 +19,7 @@ tests:
       componentTestIds:
         testId: data-testid
     selectorRoots: ["web"]
+    selectorInclude: ["web/components/**/*.tsx"]
     selectorExclude: ["web/generated/**"]
   vitest:
     configs: vitest.config.mts
@@ -38,6 +39,18 @@ tests:
 ```
 
 Selector settings feed Playwright coverage, route impact, and graph edges.
+
+`selectorRoots` picks the directories that are walked for selector sources.
+`selectorInclude` and `selectorExclude` then filter the source files found
+under those roots; both are globs matched against the root-relative path.
+`selectorInclude` defaults to empty, which keeps every source file under the
+roots; when set, a file must match at least one pattern. `selectorExclude`
+removes files and wins over `selectorInclude`. It always also drops
+`*.test.*` and `*.spec.*` files, so those defaults stay in effect when you add
+your own patterns. `selectorInclude` never widens the search: a file outside
+`selectorRoots` is not read even if it matches. Add a new directory to
+`selectorRoots` first, then adjust `selectorInclude` if it would otherwise
+filter the new files out.
 
 `tests.playwright.coverage.routes` and `tests.playwright.coverage.selectors`
 default to `true`. Set `routes: false` to skip uncovered-route *findings*

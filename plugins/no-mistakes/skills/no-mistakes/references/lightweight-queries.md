@@ -84,6 +84,21 @@ Dynamic selection and aliases invalidated by reassignment can remain unresolved.
 no-mistakes call-sites src/api.mts handler --format json
 ```
 
+## `registry-extension <file>`
+
+Best-effort, heuristic summary of the repeated "register an entry" shape in a
+registry file, for adding a new entry that follows the same pattern. Reports
+`patternKind` (`register-call`, `container-array`, `container-object`, or
+`none`), `confidence` (`high` when every entry resolves to an import, else
+`medium`; `low` when no repeated pattern exists), each entry's import, and an
+approximate `template`. Namespace-imported factories and entries wrapped in a
+local helper can be misattributed; read the file before copying the template.
+See [registry-extension](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/registry-extension.md).
+
+```bash
+no-mistakes registry-extension src/plugins/index.ts --format json
+```
+
 ## `resolve-check <file> [file...]`
 
 Whether every import in the file resolves. Fully local, sub-second. Each import

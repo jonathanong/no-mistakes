@@ -165,8 +165,8 @@ rg -l --glob '*.tsx' 'onClick='
 ```
 
 Use `no-mistakes` instead when the question needs the dependency graph
-(`effects`, `rsc-callers`, `dependents`) or project configuration
-(`data-pw`, `registry-extension`). Use `ast-grep` when the question is purely
+(`effects`, [`rsc-callers`](impact-recipes.md#rsc-caller-impact), `dependents`) or project configuration
+(`data-pw`, [`registry-extension`](lightweight-queries.md#registry-extension-file)). Use `ast-grep` when the question is purely
 "which files contain this syntactic shape?"
 
 For repeated query or cache calls hidden in helpers, enable
