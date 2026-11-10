@@ -88,15 +88,6 @@ pub(super) fn collect(
             AstKind::ComputedMemberExpression(member) => {
                 member_refs::from_computed(member, &mut result);
             }
-            AstKind::StaticMemberExpression(member) => {
-                value_refs::from_member(
-                    semantic.nodes(),
-                    node.id(),
-                    member,
-                    semantic.source_text(),
-                    &mut result,
-                );
-            }
             AstKind::ImportExpression(import) => {
                 projector.call_offset = import.span.start;
                 if consumers::from_source(

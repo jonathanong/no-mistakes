@@ -167,6 +167,9 @@ pub(crate) fn check_with_graph(
         for finding in sites.unresolved_requires(&root, application, facts, &options.enumerators) {
             unresolved_findings(&mut diagnostics, options.unresolved_root).push(finding);
         }
+        if let Some(owners) = owners.get() {
+            owners.report_scan_stats();
+        }
     }
     for list in [&mut diagnostics.findings, &mut diagnostics.advisories] {
         super::sort_findings(list);

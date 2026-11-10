@@ -11,6 +11,7 @@ pub(in super::super) enum Ownership {
     Parameter(Cause),
 }
 
+#[derive(Clone)]
 pub(in super::super) struct Cause {
     pub(super) kind: CauseKind,
     pub(super) file: PathBuf,

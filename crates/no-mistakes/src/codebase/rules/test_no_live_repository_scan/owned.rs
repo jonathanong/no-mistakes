@@ -10,6 +10,7 @@ mod consumers;
 #[cfg(test)]
 #[path = "owned/coverage/tests.rs"]
 mod coverage;
+mod entry_memo;
 pub(super) mod env;
 mod env_query;
 mod escapes;
@@ -71,6 +72,8 @@ pub(super) struct Owners<'g> {
     gate_roots: Vec<PathBuf>,
     /// Per enumerating module: whether an unreadable file can reach it.
     reached: RefCell<FxHashMap<PathBuf, bool>>,
+    /// Caller-entry walks memoized by the symbol they start from.
+    entry_memo: RefCell<entry_memo::EntryMemo<'g>>,
 }
 
 impl<'g> Owners<'g> {
@@ -121,6 +124,7 @@ impl<'g> Owners<'g> {
             test_closure: scope.test_closure.clone(),
             gate_roots: scope.gate_roots.clone(),
             reached: RefCell::new(FxHashMap::default()),
+            entry_memo: RefCell::new(entry_memo::EntryMemo::default()),
             imported: imports::ImportedWrites::new(graph),
             env: env::EnvWrites::new(
                 facts,
@@ -148,29 +152,16 @@ impl<'g> Owners<'g> {
         !self.escaped.contains(file, name) && !self.consumed.contains(file)
     }
 
-    /// Call sites that start a chain reaching `target`: sites whose own
-    /// callable nothing calls. `None` when `target` itself has no caller.
-    fn entries(&self, target: NodeId) -> Option<Vec<&'g ResolvedCallSite>> {
-        let mut seen = FxHashSet::default();
-        let mut stack = vec![target.clone()];
-        let mut entries = Vec::new();
-        while let Some(node) = stack.pop() {
-            if !seen.insert(node.clone()) {
-                continue;
-            }
-            let callers = self.callers.get(&node)?;
-            for caller in callers {
-                let source = site_source_node(caller);
-                if self.callers.contains_key(&source) {
-                    stack.push(source);
-                } else {
-                    entries.push(*caller);
-                }
-            }
+    pub(super) fn report_scan_stats(&self) {
+        if std::env::var_os("NO_MISTAKES_SCAN_RESOLVE_DEBUG").is_none() {
+            return;
         }
-        entries.sort_by(|a, b| (&a.file, a.offset).cmp(&(&b.file, b.offset)));
-        entries.dedup_by(|a, b| a.file == b.file && a.offset == b.offset);
-        Some(entries)
+        let entries = self.entry_memo.borrow();
+        eprintln!(
+            "scan-resolve entries walks={} hits={}",
+            entries.walks, entries.hits
+        );
+        self.consumed.report_targeting();
     }
 }
 

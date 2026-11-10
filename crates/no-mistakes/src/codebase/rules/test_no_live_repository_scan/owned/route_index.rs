@@ -1,10 +1,9 @@
 //! Where an unsafe import or reference sits. The consumed-file set is unchanged.
-use crate::codebase::ts_resolver::{normalize_path, ImportResolver};
+use crate::codebase::ts_resolver::{normalize_path, ImportResolution, VisiblePathLookup};
 use crate::codebase::ts_source::module_facts::arguments::PathProvenance;
 use crate::codebase::ts_source::module_facts::arguments::RouteKind;
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 use crate::codebase::workspaces::IndexedWorkspaceMap;
-use crate::fx::PathSet;
 use std::path::{Path, PathBuf};
 
 pub(super) struct RouteHit {
@@ -74,9 +73,9 @@ pub(super) fn note_nondirect(
     file: &Path,
     provenance: &PathProvenance,
     module: &TypeScriptModuleFacts,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     workspace: &IndexedWorkspaceMap,
-    visible: &PathSet,
+    visible: &dyn VisiblePathLookup,
 ) {
     for site in &provenance.route_sites {
         if site.kind != RouteKind::NonDirect {
@@ -121,14 +120,16 @@ pub(super) fn link(via: &mut Vec<(PathBuf, PathBuf)>, child: &Path, barrel: &Pat
     }
 }
 
-pub(super) fn targeting<'a>(
-    hits: &'a [RouteHit],
+pub(super) fn targeting_indexes(
+    hits: &[RouteHit],
     via: &[(PathBuf, PathBuf)],
     file: &Path,
-) -> Vec<&'a RouteHit> {
+) -> Vec<usize> {
     let accepted = reachable_forms(via, file);
     hits.iter()
-        .filter(|hit| accepted.iter().any(|path| path == &hit.target))
+        .enumerate()
+        .filter(|(_, hit)| accepted.iter().any(|path| path == &hit.target))
+        .map(|(index, _)| index)
         .collect()
 }
 

@@ -1,12 +1,8 @@
 //! The parameter-root walk. A failure names the caller or route that stopped it.
 use super::cause::{missing_caller, Cause, CauseKind, Ownership};
-use super::parameters::{argument_path, argument_present, argument_text, unproven_argument};
-use super::{path_provenance, Owners};
+use super::Owners;
 use crate::codebase::dependencies::graph::{NodeId, ResolvedCallSite, TsFactLookup};
-use crate::codebase::rules::test_no_live_repository_scan::provenance::{
-    arg_block, classify, live_or_variable, missing_block, ArgBlock, Verdict,
-};
-use crate::codebase::ts_source::module_facts::arguments::{PathAnchor, PathOrigin, PathProvenance};
+use crate::codebase::ts_source::module_facts::arguments::{PathAnchor, PathOrigin};
 use crate::fx::FxHashSet;
 
 impl Owners<'_> {
@@ -80,8 +76,14 @@ impl Owners<'_> {
             let Some(module) = source.as_file() else {
                 return Err(self.route_cause(&source, facts));
             };
-            if self.closure_unknown(module) || !self.parameter_proven(&source) {
+            if self.closure_unknown(module) {
                 return Err(self.route_for(&source, facts, Some(index)));
+            }
+            if !self.parameter_proven(&source) {
+                let routed = self.route_for(&source, facts, Some(index));
+                if routed.kind != CauseKind::CallersNotProven {
+                    return Err(routed);
+                }
             }
             if let Some(cause) = self.caller_blocked(&source, facts) {
                 return Err(cause);
@@ -91,7 +93,9 @@ impl Owners<'_> {
                 .get(&source)
                 .filter(|callers| !callers.is_empty())
             else {
-                return Err(missing_caller(facts, &source, line));
+                return Err(forwarded
+                    .clone()
+                    .unwrap_or_else(|| missing_caller(facts, &source, line)));
             };
             for caller in callers.iter().copied() {
                 let step = self.caller_step(caller, index, member.as_deref(), facts, fixture_dirs);
@@ -99,9 +103,7 @@ impl Owners<'_> {
                     Step::Block(cause) => return Err(cause),
                     Step::Seed => seeded = true,
                     Step::Follow(next, next_index, next_member, cause, next_line) => {
-                        if forwarded.is_none() {
-                            forwarded = Some(cause);
-                        }
+                        forwarded = Some(cause);
                         pending.push((next, next_index, next_member, next_line));
                     }
                 }
@@ -121,69 +123,8 @@ enum Step {
     Follow(NodeId, usize, Option<String>, Cause, u32),
 }
 
-impl Owners<'_> {
-    fn caller_step(
-        &self,
-        caller: &ResolvedCallSite,
-        index: usize,
-        member: Option<&str>,
-        facts: &dyn TsFactLookup,
-        fixture_dirs: &[&str],
-    ) -> Step {
-        let empty = PathProvenance::default();
-        let provenance = facts
-            .get_ts_facts(&caller.file)
-            .and_then(path_provenance)
-            .unwrap_or(&empty);
-        let argument = argument_path(provenance, caller.offset, index, member);
-        let present = argument_present(provenance, caller.offset, index);
-        let text = argument_text(provenance, caller.offset, index);
-        if argument.is_none() {
-            if let Some(observed) = unproven_argument(provenance, caller.offset, index) {
-                if matches!(classify(Some(observed), fixture_dirs), Verdict::Live(_)) {
-                    return Step::Block(caller_cause(caller, ArgBlock::Live, text));
-                }
-            }
-        }
-        let Some(argument) = argument else {
-            return Step::Block(caller_cause(caller, missing_block(present), text));
-        };
-        if let Some(block) = arg_block(argument, fixture_dirs) {
-            return Step::Block(caller_cause(caller, block, text));
-        }
-        if classify(Some(argument), fixture_dirs) == Verdict::Allowed {
-            return Step::Seed;
-        }
-        if let Some(name) = argument.env.as_deref() {
-            if !self.env_argument_owned(name, caller, facts) {
-                let block = live_or_variable(argument, fixture_dirs);
-                return Step::Block(caller_cause(caller, block, text));
-            }
-            return Step::Seed;
-        }
-        let source = argument.param.zip(self.parameter_source(argument, caller));
-        let Some((next_index, next)) = source else {
-            return Step::Block(caller_cause(caller, ArgBlock::Forwarded, text));
-        };
-        Step::Follow(
-            next,
-            next_index,
-            argument.param_member.clone(),
-            caller_cause(caller, ArgBlock::Forwarded, text),
-            argument.owner_line.unwrap_or(caller.line),
-        )
-    }
-}
-
-fn caller_cause(caller: &ResolvedCallSite, block: ArgBlock, text: String) -> Cause {
-    let kind = match block {
-        ArgBlock::Live => CauseKind::LivePath,
-        ArgBlock::Omitted => CauseKind::OmittedArgument,
-        ArgBlock::Variable => CauseKind::UnprovenVariable,
-        ArgBlock::Forwarded => CauseKind::ForwardedParameter,
-    };
-    Cause::new(kind, caller.file.clone(), caller.line, text)
-}
+#[path = "parameter_cause_step.rs"]
+mod step;
 
 fn not_named(site: &ResolvedCallSite, origin: &PathOrigin) -> Cause {
     let line = origin.owner_line.unwrap_or(1);

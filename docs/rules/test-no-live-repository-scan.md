@@ -265,7 +265,9 @@ the call graph cannot see may pass anything:
   a class or object member.
 - Every reference to it, and to a function that reaches it, is a direct call.
   A non-call reference to a sibling const export, such as a string used in a
-  template literal, does not count. A re-export specifier
+  template literal, does not count. A property name on a member access
+  (`import.meta.main`, `obj.main`) is not a reference to a binding named
+  `main`. A re-export specifier
   (`export { enumerate, other }`) does not count either: importers of that
   barrel, including through further re-export chains, are judged at their
   call sites.
@@ -285,17 +287,25 @@ the call graph cannot see may pass anything:
   files. An unreadable module outside that closure does not block the proof.
   An unreadable module inside it still does. The advisory names the deepest
   import that could not be read, at that import's own file and line, not the
-  first edge of the importing module. A relative `.mts` import that resolves
-  is not that failure. When the load edges show a path, the advisory includes
+  first edge of the importing module. A specifier that resolves to a readable
+  file is not that failure. That includes a workspace package imported by its
+  name when `package.json` `exports` maps `"."` and `"./*`, and a relative
+  `.mts` import of a file that exists. The check uses the same session
+  resolver as the dependency graph, and follows a relative or package entry
+  that exists on disk. A file that exists is still unreadable when a load
+  inside it cannot be named, such as `require` of a non-literal specifier.
+  That failure stays on the load's line. When the load edges show a path, the advisory includes
   it from a test or setup root. A path string, `require.resolve`, or a CLI
   invocation does not put a module on that path. When no unreadable module is
   in the closure and caller proof still fails at the function, the advisory
   names a recursive inner helper only when the judged root itself flows
   through the recursive argument. An outer parameter captured by an inner
   helper, while that helper recurses on a relative suffix, is traced to the
-  outer function's callers. Otherwise the advisory says the callers are not
-  proven. It does not describe the function declaration as an unreadable
-  module.
+  outer function's callers. Otherwise the advisory names the first caller
+  whose argument is not proven, with that call's file, line, and argument
+  text, and follows that caller when its own parameter can be traced. It does
+  not stop at the function declaration when a caller exists, and it does not
+  describe that declaration as an unreadable module.
 
 A consumer is matched to the callee by resolved file, not by specifier text: the
 resolver the dependency graph uses (relative paths, tsconfig `paths` aliases,

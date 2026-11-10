@@ -108,24 +108,6 @@ pub(super) fn from_identifier(
     }
 }
 
-pub(super) fn from_member(
-    nodes: &AstNodes<'_>,
-    node: NodeId,
-    member: &StaticMemberExpression<'_>,
-    source: &str,
-    out: &mut PathProvenance,
-) {
-    if !is_callee(nodes, node, member.span) {
-        out.value_refs.insert(member.property.name.to_string());
-        out.route_sites.push(RouteSite::at(
-            source,
-            member.span.start,
-            RouteKind::NonDirect,
-            member.property.name.to_string(),
-        ));
-    }
-}
-
 /// An import under another local name escapes under its exported name too.
 pub(super) fn add_imported_names(
     facts: &super::super::super::TypeScriptModuleFacts,

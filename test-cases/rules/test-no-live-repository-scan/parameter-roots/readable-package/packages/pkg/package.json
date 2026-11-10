@@ -1,0 +1,8 @@
+{
+  "name": "@scope/pkg",
+  "type": "module",
+  "exports": {
+    ".": "./index.mts",
+    "./*": "./*.mts"
+  }
+}

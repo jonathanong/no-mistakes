@@ -73,6 +73,18 @@ pub(super) fn call_site(file: &Path, caller: &str, id: u32) -> ResolvedCallSite 
     }
 }
 
+#[test]
+fn a_second_entry_lookup_is_a_cache_hit() {
+    let graph = empty_graph();
+    let owners = assemble(blank(&graph));
+    let target = NodeId::callable("/repo/src/fn.mts", "fn", CallableId(1));
+    assert!(owners.entries(target.clone()).is_none());
+    assert!(owners.entries(target).is_none());
+    let memo = owners.entry_memo.borrow();
+    assert_eq!(memo.walks, 1);
+    assert_eq!(memo.hits, 1);
+}
+
 pub(super) fn assemble(fixture: Fixture<'_>) -> Owners<'_> {
     Owners {
         callers: fixture.callers,
@@ -87,5 +99,6 @@ pub(super) fn assemble(fixture: Fixture<'_>) -> Owners<'_> {
         test_closure: FxHashSet::default(),
         gate_roots: Vec::new(),
         reached: RefCell::new(fixture.reached),
+        entry_memo: RefCell::new(super::entry_memo::EntryMemo::default()),
     }
 }
