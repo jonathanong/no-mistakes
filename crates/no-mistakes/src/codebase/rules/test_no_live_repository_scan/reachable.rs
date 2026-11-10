@@ -56,6 +56,12 @@ pub(super) fn sources(
     all.sort();
     all.dedup();
     let sources = graph.call_source_nodes(&all, CallTraversal::Transitive, None);
+    let mut gate_roots = root_files.to_vec();
+    gate_roots.extend(setup_files.iter().cloned());
+    if let Some(globals) = setups.global_setup_files() {
+        gate_roots.extend(globals);
+    }
+    let test_closure = module_files(graph, &gate_roots);
     let mut files: FxHashSet<PathBuf> = root_files.iter().cloned().collect();
     files.extend(test_modules);
     files.extend(setup_modules);
@@ -77,6 +83,7 @@ pub(super) fn sources(
         sources,
         files,
         config_files,
+        test_closure,
     })
 }
 
@@ -84,6 +91,8 @@ pub(super) struct Scope {
     pub(super) sources: FxHashSet<NodeId>,
     pub(super) files: FxHashSet<PathBuf>,
     pub(super) config_files: Option<FxHashSet<PathBuf>>,
+    /// Test files, `setupFiles`, `globalSetup`, and their import closure.
+    pub(super) test_closure: FxHashSet<PathBuf>,
 }
 
 pub(super) fn module_files(graph: &DepGraph, roots: &[PathBuf]) -> FxHashSet<PathBuf> {
@@ -98,7 +107,7 @@ pub(super) fn module_files(graph: &DepGraph, roots: &[PathBuf]) -> FxHashSet<Pat
     files
 }
 
-fn load_kinds() -> HashSet<EdgeKind> {
+pub(super) fn load_kinds() -> HashSet<EdgeKind> {
     [
         EdgeKind::Import,
         EdgeKind::WorkspaceImport,

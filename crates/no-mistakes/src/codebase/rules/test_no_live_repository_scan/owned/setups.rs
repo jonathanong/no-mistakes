@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 struct Project {
     filter: ProjectTestFilter,
     setups: Vec<PathBuf>,
+    global_setups: Vec<PathBuf>,
     config: Option<PathBuf>,
 }
 
@@ -55,6 +56,15 @@ impl ConfiguredSetups {
             self.projects
                 .iter()
                 .flat_map(|project| project.setups.iter().cloned())
+                .collect()
+        })
+    }
+
+    pub(in super::super) fn global_setup_files(&self) -> Option<FxHashSet<PathBuf>> {
+        self.known.then(|| {
+            self.projects
+                .iter()
+                .flat_map(|project| project.global_setups.iter().cloned())
                 .collect()
         })
     }
@@ -112,6 +122,14 @@ fn projects(
         }) {
             continue;
         }
+        let global_setups = project
+            .vitest_setup
+            .iter()
+            .filter(|setup| {
+                !setup.config_extends_provenance && setup.field == VitestSetupField::GlobalSetup
+            })
+            .filter_map(|setup| setup.resolved_path.clone())
+            .collect();
         let setups = project
             .vitest_setup
             .into_iter()
@@ -126,6 +144,7 @@ fn projects(
         selected.push(Project {
             filter,
             setups,
+            global_setups,
             config,
         });
     }

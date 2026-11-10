@@ -9,7 +9,8 @@ use std::path::{Path, PathBuf};
 pub(super) struct Escapes {
     local: FxHashMap<PathBuf, FxHashSet<String>>,
     refs: Vec<(PathBuf, u32, u32, String)>,
-    unknown: bool,
+    /// Files whose path facts failed, or that load a module this pass cannot name.
+    unknown_files: FxHashSet<PathBuf>,
     unknown_at: Option<(PathBuf, u32)>,
 }
 
@@ -30,7 +31,7 @@ impl Escapes {
             match path_provenance(ts) {
                 Some(paths) => {
                     if paths.modules_unknown {
-                        escapes.unknown = true;
+                        escapes.unknown_files.insert(file.clone());
                         route_index::note_escape(
                             &mut escapes.unknown_at,
                             file,
@@ -49,19 +50,18 @@ impl Escapes {
                     }
                     escapes.local.insert(file.clone(), paths.value_refs.clone());
                 }
-                None => {
-                    if ts.module_bindings.is_some() {
-                        escapes.unknown = true;
-                        route_index::note_escape(&mut escapes.unknown_at, file, 1);
-                    }
+                None if ts.module_bindings.is_some() => {
+                    escapes.unknown_files.insert(file.clone());
+                    route_index::note_escape(&mut escapes.unknown_at, file, 1);
                 }
+                None => {}
             }
         }
         escapes
     }
 
-    pub(super) fn unknown(&self) -> bool {
-        self.unknown
+    pub(super) fn unknown_files(&self) -> &FxHashSet<PathBuf> {
+        &self.unknown_files
     }
 
     pub(super) fn unknown_at(&self) -> Option<&(PathBuf, u32)> {

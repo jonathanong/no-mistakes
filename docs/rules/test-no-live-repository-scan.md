@@ -240,7 +240,11 @@ object-pattern parameter, such as `function scan({ opts }) { readdirSync(opts.ro
 stays unresolved too. The pattern key is not replaced by the accessed property, so
 an owned sibling `root` cannot clear a live `opts.root`. A property beside a
 rest binding can still be proven. Production modules that
-no selected test imports do not add callers.
+no selected test imports do not add callers. An unreadable module that no
+test, `setupFiles`, or `globalSetup` reaches does not erase a caller proof,
+including a lint config such as `.dependency-cruiser.cjs` loaded only from the
+runner config. The same unreadable module imported by a test that reaches the
+function keeps the finding.
 
 An object argument must expose the requested property in a literal object, without
 mutation or escape. Method and
@@ -262,15 +266,20 @@ the call graph cannot see may pass anything:
   and `vi.mock`/`vi.importActual` of the module make its consumers unknowable.
   A named static barrel re-export can preserve the route when all consumers
   remain named direct calls. A load through a `const` string specifier is
-  attributed to that module; a specifier that cannot be resolved statically
-  makes consumers unknowable for every module in that test execution scope.
+  attributed to that module. A specifier that cannot be resolved statically,
+  or any other module whose loads this pass cannot read, blocks caller proof
+  only for enumerating functions that module can reach from a test root. That
+  set is the `setupFiles`, `globalSetup`, and test files found by reverse
+  load edges from the function's module, plus the import closure of those
+  files. An unreadable module outside that closure does not block the proof.
+  An unreadable module inside it still does.
 
 A consumer is matched to the callee by resolved file, not by specifier text: the
 resolver the dependency graph uses (relative paths, tsconfig `paths` aliases,
 workspace packages, `package.json` `exports`) maps each such specifier to a file,
 so `import * as m from "@lib"` consumes the file `@lib` points at. A specifier
 that is neither a bare package nor resolvable to a file keeps the finding for
-every callee in the selected test scope. A default import, an unsupported barrel re-export, and a type-only
+every callee whose test-root closure includes the module that named it. A default import, an unsupported barrel re-export, and a type-only
 import of the callee also keep the finding. Class and object-literal methods can be
 reached from a file root; when a method's enumeration root depends on an
 unresolved parameter or expression, the rule reports an unresolved-root

@@ -1,7 +1,9 @@
 //! Resolve a parameter or env-var root through the callers that reach it.
 //!
-//! Recall first: any caller, write, or file this pass cannot read keeps the finding.
+//! Recall first: an unreadable module that a test root can use to reach the
+//! function keeps the finding. A module outside that closure does not.
 mod cause;
+mod closure;
 mod consumers;
 pub(super) mod env;
 mod env_query;
@@ -22,6 +24,7 @@ use crate::codebase::rules::forbidden_calls::site_source_node;
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::ts_source::module_facts::arguments::PathProvenance;
 use crate::fx::{FxHashMap, FxHashSet};
+use std::cell::RefCell;
 use std::path::PathBuf;
 
 /// Path facts of a file whose parse is trustworthy.
@@ -55,8 +58,13 @@ pub(super) struct Owners<'g> {
     escaped: escapes::Escapes,
     /// Files consumed other than by named static imports used only as calls.
     consumed: consumers::Consumed,
-    /// A file whose facts failed, or a module load that cannot be read, may hide a consumer.
-    escape_unknown: bool,
+    graph: &'g DepGraph,
+    /// Test files, setupFiles, globalSetup, and their import closure.
+    test_closure: FxHashSet<PathBuf>,
+    /// Modules whose loads or path facts this pass cannot read.
+    unknown_files: FxHashSet<PathBuf>,
+    /// Per enumerating module: whether an unreadable file can reach it.
+    reached: RefCell<FxHashMap<PathBuf, bool>>,
     /// `setupFiles` in a config this pass could not resolve.
     setup_hole: Option<(PathBuf, u32)>,
 }
@@ -102,11 +110,16 @@ impl<'g> Owners<'g> {
         let escaped = escapes::Escapes::new(facts, graph_files, relevant_files);
         let consumed =
             consumers::Consumed::new(graph, facts, graph_files, relevant_files, resolution);
-        let escape_unknown = !setups.known() || escaped.unknown() || consumed.unknown();
+        let mut unknown_files = escaped.unknown_files().clone();
+        unknown_files.extend(consumed.unknown_files().iter().cloned());
         let setup_hole = setups.hole();
         Self {
             callers,
             nodes,
+            graph,
+            test_closure: scope.test_closure.clone(),
+            unknown_files,
+            reached: RefCell::new(FxHashMap::default()),
             imported: imports::ImportedWrites::new(graph),
             env: env::EnvWrites::new(
                 facts,
@@ -121,7 +134,6 @@ impl<'g> Owners<'g> {
             fixture_dirs: environment.fixture_dirs,
             escaped,
             consumed,
-            escape_unknown,
             setup_hole,
         }
     }

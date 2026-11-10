@@ -38,6 +38,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "imported-cjs": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/fn.mts",
+          "import": "readdirSync",
+          "line": 5,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(repoRoot, \".x/a\"), { recursive: true });",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/fn.mts",
+          "import": "readdirSync",
+          "line": 6,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(repoRoot, \".x/b\"), { recursive: true });",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/unreadable.cjs",
+          "import": "require(<computed>)",
+          "line": 1,
+          "message": "unresolved root: `require(<computed>)` uses a computed module name that this analysis cannot resolve, so its roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under a fixtures or owned temporary directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "module.exports = require(process.env.UNREADABLE_MODULE);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "join-call": {
     "exitCode": 0,
     "report": {
@@ -108,6 +148,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unresolved root"
         }
       ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "outside-cjs": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
