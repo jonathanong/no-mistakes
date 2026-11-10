@@ -1,5 +1,4 @@
 use super::path_provenance;
-use super::route_index;
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::ts_source::module_facts::arguments::RouteKind;
 use crate::fx::{FxHashMap, FxHashSet};
@@ -10,8 +9,7 @@ pub(super) struct Escapes {
     local: FxHashMap<PathBuf, FxHashSet<String>>,
     refs: Vec<(PathBuf, u32, u32, String)>,
     /// Files whose path facts failed, or that load a module this pass cannot name.
-    unknown_files: FxHashSet<PathBuf>,
-    unknown_at: Option<(PathBuf, u32)>,
+    unknown_sites: Vec<(PathBuf, u32)>,
 }
 
 impl Escapes {
@@ -31,12 +29,7 @@ impl Escapes {
             match path_provenance(ts) {
                 Some(paths) => {
                     if paths.modules_unknown {
-                        escapes.unknown_files.insert(file.clone());
-                        route_index::note_escape(
-                            &mut escapes.unknown_at,
-                            file,
-                            paths.unknown_load.unwrap_or(1),
-                        );
+                        escapes.mark_unknown(file, paths.unknown_load.unwrap_or(1));
                     }
                     for site in &paths.route_sites {
                         if site.kind == RouteKind::NonDirect {
@@ -50,22 +43,19 @@ impl Escapes {
                     }
                     escapes.local.insert(file.clone(), paths.value_refs.clone());
                 }
-                None if ts.module_bindings.is_some() => {
-                    escapes.unknown_files.insert(file.clone());
-                    route_index::note_escape(&mut escapes.unknown_at, file, 1);
-                }
+                None if ts.module_bindings.is_some() => escapes.mark_unknown(file, 1),
                 None => {}
             }
         }
         escapes
     }
 
-    pub(super) fn unknown_files(&self) -> &FxHashSet<PathBuf> {
-        &self.unknown_files
+    pub(super) fn unknown_sites(&self) -> &[(PathBuf, u32)] {
+        &self.unknown_sites
     }
 
-    pub(super) fn unknown_at(&self) -> Option<&(PathBuf, u32)> {
-        self.unknown_at.as_ref()
+    fn mark_unknown(&mut self, file: &Path, line: u32) {
+        self.unknown_sites.push((file.to_path_buf(), line));
     }
 
     pub(super) fn contains(&self, file: &Path, name: &str) -> bool {

@@ -29,7 +29,7 @@ pub(super) struct Consumed {
     /// Files whose specifier might name a module but resolves to none.
     unknown_files: FxHashSet<PathBuf>,
     hits: Vec<super::route_index::RouteHit>,
-    unknown_at: Option<(PathBuf, u32)>,
+    unknown_sites: Vec<(PathBuf, u32)>,
     via: Vec<(PathBuf, PathBuf)>,
 }
 
@@ -70,13 +70,9 @@ impl Consumed {
                     }
                     None if class.is_unresolved_external() && external(&resolver, specifier) => {}
                     None => {
+                        let line = super::route_index::unknown_line(provenance, specifier);
                         consumed.unknown_files.insert(file.clone());
-                        super::route_index::note_unknown(
-                            &mut consumed.unknown_at,
-                            file,
-                            provenance,
-                            specifier,
-                        );
+                        consumed.unknown_sites.push((file.clone(), line));
                     }
                 }
             }
@@ -140,20 +136,16 @@ impl Consumed {
         !self.unknown_files.is_empty()
     }
 
-    pub(super) fn unknown_files(&self) -> &FxHashSet<PathBuf> {
-        &self.unknown_files
-    }
-
     pub(super) fn contains(&self, file: &Path) -> bool {
         self.files.contains(&normalize_path(file))
     }
 
-    pub(super) fn unknown_at(&self) -> Option<&(PathBuf, u32)> {
-        self.unknown_at.as_ref()
+    pub(super) fn unknown_sites(&self) -> &[(PathBuf, u32)] {
+        &self.unknown_sites
     }
 
-    pub(super) fn route(&self, file: &Path) -> Option<&super::route_index::RouteHit> {
-        super::route_index::earliest(&self.hits, &self.via, file)
+    pub(super) fn targeting(&self, file: &Path) -> Vec<&super::route_index::RouteHit> {
+        super::route_index::targeting(&self.hits, &self.via, file)
     }
 }
 

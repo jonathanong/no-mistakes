@@ -1,0 +1,11 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - rule: test-no-live-repository-scan
+    scope: repository
+    options:
+      roots:
+        - glob: src/**/*.mts
+        - vitest: true
+      excludeRoots: ["tests/**"]

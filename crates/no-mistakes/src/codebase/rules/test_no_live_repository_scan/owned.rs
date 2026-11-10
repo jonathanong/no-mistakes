@@ -2,8 +2,10 @@
 //!
 //! Recall first: an unreadable module that a test root can use to reach the
 //! function keeps the finding. A module outside that closure does not.
+mod caller_escape;
 mod cause;
 mod closure;
+mod closure_path;
 mod consumers;
 pub(super) mod env;
 mod env_query;
@@ -15,6 +17,7 @@ mod parameters;
 mod route_cause;
 mod route_index;
 pub(super) mod setups;
+mod symbol_block;
 pub(super) use cause::{Cause, Ownership};
 pub(crate) use consumers::Resolution;
 
@@ -61,12 +64,10 @@ pub(super) struct Owners<'g> {
     graph: &'g DepGraph,
     /// Test files, setupFiles, globalSetup, and their import closure.
     test_closure: FxHashSet<PathBuf>,
-    /// Modules whose loads or path facts this pass cannot read.
-    unknown_files: FxHashSet<PathBuf>,
+    /// Test files, `setupFiles`, and `globalSetup` before the closure expands.
+    gate_roots: Vec<PathBuf>,
     /// Per enumerating module: whether an unreadable file can reach it.
     reached: RefCell<FxHashMap<PathBuf, bool>>,
-    /// `setupFiles` in a config this pass could not resolve.
-    setup_hole: Option<(PathBuf, u32)>,
 }
 
 impl<'g> Owners<'g> {
@@ -110,15 +111,12 @@ impl<'g> Owners<'g> {
         let escaped = escapes::Escapes::new(facts, graph_files, relevant_files);
         let consumed =
             consumers::Consumed::new(graph, facts, graph_files, relevant_files, resolution);
-        let mut unknown_files = escaped.unknown_files().clone();
-        unknown_files.extend(consumed.unknown_files().iter().cloned());
-        let setup_hole = setups.hole();
         Self {
             callers,
             nodes,
             graph,
             test_closure: scope.test_closure.clone(),
-            unknown_files,
+            gate_roots: scope.gate_roots.clone(),
             reached: RefCell::new(FxHashMap::default()),
             imported: imports::ImportedWrites::new(graph),
             env: env::EnvWrites::new(
@@ -134,7 +132,6 @@ impl<'g> Owners<'g> {
             fixture_dirs: environment.fixture_dirs,
             escaped,
             consumed,
-            setup_hole,
         }
     }
 

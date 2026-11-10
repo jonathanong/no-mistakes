@@ -193,13 +193,17 @@ reachable caller passes an owned root or a module- or `cwd`-anchored fixture
 path through a named call (see
 [Owned parameters and env vars](#owned-parameters-and-env-vars)); a caller that
 passes a relative literal, an unproven variable, or nothing keeps the finding.
-When that proof fails, the advisory names the first blocker and where it is:
+When that proof fails, the advisory names the blocker and where it is:
 the caller call site and its argument (a live path, an omitted argument, an
 unproven variable, or a value forwarded through another parameter), or the
 route that made callers unknowable (a namespace import, a default import,
 `import()`, `require`, `vi.mock`, a reference other than a direct call, a
 callee that is not a named function, or a reassigned parameter), with that
-file and line. The fix tells the caller to pass an owned root. It does not
+file and line. When several modules in the test-root closure are unreadable,
+or several `setupFiles` entries do not resolve, the advisory names the first
+and the count of the rest. A Vitest config that cannot be read or does not
+match the selected tests is a different cause from an unresolved `setupFiles`
+entry. The fix tells the caller to pass an owned root. It does not
 ask a production helper to build the root itself. Otherwise
 enumerate with a path the helper builds itself from a fixture root, or suppress
 the helper.
@@ -259,11 +263,14 @@ the call graph cannot see may pass anything:
 
 - The callee is a named function declaration or function-valued `const`, not
   a class or object member.
-- Every reference to it is a direct call.
+- Every reference to it, and to a function that reaches it, is a direct call.
+  A non-call reference to a sibling const export, such as a string used in a
+  template literal, does not count.
 - Every test-reachable file that consumes its module does so through named static imports
   (`import { sync } from "./sync"`) whose uses are all direct calls. A namespace
   import, a default import, `import()`, `require`, an unsupported re-export,
   and `vi.mock`/`vi.importActual` of the module make its consumers unknowable.
+  A named value import that is not a call blocks only the export it names.
   A named static barrel re-export can preserve the route when all consumers
   remain named direct calls. A load through a `const` string specifier is
   attributed to that module. A specifier that cannot be resolved statically,
@@ -272,7 +279,13 @@ the call graph cannot see may pass anything:
   set is the `setupFiles`, `globalSetup`, and test files found by reverse
   load edges from the function's module, plus the import closure of those
   files. An unreadable module outside that closure does not block the proof.
-  An unreadable module inside it still does.
+  An unreadable module inside it still does. The advisory names that module
+  and, when the load edges show one, the path from a test or setup root. A
+  path string, `require.resolve`, or a CLI invocation does not put a module
+  on that path. When no unreadable module is in the closure and caller proof
+  still fails at the function, the advisory names a self-recursive inner
+  helper or says the callers are not proven. It does not describe the
+  function declaration as an unreadable module.
 
 A consumer is matched to the callee by resolved file, not by specifier text: the
 resolver the dependency graph uses (relative paths, tsconfig `paths` aliases,
@@ -348,7 +361,10 @@ vi.stubEnv("OWNED_SCAN_ROOT", mkdtempSync(join(tmpdir(), "scan-")));
 A test can import that setup before calling a named source helper that reads
 `process.env.OWNED_SCAN_ROOT ?? ""`. A statically configured Vitest `setupFiles`
 module also supplies this proof when every matching project supplies an owned
-write. The existing prepared project catalog supplies setup ownership; configs
+write. A same-file const whose `setupFiles` array is a literal, including one
+wrapped in `satisfies`, `as`, or parentheses and spread as
+`setupFiles: [...baseProject.test.setupFiles]`, resolves to those paths. The
+existing prepared project catalog supplies setup ownership; configs
 are not parsed again. Only unconditional module-level writes in setup files or their
 static imports qualify. `globalSetup`, unknown setup paths, imported hooks,
 mocked setup modules, unexecuted functions, conditional or dynamic imports, and import cycles that

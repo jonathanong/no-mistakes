@@ -84,6 +84,7 @@ pub(super) fn sources(
         files,
         config_files,
         test_closure,
+        gate_roots,
     })
 }
 
@@ -93,6 +94,8 @@ pub(super) struct Scope {
     pub(super) config_files: Option<FxHashSet<PathBuf>>,
     /// Test files, `setupFiles`, `globalSetup`, and their import closure.
     pub(super) test_closure: FxHashSet<PathBuf>,
+    /// Those roots before `test_closure` follows their imports.
+    pub(super) gate_roots: Vec<PathBuf>,
 }
 
 pub(super) fn module_files(graph: &DepGraph, roots: &[PathBuf]) -> FxHashSet<PathBuf> {

@@ -1,10 +1,14 @@
+#[path = "setups_gap.rs"]
+mod setups_gap;
+
 use super::{consumers::Consumed, imports::ImportedWrites};
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::rules::PreparedVitestProjectCatalog;
 use crate::codebase::test_discovery::ProjectTestFilter;
 use crate::fx::FxHashSet;
-use crate::integration_tests::types::VitestSetupField;
 use std::path::{Path, PathBuf};
+
+pub(super) use setups_gap::SetupGap;
 
 #[derive(Clone)]
 struct Project {
@@ -20,8 +24,8 @@ pub(in super::super) struct ConfiguredSetups {
     projects: Vec<Project>,
     known: bool,
     configs_known: bool,
-    /// Config declaration of a `setupFiles` entry this pass could not resolve.
-    hole: Option<(PathBuf, u32)>,
+    /// Why test roots could not be named. Absent when `known` is true.
+    gap: Option<SetupGap>,
 }
 
 impl ConfiguredSetups {
@@ -30,25 +34,32 @@ impl ConfiguredSetups {
         catalog: Option<&PreparedVitestProjectCatalog>,
         root_files: &[PathBuf],
     ) -> Self {
-        let projects = projects(catalog, root, root_files);
-        let known = catalog.is_none() || projects.is_some();
-        let configs_known = projects.as_ref().is_some_and(|projects| {
-            catalog.is_some() && projects.iter().all(|project| project.config.is_some())
-        });
-        let hole = (!known)
-            .then(|| catalog.and_then(|catalog| unresolved_setup(catalog, root, root_files)))
-            .flatten();
+        let (projects, gap) = match catalog {
+            None => (Vec::new(), None),
+            Some(catalog) => match setups_gap::select(catalog, root, root_files) {
+                Ok(projects) => (projects, None),
+                Err(gap) => (Vec::new(), Some(gap)),
+            },
+        };
+        let known = gap.is_none();
+        let configs_known = catalog.is_some()
+            && !projects.is_empty()
+            && projects.iter().all(|project| project.config.is_some());
         Self {
             root: root.to_path_buf(),
             known,
-            projects: projects.unwrap_or_default(),
+            projects,
             configs_known,
-            hole,
+            gap,
         }
     }
 
-    pub(super) fn hole(&self) -> Option<(PathBuf, u32)> {
-        self.hole.clone()
+    pub(super) fn root(&self) -> &Path {
+        &self.root
+    }
+
+    pub(super) fn gap(&self) -> Option<&SetupGap> {
+        self.gap.as_ref()
     }
 
     pub(in super::super) fn setup_files(&self) -> Option<FxHashSet<PathBuf>> {
@@ -105,80 +116,4 @@ impl ConfiguredSetups {
         }
         matched
     }
-}
-
-fn projects(
-    catalog: Option<&PreparedVitestProjectCatalog>,
-    root: &Path,
-    root_files: &[PathBuf],
-) -> Option<Vec<Project>> {
-    let all = catalog?.merged_projects().ok()?;
-    let mut selected = Vec::new();
-    for project in all {
-        let filter = ProjectTestFilter::from_project_ref(&project).ok()?;
-        project.matcher_warnings.is_empty().then_some(())?;
-        if !root_files.iter().any(|file| {
-            filter.is_match(&crate::codebase::ts_source::relative_slash_path(root, file))
-        }) {
-            continue;
-        }
-        let global_setups = project
-            .vitest_setup
-            .iter()
-            .filter(|setup| {
-                !setup.config_extends_provenance && setup.field == VitestSetupField::GlobalSetup
-            })
-            .filter_map(|setup| setup.resolved_path.clone())
-            .collect();
-        let setups = project
-            .vitest_setup
-            .into_iter()
-            .filter(|setup| {
-                !setup.config_extends_provenance && setup.field == VitestSetupField::SetupFiles
-            })
-            .map(|setup| setup.resolved_path)
-            .collect::<Option<Vec<_>>>()?;
-        let config = project
-            .config
-            .map(|path| crate::codebase::ts_resolver::normalize_path(&root.join(path)));
-        selected.push(Project {
-            filter,
-            setups,
-            global_setups,
-            config,
-        });
-    }
-    (!selected.is_empty()).then_some(selected)
-}
-
-fn unresolved_setup(
-    catalog: &PreparedVitestProjectCatalog,
-    root: &Path,
-    root_files: &[PathBuf],
-) -> Option<(PathBuf, u32)> {
-    let mut best = None;
-    for project in catalog.merged_projects().ok()? {
-        let Ok(filter) = ProjectTestFilter::from_project_ref(&project) else {
-            continue;
-        };
-        if !root_files.iter().any(|file| {
-            filter.is_match(&crate::codebase::ts_source::relative_slash_path(root, file))
-        }) {
-            continue;
-        }
-        for setup in project.vitest_setup {
-            if setup.config_extends_provenance
-                || setup.field != VitestSetupField::SetupFiles
-                || setup.resolved_path.is_some()
-            {
-                continue;
-            }
-            let path = crate::codebase::ts_resolver::normalize_path(&setup.declaration_path);
-            let next = (path, setup.declaration_line.max(1));
-            if best.as_ref().is_none_or(|prev| next < *prev) {
-                best = Some(next);
-            }
-        }
-    }
-    best
 }

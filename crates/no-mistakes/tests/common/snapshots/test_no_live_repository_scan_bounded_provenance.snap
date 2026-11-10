@@ -640,7 +640,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "list.mts",
           "import": "readdirSync",
           "line": 2,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because root.test.mts:1 loads a module this analysis cannot read. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because root.test.mts:1 loads a module this analysis cannot read, reached from root.test.mts. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function list(root: string) { return readdirSync(root) }",
           "target": "unresolved root"

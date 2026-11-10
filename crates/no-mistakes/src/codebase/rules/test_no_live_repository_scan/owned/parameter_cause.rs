@@ -80,8 +80,11 @@ impl Owners<'_> {
             let Some(module) = source.as_file() else {
                 return Err(self.route_cause(&source, facts));
             };
-            if self.closure_unknown(module) || !self.proven_target(&source) {
+            if self.closure_unknown(module) || !self.parameter_proven(&source) {
                 return Err(self.route_cause(&source, facts));
+            }
+            if let Some(cause) = self.caller_blocked(&source, facts) {
+                return Err(cause);
             }
             let Some(callers) = self
                 .callers

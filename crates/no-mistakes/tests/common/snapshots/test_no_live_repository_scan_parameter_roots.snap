@@ -46,7 +46,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/fn.mts",
           "import": "readdirSync",
           "line": 5,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because src/unreadable.cjs:1 loads a module this analysis cannot read. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because src/unreadable.cjs:1 loads a module this analysis cannot read, reached from tests/fn.test.mts → src/unreadable.cjs. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "readdirSync(join(repoRoot, \".x/a\"), { recursive: true });",
           "target": "unresolved root"
@@ -55,7 +55,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/fn.mts",
           "import": "readdirSync",
           "line": 6,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because src/unreadable.cjs:1 loads a module this analysis cannot read. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because src/unreadable.cjs:1 loads a module this analysis cannot read, reached from tests/fn.test.mts → src/unreadable.cjs. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "readdirSync(join(repoRoot, \".x/b\"), { recursive: true });",
           "target": "unresolved root"
@@ -82,6 +82,55 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "exitCode": 0,
     "report": {
       "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "many-blockers": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/fn.mts",
+          "import": "readdirSync",
+          "line": 5,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because src/unreadable-a.cjs:1 loads a module this analysis cannot read, reached from tests/fn.test.mts → src/unreadable-a.cjs, and 1 more. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(repoRoot, \".x/a\"), { recursive: true });",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/fn.mts",
+          "import": "readdirSync",
+          "line": 6,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because src/unreadable-a.cjs:1 loads a module this analysis cannot read, reached from tests/fn.test.mts → src/unreadable-a.cjs, and 1 more. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(repoRoot, \".x/b\"), { recursive: true });",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/unreadable-a.cjs",
+          "import": "require(<computed>)",
+          "line": 1,
+          "message": "unresolved root: `require(<computed>)` uses a computed module name that this analysis cannot resolve, so its roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under a fixtures or owned temporary directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "module.exports = require(process.env.UNREADABLE_A);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/unreadable-b.cjs",
+          "import": "require(<computed>)",
+          "line": 1,
+          "message": "unresolved root: `require(<computed>)` uses a computed module name that this analysis cannot resolve, so its roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under a fixtures or owned temporary directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "module.exports = require(process.env.UNREADABLE_B);",
+          "target": "unresolved root"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -160,6 +209,187 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "exitCode": 0,
     "report": {
       "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "path-and-unread": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/fn.mts",
+          "import": "readdirSync",
+          "line": 5,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because src/unreadable.cjs:1 loads a module this analysis cannot read, reached from tests/fn.test.mts → src/unreadable.cjs. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(repoRoot, \".x/a\"), { recursive: true });",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/fn.mts",
+          "import": "readdirSync",
+          "line": 6,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because src/unreadable.cjs:1 loads a module this analysis cannot read, reached from tests/fn.test.mts → src/unreadable.cjs. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(repoRoot, \".x/b\"), { recursive: true });",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/unreadable.cjs",
+          "import": "require(<computed>)",
+          "line": 1,
+          "message": "unresolved root: `require(<computed>)` uses a computed module name that this analysis cannot resolve, so its roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under a fixtures or owned temporary directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "module.exports = require(process.env.UNREADABLE_MODULE);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "path-only-cjs": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reaching-alias": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/fn.mts",
+          "import": "readdirSync",
+          "line": 7,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/fn.test.mts:8 references `fn` other than as a direct call. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(repoRoot, \".x/a\"), { recursive: true });",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/fn.mts",
+          "import": "readdirSync",
+          "line": 8,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/fn.test.mts:8 references `fn` other than as a direct call. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(repoRoot, \".x/b\"), { recursive: true });",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "recursive-helper": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "setup-spread": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sibling-const": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unmatched-config": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/fn.mts",
+          "import": "readdirSync",
+          "line": 5,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because vitest.config.ts:1 cannot be read or does not match these tests. Fix: make the Vitest config readable and match the selected tests, or pass an owned root from a caller this analysis can see. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(repoRoot, \".x/a\"), { recursive: true });",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/fn.mts",
+          "import": "readdirSync",
+          "line": 6,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because vitest.config.ts:1 cannot be read or does not match these tests. Fix: make the Vitest config readable and match the selected tests, or pass an owned root from a caller this analysis can see. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(repoRoot, \".x/b\"), { recursive: true });",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unresolved-setups": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/fn.mts",
+          "import": "readdirSync",
+          "line": 5,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because vitest.config.ts:5 does not resolve setupFiles, and 1 more. Fix: give setupFiles a literal path, or pass an owned root from a caller this analysis can see. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(repoRoot, \".x/a\"), { recursive: true });",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/fn.mts",
+          "import": "readdirSync",
+          "line": 6,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because vitest.config.ts:5 does not resolve setupFiles, and 1 more. Fix: give setupFiles a literal path, or pass an owned root from a caller this analysis can see. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(repoRoot, \".x/b\"), { recursive: true });",
+          "target": "unresolved root"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],

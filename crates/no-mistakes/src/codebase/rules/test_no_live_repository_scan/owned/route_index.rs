@@ -38,20 +38,14 @@ pub(super) fn note_resolved(
     }
 }
 
-pub(super) fn note_unknown(
-    slot: &mut Option<(PathBuf, u32)>,
-    file: &Path,
-    provenance: &PathProvenance,
-    specifier: &str,
-) {
-    let start = provenance
+pub(super) fn unknown_line(provenance: &PathProvenance, specifier: &str) -> u32 {
+    provenance
         .route_sites
         .iter()
         .filter(|site| site.detail == specifier)
         .map(|site| site.line)
         .min()
-        .unwrap_or(1);
-    remember(slot, file, start);
+        .unwrap_or(1)
 }
 
 pub(super) fn note_nondirect(
@@ -101,11 +95,18 @@ pub(super) fn link(via: &mut Vec<(PathBuf, PathBuf)>, child: &Path, barrel: &Pat
     }
 }
 
-pub(super) fn earliest<'a>(
+pub(super) fn targeting<'a>(
     hits: &'a [RouteHit],
     via: &[(PathBuf, PathBuf)],
     file: &Path,
-) -> Option<&'a RouteHit> {
+) -> Vec<&'a RouteHit> {
+    let accepted = reachable_forms(via, file);
+    hits.iter()
+        .filter(|hit| accepted.iter().any(|path| path == &hit.target))
+        .collect()
+}
+
+fn reachable_forms(via: &[(PathBuf, PathBuf)], file: &Path) -> Vec<PathBuf> {
     let mut accepted = Vec::new();
     let mut pending = forms(file);
     while let Some(path) = pending.pop() {
@@ -119,20 +120,7 @@ pub(super) fn earliest<'a>(
         }
         accepted.push(path);
     }
-    hits.iter()
-        .filter(|hit| accepted.iter().any(|path| path == &hit.target))
-        .min_by(|left, right| (&left.file, left.start).cmp(&(&right.file, right.start)))
-}
-
-pub(super) fn note_escape(slot: &mut Option<(PathBuf, u32)>, file: &Path, start: u32) {
-    remember(slot, file, start);
-}
-
-fn remember(slot: &mut Option<(PathBuf, u32)>, file: &Path, start: u32) {
-    let next = (file.to_path_buf(), start);
-    if slot.as_ref().is_none_or(|prev| next < *prev) {
-        *slot = Some(next);
-    }
+    accepted
 }
 
 fn push(

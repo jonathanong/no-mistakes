@@ -1,6 +1,8 @@
 //! Why a parameter root stayed unproven. Acceptance stays in the walk.
+#[path = "cause_text.rs"]
+mod cause_text;
+
 use crate::codebase::dependencies::graph::{NodeId, TsFactLookup};
-use crate::codebase::ts_source::relative_slash_path;
 use std::path::{Path, PathBuf};
 
 pub(in super::super) enum Ownership {
@@ -11,11 +13,16 @@ pub(in super::super) enum Ownership {
 
 pub(in super::super) struct Cause {
     pub(super) kind: CauseKind,
-    file: PathBuf,
-    line: u32,
-    expression: String,
+    pub(super) file: PathBuf,
+    pub(super) line: u32,
+    pub(super) expression: String,
+    /// Blockers after the one named in the message.
+    pub(super) extra: u32,
+    /// Test-root path that reaches an unread module, when one is known.
+    pub(super) reached: String,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum CauseKind {
     LivePath,
     OmittedArgument,
@@ -33,6 +40,12 @@ pub(super) enum CauseKind {
     ClimbsOut,
     UnresolvedSetup,
     UnreadModule,
+    /// Vitest config could not be read, or no project matches the selected tests.
+    UnreadableConfig,
+    /// The function site is a self-recursive inner helper, not an unread module.
+    RecursiveHelper,
+    /// No proven caller, and no unread module, at the function site.
+    CallersNotProven,
 }
 
 impl Cause {
@@ -47,95 +60,27 @@ impl Cause {
             file,
             line,
             expression: expression.into(),
+            extra: 0,
+            reached: String::new(),
         }
+    }
+
+    pub(super) fn with_extra(mut self, extra: u32) -> Self {
+        self.extra = extra;
+        self
+    }
+
+    pub(super) fn with_reached(mut self, reached: impl Into<String>) -> Self {
+        self.reached = reached.into();
+        self
     }
 
     pub(in super::super) fn detail(&self, root: &Path) -> String {
-        let place = format!("{}:{}", relative_slash_path(root, &self.file), self.line);
-        let expr = self.expression.as_str();
-        match self.kind {
-            CauseKind::LivePath => passed(&place, expr, "a live path"),
-            CauseKind::OmittedArgument => format!("{place} omits the root argument"),
-            CauseKind::UnprovenVariable => passed(&place, expr, "an unproven variable"),
-            CauseKind::ForwardedParameter => {
-                passed(&place, expr, "a value forwarded through another parameter")
-            }
-            CauseKind::NamespaceImport => route(&place, expr, "a namespace import"),
-            CauseKind::DefaultImport => route(&place, expr, "a default import"),
-            CauseKind::DynamicImport => route(&place, expr, "a dynamic import()"),
-            CauseKind::RequireImport => route(&place, expr, "a require()"),
-            CauseKind::ViMock => route(&place, expr, "vi.mock"),
-            CauseKind::NonDirectReference => format!(
-                "callers are unknowable because {place} references `{expr}` other than as a direct call"
-            ),
-            CauseKind::NotNamedFunction => {
-                format!("callers are unknowable because {place} is not a named function")
-            }
-            CauseKind::ReassignedParameter => format!("{place} reassigns the parameter"),
-            CauseKind::NoCaller => {
-                format!("no caller call site passes the parameter ({place} declares it)")
-            }
-            CauseKind::ClimbsOut => format!("{place} climbs above the caller-supplied root"),
-            CauseKind::UnresolvedSetup => format!(
-                "callers are unknowable because {place} does not resolve setupFiles"
-            ),
-            CauseKind::UnreadModule => format!(
-                "callers are unknowable because {place} loads a module this analysis cannot read"
-            ),
-        }
+        cause_text::detail(self, root)
     }
 
     pub(in super::super) fn fix(&self) -> &'static str {
-        match self.kind {
-            CauseKind::LivePath | CauseKind::OmittedArgument | CauseKind::UnprovenVariable => {
-                "pass a const fixture path or an owned mkdtemp root from that caller"
-            }
-            CauseKind::ForwardedParameter => {
-                "pass an owned root from the caller that supplies that parameter"
-            }
-            CauseKind::NamespaceImport
-            | CauseKind::DefaultImport
-            | CauseKind::DynamicImport
-            | CauseKind::RequireImport => {
-                "import the helper with a named static import and pass an owned root from the caller"
-            }
-            CauseKind::ViMock => "do not vi.mock this module, and pass an owned root from the caller",
-            CauseKind::NonDirectReference => {
-                "call the helper directly and pass an owned root from the caller"
-            }
-            CauseKind::NotNamedFunction => {
-                "declare the helper as a named function and pass an owned root from each caller"
-            }
-            CauseKind::ReassignedParameter => {
-                "stop reassigning the parameter and pass an owned root from each caller"
-            }
-            CauseKind::NoCaller => "pass an owned root from the caller",
-            CauseKind::ClimbsOut => {
-                "do not traverse above the caller-supplied root; pass an owned root from the caller"
-            }
-            CauseKind::UnresolvedSetup => {
-                "give setupFiles a literal path, or pass an owned root from a caller this analysis can see"
-            }
-            CauseKind::UnreadModule => {
-                "use a module specifier this analysis can read, and pass an owned root from the caller"
-            }
-        }
-    }
-}
-
-fn passed(place: &str, expr: &str, why: &str) -> String {
-    if expr.is_empty() {
-        format!("{place} passes an argument that is {why}")
-    } else {
-        format!("{place} passes `{expr}`, {why}")
-    }
-}
-
-fn route(place: &str, specifier: &str, form: &str) -> String {
-    if specifier.is_empty() {
-        format!("callers are unknowable because {place} uses {form}")
-    } else {
-        format!("callers are unknowable because {place} imports `{specifier}` through {form}")
+        cause_text::fix(self.kind)
     }
 }
 
