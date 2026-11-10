@@ -1,0 +1,47 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "returned": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/worker.mts",
+          "line": 1,
+          "message": "production export `main` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export default function main() {}",
+          "target": "main"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "returned-member": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/__tests__/worker.test.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: production export consumers for `main`, `testOnly` include unknown import selectors: src/__tests__/worker.test.mts:3 `../worker.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "return import(\"../worker.mjs\");",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}
