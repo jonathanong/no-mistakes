@@ -2,6 +2,7 @@
 use super::{PathOrigin, Projector};
 use oxc_ast::{ast::*, AstKind};
 use oxc_semantic::Semantic;
+use oxc_span::GetSpan;
 
 /// True for the unshadowed global `process`.
 pub(in super::super) fn process_global(
@@ -98,5 +99,29 @@ impl<'a> Projector<'a, '_> {
             param_owner: Some(semantic.nodes().kind(owner).span().start),
             ..PathOrigin::unknown()
         })
+    }
+
+    /// Span of a write to a simple parameter, when the binding is one.
+    pub(super) fn reassigned_parameter(&mut self, id: &IdentifierReference<'a>) -> Option<u32> {
+        let semantic = self.semantic;
+        let symbol = self.binding_symbol(id)?;
+        let mut declaration = semantic.scoping().symbol_declaration(symbol);
+        let mut parameter = None;
+        for _ in 0..3 {
+            if let AstKind::FormalParameter(found) = semantic.nodes().kind(declaration) {
+                parameter = Some(found);
+                break;
+            }
+            declaration = semantic.nodes().parent_id(declaration);
+        }
+        let parameter = parameter?;
+        if !matches!(parameter.pattern, BindingPattern::BindingIdentifier(_)) {
+            return None;
+        }
+        semantic
+            .scoping()
+            .get_resolved_references(symbol)
+            .find(|reference| reference.flags().is_write())
+            .map(|reference| semantic.nodes().kind(reference.node_id()).span().start)
     }
 }

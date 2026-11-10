@@ -1,21 +1,26 @@
 //! Resolve a parameter or env-var root through the callers that reach it.
 //!
 //! Recall first: any caller, write, or file this pass cannot read keeps the finding.
+mod cause;
 mod consumers;
 pub(super) mod env;
 mod env_query;
 mod escapes;
 mod imports;
 mod local_env;
+mod parameter_cause;
 mod parameters;
+mod route_cause;
+mod route_index;
 pub(super) mod setups;
+pub(super) use cause::{Cause, Ownership};
 pub(crate) use consumers::Resolution;
 
 use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::{DepGraph, NodeId, ResolvedCallSite, TsFactLookup};
 use crate::codebase::rules::forbidden_calls::site_source_node;
 use crate::codebase::ts_source::facts::TsFileFacts;
-use crate::codebase::ts_source::module_facts::arguments::{PathOrigin, PathProvenance};
+use crate::codebase::ts_source::module_facts::arguments::PathProvenance;
 use crate::fx::{FxHashMap, FxHashSet};
 use std::path::PathBuf;
 
@@ -52,6 +57,8 @@ pub(super) struct Owners<'g> {
     consumed: consumers::Consumed,
     /// A file whose facts failed, or a module load that cannot be read, may hide a consumer.
     escape_unknown: bool,
+    /// `setupFiles` in a config this pass could not resolve.
+    setup_hole: Option<(PathBuf, u32)>,
 }
 
 impl<'g> Owners<'g> {
@@ -96,6 +103,9 @@ impl<'g> Owners<'g> {
         let consumed =
             consumers::Consumed::new(graph, facts, graph_files, relevant_files, resolution);
         let escape_unknown = !setups.known() || escaped.unknown() || consumed.unknown();
+        let setup_hole = (!setups.known())
+            .then(|| route_index::setup_hole(facts, graph_files))
+            .flatten();
         Self {
             callers,
             nodes,
@@ -114,30 +124,7 @@ impl<'g> Owners<'g> {
             escaped,
             consumed,
             escape_unknown,
-        }
-    }
-
-    /// True when every route into the enumeration provably supplies an owned root.
-    pub(super) fn owned(
-        &self,
-        origin: &PathOrigin,
-        site: &ResolvedCallSite,
-        facts: &dyn TsFactLookup,
-        fixture_dirs: &[&str],
-    ) -> bool {
-        // An owned root is only owned below itself; `..` climbs out of it.
-        if origin.segments.iter().any(|segment| segment == "..")
-            && (origin.param.is_some()
-                || origin.env.is_some()
-                || origin.anchor
-                    == crate::codebase::ts_source::module_facts::arguments::PathAnchor::Temp)
-        {
-            return false;
-        }
-        match (&origin.env, origin.param) {
-            (Some(name), _) => self.env_owned(name, site, facts),
-            (None, Some(index)) => self.param_owned(index, origin, site, facts, fixture_dirs),
-            (None, None) => false,
+            setup_hole,
         }
     }
 

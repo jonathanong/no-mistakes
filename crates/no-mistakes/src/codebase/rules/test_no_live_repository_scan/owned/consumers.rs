@@ -28,6 +28,9 @@ pub(super) struct Consumed {
     files: FxHashSet<PathBuf>,
     /// A specifier that might name a file but resolves to none.
     unknown: bool,
+    hits: Vec<super::route_index::RouteHit>,
+    unknown_at: Option<(PathBuf, u32)>,
+    via: Vec<(PathBuf, PathBuf)>,
 }
 
 impl Consumed {
@@ -55,10 +58,41 @@ impl Consumed {
             for specifier in &provenance.unsafe_modules {
                 let class = resolver.classify_import(specifier, file, workspace, &visible);
                 match class.preferred_path() {
-                    Some(target) => consumed.insert(target),
+                    Some(target) => {
+                        super::route_index::note_resolved(
+                            &mut consumed.hits,
+                            file,
+                            provenance,
+                            specifier,
+                            target,
+                        );
+                        consumed.insert(target);
+                    }
                     None if class.is_unresolved_external() && external(&resolver, specifier) => {}
-                    None => consumed.unknown = true,
+                    None => {
+                        consumed.unknown = true;
+                        super::route_index::note_unknown(
+                            &mut consumed.unknown_at,
+                            file,
+                            provenance,
+                            specifier,
+                        );
+                    }
                 }
+            }
+            if let Some(module) = facts
+                .get_ts_facts(file)
+                .and_then(|facts| facts.module_bindings.as_deref())
+            {
+                super::route_index::note_nondirect(
+                    &mut consumed.hits,
+                    file,
+                    provenance,
+                    module,
+                    &resolver,
+                    workspace,
+                    &visible,
+                );
             }
         }
         let mut pending: Vec<_> = consumed.files.iter().cloned().collect();
@@ -85,6 +119,7 @@ impl Consumed {
                 }
                 if let NodeId::File(target) = target {
                     if !consumed.contains(target) {
+                        super::route_index::link(&mut consumed.via, target, &file);
                         consumed.insert(target);
                         pending.push(target.to_path_buf());
                     }
@@ -107,6 +142,14 @@ impl Consumed {
 
     pub(super) fn contains(&self, file: &Path) -> bool {
         self.files.contains(&normalize_path(file))
+    }
+
+    pub(super) fn unknown_at(&self) -> Option<&(PathBuf, u32)> {
+        self.unknown_at.as_ref()
+    }
+
+    pub(super) fn route(&self, file: &Path) -> Option<&super::route_index::RouteHit> {
+        super::route_index::earliest(&self.hits, &self.via, file)
     }
 }
 

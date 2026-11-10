@@ -24,6 +24,7 @@ impl PathOrigin {
             param: None,
             param_member: None,
             param_owner: None,
+            reassigned_at: None,
         }
     }
 
@@ -36,6 +37,7 @@ impl PathOrigin {
             param: None,
             param_member: None,
             param_owner: None,
+            reassigned_at: None,
         }
     }
 
@@ -53,6 +55,7 @@ impl PathOrigin {
             param: None,
             param_member: None,
             param_owner: None,
+            reassigned_at: None,
         };
         origin.extend(
             text.split(['/', '\\'])
@@ -142,11 +145,20 @@ impl<'a> Projector<'a, '_> {
                     origin
                 }
             }
-            None => self
-                .destructured_origin(id, depth)
-                .or_else(|| self.param_origin(id))
-                .or_else(|| self.owned_binding(id, depth))
-                .unwrap_or_else(PathOrigin::unknown),
+            None => {
+                let mut origin = self
+                    .destructured_origin(id, depth)
+                    .or_else(|| self.param_origin(id))
+                    .or_else(|| self.owned_binding(id, depth))
+                    .unwrap_or_else(PathOrigin::unknown);
+                if origin.param.is_none()
+                    && origin.env.is_none()
+                    && origin.anchor == PathAnchor::Unknown
+                {
+                    origin.reassigned_at = self.reassigned_parameter(id);
+                }
+                origin
+            }
         }
     }
 

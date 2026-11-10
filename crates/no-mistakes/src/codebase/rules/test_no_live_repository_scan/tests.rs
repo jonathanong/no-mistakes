@@ -12,6 +12,7 @@ fn origin(anchor: PathAnchor, segments: &[&str]) -> PathOrigin {
         param: None,
         param_member: None,
         param_owner: None,
+        reassigned_at: None,
     }
 }
 

@@ -26,6 +26,26 @@ pub(super) fn live(
     )
 }
 
+pub(super) fn parameter(
+    root: &Path,
+    application: &RuleDef,
+    site: &ResolvedCallSite,
+    cause: &super::owned::Cause,
+) -> RuleFinding {
+    build(
+        root,
+        application,
+        site,
+        format!(
+            "unresolved root: `{}` enumerates a directory whose root is a parameter, but {}. Fix: {}. As a last option, add `no-mistakes-disable-next-line {RULE_ID}` with a reason.",
+            site.source_callee,
+            cause.detail(root),
+            cause.fix(),
+        ),
+        "unresolved root",
+    )
+}
+
 pub(super) fn unresolved(
     root: &Path,
     application: &RuleDef,

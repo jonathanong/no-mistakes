@@ -130,6 +130,8 @@ mod cli_check_rules_test_no_live_repository_scan_bounded;
 mod cli_check_rules_test_no_live_repository_scan_caller_roots;
 #[path = "cli_check_rules_test_no_live_repository_scan_node_loaders.rs"]
 mod cli_check_rules_test_no_live_repository_scan_node_loaders;
+#[path = "cli_check_rules_test_no_live_repository_scan_parameter_cause.rs"]
+mod cli_check_rules_test_no_live_repository_scan_parameter_cause;
 #[path = "cli_check_rules_test_no_live_repository_scan_provenance.rs"]
 mod cli_check_rules_test_no_live_repository_scan_provenance;
 #[path = "cli_check_rules_test_no_live_repository_scan_shapes.rs"]
