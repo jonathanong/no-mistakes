@@ -26,7 +26,18 @@ pub(crate) fn check_with_graph_and_session(
             let entries = script_entries::ScriptEntries::collect(&root, files);
             let nextjs_roots = nextjs::project_roots(&root, config);
             let bases = extends::ProductionBases::collect(graph, |path| options.production(path));
+            let reachability = runtime_reachability::ProductionReachability::collect(
+                graph,
+                facts,
+                |path| options.production(path),
+                &incomplete,
+            );
             for (file, line, reason) in &incomplete {
+                if runtime_reachability::is_runtime_resolved_unknown(reason)
+                    && !reachability.reports(file)
+                {
+                    continue;
+                }
                 chunk.unanalyzable(policy, uncertain(&root, application, file, *line, reason));
             }
             let chunks: Vec<_> = files

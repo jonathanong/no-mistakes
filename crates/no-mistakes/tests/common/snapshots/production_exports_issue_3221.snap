@@ -1,0 +1,88 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "imported": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "ci/x.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import(entry);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "inside-roots": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/app.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import(entry);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unknown-closure": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "ci/x.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import(tool);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/app.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import(entry);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unreachable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}
