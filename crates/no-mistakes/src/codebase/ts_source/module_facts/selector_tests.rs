@@ -39,6 +39,24 @@ fn returned_import_selectors_follow_one_local_return() {
 }
 
 #[test]
+fn recovered_static_return_does_not_prove_a_selector() {
+    let result = analyze_typescript_modules(&TypeScriptModulesOptions {
+        root: Some(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../fixtures/typescript-module-facts"),
+        ),
+        files: vec![PathBuf::from("dynamic-selectors-returned-static.ts")],
+    })
+    .unwrap();
+    let facts = &result.modules[0].facts;
+    assert!(
+        !facts.diagnostics.is_empty(),
+        "a return in a class static block is a diagnosed recovery"
+    );
+    assert!(facts.dynamic_import_selectors.is_empty());
+}
+
+#[test]
 fn dynamic_import_selectors_record_only_proven_forms() {
     let names = selectors("dynamic-selectors.ts");
     let expected: Vec<Vec<&str>> = vec![

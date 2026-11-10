@@ -86,7 +86,9 @@ fn only_this_return(
     return_span: oxc_span::Span,
     semantic: &Semantic<'_>,
 ) -> bool {
-    let body_span = body_span(function, semantic);
+    let Some(body_span) = body_span(function, semantic) else {
+        return false;
+    };
     let mut found = false;
     for node in semantic.nodes().iter() {
         let AstKind::ReturnStatement(statement) = node.kind() else {
@@ -105,22 +107,18 @@ fn only_this_return(
     found
 }
 
-/// The owner is the nearest function of a `return`, so it has a block body.
-fn body_span(function: NodeId, semantic: &Semantic<'_>) -> oxc_span::Span {
+fn body_span(function: NodeId, semantic: &Semantic<'_>) -> Option<oxc_span::Span> {
     let kind = semantic.nodes().kind(function);
     if let Some(function) = kind.as_function() {
-        return function
-            .body
-            .as_ref()
-            .expect("function return has a body")
-            .span;
+        return function.body.as_ref().map(|body| body.span);
     }
-    kind.as_arrow_function_expression()
-        .expect("return owner is a function or arrow")
-        .body
-        .as_function_body()
-        .expect("arrow return has a block body")
-        .span
+    // A class static block can hold a recovered return under an expression-bodied arrow.
+    Some(
+        kind.as_arrow_function_expression()?
+            .body
+            .as_function_body()?
+            .span,
+    )
 }
 
 fn belongs_to(node: NodeId, function: NodeId, semantic: &Semantic<'_>) -> bool {
