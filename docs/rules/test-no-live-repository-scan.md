@@ -231,7 +231,9 @@ literal-object caller proof as `options.source`. A destructured default is ignor
 while the property's own origin is proven. When a literal object omits the key and
 has no spread, the default expression is the origin. An unknown object, a spread,
 or a present property with an unknown value stays unresolved, so a live default
-that might still apply keeps the finding. A reachable caller that omits a defaulted
+that might still apply keeps the finding. A `const` object is followed only when
+every other use is a non-mutating member read. A property assignment or any other
+escape stays unresolved. A reachable caller that omits a defaulted
 argument also keeps the finding. A direct object property is one key deep: nested
 patterns, computed keys, and rest bindings stay unresolved. A property beside a
 rest binding can still be proven. Production modules that

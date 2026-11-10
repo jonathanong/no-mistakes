@@ -66,6 +66,9 @@ impl<'a> Projector<'a, '_> {
         match object.get_inner_expression() {
             Expression::ObjectExpression(object) => object_member(object, key),
             Expression::Identifier(id) => {
+                if !self.destructure_source_stable(id) {
+                    return Supplied::Unknown;
+                }
                 let Some(init) = self.const_init(id) else {
                     return Supplied::Unknown;
                 };

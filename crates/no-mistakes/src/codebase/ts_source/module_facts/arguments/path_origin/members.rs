@@ -61,6 +61,23 @@ impl<'a> Projector<'a, '_> {
     }
 
     fn member_reads_only(&mut self, symbol: oxc_semantic::SymbolId) -> bool {
+        self.member_uses_stable(symbol, None)
+    }
+
+    /// The object may be read by this destructure. Every other use must stay a
+    /// non-mutating member read, so a property write cannot hide behind a default.
+    pub(super) fn destructure_source_stable(&mut self, id: &IdentifierReference<'_>) -> bool {
+        let Some(symbol) = self.binding_symbol(id) else {
+            return false;
+        };
+        self.member_uses_stable(symbol, Some(id.span))
+    }
+
+    fn member_uses_stable(
+        &mut self,
+        symbol: oxc_semantic::SymbolId,
+        allow: Option<oxc_span::Span>,
+    ) -> bool {
         if self.exported.contains(&symbol.index()) {
             return false;
         }
@@ -69,7 +86,11 @@ impl<'a> Projector<'a, '_> {
             if !self.take() || reference.flags().is_write() {
                 return false;
             }
-            let member = semantic.nodes().parent_id(reference.node_id());
+            let node = reference.node_id();
+            if allow.is_some_and(|span| semantic.nodes().kind(node).span() == span) {
+                continue;
+            }
+            let member = semantic.nodes().parent_id(node);
             if !matches!(
                 semantic.nodes().kind(member),
                 AstKind::StaticMemberExpression(_)

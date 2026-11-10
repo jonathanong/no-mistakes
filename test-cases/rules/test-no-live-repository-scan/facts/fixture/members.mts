@@ -90,3 +90,10 @@ readdirSync(shadowed)
 let unknownObject = { root: mkdtempSync('case-') }
 const { root: fromUnknown = mkdtempSync('case-') } = unknownObject
 readdirSync(fromUnknown)
+const ownedObject = { root: mkdtempSync('case-') }
+const { root: ownedMember = '/repository' } = ownedObject
+readdirSync(ownedMember)
+const assigned = {}
+assigned.root = '/repository'
+const { root: assignedRoot = mkdtempSync('case-') } = assigned
+readdirSync(assignedRoot)
