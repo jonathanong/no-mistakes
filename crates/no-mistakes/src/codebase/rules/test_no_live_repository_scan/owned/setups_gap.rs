@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 type SetupLists = (Vec<PathBuf>, Vec<PathBuf>);
 type SetupHoles = Vec<(PathBuf, u32)>;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) enum SetupGap {
     /// Matching projects left at least one `setupFiles` entry unresolved.
     Unresolved(Vec<(PathBuf, u32)>),
@@ -134,3 +134,7 @@ fn config_from_error(error: &anyhow::Error, root: &Path) -> PathBuf {
         .map(|file| normalize_path(&file))
         .unwrap_or_else(|| normalize_path(&root.join("vitest.config.ts")))
 }
+
+#[cfg(test)]
+#[path = "setups_gap_tests.rs"]
+mod setups_gap_tests;
