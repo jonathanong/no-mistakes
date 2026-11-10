@@ -421,7 +421,7 @@
         "file": "helpers/list-files.ts",
         "import": "readdirSync",
         "line": 4,
-        "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/imported-require-late.test.ts:1 loads a module this analysis cannot read. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+        "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/unresolved-root.test.ts:9 passes `\"fixtures\"`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
         "rule": "test-no-live-repository-scan",
         "target": "unresolved root",
         "sourceLine": "return readdirSync(dir);"
