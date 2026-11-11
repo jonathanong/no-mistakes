@@ -594,6 +594,11 @@ jobs:
         timeout-minutes: 2
         run: pnpm run build:js
 
+      - name: Test native build diagnostics
+        if: ${{ runner.os == 'macOS' }}
+        timeout-minutes: 2
+        run: node --test .github/scripts/build-native.test.cjs
+
       # Linux `tests` owns the full suite. Native jobs only compile/run the
       # OS-specific invocation tests (Job Objects, process groups, signals).
       # Both native platforms use focused integration tests so cargo does not

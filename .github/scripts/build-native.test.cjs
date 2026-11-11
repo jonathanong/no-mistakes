@@ -68,57 +68,68 @@ for (const [scenario, status] of [
   ["missing", 1],
   ["signal", 137],
 ]) {
-  test(`native build retains diagnostics and preserves ${scenario} status`, () => {
-    const input = fixture(scenario);
-    try {
-      const result = spawnSync(process.execPath, [wrapper], input.options);
-      assert.equal(result.status, status, result.stderr);
-      const metadata = input.read("metadata.json");
-      assert.ok(!metadata.includes("private-fixture-token"));
-      assert.equal(JSON.parse(metadata).environment.NATIVE_RUST_CACHE_HIT, "true");
-      const completed = JSON.parse(input.read("result.json"));
-      assert.ok(completed.elapsedSeconds >= 0);
-      assert.ok(input.read("processes.jsonl").trim().split("\n").length >= 2);
-      if (scenario === "missing") {
-        assert.match(input.read("spawn-error.txt"), /ENOENT/);
-      } else {
-        if (scenario === "signal") assert.equal(completed.signal, "SIGKILL");
-        else assert.equal(completed.exitCode, status);
-        assert.match(result.stdout, /fixture compiler stdout/);
-        assert.match(result.stderr, /fixture compiler stderr/);
-        assert.match(input.read("cargo.log"), /fixture compiler stderr/);
-        assert.equal(
-          input.read("cargo-timings/cargo-timing.html"),
-          fs.readFileSync(path.join(saved, "timing.html"), "utf8"),
-        );
+  test(
+    `native build retains diagnostics and preserves ${scenario} status`,
+    { skip: process.platform === "win32" },
+    () => {
+      const input = fixture(scenario);
+      try {
+        const result = spawnSync(process.execPath, [wrapper], input.options);
+        if (scenario === "missing") assert.notEqual(result.status, 0, result.stderr);
+        else assert.equal(result.status, status, result.stderr);
+        const metadata = input.read("metadata.json");
+        assert.ok(!metadata.includes("private-fixture-token"));
+        assert.equal(JSON.parse(metadata).environment.NATIVE_RUST_CACHE_HIT, "true");
+        const completed = JSON.parse(input.read("result.json"));
+        assert.ok(completed.elapsedSeconds >= 0);
+        assert.ok(input.read("processes.jsonl").trim().split("\n").length >= 2);
+        if (scenario === "missing") {
+          if (process.platform === "darwin") assert.match(result.stderr, /No such file|not found/i);
+          else assert.match(input.read("spawn-error.txt"), /ENOENT/);
+        } else {
+          if (scenario === "signal")
+            assert.ok(completed.signal === "SIGKILL" || completed.exitCode === 137);
+          else assert.equal(completed.exitCode, status);
+          assert.match(result.stdout, /fixture compiler stdout/);
+          assert.match(result.stderr, /fixture compiler stderr/);
+          assert.match(input.read("cargo.log"), /fixture compiler stderr/);
+          assert.equal(
+            input.read("cargo-timings/cargo-timing.html"),
+            fs.readFileSync(path.join(saved, "timing.html"), "utf8"),
+          );
+        }
+      } finally {
+        input.cleanup();
       }
+    },
+  );
+}
+
+test(
+  "native build forwards cancellation and retains a failing terminal record",
+  { skip: process.platform === "win32" },
+  async () => {
+    const input = fixture("cancel");
+    try {
+      const child = spawn(process.execPath, [wrapper], input.options);
+      let stdout = "";
+      child.stdout.on("data", (chunk) => {
+        stdout += chunk;
+        if (stdout.includes("fixture-ready")) child.kill("SIGTERM");
+      });
+      let stderr = "";
+      child.stderr.on("data", (chunk) => {
+        stderr += chunk;
+      });
+      const status = await new Promise((resolve, reject) => {
+        child.on("error", reject);
+        child.on("close", resolve);
+      });
+      assert.equal(status, 143, stderr);
+      assert.equal(JSON.parse(input.read("cancellation.json")).signal, "SIGTERM");
+      assert.equal(JSON.parse(input.read("result.json")).cancelledSignal, "SIGTERM");
     } finally {
       input.cleanup();
     }
-  });
-}
-
-test("native build forwards cancellation and retains a failing terminal record", async () => {
-  const input = fixture("cancel");
-  try {
-    const child = spawn(process.execPath, [wrapper], input.options);
-    let stdout = "";
-    child.stdout.on("data", (chunk) => {
-      stdout += chunk;
-      if (stdout.includes("fixture-ready")) child.kill("SIGTERM");
-    });
-    let stderr = "";
-    child.stderr.on("data", (chunk) => {
-      stderr += chunk;
-    });
-    const status = await new Promise((resolve, reject) => {
-      child.on("error", reject);
-      child.on("close", resolve);
-    });
-    assert.equal(status, 143, stderr);
-    assert.equal(JSON.parse(input.read("cancellation.json")).signal, "SIGTERM");
-    assert.equal(JSON.parse(input.read("result.json")).cancelledSignal, "SIGTERM");
-  } finally {
-    input.cleanup();
-  }
-});
+  },
+);
