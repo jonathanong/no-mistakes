@@ -51,16 +51,18 @@ impl<'a> Projector<'a, '_> {
             }
             _ => return PathOrigin::unknown(),
         };
-        let mut args = call.arguments.iter().map(Argument::as_expression);
-        match name {
-            "tmpdir" => PathOrigin::anchored(PathAnchor::SharedTemp),
-            "mkdtemp" | "mkdtempSync" => PathOrigin::anchored(PathAnchor::Temp).with_value_kind(
+        if self.is_temp_factory(callee) {
+            return PathOrigin::anchored(PathAnchor::Temp).with_value_kind(
                 if call.arguments.len() == 1 {
                     PathValueKind::Scalar
                 } else {
                     PathValueKind::Mutable
                 },
-            ),
+            );
+        }
+        let mut args = call.arguments.iter().map(Argument::as_expression);
+        match name {
+            "tmpdir" => PathOrigin::anchored(PathAnchor::SharedTemp),
             "cwd" if receiver == Some("process") => PathOrigin::anchored(PathAnchor::Cwd),
             "join" | "resolve" | "normalize"
                 if receiver.is_none_or(|r| matches!(r, "path" | "posix" | "win32")) =>

@@ -156,6 +156,7 @@ fn only_exact_rest_forwarding_inside_a_mock_implementation_passes_through() {
 }
 
 mod member_origins;
+mod temp_factories;
 
 #[test]
 fn argument_text_truncation_stops_before_multibyte_characters() {

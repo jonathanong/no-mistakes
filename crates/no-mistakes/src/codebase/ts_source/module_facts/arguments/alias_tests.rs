@@ -26,6 +26,7 @@ fn popular_alias_scans_once_and_memoizes_budget_failure() {
         300
     );
     let exported = FxHashSet::default();
+    let temp_factories = FxHashMap::default();
     let mut immutable = AliasSafety::default();
     let mut projector = Projector {
         semantic: &semantic,
@@ -33,6 +34,7 @@ fn popular_alias_scans_once_and_memoizes_budget_failure() {
         remaining: 256,
         exported: &exported,
         immutable: &mut immutable,
+        temp_factories: &temp_factories,
     };
     for _ in 0..300 {
         assert!(!projector.immutable_binding(symbol));

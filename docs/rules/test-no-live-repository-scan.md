@@ -104,6 +104,14 @@ An enumeration passes when its root is provably bounded:
   `mkdtempDisposableSync` results provide an owned root through their `.path`
   property, including a `using` binding. Destructuring needs direct literal fields without
   defaults, rest properties, computed keys, or spreads.
+  The classic factories must resolve to Node `fs` or `fs/promises` imports
+  (`fs` and `node:fs` specifiers are equivalent). Named imports, renamed
+  imports, direct `require` bindings, and stable module receivers are recognized. A same-named local
+  function, parameter, or import from another module does not establish an
+  owned root. A mutated or escaping module receiver is unresolved. Use a
+  direct Node import when creating the directory.
+  A statically bound Vitest or Jest spy on an unrelated member such as
+  `readdirSync` preserves factory ownership; a factory spy does not.
 - The root is a parameter, or an environment variable, and the test supplies an
   owned root (see [Owned parameters and env vars](#owned-parameters-and-env-vars)).
 - The call forwards a mock's own arguments unchanged

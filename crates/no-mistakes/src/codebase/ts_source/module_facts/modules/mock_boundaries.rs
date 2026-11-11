@@ -7,6 +7,8 @@ mod factory;
 #[path = "mock_boundaries_hoisted.rs"]
 mod hoisted;
 
+pub(in crate::codebase::ts_source::module_facts) use bindings::mock_binding;
+
 pub(super) fn collect(
     call: &CallExpression<'_>,
     node: oxc_semantic::NodeId,

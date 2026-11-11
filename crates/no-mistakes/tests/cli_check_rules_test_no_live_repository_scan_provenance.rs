@@ -105,6 +105,11 @@ fn provenance_json_snapshot() {
     let (provenance, bulk) = (root("provenance"), root("bulk"));
     let mut cases: Vec<(&str, PathBuf, PathBuf)> = vec![
         (
+            "temp_factory_identity",
+            root("temp-factory-identity"),
+            root("temp-factory-identity").join(".no-mistakes.yml"),
+        ),
+        (
             "default",
             provenance.clone(),
             provenance.join(".no-mistakes.yml"),
@@ -131,6 +136,72 @@ fn provenance_json_snapshot() {
     crate::check_json_snapshot::assert_saved_fixture(
         "test_no_live_repository_scan_provenance",
         &cases,
+    );
+}
+
+#[test]
+fn node_temp_factories_need_their_original_binding() {
+    let (_, report) = check_in("temp-factory-identity", ".no-mistakes.yml");
+    let mut findings = located(&report["rules"]);
+    findings.extend(located(&report["advisories"]));
+    findings.sort();
+    for line in [24, 27, 30, 31, 32] {
+        let expected = format!("tests/scan.test.mts:{line}");
+        assert!(findings.contains(&expected), "{expected}: {findings:?}");
+    }
+    for line in 35..=40 {
+        let unexpected = format!("tests/scan.test.mts:{line}");
+        assert!(
+            !findings.contains(&unexpected),
+            "{unexpected}: {findings:?}"
+        );
+    }
+    assert!(
+        findings.contains(&"tests/require.test.cts:15".to_string()),
+        "{findings:?}"
+    );
+    for line in [11, 12] {
+        let unexpected = format!("tests/require.test.cts:{line}");
+        assert!(
+            !findings.contains(&unexpected),
+            "{unexpected}: {findings:?}"
+        );
+    }
+    for line in [14, 17] {
+        let expected = format!("tests/aliases.test.mts:{line}");
+        assert!(findings.contains(&expected), "{expected}: {findings:?}");
+    }
+    assert!(
+        !findings.contains(&"tests/aliases.test.mts:20".to_string()),
+        "{findings:?}"
+    );
+    for line in [13, 14, 15] {
+        let expected = format!("tests/mutation.test.mts:{line}");
+        assert!(findings.contains(&expected), "{expected}: {findings:?}");
+    }
+    assert!(
+        findings.contains(&"tests/require-mutation.test.cts:11".to_string()),
+        "{findings:?}"
+    );
+    assert!(
+        findings.contains(&"tests/computed-mutation.test.cts:11".to_string()),
+        "{findings:?}"
+    );
+    assert!(
+        findings.contains(&"tests/fake-spy.test.mts:10".to_string()),
+        "{findings:?}"
+    );
+    assert!(
+        findings.contains(&"tests/factory-spy.test.mts:9".to_string()),
+        "{findings:?}"
+    );
+    assert!(
+        !findings.contains(&"tests/spy.test.mts:11".to_string()),
+        "{findings:?}"
+    );
+    assert!(
+        !findings.contains(&"tests/unrelated-write.test.cts:10".to_string()),
+        "{findings:?}"
     );
 }
 

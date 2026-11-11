@@ -22,7 +22,7 @@ mod vi_refs;
 
 use super::path_origin::callee_root;
 use super::{PathProvenance, Projector};
-use crate::fx::FxHashSet;
+use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::AstKind;
 use oxc_semantic::Semantic;
 
@@ -30,6 +30,7 @@ pub(super) fn collect(
     semantic: &Semantic<'_>,
     facts: &super::super::TypeScriptModuleFacts,
     exported: &FxHashSet<usize>,
+    temp_factories: &FxHashMap<usize, super::path_origin::TempFactoryBinding>,
 ) -> PathProvenance {
     let mut immutable = super::AliasSafety::default();
     let mut result = PathProvenance::default();
@@ -43,6 +44,7 @@ pub(super) fn collect(
             remaining: 256,
             exported,
             immutable: &mut immutable,
+            temp_factories,
         };
         match node.kind() {
             AstKind::Function(function) => getters::record(&mut projector, function, &mut result),
