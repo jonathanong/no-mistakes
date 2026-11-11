@@ -11,7 +11,10 @@ mod defaults;
 mod destructure;
 mod getters;
 mod forwarded;
+mod member_effects;
+mod member_mutations;
 mod members;
+mod nested_reads;
 mod nullish;
 mod object_paths;
 mod object_rest;
@@ -22,7 +25,7 @@ mod sources;
 mod tmpdir;
 pub(super) use self::composite::{callee_root, imported_locals};
 pub(super) use self::sources::{env_name, is_process_env, process_global};
-use super::{PathAnchor, PathOrigin, Projector};
+use super::{PathAnchor, PathOrigin, PathValueKind, Projector};
 use oxc_ast::{ast::*, AstKind};
 
 impl<'a> Projector<'a, '_> {
@@ -33,6 +36,7 @@ impl<'a> Projector<'a, '_> {
         match expression.get_inner_expression() {
             Expression::NullLiteral(_) => PathOrigin {
                 nullish: true,
+                value_kind: PathValueKind::Scalar,
                 ..PathOrigin::unknown()
             },
             Expression::StringLiteral(text) => PathOrigin::literal(&crate::ast::js_literal(text)),
@@ -85,6 +89,7 @@ impl<'a> Projector<'a, '_> {
         if id.name == "undefined" && self.binding_symbol(id).is_none() {
             return PathOrigin {
                 nullish: true,
+                value_kind: PathValueKind::Scalar,
                 ..PathOrigin::unknown()
             };
         }
@@ -100,7 +105,7 @@ impl<'a> Projector<'a, '_> {
                 if origin.atoms().iter().any(|atom| atom.env.is_some() || atom.getter.is_some()) {
                     PathOrigin::unknown()
                 } else {
-                    origin
+                    self.value_requirement(id, origin)
                 }
             }
             None => {
@@ -115,7 +120,7 @@ impl<'a> Projector<'a, '_> {
                 {
                     origin.reassigned_at = self.reassigned_parameter(id);
                 }
-                origin
+                self.value_requirement(id, origin)
             }
         }
     }

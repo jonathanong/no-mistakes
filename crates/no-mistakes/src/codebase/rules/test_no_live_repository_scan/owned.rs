@@ -2,6 +2,7 @@
 //!
 //! Recall first: an unreadable module that a test root can use to reach the
 //! function keeps the finding. A module outside that closure does not.
+mod argument_step;
 mod caller_escape;
 mod cause;
 mod closure;

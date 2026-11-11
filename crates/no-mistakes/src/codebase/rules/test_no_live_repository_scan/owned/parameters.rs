@@ -9,6 +9,7 @@ pub(super) struct Parameter<'a> {
     pub(super) member: Option<&'a str>,
     pub(super) default: Option<&'a PathDefault>,
     pub(super) relative: bool,
+    pub(super) require_scalar: bool,
 }
 
 impl Owners<'_> {
@@ -153,4 +154,20 @@ pub(super) fn argument_missing_member(
             .is_some_and(|members| members.contains(&(index, prefix.clone())));
     }
     false
+}
+
+pub(super) fn member_projection_requirement(
+    paths: &PathProvenance,
+    offset: u32,
+    index: usize,
+    member: &str,
+) -> Option<bool> {
+    let requested: Vec<_> = member.split('.').collect();
+    let mut scalar = false;
+    for (position, effect) in paths.arg_member_effects.get(&offset).into_iter().flatten() {
+        if *position == index {
+            scalar |= effect.requirement(&requested)?;
+        }
+    }
+    Some(scalar)
 }

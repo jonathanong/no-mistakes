@@ -51,7 +51,7 @@ pub(super) fn direct_property_member(
         }
         direct_binding(&property.value)?;
         let key = crate::ast::property_key_name(&property.key)?;
-        return Some(key.into_owned());
+        return (!key.contains('.')).then(|| key.into_owned());
     }
     None
 }

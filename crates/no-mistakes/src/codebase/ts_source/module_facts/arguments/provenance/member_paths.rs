@@ -16,7 +16,11 @@ pub(super) fn collect<'a>(
         let Some(expression) = projector.argument_expression(call, index) else {
             break;
         };
+        let literal_texts = literal_texts(source, index, expression);
+        let recorded_literal = literal_texts.is_some();
+        texts.extend(literal_texts.into_iter().flatten());
         MemberPaths {
+            recorded_literal,
             offset: call.span.start,
             index,
             out,
@@ -32,6 +36,7 @@ pub(super) fn collect<'a>(
 }
 
 struct MemberPaths<'o, 's> {
+    recorded_literal: bool,
     source: &'o ArgumentSource<'s>,
     texts: &'o mut Vec<ArgumentText>,
     offset: u32,
@@ -77,14 +82,46 @@ impl MemberPaths<'_, '_> {
             };
             self.members.push((self.index, key_path.clone(), origin));
             if let Some(value) = projector.member_initializer(expression, &key, depth + 1) {
-                self.texts.push(super::call_args::argument_text(
-                    self.source,
-                    self.index,
-                    Some(key_path.clone()),
-                    value.span(),
-                ));
+                if !prefix.is_empty() || !self.recorded_literal {
+                    self.texts.push(super::call_args::argument_text(
+                        self.source,
+                        self.index,
+                        Some(key_path.clone()),
+                        value.span(),
+                    ));
+                }
                 self.collect(projector, value, &key_path, depth + 1);
             }
         }
     }
+}
+
+fn literal_texts(
+    source: &ArgumentSource<'_>,
+    index: usize,
+    expression: &Expression<'_>,
+) -> Option<Vec<ArgumentText>> {
+    let Expression::ObjectExpression(object) = expression.get_inner_expression() else {
+        return None;
+    };
+    if object.properties.len() > 32 {
+        return None;
+    }
+    let mut texts = crate::fx::FxHashMap::default();
+    for property in &object.properties {
+        let ObjectPropertyKind::ObjectProperty(property) = property else {
+            return None;
+        };
+        if property.computed || property.method || property.kind != PropertyKind::Init {
+            return None;
+        }
+        if let Some(key) = crate::ast::property_key_name(&property.key) {
+            let key = key.into_owned();
+            texts.insert(
+                key.clone(),
+                super::call_args::argument_text(source, index, Some(key), property.value.span()),
+            );
+        }
+    }
+    Some(texts.into_values().collect())
 }

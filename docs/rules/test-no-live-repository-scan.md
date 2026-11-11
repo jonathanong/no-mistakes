@@ -760,9 +760,20 @@ alternative must be owned, a fixture path, or a known relative suffix resolved
 under an owned base. For `resolve(worktreeRoot, project.root ??
 project.test?.root ?? '.')`, the base and suffix are proved independently from
 the same selected test callers. Closed literal objects establish missing nested
-properties; unknown objects do not. Absolute, unknown, and climbing suffixes
-keep the finding. Rewrite them to literal relative paths or pass an owned root
-explicitly.
+properties; unknown objects do not. Nested literal initializers are followed only
+while their containers stay in property-read chains. Nested writes, mutating
+method calls, and container escapes through aliases or call arguments keep the
+root unresolved. The same restriction applies when an intermediate helper
+forwards an object parameter: writes to the requested member or its parents,
+and escapes of its containers, invalidate the caller's field proof. Unrelated
+property writes and reads of the path string preserve it. Passing the path value
+to other code preserves this proof only for a known immutable string. URLs and
+buffer-valued filesystem results may be mutated through that reference; convert
+a URL with `fileURLToPath` or keep the mutable value unexposed before scanning.
+The default string-returning temporary-directory overload retains the string
+proof. Literal property keys containing dots are not interpreted as nested
+selectors. Absolute, unknown, and climbing suffixes keep the finding. Rewrite
+them to literal relative paths or pass an owned root explicitly.
 A relative suffix that climbs above the owned directory, or `dirname` of the
 owned directory itself, does not remain owned. Accessor-bearing objects and
 object literals that set `__proto__` remain opaque to property/default proofs.

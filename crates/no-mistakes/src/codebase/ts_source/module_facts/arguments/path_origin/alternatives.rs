@@ -26,8 +26,17 @@ impl PathOrigin {
         if alternatives.len() == 1 {
             return alternatives.pop().unwrap();
         }
+        let kind = if alternatives
+            .iter()
+            .all(|atom| atom.value_kind == super::super::PathValueKind::Scalar)
+        {
+            super::super::PathValueKind::Scalar
+        } else {
+            super::super::PathValueKind::Unknown
+        };
         Self {
             alternatives,
+            value_kind: kind,
             ..Self::unknown()
         }
     }

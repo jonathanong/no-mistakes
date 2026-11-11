@@ -151,6 +151,7 @@ fn an_argument_without_a_parameter_source_is_forwarded() {
             member: None,
             default: None,
             relative: false,
+            require_scalar: false,
         },
         &ArgFacts(facts),
         &[],

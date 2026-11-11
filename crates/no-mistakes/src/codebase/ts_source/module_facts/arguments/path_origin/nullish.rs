@@ -101,6 +101,9 @@ impl<'a> Projector<'a, '_> {
                 supplied
             }
             Expression::StaticMemberExpression(member) => {
+                if !self.nested_reads_only(object) {
+                    return Supplied::Unknown;
+                }
                 match self.nullish_property(
                     &member.object,
                     member.property.name.as_str(),

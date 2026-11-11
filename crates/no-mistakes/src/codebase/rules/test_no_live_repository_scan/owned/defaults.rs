@@ -57,13 +57,14 @@ impl Owners<'_> {
         default.value.atoms().iter().flat_map(|atom| {
             let mut atom = atom.clone();
             atom.relative |= parameter.relative;
+            atom.require_scalar |= parameter.require_scalar;
             if let Some(index) = atom.param {
                 let same_owner = matches!(&caller.target_node,
                     Some(NodeId::Symbol { callable_id: Some(id), .. }) if Some(id.0) == atom.param_owner);
                 if !same_owner || atom.segments.iter().any(|part| part == "..") {
                     return vec![Step::Block(caller_cause(caller, ArgBlock::Forwarded, text))];
                 }
-                self.caller_steps(caller, Parameter { index, member: atom.param_member.as_deref(), default: atom.param_default.as_ref(), relative: atom.relative }, facts, fixture_dirs)
+                self.caller_steps(caller, Parameter { index, member: atom.param_member.as_deref(), default: atom.param_default.as_ref(), relative: atom.relative, require_scalar: atom.require_scalar }, facts, fixture_dirs)
             } else {
                 vec![self.argument_step(&atom, caller, facts, fixture_dirs, text)]
             }

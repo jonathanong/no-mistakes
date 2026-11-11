@@ -1,3 +1,4 @@
+pub(crate) use super::path_value::{MemberEffect, PathValueKind};
 use crate::fx::FxHashMap;
 use serde_json::Value;
 
@@ -39,6 +40,8 @@ pub(crate) enum PathAnchor {
 /// Static provenance of a path-valued expression; it never evaluates code.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct PathOrigin {
+    pub(crate) value_kind: PathValueKind,
+    pub(crate) require_scalar: bool,
     pub(crate) relative: bool,
     pub(crate) nullish: bool,
     pub(crate) anchor: PathAnchor,
@@ -107,6 +110,7 @@ pub(crate) struct ArgumentText {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct PathProvenance {
     pub(crate) arg_counts: FxHashMap<u32, Option<usize>>,
+    pub(crate) arg_member_effects: FxHashMap<u32, Vec<(usize, MemberEffect)>>,
     pub(crate) arg_closed_objects: FxHashMap<u32, Vec<usize>>,
     pub(crate) arg_closed_members: FxHashMap<u32, Vec<(usize, String)>>,
     pub(crate) arg_member_paths: FxHashMap<u32, Vec<(usize, String, PathOrigin)>>,

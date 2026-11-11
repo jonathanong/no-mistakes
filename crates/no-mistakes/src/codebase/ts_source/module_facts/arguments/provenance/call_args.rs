@@ -81,6 +81,21 @@ pub(super) fn argument_paths<'a>(
         let Some(origin) = projector.argument_origin(call, index) else {
             break;
         };
+        if origin
+            .atoms()
+            .iter()
+            .any(|atom| atom.param.is_some() && atom.param_member.is_none())
+        {
+            if let Some(expression) = projector.argument_expression(call, index) {
+                let effects = projector.forwarded_member_effects(expression, 0);
+                if !effects.is_empty() {
+                    out.arg_member_effects
+                        .entry(call.span.start)
+                        .or_default()
+                        .extend(effects.into_iter().map(|effect| (index, effect)));
+                }
+            }
+        }
         if kept(&origin) {
             paths.push((index, origin));
         } else {

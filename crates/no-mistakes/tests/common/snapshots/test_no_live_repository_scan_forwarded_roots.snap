@@ -54,7 +54,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "list.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.test.mts:6 passes `...[{ outputRoot: process.cwd() }]`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.test.mts:6 passes `process.cwd()`, a live path, as property `outputRoot`. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function list({ outputRoot }: { outputRoot: string }) { return readdirSync(outputRoot); }",
           "target": "unresolved root"
@@ -302,7 +302,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "list.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.test.mts:6 passes `{ schemaDir: unknownRoot }`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.test.mts:6 passes `unknownRoot`, an unproven variable, as property `schemaDir`. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function list({ schemaDir = mkdtempSync(\"/tmp/default-\") } = {}) { return readdirSync(schemaDir); }",
           "target": "unresolved root"
@@ -1906,7 +1906,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "list.mts",
           "import": "readdirSync",
           "line": 4,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.test.mts:6 passes `{ outputRoot: process.cwd() }`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.test.mts:6 passes `process.cwd()`, a live path, as property `outputRoot`. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "function scan({ outputRoot }: { outputRoot: string }) { return readdirSync(outputRoot); }",
           "target": "unresolved root"

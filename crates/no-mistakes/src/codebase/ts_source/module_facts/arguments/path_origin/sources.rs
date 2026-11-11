@@ -58,6 +58,7 @@ impl<'a> Projector<'a, '_> {
         match env_name(self.semantic, expression) {
             Some(name) => PathOrigin {
                 env: Some(name),
+                value_kind: super::super::PathValueKind::Scalar,
                 ..PathOrigin::unknown()
             },
             None => PathOrigin::unknown(),

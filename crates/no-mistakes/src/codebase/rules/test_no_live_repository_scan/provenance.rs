@@ -17,6 +17,14 @@ pub(super) fn classify(origin: Option<&PathOrigin>, fixture_dirs: &[&str]) -> Ve
             "the path argument was not recorded (spread argument or unparsed module)",
         );
     };
+    if origin.require_scalar
+        && origin.value_kind
+            != crate::codebase::ts_source::module_facts::arguments::PathValueKind::Scalar
+    {
+        return Verdict::Unresolved(
+            "an escaped path value is not proven to be an immutable scalar",
+        );
+    }
     if !origin.alternatives.is_empty() {
         let mut result = Verdict::Allowed;
         for atom in origin.atoms() {

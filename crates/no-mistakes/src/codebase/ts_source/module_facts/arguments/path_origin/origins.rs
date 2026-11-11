@@ -1,8 +1,11 @@
+use super::super::PathValueKind;
 use super::{PathAnchor, PathOrigin};
 
 impl PathOrigin {
     pub(crate) fn unknown() -> Self {
         Self {
+            value_kind: PathValueKind::Unknown,
+            require_scalar: false,
             relative: false,
             nullish: false,
             anchor: PathAnchor::Unknown,
@@ -23,6 +26,8 @@ impl PathOrigin {
 
     pub(super) fn anchored(anchor: PathAnchor) -> Self {
         Self {
+            value_kind: PathValueKind::Scalar,
+            require_scalar: false,
             relative: false,
             nullish: false,
             anchor,
@@ -44,6 +49,8 @@ impl PathOrigin {
     pub(super) fn literal(text: &str) -> Self {
         let absolute = text.starts_with(['/', '\\']) || text.as_bytes().get(1) == Some(&b':');
         let mut origin = Self {
+            value_kind: PathValueKind::Scalar,
+            require_scalar: false,
             relative: false,
             nullish: false,
             anchor: if absolute {
@@ -70,6 +77,14 @@ impl PathOrigin {
                 .take(32),
         );
         origin
+    }
+
+    pub(super) fn with_value_kind(mut self, kind: PathValueKind) -> Self {
+        self.value_kind = kind;
+        for atom in &mut self.alternatives {
+            atom.value_kind = kind;
+        }
+        self
     }
 
     pub(super) fn parent(mut self) -> Self {
