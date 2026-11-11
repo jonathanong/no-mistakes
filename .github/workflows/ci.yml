@@ -210,7 +210,7 @@ jobs:
 
       - name: Check Rust validation parity
         timeout-minutes: 2
-        run: node --test .github/scripts/rust-validation.test.cjs .github/scripts/rust-coverage-floors.test.cjs .github/scripts/preserve-rust-profiles.test.cjs .github/scripts/publish-npm.test.cjs
+        run: node --test .github/scripts/rust-validation.test.cjs .github/scripts/rust-coverage-floors.test.cjs .github/scripts/preserve-rust-profiles.test.cjs .github/scripts/publish-npm.test.cjs .github/scripts/build-native.test.cjs
 
       - name: Check formatting
         timeout-minutes: 5
@@ -580,6 +580,7 @@ jobs:
           toolchain: stable
 
       - name: Cache Rust build artifacts
+        id: native-rust-cache
         timeout-minutes: 5
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
@@ -601,9 +602,12 @@ jobs:
       # Rewrite crate-type in this job only so one rustc emits the CLI rlib
       # and Node cdylib. Do not commit that crate-type: Linux coverage should
       # not also link a cdylib.
+      # The same macOS head passed in 7m42s, then exceeded the former 12-minute cap.
       - name: Build native CLI and N-API addon
-        timeout-minutes: 12
+        timeout-minutes: 15
         shell: bash
+        env:
+          NATIVE_RUST_CACHE_HIT: ${{ steps.native-rust-cache.outputs.cache-hit }}
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -617,8 +621,18 @@ jobs:
           path.write_text(text.replace(old, new, 1))
           PY
           echo "NO_MISTAKES_BUILD_NAPI=1" >> "$GITHUB_ENV"
-          NO_MISTAKES_BUILD_NAPI=1 cargo build --locked -p no-mistakes
+          NO_MISTAKES_BUILD_NAPI=1 node .github/scripts/build-native.cjs
           cp "${{ matrix.addon }}" target/debug/no-mistakes.node
+
+      - name: Upload native build diagnostics
+        if: ${{ always() }}
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: native-build-diagnostics-${{ runner.os }}
+          if-no-files-found: warn
+          retention-days: 7
+          path: target/native-build-diagnostics
 
       - name: Run platform-specific Rust tests
         timeout-minutes: 18

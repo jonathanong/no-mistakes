@@ -67,17 +67,38 @@ those jobs do not also compile `suite_cli_rules` inside the bounded native step.
 Linux runs the same cases in the full Rust coverage suite.
 
 Native macOS and Windows jobs have a 35-minute aggregate deadline, a
-12-minute build step, and an 18-minute platform Rust step. The real-addon API
-step has a shared seven-minute literal deadline on Windows and macOS, so
+15-minute build step, and an 18-minute platform Rust step. The shared 15-minute
+build cap keeps the bound literal and certifiable on both Windows and macOS; the
+new variance evidence is macOS-specific. The real-addon API step has a shared
+seven-minute literal deadline on Windows and macOS, so
 the repository checks can prove its bound. The Linux
 JavaScript job has 16 minutes overall and four minutes for its real-addon step.
 These deadlines retain every validation command.
 
 Saved observations in `test-cases/rust-validation/fixture` record job metadata
 and log excerpts from the supplied hosted runs. Five green macOS builds took
-348–581 seconds, while two builds reached the former ten-minute deadline.
-Completed platform Rust steps reached 853 seconds. Build and Rust budgets
-reserve 60 and 120 seconds respectively beyond those completed observations.
+348–581 seconds, while two builds reached the former ten-minute deadline. A
+same-head comparison later completed the native build in 462 seconds, while
+its rerun reached the 12-minute build deadline. Both attempts had an exact Rust
+cache hit, used Rust 1.99.1 with LLVM 23.1.1, and ran on the same macOS 15.8.2
+image. This does not identify the source of the variance: CPU and RSS samples
+and linker phase timings are unavailable, and only the successful attempt
+reported a linker warning. The failed attempt is censored, not a completed
+runtime measurement. One completed and one censored sample do not establish a
+tail bound. Completed platform Rust steps reached 853 seconds. The 15-minute
+build cap adds headroom while keeping the build bounded and preserving native
+coverage; it is not a runtime guarantee or a diagnosis of the variance. The
+Rust step reserves 120 seconds beyond its completed observations.
+
+The native build wrapper retains Cargo's verbose output and `--timings` report,
+the Rust cache-hit result, compiler/linker versions, runner image and CPU/memory
+metadata, and periodic local compiler/linker CPU and RSS samples. macOS also
+records `/usr/bin/time -l` wall/user/system time and peak RSS for completed builds.
+The `native-build-diagnostics-*` artifact is uploaded after failed or cancelled
+builds as well; a killed build may lack a terminal resource record. Those partial
+samples remain diagnostic evidence, not completed-run resource maxima. Build
+errors and cancellation still fail the job; there are no automatic retries.
+
 A green macOS job spent 1,502 seconds before starting its API step; adding its
 420-second API budget and 120 seconds for reporting and cleanup requires
 2,042 seconds. This justifies the native job's narrow 35-minute exception to

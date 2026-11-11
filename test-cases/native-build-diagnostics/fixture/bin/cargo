@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+const fs = require("node:fs");
+const path = require("node:path");
+
+if (process.argv.includes("--version")) {
+  console.log("cargo fixture-version");
+  process.exit(0);
+}
+if (JSON.stringify(process.argv.slice(2)) !== JSON.stringify([
+  "build", "--locked", "-p", "no-mistakes", "--timings", "--verbose",
+])) {
+  console.error("unexpected cargo arguments");
+  process.exit(99);
+}
+const timings = path.join(process.env.CARGO_TARGET_DIR, "cargo-timings");
+fs.mkdirSync(timings, { recursive: true });
+fs.copyFileSync("timing.html", path.join(timings, "cargo-timing.html"));
+console.log("fixture compiler stdout");
+console.error("fixture compiler stderr");
+if (process.env.NATIVE_BUILD_FIXTURE === "signal") process.kill(process.pid, "SIGKILL");
+if (process.env.NATIVE_BUILD_FIXTURE === "cancel") {
+  console.log("fixture-ready");
+  setInterval(() => {}, 1000);
+} else {
+  process.exit(process.env.NATIVE_BUILD_FIXTURE === "failure" ? 17 : 0);
+}

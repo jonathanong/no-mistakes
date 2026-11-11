@@ -1,0 +1,57 @@
+{
+  "source": "Supplied Test CI run 43004987703, job details and logs for attempts 1 and 2",
+  "headSha": "38b6ade5633d333e5c8c46aee3aea868b0407212",
+  "runner": {
+    "image": "20261104.0514.1",
+    "os": "macOS 15.8.2 (24H232)",
+    "region": "westus"
+  },
+  "rustCache": {
+    "result": "exact hit on both attempts",
+    "key": "v0-rust-native-aarch64-apple-darwin-native-tests-Darwin-arm64-c79acb42-75ca3235",
+    "archiveBytes": 285698199
+  },
+  "compiler": {
+    "rustc": "1.99.1 (58cf8f9c3 2026-10-13)",
+    "llvm": "23.1.1"
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43004987703",
+      "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43004987703/job/130470430488",
+      "conclusion": "success",
+      "buildStartedAt": "2026-11-11T10:37:42Z",
+      "buildCompletedAt": "2026-11-11T10:45:24Z",
+      "elapsedSeconds": 462,
+      "cargoReportedSeconds": 459,
+      "noMistakesCompileStartedAt": "2026-11-11T10:37:47.962Z",
+      "linkerWarningAt": "2026-11-11T10:45:02.371Z",
+      "diagnostics": [
+        "Only no-mistakes recompiled after the exact cache restore.",
+        "Linker warned that the eh_frame section exceeded 16 MB and compact unwind information would not be emitted."
+      ]
+    },
+    {
+      "attempt": 2,
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43004987703",
+      "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43004987703/job/130482439194",
+      "conclusion": "failure",
+      "buildCommandStartedAt": "2026-11-11T11:03:59.202Z",
+      "noMistakesCompileStartedAt": "2026-11-11T11:04:08.791Z",
+      "timedOutAt": "2026-11-11T11:16:12.350Z",
+      "stepLimitSeconds": 720,
+      "outcome": "censored timeout; cargo and orphan rustc were killed before completion",
+      "diagnostics": [
+        "Only no-mistakes recompiled after the exact cache restore.",
+        "No linker diagnostic was emitted before timeout."
+      ]
+    }
+  ],
+  "unavailable": [
+    "CPU utilization samples",
+    "RSS samples",
+    "linker phase timings"
+  ],
+  "interpretation": "Same head, exact cache hit, compiler, and runner image had one completed 462-second build and one censored timeout at the 12-minute cap. The evidence does not establish a root cause or a runtime tail bound; it does not demonstrate a cold-cache failure, memory exhaustion, or a linker bottleneck."
+}
