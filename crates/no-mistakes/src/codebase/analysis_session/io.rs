@@ -21,12 +21,16 @@ impl AnalysisSession {
     /// This keeps source identity stable when one fact universe spans roots.
     pub fn read_source(&self, path: &Path) -> SourceReadResult {
         let path = normalize_path(path);
-        self.source_store_for_path(&path)
-            .read_path(&path)
-            .map_err(|error| SourceReadError {
-                path,
-                detail: Arc::from(error.to_string()),
-            })
+        let sources = self.source_store_for_path(&path);
+        let result = if crate::codebase::dependencies::extract::is_indexable(&path) {
+            sources.read_source_path(&path)
+        } else {
+            sources.read_path(&path)
+        };
+        result.map_err(|error| SourceReadError {
+            path,
+            detail: Arc::from(error.to_string()),
+        })
     }
 
     /// Return the prepared dataset source store for `root` when discovery has

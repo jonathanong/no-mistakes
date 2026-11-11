@@ -1,7 +1,6 @@
 use super::{FileId, FileInventory};
 use dashmap::{DashMap, DashSet};
 use std::cell::Cell;
-use std::hash::Hash;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -16,7 +15,7 @@ mod regular_paths;
 mod roots;
 mod validation;
 mod yaml;
-use read::read_utf8_arc;
+use read::{once_lock_slot, read_utf8_arc};
 use validation::ValidatedPathCache;
 
 /// Memoized result of a strict UTF-8 source read.
@@ -41,6 +40,7 @@ pub struct SourceStore {
     yaml_documents: OnceLock<YamlDocumentSlots>,
     config_locations: config_locations::LocationCache,
     supplemental_reads: SupplementalReadSlots,
+    source_projections: SupplementalReadSlots,
     validated_regular_paths: ValidatedPathCache,
     trusted_regular_paths: DashSet<PathBuf>,
     physical_reads: AtomicUsize,
@@ -70,6 +70,7 @@ impl SourceStore {
             yaml_documents: OnceLock::new(),
             config_locations: OnceLock::new(),
             supplemental_reads: DashMap::new(),
+            source_projections: DashMap::new(),
             validated_regular_paths: DashMap::new(),
             trusted_regular_paths: DashSet::new(),
             physical_reads: AtomicUsize::new(0),
@@ -180,20 +181,6 @@ impl SourceStore {
             observer.increment(metric, amount);
         }
     }
-}
-
-fn once_lock_slot<K, T>(map: &DashMap<K, Arc<OnceLock<T>>>, key: K) -> Arc<OnceLock<T>>
-where
-    K: Eq + Hash,
-{
-    if let Some(existing) = map.get(&key) {
-        return Arc::clone(existing.value());
-    }
-    Arc::clone(
-        map.entry(key)
-            .or_insert_with(|| Arc::new(OnceLock::new()))
-            .value(),
-    )
 }
 
 #[cfg(test)]

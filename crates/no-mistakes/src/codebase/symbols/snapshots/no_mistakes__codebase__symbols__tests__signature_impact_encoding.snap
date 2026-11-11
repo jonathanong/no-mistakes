@@ -1,0 +1,75 @@
+---
+source: crates/no-mistakes/src/codebase/symbols/tests_signature_impact_encoding.rs
+expression: "serde_json::to_string_pretty(&snapshot).unwrap()"
+---
+{
+  "roots": [
+    "target.mts#parseDate"
+  ],
+  "symbol": "parseDate",
+  "definition": {
+    "file": "target.mts",
+    "symbol": "parseDate",
+    "line": 1,
+    "kind": "function"
+  },
+  "exports": [
+    {
+      "file": "target.mts",
+      "symbol": "parseDate",
+      "line": 1,
+      "kind": "function"
+    }
+  ],
+  "productionCallers": [
+    {
+      "file": "comment.mts",
+      "symbol": "commentCaller",
+      "depth": 1,
+      "via": [
+        "import",
+        "symbol"
+      ]
+    },
+    {
+      "file": "consumer.mts",
+      "symbol": "consume",
+      "depth": 1,
+      "via": [
+        "import",
+        "symbol"
+      ]
+    },
+    {
+      "file": "string.mts",
+      "symbol": "stringCaller",
+      "depth": 1,
+      "via": [
+        "import",
+        "symbol"
+      ]
+    }
+  ],
+  "testCallers": [],
+  "suggestedTests": [],
+  "warnings": [
+    {
+      "type": "no-suggested-tests",
+      "message": "No test files were reachable from this symbol."
+    },
+    {
+      "type": "unanalyzed-files",
+      "message": "2 file(s) could not be analyzed; inspect unanalyzed for details"
+    }
+  ],
+  "unanalyzed": [
+    {
+      "file": "binary.mts",
+      "reason": "parsing <root>/binary.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Invalid Character `\\0`\", labels: [LabeledSpan { label: None, span: Span { start: 0, end: 1 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+    },
+    {
+      "file": "unrelated.mts",
+      "reason": "parsing <root>/unrelated.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"File appears to be binary.\", labels: [], help: None, note: None, severity: Error, code: OxcCode { scope: Some(\"TS\"), number: Some(\"1490\") }, url: None } }"
+    }
+  ]
+}

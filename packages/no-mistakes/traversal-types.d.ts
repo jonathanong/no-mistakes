@@ -146,6 +146,7 @@ export type SymbolsSignatureImpactOptions = SymbolsOptions & {
 
 export type {
   SymbolExport,
+  UnanalyzedFile,
   SymbolImport,
   SymbolFile,
   SymbolsResult,

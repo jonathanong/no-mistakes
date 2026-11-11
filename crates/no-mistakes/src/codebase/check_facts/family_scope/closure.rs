@@ -32,7 +32,7 @@ pub(super) fn with_import_closure(
         if !seen.insert(path.clone()) {
             continue;
         }
-        let Ok(source) = sources.read_path(&path) else {
+        let Ok(source) = sources.read_source_path(&path) else {
             continue;
         };
         for specifier in relative_specifiers(&source) {

@@ -55,7 +55,12 @@ fn collect_file_facts_unchecked(
     {
         return Some(CheckFileFacts::default());
     }
-    let source = match sources.read_path(path) {
+    let read = if crate::codebase::dependencies::extract::is_indexable(path) {
+        sources.read_source_path(path)
+    } else {
+        sources.read_path(path)
+    };
+    let source = match read {
         Ok(source) => source,
         Err(err) => return Some(super::file_parse_error::read_facts(root, path, plan, err)),
     };

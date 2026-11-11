@@ -125,6 +125,8 @@ words:
   - quasis
   - targetless
   - unanalyzable
+  - unanalyzed
+  - lossily
   - unshift
   - unparseable
   - sgconfig

@@ -14,16 +14,17 @@ fn failed_facts(root: &Path) -> (PathBuf, TsFactMap) {
 }
 
 #[test]
-fn signature_impact_surfaces_failed_fact_entries() {
-    let root = PathBuf::from("/repo");
-    let (_, facts) = failed_facts(&root);
-
-    let error = ensure_signature_impact_facts_complete(&facts, &root).unwrap_err();
-
+fn signature_impact_surfaces_potentially_related_failures() {
+    let failure = UnanalyzedFile {
+        file: "failed.mts".to_string(),
+        reason: "synthetic read failure".to_string(),
+    };
+    let error = ensure_signature_impact_failure_unrelated(&failure, true).unwrap_err();
     assert_eq!(
         error.to_string(),
         "signature-impact could not analyze `failed.mts`: synthetic read failure"
     );
+    assert!(ensure_signature_impact_failure_unrelated(&failure, false).is_ok());
 }
 
 #[test]
@@ -35,9 +36,8 @@ fn local_caller_entries_skip_failed_fact_entries_without_symbols() {
     let (failed_path, facts) = failed_facts(&root);
     let workspace = crate::codebase::workspaces::load_from_files(&root, &[]).unwrap();
     let visible_files = [failed_path].into_iter().collect::<crate::fx::PathSet>();
-    let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
-        visible_files.iter().cloned(),
-    );
+    let remapper =
+        crate::codebase::ts_source::FrozenPathRemapper::from_paths(visible_files.iter().cloned());
     let context = prepare_local_caller_context(&facts, &workspace, &visible_files, &remapper);
     let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig(None, &root).unwrap();
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
@@ -48,14 +48,8 @@ fn local_caller_entries_skip_failed_fact_entries_without_symbols() {
     );
     let filter = TestFileFilter::new(&root, &NoMistakesConfig::default());
 
-    let callers = local_caller_entries(
-        &context,
-        &BTreeMap::new(),
-        &root,
-        &resolver,
-        &filter,
-        false,
-    );
+    let callers =
+        local_caller_entries(&context, &BTreeMap::new(), &root, &resolver, &filter, false);
 
     assert!(callers.is_empty());
 }

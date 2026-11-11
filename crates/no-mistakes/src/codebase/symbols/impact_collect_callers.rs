@@ -17,9 +17,6 @@ fn local_caller_entries(
         if is_test != want_tests {
             continue;
         }
-        // The report boundary rejects operational failures before caller
-        // projection. Keep this defensive for direct helper use and partial
-        // fact plans that intentionally omit symbols.
         let Some(symbols) = facts.symbols.as_ref() else {
             continue;
         };
@@ -174,7 +171,6 @@ fn merge_caller_entry(
         })
         .or_insert(caller);
 }
-
 fn insert_caller(
     by_key: &mut BTreeMap<(String, Option<String>), CallerEntry>,
     entry: &NodeEntry,
@@ -195,7 +191,6 @@ fn insert_caller(
             via,
         });
 }
-
 fn caller_sort_key(caller: &CallerEntry) -> (usize, &str, &str) {
     (
         caller.depth,

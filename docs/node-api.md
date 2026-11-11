@@ -469,6 +469,14 @@ remain failures. See
 | `testsTargets` | `testsTargets(options)` |
 | `testsWhy` | `testsWhy(options)` |
 
+`symbols({ mode: "signature-impact", symbol })` returns a `SignatureImpactResult`
+with `unanalyzed: UnanalyzedFile[]` and warnings for unrelated files that could
+not be analyzed. Sources replace invalid UTF-8 with U+FFFD before parsing, so
+invalid bytes in comments or strings remain analyzable. Each `UnanalyzedFile`
+contains a project-relative `file` and diagnostic `reason`; a nonempty array adds
+an `unanalyzed-files` warning. A failed file that could affect the target rejects
+the request.
+
 ## PostgreSQL catalog generation
 
 See [PostgreSQL catalog generation](node-api/postgres-catalog.md).

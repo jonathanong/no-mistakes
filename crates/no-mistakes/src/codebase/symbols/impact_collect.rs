@@ -28,7 +28,7 @@ fn build_report_from_prepared(
         graph,
         facts,
     } = context;
-    ensure_signature_impact_facts_complete(facts, root)?;
+    let unanalyzed = signature_impact_unanalyzed(context, target_file, symbol)?;
     let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
         graph_files.iter_visible().cloned(),
     );
@@ -146,28 +146,14 @@ fn build_report_from_prepared(
             &production_extra_callers,
         ),
         test_callers: caller_entries(&entries, &caller_context, true, &test_extra_callers),
-        warnings: warnings(&suggested_tests),
+        warnings: signature_impact_warnings(&suggested_tests, &unanalyzed),
+        unanalyzed,
         exports,
         suggested_tests,
     })
 }
 
-fn ensure_signature_impact_facts_complete(facts: &TsFactMap, root: &Path) -> Result<()> {
-    let mut failures = facts
-        .iter()
-        .filter_map(|(path, facts)| {
-            facts
-                .operational_error
-                .as_ref()
-                .map(|error| (relative_slash_path(root, path), error))
-        })
-        .collect::<Vec<_>>();
-    failures.sort_by(|left, right| left.0.cmp(&right.0));
-    if let Some((path, error)) = failures.first() {
-        bail!("signature-impact could not analyze `{path}`: {error}");
-    }
-    Ok(())
-}
+include!("impact_collect_failures.rs");
 
 /// Shared, `want_tests`-independent inputs for [`local_caller_entries`], computed once per
 /// `signature-impact` run and reused for both the production and test passes.

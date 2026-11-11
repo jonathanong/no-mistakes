@@ -119,7 +119,7 @@ fn queue_scope(
         ) {
             continue;
         }
-        let Ok(source) = sources.read_path(path) else {
+        let Ok(source) = sources.read_source_path(path) else {
             seeds.insert(normalize_path(path));
             continue;
         };

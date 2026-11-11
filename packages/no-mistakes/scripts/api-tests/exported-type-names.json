@@ -459,6 +459,7 @@
   "TypeScriptModulesOptions",
   "TypeScriptModulesReport",
   "Unanalyzable",
+  "UnanalyzedFile",
   "UndeclaredExecutorTypeSummary",
   "UniqueExportFinding",
   "UnresolvedExecutorReceiverSummary",

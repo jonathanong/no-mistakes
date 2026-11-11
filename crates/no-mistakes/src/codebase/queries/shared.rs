@@ -183,7 +183,7 @@ pub(crate) fn read_symbols(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<FileSymbols> {
     let source = sources
-        .read_path(abs_file)
+        .read_source_path(abs_file)
         .context(format!("reading {}", abs_file.display()))?;
     extract_symbols_at_path(abs_file, &source, is_tsx_file(abs_file))
         .context(format!("extracting symbols from {}", abs_file.display()))

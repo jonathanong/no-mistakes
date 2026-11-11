@@ -64,7 +64,7 @@ fn collect_lazy_file_facts(
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> TsFileFacts {
     let source_result = match fact_source.sources {
-        Some(sources) => sources.read_path(path).map_err(|error| error.to_string()),
+        Some(sources) => sources.read_source_path(path).map_err(|error| error.to_string()),
         None => session.read_source(path).map_err(|error| error.to_string()),
     };
     let source = match source_result {

@@ -27,7 +27,7 @@ impl SharedTraversalContext {
                             .is_none_or(|facts| !facts.contains_key(path))
                     })
                     .filter_map(|path| {
-                        let source = sources.read_path(path).ok()?;
+                        let source = sources.read_source_path(path).ok()?;
                         session
                             .with_recovered_program(path, &source, |program, parsed, error| {
                                 error.is_none().then(|| {

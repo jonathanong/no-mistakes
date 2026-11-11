@@ -18,6 +18,7 @@ fn write_markdown(report: &SignatureImpactReport, out: &mut dyn Write) -> Result
             writeln!(out, "- `{}`", test.file)?;
         }
     }
+    write_unanalyzed_section(report, true, out)?;
     Ok(())
 }
 
@@ -35,6 +36,7 @@ fn write_human(report: &SignatureImpactReport, out: &mut dyn Write) -> Result<()
             writeln!(out, "  {}", test.file)?;
         }
     }
+    write_unanalyzed_section(report, false, out)?;
     Ok(())
 }
 
@@ -61,6 +63,28 @@ fn write_caller_section(heading: &str, callers: &[CallerEntry], out: &mut dyn Wr
             } else {
                 writeln!(out, "- `{}`", caller.file)?;
             }
+        }
+    }
+    Ok(())
+}
+
+fn write_unanalyzed_section(
+    report: &SignatureImpactReport,
+    markdown: bool,
+    out: &mut dyn Write,
+) -> Result<()> {
+    if report.unanalyzed.is_empty() {
+        return Ok(());
+    }
+    writeln!(out, "{}", if markdown { "## Unanalyzed files" } else { "Unanalyzed files:" })?;
+    for warning in report.warnings.iter().filter(|warning| warning.r#type == "unanalyzed-files") {
+        writeln!(out, "Warning [{}]: {}", warning.r#type, warning.message)?;
+    }
+    for failure in &report.unanalyzed {
+        if markdown {
+            writeln!(out, "- `{}`: {}", failure.file, failure.reason)?;
+        } else {
+            writeln!(out, "  {}: {}", failure.file, failure.reason)?;
         }
     }
     Ok(())

@@ -52,7 +52,7 @@ pub(crate) fn symbols_from_prepared(
     }
     let source = target
         .sources
-        .read_path(&target.abs_file)
+        .read_source_path(&target.abs_file)
         .context(format!("reading {}", target.abs_file.display()))?;
     // Reverse facts use each file's native source type for the project-
     // wide index. The queried file instead preserves the historical

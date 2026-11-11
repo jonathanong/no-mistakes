@@ -144,3 +144,49 @@ fn pass4b_signature_impact_cli_and_napi_reports_share_gitignore_visibility() {
 }
 
 include!("tests_symbols_impact_framework.rs");
+
+#[test]
+fn signature_impact_encoding_cli_and_napi_reports_match() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/symbols/signature-impact-encoding/tolerated");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let options = json!({
+        "root": root,
+        "files": ["target.mts"],
+        "mode": "signature-impact",
+        "symbol": "parseDate"
+    })
+    .to_string();
+    let cli_output = crate::codebase::symbols::run_json(crate::codebase::symbols::SymbolsArgs {
+        files: vec![PathBuf::from("target.mts")],
+        root: Some(root),
+        tsconfig: None,
+        config: None,
+        mode: crate::codebase::symbols::SymbolsMode::SignatureImpact,
+        symbol: Some("parseDate".to_string()),
+        kinds: Vec::new(),
+        include: crate::codebase::symbols::Include::Exports,
+        format: Some(crate::cli::Format::Json),
+        json: true,
+        timings: false,
+    })
+    .unwrap();
+    let napi_output = symbols_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let cli: serde_json::Value = serde_json::from_str(&cli_output).unwrap();
+    let napi: serde_json::Value = serde_json::from_str(&napi_output).unwrap();
+    assert_eq!(napi, cli);
+    assert_eq!(napi["unanalyzed"].as_array().unwrap().len(), 2);
+    assert!(napi["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|warning| warning["type"] == "unanalyzed-files"));
+    for file in ["comment.mts", "string.mts"] {
+        assert!(napi["productionCallers"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|caller| caller["file"] == file));
+    }
+}

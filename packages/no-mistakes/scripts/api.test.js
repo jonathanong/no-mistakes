@@ -203,6 +203,13 @@ test("bounded statement options export key fan-out contracts", () => {
   );
 });
 
+test("signature impact exposes scoped unanalyzed files", () => {
+  const impact = readFileSync(join(packageRoot, "signature-impact-types.d.ts"), "utf8");
+  assert.match(impact, /export interface UnanalyzedFile \{\s*file: string;\s*reason: string;/);
+  assert.match(impact, /unanalyzed: UnanalyzedFile\[\];/);
+  assert.match(readFileSync(join(packageRoot, "types.d.ts"), "utf8"), /traversal-types/);
+});
+
 test("check timings have named public types", () => {
   const report = readFileSync(join(packageRoot, "check-report-types.d.ts"), "utf8");
   const options = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
