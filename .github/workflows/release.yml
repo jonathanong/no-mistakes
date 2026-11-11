@@ -521,9 +521,10 @@ jobs:
             os: windows-2025
             addon: no_mistakes.dll
     runs-on: ${{ matrix.os }}
-    # Windows MSVC builds are the slowest and the most variable (24-45+ minutes);
-    # give them more headroom than the other targets.
-    timeout-minutes: ${{ matrix.target == 'x86_64-pc-windows-msvc' && 100 || 80 }}
+    # Windows MSVC (24-45+ minutes) and ARM macOS (36 minutes in run
+    # 43015153792, over 45 in run 43072329341) are the slowest, most variable
+    # targets; give them more headroom than Linux.
+    timeout-minutes: ${{ (matrix.target == 'x86_64-pc-windows-msvc' || matrix.target == 'aarch64-apple-darwin') && 100 || 80 }}
     permissions:
       contents: read
     # A cold ARM macOS build hit the 45-minute compile deadline with fat LTO
@@ -609,7 +610,7 @@ jobs:
       # and the Node cdylib. Do not commit that crate-type: Linux coverage
       # should not also link a cdylib.
       - name: Build CLI and N-API addon
-        timeout-minutes: ${{ matrix.target == 'x86_64-pc-windows-msvc' && 75 || 45 }}
+        timeout-minutes: ${{ (matrix.target == 'x86_64-pc-windows-msvc' || matrix.target == 'aarch64-apple-darwin') && 75 || 45 }}
         shell: bash
         run: |
           set -euo pipefail

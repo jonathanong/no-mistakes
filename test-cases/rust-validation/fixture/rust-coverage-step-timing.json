@@ -1,0 +1,18 @@
+{
+  "source": "PR #3271 Test CI, 2026-11-11",
+  "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43087735058",
+  "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43087735058/job/130756587508",
+  "jobId": 130756587508,
+  "headSha": "cf421b0e886d33ffd06ca9222ad298d6b2afe7e9",
+  "jobStartedAt": "2026-11-11T19:30:13Z",
+  "job": "tests",
+  "step": "Run Rust tests for coverage",
+  "stepConclusion": "failure",
+  "firstRunnerLogAt": "2026-11-11T19:30:14.005Z",
+  "stepStartedAt": "2026-11-11T19:36:38Z",
+  "lastTestBinaryFinishedAt": "2026-11-11T19:51:47.907Z",
+  "stepTimedOutAt": "2026-11-11T19:51:48.299Z",
+  "failedRustTests": 0,
+  "stepReserveSeconds": 300,
+  "note": "Every test binary passed; the former 15-minute step deadline cancelled the step as the last binary finished. Successful same-day runs spent 9.5 to 12 minutes in this step."
+}

@@ -247,6 +247,14 @@ was still cancelled. The extra budget reserves cleanup time; step deadlines,
 98% coverage floors, and failure behavior are unchanged. These observations
 are censored job outcomes, not completed-job timing guarantees.
 
+The coverage test step has a 22-minute deadline and the job a 40-minute one.
+On 2026-11-11, successful runs spent 9.5 to 12 minutes in that step, while four
+of nine recent runs on unrelated branches hit the former 15-minute step
+deadline. In run 43087735058, every test binary passed, and the step was
+cancelled at 15 minutes 10 seconds while the last binary finished. No test hung;
+the suite is close to the deadline on slower runners. Setup takes about seven
+minutes before the step starts, so the job deadline grows with the step.
+
 After LCOV is generated, CI checks that the merged workspace profile exists,
 then moves only root-level raw coverage inputs to a run-specific directory under
 `RUNNER_TEMP`. This keeps later summary exports from merging those profiles

@@ -372,7 +372,7 @@ test("coverage job reserves bounded post-cache time after completed tests and ga
     jobBudgetSeconds(job) >= elapsed + observed.postCacheReserveSeconds,
     "job budget must include cache cleanup after tests, reports and uploads finish",
   );
-  assert.ok(jobBudgetSeconds(job) <= 1800, "retain a job deadline of at most thirty minutes");
+  assert.ok(jobBudgetSeconds(job) <= 2400, "retain a job deadline of at most forty minutes");
   assert.equal(stepBudgetSeconds(job, "Enforce Rust coverage floors"), 300);
   assert.match(job, /cargo llvm-cov report --json --summary-only/);
   assert.match(job, /node \.github\/scripts\/rust-coverage-floors\.cjs/);
@@ -380,6 +380,24 @@ test("coverage job reserves bounded post-cache time after completed tests and ga
   for (const dimension of ["LINES", "FUNCTIONS", "REGIONS"]) {
     assert.match(workflow, new RegExp(`RUST_COVERAGE_FAIL_UNDER_${dimension}: "98"`));
   }
+});
+
+test("coverage test step reserves time beyond a passing suite cancelled at its deadline", () => {
+  const observed = JSON.parse(
+    readFileSync(
+      path.join(root, "test-cases/rust-validation/fixture/rust-coverage-step-timing.json"),
+      "utf8",
+    ),
+  );
+  const job = workflowJob("tests");
+  const setup = (Date.parse(observed.stepStartedAt) - Date.parse(observed.firstRunnerLogAt)) / 1000;
+  const tests =
+    (Date.parse(observed.lastTestBinaryFinishedAt) - Date.parse(observed.stepStartedAt)) / 1000;
+  const step = stepBudgetSeconds(job, "Run Rust tests for coverage");
+  assert.equal(observed.stepConclusion, "failure");
+  assert.equal(observed.failedRustTests, 0);
+  assert.ok(step >= tests + observed.stepReserveSeconds, "step must outlast the passing suite");
+  assert.ok(jobBudgetSeconds(job) >= setup + step, "job must cover setup and the full step");
 });
 
 test("native Rust and historical aggregate deadlines retain censored Windows progress", () => {
