@@ -5,6 +5,8 @@ impl ImportCollector {
         &mut self,
         left: &ForStatementLeft<'_>,
         right: &Expression<'_>,
+        body: &Statement<'_>,
+        closed: bool,
     ) {
         if !self.collect_value_flow {
             return;
@@ -19,7 +21,7 @@ impl ImportCollector {
                     let scope = self
                         .callee_binding_scope(&name)
                         .unwrap_or(self.current_lexical_scope_id());
-                    self.value_flow.iteration_bindings.push(ValueBinding {
+                    let binding = ValueBinding {
                         immutable: true,
                         owner: self.current_function_id(),
                         name,
@@ -29,7 +31,22 @@ impl ImportCollector {
                         invalidated_at: None,
                         mutation_contexts: fx_set(),
                         value: source.clone(),
-                    });
+                    };
+                    if closed && matches!(declarator.id, BindingPattern::BindingIdentifier(_)) {
+                        let source_name = match &source {
+                            ValueExpression::Named { name, .. } => Some(name.as_str()),
+                            _ => None,
+                        };
+                        if let Some(calls) =
+                            super::for_of_calls::collect(body, &binding.name, source_name)
+                        {
+                            self.value_flow
+                                .for_of
+                                .calls
+                                .extend(calls.into_iter().map(|offset| (offset, binding.clone())));
+                        }
+                    }
+                    self.value_flow.iteration_bindings.push(binding);
                 }
             }
         }

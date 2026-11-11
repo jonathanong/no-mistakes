@@ -175,3 +175,6 @@ impl ImportCollector {
 }
 
 include!("callable_assignment_initializers.rs");
+
+#[path = "for_of_calls.rs"]
+mod for_of_calls;

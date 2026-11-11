@@ -208,3 +208,5 @@ mod external_star_exports;
 
 #[cfg(feature = "test-instrumentation")]
 mod refinement_visit_cap;
+
+mod for_of_ownership;

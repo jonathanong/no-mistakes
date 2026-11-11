@@ -139,9 +139,16 @@ fn visit_for_of_statement_with_scope<'a>(
             collector.visit_for_statement_left(left)
         });
     });
+    let closed = collector.for_of_source_closed(&statement.right);
     collector.mark_for_of_registry(&statement.right);
     collector.visit_expression(&statement.right);
-    collector.record_for_of_value_binding(&statement.left, &statement.right);
+    let calls_before = collector.value_flow.for_of.calls.len();
+    collector.record_for_of_value_binding(&statement.left, &statement.right, &statement.body, closed);
+    if collector.value_flow.for_of.calls.len() == calls_before {
+        if let Expression::Identifier(source) = statement.right.get_inner_expression() {
+            collector.record_for_of_escape(source.name.as_str());
+        }
+    }
     let (repeated, may_repeat, guaranteed_assignment) =
         replacement_for_of_execution(collector, statement);
     with_repeat_execution(collector, &statement.body, |collector, body| {

@@ -1,0 +1,1 @@
+{"name":"coverage-scenario-fixture","private":true,"type":"module","workspaces":["packages/*"],"dependencies":{"@fixture/shutdown":"workspace:*"}}

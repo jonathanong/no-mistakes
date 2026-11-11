@@ -350,3 +350,86 @@ fn opaque_shutdown_receivers_keep_proven_assertions_check_json_snapshot() {
         ],
     );
 }
+
+#[test]
+fn production_scenario_table_reaches_default_member_assertions() {
+    let root = crate::check_json_snapshot::rules_path(
+        "coverage-producer-assertion-owner-scenario-table",
+        "fixture",
+        "",
+    );
+    for config in [
+        "direct-default",
+        "direct-object",
+        "inline-table",
+        "global-private",
+        ".no-mistakes",
+    ] {
+        let report = check_json(&root, config);
+        assert!(
+            report["rules"].as_array().unwrap().is_empty(),
+            "{config}: {report}"
+        );
+        assert!(
+            report["advisories"].as_array().unwrap().is_empty(),
+            "{config}: {report}"
+        );
+    }
+}
+
+#[test]
+fn scenario_table_guards_and_policy_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "coverage-producer-assertion-owner-scenario-table",
+        "fixture",
+        "",
+    );
+    let report = check_json(&root, "guards");
+    assert!(report["rules"].as_array().unwrap().is_empty(), "{report}");
+    let targets: Vec<_> = report["advisories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| finding["target"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        targets,
+        [
+            "dynamic",
+            "mutated",
+            "escaped",
+            "empty",
+            "uninvoked",
+            "firstDestructured",
+            "earlyBreak",
+            "earlyReturn",
+            "filtered",
+            "shadowed",
+            "overwrittenRow",
+            "aliasedTable",
+            "malformedRow",
+            "globalMutated",
+            "globalEscaped",
+            "captured",
+            "earlierEscapeLoop",
+            "earlierMutationLoop"
+        ],
+        "{report}"
+    );
+    let cases: Vec<_> = [
+        ".no-mistakes",
+        "direct-default",
+        "direct-object",
+        "inline-table",
+        "global-private",
+        "no-owner",
+        "guards",
+    ]
+    .into_iter()
+    .map(|name| (name, root.clone(), root.join(format!("{name}.yml"))))
+    .collect();
+    crate::check_json_snapshot::assert_saved_fixture(
+        "coverage_producer_assertion_owner_scenario_table",
+        &cases,
+    );
+}

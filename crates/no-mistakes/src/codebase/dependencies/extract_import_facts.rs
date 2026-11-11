@@ -48,3 +48,5 @@ pub struct ImportFacts {
     pub namespaces: NamespaceFacts,
     pub has_unknown_top_level_call: bool,
 }
+
+pub(crate) use extract_value_flow::ForOfEscapes;

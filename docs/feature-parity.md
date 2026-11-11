@@ -1163,3 +1163,10 @@ prepared catalog and statement facts between selected raw PostgreSQL and embedde
 TS/JS SQL, including recovered template and `.append` fragments. All five shape
 codes are always advisory and require a catalog; unsupported or unproven shapes
 stay silent. CLI `check` and async Node `check` / `analyzeProject` share output.
+
+The configured coverage assertion-owner analysis supports a narrow TS/JS scenario
+table: unconditional no-argument member calls in a simple `const` `for...of` over a
+closed local or module-private literal array of plain object rows with statically imported callbacks.
+The CLI and async Node check APIs share this opt-in ownership projection. Ordinary
+call-query output is unchanged; dynamic, mutated, escaped, filtered, or prematurely
+exited tables remain unproven. See the [rule](rules/coverage-producer-assertion-owner.md).

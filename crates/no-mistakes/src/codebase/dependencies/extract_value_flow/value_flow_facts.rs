@@ -180,8 +180,8 @@ pub struct ValueFlowFacts {
     pub(crate) commonjs_imported_bindings: Vec<ImportedBinding>,
     /// Iterable provenance for const loop bindings, never ordinary runtime values.
     pub iteration_bindings: Vec<ValueBinding>,
-    /// Direct call/member reads immediately preceded by a scalar overwrite.
-    /// (call start, call end, lexical scope, receiver, member), provenance only.
+    pub(crate) for_of: ForOfFacts,
+    /// Scalar-overwrite reads: (call start, call end, scope, receiver, member).
     pub row_literal_overwrites: Vec<(u32, u32, usize, String, String)>,
     pub parameters: Vec<ValueParameter>,
     pub returns: Vec<(CallableId, ValueExpression)>,

@@ -57,6 +57,8 @@ impl UncertainSpread {
 
 #[derive(Default)]
 pub(in super::super) struct Side {
+    pub(in super::super) for_of_reads: FxHashSet<u32>,
+    pub(in super::super) for_of_escapes: ForOfEscapes,
     /// `const api = new Api()` — write origins only, not a callable binding.
     /// Keyed by binding scope and name. Dotted keys are instance fields.
     instances: FxHashMap<(usize, String), CallableId>,

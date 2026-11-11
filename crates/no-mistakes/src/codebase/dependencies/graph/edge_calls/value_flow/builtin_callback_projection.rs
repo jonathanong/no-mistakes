@@ -16,7 +16,7 @@ pub(in super::super) fn project_builtin_callbacks(
             proof.as_ref().is_some_and(|positions| !positions.is_empty())
         }) && !file.value_flow.calls.iter().any(|call| {
             matches!(call.source_callee.as_str(), "setTimeout" | "setInterval" | "setImmediate")
-        }) {
+        }) && file.value_flow.for_of.calls.is_empty() {
             return None;
         }
         let base = indexes.file(facts, path)?;
@@ -95,6 +95,7 @@ pub(in super::super) fn project_builtin_callbacks(
             );
         });
     }
+    sites.retain(|site| site.invocation != InvocationKind::Call || !site.has_unknown_target());
     for site in &sites {
         for target in site.target_nodes() {
             let source = site.caller.as_deref().map_or_else(

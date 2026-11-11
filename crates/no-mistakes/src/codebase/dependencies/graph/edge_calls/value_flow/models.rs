@@ -13,6 +13,8 @@ pub(in super::super) struct FlowFileIndex {
     pub(super) possible_receiver_mutations:
         Option<std::sync::Arc<prepared_receivers::PreparedReceiverMutations>>,
     pub(super) bindings: ScopedNameMap<ValueBinding>,
+    pub(super) for_of_escapes: Option<std::sync::Arc<crate::codebase::dependencies::extract::ForOfEscapes>>,
+    pub(super) for_of_calls: FxHashMap<u32, ValueBinding>,
     pub(super) parameters: ScopedNameMap<ValueParameter>,
     pub(super) returns: FxHashMap<CallableId, Vec<ValueExpression>>,
     pub(super) calls: FxHashMap<(u32, u32), ValueCall>,

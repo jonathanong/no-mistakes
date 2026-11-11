@@ -312,6 +312,20 @@ export function owned(items: number[]) { items.map((item) => assertItem(item)); 
 export function opaque(items: number[], fn: (item: number) => void) { items.map(fn); } // unanalyzable: `fn`
 ```
 
+A narrow production scenario table can supply an owner through a `for...of`
+loop: a local or module-private `const` literal array of at most 32 plain object rows, with the
+called field naming a static import. The loop uses a simple `const` identifier
+and invokes that row member with no arguments in an unconditional expression
+or `await` expression. Plain blocks and a `try` body with a non-abrupt catch are
+supported. This projects opt-in `assertion-owner` edges; ordinary call reports
+retain their existing output.
+
+Dynamic, escaped, or mutated tables, array destructuring, empty or uninvoked
+tables, row shadowing or reassignment, filters, early exits, and unsupported
+loop-body statements do not establish an owner through this projection. Table
+contents alone never prove that an unused callback executes. Incomplete cleanup
+calls still cannot undo an assertion reached through a proven scenario.
+
 Stored callbacks remain dispatch even on proven built-ins. For example,
 `const handler = handlers.get('check'); handler?.()` stays uncertain when
 `handlers` is a `Map` of callbacks. Likewise,
