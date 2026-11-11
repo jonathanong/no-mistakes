@@ -1,5 +1,7 @@
+mod array_guard;
 pub(crate) use super::path_value::{MemberEffect, PathValueKind};
 use crate::fx::FxHashMap;
+pub(crate) use array_guard::ArrayGuard;
 use serde_json::Value;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -198,13 +200,4 @@ impl PathProvenance {
         self.env_unknown_write = true;
         self.env_opaque_write = true;
     }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct ArrayGuard {
-    pub(crate) owner: u32,
-    pub(crate) parameter: usize,
-    pub(crate) index: usize,
-    pub(crate) length: bool,
-    pub(crate) expected: Value,
 }

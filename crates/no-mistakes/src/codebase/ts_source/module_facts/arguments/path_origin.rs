@@ -1,7 +1,6 @@
 //! Static path provenance; classic temporary factories require Node bindings.
 //! Path helpers use syntactic heuristics; unsupported expressions remain unknown.
 mod alternatives;
-mod argument_object;
 mod bindings;
 mod calls;
 mod composite;
