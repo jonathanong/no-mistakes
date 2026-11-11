@@ -15,7 +15,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT match error message text; assert type, code, or structured fields.
 - MUST NOT raise coverage with weak tests or exclude files from coverage; strengthen the test or refactor the code.
 - MUST NOT treat a passing rerun as a fix for a flaky test; find the cause.
-- MUST NOT assert over a collection without asserting it is non-empty; every assertion passes over zero items.
+- MUST NOT assert something about every item in a collection without asserting it is non-empty; a per-item assertion passes over zero items. Asserting the collection equals `[]` is fine.
 - MUST NOT accept "either outcome is fine" when one outcome is a degraded fallback.
 - MUST NOT write a regression test whose fixture never reaches the bug's precondition; confirm it fails without the fix.
 - SHOULD NOT add a test that locks in a branch you believe is unreachable; delete the branch or prove it reachable.
@@ -32,7 +32,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT leave spies, env, timers, or globals unrestored after a test.
 - MUST NOT use call-order fakes for calls whose order you do not own; route fakes by method and path.
 - MUST NOT add test-only branches or placeholders to production code.
-- MUST NOT patch a name the code under test never looks up (the definition instead of the import site); assert the mock was called.
+- MUST NOT patch a name the code under test never looks up (the definition instead of the import site); prove the patch is live by asserting a call on a path that should make one, even when the test's contract is no calls.
 - MUST NOT patch a process-wide global and assert an exact call count; other code in the process calls it too.
 - MUST NOT test that an import has no side effect from a process that already imported it.
 - SHOULD NOT mock in integration tests, or rely on mock-only tests where wiring, serialization, transactions, or retries are the contract.

@@ -9,7 +9,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 
 ## Flags
 
-- MUST NOT ship a new feature flag with the new behavior active by default.
+- MUST NOT ship a new feature flag with the new behavior active by default. Exception: a security or data-integrity fix may default to the safe behavior.
 - MUST NOT flag some paths and not others; every entry point that reaches the new behavior reads the flag.
 - MUST NOT assume flag-off is a no-op; test the off path, and handle work started under the other value.
 - MUST NOT assume a flag flip is instant in a service that caches it.

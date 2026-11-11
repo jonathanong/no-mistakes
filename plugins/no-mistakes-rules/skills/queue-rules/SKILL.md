@@ -11,7 +11,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 
 - MUST NOT drop the promise of an enqueue or schedule call; `await` it, or mark deliberate fire-and-forget with `void` and a rejection handler.
 - MUST NOT enqueue inside a transaction that may roll back; enqueue after commit. Exception: when the enqueue is the only durable handoff (a consumer whose idempotency row is its only record), enqueue inside the transaction so a failed enqueue rolls the row back; the enqueue must tolerate collisions, and the worker must be idempotent and treat a missing row as a retry.
-- MUST NOT rename a job or change its payload in one step; ship worker support for both shapes, then switch producers, then drop the old.
+- MUST NOT rename a job or change its payload in one step; ship worker support for both shapes, then switch producers, then drop the old once no old-shape jobs remain queued, delayed, or retrying.
 - MUST NOT assume a unique job id prevents duplicate runs; it only dedupes enqueues. Make the work idempotent.
 - MUST NOT key dedup ids by entity alone; include the triggering event, because retained jobs still hold the id.
 - MUST NOT put shared-queue jobs in no ordering lane or with implicit concurrency; one family starves the rest.
@@ -22,10 +22,10 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT put secrets or personal data in payloads; pass ids.
 - MUST NOT make producer code import worker code; producers enqueue, workers execute.
 - MUST NOT do slow external work on a request path or in an event-forwarding function; enqueue it.
-- MUST NOT treat a dedup id collision as a failure; the work is already queued.
+- MUST NOT treat a dedup id collision as a failure. If finished or failed jobs keep their ids, check that job's state before treating the work as queued.
 - MUST NOT trust a framework's retry counter without checking that no middleware resets it.
 - MUST NOT expect a code deploy to change concurrency or prefetch settings read at worker start; restart the workers.
-- SHOULD NOT put mutable state in a payload; pass ids and re-read when the job runs.
+- SHOULD NOT put mutable state in a payload; pass ids and re-read when the job runs. Facts fixed when the event happened, such as the price charged, belong in the payload.
 - SHOULD NOT sleep inside a job; defer it through the queue.
 - SHOULD NOT do the work inside a message consumer; enqueue a job, then ack.
 - SHOULD NOT ship bulk work without sizing it against production volume.

@@ -24,6 +24,6 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 ## Inbound webhooks
 
 - MUST NOT parse, persist, or enqueue before verifying the signature against the raw body.
-- MUST NOT return 2xx before the durable handoff (enqueue or idempotency row) succeeds.
+- MUST NOT return 2xx before the durable handoff succeeds: an enqueue, or an idempotency row that records the pending work so a crash cannot lose it.
 - MUST NOT assume a webhook arrives once or in order; dedupe by event id and compare versions.
 - SHOULD NOT discard the raw body; store it with a TTL and access limits so failures can be replayed.

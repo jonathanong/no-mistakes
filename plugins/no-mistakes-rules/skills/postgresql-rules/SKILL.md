@@ -34,7 +34,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT scatter manual `BEGIN`/`COMMIT`/`ROLLBACK`; use one transaction helper that owns cleanup.
 - MUST NOT hold a transaction or pooled client across an external call or unrelated work; release clients in `finally`.
 - MUST NOT `Promise.all` statements on one transaction client expecting parallelism; merge them into one statement.
-- MUST NOT use blocking or session-scoped advisory locks; they pin a pooled connection or outlive it. Prefer a row lock; if none fits, use `pg_try_advisory_xact_lock`.
+- MUST NOT use blocking or session-scoped advisory locks; they pin a pooled connection or outlive it. Prefer a row lock; if none fits, use `pg_try_advisory_xact_lock`, check that it returned true, and do the protected work in the same transaction.
 - MUST NOT read from a replica for read-after-write, locking, or lag-sensitive reads.
 - MUST NOT add `BEGIN`/`COMMIT` inside a migration whose runner already wraps it in a transaction.
 - MUST NOT run `EXPLAIN ANALYZE` on a write outside a rolled-back transaction.
@@ -60,8 +60,8 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT update or delete append-only history rows; reject it with a trigger.
 - MUST NOT add a `NOT NULL`, unique, or check constraint without first querying for rows that already violate it.
 - MUST NOT rename or renumber a migration after it has run in any shared environment.
-- MUST NOT merge code that depends on a migration that has not been applied; ship them together or expand first.
-- SHOULD NOT build an index on a populated table without `CONCURRENTLY`, outside the migration's transaction; a failed build leaves an `INVALID` index to drop before retrying.
+- MUST NOT run code that depends on a migration before that migration is applied; order the deploy so the migration runs first, or expand first.
+- SHOULD NOT build an index on a populated table without `CONCURRENTLY`, outside the migration's transaction; a failed build leaves an `INVALID` index to drop before retrying. A partitioned parent cannot build concurrently: build each partition's index concurrently, then create the parent index `ON ONLY` and attach them.
 - SHOULD NOT omit `ON DELETE`, constraint names, or `COMMENT ON` for tables and columns.
 - SHOULD NOT use free text for a finite set; use an enum or lookup table.
 - SHOULD NOT use natural text keys as primary or foreign keys.
