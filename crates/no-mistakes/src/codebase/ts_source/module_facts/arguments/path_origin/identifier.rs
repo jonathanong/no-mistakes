@@ -25,17 +25,13 @@ impl<'a> Projector<'a, '_> {
                     .any(|atom| atom.env.is_some() || atom.getter.is_some())
                 {
                     let mut unknown = PathOrigin::unknown();
-                    unknown.env_diagnostic = origin
-                        .atoms()
-                        .iter()
-                        .find_map(|atom| atom.env_diagnostic.clone());
-                    if let Some(hint) = &mut unknown.env_diagnostic {
-                        hint.captured = true;
+                    if let [atom] = origin.atoms() {
+                        unknown.env_diagnostic = atom.env_diagnostic.clone();
+                        if let Some(hint) = &mut unknown.env_diagnostic {
+                            hint.captured = true;
+                        }
+                        unknown.captured_getter = atom.getter.or(atom.captured_getter);
                     }
-                    unknown.captured_getter = origin
-                        .atoms()
-                        .iter()
-                        .find_map(|atom| atom.getter.or(atom.captured_getter));
                     unknown
                 } else {
                     self.value_requirement(id, origin)

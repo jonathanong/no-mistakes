@@ -39,3 +39,15 @@ fn clearing_locations_are_retained_as_diagnostics_only() {
         .iter()
         .all(|write| write.origin.anchor == PathAnchor::Unknown));
 }
+
+#[test]
+fn captured_alternatives_do_not_claim_a_unique_environment_root() {
+    let facts = read("env-diagnostic-ambiguous.mjs");
+    for call in ["readdirSync(multiple)", "readdirSync(mixed)"] {
+        let origin = facts.origin(call);
+        assert_eq!(origin.anchor, PathAnchor::Unknown);
+        assert_eq!(origin.env, None);
+        assert!(origin.env_diagnostic.is_none(), "{call}");
+        assert!(origin.captured_getter.is_none(), "{call}");
+    }
+}

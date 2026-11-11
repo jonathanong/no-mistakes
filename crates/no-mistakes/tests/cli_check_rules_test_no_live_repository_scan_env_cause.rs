@@ -196,3 +196,27 @@ fn env_cause_respects_report_policy_and_custom_messages() {
         "Custom environment root finding."
     );
 }
+
+#[test]
+fn env_cause_ambiguous_capture_keeps_generic_diagnostic_check_json_snapshot() {
+    let root = root("captured-ambiguous");
+    assert_saved_fixture(
+        "test_no_live_repository_scan_env_cause_ambiguous",
+        &[(
+            "captured-ambiguous",
+            root.clone(),
+            root.join(".no-mistakes.yml"),
+        )],
+    );
+    let (exit, report) = report("captured-ambiguous", ".no-mistakes.yml");
+    assert_eq!(exit, 0, "{report}");
+    let findings = report["advisories"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{report}");
+    let message = findings[0]["message"].as_str().unwrap();
+    assert!(
+        message.contains("expression this analysis cannot follow"),
+        "{message}"
+    );
+    assert!(!message.contains("process.env.FIRST"), "{message}");
+    assert!(!message.contains("process.env.SECOND"), "{message}");
+}
