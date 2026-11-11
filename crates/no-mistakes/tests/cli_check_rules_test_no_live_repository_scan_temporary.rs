@@ -29,6 +29,7 @@ fn owned_temporary_roots_check_json_snapshot() {
             "tests/async-unawaited.test.mts",
             "tests/escape-absolute.test.mts",
             "tests/escape-parent.test.mts",
+            "tests/helper-absolute-return.test.mts",
             "tests/helper-empty-return.test.mts",
             "tests/helper-fallback.test.mts",
             "tests/helper-fallthrough.test.mts",
