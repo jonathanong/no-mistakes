@@ -58,6 +58,10 @@ test("signal diagnostics distinguish raw termination from macOS normalization", 
 function fixture(scenario, logFailure) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "native-build-test-"));
   fs.cpSync(saved, directory, { recursive: true });
+  if (scenario === "prolific-cancel")
+    fs.cpSync(path.join(saved, "../backpressure"), path.join(directory, "backpressure"), {
+      recursive: true,
+    });
   fs.chmodSync(path.join(directory, "bin/cargo"), 0o755);
   if (logFailure === "open")
     fs.cpSync(path.join(saved, "../log-failures/open"), path.join(directory, diagnostics), {
@@ -77,8 +81,10 @@ function fixture(scenario, logFailure) {
         ...process.env,
         PATH: search.map((entry) => path.resolve(directory, entry)).join(path.delimiter),
         NATIVE_BUILD_FIXTURE: scenario,
-        ...(logFailure === "midwrite"
-          ? { NODE_OPTIONS: `--require=${path.join(saved, "../log-failures/midwrite.cjs")}` }
+        ...(["midwrite", "stalled"].includes(logFailure)
+          ? {
+              NODE_OPTIONS: `--require=${path.join(saved, logFailure === "midwrite" ? "../log-failures/midwrite.cjs" : "../backpressure/stalled-log.cjs")}`,
+            }
           : {}),
         NATIVE_RUST_CACHE_HIT: "true",
         PRIVATE_FIXTURE_SECRET: "private-fixture-token",
@@ -138,22 +144,32 @@ for (const [scenario, status] of [
   );
 }
 
-for (const logFailure of [undefined, "open", "midwrite"]) {
+for (const logFailure of [undefined, "open", "midwrite", "stalled"]) {
   test(
     `native build forwards cancellation with ${logFailure || "working"} log`,
     { skip: process.platform === "win32" },
     async () => {
-      const input = fixture("cancel", logFailure);
+      const input = fixture(logFailure === "stalled" ? "prolific-cancel" : "cancel", logFailure);
       try {
-        const child = spawn(process.execPath, [wrapper], input.options);
+        const child = spawn(process.execPath, [wrapper], {
+          ...input.options,
+          killSignal: "SIGKILL",
+        });
+        let cancelled = false;
+        const cancel = () => {
+          if (cancelled) return;
+          cancelled = true;
+          child.kill("SIGTERM");
+        };
         let stdout = "";
         child.stdout.on("data", (chunk) => {
           stdout += chunk;
-          if (stdout.includes("fixture-ready")) child.kill("SIGTERM");
+          if (stdout.includes("fixture-ready")) cancel();
         });
         let stderr = "";
         child.stderr.on("data", (chunk) => {
           stderr += chunk;
+          if (logFailure === "stalled" && stderr.includes("fixture-log-stalled")) cancel();
         });
         const status = await new Promise((resolve, reject) => {
           child.on("error", reject);
@@ -162,7 +178,7 @@ for (const logFailure of [undefined, "open", "midwrite"]) {
         assert.equal(status, 143, stderr);
         assert.equal(JSON.parse(input.read("cancellation.json")).signal, "SIGTERM");
         assert.equal(JSON.parse(input.read("result.json")).cancelledSignal, "SIGTERM");
-        if (logFailure)
+        if (logFailure && logFailure !== "stalled")
           assert.match(input.read("log-error.txt"), logFailure === "open" ? /EISDIR/ : /ENOSPC/);
       } finally {
         input.cleanup();
@@ -170,6 +186,9 @@ for (const logFailure of [undefined, "open", "midwrite"]) {
     },
   );
 }
+
+require("./native-build-output.test.cjs");
+require("./native-build-output-edge.test.cjs");
 
 for (const logFailure of ["open", "midwrite"]) {
   for (const [scenario, status] of [

@@ -137,6 +137,7 @@ function main() {
   let cancelledSignal;
   function cancel(signal) {
     cancelledSignal = signal;
+    finishLog.cancel();
     diagnostic(() =>
       fs.writeFileSync(
         path.join(directory, "cancellation.json"),

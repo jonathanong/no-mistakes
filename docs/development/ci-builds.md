@@ -155,6 +155,18 @@ samples remain diagnostic evidence, not completed-run resource maxima. Build
 errors and cancellation still fail the job; there are no automatic retries.
 Log failures are reported on stderr and, when possible, in `log-error.txt`.
 Compiler output and Cargo's exit status remain independent of log completion.
+<!-- cspell:ignore backpressure -->
+
+The output tee honors each destination's stream backpressure. A slow console
+pauses its corresponding Cargo pipe, while a slow shared log can pause both;
+buffering is limited by stream high-water marks and in-flight chunks. A failed
+destination is detached so healthy destinations can keep draining. Cancellation
+allows one second for healthy writes to flush, then discards pending writes to
+stalled destinations and drains the child pipes,
+preventing a missing `drain` event from trapping the wrapper after Cargo exits.
+Normal completion retains all output and lets the log flush; compiler stderr is
+never redirected into stdout. Saved prolific-writer and slow-destination fixtures
+exercise these cases in `node --test .github/scripts/build-native.test.cjs`.
 
 A green macOS job spent 1,502 seconds before starting its API step; adding its
 420-second API budget and 120 seconds for reporting and cleanup requires

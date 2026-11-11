@@ -19,7 +19,11 @@ console.log("fixture compiler stdout");
 console.error("fixture compiler stderr");
 if (process.env.NATIVE_BUILD_FIXTURE === "signal") process.kill(process.pid, "SIGKILL");
 if (process.env.NATIVE_BUILD_FIXTURE === "exit-137") process.exit(137);
-if (process.env.NATIVE_BUILD_FIXTURE === "cancel") {
+if (process.env.NATIVE_BUILD_FIXTURE === "prolific-cancel") {
+  require("../backpressure/prolific-writer.cjs");
+  setTimeout(() => process.exit(99), 12000);
+  setInterval(() => {}, 1000);
+} else if (process.env.NATIVE_BUILD_FIXTURE === "cancel") {
   console.log("fixture-ready");
   setInterval(() => {}, 1000);
 } else {
