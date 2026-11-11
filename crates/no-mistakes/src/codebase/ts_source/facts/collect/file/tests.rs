@@ -33,7 +33,8 @@ fn collect_file_facts_reports_source_store_read_failures() {
 
 #[test]
 fn collect_file_facts_uses_the_typescript_fallback_for_unknown_extensions() {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/ts-source/unknown-extension-fallback/guide.md");
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/ts-source/unknown-extension-fallback/guide.md");
     let path = crate::codebase::ts_resolver::normalize_path(&path);
     let inventory =
         crate::codebase::ts_source::FileInventory::from_paths(std::slice::from_ref(&path));
