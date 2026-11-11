@@ -98,6 +98,7 @@ pub(crate) struct ArgumentText {
 /// Facts that let a rule trace a path through callers, env vars, and mocks.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct PathProvenance {
+    pub(crate) arg_counts: FxHashMap<u32, Option<usize>>,
     pub(crate) arg_closed_objects: FxHashMap<u32, Vec<usize>>,
     pub(crate) arg_member_paths: FxHashMap<u32, Vec<(usize, String, PathOrigin)>>,
     pub(crate) arg_paths: FxHashMap<u32, Vec<(usize, PathOrigin)>>,

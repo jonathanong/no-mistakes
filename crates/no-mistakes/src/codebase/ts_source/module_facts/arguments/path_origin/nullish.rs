@@ -23,17 +23,7 @@ impl<'a> Projector<'a, '_> {
                 };
                 self.definitely_nullish(init, depth + 1)
             }
-            Expression::StaticMemberExpression(member) => {
-                match self.nullish_property(
-                    &member.object,
-                    member.property.name.as_str(),
-                    depth + 1,
-                ) {
-                    Supplied::Missing => true,
-                    Supplied::Value(value) => self.definitely_nullish(value, depth + 1),
-                    Supplied::Unknown => false,
-                }
-            }
+            Expression::StaticMemberExpression(member) => self.nullish_member(member, depth),
             Expression::ChainExpression(chain) => {
                 let ChainElement::StaticMemberExpression(member) = &chain.expression else {
                     return false;
@@ -41,17 +31,17 @@ impl<'a> Projector<'a, '_> {
                 if member.optional && self.definitely_nullish(&member.object, depth + 1) {
                     return true;
                 }
-                match self.nullish_property(
-                    &member.object,
-                    member.property.name.as_str(),
-                    depth + 1,
-                ) {
-                    Supplied::Missing => true,
-                    Supplied::Value(value) => self.definitely_nullish(value, depth + 1),
-                    Supplied::Unknown => false,
-                }
+                self.nullish_member(member, depth)
             }
             _ => false,
+        }
+    }
+
+    fn nullish_member(&mut self, member: &StaticMemberExpression<'a>, depth: usize) -> bool {
+        match self.nullish_property(&member.object, member.property.name.as_str(), depth + 1) {
+            Supplied::Missing => true,
+            Supplied::Value(value) => self.definitely_nullish(value, depth + 1),
+            Supplied::Unknown => false,
         }
     }
 

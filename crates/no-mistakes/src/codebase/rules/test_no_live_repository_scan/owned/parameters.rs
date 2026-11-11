@@ -104,3 +104,12 @@ pub(super) fn unproven_argument(
         .and_then(|args| args.iter().find(|(position, _)| *position == index))
         .map(|(_, origin)| origin)
 }
+
+pub(super) fn argument_omitted(paths: &PathProvenance, offset: u32, index: usize) -> bool {
+    paths
+        .arg_counts
+        .get(&offset)
+        .copied()
+        .flatten()
+        .is_some_and(|count| index >= count)
+}

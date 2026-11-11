@@ -17,6 +17,8 @@ pub(super) fn record_arg_text(
     out: &mut PathProvenance,
     members: Vec<ArgumentText>,
 ) {
+    let count = (call.arguments.len() <= 32 && call.arguments.iter().all(|arg| arg.as_expression().is_some())).then_some(call.arguments.len());
+    out.arg_counts.insert(call.span.start, count);
     let mut texts: Vec<_> = call
         .arguments
         .iter()

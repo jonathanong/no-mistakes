@@ -1,6 +1,8 @@
 //! One caller of a parameter root: seed, block, or follow that caller's parameter.
 use super::super::cause::{Cause, CauseKind};
-use super::super::parameters::{argument_path, argument_present, argument_text, unproven_argument};
+use super::super::parameters::{
+    argument_omitted, argument_path, argument_present, argument_text, unproven_argument,
+};
 use super::super::{path_provenance, Owners};
 use super::Step;
 use crate::codebase::dependencies::graph::{ResolvedCallSite, TsFactLookup};
@@ -50,7 +52,7 @@ impl Owners<'_> {
             .get(&caller.offset)
             .is_some_and(|positions| positions.contains(&index));
         let argument = argument.or_else(|| {
-            (!present || (member.is_some() && closed))
+            (argument_omitted(provenance, caller.offset, index) || (member.is_some() && closed))
                 .then_some(default)
                 .flatten()
         });

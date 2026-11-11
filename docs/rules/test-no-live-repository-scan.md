@@ -737,6 +737,8 @@ A destructuring default applies only when a caller demonstrably omits that
 property. Passing an explicit owned `schemaDir` proves
 `function main({ schemaDir = process.cwd() } = {})`; omitting it retains the live
 default. An unknown object or an explicitly unknown property is unresolved.
+Missing bounded argument facts do not establish omission: defaults require a
+known argument count or a known missing property on a closed object.
 `??` and `||` fallbacks retain every alternative, including optional-chain
 fallbacks. Each alternative must be owned, a fixture path, or a known relative
 suffix resolved under an owned base. A live or unknown alternative keeps the
