@@ -17,6 +17,13 @@ pub(super) fn record_arg_text(
     out: &mut PathProvenance,
     members: Vec<ArgumentText>,
 ) {
+    let count = (call.arguments.len() <= 32
+        && call
+            .arguments
+            .iter()
+            .all(|arg| arg.as_expression().is_some()))
+    .then_some(call.arguments.len());
+    out.arg_counts.insert(call.span.start, count);
     let mut texts: Vec<_> = call
         .arguments
         .iter()
@@ -70,11 +77,25 @@ pub(super) fn argument_paths<'a>(
 ) -> Vec<(usize, PathOrigin)> {
     let mut paths = Vec::new();
     let mut unproven = Vec::new();
-    for (index, argument) in call.arguments.iter().take(MAX_ARGUMENTS).enumerate() {
-        let Some(expression) = argument.as_expression() else {
+    for index in 0..MAX_ARGUMENTS {
+        let Some(origin) = projector.argument_origin(call, index) else {
             break;
         };
-        let origin = projector.path_of(expression);
+        if origin
+            .atoms()
+            .iter()
+            .any(|atom| atom.param.is_some() && atom.param_member.is_none())
+        {
+            if let Some(expression) = projector.argument_expression(call, index) {
+                let effects = projector.forwarded_member_effects(expression, 0);
+                if !effects.is_empty() {
+                    out.arg_member_effects
+                        .entry(call.span.start)
+                        .or_default()
+                        .extend(effects.into_iter().map(|effect| (index, effect)));
+                }
+            }
+        }
         if kept(&origin) {
             paths.push((index, origin));
         } else {
@@ -88,12 +109,14 @@ pub(super) fn argument_paths<'a>(
 }
 
 fn kept(origin: &PathOrigin) -> bool {
-    matches!(
-        origin.anchor,
-        PathAnchor::Temp | PathAnchor::Module | PathAnchor::Cwd
-    ) || origin.param.is_some()
-        || origin.env.is_some()
-        || origin.getter.is_some()
+    origin.atoms().iter().any(|origin| {
+        matches!(
+            origin.anchor,
+            PathAnchor::Temp | PathAnchor::Module | PathAnchor::Cwd
+        ) || origin.param.is_some()
+            || origin.env.is_some()
+            || origin.getter.is_some()
+    })
 }
 
 /// `it(...)` / `test(...)` (including `.only` / `.skip`) with a function body.

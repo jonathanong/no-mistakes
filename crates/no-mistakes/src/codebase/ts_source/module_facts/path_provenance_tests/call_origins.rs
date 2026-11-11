@@ -104,7 +104,8 @@ fn only_owned_or_module_rooted_arguments_of_imported_calls_are_kept() {
         [
             (1, PathAnchor::Temp),
             (3, PathAnchor::Module),
-            (4, PathAnchor::Cwd)
+            (4, PathAnchor::Cwd),
+            (6, PathAnchor::Temp)
         ]
     );
 }

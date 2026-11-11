@@ -138,6 +138,14 @@ fn provenance_json_snapshot() {
 fn owned_env_and_arguments_resolve_but_unproven_provenance_is_kept() {
     let (_, report) = check_in("provenance", ".no-mistakes.yml");
     let advisories = located(&report["advisories"]);
+    let live = located(&report["rules"]);
+    let reported: Vec<_> = advisories.iter().chain(&live).cloned().collect();
+    for location in [
+        "tests/pass-through.test.ts:14",
+        "tests/pass-through.test.ts:29",
+    ] {
+        assert!(live.contains(&location.to_string()), "{location}: {live:?}");
+    }
     // Accepted: an owned env root through a getter and join, a hook, an owned
     // argument for a defaulted parameter, and exact spread-forwarding mocks.
     for resolved in [
@@ -149,7 +157,7 @@ fn owned_env_and_arguments_resolve_but_unproven_provenance_is_kept() {
         "tests/pass-through.test.ts:10",
     ] {
         assert!(
-            advisories.iter().all(|f| !f.contains(resolved)),
+            reported.iter().all(|f| !f.contains(resolved)),
             "{resolved}: {advisories:?}"
         );
     }
@@ -190,7 +198,7 @@ fn owned_env_and_arguments_resolve_but_unproven_provenance_is_kept() {
         "src/param-climb.ts:6",
     ] {
         assert!(
-            advisories.contains(&kept.to_string()),
+            reported.contains(&kept.to_string()),
             "{kept}: {advisories:?}"
         );
     }

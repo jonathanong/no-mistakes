@@ -15,14 +15,19 @@ pub(super) enum Supplied<'a> {
 }
 
 pub(super) fn proven(origin: &PathOrigin) -> bool {
-    origin.anchor != PathAnchor::Unknown || origin.param.is_some() || origin.env.is_some()
+    origin.atoms().iter().all(|origin| {
+        origin.anchor != PathAnchor::Unknown || origin.param.is_some() || origin.env.is_some()
+    })
 }
 
 /// A parameterized helper may return a non-dynamic owned root. A dynamic return
 /// drops parameter components (`join(temp, suffix)`), so it stays unknown.
 pub(super) fn accept_parameterized(has_parameters: bool, origin: PathOrigin) -> Option<PathOrigin> {
-    let climbs = origin.segments.iter().any(|part| part == "..");
-    if has_parameters && (origin.dynamic || climbs) {
+    let unproven = origin
+        .atoms()
+        .iter()
+        .any(|atom| atom.dynamic || atom.segments.iter().any(|part| part == ".."));
+    if has_parameters && unproven {
         None
     } else {
         Some(origin)
@@ -46,7 +51,7 @@ pub(super) fn direct_property_member(
         }
         direct_binding(&property.value)?;
         let key = crate::ast::property_key_name(&property.key)?;
-        return Some(key.into_owned());
+        return (!key.contains('.')).then(|| key.into_owned());
     }
     None
 }

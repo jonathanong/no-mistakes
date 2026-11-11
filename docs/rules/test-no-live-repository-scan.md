@@ -638,6 +638,11 @@ rebound rest parameter keeps the advisory; so does any other use of the rest
 binding (an index write, `splice`, `push`, `length = ...`, or a nested closure), as does forwarding outside
 `mockImplementation`/`mockImplementationOnce`.
 
+Ordinary root provenance can independently prove a rewritten argument. For example,
+an unconditional `args[0] = ownedRoot` before forwarding passes when `ownedRoot`
+is a fixture path or owned temporary root. This does not use the identity-only
+mock exemption.
+
 A conditional rewrite such as `if (args[0] === migrations) args[0] = root`
 before `original(...args)` remains unresolved. This is no longer identity
 forwarding: the analysis does not connect every mocked caller to the rewritten
@@ -720,6 +725,58 @@ writeFileSync(join(root, "ci.yml"), "name: ci\n");
 const names = readdirSync(root);
 const bounded = readdirSync(join(import.meta.dirname, "fixtures", "workflows"));
 ```
+
+Argument forwarding preserves each known position and property. Literal array
+spreads and a helper's rest parameter can carry an owned root to an enumerator.
+For object spreads, the last property wins: `{ ...inputs, outputRoot: root }`
+retains the explicit owned root, while `{ outputRoot: root, ...inputs }` stays
+unresolved when `inputs` is unknown. Object rest destructuring proves excluded
+keys: in `main({ outputRoot, ...inputs })`, spreading `inputs` after the explicit
+`outputRoot` cannot replace it. A real override or an opaque spread retains the
+finding. Writes to a rest slot are followed in source
+order; a conditional write also retains the unchanged input alternative. A slot
+write after an enumeration in the same loop keeps the root unresolved because
+the next iteration can read that write. Pass an owned root directly at the
+enumeration to avoid relying on mutable forwarded arguments across iterations.
+
+A destructuring default applies only when a caller demonstrably omits that
+property. A whole-parameter default other than `{}` is not used to prove a
+destructured property default, and forwarding an object parameter with its own
+default keeps the property unresolved. Pass an explicit owned property to make
+that input provable. Passing an explicit owned `schemaDir` proves
+`function main({ schemaDir = process.cwd() } = {})`; omitting it retains the live
+default. An unknown object or an explicitly unknown property is unresolved.
+A fallback on a parameter property, such as `paths.schemaDir ?? DEFAULT`, is
+checked against each reachable test caller. An explicit owned property supplies
+the root for that call; a missing, nullish, live, or unknown property cannot
+inherit that proof. Production call paths that the selected tests never execute
+do not supply additional arguments to that proof.
+
+Missing bounded argument facts do not establish omission: defaults require a
+known argument count or a known missing property on a closed object.
+Fallbacks that cannot be selected from proven caller properties retain every
+finite alternative, including optional-chain and `||` fallbacks. Each reachable
+alternative must be owned, a fixture path, or a known relative suffix resolved
+under an owned base. For `resolve(worktreeRoot, project.root ??
+project.test?.root ?? '.')`, the base and suffix are proved independently from
+the same selected test callers. Closed literal objects establish missing nested
+properties; unknown objects do not. Nested literal initializers are followed only
+while their containers stay in property-read chains. Nested writes, mutating
+method calls, and container escapes through aliases or call arguments keep the
+root unresolved. The same restriction applies when an intermediate helper
+forwards an object parameter: writes to the requested member or its parents,
+and escapes of its containers, invalidate the caller's field proof. Unrelated
+property writes and reads of the path string preserve it. Passing the path value
+to other code preserves this proof only for a known immutable string. URLs and
+buffer-valued filesystem results may be mutated through that reference; convert
+a URL with `fileURLToPath` or keep the mutable value unexposed before scanning.
+The default string-returning temporary-directory overload retains the string
+proof. Literal property keys containing dots are not interpreted as nested
+selectors. Absolute, unknown, and climbing suffixes keep the finding. Rewrite
+them to literal relative paths or pass an owned root explicitly.
+A relative suffix that climbs above the owned directory, or `dirname` of the
+owned directory itself, does not remain owned. Accessor-bearing objects and
+object literals that set `__proto__` remain opaque to property/default proofs.
 
 ## Counterexample
 

@@ -88,6 +88,12 @@ impl EnvWrites {
 pub(in super::super) use lifecycle::{cleanup_read, dominated};
 
 pub(in super::super) fn owned_origin(origin: &PathOrigin, fixture_dirs: &[String]) -> bool {
+    if !origin.alternatives.is_empty() {
+        return origin
+            .atoms()
+            .iter()
+            .all(|atom| owned_origin(atom, fixture_dirs));
+    }
     if origin.anchor == PathAnchor::Temp {
         return origin.root_tails.is_empty()
             && !origin.segments.iter().any(|segment| segment == "..");

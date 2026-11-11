@@ -17,10 +17,39 @@ pub(super) fn classify(origin: Option<&PathOrigin>, fixture_dirs: &[&str]) -> Ve
             "the path argument was not recorded (spread argument or unparsed module)",
         );
     };
-    if origin.anchor == PathAnchor::Temp
-        && origin.root_tails.is_empty()
-        && !origin.segments.iter().any(|part| part == "..")
+    if origin.require_scalar
+        && origin.value_kind
+            != crate::codebase::ts_source::module_facts::arguments::PathValueKind::Scalar
     {
+        return Verdict::Unresolved(
+            "an escaped path value is not proven to be an immutable scalar",
+        );
+    }
+    if !origin.alternatives.is_empty() {
+        let mut result = Verdict::Allowed;
+        for atom in origin.atoms() {
+            match classify(Some(atom), fixture_dirs) {
+                verdict @ Verdict::Live(_) => return verdict,
+                verdict @ Verdict::Unresolved(_) => result = verdict,
+                Verdict::Allowed => {}
+            }
+        }
+        return result;
+    }
+    if origin.relative {
+        return if origin.anchor == PathAnchor::Relative
+            && !origin.dynamic
+            && !origin.segments.iter().any(|part| part == "..")
+        {
+            Verdict::Allowed
+        } else {
+            Verdict::Unresolved("the suffix is not a proven relative path within the owned root")
+        };
+    }
+    if origin.anchor == PathAnchor::Temp && origin.root_tails.is_empty() {
+        if origin.segments.iter().any(|segment| segment == "..") {
+            return Verdict::Unresolved("the path climbs out of the owned temporary directory");
+        }
         return Verdict::Allowed;
     }
     if origin

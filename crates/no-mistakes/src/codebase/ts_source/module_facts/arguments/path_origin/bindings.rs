@@ -51,15 +51,14 @@ impl<'a> Projector<'a, '_> {
         if !matches!(declaration.id, BindingPattern::BindingIdentifier(_)) {
             return None;
         }
+        let mut origins = Vec::new();
         let mut writes = usize::from(declaration.init.is_some());
         if let Some(init) = &declaration.init {
             let origin = self.origin(init, depth + 1);
-            if origin.anchor != PathAnchor::Temp
-                || !origin.root_tails.is_empty()
-                || origin.segments.iter().any(|part| part == "..")
-            {
+            if !owned(&origin) {
                 return None;
             }
+            origins.push(origin);
         }
         for reference in semantic.scoping().get_resolved_references(symbol) {
             if !reference.flags().is_write() {
@@ -71,20 +70,16 @@ impl<'a> Projector<'a, '_> {
             else {
                 return None;
             };
-            if writes > 16 || assignment.operator != AssignmentOperator::Assign || {
-                let origin = self.origin(&assignment.right, depth + 1);
-                origin.anchor != PathAnchor::Temp
-                    || !origin.root_tails.is_empty()
-                    || origin.segments.iter().any(|part| part == "..")
-            } {
+            if writes > 16 || assignment.operator != AssignmentOperator::Assign {
                 return None;
             }
+            let origin = self.origin(&assignment.right, depth + 1);
+            if !owned(&origin) {
+                return None;
+            }
+            origins.push(origin);
         }
-        (writes > 0).then(|| PathOrigin {
-            anchor: PathAnchor::Temp,
-            dynamic: false,
-            ..PathOrigin::unknown()
-        })
+        (writes > 0).then(|| PathOrigin::alternatives(origins))
     }
 
     /// `getDir()` / `mkTmp(prefix)` for a same-file function with one returned expression.
@@ -152,4 +147,12 @@ fn function_value<'a>(init: &'a Expression<'a>) -> Option<(&'a Expression<'a>, b
         }
         _ => None,
     }
+}
+
+fn owned(origin: &PathOrigin) -> bool {
+    origin.atoms().iter().all(|atom| {
+        atom.anchor == PathAnchor::Temp
+            && atom.root_tails.is_empty()
+            && !atom.segments.iter().any(|part| part == "..")
+    })
 }

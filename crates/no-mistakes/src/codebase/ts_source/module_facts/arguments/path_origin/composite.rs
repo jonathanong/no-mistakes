@@ -1,4 +1,5 @@
 //! Composite path expressions: templates, `new URL`, and path-helper calls.
+use super::super::PathValueKind;
 use super::{PathAnchor, PathOrigin, Projector};
 use oxc_ast::ast::*;
 
@@ -22,6 +23,7 @@ impl<'a> Projector<'a, '_> {
             }
         }
         acc.unwrap_or_else(|| PathOrigin::literal(""))
+            .with_value_kind(PathValueKind::Scalar)
     }
 
     /// `new URL(relative, base)`.
@@ -32,7 +34,9 @@ impl<'a> Projector<'a, '_> {
             return PathOrigin::unknown();
         };
         let relative = self.origin(relative, depth + 1);
-        self.origin(base, depth + 1).append(relative)
+        self.origin(base, depth + 1)
+            .append(relative)
+            .with_value_kind(PathValueKind::Mutable)
     }
 
     pub(super) fn call(&mut self, call: &CallExpression<'a>, depth: usize) -> PathOrigin {
@@ -50,7 +54,13 @@ impl<'a> Projector<'a, '_> {
         let mut args = call.arguments.iter().map(Argument::as_expression);
         match name {
             "tmpdir" => PathOrigin::anchored(PathAnchor::SharedTemp),
-            "mkdtemp" | "mkdtempSync" => PathOrigin::anchored(PathAnchor::Temp),
+            "mkdtemp" | "mkdtempSync" => PathOrigin::anchored(PathAnchor::Temp).with_value_kind(
+                if call.arguments.len() == 1 {
+                    PathValueKind::Scalar
+                } else {
+                    PathValueKind::Mutable
+                },
+            ),
             "cwd" if receiver == Some("process") => PathOrigin::anchored(PathAnchor::Cwd),
             "join" | "resolve" | "normalize"
                 if receiver.is_none_or(|r| matches!(r, "path" | "posix" | "win32")) =>
@@ -58,34 +68,34 @@ impl<'a> Projector<'a, '_> {
                 let mut acc: Option<PathOrigin> = None;
                 for arg in args {
                     let part = arg.map_or_else(PathOrigin::unknown, |e| self.origin(e, depth + 1));
-                    acc = Some(
-                        if name == "resolve"
-                            && matches!(
-                                part.anchor,
-                                PathAnchor::Absolute
-                                    | PathAnchor::Cwd
-                                    | PathAnchor::Module
-                                    | PathAnchor::SharedTemp
-                            )
-                        {
-                            part
+                    acc = Some(acc.take().map_or(part.clone(), |prefix| {
+                        if name == "resolve" {
+                            prefix.resolve_append(part)
                         } else {
-                            acc.take()
-                                .map_or(part.clone(), |prefix| prefix.append(part))
-                        },
-                    );
+                            prefix.append(part)
+                        }
+                    }));
                 }
                 acc.unwrap_or_else(PathOrigin::unknown)
+                    .with_value_kind(PathValueKind::Scalar)
             }
             "dirname" | "fileURLToPath" | "pathToFileURL" | "realpath" | "realpathSync" => {
                 let Some(Some(inner)) = args.next() else {
                     return PathOrigin::unknown();
                 };
-                let mut origin = self.origin(inner, depth + 1);
+                let origin = self.origin(inner, depth + 1);
+                let kind = if name == "pathToFileURL"
+                    || (matches!(name, "realpath" | "realpathSync") && call.arguments.len() != 1)
+                {
+                    PathValueKind::Mutable
+                } else {
+                    PathValueKind::Scalar
+                };
                 if name == "dirname" {
-                    origin.extend([".."]);
+                    origin.parent().with_value_kind(kind)
+                } else {
+                    origin.with_value_kind(kind)
                 }
-                origin
             }
             _ => self
                 .getter_origin(call, depth)
@@ -122,4 +132,20 @@ pub(in super::super) fn callee_root<'a>(expression: &'a Expression<'_>) -> Optio
         Expression::StaticMemberExpression(member) => callee_root(&member.object),
         _ => None,
     }
+}
+
+pub(super) fn disposable_path(call: &CallExpression<'_>, key: &str) -> Option<PathOrigin> {
+    let disposable = matches!(call.callee.get_inner_expression(),
+        Expression::Identifier(id) if id.name == "mkdtempDisposableSync")
+        || matches!(call.callee.get_inner_expression(),
+        Expression::StaticMemberExpression(member) if member.property.name == "mkdtempDisposableSync");
+    if key != "path" || !disposable {
+        return None;
+    }
+    let kind = if call.arguments.len() == 1 {
+        PathValueKind::Scalar
+    } else {
+        PathValueKind::Mutable
+    };
+    Some(PathOrigin::anchored(PathAnchor::Temp).with_value_kind(kind))
 }

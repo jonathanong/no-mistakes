@@ -1,5 +1,6 @@
+use super::member_mutations::member_assignment_target;
 use super::patterns::accept_parameterized;
-use super::{PathAnchor, PathOrigin, Projector};
+use super::{PathOrigin, Projector};
 use oxc_ast::{ast::*, AstKind};
 use oxc_span::GetSpan;
 
@@ -25,10 +26,14 @@ impl<'a> Projector<'a, '_> {
                         return None;
                     }
                     origin.param_member = Some(key.to_owned());
+                    return self.member_value(origin, object, key);
+                }
+                if let Some(origin) = self.rest_member_origin(id, key, depth + 1) {
                     return Some(origin);
                 }
                 let init = self.const_init(id)?;
-                self.member_origin(init, key, depth + 1)
+                let origin = self.member_origin(init, key, depth + 1)?;
+                self.member_value(origin, object, key)
             }
             Expression::ObjectExpression(object) => {
                 let mut value = None;
@@ -45,13 +50,23 @@ impl<'a> Projector<'a, '_> {
                 }
                 value.map(|value| self.origin(value, depth + 1))
             }
+            Expression::StaticMemberExpression(_) => {
+                if !self.nested_reads_only(object) {
+                    return None;
+                }
+                let mut origin = self.origin(object, depth + 1);
+                if origin.param.is_some() {
+                    let prefix = origin.param_member.as_ref()?;
+                    origin.param_member = Some(format!("{prefix}.{key}"));
+                    return self.member_value(origin, object, key);
+                }
+                let value = self.member_initializer(object, key, depth + 1)?;
+                let origin = self.origin(value, depth + 1);
+                self.member_value(origin, object, key)
+            }
             Expression::CallExpression(call) => {
-                let disposable = matches!(call.callee.get_inner_expression(),
-                    Expression::Identifier(id) if id.name == "mkdtempDisposableSync")
-                    || matches!(call.callee.get_inner_expression(),
-                    Expression::StaticMemberExpression(member) if member.property.name == "mkdtempDisposableSync");
-                if key == "path" && disposable {
-                    return Some(PathOrigin::anchored(PathAnchor::Temp));
+                if let Some(origin) = super::composite::disposable_path(call, key) {
+                    return Some(origin);
                 }
                 let (returned, parameterized) = self.getter_expression(call)?;
                 let origin = self.member_origin(returned, key, depth + 1)?;
@@ -64,7 +79,7 @@ impl<'a> Projector<'a, '_> {
         }
     }
 
-    fn member_reads_only(&mut self, symbol: oxc_semantic::SymbolId) -> bool {
+    pub(super) fn member_reads_only(&mut self, symbol: oxc_semantic::SymbolId) -> bool {
         self.member_uses_stable(symbol, None)
     }
 
@@ -121,44 +136,4 @@ impl<'a> Projector<'a, '_> {
         }
         true
     }
-}
-
-fn member_assignment_target(
-    nodes: &oxc_semantic::AstNodes<'_>,
-    member: oxc_semantic::NodeId,
-) -> bool {
-    let span = nodes.kind(member).span();
-    nodes
-        .ancestors(member)
-        .find_map(|ancestor| match ancestor.kind() {
-            AstKind::AssignmentExpression(assignment) => {
-                Some(assignment.left.span().contains_inclusive(span))
-            }
-            AstKind::ForInStatement(statement) => {
-                Some(statement.left.span().contains_inclusive(span))
-            }
-            AstKind::ForOfStatement(statement) => {
-                Some(statement.left.span().contains_inclusive(span))
-            }
-            AstKind::AssignmentTargetPropertyProperty(property)
-                if property.binding.span().contains_inclusive(span) =>
-            {
-                None
-            }
-            AstKind::AssignmentTargetWithDefault(default)
-                if default.binding.span().contains_inclusive(span) =>
-            {
-                None
-            }
-            AstKind::ArrayAssignmentTarget(_)
-            | AstKind::ObjectAssignmentTarget(_)
-            | AstKind::AssignmentTargetRest(_)
-            | AstKind::ParenthesizedExpression(_)
-            | AstKind::TSAsExpression(_)
-            | AstKind::TSTypeAssertion(_)
-            | AstKind::TSNonNullExpression(_)
-            | AstKind::TSSatisfiesExpression(_) => None,
-            _ => Some(false),
-        })
-        .unwrap_or(false)
 }

@@ -16,6 +16,7 @@ fn origin(anchor: PathAnchor, segments: &[&str]) -> PathOrigin {
         param_owner: None,
         owner_line: None,
         reassigned_at: None,
+        ..PathOrigin::unknown()
     }
 }
 

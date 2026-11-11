@@ -202,6 +202,15 @@
       {
         "file": "tests/path-forms.test.ts",
         "import": "readdirSync",
+        "line": 25,
+        "message": "live repository scan: `readdirSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+        "rule": "test-no-live-repository-scan",
+        "target": "live repository scan",
+        "sourceLine": "readdirSync(...[here]); // LIVE spread argument"
+      },
+      {
+        "file": "tests/path-forms.test.ts",
+        "import": "readdirSync",
         "line": 28,
         "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
         "rule": "test-no-live-repository-scan",
@@ -524,15 +533,6 @@
         "rule": "test-no-live-repository-scan",
         "target": "unresolved root",
         "sourceLine": "readdirSync(param(\"x\")); // UNRESOLVED call not modeled"
-      },
-      {
-        "file": "tests/path-forms.test.ts",
-        "import": "readdirSync",
-        "line": 25,
-        "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
-        "rule": "test-no-live-repository-scan",
-        "target": "unresolved root",
-        "sourceLine": "readdirSync(...[here]); // UNRESOLVED spread"
       },
       {
         "file": "tests/path-forms.test.ts",

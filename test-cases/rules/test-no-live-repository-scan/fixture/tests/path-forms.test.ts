@@ -22,7 +22,7 @@ globSync("*.yml", { cwd: here }); // LIVE glob cwd
 globSync("*.yml", { cwd: join(here, "fixtures") }); // allowed glob cwd
 readdirSync(mutable); // UNRESOLVED mutable binding
 readdirSync(param("x")); // UNRESOLVED call not modeled
-readdirSync(...[here]); // UNRESOLVED spread
+readdirSync(...[here]); // LIVE spread argument
 readdirSync(process.env.ROOT as string); // UNRESOLVED environment
 readdirSync(await Promise.resolve(here)); // UNRESOLVED await of a call
 readdirSync("fixtures/../src"); // LIVE parent traversal leaves the fixture dir

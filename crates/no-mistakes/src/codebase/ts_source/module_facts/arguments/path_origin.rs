@@ -3,84 +3,30 @@
 //! Syntactic heuristics only: `join`/`resolve`, `tmpdir`, `mkdtemp`, `cwd`, and
 //! `import.meta.dirname` are recognised by spelling, and only immutable `const`
 //! aliases are followed. Everything else is `Unknown`, never guessed.
+mod alternatives;
 mod bindings;
 mod calls;
 mod composite;
+mod defaults;
 mod destructure;
+mod forwarded;
 mod getters;
+mod member_effects;
+mod member_mutations;
 mod members;
+mod nested_reads;
+mod nullish;
+mod object_paths;
+mod object_rest;
+mod origins;
 mod patterns;
+mod positions;
 mod sources;
 mod tmpdir;
 pub(super) use self::composite::{callee_root, imported_locals};
 pub(super) use self::sources::{env_name, is_process_env, process_global};
-use super::{PathAnchor, PathOrigin, Projector};
+use super::{PathAnchor, PathOrigin, PathValueKind, Projector};
 use oxc_ast::{ast::*, AstKind};
-
-impl PathOrigin {
-    pub(crate) fn unknown() -> Self {
-        Self {
-            anchor: PathAnchor::Unknown,
-            segments: Vec::new(),
-            dynamic: true,
-            env: None,
-            getter: None,
-            root_tails: Vec::new(),
-            param: None,
-            param_member: None,
-            param_owner: None,
-            owner_line: None,
-            reassigned_at: None,
-        }
-    }
-
-    fn anchored(anchor: PathAnchor) -> Self {
-        Self {
-            anchor,
-            dynamic: false,
-            ..Self::unknown()
-        }
-    }
-
-    fn literal(text: &str) -> Self {
-        let absolute = text.starts_with(['/', '\\']) || text.as_bytes().get(1) == Some(&b':');
-        let mut origin = Self::anchored(if absolute {
-            PathAnchor::Absolute
-        } else {
-            PathAnchor::Relative
-        });
-        origin.extend(
-            text.split(['/', '\\'])
-                .filter(|part| !part.is_empty() && *part != ".")
-                .take(32),
-        );
-        origin
-    }
-
-    /// Add components, resolving `..` so `fixtures/../src` is not a fixture path.
-    fn extend<'s>(&mut self, parts: impl IntoIterator<Item = &'s str>) {
-        for part in parts {
-            if part == ".." && self.segments.last().is_some_and(|last| last != "..") {
-                self.segments.pop();
-            } else {
-                self.segments.push(part.to_owned());
-            }
-        }
-    }
-
-    /// Append `tail` as trailing components of `self`.
-    fn append(mut self, tail: Self) -> Self {
-        if (self.getter.is_some() || self.env.is_some() || self.anchor == PathAnchor::Temp)
-            && (tail.dynamic || tail.anchor != PathAnchor::Relative)
-        {
-            self.root_tails.push(tail.clone());
-        }
-        self.dynamic |=
-            tail.dynamic || !matches!(tail.anchor, PathAnchor::Relative | PathAnchor::Absolute);
-        self.extend(tail.segments.iter().map(String::as_str));
-        self
-    }
-}
 
 impl<'a> Projector<'a, '_> {
     fn origin(&mut self, expression: &Expression<'a>, depth: usize) -> PathOrigin {
@@ -88,6 +34,11 @@ impl<'a> Projector<'a, '_> {
             return PathOrigin::unknown();
         }
         match expression.get_inner_expression() {
+            Expression::NullLiteral(_) => PathOrigin {
+                nullish: true,
+                value_kind: PathValueKind::Scalar,
+                ..PathOrigin::unknown()
+            },
             Expression::StringLiteral(text) => PathOrigin::literal(&crate::ast::js_literal(text)),
             Expression::TemplateLiteral(template) => self.template(template, depth),
             Expression::Identifier(id) => self.identifier(id, depth),
@@ -112,14 +63,22 @@ impl<'a> Projector<'a, '_> {
                     LogicalOperator::Coalesce | LogicalOperator::Or
                 ) =>
             {
-                // An env var that is set wins over the fallback on its right.
+                if self.definitely_nullish(&logical.left, depth + 1) {
+                    return self.origin(&logical.right, depth + 1);
+                }
                 let left = self.origin(&logical.left, depth + 1);
                 if left.env.is_some() {
                     left
                 } else {
-                    PathOrigin::unknown()
+                    let right = self.origin(&logical.right, depth + 1);
+                    if logical.operator == LogicalOperator::Coalesce {
+                        left.coalesced(right)
+                    } else {
+                        PathOrigin::alternatives(vec![left, right])
+                    }
                 }
             }
+            Expression::ChainExpression(chain) => self.chain_origin(chain, depth),
             Expression::NewExpression(url) => self.url(url, depth),
             Expression::CallExpression(call) => self.call(call, depth),
             _ => PathOrigin::unknown(),
@@ -127,6 +86,13 @@ impl<'a> Projector<'a, '_> {
     }
 
     fn identifier(&mut self, id: &IdentifierReference<'a>, depth: usize) -> PathOrigin {
+        if id.name == "undefined" && self.binding_symbol(id).is_none() {
+            return PathOrigin {
+                nullish: true,
+                value_kind: PathValueKind::Scalar,
+                ..PathOrigin::unknown()
+            };
+        }
         let global = matches!(id.name.as_str(), "__dirname" | "__filename");
         if global && self.binding_symbol(id).is_none() {
             return PathOrigin::anchored(PathAnchor::Module);
@@ -136,10 +102,14 @@ impl<'a> Projector<'a, '_> {
                 let origin = self.origin(init, depth + 1);
                 // A captured env read ran when the alias was initialised, not at the
                 // call, so a later owned write does not cover it.
-                if origin.env.is_some() || origin.getter.is_some() {
+                if origin
+                    .atoms()
+                    .iter()
+                    .any(|atom| atom.env.is_some() || atom.getter.is_some())
+                {
                     PathOrigin::unknown()
                 } else {
-                    origin
+                    self.value_requirement(id, origin)
                 }
             }
             None => {
@@ -154,7 +124,7 @@ impl<'a> Projector<'a, '_> {
                 {
                     origin.reassigned_at = self.reassigned_parameter(id);
                 }
-                origin
+                self.value_requirement(id, origin)
             }
         }
     }
