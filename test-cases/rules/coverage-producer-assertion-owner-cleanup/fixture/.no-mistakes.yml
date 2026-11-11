@@ -1,0 +1,19 @@
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/producers.mts, symbol: run }
+        - { file: src/producers.mts, symbol: loggerWithOwner }
+        - { file: src/producers.mts, symbol: mapWithOwner }
+        - { file: src/producers.mts, symbol: flatMapWithOwner }
+        - { file: src/producers.mts, symbol: sentryWithOwner }
+        - { file: src/producers.mts, symbol: cleanupWithOwner }
+        - { file: src/producers.mts, symbol: withoutAssertion }
+        - { file: src/producers.mts, symbol: cleanupOnly }
+        - { file: src/producers.mts, symbol: loggerOnly }
+        - { file: src/producers.mts, symbol: mapOnly }
+        - { file: src/producers.mts, symbol: flatMapOnly }
+        - { file: src/producers.mts, symbol: sentryOnly }
+        - { file: src/producers.mts, symbol: noOwner }
+      assertions: [{ module: "node:assert", export: strictEqual }]

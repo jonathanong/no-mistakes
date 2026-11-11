@@ -226,3 +226,53 @@ fn cli_reports_only_blocking_sites_with_structured_causes() {
         }
     }
 }
+
+#[test]
+fn proven_assertion_owner_survives_unresolved_cleanup_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "coverage-producer-assertion-owner-cleanup",
+        "fixture",
+        "",
+    );
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--format", "json", "--root"])
+        .arg(&root)
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let findings = report["rules"].as_array().unwrap();
+    let targets: Vec<_> = findings
+        .iter()
+        .map(|row| row["target"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        targets,
+        [
+            "loggerOnly",
+            "mapOnly",
+            "flatMapOnly",
+            "sentryOnly",
+            "cleanupOnly",
+            "withoutAssertion",
+            "noOwner"
+        ],
+        "{report}"
+    );
+    for finding in findings.iter().filter(|row| row["target"] != "noOwner") {
+        assert!(
+            finding["message"]
+                .as_str()
+                .unwrap()
+                .contains("unanalyzable coverage producer"),
+            "{finding}"
+        );
+        assert!(
+            !finding["causes"].as_array().unwrap().is_empty(),
+            "{finding}"
+        );
+    }
+    crate::check_json_snapshot::assert_saved_fixture(
+        "coverage_producer_assertion_owner_cleanup",
+        &[("cleanup", root.clone(), root.join(".no-mistakes.yml"))],
+    );
+}

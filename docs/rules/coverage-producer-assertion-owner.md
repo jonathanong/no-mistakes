@@ -163,6 +163,14 @@ when others exist. JSON `rules[]` / `advisories[]` findings also carry
 Ordinary no-owner findings omit `causes`. A custom `message` is followed by the
 same text. Only sites which block the proof are listed.
 
+A direct assertion-bearing helper also settles a producer whose result chains
+cleanup: `return main().finally(gracefulShutdown)` passes when `main` reaches a
+configured assertion. Cleanup callbacks selected from injected dependencies or
+mutable registrations, logger and error-reporter calls, and unresolved `map` or
+`flatMap` callbacks do not undo that proof. Without the assertion-bearing path,
+the same unresolved calls remain unanalyzable; registering a callback alone does
+not establish that an assertion executes.
+
 A producer with multiple uncertain paths reports their causes together. A reached
 assertion still passes despite dispatch or traversal uncertainty. Source failures
 remain errors even when an assertion is reached. Disabling this rule retains the
