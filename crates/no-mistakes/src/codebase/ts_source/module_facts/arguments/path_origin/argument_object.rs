@@ -13,6 +13,7 @@ impl<'a> Projector<'a, '_> {
             remaining: 256,
             exported: self.exported,
             immutable: self.immutable,
+            temp_factories: self.temp_factories,
         };
         diagnostic.plain_argument_object(expression, 0)
     }
