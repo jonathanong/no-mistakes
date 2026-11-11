@@ -81,6 +81,12 @@ impl<'a> Projector<'a, '_> {
                 if object.properties.len() > 32 {
                     return Supplied::Unknown;
                 }
+                if object.properties.iter().any(|property| matches!(property,
+                    ObjectPropertyKind::ObjectProperty(property) if property.method
+                        || property.kind != PropertyKind::Init
+                        || (!property.computed && crate::ast::property_key_name(&property.key).as_deref() == Some("__proto__")))) {
+                    return Supplied::Unknown;
+                }
                 let mut supplied = Supplied::Missing;
                 for property in &object.properties {
                     match property {

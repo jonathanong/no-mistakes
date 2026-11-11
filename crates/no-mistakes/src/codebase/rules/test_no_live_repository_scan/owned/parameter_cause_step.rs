@@ -25,7 +25,7 @@ impl Owners<'_> {
             .and_then(path_provenance)
             .unwrap_or(&empty);
         let argument = argument_path(provenance, caller.offset, index, member);
-        let mut forwarded = member.and_then(|member| {
+        let forwarded = member.and_then(|member| {
             let origin = argument_path(provenance, caller.offset, index, None)?;
             let atoms = origin
                 .atoms()
@@ -42,7 +42,7 @@ impl Owners<'_> {
                 .collect::<Option<Vec<_>>>()?;
             Some(PathOrigin::alternatives(atoms))
         });
-        let argument = argument.or(forwarded.as_mut().map(|origin| &*origin));
+        let argument = argument.or(forwarded.as_ref());
         let present = argument_present(provenance, caller.offset, index);
         let text = argument_text(provenance, caller.offset, index, member);
         let closed = provenance

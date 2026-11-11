@@ -1,6 +1,9 @@
 use std::path::PathBuf;
 
 const CASES: &[&str] = &[
+    "optional-prototype-live",
+    "object-accessor-mutation",
+    "object-prototype-default",
     "captured-mixed-env",
     "optional-missing-owned",
     "rest-object-mutation",

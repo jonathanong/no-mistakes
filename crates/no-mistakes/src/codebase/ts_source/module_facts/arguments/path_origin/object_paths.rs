@@ -46,6 +46,9 @@ impl<'a> Projector<'a, '_> {
                     paths.extend(spread_paths);
                 }
                 ObjectPropertyKind::ObjectProperty(property) => {
+                    if property.method || property.kind != PropertyKind::Init {
+                        return (FxHashMap::default(), true);
+                    }
                     if property.computed {
                         paths.clear();
                         unknown = true;
@@ -56,11 +59,10 @@ impl<'a> Projector<'a, '_> {
                         unknown = true;
                         continue;
                     };
-                    let origin = if property.method || property.kind != PropertyKind::Init {
-                        PathOrigin::unknown()
-                    } else {
-                        self.origin(&property.value, depth + 1)
-                    };
+                    if key == "__proto__" {
+                        return (FxHashMap::default(), true);
+                    }
+                    let origin = self.origin(&property.value, depth + 1);
                     paths.insert(key.into_owned(), origin);
                 }
             }
