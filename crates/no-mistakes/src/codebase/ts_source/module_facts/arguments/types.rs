@@ -56,6 +56,7 @@ pub(crate) struct PathOrigin {
     /// Offset of a named imported zero-argument getter call.
     pub(crate) getter: Option<u32>,
     pub(crate) root_tails: Vec<PathOrigin>,
+    pub(crate) env_capture: Option<u32>,
     /// Index of the enclosing function's parameter the leading component reads.
     pub(crate) param: Option<usize>,
     pub(crate) param_member: Option<String>,

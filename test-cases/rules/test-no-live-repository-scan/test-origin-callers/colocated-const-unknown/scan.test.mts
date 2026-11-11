@@ -1,0 +1,11 @@
+import { beforeEach, it } from "vitest";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { validate } from "./scan.mts";
+declare function externalRoot(): string;
+const root = externalRoot();
+it("first", () => validate(root));
+it("second", () => validate(root));
+it("third", () => validate(root));
+it("fourth", () => validate(root));

@@ -36,7 +36,7 @@ impl Owners<'_> {
                 .root_tails
                 .iter()
                 .all(|tail| self.safe_suffix(tail, caller, facts, 0))
-                || !self.env_argument_owned(name, caller, facts)
+                || !self.env_argument_owned(name, argument.env_capture, caller, facts)
             {
                 let block = live_or_variable(argument, fixture_dirs);
                 return Step::Block(caller_cause(caller, block, text));

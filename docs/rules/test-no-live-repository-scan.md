@@ -375,16 +375,33 @@ object-pattern parameter, such as `function scan({ opts }) { readdirSync(opts.ro
 stays unresolved too. The pattern key is not replaced by the accessed property, so
 an owned sibling `root` cannot clear a live `opts.root`. A property beside a
 rest binding can still be proven. Production modules that
-no selected test imports do not add callers. An unreadable module that no
-test, `setupFiles`, or `globalSetup` reaches does not erase a caller proof,
+no selected test imports do not add callers. This includes a separate CLI entry
+that passes `process.argv` to the exported helper: colocated `*.test.mts` files
+can call that helper with a top-level `const` temporary root or a root assigned
+in `beforeEach`. Several test calls still require every test-origin argument to
+be bounded. Importing the CLI from a selected test makes its calls count again.
+An unreadable module that no test, `setupFiles`, or `globalSetup` reaches does not erase a caller proof,
 including a lint config such as `.dependency-cruiser.cjs` loaded only from the
 runner config. The same unreadable module imported by a test that reaches the
 function keeps the finding.
 
 An object argument must expose the requested property in a literal object, without
-mutation or escape. Method and
-constructor calls on that object prevent this proof because they may mutate its
-properties. A member written through an object or array assignment target,
+mutation or escape. A local `const` options object can carry that property into
+its single direct call. Keep the object inside the test callback that allocates
+it; mutation, another consumer, or sharing a carrier across test executions
+keeps the root unresolved. A direct env value captured inside the options object
+also stays unresolved; pass the proven root binding instead. For example:
+
+```ts
+it("checks a bounded directory", () => {
+  const root = mkdtempSync(join(tmpdir(), "scan-"));
+  const options = { root, paths: ["rules"] };
+  validate(options);
+});
+```
+
+Method and constructor calls on that object prevent this proof because they may
+mutate its properties. A member written through an object or array assignment target,
 including nested patterns, rest elements, defaults, and loop targets, also
 invalidates ownership. For example, `({ root: options.root } = { root: process.cwd() })`
 before `readdirSync(options.root)` remains reported even when the caller supplied
@@ -560,9 +577,18 @@ A named helper can receive `process.env.X` as an argument when the value is
 proven owned at that argument read. The same dominance and poison checks apply
 to direct calls and named forwarding helpers.
 
-The env read must happen at the call: a value captured into a module- or
-function-level `const` (`const dir = process.env.X ?? "."`) keeps the finding, as
-does a `beforeAll`/`beforeEach` registered inside a branch.
+A module-level `const` can capture an owned env root from an unconditional earlier
+write in that module or one of its static imports. A selected Vitest `setupFiles`
+module can also establish ownership when every matching project writes the root
+before importing the capturing module. Import cycles keep the finding.
+The proof applies at the capture, so a test body or `beforeAll`/`beforeEach`
+write after a static import does not establish ownership. A setup module that
+imports the capturing module before its write also retains the finding.
+Function-local captures, captured env aliases passed as helper arguments, direct
+env values stored inside const object properties, and hooks registered inside
+branches remain unresolved. If any configured setup
+loads the capturing module, the setup proof stays unresolved even when another
+setup writes an owned root. Keep root setup independent of the module under test.
 
 A hook setup-and-restore pair remains unresolved: assigning an owned root in
 `beforeAll` and restoring the prior value (or deleting the variable) in

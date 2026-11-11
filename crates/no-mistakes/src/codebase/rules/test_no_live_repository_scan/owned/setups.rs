@@ -131,13 +131,66 @@ impl ConfiguredSetups {
         consumed: &Consumed,
         fixture_dirs: &[String],
     ) -> bool {
-        let relative = crate::codebase::ts_source::relative_slash_path(&self.root, file);
+        self.owns_in_project(
+            file,
+            file,
+            false,
+            name,
+            facts,
+            imports,
+            consumed,
+            fixture_dirs,
+        )
+    }
+
+    pub(super) fn owns_before_capture(
+        &self,
+        test: &Path,
+        capture: &Path,
+        name: &str,
+        facts: &dyn TsFactLookup,
+        imports: &ImportedWrites<'_>,
+        consumed: &Consumed,
+        fixture_dirs: &[String],
+    ) -> bool {
+        self.owns_in_project(
+            test,
+            capture,
+            true,
+            name,
+            facts,
+            imports,
+            consumed,
+            fixture_dirs,
+        )
+    }
+
+    fn owns_in_project(
+        &self,
+        test: &Path,
+        capture: &Path,
+        captured: bool,
+        name: &str,
+        facts: &dyn TsFactLookup,
+        imports: &ImportedWrites<'_>,
+        consumed: &Consumed,
+        fixture_dirs: &[String],
+    ) -> bool {
+        let relative = crate::codebase::ts_source::relative_slash_path(&self.root, test);
         let mut matched = false;
         for project in &self.projects {
             if project.filter.is_match(&relative) {
                 matched = true;
+                if captured
+                    && project
+                        .setups
+                        .iter()
+                        .any(|setup| imports.loads_module(setup, capture))
+                {
+                    return false;
+                }
                 if !project.setups.iter().any(|setup| {
-                    imports.module_owns_before(setup, file, name, facts, consumed, fixture_dirs)
+                    imports.module_owns_before(setup, capture, name, facts, consumed, fixture_dirs)
                 }) {
                     return false;
                 }

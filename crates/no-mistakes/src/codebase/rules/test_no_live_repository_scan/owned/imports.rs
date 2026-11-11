@@ -19,6 +19,7 @@ struct Summary {
 pub(super) struct ImportedWrites<'g> {
     graph: &'g DepGraph,
     summaries: RefCell<FxHashMap<PathBuf, Summary>>,
+    loads: RefCell<FxHashMap<PathBuf, FxHashSet<NodeId>>>,
 }
 
 impl<'g> ImportedWrites<'g> {
@@ -26,6 +27,7 @@ impl<'g> ImportedWrites<'g> {
         Self {
             graph,
             summaries: RefCell::new(FxHashMap::default()),
+            loads: RefCell::new(FxHashMap::default()),
         }
     }
 
@@ -45,6 +47,27 @@ impl<'g> ImportedWrites<'g> {
             .entry(file.to_path_buf())
             .or_insert_with(|| self.collect(file, facts, consumed, fixture_dirs));
         !summary.cycle && summary.owned.contains(name)
+    }
+
+    pub(super) fn loads_module(&self, module: &Path, target: &Path) -> bool {
+        if module == target {
+            return true;
+        }
+        self.loads
+            .borrow_mut()
+            .entry(module.to_path_buf())
+            .or_insert_with(|| {
+                self.graph
+                    .deps_of(
+                        &[NodeId::file(module)],
+                        None,
+                        Some(&super::super::reachable::load_kinds()),
+                    )
+                    .into_iter()
+                    .map(|entry| entry.node)
+                    .collect()
+            })
+            .contains(&NodeId::file(target))
     }
 
     pub(super) fn module_owns_before(

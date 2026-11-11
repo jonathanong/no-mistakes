@@ -1,5 +1,6 @@
 use super::{PathAnchor, PathOrigin, PathValueKind, Projector};
-use oxc_ast::ast::IdentifierReference;
+use oxc_ast::{ast::*, AstKind};
+use oxc_span::GetSpan;
 
 impl<'a> Projector<'a, '_> {
     pub(super) fn identifier(&mut self, id: &IdentifierReference<'a>, depth: usize) -> PathOrigin {
@@ -16,26 +17,34 @@ impl<'a> Projector<'a, '_> {
         }
         match self.const_init(id) {
             Some(init) => {
-                let origin = self.origin(init, depth + 1);
-                // A captured env read ran when the alias was initialised, not at the
-                // call, so a later owned write does not cover it.
-                if origin
-                    .atoms()
-                    .iter()
-                    .any(|atom| atom.env.is_some() || atom.getter.is_some())
+                let mut origin = self.origin(init, depth + 1);
+                if origin.getter.is_some()
+                    || (!origin.alternatives.is_empty()
+                        && origin
+                            .atoms()
+                            .iter()
+                            .any(|atom| atom.env.is_some() || atom.getter.is_some()))
+                    || (origin.anchor == PathAnchor::SharedTemp && origin.env.is_some())
                 {
-                    let mut unknown = PathOrigin::unknown();
-                    if let [atom] = origin.atoms() {
-                        unknown.env_diagnostic = atom.env_diagnostic.clone();
-                        if let Some(hint) = &mut unknown.env_diagnostic {
-                            hint.captured = true;
-                        }
-                        unknown.captured_getter = atom.getter.or(atom.captured_getter);
-                    }
-                    unknown
-                } else {
-                    self.value_requirement(id, origin)
+                    return captured_unknown(&origin);
                 }
+                if origin.env.is_some() && origin.env_capture.is_none() {
+                    let symbol = self.binding_symbol(id).unwrap();
+                    let node = self.semantic.scoping().symbol_declaration(symbol);
+                    if self.semantic.nodes().ancestors(node).any(|node| {
+                        matches!(
+                            node.kind(),
+                            AstKind::Function(_) | AstKind::ArrowFunctionExpression(_)
+                        )
+                    }) {
+                        return captured_unknown(&origin);
+                    }
+                    origin.env_capture = Some(init.span().start);
+                    if let Some(hint) = &mut origin.env_diagnostic {
+                        hint.captured = true;
+                    }
+                }
+                self.value_requirement(id, origin)
             }
             None => {
                 let mut origin = self
@@ -53,4 +62,16 @@ impl<'a> Projector<'a, '_> {
             }
         }
     }
+}
+
+fn captured_unknown(origin: &PathOrigin) -> PathOrigin {
+    let mut unknown = PathOrigin::unknown();
+    if let [atom] = origin.atoms() {
+        unknown.env_diagnostic = atom.env_diagnostic.clone();
+        if let Some(hint) = &mut unknown.env_diagnostic {
+            hint.captured = true;
+        }
+        unknown.captured_getter = atom.getter.or(atom.captured_getter);
+    }
+    unknown
 }

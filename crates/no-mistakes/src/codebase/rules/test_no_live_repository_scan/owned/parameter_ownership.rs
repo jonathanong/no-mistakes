@@ -84,7 +84,7 @@ impl Owners<'_> {
                     .root_tails
                     .iter()
                     .all(|tail| self.safe_suffix(tail, site, facts, 0))
-                    && self.env_owned(name, site, facts)
+                    && self.env_owned(name, origin.env_capture, site, facts)
                 {
                     Ownership::Yes
                 } else {

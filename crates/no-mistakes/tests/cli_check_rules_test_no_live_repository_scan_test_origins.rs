@@ -4,6 +4,43 @@ use std::process::Command;
 
 const RULE: &str = "test-no-live-repository-scan";
 const CASES: &[&str] = &[
+    "colocated-const-owned",
+    "colocated-const-live",
+    "colocated-const-unknown",
+    "colocated-hook-owned",
+    "colocated-hook-live",
+    "colocated-hook-unknown",
+    "colocated-options-owned",
+    "colocated-options-live",
+    "colocated-options-unknown",
+    "captured-env-setup-owned",
+    "captured-env-setup-live",
+    "captured-env-setup-unknown",
+    "captured-env-hook-owned",
+    "captured-env-hook-live",
+    "captured-env-hook-unknown",
+    "colocated-options-mutated",
+    "colocated-options-escaped",
+    "colocated-options-shared",
+    "captured-env-setup-imported-before-write",
+    "colocated-options-shared-clean",
+    "colocated-options-captured-env",
+    "colocated-options-env-hook",
+    "captured-env-program-owned",
+    "captured-env-program-live",
+    "captured-env-program-unknown",
+    "captured-env-import-owned",
+    "captured-env-import-live",
+    "captured-env-import-unknown",
+    "captured-env-program-late",
+    "captured-env-import-cycle",
+    "captured-env-member-owned",
+    "captured-env-member-live",
+    "captured-env-member-unknown",
+    "captured-env-member-alias-owned",
+    "captured-env-member-alias-live",
+    "captured-env-member-alias-unknown",
+    "captured-env-setup-loaded-first",
     "destructured",
     "forwarding",
     "cli",
@@ -61,7 +98,38 @@ fn test_no_live_repository_scan_only_test_originating_callers_decide_ownership()
             .collect();
         let expected = usize::from(matches!(
             *name,
-            "global-setup-escape"
+            "colocated-const-live"
+                | "colocated-const-unknown"
+                | "colocated-hook-live"
+                | "colocated-hook-unknown"
+                | "colocated-options-live"
+                | "colocated-options-unknown"
+                | "captured-env-setup-live"
+                | "captured-env-setup-unknown"
+                | "captured-env-hook-owned"
+                | "captured-env-hook-live"
+                | "captured-env-hook-unknown"
+                | "colocated-options-mutated"
+                | "colocated-options-escaped"
+                | "colocated-options-shared"
+                | "captured-env-setup-imported-before-write"
+                | "colocated-options-shared-clean"
+                | "colocated-options-captured-env"
+                | "colocated-options-env-hook"
+                | "captured-env-program-live"
+                | "captured-env-program-unknown"
+                | "captured-env-import-live"
+                | "captured-env-import-unknown"
+                | "captured-env-program-late"
+                | "captured-env-import-cycle"
+                | "captured-env-member-owned"
+                | "captured-env-member-live"
+                | "captured-env-member-unknown"
+                | "captured-env-member-alias-owned"
+                | "captured-env-member-alias-live"
+                | "captured-env-member-alias-unknown"
+                | "captured-env-setup-loaded-first"
+                | "global-setup-escape"
                 | "explicit-roots-barrel"
                 | "explicit-roots-imported"
                 | "explicit-roots-live"

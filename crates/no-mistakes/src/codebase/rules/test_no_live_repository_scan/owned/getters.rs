@@ -61,7 +61,7 @@ impl Owners<'_> {
             && root
                 .env
                 .as_deref()
-                .is_some_and(|name| self.env_owned(name, site, facts))
+                .is_some_and(|name| self.env_owned(name, root.env_capture, site, facts))
     }
 }
 

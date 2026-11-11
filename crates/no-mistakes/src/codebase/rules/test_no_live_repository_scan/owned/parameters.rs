@@ -16,9 +16,13 @@ impl Owners<'_> {
     pub(super) fn env_argument_owned(
         &self,
         name: &str,
+        capture: Option<u32>,
         site: &ResolvedCallSite,
         facts: &dyn TsFactLookup,
     ) -> bool {
+        if capture.is_some() {
+            return false;
+        }
         if !self.env.all_owned(name) || self.overlapping_env(&site.file, site.offset, name, facts) {
             return false;
         }
