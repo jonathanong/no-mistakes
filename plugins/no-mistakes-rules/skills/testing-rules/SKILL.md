@@ -15,6 +15,11 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT match error message text; assert type, code, or structured fields.
 - MUST NOT raise coverage with weak tests or exclude files from coverage; strengthen the test or refactor the code.
 - MUST NOT treat a passing rerun as a fix for a flaky test; find the cause.
+- MUST NOT assert over a collection without asserting it is non-empty; every assertion passes over zero items.
+- MUST NOT accept "either outcome is fine" when one outcome is a degraded fallback.
+- MUST NOT write a regression test whose fixture never reaches the bug's precondition; confirm it fails without the fix.
+- MUST NOT add a test that locks in a branch you believe is unreachable; delete the branch or prove it reachable.
+- MUST NOT trust a green exit code; check the number of tests that ran.
 - SHOULD NOT keep redundant tests; keep one failure-sensitive test per contract at the lowest realistic boundary.
 - SHOULD NOT recompute the production algorithm in the test; a shared bug cancels out.
 - SHOULD NOT assert what a dependency owns (its messages, markup, call order, exact versions or pins); assert your own outcome.
@@ -27,6 +32,9 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT leave spies, env, timers, or globals unrestored after a test.
 - MUST NOT use call-order fakes for calls whose order you do not own; route fakes by method and path.
 - MUST NOT add test-only branches or placeholders to production code.
+- MUST NOT patch a name the code under test never looks up (the definition instead of the import site); assert the mock was called.
+- MUST NOT patch a process-wide global and assert an exact call count; other code in the process calls it too.
+- MUST NOT test that an import has no side effect from a process that already imported it.
 - SHOULD NOT mock in integration tests, or rely on mock-only tests where wiring, serialization, transactions, or retries are the contract.
 - SHOULD NOT keep a production export only so tests can reach it; test through the public surface.
 
@@ -47,6 +55,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT bind port 0 or real network services in unit tests.
 - MUST NOT scan the live repository checkout from unit tests; use saved fixtures.
 - MUST NOT change shared database schema or server settings inside tests; migrate before the suite.
+- MUST NOT hardcode dates a test depends on being in the future or past; derive them from the injected clock.
 
 ## Fixtures and snapshots
 
@@ -57,6 +66,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - SHOULD NOT build fixtures by bypassing public constructors; keep them minimal and typed.
 - SHOULD NOT hide expectations inside shared helpers; helpers remove setup only.
 - SHOULD NOT add aggregate test files that only import other tests.
+- SHOULD NOT build a "nothing was forgotten" guard as an allow-list; use a deny-list so new files are covered by default.
 
 ## Platform notes
 

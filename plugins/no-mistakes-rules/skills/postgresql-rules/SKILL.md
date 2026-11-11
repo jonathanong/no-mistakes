@@ -19,24 +19,34 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT put volatile functions (`now()`, `random()`) in predicates or change detection; compute the bound once and bind it.
 - MUST NOT write non-idempotent `INSERT`s on retried paths; use `ON CONFLICT`.
 - MUST NOT write generated or trigger-maintained columns.
+- MUST NOT read `COUNT(expr)` as a count of true rows; it counts non-NULL values. Use `COUNT(*) FILTER (WHERE expr)`.
 - SHOULD NOT use `SELECT *`, `alias.*`, or `RETURNING *`; list columns.
 - SHOULD NOT use `COUNT(*) > 0` or `GROUP BY` to test existence or dedupe; use `EXISTS`.
 - SHOULD NOT cast or wrap an indexed column in a predicate (UUIDs, timestamps); compare the raw column to a bound.
 - SHOULD NOT add `MATERIALIZED` CTEs, `LATERAL`, `UNION`, `DISTINCT`, or candidate pools unless `EXPLAIN ANALYZE` at realistic size beats the plain query.
 - SHOULD NOT send SQL without an operation-name comment.
+- SHOULD NOT upsert by overwriting every column; it resets an existing row to the inserter's values. Use `DO UPDATE SET` on the columns you own, or `DO NOTHING` then read the row.
 
 ## Locks, transactions, connections
 
-- MUST NOT lock rows you do not write (`FOR UPDATE` on read sets, parents, globals).
+- MUST NOT lock rows you neither write nor read to decide a write. Allowed: a parent row used as a mutex, or a lock-order anchor taken before a trigger or cascade locks in another order; name which one at the call site.
 - MUST NOT lock or upsert several rows in unspecified order; `ORDER BY` the key, or use `SKIP LOCKED` for competing workers.
 - MUST NOT scatter manual `BEGIN`/`COMMIT`/`ROLLBACK`; use one transaction helper that owns cleanup.
 - MUST NOT hold a transaction or pooled client across an external call or unrelated work; release clients in `finally`.
 - MUST NOT `Promise.all` statements on one transaction client expecting parallelism; merge them into one statement.
-- MUST NOT use advisory locks.
+- MUST NOT use blocking or session-scoped advisory locks; they pin a pooled connection or outlive it. Prefer a row lock; if none fits, use `pg_try_advisory_xact_lock`.
 - MUST NOT read from a replica for read-after-write, locking, or lag-sensitive reads.
 - MUST NOT add `BEGIN`/`COMMIT` inside a migration whose runner already wraps it in a transaction.
 - MUST NOT run `EXPLAIN ANALYZE` on a write outside a rolled-back transaction.
 - MUST NOT fold away a statement without keeping the lock or snapshot guarantee it gave.
+- MUST NOT add `FOR UPDATE` to a subquery or pre-select whose rows the same `UPDATE` or `DELETE` already locks and whose values you do not read; it only adds a second lock order. A `SKIP LOCKED` claim subquery is fine.
+- MUST NOT write an ORM lock that never executes; lazy querysets take no lock until evaluated, and some ORMs drop the lock on bulk delete.
+- MUST NOT lock related tables in different orders on different paths; lock parent before child everywhere.
+- MUST NOT pick which parent to lock from an unlocked read of the child's foreign key; lock that parent, then lock the child and re-check the key, retrying if it moved.
+- MUST NOT wait unboundedly on a row lock in a request path; use `NOWAIT` or `lock_timeout` and return 409.
+- MUST NOT ship a job that locks contended rows without retrying deadlocks with jittered backoff.
+- MUST NOT keep using a transaction after a statement fails unless it ran in a savepoint you rolled back to; every later statement fails with `25P02`.
+- MUST NOT run logging or metrics code that queries the database on the transaction's connection; its failure aborts the transaction.
 
 ## Schema and migrations
 
@@ -48,6 +58,10 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT run DDL or session settings from runtime or seed SQL; keep them in migrations.
 - MUST NOT hand-sync a status column beside lifecycle timestamps; derive one from the other.
 - MUST NOT update or delete append-only history rows; reject it with a trigger.
+- MUST NOT build an index on a populated table without `CONCURRENTLY`, outside the migration's transaction; a failed build leaves an `INVALID` index to drop before retrying.
+- MUST NOT add a `NOT NULL`, unique, or check constraint without first querying for rows that already violate it.
+- MUST NOT rename or renumber a migration after it has run in any shared environment.
+- MUST NOT merge code that depends on a migration that has not been applied; ship them together or expand first.
 - SHOULD NOT omit `ON DELETE`, constraint names, or `COMMENT ON` for tables and columns.
 - SHOULD NOT use free text for a finite set; use an enum or lookup table.
 - SHOULD NOT use natural text keys as primary or foreign keys.

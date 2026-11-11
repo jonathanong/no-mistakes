@@ -1,6 +1,6 @@
 ---
 name: infra-rules
-description: "MUST NOT / SHOULD NOT rules for infrastructure and ops scripts: OpenTofu or Terraform, IAM, secrets stores, provisioning and cleanup scripts, and shell. Use when writing or reviewing infrastructure code, machine setup, or shell scripts."
+description: "MUST NOT / SHOULD NOT rules for infrastructure and ops scripts: OpenTofu or Terraform, IAM, secrets stores, provisioning and cleanup scripts, shell, runtime state, probes, and data ownership. Use when writing or reviewing infrastructure code, machine setup, shell scripts, or code whose correctness depends on how many instances run."
 ---
 
 # Infrastructure and shell rules
@@ -17,6 +17,14 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT put browser-visible values in secret stores.
 - SHOULD NOT put topology (counts, scaling, resource ids) in application repos.
 - SHOULD NOT rely on alerts and runbooks where automatic detection and scoped remediation are possible.
+
+## Runtime
+
+- MUST NOT keep state that request correctness depends on (sessions, uploads, counters, locks) in process memory or on local disk; the next request may land on another instance.
+- MUST NOT run side-effecting scheduled work from an in-process timer in a service with more than one replica; use a scheduler that runs it once.
+- MUST NOT make a liveness probe check a shared dependency; one outage restarts every instance.
+- MUST NOT read or write another service's database, cache, or queue directly; call its API or consume its events.
+- MUST NOT open a database connection per request; pool, and size the pool against the database limit across all instances.
 
 ## Scripts and shell
 

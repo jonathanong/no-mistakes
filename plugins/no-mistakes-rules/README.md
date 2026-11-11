@@ -10,7 +10,7 @@ and loads only when that topic comes up.
 |---|---|
 | `testing-rules` | Assertions, mocks, isolation, timing, fixtures, snapshots |
 | `playwright-rules` | Browser tests: waits, locators, test ids, setup |
-| `postgresql-rules` | Queries, locks, transactions, schema, partitioning |
+| `postgresql-rules` | Queries, locks, transactions, schema, migrations, partitioning |
 | `queue-rules` | Producers, workers, leases, sweeps, bounded iteration |
 | `typescript-rules` | Async, errors, mutation, dead paths, Node IO, Redis, packages |
 | `react-rules` | React and Next.js |
@@ -18,8 +18,11 @@ and loads only when that topic comes up.
 | `github-actions-rules` | Pinning, permissions, timeouts, polling, required checks |
 | `dependency-rules` | Manifests, lockfiles, publishing, Dependabot |
 | `security-rules` | Secrets, auth, SSRF, injection, API shape |
-| `git-rules` | Commits, rebases, PRs, docs |
-| `infra-rules` | Infrastructure as code, ops scripts, shell |
+| `git-rules` | Commits, rebases, PRs, docs, evidence |
+| `infra-rules` | Infrastructure as code, runtime, ops scripts, shell |
+| `integrations-rules` | Third-party APIs, webhooks, retries, payload mapping |
+| `rollout-rules` | Feature flags, deploy order, API and message compatibility |
+| `observability-rules` | Logs, metrics, alerts, context binding |
 | `native-app-rules` | Swift and .NET apps |
 
 Many rules are enforced by the `no-mistakes` CLI checks and
