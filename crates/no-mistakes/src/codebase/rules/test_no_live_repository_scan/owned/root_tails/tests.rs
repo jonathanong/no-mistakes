@@ -42,7 +42,7 @@ fn unknown_suffixes_require_complete_named_caller_proof() {
 fn an_explicit_unknown_argument_does_not_use_the_omitted_argument_default() {
     use crate::codebase::dependencies::graph::TsFactLookup;
     use crate::codebase::ts_source::facts::TsFileFacts;
-    use crate::codebase::ts_source::module_facts::arguments::PathProvenance;
+    use crate::codebase::ts_source::module_facts::arguments::{ArgumentText, PathProvenance};
     use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
     use std::sync::Arc;
 
@@ -86,7 +86,15 @@ fn an_explicit_unknown_argument_does_not_use_the_omitted_argument_default() {
         ..TsFileFacts::default()
     });
     assert!(owners.safe_suffix(&tail, &site, &facts, 0));
-    paths.arg_text.insert(0, vec![(0, "unprojectable".into())]);
+    paths.arg_text.insert(
+        0,
+        vec![ArgumentText {
+            index: 0,
+            property: None,
+            line: 1,
+            text: "unprojectable".into(),
+        }],
+    );
     Arc::make_mut(facts.0.module_bindings.as_mut().unwrap()).path_provenance =
         Some(Arc::new(paths));
     assert!(!owners.safe_suffix(&tail, &site, &facts, 0));
