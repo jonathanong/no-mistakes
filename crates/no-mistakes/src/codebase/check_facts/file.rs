@@ -30,6 +30,25 @@ pub(crate) fn collect_file_facts_with_request(
     sources: &crate::codebase::ts_source::SourceStore,
     retain_parse: bool,
 ) -> Option<CheckFileFacts> {
+    crate::codebase::fact_panic::isolate(session.session, path, || {
+        collect_file_facts_unchecked(session, root, path, plan, playwright, sources, retain_parse)
+    })
+    .unwrap_or_else(|error| {
+        Some(super::file_parse_error::failure_facts(
+            root, path, plan, error,
+        ))
+    })
+}
+
+fn collect_file_facts_unchecked(
+    session: super::FactRequest<'_>,
+    root: &Path,
+    path: &Path,
+    plan: &CheckFactPlan,
+    playwright: Option<&PlaywrightFactPlan>,
+    sources: &crate::codebase::ts_source::SourceStore,
+    retain_parse: bool,
+) -> Option<CheckFileFacts> {
     if plan.raw_source
         && !should_store_source(plan, path)
         && !requires_parse(root, plan, path, playwright)

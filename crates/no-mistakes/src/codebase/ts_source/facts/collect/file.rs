@@ -21,6 +21,20 @@ pub(super) fn collect_file_facts_with_sources_and_session(
     sources: &crate::codebase::ts_source::SourceStore,
     retain_parse: bool,
 ) -> Option<TsFileFacts> {
+    crate::codebase::fact_panic::isolate(session, path, || {
+        collect_file_facts_unchecked(session, path, plan, context, sources, retain_parse)
+    })
+    .unwrap_or_else(|error| Some(failure_facts(error)))
+}
+
+fn collect_file_facts_unchecked(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    path: &Path,
+    plan: TsFactPlan,
+    context: &TsFactContext,
+    sources: &crate::codebase::ts_source::SourceStore,
+    retain_parse: bool,
+) -> Option<TsFileFacts> {
     let source = match sources.read_path(path) {
         Ok(source) => source,
         Err(error) => {
