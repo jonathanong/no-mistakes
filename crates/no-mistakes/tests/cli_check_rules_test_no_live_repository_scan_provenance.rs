@@ -110,7 +110,7 @@ fn enumeration_locations(items: &Value) -> Vec<String> {
         .collect()
 }
 
-#[path = "cli_check_rules_test_no_live_repository_scan_factory_cases.rs"]
+#[path = "cli_check_rules_test_no_live_repository_scan_provenance/factory_cases.rs"]
 mod factory_cases;
 
 #[test]
