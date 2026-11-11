@@ -132,7 +132,7 @@ fn signature_impact_rejects_target_parse_failure_before_export_projection() {
 
 #[cfg(unix)]
 #[test]
-fn signature_impact_rejects_unreadable_imported_aliases_and_reports_unrelated_io_errors() {
+fn signature_impact_rejects_unreadable_sources_without_proven_independence() {
     use std::os::unix::fs::PermissionsExt;
     struct RestorePermissions(PathBuf, std::fs::Permissions);
     impl Drop for RestorePermissions {
@@ -140,7 +140,7 @@ fn signature_impact_rejects_unreadable_imported_aliases_and_reports_unrelated_io
             std::fs::set_permissions(&self.0, self.1.clone()).unwrap();
         }
     }
-    for (file, potentially_related) in [("bridge.mts", true), ("unrelated.mts", false)] {
+    for file in ["bridge.mts", "standalone.mts", "unrelated.mts"] {
         let fixture = encoding_fixture("unreadable-renamed-bridge");
         let root = fixture.path().canonicalize().unwrap();
         let path = root.join(file);
@@ -155,25 +155,11 @@ fn signature_impact_rejects_unreadable_imported_aliases_and_reports_unrelated_io
         }
         let result = impact::report_json(encoding_args(&root));
         drop(restore);
-        if potentially_related {
-            let error = result.unwrap_err().to_string();
-            assert!(
-                error.contains("signature-impact could not analyze `bridge.mts`"),
-                "{error}"
-            );
-            assert!(error.contains("failed to read"), "{error}");
-        } else {
-            let report: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
-            assert_eq!(report["unanalyzed"][0]["file"], "unrelated.mts");
-            assert!(report["unanalyzed"][0]["reason"]
-                .as_str()
-                .unwrap()
-                .contains("failed to read"));
-            assert!(report["warnings"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|warning| warning["type"] == "unanalyzed-files"));
-        }
+        let error = result.unwrap_err().to_string();
+        assert!(
+            error.contains(&format!("signature-impact could not analyze `{file}`")),
+            "{error}"
+        );
+        assert!(error.contains("failed to read"), "{error}");
     }
 }

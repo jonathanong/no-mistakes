@@ -81,3 +81,48 @@ fn panicked_variants_preserve_declared_source_without_ast_facts_or_extra_reads()
     assert!(facts.source.is_none());
     assert_eq!(sources.physical_read_count(), 1);
 }
+
+#[test]
+fn recovered_parse_failures_retain_declared_graph_source_without_check_source() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/symbols/signature-impact-encoding/tolerated")
+        .canonicalize()
+        .unwrap();
+    for name in ["binary.mts", "unrelated.mts"] {
+        let path = root.join(name);
+        let sources = SourceStore::new(Arc::new(FileInventory::from_paths(std::slice::from_ref(
+            &path,
+        ))));
+        let source = sources.read_source_path(&path).unwrap();
+        let plan = CheckFactPlan {
+            graph: crate::codebase::ts_source::facts::TsFactPlan {
+                source: true,
+                imports: true,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let variants = [CheckFactVariant {
+            root: &root,
+            plan: &plan,
+            playwright: None,
+            collect_tests: false,
+        }];
+        let facts = super::super::collect_file_fact_variants_from_source_with_session(
+            &AnalysisSession::disabled(),
+            &path,
+            Arc::clone(&source),
+            &variants,
+        )
+        .pop()
+        .unwrap()
+        .unwrap();
+        assert!(facts.ts.parse_error.is_some(), "{name}");
+        assert!(facts.source.is_none(), "{name}");
+        assert!(
+            Arc::ptr_eq(facts.ts.source.as_ref().unwrap(), &source),
+            "{name}"
+        );
+        assert_eq!(sources.physical_read_count(), 1, "{name}");
+    }
+}

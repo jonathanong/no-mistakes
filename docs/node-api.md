@@ -475,7 +475,8 @@ not be analyzed. Sources replace invalid UTF-8 with U+FFFD before parsing, so
 invalid bytes in comments or strings remain analyzable. Each `UnanalyzedFile`
 contains a project-relative `file` and diagnostic `reason`; a nonempty array adds
 an `unanalyzed-files` warning. A failed file that could affect the target rejects
-the request.
+the request. Files without retained source also reject the request because their
+imports cannot establish independence.
 
 ## PostgreSQL catalog generation
 

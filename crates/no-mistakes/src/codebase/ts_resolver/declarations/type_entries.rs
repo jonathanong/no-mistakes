@@ -160,3 +160,7 @@ fn package_entry(dir: &Path, sources: &SourceStore) -> PackageEntry {
 #[cfg(test)]
 #[path = "type_entries_tests.rs"]
 mod type_entries_tests;
+
+#[cfg(test)]
+#[path = "type_entries_encoding_tests.rs"]
+mod type_entries_encoding_tests;

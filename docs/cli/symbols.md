@@ -37,14 +37,14 @@ no-mistakes symbols src/api.mts --mode signature-impact --symbol handler --forma
 This report groups the symbol definition, export/re-export paths, production
 callers, test callers, and suggested focused tests. Signature-impact results
 include `unanalyzed`, an array of `{ file, reason }` records. Unrelated failures
-are reported there with an `unanalyzed-files` warning. Source text is decoded
+with retained source are reported there with an `unanalyzed-files` warning. Source text is decoded
 lossily before analysis. A failure is an error when it could change the answer:
 the target file, transitive importers of the target and their transitive
 dependencies, or a raw occurrence of the requested symbol or a known export
 alias in retained source. Imports or re-exports of these names through an opaque failed module
 also fail conservatively, even when that module's link to the target is unknown.
-Unreadable files referenced by importers also fail conservatively because their
-exports are unknown.
+Failures without retained source also fail conservatively: missing import edges
+cannot establish independence when the file could not be read.
 The default `symbols` output is unchanged unless `--mode signature-impact` is set.
 Unrelated failures return exit 0; potentially relevant failures return exit 2.
 Use JSON or YAML to inspect completeness before consuming `--format paths`.
