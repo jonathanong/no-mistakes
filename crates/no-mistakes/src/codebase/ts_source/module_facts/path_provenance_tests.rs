@@ -164,7 +164,7 @@ fn argument_text_truncation_stops_before_multibyte_characters() {
         .provenance()
         .arg_text
         .values()
-        .map(|arguments| arguments[0].1.as_str())
+        .map(|arguments| arguments[0].text.as_str())
         .collect::<Vec<_>>();
     texts.sort();
     assert_eq!(

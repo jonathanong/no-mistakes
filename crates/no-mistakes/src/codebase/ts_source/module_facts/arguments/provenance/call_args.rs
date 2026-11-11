@@ -1,6 +1,6 @@
 //! Argument text and path origins for one call.
 use super::super::path_origin::callee_root;
-use super::super::{PathAnchor, PathOrigin, PathProvenance, Projector};
+use super::super::{line_in, ArgumentText, PathAnchor, PathOrigin, PathProvenance, Projector};
 use oxc_ast::ast::*;
 use oxc_span::GetSpan;
 
@@ -10,26 +10,48 @@ pub(super) const MAX_ARGUMENTS: usize = 8;
 /// Argument text is cut at this many bytes, on a char boundary.
 const ARG_TEXT_LIMIT: usize = 80;
 
-pub(super) fn record_arg_text(source: &str, call: &CallExpression<'_>, out: &mut PathProvenance) {
-    let mut texts = Vec::new();
-    for (index, argument) in call.arguments.iter().take(MAX_ARGUMENTS).enumerate() {
-        let mut text = String::new();
-        for word in crate::ast::span_text(source, argument.span()).split_whitespace() {
-            if !text.is_empty() {
-                text.push(' ');
-            }
-            text.push_str(word);
-            if text.len() >= ARG_TEXT_LIMIT {
-                break;
-            }
-        }
-        text.truncate(text.floor_char_boundary(ARG_TEXT_LIMIT));
-        if !text.is_empty() {
-            texts.push((index, text));
-        }
-    }
+pub(super) fn record_arg_text(
+    source: &str,
+    call: &CallExpression<'_>,
+    out: &mut PathProvenance,
+    members: Vec<ArgumentText>,
+) {
+    let mut texts: Vec<_> = call
+        .arguments
+        .iter()
+        .take(MAX_ARGUMENTS)
+        .enumerate()
+        .map(|(index, argument)| argument_text(source, index, None, argument.span()))
+        .filter(|argument| !argument.text.is_empty())
+        .collect();
+    texts.extend(members);
     if !texts.is_empty() {
         out.arg_text.insert(call.span.start, texts);
+    }
+}
+
+pub(super) fn argument_text(
+    source: &str,
+    index: usize,
+    property: Option<String>,
+    span: oxc_span::Span,
+) -> ArgumentText {
+    let mut text = String::new();
+    for word in crate::ast::span_text(source, span).split_whitespace() {
+        if !text.is_empty() {
+            text.push(' ');
+        }
+        text.push_str(word);
+        if text.len() >= ARG_TEXT_LIMIT {
+            break;
+        }
+    }
+    text.truncate(text.floor_char_boundary(ARG_TEXT_LIMIT));
+    ArgumentText {
+        index,
+        property,
+        line: line_in(source, span.start),
+        text,
     }
 }
 

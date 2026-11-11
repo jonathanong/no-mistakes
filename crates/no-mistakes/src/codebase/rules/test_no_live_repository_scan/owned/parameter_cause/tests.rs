@@ -4,7 +4,9 @@ use super::super::escapes::Escapes;
 use crate::codebase::dependencies::extract::CallableId;
 use crate::codebase::dependencies::graph::NodeId;
 use crate::codebase::ts_source::facts::TsFileFacts;
-use crate::codebase::ts_source::module_facts::arguments::{PathAnchor, PathOrigin, PathProvenance};
+use crate::codebase::ts_source::module_facts::arguments::{
+    ArgumentText, PathAnchor, PathOrigin, PathProvenance,
+};
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 use crate::fx::FxHashMap;
 use std::path::PathBuf;
@@ -87,9 +89,15 @@ fn a_file_wide_consume_names_the_forwarded_argument() {
     let mut origin = parameter_origin(20);
     origin.param_owner = Some(20);
     provenance.arg_paths.insert(50, vec![(0, origin)]);
-    provenance
-        .arg_text
-        .insert(50, vec![(0, "root".to_string())]);
+    provenance.arg_text.insert(
+        50,
+        vec![ArgumentText {
+            index: 0,
+            property: None,
+            line: forwarded_site.line,
+            text: "root".to_string(),
+        }],
+    );
     let facts = TsFileFacts {
         module_bindings: Some(Arc::new(TypeScriptModuleFacts {
             path_provenance: Some(Arc::new(provenance)),
@@ -117,9 +125,15 @@ fn an_argument_without_a_parameter_source_is_forwarded() {
     provenance
         .arg_paths
         .insert(50, vec![(0, parameter_origin(20))]);
-    provenance
-        .arg_text
-        .insert(50, vec![(0, "root".to_string())]);
+    provenance.arg_text.insert(
+        50,
+        vec![ArgumentText {
+            index: 0,
+            property: None,
+            line: forwarded_site.line,
+            text: "root".to_string(),
+        }],
+    );
     let facts = TsFileFacts {
         module_bindings: Some(Arc::new(TypeScriptModuleFacts {
             path_provenance: Some(Arc::new(provenance)),

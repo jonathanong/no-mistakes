@@ -49,11 +49,11 @@ pub(super) fn collect(
                 }
                 consumers::from_call(&mut projector, call, &mut result);
                 if callee_root(&call.callee).is_some() && !call_args::rebinds_callee(&call.callee) {
-                    let members = member_paths::collect(&mut projector, call);
+                    let (members, texts) = member_paths::collect(&mut projector, call);
                     if !members.is_empty() {
                         result.arg_member_paths.insert(call.span.start, members);
                     }
-                    call_args::record_arg_text(semantic.source_text(), call, &mut result);
+                    call_args::record_arg_text(semantic.source_text(), call, &mut result, texts);
                     let paths = call_args::argument_paths(&mut projector, call, &mut result);
                     if !paths.is_empty() {
                         if paths.iter().any(|(_, path)| path.env.is_some())

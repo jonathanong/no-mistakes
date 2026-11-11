@@ -79,6 +79,14 @@ pub(crate) struct EnvWrite {
     pub(crate) scope: WriteScope,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ArgumentText {
+    pub(crate) index: usize,
+    pub(crate) property: Option<String>,
+    pub(crate) line: u32,
+    pub(crate) text: String,
+}
+
 /// Facts that let a rule trace a path through callers, env vars, and mocks.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct PathProvenance {
@@ -107,8 +115,8 @@ pub(crate) struct PathProvenance {
     /// 1-based line of the first load that set `modules_unknown`.
     pub(crate) unknown_load: Option<u32>,
     pub(crate) resolved_import_spans: Vec<(u32, u32)>,
-    /// Source text of each positional argument, including ones the proof ignores.
-    pub(crate) arg_text: FxHashMap<u32, Vec<(usize, String)>>,
+    /// Diagnostic text and locations for positional arguments and direct literal properties.
+    pub(crate) arg_text: FxHashMap<u32, Vec<ArgumentText>>,
     /// Origins omitted from `arg_paths`. The caller proof does not read this.
     pub(crate) arg_unproven: FxHashMap<u32, Vec<(usize, PathOrigin)>>,
     /// Imports and references that can make a callee's callers unknowable.
