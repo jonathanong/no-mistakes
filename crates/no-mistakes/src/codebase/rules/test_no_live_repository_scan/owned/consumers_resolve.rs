@@ -7,11 +7,18 @@ use crate::codebase::ts_source::module_facts::arguments::PathProvenance;
 use crate::codebase::workspaces::IndexedWorkspaceMap;
 use std::path::{Path, PathBuf};
 
+#[path = "consumer_selections.rs"]
+mod selections;
+
 pub(super) struct Gate<'a> {
     pub(super) resolver: &'a dyn ImportResolution,
     pub(super) workspace: &'a IndexedWorkspaceMap,
     pub(super) visible: &'a dyn VisiblePathLookup,
     pub(super) resolver_name: &'static str,
+    pub(super) selection: Option<(
+        &'a crate::codebase::dependencies::graph::DepGraph,
+        &'a dyn crate::codebase::dependencies::graph::TsFactLookup,
+    )>,
 }
 
 enum Choice {
@@ -36,14 +43,25 @@ pub(super) fn apply(
     for specifier in &provenance.unsafe_modules {
         match choose(gate, file, specifier) {
             Choice::Follow(target) => {
-                route_index::note_resolved(
+                let selected = gate
+                    .selection
+                    .zip(ts.module_bindings.as_deref())
+                    .map(|(context, module)| {
+                        selections::collect(
+                            context, consumed, file, module, provenance, specifier, &target,
+                        )
+                    })
+                    .unwrap_or_default();
+                if route_index::note_resolved(
                     &mut consumed.hits,
                     file,
                     provenance,
                     specifier,
                     &target,
-                );
-                consumed.insert(&target);
+                    &selected,
+                ) {
+                    consumed.insert(&target);
+                }
             }
             Choice::Ignore => {}
             Choice::Unread(reason) => {

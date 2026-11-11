@@ -2,6 +2,7 @@ use super::*;
 use oxc_syntax::node::NodeId;
 
 mod all;
+pub(super) mod discarded;
 mod loader;
 mod member;
 mod registry;

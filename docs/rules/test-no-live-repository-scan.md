@@ -268,16 +268,26 @@ the call graph cannot see may pass anything:
   template literal, does not count. A property name on a member access
   (`import.meta.main`, `obj.main`) is not a reference to a binding named
   `main`. A re-export specifier
-  (`export { enumerate, other }`) does not count either: importers of that
+  (`export { enumerate, other }`) or plain `export *` does not count either: importers of that
   barrel, including through further re-export chains, are judged at their
-  call sites.
+  call sites. Type-only references such as `void (0 as unknown as typeof scan)`
+  and discarded values such as `void (scan as unknown)` do not escape the
+  function. Runtime arguments such as `consume(scan as unknown)` still do.
 - Every test-reachable file that consumes its module does so through named static imports
   (`import { sync } from "./sync"`) whose uses are all direct calls. A namespace
-  import, a default import, `import()`, `require`, an unsupported re-export,
+  import, a default import, `require`, a namespace re-export (`export * as ns`),
   and `vi.mock`/`vi.importActual` of the module make its consumers unknowable.
+  A literal dynamic import whose result is discarded, or whose awaited
+  namespace binding is unused, does not expose every export. An unexported
+  promise binding whose only reads discard its value with `void` is also inert. Proven named
+  reads select only those exports through the canonical graph. A namespace
+  passed to unknown code, a computed member read, an exported namespace, or an
+  escaping import promise retains the conservative advisory. Method calls on
+  a namespace narrow only when the selected exports are proven independent
+  of their receiver.
   A named value import that is not a call blocks only the export it names.
   A rename (`import { fn as alias }`) still names that export.
-  A named static barrel re-export can preserve the route when all consumers
+  A named or plain-star barrel re-export preserves the route when all consumers
   remain named direct calls. A load through a `const` string specifier is
   attributed to that module. A specifier that cannot be resolved statically,
   or any other module whose loads this pass cannot read, blocks caller proof
@@ -317,8 +327,9 @@ workspace packages, `package.json` `exports` including a single `*` subpath
 such as `"./*": "./*.mts"`) maps each such specifier to a file,
 so `import * as m from "@lib"` consumes the file `@lib` points at. A specifier
 that is neither a bare package nor resolvable to a file keeps the finding for
-every callee whose test-root closure includes the module that named it. A default import, an unsupported barrel re-export, and a type-only
-import of the callee also keep the finding. Class and object-literal methods can be
+every callee whose test-root closure includes the module that named it. A default
+import or a namespace re-export also keeps the finding; erased type-only imports
+and re-exports do not. Class and object-literal methods can be
 reached from a file root; when a method's enumeration root depends on an
 unresolved parameter or expression, the rule reports an unresolved-root
 advisory at that call.
@@ -364,6 +375,8 @@ This proof requires a named `vi` import from `vitest`, an unconditional stub,
 and the immediately following statement calling a named helper without
 arguments. The helper must have no parameters and a single return statement
 whose root reads `process.env` directly. Every caller must satisfy that proof.
+A selected dynamic import that passes this helper to other code is an unproven
+caller; a selected reference to a sibling export does not block the helper.
 No other call or `await` can run between the stub and the read, so an
 `afterEach` reset, `unstubEnvs`, or another test's env value cannot interrupt it.
 Conditional stubs and `vi.stubEnv("OWNED_SCAN_ROOT", process.cwd())` retain

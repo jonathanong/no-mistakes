@@ -171,6 +171,14 @@ fn value_import_selectors_are_opt_in_and_preserve_existing_imports_and_calls() {
         );
     }
     assert!(plain
+        .file_export_binding(&root.join("barrel.ts"), "TABLES")
+        .is_none());
+    let source = root.join("source.ts");
+    assert_eq!(
+        selected.file_export_binding(&root.join("barrel.ts"), "TABLES"),
+        Some((source.as_path(), "TABLES"))
+    );
+    assert!(plain
         .imported_value(&root.join("consumer.ts"), "selected")
         .is_none());
     assert!(selected

@@ -73,17 +73,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "captured-root-owned-caller": {
     "exitCode": 0,
     "report": {
-      "advisories": [
-        {
-          "file": "src/fn.mts",
-          "import": "readdirSync",
-          "line": 7,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are not proven (src/update.mts:1 declares it). Fix: pass an owned root from a caller this analysis can see. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
-          "rule": "test-no-live-repository-scan",
-          "sourceLine": "for (const entry of readdirSync(join(root, rel), { withFileTypes: true })) {",
-          "target": "unresolved root"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -100,7 +90,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/fn.mts",
           "import": "readdirSync",
           "line": 8,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because settings.mts:2 loads a module this analysis cannot read, reached from tests/fn.test.mts → src/fn.mts → config.mts → settings.mts, and 1 more. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because settings.mts:2 loads a module this analysis cannot read, reached from tests/fn.test.mts → src/fn.mts → config.mts → settings.mts. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "readdirSync(join(repoRoot, \".x/a\"), { recursive: true });",
           "target": "unresolved root"
@@ -109,7 +99,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/fn.mts",
           "import": "readdirSync",
           "line": 9,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because settings.mts:2 loads a module this analysis cannot read, reached from tests/fn.test.mts → src/fn.mts → config.mts → settings.mts, and 1 more. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because settings.mts:2 loads a module this analysis cannot read, reached from tests/fn.test.mts → src/fn.mts → config.mts → settings.mts. Fix: use a module specifier this analysis can read, and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "readdirSync(join(repoRoot, \".x/b\"), { recursive: true });",
           "target": "unresolved root"
@@ -162,26 +152,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "import-alias": {
     "exitCode": 0,
     "report": {
-      "advisories": [
-        {
-          "file": "src/fn.mts",
-          "import": "readdirSync",
-          "line": 7,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/fn.test.mts:8 references `fn` other than as a direct call. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
-          "rule": "test-no-live-repository-scan",
-          "sourceLine": "readdirSync(join(repoRoot, \".x/a\"), { recursive: true });",
-          "target": "unresolved root"
-        },
-        {
-          "file": "src/fn.mts",
-          "import": "readdirSync",
-          "line": 8,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/fn.test.mts:8 references `fn` other than as a direct call. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
-          "rule": "test-no-live-repository-scan",
-          "sourceLine": "readdirSync(join(repoRoot, \".x/b\"), { recursive: true });",
-          "target": "unresolved root"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],

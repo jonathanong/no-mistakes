@@ -1,7 +1,7 @@
 use super::*;
 use std::path::PathBuf;
 
-fn selectors(file: &str) -> Vec<Vec<String>> {
+fn facts(file: &str) -> TypeScriptModuleFacts {
     let result = analyze_typescript_modules(&TypeScriptModulesOptions {
         root: Some(
             PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -10,13 +10,17 @@ fn selectors(file: &str) -> Vec<Vec<String>> {
         files: vec![PathBuf::from(file)],
     })
     .unwrap();
-    let facts = &result.modules[0].facts;
+    let facts = result.modules.into_iter().next().unwrap().facts;
     assert!(
         facts.diagnostics.is_empty(),
         "fixture must parse cleanly: {:?}",
         facts.diagnostics
     );
-    let mut proven = facts.dynamic_import_selectors.clone();
+    facts
+}
+
+fn selectors(file: &str) -> Vec<Vec<String>> {
+    let mut proven = facts(file).dynamic_import_selectors;
     proven.sort_by_key(|(start, _, _)| *start);
     proven.into_iter().map(|(_, names, _)| names).collect()
 }
@@ -79,4 +83,31 @@ fn dynamic_import_selectors_record_only_proven_forms() {
         vec!["A"],
     ];
     assert_eq!(names, expected);
+}
+
+#[test]
+fn discarded_import_results_are_isolated_from_export_policy_selectors() {
+    let facts = facts("dynamic-selectors-unused.mts");
+    let discarded: Vec<_> = facts
+        .loads
+        .iter()
+        .filter(|load| facts.discarded_dynamic_imports.contains(&load.span.start))
+        .map(|load| load.specifier.as_str())
+        .collect();
+    assert_eq!(
+        discarded,
+        [
+            "./bare",
+            "./awaited",
+            "./void",
+            "./unused",
+            "./typed",
+            "./promise"
+        ]
+    );
+    assert!(facts.dynamic_import_selectors.is_empty());
+    let public = serde_json::to_value(&facts).unwrap();
+    let mut without_discarded = facts.clone();
+    without_discarded.discarded_dynamic_imports.clear();
+    assert_eq!(public, serde_json::to_value(without_discarded).unwrap());
 }

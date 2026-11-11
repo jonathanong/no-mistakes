@@ -81,3 +81,18 @@ impl Consumed {
         }
     }
 }
+
+#[test]
+fn a_selected_sibling_cannot_hide_a_file_wide_consumption() {
+    use super::super::symbol_block::{blocks, route};
+    use crate::codebase::ts_source::module_facts::arguments::{RouteKind, RouteSite};
+    let file = Path::new("/repo/src/fn.mts");
+    let site = RouteSite::at("", 0, RouteKind::Dynamic, "./fn.mts");
+    let hit = RouteHit::selected(Path::new("/repo/tests/t.mts"), &site, file, "other".into());
+    let mut consumed = Consumed::with_hits(vec![hit]);
+    assert!(!blocks(&consumed, file, "scan"));
+    assert!(blocks(&consumed, file, "other"));
+    consumed.files.insert(normalize_path(file));
+    assert!(blocks(&consumed, file, "scan"));
+    assert!(route(&consumed, file, "scan").is_none());
+}

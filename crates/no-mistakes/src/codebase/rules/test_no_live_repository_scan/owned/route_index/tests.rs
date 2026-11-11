@@ -17,6 +17,7 @@ impl RouteHit {
             kind: RouteKind::NonDirect,
             detail: detail.to_string(),
             target: normalize_path(target),
+            symbol: None,
         }
     }
 }

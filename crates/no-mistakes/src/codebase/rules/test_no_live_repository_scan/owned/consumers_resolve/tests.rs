@@ -19,6 +19,7 @@ fn a_readable_relative_is_followed_when_classify_misses() {
         workspace: &workspace,
         visible: &visible,
         resolver_name: "private",
+        selection: None,
     };
     let importer = Path::new(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml");
     assert!(matches!(
@@ -46,6 +47,7 @@ fn apply_follows_a_readable_file_and_names_a_missing_specifier() {
         workspace: &workspace,
         visible: &visible,
         resolver_name: "private",
+        selection: None,
     };
     let importer = Path::new(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml");
     let mut provenance = PathProvenance::default();
@@ -94,6 +96,7 @@ fn a_recognized_package_entry_is_followed_when_the_file_exists() {
         workspace: &workspace,
         visible: &visible,
         resolver_name: "private",
+        selection: None,
     };
     assert!(matches!(
         after_miss(&gate, &cargo, "@scope/pkg", true),

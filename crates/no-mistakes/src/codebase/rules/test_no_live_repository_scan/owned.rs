@@ -142,16 +142,6 @@ impl<'g> Owners<'g> {
         }
     }
 
-    /// A named function, referenced only as a direct callee, in a module
-    /// every consumer imports by name and only calls.
-    fn proven_target(&self, source: &NodeId) -> bool {
-        let NodeId::Symbol { file, symbol, .. } = source else {
-            return false;
-        };
-        let name: &str = symbol;
-        !self.escaped.contains(file, name) && !self.consumed.contains(file)
-    }
-
     pub(super) fn report_scan_stats(&self) {
         if std::env::var_os("NO_MISTAKES_SCAN_RESOLVE_DEBUG").is_none() {
             return;

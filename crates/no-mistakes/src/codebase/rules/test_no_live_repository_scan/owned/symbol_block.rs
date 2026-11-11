@@ -6,13 +6,10 @@ use std::path::Path;
 
 pub(super) fn blocks(consumed: &Consumed, file: &Path, symbol: &str) -> bool {
     let hits = consumed.targeting(file);
-    if hits.iter().any(|hit| hit.kind != RouteKind::NonDirect) {
+    if hits.iter().any(|hit| applies(hit, symbol)) {
         return true;
     }
-    if hits.iter().any(|hit| matches_symbol(symbol, &hit.detail)) {
-        return true;
-    }
-    consumed.contains(file) && hits.is_empty()
+    consumed.contains(file) && hits.iter().all(|hit| hit.symbol.is_some())
 }
 
 /// Prefer a non-call reference to this symbol over any other hit on its module.
@@ -20,17 +17,25 @@ pub(super) fn route<'a>(consumed: &'a Consumed, file: &Path, symbol: &str) -> Op
     let hits = consumed.targeting(file);
     hits.iter()
         .copied()
-        .find(|hit| hit.kind == RouteKind::NonDirect && matches_symbol(symbol, &hit.detail))
+        .find(|hit| hit.kind == RouteKind::NonDirect && applies(hit, symbol))
         .or_else(|| {
             hits.iter()
                 .copied()
-                .find(|hit| hit.kind != RouteKind::NonDirect)
+                .find(|hit| hit.kind != RouteKind::NonDirect && applies(hit, symbol))
         })
         .or_else(|| {
             hits.iter()
                 .copied()
+                .filter(|hit| hit.symbol.is_none() || applies(hit, symbol))
                 .min_by(|left, right| (&left.file, left.start).cmp(&(&right.file, right.start)))
         })
+}
+
+fn applies(hit: &RouteHit, symbol: &str) -> bool {
+    hit.symbol.as_deref().map_or_else(
+        || hit.kind != RouteKind::NonDirect || matches_symbol(symbol, &hit.detail),
+        |name| matches_symbol(symbol, name),
+    )
 }
 
 fn matches_symbol(symbol: &str, detail: &str) -> bool {
