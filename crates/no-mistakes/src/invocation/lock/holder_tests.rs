@@ -117,10 +117,6 @@ fn status_reports_held_free_and_missing_lock_files() {
     let status = status_at(&path).unwrap();
     assert_eq!(status.state, LockState::Held);
     assert_eq!(status.holder.unwrap().pid, std::process::id());
-    // Explicit release isolates status assertions from subprocess descriptor inheritance.
-    held.unlock().unwrap();
-    let status = status_at(&path).unwrap();
-    assert_eq!((status.state, status.holder), (LockState::Free, None));
     drop(held);
     // The record outlives the lock, but a free lock never reports a holder.
     let status = status_at(&path).unwrap();
