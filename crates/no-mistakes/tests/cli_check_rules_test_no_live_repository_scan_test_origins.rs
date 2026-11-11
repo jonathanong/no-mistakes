@@ -41,6 +41,8 @@ const CASES: &[&str] = &[
     "captured-env-member-alias-live",
     "captured-env-member-alias-unknown",
     "captured-env-setup-loaded-first",
+    "captured-env-config-loaded-first",
+    "captured-env-static-cleanup",
     "destructured",
     "forwarding",
     "cli",
@@ -163,6 +165,7 @@ fn test_no_live_repository_scan_test_origin_check_json_snapshot() {
                 | "captured-env-member-alias-live"
                 | "captured-env-member-alias-unknown"
                 | "captured-env-setup-loaded-first"
+                | "captured-env-config-loaded-first"
                 | "global-setup-escape"
                 | "explicit-roots-barrel"
                 | "explicit-roots-imported"

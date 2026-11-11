@@ -165,10 +165,14 @@ impl ConfiguredSetups {
             if project.filter.is_match(&relative) {
                 matched = true;
                 if captured
-                    && project
-                        .setups
-                        .iter()
-                        .any(|setup| imports.loads_module(setup, capture))
+                    && (project
+                        .config
+                        .as_ref()
+                        .is_some_and(|config| imports.loads_module(config, capture))
+                        || project
+                            .setups
+                            .iter()
+                            .any(|setup| imports.loads_module(setup, capture)))
                 {
                     return false;
                 }

@@ -602,7 +602,7 @@ write after a static import does not establish ownership. A setup module that
 imports the capturing module before its write also retains the finding.
 Function-local captures, captured env aliases passed as helper arguments, direct
 env values stored inside const object properties, and hooks registered inside
-branches remain unresolved. If any configured setup
+branches remain unresolved. If any configured setup or selected runner configuration
 loads the capturing module, the setup proof stays unresolved even when another
 setup writes an owned root. Keep root setup independent of the module under test.
 
