@@ -279,6 +279,20 @@ test("browser qualification retains lifecycle artifacts after failures within ex
   assert.match(upload, /retention-days: 7/);
 });
 
+test("browser qualification compares the original Node runtime without replacing the current lane", () => {
+  const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
+  const job = workflow.match(/^ {2}timeout-policy-browser-tests:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
+  assert.ok(job);
+  assert.match(job, /name: \$\{\{ matrix.name \}\}/);
+  assert.match(job, /fail-fast: false/);
+  assert.match(job, /- name: Timeout-policy browser tests\n {12}runtime: node@24\n/);
+  assert.match(job, /runtime: node@24\.22\.2\n/);
+  assert.match(job, /runtime: \$\{\{ matrix.runtime \}\}/);
+  assert.match(job, /artifact: timeout-policy-browser-lifecycle\n/);
+  assert.match(job, /artifact: timeout-policy-browser-lifecycle-node-24\.22\.2\n/);
+  assert.match(job, /name: \$\{\{ matrix.artifact \}\}/);
+});
+
 test("release validation gives browser and other JavaScript tests separate timeouts", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
   const js = workflow.match(/^ {2}validate-js:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];

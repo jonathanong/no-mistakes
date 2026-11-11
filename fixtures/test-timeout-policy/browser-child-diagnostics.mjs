@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { availableParallelism, cpus, totalmem } from "node:os";
+import { createRequire } from "node:module";
 import { join } from "node:path";
 // cspell:ignore GOMEMLIMIT
 
@@ -41,14 +42,45 @@ export async function recordBrowserChildDiagnostics(outcome, options) {
       ].map((key) => [key, options.environment[key] ?? process.env[key] ?? null]),
     );
     const versions = {};
-    for (const name of ["vitest", "@vitest/browser-playwright", "playwright", "vite"]) {
-      try {
-        versions[name] = JSON.parse(
-          await readFile(require.resolve(`${name}/package.json`), "utf8"),
-        ).version;
-      } catch (error) {
-        versions[name] = { error: error.message };
+    let sdkRequire = require;
+    try {
+      sdkRequire = createRequire(require.resolve("vitest/package.json"));
+    } catch {
+      sdkRequire = require;
+    }
+    const packages = [
+      "vitest",
+      "@vitest/browser-playwright",
+      "@vitest/browser",
+      "playwright",
+      "vite",
+      ...(storybook
+        ? [
+            "storybook",
+            "@storybook/addon-vitest",
+            "@storybook/react-vite",
+            "@storybook/react",
+            "react",
+            "react-dom",
+          ]
+        : []),
+    ];
+    for (const name of packages) {
+      const lookups = ["vite", "@vitest/browser"].includes(name)
+        ? [sdkRequire, require]
+        : [require, sdkRequire];
+      let failure;
+      for (const lookup of lookups) {
+        try {
+          versions[name] = JSON.parse(
+            await readFile(lookup.resolve(`${name}/package.json`), "utf8"),
+          ).version;
+          break;
+        } catch (error) {
+          failure = error;
+        }
       }
+      if (!(name in versions)) versions[name] = { error: failure.message };
     }
     const receipt = {
       pid: child.pid,

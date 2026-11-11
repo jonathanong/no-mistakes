@@ -1,6 +1,7 @@
 const assert = require("node:assert/strict");
 const { cp, mkdtemp, readFile, rm } = require("node:fs/promises");
 const { tmpdir } = require("node:os");
+const { createRequire } = require("node:module");
 const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 
@@ -48,6 +49,7 @@ for (const scenario of ["child-read-error", "live-group", "receipt-write-error"]
           directory,
           source: scenario,
           environment: {},
+          storybook: scenario === "child-read-error" ? { stableSetup: true } : undefined,
           require,
         });
         const artifact = `${receipts}-artifacts/424242`;
@@ -60,6 +62,28 @@ for (const scenario of ["child-read-error", "live-group", "receipt-write-error"]
           const receipt = JSON.parse((await readFile(receipts, "utf8")).trim());
           assert.equal(receipt.code, outcome.result.code);
           assert.equal(receipt.drained, outcome.drained);
+          const sdkRequire = createRequire(require.resolve("vitest/package.json"));
+          for (const name of ["vite", "@vitest/browser"]) {
+            const expected = JSON.parse(
+              await readFile(sdkRequire.resolve(`${name}/package.json`), "utf8"),
+            ).version;
+            assert.equal(receipt.sdkVersions[name], expected);
+          }
+          if (scenario === "child-read-error") {
+            for (const name of [
+              "storybook",
+              "@storybook/addon-vitest",
+              "@storybook/react-vite",
+              "@storybook/react",
+              "react",
+              "react-dom",
+            ]) {
+              const expected = JSON.parse(
+                await readFile(require.resolve(`${name}/package.json`), "utf8"),
+              ).version;
+              assert.equal(receipt.sdkVersions[name], expected);
+            }
+          } else assert.equal(receipt.sdkVersions.storybook, undefined);
         }
         if (scenario === "live-group") {
           assert.equal(

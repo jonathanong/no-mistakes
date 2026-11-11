@@ -72,6 +72,10 @@ stage or establish completed runtime or resource maxima. The passing 4 ms
 Chromium body in one killed child does not establish that shutdown completed.
 The three outer test files can launch independent browser children concurrently;
 each child's `--maxWorkers=1` only bounds that child's SDK workers.
+The qualification matrix retains the current Node 24 lane and adds an exact
+Node 24.22.2 control matching the historical failure. Both run the same 18 cases
+and deadlines, retain separate artifacts, and complete independently so a failed
+sample does not cancel the other runtime's evidence.
 
 The real-addon API steps load `inline-owned-member-api.test.js` through
 `real-napi-api.test.js` on Linux, macOS, and Windows with

@@ -487,11 +487,21 @@ jobs:
           fail_ci_if_error: true
 
   timeout-policy-browser-tests:
-    name: Timeout-policy browser tests
+    name: ${{ matrix.name }}
     needs: changes
     if: ${{ needs.changes.outputs.timeout-policy-browser == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Timeout-policy browser tests
+            runtime: node@24
+            artifact: timeout-policy-browser-lifecycle
+          - name: Timeout-policy browser tests (Node 24.22.2)
+            runtime: node@24.22.2
+            artifact: timeout-policy-browser-lifecycle-node-24.22.2
     permissions:
       contents: read
 
@@ -504,7 +514,7 @@ jobs:
         timeout-minutes: 5
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
-          runtime: node@24
+          runtime: ${{ matrix.runtime }}
           cache: true
           install: false
 
@@ -532,7 +542,7 @@ jobs:
         timeout-minutes: 2
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: timeout-policy-browser-lifecycle
+          name: ${{ matrix.artifact }}
           path: ${{ runner.temp }}/timeout-policy-browser
           if-no-files-found: warn
           retention-days: 7
