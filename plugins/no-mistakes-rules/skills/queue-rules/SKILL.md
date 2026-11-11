@@ -22,13 +22,13 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT put secrets or personal data in payloads; pass ids.
 - MUST NOT make producer code import worker code; producers enqueue, workers execute.
 - MUST NOT do slow external work on a request path or in an event-forwarding function; enqueue it.
-- MUST NOT put mutable state in a payload; pass ids and re-read when the job runs.
 - MUST NOT treat a dedup id collision as a failure; the work is already queued.
-- MUST NOT sleep inside a job; defer it through the queue.
-- MUST NOT do the work inside a message consumer; enqueue a job, then ack.
 - MUST NOT trust a framework's retry counter without checking that no middleware resets it.
 - MUST NOT expect a code deploy to change concurrency or prefetch settings read at worker start; restart the workers.
-- MUST NOT ship bulk work without sizing it against production volume.
+- SHOULD NOT put mutable state in a payload; pass ids and re-read when the job runs.
+- SHOULD NOT sleep inside a job; defer it through the queue.
+- SHOULD NOT do the work inside a message consumer; enqueue a job, then ack.
+- SHOULD NOT ship bulk work without sizing it against production volume.
 - SHOULD NOT put business logic in processors; call the service that owns the write.
 - SHOULD NOT add an outbox or lease table by default; use job id = row id, enqueue after commit, and a bounded re-enqueue sweep.
 

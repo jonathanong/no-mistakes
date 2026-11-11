@@ -18,8 +18,8 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT assert over a collection without asserting it is non-empty; every assertion passes over zero items.
 - MUST NOT accept "either outcome is fine" when one outcome is a degraded fallback.
 - MUST NOT write a regression test whose fixture never reaches the bug's precondition; confirm it fails without the fix.
-- MUST NOT add a test that locks in a branch you believe is unreachable; delete the branch or prove it reachable.
-- MUST NOT trust a green exit code; check the number of tests that ran.
+- SHOULD NOT add a test that locks in a branch you believe is unreachable; delete the branch or prove it reachable.
+- SHOULD NOT trust a green exit code; check the number of tests that ran.
 - SHOULD NOT keep redundant tests; keep one failure-sensitive test per contract at the lowest realistic boundary.
 - SHOULD NOT recompute the production algorithm in the test; a shared bug cancels out.
 - SHOULD NOT assert what a dependency owns (its messages, markup, call order, exact versions or pins); assert your own outcome.

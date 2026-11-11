@@ -20,11 +20,11 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 
 ## Runtime
 
-- MUST NOT keep state that request correctness depends on (sessions, uploads, counters, locks) in process memory or on local disk; the next request may land on another instance.
 - MUST NOT run side-effecting scheduled work from an in-process timer in a service with more than one replica; use a scheduler that runs it once.
 - MUST NOT make a liveness probe check a shared dependency; one outage restarts every instance.
-- MUST NOT read or write another service's database, cache, or queue directly; call its API or consume its events.
-- MUST NOT open a database connection per request; pool, and size the pool against the database limit across all instances.
+- SHOULD NOT keep state that request correctness depends on (sessions, uploads, counters, locks) in process memory or on local disk; the next request may land on another instance.
+- SHOULD NOT read or write another service's database, cache, or queue directly; call its API or consume its events.
+- SHOULD NOT open a database connection per request; pool, and size the pool against the database limit across all instances.
 
 ## Scripts and shell
 

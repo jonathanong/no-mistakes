@@ -10,14 +10,15 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 ## Outbound calls
 
 - MUST NOT call a partner without separate connect and read timeouts; a missing read timeout hangs the worker.
-- MUST NOT treat a 2xx as proof of success; check the body for an error.
 - MUST NOT retry a non-idempotent call without an idempotency key the provider honors, or a lookup proving the first attempt failed.
 - MUST NOT record "sent" before delivery is confirmed.
-- MUST NOT let a partner's payload shape pass the mapping layer; map it to your own types once.
-- MUST NOT index into a partner payload as if it were your schema; tolerate missing, null, and extra fields.
-- MUST NOT store partner timestamps without normalizing them to UTC at the boundary.
 - MUST NOT round money, weights, or quantities before the final step, or mix units.
-- MUST NOT fail a whole batch for one bad item, or report a batch done when items failed; choose a per-item or whole-batch policy and record each item's result.
+- MUST NOT report a batch done when any item failed; record each item's result.
+- SHOULD NOT treat a 2xx as proof of success; check the body for an error.
+- SHOULD NOT let a partner's payload shape pass the mapping layer; map it to your own types once.
+- SHOULD NOT index into a partner payload as if it were your schema; tolerate missing, null, and extra fields.
+- SHOULD NOT store partner timestamps without normalizing them to UTC at the boundary.
+- SHOULD NOT leave the batch failure policy implicit; choose per-item or whole-batch and say which.
 - SHOULD NOT test the boundary only with hand-written payloads; replay captured responses.
 
 ## Inbound webhooks

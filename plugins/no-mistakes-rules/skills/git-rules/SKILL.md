@@ -27,7 +27,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT add broad, unexplained suppressions or allowlists to get a check green.
 - MUST NOT ship a breaking API change without calling it breaking; removed fields, changed meanings, and blocked workflows that callers depend on all count.
 - MUST NOT call a change "unchanged" from the diff alone; check the behavior every caller sees.
-- MUST NOT dismiss a review finding with less evidence than it took to raise it.
+- SHOULD NOT dismiss a review finding with less evidence than it took to raise it.
 - SHOULD NOT widen scope for a discovered follow-up; file it.
 - SHOULD NOT take on scope a ticket's technical design added beyond the reported problem without asking whether the fix needs it.
 - SHOULD NOT split related work across PRs without a risk reason.
