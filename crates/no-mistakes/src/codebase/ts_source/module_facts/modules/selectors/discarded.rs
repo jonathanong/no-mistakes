@@ -13,9 +13,6 @@ pub(super) fn unused(node: NodeId, semantic: &Semantic<'_>) -> bool {
                 return value.operator == oxc_syntax::operator::UnaryOperator::Void;
             }
             AstKind::VariableDeclarator(value) => {
-                if !matches!(semantic.nodes().kind(current), AstKind::AwaitExpression(_)) {
-                    return false;
-                }
                 let BindingPattern::BindingIdentifier(binding) = &value.id else {
                     return false;
                 };
@@ -34,7 +31,11 @@ pub(super) fn unused(node: NodeId, semantic: &Semantic<'_>) -> bool {
                         .get_resolved_references(symbol)
                         .any(|reference| {
                             let flags = reference.flags();
-                            flags.is_value() && !flags.is_value_as_type()
+                            flags.is_value()
+                                && !flags.is_value_as_type()
+                                && !matches!(parent(reference.node_id(), semantic),
+                                    Some((_, AstKind::UnaryExpression(value)))
+                                    if value.operator == oxc_syntax::operator::UnaryOperator::Void)
                         });
             }
             _ => return false,

@@ -71,17 +71,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "dynamic-import": {
     "exitCode": 0,
     "report": {
-      "advisories": [
-        {
-          "file": "list.mts",
-          "import": "readdirSync",
-          "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because root.mts:7 imports `./list.mts` through a dynamic import(). Fix: import the helper with a named static import and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
-          "rule": "test-no-live-repository-scan",
-          "sourceLine": "return readdirSync(root)",
-          "target": "unresolved root"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],

@@ -278,7 +278,8 @@ the call graph cannot see may pass anything:
   import, a default import, `require`, a namespace re-export (`export * as ns`),
   and `vi.mock`/`vi.importActual` of the module make its consumers unknowable.
   A literal dynamic import whose result is discarded, or whose awaited
-  namespace binding is unused, does not expose every export. Proven named
+  namespace binding is unused, does not expose every export. An unexported
+  promise binding whose only reads discard its value with `void` is also inert. Proven named
   reads select only those exports through the canonical graph. A namespace
   passed to unknown code, a computed member read, an exported namespace, or an
   escaping import promise retains the conservative advisory. Method calls on

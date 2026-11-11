@@ -50,6 +50,11 @@ fn populate_callable_export_resolutions(
     indexes: &CallableResolutionIndexes,
     output: &mut FxHashMap<(std::path::PathBuf, String), ExportedCallableResolution>,
 ) -> Option<FxHashMap<std::path::PathBuf, ExportNameEdges>> {
+    let value_indexes = edge_inputs
+        .plan
+        .value_import_selectors
+        .then(|| indexes.for_value_imports());
+    let indexes = value_indexes.as_ref().unwrap_or(indexes);
     let mut export_edges = FxHashMap::default();
     for path in edge_inputs.graph_files.indexable() {
         let Some(file) = indexes.file(facts, path) else {

@@ -88,6 +88,7 @@ fn advisory_targets(report: &Value) -> Vec<&str> {
 fn bounded_supported_forms_and_controls_stay_clean() {
     for name in [
         "const-load",
+        "consumed-const-load",
         "nested-async-return",
         "owned-object-return",
         "recursive-parameter",
@@ -135,7 +136,6 @@ fn bounded_arbitrary_roots_and_escaped_callers_stay_advisory() {
         "arbitrary-hook-env",
         "arbitrary-rewritten-spread",
         "reaching-dynamic",
-        "consumed-const-load",
         "recursive-parent",
         "captured-arbitrary",
         "barrel-escaped",

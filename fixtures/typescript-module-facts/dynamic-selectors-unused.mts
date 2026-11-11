@@ -14,3 +14,9 @@ void promise;
 const computed = await import("./computed");
 declare const key: string;
 void computed[key];
+
+const escapedPromise = import("./escaped-promise");
+consume(escapedPromise);
+
+const relayed = await import("./relayed");
+export { relayed };

@@ -96,6 +96,7 @@ fn a_recognized_package_entry_is_followed_when_the_file_exists() {
         workspace: &workspace,
         visible: &visible,
         resolver_name: "private",
+        selection: None,
     };
     assert!(matches!(
         after_miss(&gate, &cargo, "@scope/pkg", true),

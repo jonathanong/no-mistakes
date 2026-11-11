@@ -26,6 +26,7 @@ pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     config.rule_configured(RULE_ID).then(|| {
         let mut plan = GraphBuildPlan::imports_and_workspace();
         plan.calls = true;
+        plan.value_import_selectors = true;
         plan
     })
 }

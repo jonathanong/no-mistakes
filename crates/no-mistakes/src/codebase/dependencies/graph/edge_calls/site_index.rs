@@ -77,17 +77,36 @@ impl DepGraph {
             ExportedCallableResolution::Callable(file, scope, None) => {
                 Some(NodeId::symbol(file, scope.clone()))
             }
-            ExportedCallableResolution::Value(file, local) => Some(NodeId::symbol(file, local.clone())),
+            ExportedCallableResolution::Value(file, local) => {
+                Some(NodeId::symbol(file, local.clone()))
+            }
             _ => None,
         }
     }
 }
 
 impl DepGraph {
-    pub(crate) fn file_export_receiver_safe(&self, file: &std::path::Path, export: &str, facts: &dyn TsFactLookup) -> bool {
-        let Some(ExportedCallableResolution::Callable(producer, local, _)) = self.callable_export_resolutions.get(&(file.to_path_buf(), export.to_string())) else { return false; };
-        facts.get_ts_facts(producer).and_then(|facts| facts.module_bindings.as_deref()).is_some_and(|module| {
-            module.exports.iter().any(|export| export.specifier.is_none() && export.local == *local && module.receiver_safe_exports.contains(&export.exported))
-        })
+    pub(crate) fn file_export_receiver_safe(
+        &self,
+        file: &std::path::Path,
+        export: &str,
+        facts: &dyn TsFactLookup,
+    ) -> bool {
+        let Some(ExportedCallableResolution::Callable(producer, local, _)) = self
+            .callable_export_resolutions
+            .get(&(file.to_path_buf(), export.to_string()))
+        else {
+            return false;
+        };
+        facts
+            .get_ts_facts(producer)
+            .and_then(|facts| facts.module_bindings.as_deref())
+            .is_some_and(|module| {
+                module.exports.iter().any(|export| {
+                    export.specifier.is_none()
+                        && export.local == *local
+                        && module.receiver_safe_exports.contains(&export.exported)
+                })
+            })
     }
 }
