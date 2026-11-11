@@ -1,6 +1,7 @@
 //! Argument text and path origins for one call.
 use super::super::path_origin::callee_root;
-use super::super::{line_in, ArgumentText, PathAnchor, PathOrigin, PathProvenance, Projector};
+use super::super::{ArgumentText, PathAnchor, PathOrigin, PathProvenance, Projector};
+use super::argument_source::ArgumentSource;
 use oxc_ast::ast::*;
 use oxc_span::GetSpan;
 
@@ -11,7 +12,7 @@ pub(super) const MAX_ARGUMENTS: usize = 8;
 const ARG_TEXT_LIMIT: usize = 80;
 
 pub(super) fn record_arg_text(
-    source: &str,
+    source: &ArgumentSource<'_>,
     call: &CallExpression<'_>,
     out: &mut PathProvenance,
     members: Vec<ArgumentText>,
@@ -31,13 +32,13 @@ pub(super) fn record_arg_text(
 }
 
 pub(super) fn argument_text(
-    source: &str,
+    source: &ArgumentSource<'_>,
     index: usize,
     property: Option<String>,
     span: oxc_span::Span,
 ) -> ArgumentText {
     let mut text = String::new();
-    for word in crate::ast::span_text(source, span).split_whitespace() {
+    for word in crate::ast::span_text(source.text, span).split_whitespace() {
         if !text.is_empty() {
             text.push(' ');
         }
@@ -50,7 +51,7 @@ pub(super) fn argument_text(
     ArgumentText {
         index,
         property,
-        line: line_in(source, span.start),
+        line: source.line(span.start),
         text,
     }
 }

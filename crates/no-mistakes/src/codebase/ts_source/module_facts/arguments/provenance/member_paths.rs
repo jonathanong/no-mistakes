@@ -1,4 +1,5 @@
 use super::super::{ArgumentText, PathOrigin, Projector};
+use super::argument_source::ArgumentSource;
 use super::call_args::MAX_ARGUMENTS;
 use oxc_ast::ast::*;
 use oxc_span::GetSpan;
@@ -6,6 +7,7 @@ use oxc_span::GetSpan;
 pub(super) fn collect<'a>(
     projector: &mut Projector<'a, '_>,
     call: &CallExpression<'a>,
+    source: &ArgumentSource<'_>,
 ) -> (Vec<(usize, String, PathOrigin)>, Vec<ArgumentText>) {
     let mut members = Vec::new();
     let mut texts = Vec::new();
@@ -36,7 +38,7 @@ pub(super) fn collect<'a>(
                     (
                         projector.path_of(&property.value),
                         super::call_args::argument_text(
-                            projector.semantic.source_text(),
+                            source,
                             index,
                             Some(key.to_string()),
                             property.value.span(),

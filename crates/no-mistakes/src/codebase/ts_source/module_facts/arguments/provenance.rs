@@ -2,6 +2,7 @@
 //!
 //! Syntactic only: a form this pass does not recognise is left out, and the
 //! rule that reads these facts then keeps its finding.
+mod argument_source;
 mod call_args;
 mod config_keys;
 mod consumers;
@@ -31,6 +32,7 @@ pub(super) fn collect(
     let mut result = PathProvenance::default();
     process_refs::poison_process_imports(facts, &mut result);
     let vi_names = vi_refs::local_names(facts, &mut result);
+    let source = argument_source::ArgumentSource::new(semantic.source_text());
     for node in semantic.nodes().iter() {
         let mut projector = Projector {
             semantic,
@@ -49,11 +51,11 @@ pub(super) fn collect(
                 }
                 consumers::from_call(&mut projector, call, &mut result);
                 if callee_root(&call.callee).is_some() && !call_args::rebinds_callee(&call.callee) {
-                    let (members, texts) = member_paths::collect(&mut projector, call);
+                    let (members, texts) = member_paths::collect(&mut projector, call, &source);
                     if !members.is_empty() {
                         result.arg_member_paths.insert(call.span.start, members);
                     }
-                    call_args::record_arg_text(semantic.source_text(), call, &mut result, texts);
+                    call_args::record_arg_text(&source, call, &mut result, texts);
                     let paths = call_args::argument_paths(&mut projector, call, &mut result);
                     if !paths.is_empty() {
                         if paths.iter().any(|(_, path)| path.env.is_some())
