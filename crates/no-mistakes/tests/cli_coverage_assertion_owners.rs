@@ -276,3 +276,77 @@ fn proven_assertion_owner_survives_unresolved_cleanup_check_json_snapshot() {
         &[("cleanup", root.clone(), root.join(".no-mistakes.yml"))],
     );
 }
+
+#[test]
+fn opaque_shutdown_receivers_keep_proven_assertions_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "coverage-producer-assertion-owner-opaque-shutdown",
+        "fixture",
+        "",
+    );
+    let report = check_json(&root, ".no-mistakes");
+    let findings = report["rules"].as_array().unwrap();
+    let targets: Vec<_> = findings
+        .iter()
+        .map(|finding| finding["target"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        targets,
+        [
+            "unownedThen",
+            "unownedCatch",
+            "unownedFinally",
+            "unresolvedThen",
+            "unresolvedCatch",
+            "unresolvedFinally"
+        ],
+        "{report}"
+    );
+    for (target, callee) in [
+        ("unresolvedThen", "<unknown>.then"),
+        ("unresolvedCatch", "<unknown>.catch"),
+        ("unresolvedFinally", "<unknown>.finally"),
+    ] {
+        let finding = findings
+            .iter()
+            .find(|finding| finding["target"] == target)
+            .unwrap();
+        assert_eq!(finding["causes"][0]["callee"], callee, "{finding}");
+        assert_eq!(
+            finding["causes"][0]["detail"],
+            "built-in callback `shutdownStore` is not statically resolved",
+            "{finding}"
+        );
+    }
+    let script_report = check_json(&root, "script-roots");
+    let script_targets: Vec<_> = script_report["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| finding["target"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        script_targets,
+        [
+            "runUnresolvedThen",
+            "runUnresolvedCatch",
+            "runUnresolvedFinally"
+        ],
+        "{script_report}"
+    );
+    crate::check_json_snapshot::assert_saved_fixture(
+        "coverage_producer_assertion_owner_opaque_shutdown",
+        &[
+            (
+                "proven_direct_owners",
+                root.clone(),
+                root.join(".no-mistakes.yml"),
+            ),
+            (
+                "caller_only_owners",
+                root.clone(),
+                root.join("script-roots.yml"),
+            ),
+        ],
+    );
+}

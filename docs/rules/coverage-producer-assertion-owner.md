@@ -171,6 +171,18 @@ mutable registrations, logger and error-reporter calls, and unresolved `map` or
 the same unresolved calls remain unanalyzable; registering a callback alone does
 not establish that an assertion executes.
 
+A named imported shutdown function passed to `.then`, `.catch`, or `.finally`
+follows the same rule. An opaque receiver might implement a custom method, so
+passing an assertion-bearing function to it does not prove callback execution.
+A known Promise continuation with an unresolved imported callback also stays
+uncertain when no other owner is reached.
+
+The configured producer determines the forward path. A test wrapper that calls
+a script and then asserts can be a proven producer. Selecting the script itself
+still reports when only that calling test asserts: the test's later assertion
+is outside the script's forward call closure. Select the assertion-bearing test
+callable when that is the coverage producer being checked.
+
 A producer with multiple uncertain paths reports their causes together. A reached
 assertion still passes despite dispatch or traversal uncertainty. Source failures
 remain errors even when an assertion is reached. Disabling this rule retains the

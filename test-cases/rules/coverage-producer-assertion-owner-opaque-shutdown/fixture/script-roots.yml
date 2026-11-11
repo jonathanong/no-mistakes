@@ -1,0 +1,9 @@
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/script.mts, symbol: runUnresolvedThen }
+        - { file: src/script.mts, symbol: runUnresolvedCatch }
+        - { file: src/script.mts, symbol: runUnresolvedFinally }
+      assertions: [{ module: "node:assert", export: strictEqual }]
