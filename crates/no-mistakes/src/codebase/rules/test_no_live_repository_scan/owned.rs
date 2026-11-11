@@ -126,8 +126,10 @@ impl<'g> Owners<'g> {
         let mut caller_files = scope.proof_files.clone();
         caller_files.extend(scope.config_files.iter().flatten().cloned());
         let escaped = escapes::Escapes::new(facts, graph_files, &caller_files);
+        let mut consumer_files = relevant_files.clone();
+        consumer_files.extend(caller_files.iter().cloned());
         let environment_consumed =
-            consumers::Consumed::new(graph, facts, graph_files, relevant_files, resolution);
+            consumers::Consumed::new(graph, facts, graph_files, &consumer_files, resolution);
         let consumed = environment_consumed.narrowed(&caller_files);
         let mut owners = Self {
             callers,
