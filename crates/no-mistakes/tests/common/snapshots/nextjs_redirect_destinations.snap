@@ -95,6 +95,44 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "invalid_byte_trivia": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "next.config.ts",
+          "line": 5,
+          "message": "next.config.ts: redirect destination '/missing' has no matching App Router page (expected app/**/page.tsx for route /missing); remove the redirect or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid_byte_trivia_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "next.config.ts",
+          "line": 5,
+          "message": "next.config.ts: redirect destination '/missing' has no matching App Router page (expected app/**/page.tsx for route /missing); remove the redirect or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "missing": {
     "exitCode": 1,
     "report": {
