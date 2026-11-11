@@ -63,6 +63,47 @@ test("CLI reads NUL-separated name-status pairs and fails closed without a base"
   assert.notEqual(run("R100\0a.md\0").status, 0);
 });
 
+const DOCS_SUITE = /^crates\/no-mistakes\/tests\/(docs_|support\/docs_|mermaid_validation)/;
+const RELATIVE_DOC = /(?:\.\.\/){2,}((?:docs\/[\w./-]+|[A-Z_]+)\.mdx?)\b/g;
+const JOINED_DOC = /["']docs["'],\s*((?:["'][\w.-]+["'],\s*)*["'][\w.-]+\.mdx?["'])/g;
+
+function repositoryDocReads() {
+  const listed = spawnSync(
+    "git",
+    [
+      "ls-files",
+      "-z",
+      "--",
+      "crates/*.rs",
+      "packages/*.js",
+      "packages/*.mjs",
+      "packages/*.cjs",
+      "tests/js/*.js",
+    ],
+    { cwd: repoRoot, encoding: "utf8" },
+  );
+  assert.equal(listed.status, 0, listed.stderr);
+  const reads = [];
+  for (const file of listed.stdout.split("\0")) {
+    if (!file || DOCS_SUITE.test(file) || file.endsWith("docs-only-scope.test.js")) continue;
+    const source = readFileSync(join(repoRoot, file), "utf8");
+    for (const [, doc] of source.matchAll(RELATIVE_DOC)) reads.push({ file, doc });
+    for (const [, parts] of source.matchAll(JOINED_DOC)) {
+      const segments = parts.split(",").map((part) => part.trim().slice(1, -1));
+      reads.push({ file, doc: ["docs", ...segments].join("/") });
+    }
+  }
+  return reads;
+}
+
+test("docs that tests outside the docs suite read always run every test job", () => {
+  const reads = repositoryDocReads();
+  assert.ok(reads.some(({ doc }) => doc === "docs/graph-edges.md"));
+  for (const { file, doc } of reads) {
+    assert.equal(docsOnlyFor(doc), false, `${file} reads ${doc}`);
+  }
+});
+
 test("docs-only pull requests still run the docs contract suite", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
   assert.match(workflow, /--test suite_contracts/);

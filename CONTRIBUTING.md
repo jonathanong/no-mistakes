@@ -166,9 +166,10 @@ Pull requests that change only Markdown run `Docs tests` (the `suite_contracts`
 docs checks) instead of the full test jobs. Quality and AST analysis still run,
 and pushes to `main` run everything. Markdown under `crates/`, `packages/`,
 `plugins/`, `fixtures/`, `test-cases/`, `tests/`, `evals/`, `.ast-grep/`, and
-`docs/eslint-rules/`, plus `docs/eslint-plugin.md` and `docs/cli/tests-audit.md`,
-is test input and runs the full suite. `.github/scripts/docs-only-scope.cjs`
-owns the list.
+`docs/eslint-rules/`, plus the pages that unit and package tests read, is test
+input and runs the full suite. `.github/scripts/docs-only-scope.cjs` owns the
+list, and `tests/js/docs-only-scope.test.js` fails when a test reads a page
+missing from it.
 
 ## Shared machines and memory
 

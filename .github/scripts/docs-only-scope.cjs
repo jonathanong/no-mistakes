@@ -15,7 +15,15 @@ const FULL_TEST_PREFIXES = [
   "docs/eslint-rules/",
 ];
 
-const FULL_TEST_FILES = new Set(["docs/eslint-plugin.md", "docs/cli/tests-audit.md"]);
+// Docs pages that unit or package tests read. tests/js/docs-only-scope.test.js
+// fails when a test reads a repository doc that is missing here.
+const FULL_TEST_FILES = new Set([
+  "docs/cli/diagnostics.md",
+  "docs/cli/tests-audit.md",
+  "docs/eslint-plugin.md",
+  "docs/graph-edges.md",
+  "docs/rules/test-no-dependency-pins.md",
+]);
 
 function isDocsOnlyPath(path) {
   if (!DOC_EXTENSIONS.some((extension) => path.endsWith(extension))) return false;
