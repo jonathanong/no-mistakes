@@ -12,6 +12,7 @@ mod cli_mrf_snapshot_markdown_child_links;
 mod cli_mrf_snapshot_markdown_eval_tests;
 #[path = "cli_mrf_snapshot_markdown_link_display_text.rs"]
 mod cli_mrf_snapshot_markdown_link_display_text;
+#[cfg(feature = "mermaid-validation")]
 #[path = "cli_mrf_snapshot_markdown_mermaid.rs"]
 mod cli_mrf_snapshot_markdown_mermaid;
 #[path = "cli_mrf_snapshot_markdown_reachability.rs"]

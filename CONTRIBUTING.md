@@ -139,6 +139,12 @@ Use the full module-qualified name with `-- --exact` for a single test.
 `windows_job_object` and `macos_invocation` remain separate platform harnesses
 for their process and crate-root requirements.
 
+Mermaid validation tests require the default `mermaid-validation` feature. The
+suites gate only those modules, so other tests remain available without default
+features. CI runs `cargo check --locked --tests --no-default-features -p no-mistakes`
+to prevent integration tests from importing feature-disabled APIs. Default-feature
+Clippy and all-feature validation retain the Mermaid fixture and snapshot tests.
+
 For this repository, use `no-mistakes impacted-checks <changed-file> --root .
 --format json` to obtain the configured Rust validation command. The Cargo test
 planner currently derives integration target names from source filenames; it

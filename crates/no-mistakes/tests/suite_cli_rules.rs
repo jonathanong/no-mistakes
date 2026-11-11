@@ -68,6 +68,7 @@ mod cli_check_deadline_evidence;
 mod cli_check_declared_payload;
 #[path = "cli_check_finite_set.rs"]
 mod cli_check_finite_set;
+#[cfg(feature = "mermaid-validation")]
 #[path = "cli_check_mermaid.rs"]
 mod cli_check_mermaid;
 #[path = "cli_check_redirect_delegation.rs"]
