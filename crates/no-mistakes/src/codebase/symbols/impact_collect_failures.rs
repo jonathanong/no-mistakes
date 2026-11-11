@@ -53,11 +53,19 @@ fn signature_impact_unanalyzed(
         .map(|export| export.symbol.clone())
         .collect::<BTreeSet<_>>();
     let relevant = signature_impact_relevant_files(context, target_file, &names);
+    let allowed = signature_impact_edges();
     for (path, facts, failure) in &failures {
         ensure_signature_impact_failure_unrelated(
             failure,
             path.as_path() == target_file
                 || relevant.contains(path.as_path())
+                || (facts.source.is_none()
+                    && context
+                        .graph
+                        .dependents_of_node(&NodeId::file_in(context.session.interner(), path))
+                        .is_some_and(|neighbors| {
+                            neighbors.iter().any(|(_, kind)| allowed.contains(kind))
+                        }))
                 || facts
                     .source
                     .as_ref()

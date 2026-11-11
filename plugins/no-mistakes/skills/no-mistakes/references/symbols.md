@@ -94,6 +94,7 @@ src/queues.mts:3:withRetry
   dependencies, and retained source containing the requested symbol or a known
   export alias. Imports or re-exports of those names through opaque failed
   modules also fail conservatively.
+  Unreadable files with importer edges also fail because their exports are unknown.
 - In signature-impact mode, `--format paths` emits only suggested test files
 - TSX/JSX files are auto-detected by extension and parsed with the appropriate grammar
 - Only top-level statements are walked — nested or conditional exports are not surfaced

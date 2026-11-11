@@ -12,7 +12,8 @@ mod program;
 mod program_walk;
 mod sql_identifier;
 mod variants;
-use plan::{requires_parse, should_store_source, ts_source};
+pub(super) use plan::should_store_source;
+use plan::{requires_parse, ts_source};
 pub(crate) use program::collect_file_facts_from_program_with_discovery;
 pub(crate) use variants::{
     collect_file_fact_variants_from_source_with_session, collect_file_fact_variants_with_session,
@@ -34,8 +35,14 @@ pub(crate) fn collect_file_facts_with_request(
         collect_file_facts_unchecked(session, root, path, plan, playwright, sources, retain_parse)
     })
     .unwrap_or_else(|error| {
+        let source = (plan.graph.source || should_store_source(plan, path))
+            .then(|| {
+                crate::codebase::ts_source::SourceStore::read_prepared_or_open(Some(sources), path)
+                    .ok()
+            })
+            .flatten();
         Some(super::file_parse_error::panic_facts(
-            root, path, plan, error,
+            root, path, plan, error, source,
         ))
     })
 }

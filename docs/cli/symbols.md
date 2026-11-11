@@ -43,6 +43,8 @@ the target file, transitive importers of the target and their transitive
 dependencies, or a raw occurrence of the requested symbol or a known export
 alias in retained source. Imports or re-exports of these names through an opaque failed module
 also fail conservatively, even when that module's link to the target is unknown.
+Unreadable files referenced by importers also fail conservatively because their
+exports are unknown.
 The default `symbols` output is unchanged unless `--mode signature-impact` is set.
 Unrelated failures return exit 0; potentially relevant failures return exit 2.
 Use JSON or YAML to inspect completeness before consuming `--format paths`.

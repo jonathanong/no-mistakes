@@ -108,7 +108,7 @@ pub(crate) fn collect_prepared_runner_facts(
                     results.into_iter().next().flatten().unwrap_or_default()
                 });
                 *helper = projected.unwrap_or_else(|error| {
-                    super::file_parse_error::panic_facts(root, path, plan, error)
+                    super::file_parse_error::panic_facts(root, path, plan, error, Some(source))
                 });
             }
         }

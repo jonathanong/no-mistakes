@@ -52,7 +52,13 @@ pub(super) fn collect_helper_facts(path: &Path, program: &oxc_ast::ast::Program<
         )
     })
     .unwrap_or_else(|error| {
-        crate::codebase::check_facts::panicked_file_facts(&request.root, &path, plan, error)
+        crate::codebase::check_facts::panicked_file_facts(
+            &request.root,
+            &path,
+            plan,
+            error,
+            Some(std::sync::Arc::from(source)),
+        )
     });
     REQUEST_CACHES.with(|caches| {
         if let Some(cache) = caches.borrow_mut().last_mut() {
