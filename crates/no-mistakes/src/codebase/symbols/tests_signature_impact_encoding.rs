@@ -148,7 +148,7 @@ fn signature_impact_rejects_unreadable_imported_aliases_and_reports_unrelated_io
             path.clone(),
             std::fs::metadata(&path).unwrap().permissions(),
         );
-        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0)).unwrap();
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o000)).unwrap();
         if std::fs::read(&path).is_ok() {
             drop(restore);
             return;
