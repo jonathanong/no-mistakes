@@ -1114,7 +1114,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but scan.test.mts:10 passes `options`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but scan.test.mts:8 passes `process.env.SCAN_ROOT!`, an unproven variable, as property `root`. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function validate({ root, paths }: { root: string; paths: string[] }) { return paths.flatMap(path => readdirSync(join(root, path))); }",
           "target": "unresolved root"
@@ -1180,7 +1180,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but scan.test.mts:9 passes `options`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but scan.test.mts:8 passes `root`, a live path, as property `root`. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function validate({ root, paths }: { root: string; paths: string[] }) { return paths.flatMap(path => readdirSync(join(root, path))); }",
           "target": "unresolved root"
@@ -1280,7 +1280,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but scan.test.mts:10 passes `options`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but scan.test.mts:9 passes `root`, an unproven variable, as property `root`. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function validate({ root, paths }: { root: string; paths: string[] }) { return paths.flatMap(path => readdirSync(join(root, path))); }",
           "target": "unresolved root"
