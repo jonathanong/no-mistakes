@@ -136,18 +136,11 @@ pub(in super::super) fn callee_root<'a>(expression: &'a Expression<'_>) -> Optio
     }
 }
 
-pub(super) fn disposable_path(call: &CallExpression<'_>, key: &str) -> Option<PathOrigin> {
-    let disposable = matches!(call.callee.get_inner_expression(),
-        Expression::Identifier(id) if id.name == "mkdtempDisposableSync")
-        || matches!(call.callee.get_inner_expression(),
-        Expression::StaticMemberExpression(member) if member.property.name == "mkdtempDisposableSync");
-    if key != "path" || !disposable {
-        return None;
-    }
+pub(super) fn disposable_origin(call: &CallExpression<'_>) -> PathOrigin {
     let kind = if call.arguments.len() == 1 {
         PathValueKind::Scalar
     } else {
         PathValueKind::Mutable
     };
-    Some(PathOrigin::anchored(PathAnchor::Temp).with_value_kind(kind))
+    PathOrigin::anchored(PathAnchor::Temp).with_value_kind(kind)
 }

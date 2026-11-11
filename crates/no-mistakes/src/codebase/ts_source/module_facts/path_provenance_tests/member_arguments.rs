@@ -29,13 +29,10 @@ fn object_arguments_require_small_plain_static_properties() {
 }
 
 #[test]
-fn getter_prefixes_allow_only_declarations_and_expressions_before_a_final_return() {
+fn getter_setups_require_owned_complete_return_paths() {
     let read = read("getter-rejected-statements.mjs");
-    for rejected in ["readdirSync(branch())", "readdirSync(tail())"] {
-        assert_eq!(read.origin(rejected), PathOrigin::unknown(), "{rejected}");
+    assert_eq!(read.origin("readdirSync(tail())"), PathOrigin::unknown());
+    for accepted in ["readdirSync(branch())", "readdirSync(accepted())"] {
+        assert_eq!(read.origin(accepted).anchor, PathAnchor::Temp, "{accepted}");
     }
-    assert_eq!(
-        read.origin("readdirSync(accepted())").anchor,
-        PathAnchor::Temp
-    );
 }

@@ -1170,3 +1170,8 @@ closed local or module-private literal array of plain object rows with staticall
 The CLI and async Node check APIs share this opt-in ownership projection. Ordinary
 call-query output is unchanged; dynamic, mutated, escaped, filtered, or prematurely
 exited tables remain unproven. See the [rule](rules/coverage-producer-assertion-owner.md).
+
+The `test-no-live-repository-scan` rule shares owned temporary-root proof across
+CLI and async Node checks: Node disposable directory `.path` values (including
+`await using`) and same-file helpers with owned returns and no fallthrough.
+See the [rule](rules/test-no-live-repository-scan.md) for the supported bounds.

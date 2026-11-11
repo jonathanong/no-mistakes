@@ -1,0 +1,81 @@
+use super::*;
+
+impl<'a> Projector<'a, '_> {
+    pub(super) fn disposable_factory(
+        &mut self,
+        call: &CallExpression<'a>,
+        asynchronous: bool,
+    ) -> bool {
+        let (identifier, member) = match call.callee.get_inner_expression() {
+            Expression::Identifier(identifier) => (identifier.as_ref(), None),
+            Expression::StaticMemberExpression(member) => {
+                let Expression::Identifier(identifier) = member.object.get_inner_expression()
+                else {
+                    return false;
+                };
+                (identifier.as_ref(), Some(member.property.name.as_str()))
+            }
+            _ => return false,
+        };
+        let Some(symbol) = self.binding_symbol(identifier) else {
+            return false;
+        };
+        let declaration = self.semantic.scoping().symbol_declaration(symbol);
+        let expected = if asynchronous {
+            "mkdtempDisposable"
+        } else {
+            "mkdtempDisposableSync"
+        };
+        let matches = match self.semantic.nodes().kind(declaration) {
+            AstKind::ImportSpecifier(binding) => {
+                !binding.import_kind.is_type()
+                    && member.is_none()
+                    && crate::codebase::ts_source::module_facts::modules::name(&binding.imported)
+                        == expected
+            }
+            AstKind::ImportNamespaceSpecifier(_) | AstKind::ImportDefaultSpecifier(_) => {
+                member == Some(expected) && self.disposable_namespace_stable(symbol, expected)
+            }
+            _ => false,
+        };
+        if !matches {
+            return false;
+        }
+        let AstKind::ImportDeclaration(import) = self.semantic.nodes().parent_kind(declaration)
+        else {
+            return false;
+        };
+        let module = crate::ast::js_literal(&import.source);
+        !import.import_kind.is_type()
+            && if asynchronous {
+                matches!(module.as_ref(), "node:fs/promises" | "fs/promises")
+            } else {
+                matches!(module.as_ref(), "node:fs" | "fs")
+            }
+    }
+    fn disposable_namespace_stable(
+        &mut self,
+        symbol: oxc_semantic::SymbolId,
+        expected: &str,
+    ) -> bool {
+        let semantic = self.semantic;
+        for reference in semantic.scoping().get_resolved_references(symbol) {
+            if !self.take() || reference.flags().is_write() {
+                return false;
+            }
+            let member = semantic.nodes().parent_id(reference.node_id());
+            let AstKind::StaticMemberExpression(access) = semantic.nodes().kind(member) else {
+                return false;
+            };
+            if access.property.name != expected {
+                return false;
+            }
+            if !matches!(semantic.nodes().parent_kind(member),
+                AstKind::CallExpression(call) if call.callee.get_inner_expression().span() == access.span)
+            {
+                return false;
+            }
+        }
+        true
+    }
+}

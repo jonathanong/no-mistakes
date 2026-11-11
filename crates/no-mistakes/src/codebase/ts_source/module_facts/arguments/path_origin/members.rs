@@ -3,6 +3,8 @@ use super::patterns::accept_parameterized;
 use super::{PathOrigin, Projector};
 use oxc_ast::{ast::*, AstKind};
 use oxc_span::GetSpan;
+#[path = "disposable.rs"]
+mod disposable;
 
 impl<'a> Projector<'a, '_> {
     pub(super) fn member_origin(
@@ -65,14 +67,23 @@ impl<'a> Projector<'a, '_> {
                 self.member_value(origin, object, key)
             }
             Expression::CallExpression(call) => {
-                if let Some(origin) = super::composite::disposable_path(call, key) {
-                    return Some(origin);
+                if key == "path" && self.disposable_factory(call, false) {
+                    return Some(super::composite::disposable_origin(call));
                 }
                 let (returned, parameterized) = self.getter_expression(call)?;
                 let origin = self.member_origin(returned, key, depth + 1)?;
                 accept_parameterized(parameterized, origin)
             }
             Expression::AwaitExpression(awaited) => {
+                if key == "path" {
+                    if let Expression::CallExpression(call) =
+                        awaited.argument.get_inner_expression()
+                    {
+                        if self.disposable_factory(call, true) {
+                            return Some(super::composite::disposable_origin(call));
+                        }
+                    }
+                }
                 self.member_origin(&awaited.argument, key, depth + 1)
             }
             _ => None,
