@@ -211,6 +211,10 @@ fn node_temp_factories_need_their_original_binding() {
         !findings.contains(&"tests/spy.test.mts:11".to_string()),
         "{findings:?}"
     );
+    for line in [9, 10] {
+        let owned = format!("tests/promises-safe-spy.test.mts:{line}");
+        assert!(!enumerations.contains(&owned), "{owned}: {enumerations:?}");
+    }
     assert!(
         !findings.contains(&"tests/unrelated-write.test.cts:10".to_string()),
         "{findings:?}"

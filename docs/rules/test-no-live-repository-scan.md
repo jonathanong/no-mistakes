@@ -114,7 +114,8 @@ An enumeration passes when its root is provably bounded:
   `require('fs').promises.mkdtemp` keep their Node factory identity when bound
   locally or called directly. Unknown selections, shadowed loaders, and
   mutations or opaque escapes of a Node factory view stay unresolved. A genuine
-  `vi.spyOn(require('fs'), 'readdirSync')` leaves the factory identity intact.
+  `vi.spyOn(require('fs'), 'readdirSync')` and a genuine spy on
+  `fs.promises.readdir` leave the factory identity intact.
   Direct `require(...)` calls may still produce the existing conservative loader
   advisory even when an enumerator's temporary root is proven owned.
   A same-named local function, parameter, or import from another module does not establish an

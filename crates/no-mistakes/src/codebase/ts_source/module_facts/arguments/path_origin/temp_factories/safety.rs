@@ -59,7 +59,11 @@ pub(super) fn factory_view_safe(semantic: &Semantic<'_>, symbol: SymbolId, sync:
             _ => None,
         };
         if let Some(name) = member {
-            if sync && name == "promises" && !promises_member_safe(nodes, parent) {
+            if sync
+                && name == "promises"
+                && !promises_member_safe(nodes, parent)
+                && !safe_nonfactory_spy(semantic, parent)
+            {
                 return false;
             }
             if factory(name)
