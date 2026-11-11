@@ -110,6 +110,9 @@ fn enumeration_locations(items: &Value) -> Vec<String> {
         .collect()
 }
 
+#[path = "cli_check_rules_test_no_live_repository_scan_factory_cases.rs"]
+mod factory_cases;
+
 #[test]
 fn provenance_json_snapshot() {
     let (provenance, bulk) = (root("provenance"), root("bulk"));
