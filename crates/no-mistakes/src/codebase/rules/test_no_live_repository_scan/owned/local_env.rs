@@ -14,7 +14,7 @@ impl Owners<'_> {
         let source = site_source_node(site);
         if !self.env.local_known()
             || self.closure_unknown(&site.file)
-            || !self.proven_target(&source)
+            || !self.parameter_proven(&source)
         {
             return false;
         }

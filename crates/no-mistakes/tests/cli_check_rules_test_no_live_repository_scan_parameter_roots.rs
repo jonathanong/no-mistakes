@@ -62,6 +62,8 @@ fn caller_references_check_json_snapshot() {
         "erased-live",
         "dynamic-owned",
         "selected-root",
+        "env-selected-escape",
+        "env-selected-sibling-owned",
         "dynamic-reexport-owned",
         "dynamic-reexport-live",
         "void-owned",

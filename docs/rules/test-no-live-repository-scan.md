@@ -375,6 +375,8 @@ This proof requires a named `vi` import from `vitest`, an unconditional stub,
 and the immediately following statement calling a named helper without
 arguments. The helper must have no parameters and a single return statement
 whose root reads `process.env` directly. Every caller must satisfy that proof.
+A selected dynamic import that passes this helper to other code is an unproven
+caller; a selected reference to a sibling export does not block the helper.
 No other call or `await` can run between the stub and the read, so an
 `afterEach` reset, `unstubEnvs`, or another test's env value cannot interrupt it.
 Conditional stubs and `vi.stubEnv("OWNED_SCAN_ROOT", process.cwd())` retain
