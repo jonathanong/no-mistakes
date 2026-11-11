@@ -21,6 +21,9 @@ impl Owners<'_> {
                     .get_ts_facts(&entry.file)
                     .and_then(path_provenance)
                     .is_some_and(|provenance| {
+                        if env::cleanup_read(provenance, name, entry.offset) {
+                            return false;
+                        }
                         env::dominated(provenance, name, entry.offset, &self.fixture_dirs)
                             || self.imported.owns(
                                 &entry.file,

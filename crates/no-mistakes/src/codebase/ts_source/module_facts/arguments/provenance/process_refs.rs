@@ -35,8 +35,20 @@ pub(super) fn poison_process_loads(source: &str, out: &mut PathProvenance) {
     }
 }
 
-pub(super) fn poison_name(name: &str, out: &mut PathProvenance) {
-    if matches!(name, "unstubAllEnvs" | "unstubEnvs") {
+pub(super) fn poison_name(
+    name: &str,
+    semantic: &Semantic<'_>,
+    facts: &super::super::super::TypeScriptModuleFacts,
+    node: NodeId,
+    out: &mut PathProvenance,
+) {
+    if name == "unstubAllEnvs" {
+        if let Some(scope) = super::resets::cleanup(semantic, facts, node) {
+            out.env_resets.push(scope);
+            return;
+        }
+        out.env_unknown_write = true;
+    } else if name == "unstubEnvs" {
         out.env_unknown_write = true;
     } else if name == "createRequire" {
         out.poison_env();

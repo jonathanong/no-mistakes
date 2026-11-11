@@ -42,6 +42,7 @@ pub(super) fn from_assignment<'a>(
         PathOrigin::unknown()
     };
     record(out, projector, node, name, origin, assignment.span.end);
+    reject_cleanup_assignment(out);
 }
 
 pub(super) fn from_delete<'a>(
@@ -103,6 +104,7 @@ pub(super) fn from_call<'a>(
                     .and_then(Argument::as_expression)
                     .map_or_else(PathOrigin::unknown, |value| projector.path_of(value));
                 record(out, projector, node, name, origin, call.span.end);
+                reject_cleanup_assignment(out);
             }
             None => out.poison_env(),
         }
@@ -149,4 +151,16 @@ fn record(
         origin,
         scope: super::scope::write_scope(projector.semantic, node),
     });
+}
+
+fn reject_cleanup_assignment(out: &mut PathProvenance) {
+    let Some(write) = out.env_writes.last_mut() else {
+        return;
+    };
+    if matches!(
+        write.scope,
+        super::super::WriteScope::AfterEach(..) | super::super::WriteScope::AfterAll(..)
+    ) {
+        write.scope = super::super::WriteScope::Conditional;
+    }
 }

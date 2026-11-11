@@ -53,7 +53,11 @@ impl<'a> Projector<'a, '_> {
         }
         let mut writes = usize::from(declaration.init.is_some());
         if let Some(init) = &declaration.init {
-            if self.origin(init, depth + 1).anchor != PathAnchor::Temp {
+            let origin = self.origin(init, depth + 1);
+            if origin.anchor != PathAnchor::Temp
+                || !origin.root_tails.is_empty()
+                || origin.segments.iter().any(|part| part == "..")
+            {
                 return None;
             }
         }
@@ -67,10 +71,12 @@ impl<'a> Projector<'a, '_> {
             else {
                 return None;
             };
-            if writes > 16
-                || assignment.operator != AssignmentOperator::Assign
-                || self.origin(&assignment.right, depth + 1).anchor != PathAnchor::Temp
-            {
+            if writes > 16 || assignment.operator != AssignmentOperator::Assign || {
+                let origin = self.origin(&assignment.right, depth + 1);
+                origin.anchor != PathAnchor::Temp
+                    || !origin.root_tails.is_empty()
+                    || origin.segments.iter().any(|part| part == "..")
+            } {
                 return None;
             }
         }

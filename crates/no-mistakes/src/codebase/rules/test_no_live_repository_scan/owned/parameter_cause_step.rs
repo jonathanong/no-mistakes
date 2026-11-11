@@ -43,7 +43,12 @@ impl Owners<'_> {
             return Step::Seed;
         }
         if let Some(name) = argument.env.as_deref() {
-            if !self.env_argument_owned(name, caller, facts) {
+            if !argument
+                .root_tails
+                .iter()
+                .all(|tail| self.safe_suffix(tail, caller, facts, 0))
+                || !self.env_argument_owned(name, caller, facts)
+            {
                 let block = live_or_variable(argument, fixture_dirs);
                 return Step::Block(caller_cause(caller, block, text));
             }

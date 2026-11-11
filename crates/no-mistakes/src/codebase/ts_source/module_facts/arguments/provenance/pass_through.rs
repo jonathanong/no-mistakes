@@ -1,11 +1,14 @@
-//! Spread-forwarding `mockImplementation` wrappers that add no root of their own.
+//! Spread-forwarding wrappers that add no root of their own.
+#[path = "pass_through_assignment.rs"]
+mod assignment;
+pub(crate) use assignment::assignment_parent;
+#[path = "pass_through_reads.rs"]
+mod reads;
 use oxc_ast::{ast::*, AstKind};
 use oxc_semantic::Semantic;
 
-/// `vi.spyOn(x, "name").mockImplementation((...args) => original(...args))`: the
-/// wrapper adds no root. Returns the literal spied name; a bare `vi.fn()` or a
-/// computed name is not attributable to the mocked function, so it is not a pass-through.
-pub(super) fn forwards_mock_arguments(
+/// The original member name for a proven forwarding assignment or spy mock.
+pub(in super::super) fn forwards_mock_arguments(
     semantic: &Semantic<'_>,
     node: oxc_syntax::node::NodeId,
     call: &CallExpression<'_>,
@@ -21,7 +24,7 @@ pub(super) fn forwards_mock_arguments(
         .get()
         .and_then(|reference| semantic.scoping().get_reference(reference).symbol_id())?;
     // Any other use (an index write, `splice`, a nested closure) may change the arguments.
-    let written = semantic
+    let multiple_uses = semantic
         .scoping()
         .get_resolved_references(forwarded_symbol)
         .count()
@@ -37,12 +40,18 @@ pub(super) fn forwards_mock_arguments(
                 }
                 _ => None,
             })?;
-    let rest_is_forwarded = !written
-        && params.items.is_empty()
+    let rest_is_forwarded = params.items.is_empty()
         && params.rest.as_ref().is_some_and(|rest| {
             matches!(&rest.rest.argument, BindingPattern::BindingIdentifier(id)
                 if id.symbol_id.get() == Some(forwarded_symbol))
         });
+    if !rest_is_forwarded {
+        return None;
+    }
+    if let Some(captured) = assignment::assigned_capture(semantic, function, call) {
+        return reads::unchanged_arguments(semantic, function, forwarded_symbol, forwarded)
+            .then_some(captured);
+    }
     let AstKind::CallExpression(mock) = semantic.nodes().parent_kind(function) else {
         return None;
     };
@@ -53,7 +62,7 @@ pub(super) fn forwards_mock_arguments(
         member.property.name.as_str(),
         "mockImplementation" | "mockImplementationOnce"
     );
-    (rest_is_forwarded && mocks)
+    (!multiple_uses && mocks)
         .then(|| spied_name(&member.object))
         .flatten()
 }

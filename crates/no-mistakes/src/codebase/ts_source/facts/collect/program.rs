@@ -1,5 +1,5 @@
 use super::super::{domain, TsFactContext, TsFactPlan, TsFileFacts};
-use crate::codebase::dependencies::extract::extract_import_facts_with_plan;
+use crate::codebase::dependencies::extract::extract_import_facts_with_forwarders;
 use crate::codebase::ts_source::module_facts;
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use std::{path::Path, sync::Arc};
@@ -34,9 +34,38 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
     semantic: Option<&oxc_semantic::SemanticBuilderReturn<'_>>,
 ) -> TsFileFacts {
     let (parse_error, stored_source) = source_state;
+    let module_bindings = (plan.module_bindings || plan.call_arguments).then(|| {
+        Arc::new(match semantic {
+            Some(built) => module_facts::extract_from_semantic(
+                &built.semantic,
+                &built.diagnostics,
+                plan.call_arguments && parse_error.is_none(),
+            ),
+            None => module_facts::extract_with_arguments(
+                program,
+                plan.call_arguments && parse_error.is_none(),
+            ),
+        })
+    });
+    let forwarders = plan
+        .needs_import_facts()
+        .then(|| {
+            module_bindings
+                .as_ref()
+                .map(|facts| Arc::clone(&facts.transparent_receiver_writes))
+                .unwrap_or_else(|| match semantic {
+                    Some(built) => Arc::new(module_facts::arguments::transparent_receiver_writes(
+                        &built.semantic,
+                    )),
+                    None => {
+                        module_facts::arguments::transparent_receiver_writes_from_program(program)
+                    }
+                })
+        })
+        .unwrap_or_default();
     let import_facts = if plan.needs_import_facts() {
         crate::diagnostics::hot_files::with_file(path, || {
-            extract_import_facts_with_plan(program, source, plan)
+            extract_import_facts_with_forwarders(program, source, plan, forwarders)
         })
     } else {
         Default::default()
@@ -102,19 +131,7 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
         builtin_callback_calls: builtin_calls.callbacks,
         known_nonbuiltin_receiver_calls: builtin_calls.known_nonbuiltin,
         ancestry,
-        module_bindings: (plan.module_bindings || plan.call_arguments).then(|| {
-            Arc::new(match semantic {
-                Some(built) => module_facts::extract_from_semantic(
-                    &built.semantic,
-                    &built.diagnostics,
-                    plan.call_arguments && parse_error.is_none(),
-                ),
-                None => module_facts::extract_with_arguments(
-                    program,
-                    plan.call_arguments && parse_error.is_none(),
-                ),
-            })
-        }),
+        module_bindings,
         operational_error: None,
         parse_error,
         fatal_parse_error: false,

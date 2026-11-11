@@ -1,6 +1,7 @@
 use super::*;
 use std::path::{Path, PathBuf};
 
+mod forwarders;
 mod map;
 
 fn collect_file_facts(
@@ -443,22 +444,6 @@ fn plan_coverage_tracks_effect_and_rsc_facts() {
 }
 
 #[test]
-fn plan_coverage_tracks_call_site_facts() {
-    let available = TsFactPlan {
-        call_sites: true,
-        ..TsFactPlan::default()
-    };
-    assert!(available.covers(TsFactPlan {
-        call_sites: true,
-        ..TsFactPlan::default()
-    }));
-    assert!(!TsFactPlan::default().covers(TsFactPlan {
-        call_sites: true,
-        ..TsFactPlan::default()
-    }));
-}
-
-#[test]
 fn unscoped_domain_fact_context_does_not_collect_config_scoped_facts() {
     let ts = fixture("imports.ts");
     let context = TsFactContext::new(ts.parent().unwrap());
@@ -500,18 +485,3 @@ fn queue_factory_context_requires_specifier_and_function_even_when_glob_matches(
 
 #[path = "tests/collection_regressions.rs"]
 mod collection_regressions;
-
-#[test]
-fn per_item_demand_survives_plan_union_and_requires_complete_facts() {
-    let required = TsFactPlan {
-        function_calls: true,
-        per_item_calls: true,
-        ..TsFactPlan::default()
-    };
-    let mut shared = TsFactPlan::imports();
-    // Ordinary call facts cannot answer an iteration policy without its demand.
-    assert!(!shared.covers(required));
-    shared.include(required);
-    assert!(shared.covers(required));
-    assert!(!shared.is_empty());
-}

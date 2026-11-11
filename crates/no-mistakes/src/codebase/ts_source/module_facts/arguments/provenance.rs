@@ -7,11 +7,13 @@ mod call_args;
 mod config_keys;
 mod consumers;
 mod env_writes;
+mod getters;
 mod local_env;
 mod member_paths;
 mod member_refs;
-mod pass_through;
+pub(super) mod pass_through;
 mod process_refs;
+mod resets;
 mod scope;
 mod stub_global;
 mod value_refs;
@@ -42,6 +44,13 @@ pub(super) fn collect(
             immutable: &mut immutable,
         };
         match node.kind() {
+            AstKind::Function(function) => getters::record(&mut projector, function, &mut result),
+            AstKind::ArrowFunctionExpression(function) => getters::record_defaults(
+                &mut projector,
+                function.span.start,
+                &function.params,
+                &mut result,
+            ),
             AstKind::CallExpression(call) => {
                 projector.call_offset = call.span.start;
                 if let Some(spied) =
@@ -70,21 +79,24 @@ pub(super) fn collect(
                     result.test_callbacks.push(span);
                     local_env::test_calls(semantic, facts, call, &mut result);
                 }
+                if let Some(span) = resets::callback(semantic, call) {
+                    result.cleanup_callbacks.push(span);
+                }
                 env_writes::from_call(&mut projector, call, node.id(), &mut result);
             }
             AstKind::IdentifierReference(id) => {
                 process_refs::from_identifier(semantic, node.id(), id, &mut result);
-                process_refs::poison_name(&id.name, &mut result);
+                process_refs::poison_name(&id.name, semantic, facts, node.id(), &mut result);
                 vi_refs::check(semantic.nodes(), node.id(), id, &vi_names, &mut result);
                 value_refs::from_identifier(semantic, node.id(), id, &mut result);
             }
             AstKind::IdentifierName(name) => {
-                process_refs::poison_name(&name.name, &mut result);
+                process_refs::poison_name(&name.name, semantic, facts, node.id(), &mut result);
                 member_refs::from_name(semantic.nodes(), node.id(), &name.name, &mut result);
             }
             AstKind::StringLiteral(text) => {
                 let literal = crate::ast::js_literal(text);
-                process_refs::poison_name(&literal, &mut result);
+                process_refs::poison_name(&literal, semantic, facts, node.id(), &mut result);
                 member_refs::from_literal(&literal, &mut result);
             }
             AstKind::ComputedMemberExpression(member) => {

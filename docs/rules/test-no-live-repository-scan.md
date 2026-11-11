@@ -234,6 +234,30 @@ the helper.
 
 ## Owned parameters and env vars
 
+A statically named imported helper may return the environment root, such as
+`export function getLocalDir() { return process.env.X ?? "./tmp/data"; }`.
+The helper must have no parameters and a single direct return of `process.env.X`,
+optionally using `??` or `||` with a string literal fallback. Path operations
+inside the imported helper remain unproven. The canonical call graph resolves
+its source; arbitrary imports, captured helper results,
+side effects in the helper, and parent escapes retain unresolved-root findings.
+This includes `readdir(path.join(getLocalDir(), table))` when a hook establishes
+the environment root and every reaching caller supplies a provably relative
+child suffix, including a known constant or a safe string literal default.
+Unknown, escaping, or absolute parameter values remain unresolved. Static child
+and parent components normalize before this proof.
+
+Hook names must resolve to Vitest named imports (including aliases) or
+Vitest globals with no local binding. Local functions or custom imports with those names
+do not establish lifecycle ownership.
+Unconditional same-scope `beforeEach` setup may pair with `afterEach` cleanup,
+and `beforeAll` setup may pair with `afterAll` cleanup. Supported cleanup is a
+named `delete process.env.X` or a direct `vi.unstubAllEnvs()` through the named
+Vitest import. The owned write must still run before every reaching test call.
+A `beforeAll` write followed by an `afterEach` reset cannot prove later tests;
+conditional or live writes, arbitrary reset references, and scans from cleanup
+callbacks remain unresolved. Runner-level reset configuration stays conservative.
+
 A same-file helper such as `const getDataDir = () => process.env.DATA_DIR ??
 "./tmp/data"` keeps the environment origin in `readdir(join(getDataDir(), table))`.
 The fallback remains the production root: tests must assign `DATA_DIR` to an
@@ -585,6 +609,16 @@ Long call chains use a cycle-safe traversal of the canonical graph without a
 fixed caller-state cutoff. Cycles need an independently owned entry argument.
 
 ## Pass-through mocks
+
+A wrapper may capture a Node filesystem enumerator in a `const`, replace that
+same member with a rest-argument function, and return the captured function's
+unchanged arguments. Read-only strict-equality checks on an argument are allowed
+for fixture failure injection. The ordinary filesystem call still receives root
+analysis. Mutating or escaping the argument array, replacing the arguments,
+unknown receiver writes, and competing aliases of the same filesystem module
+retain unresolved receiver findings. Extra opaque calls or constructors also
+keep the receiver unresolved; failure injection may throw global
+`new Error` with primitive literal arguments when `Error` has no local binding.
 
 `vi.spyOn(fs, "readdir").mockImplementation((...args) => original(...args))`
 forwards the caller's arguments, so the forwarding call is not a root of its

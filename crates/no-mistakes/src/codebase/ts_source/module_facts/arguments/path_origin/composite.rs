@@ -59,8 +59,20 @@ impl<'a> Projector<'a, '_> {
                 for arg in args {
                     let part = arg.map_or_else(PathOrigin::unknown, |e| self.origin(e, depth + 1));
                     acc = Some(
-                        acc.take()
-                            .map_or(part.clone(), |prefix| prefix.append(part)),
+                        if name == "resolve"
+                            && matches!(
+                                part.anchor,
+                                PathAnchor::Absolute
+                                    | PathAnchor::Cwd
+                                    | PathAnchor::Module
+                                    | PathAnchor::SharedTemp
+                            )
+                        {
+                            part
+                        } else {
+                            acc.take()
+                                .map_or(part.clone(), |prefix| prefix.append(part))
+                        },
                     );
                 }
                 acc.unwrap_or_else(PathOrigin::unknown)
@@ -77,6 +89,7 @@ impl<'a> Projector<'a, '_> {
             }
             _ => self
                 .getter_origin(call, depth)
+                .or_else(|| self.imported_getter(call))
                 .unwrap_or_else(PathOrigin::unknown),
         }
     }

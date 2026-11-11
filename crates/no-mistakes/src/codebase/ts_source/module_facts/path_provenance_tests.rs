@@ -207,3 +207,7 @@ fn argument_lines_share_one_index_across_calls_and_properties() {
     );
 }
 mod tmpdir;
+
+mod captured_wrappers;
+
+mod getters;

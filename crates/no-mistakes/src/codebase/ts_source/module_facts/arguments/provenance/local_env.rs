@@ -104,7 +104,7 @@ pub(super) fn immediate_read(semantic: &Semantic<'_>, call: NodeId) -> bool {
         && function.params.rest.is_none()
 }
 
-fn known_vi(
+pub(super) fn known_vi(
     semantic: &Semantic<'_>,
     facts: &TypeScriptModuleFacts,
     expression: &Expression<'_>,

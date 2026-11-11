@@ -1,9 +1,9 @@
 //! Which `process.env` variables are only ever set to an owned temp root.
+mod lifecycle;
+
 use super::path_provenance;
 use crate::codebase::dependencies::graph::TsFactLookup;
-use crate::codebase::ts_source::module_facts::arguments::{
-    PathAnchor, PathOrigin, PathProvenance, WriteScope,
-};
+use crate::codebase::ts_source::module_facts::arguments::{PathAnchor, PathOrigin};
 use crate::config::v2::schema::StringOrList;
 use crate::config::v2::NoMistakesConfig;
 use crate::fx::{FxHashMap, FxHashSet};
@@ -29,6 +29,7 @@ impl EnvWrites {
         selected_configs: Option<&FxHashSet<PathBuf>>,
     ) -> Self {
         let mut writes = Self::default();
+        let mut reset_names: Option<FxHashSet<String>> = None;
         // A file with no path facts was outside the rule's scope; a file whose
         // facts failed to build may hide writes.
         for file in graph_files
@@ -52,9 +53,21 @@ impl EnvWrites {
                 || (runner_config && provenance.is_some_and(|found| found.opaque_config_key));
             writes.poisoned |=
                 runner_config && provenance.is_some_and(|found| found.opaque_config_key);
+            let cleanup = provenance.map(|found| lifecycle::CleanupProof::new(found, fixture_dirs));
+            if let (Some(found), Some(cleanup)) = (provenance, &cleanup) {
+                cleanup.constrain_resets(found, &mut reset_names);
+            }
             for write in provenance.iter().flat_map(|found| &found.env_writes) {
                 let entry = writes.owned.entry(write.name.clone()).or_insert(true);
-                *entry &= owned_origin(&write.origin, fixture_dirs);
+                *entry &= owned_origin(&write.origin, fixture_dirs)
+                    || cleanup
+                        .as_ref()
+                        .is_some_and(|proof| proof.paired_cleanup(write));
+            }
+        }
+        if let Some(allowed) = reset_names {
+            for (name, owned) in &mut writes.owned {
+                *owned &= allowed.contains(name);
             }
         }
         let json_poison = json_configs_poison(root, config);
@@ -72,34 +85,12 @@ impl EnvWrites {
     }
 }
 
-/// An unconditional owned write of `name` that must have run before `offset`.
-pub(in super::super) fn dominated(
-    provenance: &PathProvenance,
-    name: &str,
-    offset: u32,
-    fixture_dirs: &[String],
-) -> bool {
-    provenance
-        .env_writes
-        .iter()
-        .filter(|write| write.name == name && owned_origin(&write.origin, fixture_dirs))
-        .any(|write| match write.scope {
-            WriteScope::Program => write.end <= offset,
-            WriteScope::Function(start, end) => {
-                start <= offset && offset < end && write.end <= offset
-            }
-            // A hook runs before every test body registered in the same scope.
-            WriteScope::Hook(start, end) => provenance
-                .test_callbacks
-                .iter()
-                .any(|(from, to)| start <= *from && *to <= end && *from <= offset && offset < *to),
-            WriteScope::Conditional => false,
-        })
-}
+pub(in super::super) use lifecycle::{cleanup_read, dominated};
 
 pub(in super::super) fn owned_origin(origin: &PathOrigin, fixture_dirs: &[String]) -> bool {
     if origin.anchor == PathAnchor::Temp {
-        return !origin.segments.iter().any(|segment| segment == "..");
+        return origin.root_tails.is_empty()
+            && !origin.segments.iter().any(|segment| segment == "..");
     }
     origin
         .segments
