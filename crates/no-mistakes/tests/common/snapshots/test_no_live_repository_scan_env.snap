@@ -528,6 +528,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "owned-env-tmpdir-parent": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "scan.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export async function scan() { return readdir(dirname(process.env.TMPDIR)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "owned-env-tmpdir-stub-live": {
     "exitCode": 0,
     "report": {
@@ -606,6 +628,40 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "owned-tmpdir-child-parent": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "owned-tmpdir-child-parent-escape": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scan.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "live repository scan: `readdir` enumerates the shared temporary directory, which the test does not own, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export async function scan() { return readdir(dirname(dirname(join(os.tmpdir(), \"child\")))); }",
+          "target": "live repository scan"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "owned-tmpdir-custom-import": {
     "exitCode": 1,
     "report": {
@@ -637,6 +693,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "owned-tmpdir-escaped-env-setup": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scan.mts",
+          "import": "readdir",
+          "line": 3,
+          "message": "live repository scan: `readdir` enumerates the shared temporary directory, which the test does not own, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function scan() { return readdir(os.tmpdir()); }",
+          "target": "live repository scan"
+        }
+      ],
       "warnings": []
     }
   },
@@ -806,6 +884,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "owned-tmpdir-nested-parent": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scan.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "live repository scan: `readdir` enumerates the shared temporary directory, which the test does not own, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export async function scan() { return readdir(dirname(dirname(os.tmpdir()))); }",
+          "target": "live repository scan"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "owned-tmpdir-nested-receiver": {
     "exitCode": 1,
     "report": {
@@ -822,6 +922,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "live repository scan: `readdir` enumerates the shared temporary directory, which the test does not own, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function scan() { return readdir(getOS().tmpdir()); }",
+          "target": "live repository scan"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "owned-tmpdir-parent": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scan.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "live repository scan: `readdir` enumerates the shared temporary directory, which the test does not own, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export async function scan() { return readdir(dirname(os.tmpdir())); }",
           "target": "live repository scan"
         }
       ],

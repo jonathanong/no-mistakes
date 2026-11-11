@@ -338,6 +338,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "owned-env-tmpdir-parent": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "owned-env-tmpdir-stub-live": {
     "exitCode": 0,
     "report": {
@@ -386,6 +398,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "owned-tmpdir-child-parent": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "owned-tmpdir-child-parent-escape": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "owned-tmpdir-custom-import": {
     "exitCode": 0,
     "report": {
@@ -399,6 +435,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "owned-tmpdir-default": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "owned-tmpdir-escaped-env-setup": {
     "exitCode": 0,
     "report": {
       "advisories": [],
@@ -506,7 +554,31 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "owned-tmpdir-nested-parent": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "owned-tmpdir-nested-receiver": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "owned-tmpdir-parent": {
     "exitCode": 0,
     "report": {
       "advisories": [],

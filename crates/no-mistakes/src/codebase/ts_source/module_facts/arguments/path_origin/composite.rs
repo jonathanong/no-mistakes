@@ -71,7 +71,7 @@ impl<'a> Projector<'a, '_> {
                 };
                 let mut origin = self.origin(inner, depth + 1);
                 if name == "dirname" {
-                    origin.segments.pop();
+                    origin.extend([".."]);
                 }
                 origin
             }

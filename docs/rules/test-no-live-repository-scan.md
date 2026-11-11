@@ -128,6 +128,11 @@ assignment keeps the shared-directory finding. For portable tests, create one
 `const fixture = await mkdtemp(join(tmpdir(), "owned-"))`, then call both
 `vi.stubEnv("TMPDIR", fixture)` and `vi.stubEnv("TEMP", fixture)` before the scanner.
 Direct `process.env.TMPDIR` reads always use `TMPDIR`, regardless of host platform.
+`dirname(root)` escapes an opaque owned root and remains reported, including
+nested `dirname` calls. `dirname(join(root, "child"))` stays owned because it
+removes a known child rather than crossing the root boundary. This applies to
+Node `tmpdir()` calls and direct environment reads. An environment assignment
+from the parent of a fresh `mkdtemp` root also fails the ownership proof.
 A matching `fixtureDirs` segment remains an explicit allowance.
 
 ## Unresolved roots
