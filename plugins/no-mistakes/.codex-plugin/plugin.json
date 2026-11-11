@@ -1,6 +1,6 @@
 {
   "name": "no-mistakes",
-  "version": "0.109.38",
+  "version": "0.109.39",
   "description": "Deterministic impact maps, test plans, Playwright coverage, and repository checks for Codex.",
   "author": {
     "name": "Jonathan Ong",
