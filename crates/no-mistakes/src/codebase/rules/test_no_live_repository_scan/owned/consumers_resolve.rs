@@ -43,8 +43,15 @@ pub(super) fn apply(
     for specifier in &provenance.unsafe_modules {
         match choose(gate, file, specifier) {
             Choice::Follow(target) => {
-                let selected =
-                    selections::collect(gate, consumed, file, ts, provenance, specifier, &target);
+                let selected = gate
+                    .selection
+                    .zip(ts.module_bindings.as_deref())
+                    .map(|(context, module)| {
+                        selections::collect(
+                            context, consumed, file, module, provenance, specifier, &target,
+                        )
+                    })
+                    .unwrap_or_default();
                 if route_index::note_resolved(
                     &mut consumed.hits,
                     file,

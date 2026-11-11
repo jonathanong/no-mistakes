@@ -1,23 +1,22 @@
 use super::route_index::RouteHit;
-use super::{Consumed, Gate};
-use crate::codebase::ts_source::facts::TsFileFacts;
+use super::Consumed;
+use crate::codebase::dependencies::graph::{DepGraph, TsFactLookup};
 use crate::codebase::ts_source::module_facts::arguments::{PathProvenance, RouteKind};
+use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 use crate::fx::FxHashSet;
 use std::path::Path;
 
 pub(super) fn collect(
-    gate: &Gate<'_>,
+    context: (&DepGraph, &dyn TsFactLookup),
     consumed: &mut Consumed,
     file: &Path,
-    ts: &TsFileFacts,
+    module: &TypeScriptModuleFacts,
     provenance: &PathProvenance,
     specifier: &str,
     target: &Path,
 ) -> FxHashSet<u32> {
     let mut selected = FxHashSet::default();
-    let Some(module) = ts.module_bindings.as_deref() else {
-        return selected;
-    };
+    let (graph, facts) = context;
     for site in provenance
         .route_sites
         .iter()
@@ -34,13 +33,6 @@ pub(super) fn collect(
         else {
             continue;
         };
-        if names.is_empty() {
-            selected.insert(site.start);
-            continue;
-        }
-        let Some((graph, facts)) = gate.selection else {
-            continue;
-        };
         if !calls
             .iter()
             .all(|name| graph.file_export_receiver_safe(target, name, facts))
@@ -49,17 +41,15 @@ pub(super) fn collect(
         }
         let targets = names
             .iter()
-            .map(|name| graph.file_export_node(target, name))
+            .map(|name| graph.file_export_binding(target, name))
             .collect::<Option<Vec<_>>>();
         let Some(targets) = targets else {
             continue;
         };
-        for node in targets {
-            if let Some((target, symbol)) = node.as_symbol() {
-                consumed
-                    .hits
-                    .push(RouteHit::selected(file, site, target, symbol.to_string()));
-            }
+        for (target, symbol) in targets {
+            consumed
+                .hits
+                .push(RouteHit::selected(file, site, target, symbol.to_string()));
         }
         selected.insert(site.start);
     }

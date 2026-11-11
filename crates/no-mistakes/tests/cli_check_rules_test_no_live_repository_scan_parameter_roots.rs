@@ -74,6 +74,8 @@ fn caller_references_check_json_snapshot() {
         "void-import-live",
         "guarded-live",
         "constant-owned",
+        "missing-export",
+        "receiver-value",
         "constant-live",
         "namespace-escape",
         "namespace-computed",
