@@ -31,6 +31,11 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - Change the code, not the analyzer: rules ban hard-to-parse code (indirection,
   dynamism, runtime mutation) and name a static rewrite. Rules judge only what
   they can soundly judge; see [why](docs/why.md).
+- Tolerate input like the language's compiler: decode lossily, keep read and
+  parse failures scoped to the file, and analyze the rest. Never abort a whole
+  query over a file the compiler accepts; report files that still cannot be
+  analyzed in a structured field with a warning, and fail only when such a
+  file could change the answer.
 - Reduce Agent token usage
 - Allow custom error messages for agents
 - Automatically fix when possible
