@@ -1,6 +1,4 @@
-use serde_json::Value;
 use std::path::PathBuf;
-use std::process::Command;
 
 const RULE: &str = "test-no-live-repository-scan";
 const CASES: &[&str] = &[
@@ -114,22 +112,14 @@ fn test_no_live_repository_scan_test_origin_check_json_snapshot() {
             (*name, root.clone(), root.join(".no-mistakes.yml"))
         })
         .collect();
-    crate::check_json_snapshot::assert_saved_fixture(
+    let reports = crate::check_json_snapshot::assert_saved_fixture_report(
         "test_no_live_repository_scan_test_origins",
         &cases,
+        &[],
+        &[],
     );
-}
-
-#[test]
-fn test_no_live_repository_scan_only_test_originating_callers_decide_ownership() {
     for name in CASES {
-        let root = root(name);
-        let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
-            .args(["check", "--format", "json", "--root"])
-            .arg(&root)
-            .output()
-            .unwrap();
-        let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+        let report = &reports[*name]["report"];
         let findings: Vec<_> = ["rules", "advisories"]
             .into_iter()
             .flat_map(|field| report[field].as_array().unwrap())
