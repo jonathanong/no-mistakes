@@ -1,0 +1,6 @@
+Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+Get:7 https://apt.postgresql.org/pub/repos/apt noble-pgdg InRelease [189 kB]
+Ign:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+Ign:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease
+Ign:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease
+Ign:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease

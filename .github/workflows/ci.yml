@@ -212,6 +212,10 @@ jobs:
         timeout-minutes: 2
         run: node --test .github/scripts/rust-validation.test.cjs .github/scripts/rust-coverage-floors.test.cjs .github/scripts/preserve-rust-profiles.test.cjs .github/scripts/publish-npm.test.cjs
 
+      - name: Test PostgreSQL setup policy
+        timeout-minutes: 2
+        run: python3 -m unittest discover -s .github/actions/start-test-postgres -p 'test_*.py'
+
       - name: Check formatting
         timeout-minutes: 5
         run: cargo fmt --all -- --check

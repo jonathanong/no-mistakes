@@ -29,6 +29,32 @@ requires both jobs to succeed, including rejecting cancelled or skipped package
 validation. This keeps packaging independent of the several Rust validation
 profiles that previously consumed the same lint-job budget.
 
+<!-- cspell:ignore citext -->
+
+Linux catalog tests and release validation share the PostgreSQL setup action.
+They require PostgreSQL 18 and the `citext` and `pg_stat_statements` extension
+files; an older server cannot substitute for the committed catalog fixtures.
+Setup reuses a complete installation and otherwise limits package preparation
+to 220 seconds inside the existing five-minute step deadline. APT index errors
+remain failures. One recovery attempt may replace the Azure Ubuntu mirror with
+the [Linux Kernel Archives Ubuntu mirror](https://mirrors.kernel.org/) over HTTPS
+after a matching DNS failure. Recovery replaces active Azure and canonical Ubuntu
+archive entries, preserving APT signature verification and unrelated repositories.
+A five-second resolver probe checks that configured mirror before APT can stall
+without printing a DNS diagnostic. Unrelated repository, signature, package, and
+timeout failures still stop setup. Recovery cannot guarantee that the alternate
+mirror is reachable.
+
+The setup-policy tests replay saved source configurations and failure transcripts
+without changing host packages or contacting a database:
+
+```sh
+python3 -m unittest discover -s .github/actions/start-test-postgres -p 'test_*.py'
+```
+
+These tests run in the lint job. The standalone library, coverage, and release
+jobs still start a real isolated server before running their catalog tests.
+
 The real-addon API steps load `inline-owned-member-api.test.js` through
 `real-napi-api.test.js` on Linux, macOS, and Windows with
 `NO_MISTAKES_TEST_NAPI_ADDON_PATH` pointing to the compiled addon. This exercises async CJS/ESM method-acquisition parity; ordinary

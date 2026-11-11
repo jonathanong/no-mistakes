@@ -1,0 +1,6 @@
+Err:1 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+  Temporary failure resolving 'azure.archive.ubuntu.com'
+Fetched 0 B in 0s (0 B/s)
+Reading package lists... Done
+W: Some index files failed to download. They have been ignored, or old ones used instead.
+E: Failed to fetch index from azure.archive.ubuntu.com
