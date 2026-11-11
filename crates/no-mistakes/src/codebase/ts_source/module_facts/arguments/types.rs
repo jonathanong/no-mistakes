@@ -118,6 +118,7 @@ pub(crate) struct PathProvenance {
     pub(crate) arg_member_effects: FxHashMap<u32, Vec<(usize, MemberEffect)>>,
     pub(crate) arg_closed_objects: FxHashMap<u32, Vec<usize>>,
     pub(crate) arg_closed_members: FxHashMap<u32, Vec<(usize, String)>>,
+    pub(crate) call_guards: FxHashMap<u32, Vec<ArrayGuard>>,
     pub(crate) arg_member_paths: FxHashMap<u32, Vec<(usize, String, PathOrigin)>>,
     pub(crate) arg_paths: FxHashMap<u32, Vec<(usize, PathOrigin)>>,
     /// Calls that forward their enclosing mock implementation's rest arguments unchanged.
@@ -197,4 +198,13 @@ impl PathProvenance {
         self.env_unknown_write = true;
         self.env_opaque_write = true;
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ArrayGuard {
+    pub(crate) owner: u32,
+    pub(crate) parameter: usize,
+    pub(crate) index: usize,
+    pub(crate) length: bool,
+    pub(crate) expected: Value,
 }

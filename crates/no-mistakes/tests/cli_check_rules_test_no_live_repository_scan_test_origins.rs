@@ -47,6 +47,23 @@ const CASES: &[&str] = &[
     "forwarding",
     "cli",
     "cli-guarded",
+    "cli-argv-cleanup",
+    "cli-argv-default-parameter",
+    "cli-argv-nested-owner",
+    "cli-argv-deep-owner",
+    "cli-argv-spread",
+    "cli-argv-mutated-alias",
+    "cli-argv-default-mutation",
+    "cli-argv-escaped",
+    "cli-argv-reassigned",
+    "cli-argv-literal-live",
+    "cli-argv-live",
+    "cli-argv-long",
+    "cli-argv-mixed",
+    "cli-argv-mutated",
+    "cli-argv-short",
+    "cli-argv-unknown",
+    "cli-argv-unknown-array",
     "explicit-roots",
     "explicit-roots-barrel",
     "explicit-destructured",
@@ -145,6 +162,15 @@ fn test_no_live_repository_scan_only_test_originating_callers_decide_ownership()
                 | "unknown-test"
                 | "cli-reached"
         ));
+        let expected = if name.starts_with("cli-argv-")
+            && !matches!(
+                *name,
+                "cli-argv-cleanup" | "cli-argv-short" | "cli-argv-long"
+            ) {
+            2
+        } else {
+            expected
+        };
         assert_eq!(findings.len(), expected, "{name}: {findings:?}");
     }
 }

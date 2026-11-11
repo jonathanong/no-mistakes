@@ -3,6 +3,7 @@
 //! Recall first: an unreadable module that a test root can use to reach the
 //! function keeps the finding. A module outside that closure does not.
 mod argument_step;
+mod call_guards;
 mod caller_escape;
 mod cause;
 mod closure;
@@ -128,7 +129,7 @@ impl<'g> Owners<'g> {
         let environment_consumed =
             consumers::Consumed::new(graph, facts, graph_files, relevant_files, resolution);
         let consumed = environment_consumed.narrowed(&caller_files);
-        Self {
+        let mut owners = Self {
             callers,
             nodes,
             graph,
@@ -152,7 +153,9 @@ impl<'g> Owners<'g> {
             escaped,
             consumed,
             environment_consumed,
-        }
+        };
+        owners.prune_infeasible_callers(facts);
+        owners
     }
 
     /// A named function, referenced only as a direct callee, in a module

@@ -4,6 +4,7 @@
 //! rule that reads these facts then keeps its finding.
 mod argument_source;
 mod call_args;
+mod call_guards;
 mod concurrent;
 mod config_keys;
 mod consumers;
@@ -62,6 +63,10 @@ pub(super) fn collect(
                         .extend(concurrent::callbacks(semantic, call));
                 }
                 projector.call_offset = call.span.start;
+                let guards = call_guards::collect(&mut projector, node.id());
+                if !guards.is_empty() {
+                    result.call_guards.insert(call.span.start, guards);
+                }
                 if let Some(spied) =
                     pass_through::forwards_mock_arguments(semantic, node.id(), call)
                 {

@@ -380,6 +380,20 @@ that passes `process.argv` to the exported helper: colocated `*.test.mts` files
 can call that helper with a top-level `const` temporary root or a root assigned
 in `beforeEach`. Several test calls still require every test-origin argument to
 be bounded. Importing the CLI from a selected test makes its calls count again.
+
+A guarded helper call is excluded from the caller proof when every visible
+selected-test caller supplies a literal argument array that contradicts a required
+strict equality. For example, `main(['cleanup'])` cannot reach
+`if (command === 'validate' && args.length === 1) validateArtifact(args[0]!)`
+after `const [command, ...args] = argv`. The destructure must be the first
+statement of the function body, with only simple element bindings and no defaults.
+The function must have exactly one plain parameter, used only in that destructure.
+The command binding must be immutable; rest-length proof also requires only
+length comparisons and direct element reads. Mutating or escaping the rest
+array prevents the length proof. Unknown argument arrays, matching command/length
+pairs, and unknowable callers keep the call in the proof. This bounded guard
+check uses the shared parsed facts and does not evaluate the function.
+
 An unreadable module that no test, `setupFiles`, or `globalSetup` reaches does not erase a caller proof,
 including a lint config such as `.dependency-cruiser.cjs` loaded only from the
 runner config. The same unreadable module imported by a test that reaches the

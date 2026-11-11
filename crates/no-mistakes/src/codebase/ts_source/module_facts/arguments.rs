@@ -19,8 +19,9 @@ pub(crate) use env_diagnostic::EnvDiagnostic;
 mod types;
 mod value;
 pub(crate) use types::{
-    line_in, ArgumentText, ArgumentValue, ArgumentValues, EnvWrite, MemberEffect, PathAnchor,
-    PathDefault, PathOrigin, PathProvenance, PathValueKind, RouteKind, RouteSite, WriteScope,
+    line_in, ArgumentText, ArgumentValue, ArgumentValues, ArrayGuard, EnvWrite, MemberEffect,
+    PathAnchor, PathDefault, PathOrigin, PathProvenance, PathValueKind, RouteKind, RouteSite,
+    WriteScope,
 };
 pub(super) fn collect(
     semantic: &Semantic<'_>,
@@ -46,7 +47,7 @@ pub(super) fn collect(
         .collect();
     let temp_factories = path_origin::temp_factories(semantic, facts);
     let imported = path_origin::imported_locals(facts);
-    let provenance = provenance::collect(semantic, facts, &exported, &temp_factories);
+    let mut provenance = provenance::collect(semantic, facts, &exported, &temp_factories);
     let mut immutable = AliasSafety::default();
     let mut result = FxHashMap::default();
     let mut dynamic_scope = false;
@@ -109,6 +110,7 @@ pub(super) fn collect(
         );
     }
     if dynamic_scope {
+        provenance.call_guards.clear();
         for call in result.values_mut() {
             call.values.fill(ArgumentValue::Unknown);
             call.spread_from = Some(0);
