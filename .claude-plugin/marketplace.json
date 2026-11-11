@@ -13,6 +13,13 @@
       "source": "./plugins/no-mistakes",
       "category": "development",
       "homepage": "https://github.com/jonathanong/no-mistakes"
+    },
+    {
+      "name": "no-mistakes-rules",
+      "description": "Concise MUST NOT and SHOULD NOT rules for coding agents: testing, PostgreSQL, queues, TypeScript, React, Rust, CI, and more",
+      "source": "./plugins/no-mistakes-rules",
+      "category": "development",
+      "homepage": "https://github.com/jonathanong/no-mistakes"
     }
   ]
 }

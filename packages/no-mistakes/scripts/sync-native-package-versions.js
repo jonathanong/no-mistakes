@@ -14,6 +14,8 @@ const PACKAGE_NAMES = [
 const PLUGIN_MANIFESTS = [
   join("plugins", "no-mistakes", ".claude-plugin", "plugin.json"),
   join("plugins", "no-mistakes", ".codex-plugin", "plugin.json"),
+  join("plugins", "no-mistakes-rules", ".claude-plugin", "plugin.json"),
+  join("plugins", "no-mistakes-rules", ".codex-plugin", "plugin.json"),
 ];
 
 function manifest(path) {
