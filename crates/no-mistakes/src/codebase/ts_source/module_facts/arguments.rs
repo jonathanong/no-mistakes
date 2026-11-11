@@ -41,8 +41,9 @@ pub(super) fn collect(
         .filter(|b| roots.contains(&b.scope_id) && names.contains(b.name.as_str()))
         .map(|b| b.id)
         .collect();
+    let temp_factories = path_origin::temp_factories(semantic, facts);
     let imported = path_origin::imported_locals(facts);
-    let provenance = provenance::collect(semantic, facts, &exported);
+    let provenance = provenance::collect(semantic, facts, &exported, &temp_factories);
     let mut immutable = AliasSafety::default();
     let mut result = FxHashMap::default();
     let mut dynamic_scope = false;
@@ -73,6 +74,7 @@ pub(super) fn collect(
             remaining: 256,
             exported: &exported,
             immutable: &mut immutable,
+            temp_factories: &temp_factories,
         };
         let mut spread = false;
         let spread_from = arguments
@@ -118,14 +120,5 @@ struct Projector<'a, 's> {
     remaining: usize,
     exported: &'s FxHashSet<usize>,
     immutable: &'s mut AliasSafety,
-}
-
-impl Projector<'_, '_> {
-    fn take(&mut self) -> bool {
-        if self.remaining == 0 {
-            return false;
-        }
-        self.remaining -= 1;
-        true
-    }
+    temp_factories: &'s path_origin::TempFactories,
 }

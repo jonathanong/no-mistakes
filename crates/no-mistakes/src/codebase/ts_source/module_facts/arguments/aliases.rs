@@ -9,6 +9,14 @@ mod safety;
 pub(super) use safety::AliasSafety;
 
 impl Projector<'_, '_> {
+    pub(super) fn take(&mut self) -> bool {
+        if self.remaining == 0 {
+            return false;
+        }
+        self.remaining -= 1;
+        true
+    }
+
     pub(super) fn named(
         &mut self,
         identifier: &IdentifierReference<'_>,

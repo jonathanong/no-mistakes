@@ -1,8 +1,5 @@
-//! Static provenance of the first path argument of a call through an import.
-//!
-//! Syntactic heuristics only: `join`/`resolve`, `tmpdir`, `mkdtemp`, `cwd`, and
-//! `import.meta.dirname` are recognised by spelling, and only immutable `const`
-//! aliases are followed. Everything else is `Unknown`, never guessed.
+//! Static path provenance; classic temporary factories require Node bindings.
+//! Path helpers use syntactic heuristics; unsupported expressions remain unknown.
 mod alternatives;
 mod bindings;
 mod calls;
@@ -22,9 +19,12 @@ mod origins;
 mod patterns;
 mod positions;
 mod sources;
+mod temp_factories;
 mod tmpdir;
+
 pub(super) use self::composite::{callee_root, imported_locals};
 pub(super) use self::sources::{env_name, is_process_env, process_global};
+pub(super) use self::temp_factories::{temp_factories, TempFactories};
 use super::{PathAnchor, PathOrigin, PathValueKind, Projector};
 use oxc_ast::{ast::*, AstKind};
 

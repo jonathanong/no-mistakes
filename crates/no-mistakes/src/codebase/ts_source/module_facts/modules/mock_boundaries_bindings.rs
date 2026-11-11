@@ -18,7 +18,10 @@ pub(super) fn mock_method<'a>(
     Some((method, member.optional()))
 }
 
-pub(super) fn mock_binding(object: &IdentifierReference<'_>, semantic: &Semantic<'_>) -> bool {
+pub(in crate::codebase::ts_source::module_facts) fn mock_binding(
+    object: &IdentifierReference<'_>,
+    semantic: &Semantic<'_>,
+) -> bool {
     let Some(reference) = object.reference_id.get() else {
         return false;
     };

@@ -5,9 +5,9 @@ use oxc_span::GetSpan;
 
 mod exports;
 mod imports;
-mod imports_namespace;
+pub(super) mod imports_namespace;
 pub(super) mod loads;
-mod mock_boundaries;
+pub(super) mod mock_boundaries;
 mod mocks;
 mod selectors;
 mod type_selection;

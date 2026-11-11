@@ -64,7 +64,7 @@ pub(super) fn receiver_use(
         .unwrap_or(false)
 }
 
-pub(super) fn writes_member(
+pub(in crate::codebase::ts_source::module_facts) fn writes_member(
     nodes: &oxc_semantic::AstNodes<'_>,
     member: oxc_semantic::NodeId,
 ) -> bool {
