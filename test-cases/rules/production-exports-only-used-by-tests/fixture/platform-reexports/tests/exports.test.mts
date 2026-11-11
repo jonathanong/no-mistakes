@@ -5,4 +5,7 @@ import { Implementation } from '../src/imported.mts';
 import { Unlisted, Consumed } from '../src/control.mts';
 import { Named as Unrelated } from '../src/unrelated.mts';
 import { Conservative } from '../src/unresolved.mts';
+import type { PlatformType, TestOnlyType } from '../src/types.mts';
 void [Conservative, Named, Original, Star, Implementation, Unlisted, Consumed, Unrelated];
+const types: [PlatformType, TestOnlyType] = [{ value: 'platform' }, { value: 'test' }];
+void types;

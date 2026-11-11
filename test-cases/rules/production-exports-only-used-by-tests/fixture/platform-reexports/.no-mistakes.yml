@@ -17,3 +17,5 @@ rules:
           exports: [Consumed]
         - file: src/unresolved-entry.mts
           exports: [Conservative]
+        - file: src/types-entry.mts
+          exports: [SelectedType]

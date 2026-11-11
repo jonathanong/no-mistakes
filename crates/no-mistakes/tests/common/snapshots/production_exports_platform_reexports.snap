@@ -20,6 +20,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "Unlisted"
         },
         {
+          "file": "src/types.mts",
+          "line": 2,
+          "message": "production export `TestOnlyType` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export interface TestOnlyType { value: string }",
+          "target": "TestOnlyType"
+        },
+        {
           "file": "src/unrelated.mts",
           "line": 1,
           "message": "production export `Named` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
