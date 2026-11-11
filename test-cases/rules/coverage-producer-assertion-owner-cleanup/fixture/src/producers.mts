@@ -15,24 +15,28 @@ export function cleanupOnly() { return gracefulShutdown(); }
 
 async function main() {
   loggerOnly();
-  mapOnly([{}]);
-  flatMapOnly([{}]);
+  mapOnly(executableRows());
+  flatMapOnly(executableRows());
   sentryOnly();
   assertNoFailures([]);
 }
 
 async function mainWithoutAssertion() {
   loggerOnly();
-  mapOnly([{}]);
-  flatMapOnly([{}]);
+  mapOnly(executableRows());
+  flatMapOnly(executableRows());
   sentryOnly();
 }
 
 export function run() { return main().finally(gracefulShutdown); }
 export function withoutAssertion() { return mainWithoutAssertion().finally(gracefulShutdown); }
 export function loggerWithOwner() { loggerOnly(); assertNoFailures([]); }
-export function mapWithOwner() { mapOnly([{}]); assertNoFailures([]); }
-export function flatMapWithOwner() { flatMapOnly([{}]); assertNoFailures([]); }
+export function mapWithOwner() { mapOnly(executableRows()); assertNoFailures([]); }
+export function flatMapWithOwner() { flatMapOnly(executableRows()); assertNoFailures([]); }
 export function sentryWithOwner() { sentryOnly(); assertNoFailures([]); }
 export function cleanupWithOwner() { gracefulShutdown(); assertNoFailures([]); }
 export function noOwner() { return 1; }
+
+function executableRows(): any[] {
+  return [{ execute() { logger.info('row executed'); return []; } }];
+}
