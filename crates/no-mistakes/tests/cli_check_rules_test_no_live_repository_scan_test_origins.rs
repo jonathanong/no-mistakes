@@ -14,6 +14,7 @@ const CASES: &[&str] = &[
     "colocated-options-live",
     "colocated-options-unknown",
     "captured-env-setup-owned",
+    "captured-env-function-owned",
     "captured-env-setup-live",
     "captured-env-setup-unknown",
     "captured-env-hook-owned",
@@ -104,6 +105,7 @@ fn test_no_live_repository_scan_only_test_originating_callers_decide_ownership()
                 | "colocated-hook-unknown"
                 | "colocated-options-live"
                 | "colocated-options-unknown"
+                | "captured-env-function-owned"
                 | "captured-env-setup-live"
                 | "captured-env-setup-unknown"
                 | "captured-env-hook-owned"
