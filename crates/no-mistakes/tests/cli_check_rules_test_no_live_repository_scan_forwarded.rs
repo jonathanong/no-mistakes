@@ -134,14 +134,16 @@ fn forwarded_roots_check_json_snapshot() {
             (name, root.clone(), root.join(".no-mistakes.yml"))
         })
         .collect();
-    crate::check_json_snapshot::assert_saved_fixture(
+    let reports = crate::check_json_snapshot::assert_saved_fixture_report(
         "test_no_live_repository_scan_forwarded_roots",
         &cases,
+        &[],
+        &[],
     );
+    forwarded_roots_preserve_positive_and_negative_controls(&reports);
 }
 
-#[test]
-fn forwarded_roots_preserve_positive_and_negative_controls() {
+fn forwarded_roots_preserve_positive_and_negative_controls(reports: &serde_json::Value) {
     let allowed = [
         "nullish-spread-owned",
         "nullish-empty-spread-owned",
@@ -187,20 +189,7 @@ fn forwarded_roots_preserve_positive_and_negative_controls() {
         "rewrite-owned-branch",
     ];
     for &name in CASES {
-        let root = crate::check_json_snapshot::rules_path(
-            "test-no-live-repository-scan",
-            "forwarded-roots",
-            name,
-        );
-        let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
-            .args(["check", "--root"])
-            .arg(&root)
-            .arg("--config")
-            .arg(root.join(".no-mistakes.yml"))
-            .args(["--format", "json", "--jobs", "1"])
-            .output()
-            .unwrap();
-        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        let report = &reports[name]["report"];
         assert!(
             report["warnings"].as_array().unwrap().is_empty(),
             "{name}: {report}"

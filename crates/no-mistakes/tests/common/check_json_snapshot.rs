@@ -29,6 +29,16 @@ pub fn assert_saved_fixture(name: &str, cases: &[(&str, PathBuf, PathBuf)]) {
     assert_saved_fixture_with_env(name, cases, &[]);
 }
 
+/// Return the normalized reports already checked at both job counts.
+pub fn assert_saved_fixture_report(
+    name: &str,
+    cases: &[(&str, PathBuf, PathBuf)],
+    envs: &[(&str, &str)],
+    args: &[&str],
+) -> Value {
+    assert_saved_fixture_checked(name, cases, envs, false, args)
+}
+
 /// Like `assert_saved_fixture`, with extra environment for the child only
 /// (for example an empty `PATH` so an external tool is deterministically absent).
 pub fn assert_saved_fixture_with_env(
@@ -45,7 +55,7 @@ pub fn assert_saved_fixture_with_env_and_args(
     envs: &[(&str, &str)],
     args: &[&str],
 ) {
-    assert_saved_fixture_checked(name, cases, envs, false, args);
+    assert_saved_fixture_report(name, cases, envs, args);
 }
 
 pub(super) fn assert_saved_fixture_checked(
@@ -54,7 +64,7 @@ pub(super) fn assert_saved_fixture_checked(
     envs: &[(&str, &str)],
     clean: bool,
     args: &[&str],
-) {
+) -> Value {
     let mut document = serde_json::Map::new();
     for (label, root, config) in cases {
         let jobs_one = run_normalized(root, config, 1, envs, args);
@@ -94,6 +104,7 @@ pub(super) fn assert_saved_fixture_checked(
     }, {
         insta::assert_snapshot!(name, pretty);
     });
+    value
 }
 
 fn run_normalized(
