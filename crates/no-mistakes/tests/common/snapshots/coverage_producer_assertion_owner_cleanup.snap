@@ -1,0 +1,182 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "cleanup": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.then",
+              "detail": "built-in callback `first` is not statically resolved",
+              "file": "src/registry.mts",
+              "kind": "unresolved-dispatch",
+              "line": 17,
+              "sourceLine": "return Promise.resolve().then(first).then(second);"
+            },
+            {
+              "callee": "<unknown>.then",
+              "detail": "built-in callback `second` is not statically resolved",
+              "file": "src/registry.mts",
+              "kind": "unresolved-dispatch",
+              "line": 17,
+              "sourceLine": "return Promise.resolve().then(first).then(second);"
+            },
+            {
+              "callee": "Sentry.captureException",
+              "detail": "external call has no ownership model",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 13,
+              "sourceLine": "export function sentryOnly() { Sentry.captureException(new Error('failure')); }"
+            },
+            {
+              "callee": "logger.info",
+              "detail": "external call has no ownership model",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 10,
+              "sourceLine": "export function loggerOnly() { logger.info('coverage started'); }"
+            },
+            {
+              "callee": "row.execute",
+              "detail": "callee target is unknown",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 11,
+              "sourceLine": "export function mapOnly(rows: any[]) { return rows.map(row => row.execute()); }"
+            },
+            {
+              "callee": "row.execute",
+              "detail": "callee target is unknown",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 12,
+              "sourceLine": "export function flatMapOnly(rows: any[]) { return rows.flatMap(row => row.execute()); }"
+            }
+          ],
+          "file": "src/producers.mts",
+          "line": 32,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:10 callee `logger.info` (external call has no ownership model); unresolved dispatch at src/producers.mts:11 callee `row.execute` (callee target is unknown); unresolved dispatch at src/producers.mts:12 callee `row.execute` (callee target is unknown); unresolved dispatch at src/producers.mts:13 callee `Sentry.captureException` (external call has no ownership model); unresolved dispatch at src/registry.mts:17 callee `<unknown>.then` (built-in callback `first` is not statically resolved); +1 more; model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#withoutAssertion",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function withoutAssertion() { return mainWithoutAssertion().finally(gracefulShutdown); }",
+          "target": "withoutAssertion"
+        },
+        {
+          "causes": [
+            {
+              "callee": "<unknown>.then",
+              "detail": "built-in callback `first` is not statically resolved",
+              "file": "src/registry.mts",
+              "kind": "unresolved-dispatch",
+              "line": 17,
+              "sourceLine": "return Promise.resolve().then(first).then(second);"
+            },
+            {
+              "callee": "<unknown>.then",
+              "detail": "built-in callback `second` is not statically resolved",
+              "file": "src/registry.mts",
+              "kind": "unresolved-dispatch",
+              "line": 17,
+              "sourceLine": "return Promise.resolve().then(first).then(second);"
+            }
+          ],
+          "file": "src/producers.mts",
+          "line": 14,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/registry.mts:17 callee `<unknown>.then` (built-in callback `first` is not statically resolved); unresolved dispatch at src/registry.mts:17 callee `<unknown>.then` (built-in callback `second` is not statically resolved); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#cleanupOnly",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function cleanupOnly() { return gracefulShutdown(); }",
+          "target": "cleanupOnly"
+        },
+        {
+          "causes": [
+            {
+              "callee": "Sentry.captureException",
+              "detail": "external call has no ownership model",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 13,
+              "sourceLine": "export function sentryOnly() { Sentry.captureException(new Error('failure')); }"
+            }
+          ],
+          "file": "src/producers.mts",
+          "line": 13,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:13 callee `Sentry.captureException` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#sentryOnly",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function sentryOnly() { Sentry.captureException(new Error('failure')); }",
+          "target": "sentryOnly"
+        },
+        {
+          "causes": [
+            {
+              "callee": "logger.info",
+              "detail": "external call has no ownership model",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 10,
+              "sourceLine": "export function loggerOnly() { logger.info('coverage started'); }"
+            }
+          ],
+          "file": "src/producers.mts",
+          "line": 10,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:10 callee `logger.info` (external call has no ownership model); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#loggerOnly",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function loggerOnly() { logger.info('coverage started'); }",
+          "target": "loggerOnly"
+        },
+        {
+          "causes": [
+            {
+              "callee": "row.execute",
+              "detail": "callee target is unknown",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 11,
+              "sourceLine": "export function mapOnly(rows: any[]) { return rows.map(row => row.execute()); }"
+            }
+          ],
+          "file": "src/producers.mts",
+          "line": 11,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:11 callee `row.execute` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#mapOnly",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function mapOnly(rows: any[]) { return rows.map(row => row.execute()); }",
+          "target": "mapOnly"
+        },
+        {
+          "causes": [
+            {
+              "callee": "row.execute",
+              "detail": "callee target is unknown",
+              "file": "src/producers.mts",
+              "kind": "unresolved-dispatch",
+              "line": 12,
+              "sourceLine": "export function flatMapOnly(rows: any[]) { return rows.flatMap(row => row.execute()); }"
+            }
+          ],
+          "file": "src/producers.mts",
+          "line": 12,
+          "message": "unanalyzable coverage producer: unresolved dispatch at src/producers.mts:12 callee `row.execute` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: src/producers.mts#flatMapOnly",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function flatMapOnly(rows: any[]) { return rows.flatMap(row => row.execute()); }",
+          "target": "flatMapOnly"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 38,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#noOwner",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function noOwner() { return 1; }",
+          "target": "noOwner"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
