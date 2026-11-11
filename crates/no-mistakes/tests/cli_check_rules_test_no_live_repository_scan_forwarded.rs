@@ -1,6 +1,14 @@
 use std::path::PathBuf;
 
 const CASES: &[&str] = &[
+    "fallback-join-unknown",
+    "fallback-join-owned",
+    "direct-temp-climb",
+    "fallback-climb-live",
+    "let-temp-climb",
+    "dirname-temp-root",
+    "dirname-alternatives",
+    "dirname-child-owned",
     "optional-prototype-live",
     "object-accessor-mutation",
     "object-prototype-default",
@@ -77,6 +85,8 @@ fn forwarded_roots_check_json_snapshot() {
 #[test]
 fn forwarded_roots_preserve_positive_and_negative_controls() {
     let allowed = [
+        "fallback-join-owned",
+        "dirname-child-owned",
         "array-object-owned",
         "array-spread-owned",
         "default-omitted-owned",

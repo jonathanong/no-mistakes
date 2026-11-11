@@ -66,6 +66,23 @@ impl PathOrigin {
         origin
     }
 
+    pub(super) fn parent(mut self) -> Self {
+        if !self.alternatives.is_empty() {
+            return Self::alternatives(
+                self.atoms()
+                    .iter()
+                    .map(|atom| atom.clone().parent())
+                    .collect(),
+            );
+        }
+        if self.segments.last().is_some_and(|last| last != "..") {
+            self.segments.pop();
+        } else if self.anchor == PathAnchor::Temp || self.param.is_some() || self.env.is_some() {
+            self.segments.push("..".to_owned());
+        }
+        self
+    }
+
     /// Add components, resolving `..` so `fixtures/../src` is not a fixture path.
     pub(super) fn extend<'s>(&mut self, parts: impl IntoIterator<Item = &'s str>) {
         for part in parts {
@@ -86,9 +103,13 @@ impl PathOrigin {
             self.atoms()
                 .iter()
                 .flat_map(|base| {
-                    tail.atoms()
-                        .iter()
-                        .map(|tail| base.clone().append_single(tail.clone()))
+                    tail.atoms().iter().map(|tail| {
+                        if tail.anchor == PathAnchor::Unknown {
+                            tail.clone()
+                        } else {
+                            base.clone().append_single(tail.clone())
+                        }
+                    })
                 })
                 .collect(),
         )

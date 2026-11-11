@@ -28,11 +28,10 @@ pub(super) fn classify(origin: Option<&PathOrigin>, fixture_dirs: &[&str]) -> Ve
         }
         return result;
     }
-    if origin.anchor == PathAnchor::Temp
-        && origin.root_tails.is_empty()
-        && !origin.segments.iter().any(|part| part == "..")
-    {
-
+    if origin.anchor == PathAnchor::Temp && origin.root_tails.is_empty() {
+        if origin.segments.iter().any(|segment| segment == "..") {
+            return Verdict::Unresolved("the path climbs out of the owned temporary directory");
+        }
         return Verdict::Allowed;
     }
     if origin

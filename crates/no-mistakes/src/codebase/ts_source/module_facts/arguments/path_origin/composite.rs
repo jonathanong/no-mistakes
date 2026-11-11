@@ -72,24 +72,12 @@ impl<'a> Projector<'a, '_> {
                 let Some(Some(inner)) = args.next() else {
                     return PathOrigin::unknown();
                 };
-                let mut origin = self.origin(inner, depth + 1);
+                let origin = self.origin(inner, depth + 1);
                 if name == "dirname" {
-                    if !origin.alternatives.is_empty() {
-                        return PathOrigin::alternatives(
-                            origin
-                                .atoms()
-                                .iter()
-                                .map(|atom| {
-                                    let mut atom = atom.clone();
-                                    atom.segments.pop();
-                                    atom
-                                })
-                                .collect(),
-                        );
-                    }
-                    origin.segments.pop();
+                    origin.parent()
+                } else {
+                    origin
                 }
-                origin
             }
             _ => self
                 .getter_origin(call, depth)

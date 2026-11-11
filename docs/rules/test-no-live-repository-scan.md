@@ -741,6 +741,9 @@ default. An unknown object or an explicitly unknown property is unresolved.
 fallbacks. Each alternative must be owned, a fixture path, or a known relative
 suffix resolved under an owned base. A live or unknown alternative keeps the
 finding; rewrite it to a literal bounded path or pass an owned root explicitly.
+A relative suffix that climbs above the owned directory, or `dirname` of the
+owned directory itself, does not remain owned. Accessor-bearing objects and
+object literals that set `__proto__` remain opaque to property/default proofs.
 
 ## Counterexample
 

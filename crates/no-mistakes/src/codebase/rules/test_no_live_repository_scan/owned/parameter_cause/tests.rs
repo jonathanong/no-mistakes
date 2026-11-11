@@ -144,8 +144,9 @@ fn an_argument_without_a_parameter_source_is_forwarded() {
         })),
         ..TsFileFacts::default()
     };
-    let step = assemble(blank(&graph)).caller_step(&forwarded_site, 0, None, &ArgFacts(facts), &[]);
-    let super::Step::Block(cause) = step else {
+    let steps =
+        assemble(blank(&graph)).caller_steps(&forwarded_site, 0, None, None, &ArgFacts(facts), &[]);
+    let [super::Step::Block(cause)] = steps.as_slice() else {
         panic!("forwarded block");
     };
     assert_eq!(cause.kind, CauseKind::ForwardedParameter);
