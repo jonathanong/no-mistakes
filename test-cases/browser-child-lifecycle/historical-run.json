@@ -1,0 +1,41 @@
+{
+  "run": "https://github.com/jonathanong/no-mistakes/actions/runs/43016434597",
+  "head": "fa42bb426d77c45e75288bd55d543f261e6a57ef",
+  "checkoutPrefix": "84d16673",
+  "basePrefix": "06206bdf0",
+  "node": "24.22.2",
+  "pnpm": "11.24.0",
+  "runnerImage": "Ubuntu 24.04.5 / 20261101.360.1",
+  "cpu": null,
+  "rss": null,
+  "attempts": [
+    {
+      "attempt": 1,
+      "job": 130509019370,
+      "passed": 16,
+      "failed": 2,
+      "parentTestDurationsMs": {
+        "aliased-runtime-config": 15100,
+        "github-actions-reporter": 15070,
+        "storybook-stable-setup-control": 17612
+      },
+      "watchdogTerminated": ["aliased-runtime-config", "github-actions-reporter"],
+      "reporterBrowserBodyMs": 4,
+      "failedChildStage": "unknown",
+      "censored": true
+    },
+    {
+      "attempt": 2,
+      "job": 130528036925,
+      "passed": 18,
+      "failed": 0,
+      "parentTestDurationsMs": {
+        "aliased-runtime-config": 2189,
+        "github-actions-reporter": 2711,
+        "storybook-stable-setup-control": 5597
+      },
+      "watchdogTerminated": [],
+      "censored": false
+    }
+  ]
+}
