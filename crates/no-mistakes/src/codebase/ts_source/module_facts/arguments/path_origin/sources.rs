@@ -57,6 +57,15 @@ impl<'a> Projector<'a, '_> {
     pub(super) fn env_origin(&mut self, expression: &Expression<'a>) -> PathOrigin {
         match env_name(self.semantic, expression) {
             Some(name) => PathOrigin {
+                env_diagnostic: Some(Box::new(super::super::EnvDiagnostic {
+                    name: name.clone(),
+                    fallback: None,
+                    captured: false,
+                    line: super::super::line_in(
+                        self.semantic.source_text(),
+                        expression.span().start,
+                    ),
+                })),
                 env: Some(name),
                 value_kind: super::super::PathValueKind::Scalar,
                 ..PathOrigin::unknown()

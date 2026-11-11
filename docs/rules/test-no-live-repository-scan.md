@@ -293,6 +293,42 @@ ownership. `vi.stubEnv("TMPDIR", fixture)` supplies the same proof when `fixture
 is an owned `mkdtemp` result. A nested `mkdtemp(join(parent, "impact."))` creates
 a fresh owned directory even when `parent` comes from that environment.
 
+When an environment root is unresolved, the finding should name the environment
+variable and retain the path expression that reaches the enumerator, including
+its fallback. If a test clears that variable before importing a module-level
+scanner or calling a helper, identify the selected test file and clearing line:
+
+```typescript
+// scanner.mts
+const dir = process.env.EXAMPLE_LOCAL_DIR ?? "./tmp/example";
+export const entries = readdirSync(dir);
+
+// tests/scan.test.mts
+it("uses the fallback", async () => {
+  delete process.env.EXAMPLE_LOCAL_DIR;
+  await import("../scanner.mts");
+});
+```
+
+The finding should point to the enumeration and explain that clearing
+`EXAMPLE_LOCAL_DIR` selects `"./tmp/example"`; it should also point to the
+`delete` in `tests/scan.test.mts`. When no owned write is visible from a selected
+test call, name that variable and call site and say that ownership is not proven
+there. Do not claim the variable is never assigned when an unresolved or
+unselected setup could still write it. A computed fallback such as
+`join(process.cwd(), "tmp", "example")` remains unowned too, and should be
+shown as the fallback expression. An unconditional owned `beforeEach` write
+followed by `afterEach` cleanup remains a valid control: the cleanup happens
+after the scan and does not make the earlier root unsafe.
+
+When selected tests have mixed environment histories, report the history that
+reaches the unsafe scan. If one test scans with the owned `beforeEach` value and
+a later test deletes the variable before scanning, identify the later test's
+delete and call lines instead of describing the whole suite as missing an
+assignment. Likewise, a module-level delete superseded by an owned setup before
+every scan is not the blocker; explain the remaining unresolved path expression
+or fallback rather than attributing it to that earlier delete.
+
 Two provenance gaps resolve when every route into the enumeration is proven.
 
 **Parameters.** `sync(user, dir = DEFAULT_DIR)` enumerates `dir`. If every

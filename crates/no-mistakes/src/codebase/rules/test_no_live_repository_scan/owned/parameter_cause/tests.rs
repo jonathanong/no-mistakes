@@ -18,6 +18,8 @@ fn parameter_origin(owner: u32) -> PathOrigin {
         segments: Vec::new(),
         dynamic: false,
         env: None,
+        env_diagnostic: None,
+        captured_getter: None,
         getter: None,
         root_tails: Vec::new(),
         param: Some(0),

@@ -38,7 +38,7 @@ pub(crate) enum PathAnchor {
 }
 
 /// Static provenance of a path-valued expression; it never evaluates code.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub(crate) struct PathOrigin {
     pub(crate) value_kind: PathValueKind,
     pub(crate) require_scalar: bool,
@@ -51,6 +51,8 @@ pub(crate) struct PathOrigin {
     pub(crate) dynamic: bool,
     /// The `process.env` variable the leading component reads, if any.
     pub(crate) env: Option<String>,
+    pub(crate) env_diagnostic: Option<Box<super::EnvDiagnostic>>,
+    pub(crate) captured_getter: Option<u32>,
     /// Offset of a named imported zero-argument getter call.
     pub(crate) getter: Option<u32>,
     pub(crate) root_tails: Vec<PathOrigin>,
@@ -92,6 +94,8 @@ pub(crate) enum WriteScope {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct EnvWrite {
+    pub(crate) line: u32,
+    pub(crate) cleared: bool,
     pub(crate) name: String,
     pub(crate) end: u32,
     pub(crate) origin: PathOrigin,

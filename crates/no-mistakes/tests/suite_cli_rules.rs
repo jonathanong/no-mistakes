@@ -275,6 +275,8 @@ mod cli_postgres_unused_disables;
 
 #[path = "cli_check_rules_test_no_live_repository_scan_env.rs"]
 mod cli_check_rules_test_no_live_repository_scan_env;
+#[path = "cli_check_rules_test_no_live_repository_scan_env_cause.rs"]
+mod cli_check_rules_test_no_live_repository_scan_env_cause;
 
 #[path = "cli_check_production_exports_namespaces.rs"]
 mod cli_check_production_exports_namespaces;

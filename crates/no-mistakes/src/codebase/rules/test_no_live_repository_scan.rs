@@ -164,6 +164,9 @@ pub(crate) fn check_with_graph(
                         Some(owned::Ownership::Parameter(cause)) => {
                             findings::parameter(&root, application, site, &cause)
                         }
+                        Some(owned::Ownership::Environment(cause)) => {
+                            findings::environment(&root, application, site, &cause)
+                        }
                         _ => findings::unresolved(&root, application, site, why),
                     };
                     unresolved_findings(&mut diagnostics, options.unresolved_root).push(finding);
@@ -193,6 +196,5 @@ fn unresolved_findings(
         UnresolvedRoot::Advise => &mut diagnostics.advisories,
     }
 }
-
 #[cfg(test)]
 mod tests;

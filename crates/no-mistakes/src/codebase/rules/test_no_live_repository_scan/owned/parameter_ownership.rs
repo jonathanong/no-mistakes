@@ -11,6 +11,22 @@ impl Owners<'_> {
         facts: &dyn TsFactLookup,
         fixture_dirs: &[&str],
     ) -> Ownership {
+        let proof = self.proof_ownership(origin, site, facts, fixture_dirs);
+        if matches!(proof, Ownership::No) {
+            if let Some(cause) = self.env_cause(origin, site, facts) {
+                return Ownership::Environment(cause);
+            }
+        }
+        proof
+    }
+
+    fn proof_ownership(
+        &self,
+        origin: &PathOrigin,
+        site: &ResolvedCallSite,
+        facts: &dyn TsFactLookup,
+        fixture_dirs: &[&str],
+    ) -> Ownership {
         if origin.require_scalar && origin.value_kind == PathValueKind::Mutable {
             return Ownership::No;
         }

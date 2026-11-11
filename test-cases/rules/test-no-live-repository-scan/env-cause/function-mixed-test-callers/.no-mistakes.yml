@@ -1,0 +1,6 @@
+rules:
+  - rule: test-no-live-repository-scan
+    scope: repository
+    severity: advisory
+    options:
+      roots: [{file: root.mts}]

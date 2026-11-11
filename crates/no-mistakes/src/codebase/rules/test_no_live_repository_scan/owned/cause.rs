@@ -9,6 +9,7 @@ pub(in super::super) enum Ownership {
     Yes,
     No,
     Parameter(Cause),
+    Environment(super::env_cause::EnvCause),
 }
 
 #[derive(Clone)]

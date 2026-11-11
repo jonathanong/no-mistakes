@@ -14,6 +14,7 @@ mod coverage;
 mod defaults;
 mod entry_memo;
 pub(super) mod env;
+mod env_cause;
 mod env_query;
 mod escapes;
 mod getters;
@@ -28,6 +29,7 @@ pub(super) mod setups;
 mod symbol_block;
 pub(super) use cause::{Cause, Ownership};
 pub(crate) use consumers::Resolution;
+pub(super) use env_cause::EnvCause;
 
 use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::{DepGraph, NodeId, ResolvedCallSite, TsFactLookup};
@@ -78,6 +80,7 @@ pub(super) struct Owners<'g> {
     reached: RefCell<FxHashMap<PathBuf, bool>>,
     /// Caller-entry walks memoized by the symbol they start from.
     entry_memo: RefCell<entry_memo::EntryMemo<'g>>,
+    env_entries: RefCell<FxHashMap<PathBuf, Vec<env_cause::Entry>>>,
 }
 
 impl<'g> Owners<'g> {
@@ -138,6 +141,7 @@ impl<'g> Owners<'g> {
             gate_roots: scope.gate_roots.clone(),
             reached: RefCell::new(FxHashMap::default()),
             entry_memo: RefCell::new(entry_memo::EntryMemo::default()),
+            env_entries: RefCell::new(FxHashMap::default()),
             imported: imports::ImportedWrites::new(graph),
             env: env::EnvWrites::new(
                 facts,

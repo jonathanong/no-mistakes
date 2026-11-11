@@ -160,7 +160,7 @@ fn redact_temp(text: &str) -> String {
             && text[..start]
                 .chars()
                 .next_back()
-                .is_some_and(|ch| ch.is_ascii_alphanumeric() || ch == '_' || ch == '>');
+                .is_some_and(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '_' | '>' | '.'));
         if inside_token {
             continue;
         }

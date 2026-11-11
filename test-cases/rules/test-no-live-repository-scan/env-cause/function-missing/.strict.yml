@@ -1,0 +1,7 @@
+rules:
+  - rule: test-no-live-repository-scan
+    scope: repository
+    message: Custom environment root finding.
+    options:
+      roots: [{file: root.mts}]
+      unresolvedRoot: report
