@@ -78,6 +78,29 @@ fn a_pattern_without_a_star_in_the_target_does_not_resolve() {
 }
 
 #[test]
+fn a_capture_is_rejected_when_a_target_lacks_one_star() {
+    let mut targets = vec![super::Target {
+        path: "./src/file.mts".to_string(),
+        required: true,
+        known: true,
+    }];
+    assert!(super::pattern::apply_capture(&mut targets, Some("name")).is_err());
+    assert_eq!(targets[0].path, "./src/file.mts");
+}
+
+#[test]
+fn star_patterns_skip_arrays_and_non_string_values() {
+    let array = json!({ "./*": ["./*.mts"] });
+    assert!(super::pattern::pattern_export(array.as_object().unwrap(), "./name").is_none());
+    let null = json!({ "./*": null });
+    assert!(super::pattern::pattern_export(null.as_object().unwrap(), "./name").is_none());
+    let flag = json!({ "./*": true });
+    assert!(super::pattern::pattern_export(flag.as_object().unwrap(), "./name").is_none());
+    let number = json!({ "./*": 1 });
+    assert!(super::pattern::pattern_export(number.as_object().unwrap(), "./name").is_none());
+}
+
+#[test]
 fn declaration_targets_substitute_a_star_pattern() {
     let sources = crate::codebase::rules::source_store_for_files(&[]);
     let (typed, found) = targets(

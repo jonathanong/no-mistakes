@@ -3,9 +3,12 @@ use super::super::coverage::{assemble, blank, call_site, empty_graph, NoFacts};
 use super::super::escapes::Escapes;
 use crate::codebase::dependencies::extract::CallableId;
 use crate::codebase::dependencies::graph::NodeId;
-use crate::codebase::ts_source::module_facts::arguments::{PathAnchor, PathOrigin};
+use crate::codebase::ts_source::facts::TsFileFacts;
+use crate::codebase::ts_source::module_facts::arguments::{PathAnchor, PathOrigin, PathProvenance};
+use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 use crate::fx::FxHashMap;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 fn parameter_origin(owner: u32) -> PathOrigin {
     PathOrigin {
@@ -102,6 +105,33 @@ fn a_file_wide_consume_names_the_forwarded_argument() {
     assert!(text.contains("src/x.mts:94"), "{text}");
     assert!(text.contains("`root`"), "{text}");
     assert!(!text.contains("declares it"), "{text}");
+}
+
+#[test]
+fn an_argument_without_a_parameter_source_is_forwarded() {
+    let caller_file = PathBuf::from("/repo/src/x.mts");
+    let mut forwarded_site = call_site(&caller_file, "gather", 20);
+    forwarded_site.offset = 50;
+    let graph = empty_graph();
+    let mut provenance = PathProvenance::default();
+    provenance
+        .arg_paths
+        .insert(50, vec![(0, parameter_origin(20))]);
+    provenance
+        .arg_text
+        .insert(50, vec![(0, "root".to_string())]);
+    let facts = TsFileFacts {
+        module_bindings: Some(Arc::new(TypeScriptModuleFacts {
+            path_provenance: Some(Arc::new(provenance)),
+            ..TypeScriptModuleFacts::default()
+        })),
+        ..TsFileFacts::default()
+    };
+    let step = assemble(blank(&graph)).caller_step(&forwarded_site, 0, None, &ArgFacts(facts), &[]);
+    let super::Step::Block(cause) = step else {
+        panic!("forwarded block");
+    };
+    assert_eq!(cause.kind, CauseKind::ForwardedParameter);
 }
 
 struct ArgFacts(crate::codebase::ts_source::facts::TsFileFacts);
