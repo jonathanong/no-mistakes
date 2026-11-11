@@ -3,6 +3,9 @@ use super::*;
 impl CallableFileIndex {
     pub(in super::super) fn prepare_builtin_callbacks(&mut self, file: &TsFileFacts) {
         use crate::codebase::dependencies::extract::{ValueCall, ValueExpression};
+        self.values.builtin_callbacks.extend(file.function_calls.iter()
+            .filter(|call| self.values.for_of_calls.contains_key(&call.offset))
+            .cloned());
         for call in &file.value_flow.calls {
             if matches!(&call.callee, ValueExpression::Named { name, scope: None, .. }
                 if matches!(name.as_str(), "setTimeout" | "setInterval" | "setImmediate")

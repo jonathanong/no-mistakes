@@ -1,0 +1,51 @@
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    severity: error
+    options:
+      unanalyzable: advise
+      producers:
+        - { file: scripts/runner/guards.mts, symbol: dynamic }
+        - { file: scripts/runner/guards.mts, symbol: mutated }
+        - { file: scripts/runner/guards.mts, symbol: escaped }
+        - { file: scripts/runner/guards.mts, symbol: empty }
+        - { file: scripts/runner/guards.mts, symbol: uninvoked }
+        - { file: scripts/runner/guards.mts, symbol: firstDestructured }
+        - { file: scripts/runner/guards.mts, symbol: earlyBreak }
+        - { file: scripts/runner/guards.mts, symbol: earlyReturn }
+        - { file: scripts/runner/guards.mts, symbol: filtered }
+        - { file: scripts/runner/guards.mts, symbol: shadowed }
+        - { file: scripts/runner/guards.mts, symbol: overwrittenRow }
+        - { file: scripts/runner/guards.mts, symbol: aliasedTable }
+        - { file: scripts/runner/guards.mts, symbol: malformedRow }
+        - { file: scripts/runner/guards.mts, symbol: globalMutated }
+        - { file: scripts/runner/guards.mts, symbol: globalEscaped }
+        - { file: scripts/runner/guards.mts, symbol: captured }
+        - { file: scripts/runner/guards.mts, symbol: earlierEscapeLoop }
+        - { file: scripts/runner/guards.mts, symbol: earlierMutationLoop }
+        - { file: scripts/runner/guards.mts, symbol: opaqueWithoutOwner }
+        - { file: scripts/runner/guards.mts, symbol: onlyOpaque }
+        - { file: scripts/runner/guards.mts, symbol: exitingCatch }
+        - { file: scripts/runner/guards.mts, symbol: abortingCatch }
+        - { file: scripts/runner/guards.mts, symbol: exitingCatchWithCode }
+        - { file: scripts/runner/guards.mts, symbol: aliasedExitingCatch }
+        - { file: scripts/runner/guards.mts, symbol: effectfulIterable }
+      assertions:
+        - { module: "node:assert/strict", export: ok }
+        - { module: "node:assert/strict", export: equal }
+        - { module: "node:assert/strict", export: notEqual }
+        - { module: "node:assert/strict", export: deepEqual }
+        - { module: "node:assert/strict", export: notDeepEqual }
+        - { module: "node:assert/strict", export: strictEqual }
+        - { module: "node:assert/strict", export: notStrictEqual }
+        - { module: "node:assert/strict", export: deepStrictEqual }
+        - { module: "node:assert/strict", export: notDeepStrictEqual }
+        - { module: "node:assert/strict", export: fail }
+        - { module: "node:assert/strict", export: ifError }
+        - { module: "node:assert/strict", export: match }
+        - { module: "node:assert/strict", export: doesNotMatch }
+        - { module: "node:assert/strict", export: throws }
+        - { module: "node:assert/strict", export: doesNotThrow }
+        - { module: "node:assert/strict", export: rejects }
+        - { module: "node:assert/strict", export: doesNotReject }
+        - { module: "node:assert/strict", export: partialDeepStrictEqual }

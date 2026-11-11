@@ -38,6 +38,11 @@ impl ValueFlowResolution<'_, '_> {
             ValueExpression::Callable(id) => self.callable(path, *id),
             ValueExpression::Super(owner) => self.super_constructor(path, *owner),
             ValueExpression::Member(base, member) => {
+                if self.cache.ownership_callbacks {
+                    if let Some(value) = self.for_of_member(path, base, member) {
+                        return value;
+                    }
+                }
                 if let Some(value) = self.replacement_member(path, base, member) {
                     return value;
                 }
@@ -82,7 +87,9 @@ impl ValueFlowResolution<'_, '_> {
             ValueExpression::Awaited(value) => self.value(path, value).awaited(),
             ValueExpression::Call(offset, end) => self.returned(path, *offset, *end),
             // A conditional element used to be Unknown. Keep that flow value.
-            ValueExpression::Derived(_) | ValueExpression::Either(_, _) | ValueExpression::Unknown => FlowValue::Unknown,
+            ValueExpression::Derived(_)
+            | ValueExpression::Either(_, _)
+            | ValueExpression::Unknown => FlowValue::Unknown,
         }
     }
     pub(super) fn callable(&self, path: &std::path::Path, id: CallableId) -> FlowValue {

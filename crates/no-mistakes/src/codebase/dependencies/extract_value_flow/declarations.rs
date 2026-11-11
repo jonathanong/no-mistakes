@@ -45,3 +45,5 @@ pub use replacements::{
 pub use value_descriptors::{
     ValueBinding, ValueCall, ValueExpression, ValueParameter, ValueProjection,
 };
+
+pub(crate) use value_descriptors::{ForOfEscapes, ForOfFacts};

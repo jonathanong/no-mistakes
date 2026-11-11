@@ -1,0 +1,27 @@
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/producers.mts, symbol: ownedThen }
+        - { file: src/producers.mts, symbol: ownedCatch }
+        - { file: src/producers.mts, symbol: ownedFinally }
+        - { file: src/producers.mts, symbol: unownedThen }
+        - { file: src/producers.mts, symbol: unownedCatch }
+        - { file: src/producers.mts, symbol: unownedFinally }
+        - { file: src/producers.mts, symbol: ownedOpaqueThen }
+        - { file: src/producers.mts, symbol: ownedOpaqueCatch }
+        - { file: src/producers.mts, symbol: ownedOpaqueFinally }
+        - { file: tests/script.test.mts, symbol: assertsThen }
+        - { file: tests/script.test.mts, symbol: assertsCatch }
+        - { file: tests/script.test.mts, symbol: assertsFinally }
+        - { file: src/producers.mts, symbol: ownedUnresolvedThen }
+        - { file: src/producers.mts, symbol: ownedUnresolvedCatch }
+        - { file: src/producers.mts, symbol: ownedUnresolvedFinally }
+        - { file: src/producers.mts, symbol: unresolvedThen }
+        - { file: src/producers.mts, symbol: unresolvedCatch }
+        - { file: src/producers.mts, symbol: unresolvedFinally }
+        - { file: tests/script.test.mts, symbol: assertsUnresolvedThen }
+        - { file: tests/script.test.mts, symbol: assertsUnresolvedCatch }
+        - { file: tests/script.test.mts, symbol: assertsUnresolvedFinally }
+      assertions: [{ module: "node:assert", export: strictEqual }]

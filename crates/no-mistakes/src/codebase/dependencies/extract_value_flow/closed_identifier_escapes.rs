@@ -70,6 +70,13 @@ impl super::super::super::ImportCollector {
 
     pub(in super::super::super) fn mark_for_of_registry(&mut self, right: &Expression<'_>) {
         if self.collect_value_flow {
+            if self.collect_call_eligibility {
+                if let Expression::Identifier(identifier) = right.get_inner_expression() {
+                    self.receiver_escapes
+                        .for_of_reads
+                        .insert(identifier.span.start);
+                }
+            }
             mark_read(self, right);
         }
     }
@@ -121,6 +128,7 @@ impl super::super::super::ImportCollector {
         if self.namespace.type_depth > 0 {
             return;
         }
+        self.record_for_of_reference(identifier);
         self.note_metadata_row_identifier(identifier);
         self.note_literal_catalog_identifier(identifier);
         if !self.collect_value_flow || self.closed_registry_reads.contains(&identifier.span.start) {
@@ -133,6 +141,7 @@ impl super::super::super::ImportCollector {
         if !self.collect_value_flow {
             return;
         }
+        self.record_for_of_escape(name);
         self.record_registry_mutation(name);
     }
 }

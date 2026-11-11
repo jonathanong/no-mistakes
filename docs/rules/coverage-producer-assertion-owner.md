@@ -163,6 +163,26 @@ when others exist. JSON `rules[]` / `advisories[]` findings also carry
 Ordinary no-owner findings omit `causes`. A custom `message` is followed by the
 same text. Only sites which block the proof are listed.
 
+A direct assertion-bearing helper also settles a producer whose result chains
+cleanup: `return main().finally(gracefulShutdown)` passes when `main` reaches a
+configured assertion. Cleanup callbacks selected from injected dependencies or
+mutable registrations, logger and error-reporter calls, and unresolved `map` or
+`flatMap` callbacks do not undo that proof. Without the assertion-bearing path,
+the same unresolved calls remain unanalyzable; registering a callback alone does
+not establish that an assertion executes.
+
+A named imported shutdown function passed to `.then`, `.catch`, or `.finally`
+follows the same rule. An opaque receiver might implement a custom method, so
+passing an assertion-bearing function to it does not prove callback execution.
+A known Promise continuation with an unresolved imported callback also stays
+uncertain when no other owner is reached.
+
+The configured producer determines the forward path. A test wrapper that calls
+a script and then asserts can be a proven producer. Selecting the script itself
+still reports when only that calling test asserts: the test's later assertion
+is outside the script's forward call closure. Select the assertion-bearing test
+callable when that is the coverage producer being checked.
+
 A producer with multiple uncertain paths reports their causes together. A reached
 assertion still passes despite dispatch or traversal uncertainty. Source failures
 remain errors even when an assertion is reached. Disabling this rule retains the
@@ -291,6 +311,35 @@ span proof; an unproven call in that group retains dispatch uncertainty.
 export function owned(items: number[]) { items.map((item) => assertItem(item)); } // reaches assertItem
 export function opaque(items: number[], fn: (item: number) => void) { items.map(fn); } // unanalyzable: `fn`
 ```
+
+A narrow production scenario table can supply an owner through a `for...of`
+loop: a local or module-private `const` literal array of at most 32 plain object rows, with the
+called field naming a static import. Other row fields must contain primitive
+metadata; nested objects and additional callbacks remain unproven. Local
+callback aliases and factory-returned tables are also outside this projection.
+The iterable expression must be a simple identifier or literal array. Expressions
+with side effects, such as `(swap(table), table)`, remain unproven even when their
+final value names a literal table.
+The loop uses a simple `const` identifier
+and invokes that row member with no arguments in an unconditional expression
+or `await` expression. Plain blocks and a `try` body with a non-abrupt catch are
+supported. Catch-side methods named `exit` or `abort` are excluded regardless of
+receiver, including `process.exit()`, `process.abort()`, and namespace aliases:
+they may terminate before a later row executes. Record the error in the catch
+and validate the collected failures after the loop, or call scenarios directly.
+This projects opt-in `assertion-owner` edges; ordinary call reports retain their
+existing output. Catch calls accept identifier or literal arguments, such as
+`errors.push(error)` or `errors.push('scenario failed')`; structured argument
+expressions remain unproven. Bodies exceeding 128 statement checks also remain
+unproven; split larger runners into smaller direct calls.
+
+Dynamic, escaped, or mutated tables, array destructuring, empty tables or entries
+never called, row shadowing or reassignment, filters, early exits, and unsupported
+loop-body statements do not establish an owner through this projection. Table
+contents alone never prove that an unused callback executes. Incomplete cleanup
+calls still cannot undo an assertion reached through a proven scenario. A table
+with both known and unresolved callbacks retains its known assertion owners;
+without a known owner, unresolved rows still follow `unanalyzable`.
 
 Stored callbacks remain dispatch even on proven built-ins. For example,
 `const handler = handlers.get('check'); handler?.()` stays uncertain when

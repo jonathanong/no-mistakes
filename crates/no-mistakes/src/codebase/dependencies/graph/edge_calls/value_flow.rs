@@ -62,7 +62,6 @@ struct ValueFlowResolution<'a, 'b> {
     member_initializer: Option<(&'a std::path::Path, u32, Option<CallableId>, bool)>,
     member_read: Option<(std::path::PathBuf, u32, Option<CallableId>)>,
 }
-
 #[path = "value_flow/execution_quality.rs"]
 mod execution_quality;
 #[path = "value_flow/execution_reads.rs"]
@@ -71,6 +70,8 @@ mod execution_reads;
 mod member_projection;
 #[path = "value_flow/member_reads.rs"]
 mod member_reads;
+#[path = "value_flow/for_of_values.rs"]
+mod for_of_values;
 #[path = "value_flow/named.rs"]
 mod named;
 #[path = "value_flow/named_imports.rs"]
@@ -82,7 +83,6 @@ mod returned;
 #[path = "value_flow/values.rs"]
 mod values;
 pub(super) use refine::refine_value_calls;
-
 #[path = "value_flow/factory_bindings.rs"]
 mod factory_bindings;
 

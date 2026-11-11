@@ -56,6 +56,8 @@ impl FlowFileIndex {
                     .iter()
                     .map(|value| ((value.scope, value.name.clone()), value.clone())),
             ),
+            for_of_escapes: flow.for_of.escaped.clone(),
+            for_of_calls: flow.for_of.calls.iter().cloned().collect(),
             parameters: index_scoped_names(
                 flow.parameters
                     .iter()

@@ -226,3 +226,249 @@ fn cli_reports_only_blocking_sites_with_structured_causes() {
         }
     }
 }
+
+#[test]
+fn proven_assertion_owner_survives_unresolved_cleanup_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "coverage-producer-assertion-owner-cleanup",
+        "fixture",
+        "",
+    );
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--format", "json", "--root"])
+        .arg(&root)
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let findings = report["rules"].as_array().unwrap();
+    let targets: Vec<_> = findings
+        .iter()
+        .map(|row| row["target"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        targets,
+        [
+            "loggerOnly",
+            "mapOnly",
+            "flatMapOnly",
+            "sentryOnly",
+            "cleanupOnly",
+            "withoutAssertion",
+            "noOwner"
+        ],
+        "{report}"
+    );
+    for finding in findings.iter().filter(|row| row["target"] != "noOwner") {
+        assert!(
+            finding["message"]
+                .as_str()
+                .unwrap()
+                .contains("unanalyzable coverage producer"),
+            "{finding}"
+        );
+        assert!(
+            !finding["causes"].as_array().unwrap().is_empty(),
+            "{finding}"
+        );
+    }
+    crate::check_json_snapshot::assert_saved_fixture(
+        "coverage_producer_assertion_owner_cleanup",
+        &[("cleanup", root.clone(), root.join(".no-mistakes.yml"))],
+    );
+}
+
+#[test]
+fn opaque_shutdown_receivers_keep_proven_assertions_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "coverage-producer-assertion-owner-opaque-shutdown",
+        "fixture",
+        "",
+    );
+    let report = check_json(&root, ".no-mistakes");
+    let findings = report["rules"].as_array().unwrap();
+    let targets: Vec<_> = findings
+        .iter()
+        .map(|finding| finding["target"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        targets,
+        [
+            "unownedThen",
+            "unownedCatch",
+            "unownedFinally",
+            "unresolvedThen",
+            "unresolvedCatch",
+            "unresolvedFinally"
+        ],
+        "{report}"
+    );
+    for (target, callee) in [
+        ("unresolvedThen", "<unknown>.then"),
+        ("unresolvedCatch", "<unknown>.catch"),
+        ("unresolvedFinally", "<unknown>.finally"),
+    ] {
+        let finding = findings
+            .iter()
+            .find(|finding| finding["target"] == target)
+            .unwrap();
+        assert_eq!(finding["causes"][0]["callee"], callee, "{finding}");
+        assert_eq!(
+            finding["causes"][0]["detail"],
+            "built-in callback `shutdownStore` is not statically resolved",
+            "{finding}"
+        );
+    }
+    let script_report = check_json(&root, "script-roots");
+    let script_targets: Vec<_> = script_report["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| finding["target"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        script_targets,
+        [
+            "runUnresolvedThen",
+            "runUnresolvedCatch",
+            "runUnresolvedFinally"
+        ],
+        "{script_report}"
+    );
+    crate::check_json_snapshot::assert_saved_fixture(
+        "coverage_producer_assertion_owner_opaque_shutdown",
+        &[
+            (
+                "proven_direct_owners",
+                root.clone(),
+                root.join(".no-mistakes.yml"),
+            ),
+            (
+                "caller_only_owners",
+                root.clone(),
+                root.join("script-roots.yml"),
+            ),
+        ],
+    );
+}
+
+#[test]
+fn production_scenario_table_reaches_default_member_assertions() {
+    let root = crate::check_json_snapshot::rules_path(
+        "coverage-producer-assertion-owner-scenario-table",
+        "fixture",
+        "",
+    );
+    for config in [
+        "direct-default",
+        "direct-object",
+        "inline-table",
+        "global-private",
+        "mixed-first",
+        "mixed-last",
+        "direct-module",
+        "literal-catch",
+        ".no-mistakes",
+    ] {
+        let report = check_json(&root, config);
+        assert!(
+            report["rules"].as_array().unwrap().is_empty(),
+            "{config}: {report}"
+        );
+        assert!(
+            report["advisories"].as_array().unwrap().is_empty(),
+            "{config}: {report}"
+        );
+    }
+}
+
+#[test]
+fn scenario_table_guards_and_policy_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "coverage-producer-assertion-owner-scenario-table",
+        "fixture",
+        "",
+    );
+    let report = check_json(&root, "guards");
+    assert!(report["rules"].as_array().unwrap().is_empty(), "{report}");
+    let targets: Vec<_> = report["advisories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| finding["target"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        targets,
+        [
+            "dynamic",
+            "mutated",
+            "escaped",
+            "empty",
+            "uninvoked",
+            "firstDestructured",
+            "earlyBreak",
+            "earlyReturn",
+            "filtered",
+            "shadowed",
+            "overwrittenRow",
+            "aliasedTable",
+            "malformedRow",
+            "globalMutated",
+            "globalEscaped",
+            "captured",
+            "earlierEscapeLoop",
+            "earlierMutationLoop",
+            "opaqueWithoutOwner",
+            "onlyOpaque",
+            "exitingCatch",
+            "abortingCatch",
+            "exitingCatchWithCode",
+            "aliasedExitingCatch",
+            "effectfulIterable"
+        ],
+        "{report}"
+    );
+    let boundaries = check_json(&root, "boundaries");
+    assert!(boundaries["rules"].as_array().unwrap().is_empty());
+    let boundary_targets: Vec<_> = boundaries["advisories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| finding["target"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        boundary_targets,
+        [
+            "excessiveBody",
+            "nestedReceiver",
+            "sourceReceiver",
+            "rowArgument",
+            "unrelatedBody",
+            "structuredCatch",
+            "factoryTable",
+            "nestedMetadata",
+            "localCallback",
+        ],
+        "{boundaries}"
+    );
+    let cases: Vec<_> = [
+        ".no-mistakes",
+        "direct-default",
+        "direct-object",
+        "inline-table",
+        "global-private",
+        "mixed-first",
+        "mixed-last",
+        "direct-module",
+        "literal-catch",
+        "no-owner",
+        "guards",
+        "boundaries",
+    ]
+    .into_iter()
+    .map(|name| (name, root.clone(), root.join(format!("{name}.yml"))))
+    .collect();
+    crate::check_json_snapshot::assert_saved_fixture(
+        "coverage_producer_assertion_owner_scenario_table",
+        &cases,
+    );
+}

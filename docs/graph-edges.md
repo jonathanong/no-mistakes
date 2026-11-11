@@ -894,3 +894,9 @@ imports as value exposure. These links connect namespace files to producer
 symbols or to other exported namespace files. This projection has separate
 export-resolution caches from callable analysis and preserves ordinary call-site
 classification.
+
+Coverage assertion ownership also projects unconditional no-argument member calls
+from simple `const` `for...of` bindings over closed local or module-private literal scenario tables.
+The projection uses `assertion-owner` edges and leaves ordinary `call` queries
+unchanged. Filters, early exits, mutation, escaping, and unused rows remain outside
+this proof; see the [rule](rules/coverage-producer-assertion-owner.md).

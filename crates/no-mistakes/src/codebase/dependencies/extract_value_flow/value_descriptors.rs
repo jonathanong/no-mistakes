@@ -89,3 +89,11 @@ pub struct ValueCall {
     /// inherit repetition solely from their creation site.
     pub repeated: bool,
 }
+
+pub(crate) type ForOfEscapes = FxHashMap<usize, FxHashMap<String, FxHashSet<Option<CallableId>>>>;
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct ForOfFacts {
+    pub(crate) calls: Vec<(u32, ValueBinding)>,
+    pub(crate) escaped: Option<std::sync::Arc<ForOfEscapes>>,
+}
