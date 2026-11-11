@@ -734,7 +734,10 @@ unresolved when `inputs` is unknown. Writes to a rest slot are followed in sourc
 order; a conditional write also retains the unchanged input alternative.
 
 A destructuring default applies only when a caller demonstrably omits that
-property. Passing an explicit owned `schemaDir` proves
+property. A whole-parameter default other than `{}` is not used to prove a
+destructured property default, and forwarding an object parameter with its own
+default keeps the property unresolved. Pass an explicit owned property to make
+that input provable. Passing an explicit owned `schemaDir` proves
 `function main({ schemaDir = process.cwd() } = {})`; omitting it retains the live
 default. An unknown object or an explicitly unknown property is unresolved.
 Missing bounded argument facts do not establish omission: defaults require a

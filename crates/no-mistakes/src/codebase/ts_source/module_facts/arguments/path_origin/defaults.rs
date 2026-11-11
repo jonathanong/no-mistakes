@@ -51,11 +51,16 @@ impl<'a> Projector<'a, '_> {
         let start = semantic.nodes().kind(owner).span().start;
         let default = self
             .parameter_default(list_kind.items.get(index)?, member.as_deref(), symbol)
-            .filter(|origin| {
-                origin
+            .map(|origin| {
+                if origin
                     .atoms()
                     .iter()
                     .all(|atom| atom.param.is_none() && atom.env.is_none())
+                {
+                    origin
+                } else {
+                    PathOrigin::unknown()
+                }
             });
         Some(PathOrigin {
             param: Some(index),
@@ -91,6 +96,11 @@ impl<'a> Projector<'a, '_> {
             };
             if binding.symbol_id.get() == Some(symbol) {
                 if let Some(default) = default {
+                    if parameter.initializer.as_ref().is_some_and(|initializer| {
+                        !matches!(initializer.get_inner_expression(), Expression::ObjectExpression(object) if object.properties.is_empty())
+                    }) {
+                        return None;
+                    }
                     return Some(self.origin(default, 1));
                 }
                 break;

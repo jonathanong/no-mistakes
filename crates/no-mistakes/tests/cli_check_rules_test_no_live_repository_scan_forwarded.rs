@@ -1,6 +1,9 @@
 use std::path::PathBuf;
 
 const CASES: &[&str] = &[
+    "forwarded-parameter-default-live",
+    "forwarded-object-default-live",
+    "whole-object-default-live",
     "nullish-literal-owned",
     "undefined-literal-owned",
     "nullish-alias-owned",

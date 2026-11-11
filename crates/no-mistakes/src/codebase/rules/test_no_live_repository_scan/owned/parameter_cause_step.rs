@@ -33,7 +33,10 @@ impl Owners<'_> {
                 .atoms()
                 .iter()
                 .map(|atom| {
-                    if atom.param.is_none() || atom.param_member.is_some() {
+                    if atom.param.is_none()
+                        || atom.param_member.is_some()
+                        || atom.param_default.is_some()
+                    {
                         return None;
                     }
                     let mut atom = atom.clone();

@@ -596,6 +596,50 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "forwarded-object-default-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "list.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but list.mts:2 passes `options`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "function scan({ root = mkdtempSync(\"/tmp/default-\") } = {}) { return readdirSync(root); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "forwarded-parameter-default-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "list.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but list.mts:2 passes `options`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "function scan({ root = mkdtempSync(\"/tmp/default-\") } = {}) { return readdirSync(root); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "let-temp-climb": {
     "exitCode": 0,
     "report": {
@@ -1171,6 +1215,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.test.mts:6 passes `{ outputRoot: root }`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function list(first: unknown, { outputRoot }: { outputRoot: string }) { return readdirSync(outputRoot); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "whole-object-default-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "list.mts",
+          "import": "readdirSync",
+          "line": 2,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.test.mts:2 omits the root argument. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function list({ root = mkdtempSync(\"/tmp/default-\") } = { root: process.cwd() }) { return readdirSync(root); }",
           "target": "unresolved root"
         }
       ],
