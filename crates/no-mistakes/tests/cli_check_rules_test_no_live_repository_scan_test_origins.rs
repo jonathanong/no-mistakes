@@ -46,6 +46,7 @@ const CASES: &[&str] = &[
     "cli",
     "cli-guarded",
     "cli-argv-cleanup",
+    "cli-argv-mutable-bindings",
     "cli-argv-explicit-function",
     "cli-argv-explicit-file",
     "cli-argv-scalar-command",
