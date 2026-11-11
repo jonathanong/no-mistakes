@@ -123,6 +123,9 @@ graph. Details:
 - After cargo builds in a throwaway worktree, `rm -rf <workspace-root>/target`
   (not `cargo clean`, which may follow `CARGO_TARGET_DIR`), after any Criterion
   baseline comparison finishes. Never delete the main workspace `target/`.
+- On a shared machine, run heavy cargo jobs one at a time with capped
+  parallelism, prefer CI for coverage, and push early. See
+  [shared machines](CONTRIBUTING.md#shared-machines-and-memory).
 - Performance measurement rules and gates:
   [core performance guidance](crates/no-mistakes/AGENTS.md).
 

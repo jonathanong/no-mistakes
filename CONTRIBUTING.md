@@ -161,3 +161,22 @@ minutes on Windows and five on macOS; individual test deadlines and duration
 warnings remain in force. The native job retains its thirty-minute limit.
 Saved timing records distinguish historical censored progress from current
 completed setup and Rust work; neither observation guarantees tail duration.
+
+## Shared machines and memory
+
+Release builds, full-workspace tests, `cargo llvm-cov`, and Criterion each use a
+large share of RAM and spawn many processes. Several agents running them at once
+can exhaust memory and hang the machine until a hard reset. When agents share a
+machine:
+
+- Run heavy jobs one at a time, behind a machine-wide lock or a memory- and
+  task-capped scope, with a limited `CARGO_BUILD_JOBS`. A lock alone does not
+  cap one job's memory.
+- Prefer CI for coverage. Never `eval "$(cargo llvm-cov show-env)"` in a working
+  shell; every later cargo command in that shell is instrumented.
+- Run focused tests (`-p <crate>`, `--test <suite>`, a name filter) before the
+  full suite.
+- Check available memory before starting a heavy job.
+- Keep worktrees and target directories where a reboot will not delete them,
+  and commit and push early so a crash loses no work.
+- Delete throwaway target directories as soon as they are no longer needed.
