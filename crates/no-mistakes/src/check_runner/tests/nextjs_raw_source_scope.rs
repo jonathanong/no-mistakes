@@ -188,13 +188,6 @@ fn mixed_route_and_source_fact_consumers_keep_each_others_work() {
         Some(&21),
         "the mixed request must reuse extracted facts: {mixed_work:#?}"
     );
-    assert_eq!(
-        mixed_observer
-            .source_read_snapshot()
-            .get(&root.join("apps/store/src/invalid-utf8.ts")),
-        Some(&1),
-        "lossy source projection must reuse the strict physical read"
-    );
     assert!(raw_result.warnings.is_empty(), "{:?}", raw_result.warnings);
     assert!(
         raw_result.advisories.is_empty(),

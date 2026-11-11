@@ -51,4 +51,3 @@ fn args_for(root: &Path, files: Vec<&str>, format: Format) -> SymbolsArgs {
 fn fixture_args(files: Vec<&str>, format: Format) -> SymbolsArgs {
     args_for(&fixture_root(), files, format)
 }
-
