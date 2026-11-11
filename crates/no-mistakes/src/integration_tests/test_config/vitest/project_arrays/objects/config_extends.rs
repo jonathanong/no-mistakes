@@ -68,6 +68,7 @@ pub(super) fn resolve_config_extends(options: &mut Options, ctx: &mut Ctx<'_, '_
 
 fn merge_inherited_options(options: &mut Options, mut inherited: Options, path: &Path) {
     deadline_inheritance::inherit_named_deadlines(options, &mut inherited, path);
+    options.concurrent = options.concurrent.or(inherited.concurrent);
     normalize_inherited_root(&mut inherited, path);
     options.name = options.name.take().or(inherited.name);
     options.root = options.root.take().or(inherited.root);

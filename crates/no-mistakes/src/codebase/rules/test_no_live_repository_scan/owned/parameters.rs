@@ -11,7 +11,7 @@ impl Owners<'_> {
         site: &ResolvedCallSite,
         facts: &dyn TsFactLookup,
     ) -> bool {
-        if !self.env.all_owned(name) {
+        if !self.env.all_owned(name) || self.overlapping_env(&site.file, site.offset, name, facts) {
             return false;
         }
         facts

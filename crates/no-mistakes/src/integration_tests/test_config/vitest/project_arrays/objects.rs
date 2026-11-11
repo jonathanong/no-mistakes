@@ -11,6 +11,7 @@ use std::collections::BTreeSet;
 use crate::integration_tests::test_config::shared_project_arrays::object_calls::{
     self as calls, ObjectCallOps,
 };
+mod concurrent;
 mod config_extends;
 mod dynamic_triggers;
 mod exports;
@@ -83,6 +84,7 @@ fn parse_options(object: &ObjectExpression<'_>, ctx: &mut Ctx<'_, '_>) -> Result
                 if let Some(imported) = spread_options(&spread.argument, ctx)? {
                     merge_options(&mut options, imported);
                 } else {
+                    options.concurrent = Some(true);
                     deadlines::obscure(
                         &mut options.deadlines,
                         ctx.path,
@@ -102,6 +104,7 @@ fn parse_options(object: &ObjectExpression<'_>, ctx: &mut Ctx<'_, '_>) -> Result
         }
     }
     if let Some(Extends::Unknown { path, span }) = &options.deadline_extends {
+        options.concurrent.get_or_insert(true);
         let declaration = deadlines::unknown(
             DeadlineUnknownReason::UnresolvedInheritance,
             path,

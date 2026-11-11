@@ -98,6 +98,7 @@ fn collect_projects(
             exclude: prefix_globs(root, root, &configured_project.exclude),
             declared_deadlines: Default::default(),
             matcher_warnings: Vec::new(),
+            vitest_concurrent: false,
             vitest_setup: Vec::new(),
         });
     }

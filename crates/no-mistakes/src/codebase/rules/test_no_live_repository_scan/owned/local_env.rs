@@ -33,6 +33,7 @@ impl Owners<'_> {
             return false;
         };
         callers.iter().all(|caller| {
+            if self.overlapping_env(&caller.file, caller.offset, name, facts) { return false; }
             let Some(paths) = facts.get_ts_facts(&caller.file).and_then(path_provenance) else { return false };
             let Some(end) = paths.test_env_calls.get(&caller.offset) else { return false };
             paths.env_writes.iter().any(|write| {

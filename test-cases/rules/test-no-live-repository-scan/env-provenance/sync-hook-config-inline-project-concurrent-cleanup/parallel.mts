@@ -1,0 +1,11 @@
+import { mkdtempSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { vi, afterEach, beforeEach, it } from "vitest";
+import { query } from "./parallel-query.mjs";
+beforeEach(() => { process.env.X = mkdtempSync(join(tmpdir(), "x-")); });
+let release;
+const finished = new Promise((resolve) => { release = resolve; });
+it("query after reset", async () => { await finished; await query("table"); });
+it("finishes first", () => {});
+afterEach(() => { delete process.env.X; release(); });

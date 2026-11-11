@@ -49,6 +49,7 @@ pub(super) fn parse(
             // fields belong to that nested object. `root` and `extends` may
             // still be declared on the outer project object.
             options.deadlines = Default::default();
+            options.concurrent = None;
             options.name = None;
             options.include = None;
             options.exclude = None;

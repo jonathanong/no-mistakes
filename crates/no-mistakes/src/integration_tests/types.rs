@@ -151,5 +151,6 @@ pub(crate) struct ConfigProject {
     /// Vitest setup modules statically declared for this effective project.
     /// Other runners always leave this empty.
     pub(crate) vitest_setup: Vec<VitestSetupDependency>,
+    pub(crate) vitest_concurrent: bool,
     pub(crate) declared_deadlines: DeclaredDeadlines,
 }

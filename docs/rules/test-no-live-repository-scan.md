@@ -256,7 +256,13 @@ named `delete process.env.X` or a direct `vi.unstubAllEnvs()` through the named
 Vitest import. The owned write must still run before every reaching test call.
 A `beforeAll` write followed by an `afterEach` reset cannot prove later tests;
 conditional or live writes, arbitrary reset references, and scans from cleanup
-callbacks remain unresolved. Runner-level reset configuration stays conservative.
+callbacks remain unresolved. Concurrent callbacks cannot rely on shared
+environment ownership when cleanup in their file, imports, or matched setup
+project may overlap. Use a local `mkdtemp` root or sequential tests. Unrelated
+sequential callbacks keep their ownership proof. This includes concurrency selected
+by a matched project's `test.sequence.concurrent`; unknown configured values
+remain conservative, and an unrelated sequential project keeps its own proof.
+Runner-level reset configuration stays conservative.
 
 A same-file helper such as `const getDataDir = () => process.env.DATA_DIR ??
 "./tmp/data"` keeps the environment origin in `readdir(join(getDataDir(), table))`.

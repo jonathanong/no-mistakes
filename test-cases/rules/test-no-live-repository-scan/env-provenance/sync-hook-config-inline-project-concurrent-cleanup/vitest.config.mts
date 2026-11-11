@@ -1,0 +1,1 @@
+export default { test: { sequence: { concurrent: true }, projects: [{ extends: true, test: { name: "parallel", include: ["parallel.mts"] } }, { extends: true, test: { name: "serial", include: ["serial.mts"], sequence: { concurrent: false } } }] } };

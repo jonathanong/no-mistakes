@@ -115,6 +115,7 @@ pub(crate) struct PathProvenance {
     /// Function spans of `it`/`test` callbacks.
     pub(crate) test_callbacks: Vec<(u32, u32)>,
     pub(crate) cleanup_callbacks: Vec<(u32, u32)>,
+    pub(crate) lifecycle_overlaps: Vec<(u32, u32)>,
     /// Names of functions referenced other than as the callee of a direct call.
     pub(crate) value_refs: crate::fx::FxHashSet<String>,
     /// Specifiers reached other than by named static imports used only as calls.

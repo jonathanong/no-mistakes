@@ -23,6 +23,7 @@ const DEFAULT_EXTENSIONS: &[&str] = &[
 
 #[derive(Default, Clone)]
 pub(super) struct Options {
+    pub(super) concurrent: Option<bool>,
     pub(super) deadlines: crate::integration_tests::types::DeclaredDeadlines,
     pub(super) name: Option<String>,
     pub(super) root: Option<String>,
@@ -178,6 +179,7 @@ fn to_project(
         exclude: prefix_globs(root, &project_root, &options.exclude.unwrap_or_default()),
         declared_deadlines: options.deadlines,
         matcher_warnings: Vec::new(),
+        vitest_concurrent: options.concurrent.unwrap_or(false),
         vitest_setup: options
             .setup_files
             .into_iter()

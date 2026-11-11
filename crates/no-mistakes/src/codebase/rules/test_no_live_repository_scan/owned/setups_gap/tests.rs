@@ -22,6 +22,7 @@ fn project(config: Option<&str>, include: &str) -> ConfigProject {
         include: vec![include.to_string()],
         exclude: Vec::new(),
         matcher_warnings: Vec::new(),
+        vitest_concurrent: false,
         vitest_setup: Vec::new(),
         declared_deadlines: Default::default(),
     }

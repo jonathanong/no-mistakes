@@ -14,6 +14,7 @@ fn project(scope: Option<&str>, setup: VitestSetupDependency) -> ConfigProject {
         exclude: Vec::new(),
         declared_deadlines: Default::default(),
         matcher_warnings: Vec::new(),
+        vitest_concurrent: false,
         vitest_setup: vec![setup],
     }
 }

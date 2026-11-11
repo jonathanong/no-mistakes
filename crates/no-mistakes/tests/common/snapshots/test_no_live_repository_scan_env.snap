@@ -1805,6 +1805,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "sync-hook-aliased-concurrent-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "sync-hook-beforeall-aftereach-delete": {
     "exitCode": 0,
     "report": {
@@ -2151,6 +2173,316 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "sync-hook-concurrent-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-concurrent-named-callback-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-concurrent-options-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-concurrent-options-named-callback-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-concurrent-shared-setup-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-concurrent-sibling-suite-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-concurrent-suite-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-concurrent-tagged-each-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-config-concurrent-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-config-default-sequential-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-config-extends-concurrent-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-config-imported-project-concurrent-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "parallel-query.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-config-inline-project-concurrent-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "parallel-query.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-config-sequential-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-config-unknown-concurrent-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "sync-hook-custom-import-cleanup": {
     "exitCode": 0,
     "report": {
@@ -2195,6 +2527,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "sync-hook-sequential-unrelated-concurrent": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-sequential-unrelated-concurrent-suite": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "sync-hook-shadowed-cleanup": {
     "exitCode": 0,
     "report": {
@@ -2206,6 +2562,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdirSync(process.env.TMPDIR); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-unknown-concurrent-options-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
         }
       ],

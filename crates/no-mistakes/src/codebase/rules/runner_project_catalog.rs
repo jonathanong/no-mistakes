@@ -59,10 +59,16 @@ pub(crate) fn merge_explicit_projects(
     mut projects: Vec<ConfigProject>,
     explicit: Vec<ConfigProject>,
 ) -> Vec<ConfigProject> {
-    for project in explicit {
+    for mut project in explicit {
+        project.vitest_concurrent |= projects.iter().any(|existing| {
+            existing.policy_name == project.policy_name && existing.vitest_concurrent
+        });
         projects
             .retain(|existing| existing.policy_name.as_deref() != project.policy_name.as_deref());
         projects.push(project);
     }
     projects
 }
+
+#[cfg(test)]
+mod tests;

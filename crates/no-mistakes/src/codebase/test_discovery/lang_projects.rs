@@ -73,6 +73,7 @@ fn project_for(
         exclude: Vec::new(),
         declared_deadlines: Default::default(),
         matcher_warnings: Vec::new(),
+        vitest_concurrent: false,
         vitest_setup: Vec::new(),
     }
 }

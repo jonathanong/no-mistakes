@@ -47,22 +47,19 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
             ),
         })
     });
-    let forwarders = plan
-        .needs_import_facts()
-        .then(|| {
-            module_bindings
-                .as_ref()
-                .map(|facts| Arc::clone(&facts.transparent_receiver_writes))
-                .unwrap_or_else(|| match semantic {
-                    Some(built) => Arc::new(module_facts::arguments::transparent_receiver_writes(
-                        &built.semantic,
-                    )),
-                    None => {
-                        module_facts::arguments::transparent_receiver_writes_from_program(program)
-                    }
-                })
-        })
-        .unwrap_or_default();
+    let forwarders = if plan.needs_import_facts() {
+        module_bindings
+            .as_ref()
+            .map(|facts| Arc::clone(&facts.transparent_receiver_writes))
+            .unwrap_or_else(|| match semantic {
+                Some(built) => Arc::new(module_facts::arguments::transparent_receiver_writes(
+                    &built.semantic,
+                )),
+                None => module_facts::arguments::transparent_receiver_writes_from_program(program),
+            })
+    } else {
+        Default::default()
+    };
     let import_facts = if plan.needs_import_facts() {
         crate::diagnostics::hot_files::with_file(path, || {
             extract_import_facts_with_forwarders(program, source, plan, forwarders)

@@ -4,6 +4,7 @@
 //! rule that reads these facts then keeps its finding.
 mod argument_source;
 mod call_args;
+mod concurrent;
 mod config_keys;
 mod consumers;
 mod env_writes;
@@ -52,6 +53,11 @@ pub(super) fn collect(
                 &mut result,
             ),
             AstKind::CallExpression(call) => {
+                if concurrent::overlap(semantic, call) {
+                    result
+                        .lifecycle_overlaps
+                        .extend(concurrent::callbacks(semantic, call));
+                }
                 projector.call_offset = call.span.start;
                 if let Some(spied) =
                     pass_through::forwards_mock_arguments(semantic, node.id(), call)

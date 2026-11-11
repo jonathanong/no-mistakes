@@ -18,6 +18,7 @@ pub(super) fn parse(object: &Map<String, Value>, path: &Path) -> Result<Options>
             },
         );
     Ok(Options {
+        concurrent: object.get("sequence").and_then(sequence),
         deadlines: crate::integration_tests::types::DeclaredDeadlines {
             case: object
                 .get("testTimeout")
@@ -46,6 +47,7 @@ pub(super) fn parse(object: &Map<String, Value>, path: &Path) -> Result<Options>
 }
 
 pub(super) fn merge(base: &mut Options, nested: Options) {
+    base.concurrent = nested.concurrent.or(base.concurrent);
     base.deadlines = nested.deadlines;
     base.name = nested.name.or(base.name.take());
     base.root = nested.root.or(base.root.take());
@@ -158,4 +160,13 @@ fn dependencies(
                 .collect(),
         )
     })
+}
+
+fn sequence(value: &Value) -> Option<bool> {
+    match value.as_object() {
+        Some(object) => object
+            .get("concurrent")
+            .map(|value| value.as_bool().unwrap_or(true)),
+        None => Some(true),
+    }
 }

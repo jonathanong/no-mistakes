@@ -15,6 +15,7 @@ pub(super) fn apply_property(
 ) -> Result<()> {
     let name = shared::property_key_name(&property.key);
     if property.computed && name.is_none() {
+        options.concurrent = Some(true);
         deadlines::obscure(
             &mut options.deadlines,
             ctx.path,
@@ -76,6 +77,7 @@ fn apply_accessor(
     ctx: &Ctx<'_, '_>,
 ) {
     match name {
+        Some("sequence") if !nested_test => options.concurrent = Some(true),
         Some("testTimeout") if !nested_test => {
             options.deadlines.case = Some(deadlines::unknown(
                 DeadlineUnknownReason::Accessor,
@@ -91,6 +93,7 @@ fn apply_accessor(
             ))
         }
         Some("test") => {
+            options.concurrent = Some(true);
             options.nested_test_scope = true;
             deadlines::obscure(
                 &mut options.deadlines,
@@ -131,11 +134,13 @@ fn replace_test_object(
         options.setup_files_cleared = false;
         options.global_setup_cleared = false;
         options.deadlines = Default::default();
+        options.concurrent = None;
         // SDK extends is an outer project field, never test.extends.
         test_options.deadline_extends = None;
         test_options.nested_test_scope = true;
         merge_options(options, test_options);
     } else {
+        options.concurrent = Some(true);
         options.nested_test_scope = true;
         deadlines::obscure(
             &mut options.deadlines,
