@@ -681,6 +681,22 @@ on caller ownership.
 Long call chains use a cycle-safe traversal of the canonical graph without a
 fixed caller-state cutoff. Cycles need an independently owned entry argument.
 
+## Test-originating callers
+
+Parameter ownership is decided by call paths starting in the selected tests and
+setup files. Every such path must supply an owned fixture or `mkdtemp` root.
+A production or CLI caller outside those paths does not invalidate that proof,
+including a caller that supplies a repository path, forwards through a helper,
+or reads its root from CLI arguments. The same rule applies to a destructured
+root such as `check({ root, paths })`.
+
+Calling production code from a test makes that path relevant. A test that calls
+`production()` when `production(root = process.cwd())` forwards to the scanner
+retains the finding. So does a test that forwards unknown CLI arguments or passes
+an unknown or live root alongside otherwise owned callers. Importing a module
+also executes its top level; a production call at that top level is relevant
+when a test imports it.
+
 ## Pass-through mocks
 
 A wrapper may capture a Node filesystem enumerator in a `const`, replace that
