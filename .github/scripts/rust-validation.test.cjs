@@ -164,6 +164,14 @@ test("CI Clippy also builds default-feature test targets", () => {
   );
 });
 
+test("CI checks every test target without default features", () => {
+  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
+  assert.match(
+    workflow,
+    /run: cargo check --locked --tests --no-default-features -p no-mistakes\n/,
+  );
+});
+
 test("packaging has its own bounded job and remains in the required aggregate", () => {
   const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
   const body = (job) => workflow.split(`\n  ${job}:\n`)[1]?.split(/\n  [a-z][a-z-]*:\n/)[0];

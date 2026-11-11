@@ -10,6 +10,7 @@ mod docs_coverage;
 mod docs_rule_snippet_execution;
 #[path = "support/integration_suites.rs"]
 mod integration_suites;
+#[cfg(feature = "mermaid-validation")]
 #[path = "mermaid_validation.rs"]
 mod mermaid_validation;
 #[path = "release_validate_cache.rs"]
