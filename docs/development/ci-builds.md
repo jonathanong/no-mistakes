@@ -171,6 +171,28 @@ one process still contend, and explicit planning-artifact locks retain their
 normal behavior. Saved process fixtures verify both contention and independent
 CLI execution. Production invocation locking is unchanged.
 
+Lock-status and close-release unit tests run their original assertions in an
+isolated exact-test subprocess. That process does not spawn children while its
+lock is held, so unrelated parallel tests cannot fork with its lock descriptor.
+Both cases still close the handle with `drop`; they do not substitute an explicit
+unlock for close-release coverage.
+
+The saved Unix diagnostic reproduces descriptor retention during a controlled
+fork-before-exec window:
+
+```sh
+rustc --edition=2021 fixtures/invocation/lock-inheritance/probe.rs -o /tmp/nm-lock-probe
+/tmp/nm-lock-probe
+```
+
+It pauses a child before exec, closes the parent's lock handle, and verifies that
+the lock remains held until the child executes and exits. On Linux it also
+checks that the child's inherited descriptor points at the exact lock path.
+This demonstrates the retention mechanism; the original intermittent CI failure
+was not instrumented, so its cause remains unproven. Production lock behavior,
+CLI/N-API contracts, and rule diagnostics are unchanged; rule-output snapshots
+and public-surface additions do not apply to this test-infrastructure change.
+
 Each real-addon step writes Vitest JSON to `target/native-api-tests.json`.
 The [timing helper](../../.github/scripts/report-native-api-tests.cjs) adds the
 slowest tests to the job summary and writes every test's status and duration to

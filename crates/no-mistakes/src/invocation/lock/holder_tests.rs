@@ -1,6 +1,7 @@
 use super::acquire_lock;
 use crate::invocation::holder::LockHolder;
 use crate::invocation::lock_status::{status_at, LockState};
+use crate::invocation::test_worker_process::run_isolated;
 use crate::invocation::{
     error_report, exit_code, timeout_exit_code, InvocationError, InvocationErrorKind,
     EXIT_TEMPFAIL, EXIT_TIMEOUT,
@@ -109,18 +110,25 @@ fn deadline_errors_keep_exit_124_and_report_their_phase() {
 
 #[test]
 fn status_reports_held_free_and_missing_lock_files() {
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("invocation.lock");
-    let missing = status_at(&path).unwrap();
-    assert_eq!((missing.state, missing.holder), (LockState::Free, None));
-    let held = acquire_lock(&path, None, false).unwrap();
-    let status = status_at(&path).unwrap();
-    assert_eq!(status.state, LockState::Held);
-    assert_eq!(status.holder.unwrap().pid, std::process::id());
-    drop(held);
-    // The record outlives the lock, but a free lock never reports a holder.
-    let status = status_at(&path).unwrap();
-    assert_eq!((status.state, status.holder), (LockState::Free, None));
+    run_isolated(
+        module_path!(),
+        "status_reports_held_free_and_missing_lock_files",
+        "NO_MISTAKES_LOCK_STATUS_CONTROL",
+        || {
+            let directory = tempfile::tempdir().unwrap();
+            let path = directory.path().join("invocation.lock");
+            let missing = status_at(&path).unwrap();
+            assert_eq!((missing.state, missing.holder), (LockState::Free, None));
+            let held = acquire_lock(&path, None, false).unwrap();
+            let status = status_at(&path).unwrap();
+            assert_eq!(status.state, LockState::Held);
+            assert_eq!(status.holder.unwrap().pid, std::process::id());
+            drop(held);
+            // The record outlives the lock, but a free lock never reports a holder.
+            let status = status_at(&path).unwrap();
+            assert_eq!((status.state, status.holder), (LockState::Free, None));
+        },
+    );
 }
 
 // Windows reports a path below a file as "not found", which is a free lock.
@@ -140,22 +148,29 @@ fn status_surfaces_unopenable_lock_paths() {
 
 #[test]
 fn lock_contention_supports_fail_timeout_and_release() {
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("invocation.lock");
-    let held = acquire_lock(&path, None, false).unwrap();
-    let busy = acquire_lock(&path, None, true).unwrap_err();
-    assert_eq!(
-        busy.downcast_ref::<InvocationError>().unwrap().kind(),
-        InvocationErrorKind::LockBusy
+    run_isolated(
+        module_path!(),
+        "lock_contention_supports_fail_timeout_and_release",
+        "NO_MISTAKES_LOCK_CLOSE_RELEASE_CONTROL",
+        || {
+            let directory = tempfile::tempdir().unwrap();
+            let path = directory.path().join("invocation.lock");
+            let held = acquire_lock(&path, None, false).unwrap();
+            let busy = acquire_lock(&path, None, true).unwrap_err();
+            assert_eq!(
+                busy.downcast_ref::<InvocationError>().unwrap().kind(),
+                InvocationErrorKind::LockBusy
+            );
+            assert_eq!(timeout_exit_code(&busy), None);
+            let timeout = acquire_lock(&path, Some(Duration::from_millis(1)), false).unwrap_err();
+            assert_eq!(
+                timeout.downcast_ref::<InvocationError>().unwrap().kind(),
+                InvocationErrorKind::LockTimeout
+            );
+            assert_eq!(timeout_exit_code(&timeout), None);
+            assert_eq!(exit_code(&timeout), EXIT_TEMPFAIL);
+            drop(held);
+            assert!(acquire_lock(&path, Some(Duration::from_secs(1)), false).is_ok());
+        },
     );
-    assert_eq!(timeout_exit_code(&busy), None);
-    let timeout = acquire_lock(&path, Some(Duration::from_millis(1)), false).unwrap_err();
-    assert_eq!(
-        timeout.downcast_ref::<InvocationError>().unwrap().kind(),
-        InvocationErrorKind::LockTimeout
-    );
-    assert_eq!(timeout_exit_code(&timeout), None);
-    assert_eq!(exit_code(&timeout), EXIT_TEMPFAIL);
-    drop(held);
-    assert!(acquire_lock(&path, Some(Duration::from_secs(1)), false).is_ok());
 }
