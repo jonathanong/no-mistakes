@@ -30,10 +30,14 @@ test("native workflow retains failure artifacts, literal deadlines and shared bu
   assert.match(workflow, /node --test[^\n]*\.github\/scripts\/build-native.test.cjs/);
 });
 
-function fixture(scenario) {
+function fixture(scenario, logFailure) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "native-build-test-"));
   fs.cpSync(saved, directory, { recursive: true });
   fs.chmodSync(path.join(directory, "bin/cargo"), 0o755);
+  if (logFailure === "open")
+    fs.cpSync(path.join(saved, "../log-failures/open"), path.join(directory, diagnostics), {
+      recursive: true,
+    });
   const search =
     scenario === "missing"
       ? ["empty-bin", path.dirname(process.execPath)]
@@ -48,6 +52,9 @@ function fixture(scenario) {
         ...process.env,
         PATH: search.map((entry) => path.resolve(directory, entry)).join(path.delimiter),
         NATIVE_BUILD_FIXTURE: scenario,
+        ...(logFailure === "midwrite"
+          ? { NODE_OPTIONS: `--require=${path.join(saved, "../log-failures/midwrite.cjs")}` }
+          : {}),
         NATIVE_RUST_CACHE_HIT: "true",
         PRIVATE_FIXTURE_SECRET: "private-fixture-token",
         CARGO_TARGET_DIR: path.join(directory, "cargo-target"),
@@ -105,31 +112,63 @@ for (const [scenario, status] of [
   );
 }
 
-test(
-  "native build forwards cancellation and retains a failing terminal record",
-  { skip: process.platform === "win32" },
-  async () => {
-    const input = fixture("cancel");
-    try {
-      const child = spawn(process.execPath, [wrapper], input.options);
-      let stdout = "";
-      child.stdout.on("data", (chunk) => {
-        stdout += chunk;
-        if (stdout.includes("fixture-ready")) child.kill("SIGTERM");
-      });
-      let stderr = "";
-      child.stderr.on("data", (chunk) => {
-        stderr += chunk;
-      });
-      const status = await new Promise((resolve, reject) => {
-        child.on("error", reject);
-        child.on("close", resolve);
-      });
-      assert.equal(status, 143, stderr);
-      assert.equal(JSON.parse(input.read("cancellation.json")).signal, "SIGTERM");
-      assert.equal(JSON.parse(input.read("result.json")).cancelledSignal, "SIGTERM");
-    } finally {
-      input.cleanup();
-    }
-  },
-);
+for (const logFailure of [undefined, "open", "midwrite"]) {
+  test(
+    `native build forwards cancellation with ${logFailure || "working"} log`,
+    { skip: process.platform === "win32" },
+    async () => {
+      const input = fixture("cancel", logFailure);
+      try {
+        const child = spawn(process.execPath, [wrapper], input.options);
+        let stdout = "";
+        child.stdout.on("data", (chunk) => {
+          stdout += chunk;
+          if (stdout.includes("fixture-ready")) child.kill("SIGTERM");
+        });
+        let stderr = "";
+        child.stderr.on("data", (chunk) => {
+          stderr += chunk;
+        });
+        const status = await new Promise((resolve, reject) => {
+          child.on("error", reject);
+          child.on("close", resolve);
+        });
+        assert.equal(status, 143, stderr);
+        assert.equal(JSON.parse(input.read("cancellation.json")).signal, "SIGTERM");
+        assert.equal(JSON.parse(input.read("result.json")).cancelledSignal, "SIGTERM");
+        if (logFailure)
+          assert.match(input.read("log-error.txt"), logFailure === "open" ? /EISDIR/ : /ENOSPC/);
+      } finally {
+        input.cleanup();
+      }
+    },
+  );
+}
+
+for (const logFailure of ["open", "midwrite"]) {
+  for (const [scenario, status] of [
+    ["success", 0],
+    ["failure", 17],
+    ["signal", 137],
+  ]) {
+    test(
+      `native build preserves ${scenario} status after ${logFailure} log failure`,
+      { skip: process.platform === "win32" },
+      () => {
+        const input = fixture(scenario, logFailure);
+        try {
+          const result = spawnSync(process.execPath, [wrapper], input.options);
+          assert.equal(result.status, status, result.stderr);
+          const completed = JSON.parse(input.read("result.json"));
+          if (scenario !== "signal") assert.equal(completed.exitCode, status);
+          assert.match(input.read("log-error.txt"), logFailure === "open" ? /EISDIR/ : /ENOSPC/);
+          assert.match(result.stdout, /fixture compiler stdout/);
+          assert.match(result.stderr, /fixture compiler stderr/);
+          if (logFailure === "midwrite") assert.ok(input.read("cargo.log").length > 0);
+        } finally {
+          input.cleanup();
+        }
+      },
+    );
+  }
+}

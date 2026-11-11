@@ -126,6 +126,17 @@ function main() {
       ]
     : args;
   const log = fs.createWriteStream(path.join(directory, "cargo.log"));
+  let logFailed = false;
+  log.on("error", (error) => {
+    logFailed = true;
+    console.warn(`Native build cargo.log: ${error.message}`);
+    diagnostic(() =>
+      fs.writeFileSync(
+        path.join(directory, "log-error.txt"),
+        `${error.code || "ERROR"}: ${error.message}\n`,
+      ),
+    );
+  });
   const started = Date.now();
   const child = spawn(command, commandArgs, {
     stdio: ["inherit", "pipe", "pipe"],
@@ -137,7 +148,7 @@ function main() {
   ]) {
     source.on("data", (data) => {
       destination.write(data);
-      log.write(data);
+      if (!logFailed && !log.destroyed) log.write(data);
     });
   }
   diagnostic(sample);
@@ -201,14 +212,13 @@ function main() {
       if (fs.existsSync(timings))
         fs.cpSync(timings, path.join(directory, "cargo-timings"), { recursive: true });
     });
-    log.end(() => {
-      const termination = cancelledSignal || signal;
-      process.exitCode = termination
-        ? 128 + (os.constants.signals[termination] || 1)
-        : code >= 0
-          ? code
-          : 1;
-    });
+    const termination = cancelledSignal || signal;
+    process.exitCode = termination
+      ? 128 + (os.constants.signals[termination] || 1)
+      : code >= 0
+        ? code
+        : 1;
+    if (!logFailed && !log.destroyed) log.end();
   });
 }
 
