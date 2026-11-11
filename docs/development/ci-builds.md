@@ -122,7 +122,11 @@ metadata, and periodic local compiler/linker CPU and RSS samples. macOS also
 records `/usr/bin/time -l` wall/user/system time and peak RSS for completed builds.
 A small shell converts Cargo signal termination to its conventional failing exit
 status before BSD `time` observes it. This preserves a killed Cargo command's
-status instead of BSD `time` returning its own signal-handling error.
+status instead of BSD `time` returning its own signal-handling error. The saved
+SIGKILL subprocess tests require `exitCode: null` and `signal: "SIGKILL"` for a
+direct child on non-macOS. On macOS they require the normalized `exitCode: 137`
+and `signal: null`. A separate external exit-137 control preserves that numeric
+failure without treating it as raw signal metadata.
 The `native-build-diagnostics-*` artifact is uploaded after failed or cancelled
 builds as well; a killed build may lack a terminal resource record. Those partial
 samples remain diagnostic evidence, not completed-run resource maxima. Build
