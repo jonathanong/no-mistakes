@@ -337,7 +337,12 @@ advisory at that call.
 Callers include the selected tests and their selected `setupFiles` execution,
 using the canonical call graph. A setup-only scan is checked, and a setup call
 with a live root prevents an otherwise owned test caller from clearing it.
-Production-only callers do not widen that set. Only calls
+Production-only callers do not widen that set. This includes a guarded dynamic
+import from an entrypoint that no selected test or setup reaches. The same
+import remains an unproven caller when a test, setup, global setup, or selected
+runner configuration can reach it. Unknown runner configuration keeps the
+conservative whole-inventory fallback for environment writes without admitting
+unrelated production importers as caller evidence. Only calls
 through imported bindings or same-file named functions record their argument roots.
 A function reached only through `import()` or a namespace is not scanned at all unless a resolved call
 reaches it.

@@ -114,9 +114,18 @@ impl<'g> Owners<'g> {
             }
         }
         let relevant_files = &scope.files;
-        let escaped = escapes::Escapes::new(facts, graph_files, relevant_files);
+        let mut caller_files = scope.test_closure.clone();
+        caller_files.extend(
+            scope
+                .sources
+                .iter()
+                .filter_map(NodeId::as_file)
+                .map(std::path::Path::to_path_buf),
+        );
+        caller_files.extend(scope.config_files.iter().flatten().cloned());
+        let escaped = escapes::Escapes::new(facts, graph_files, &caller_files);
         let consumed =
-            consumers::Consumed::new(graph, facts, graph_files, relevant_files, resolution);
+            consumers::Consumed::new(graph, facts, graph_files, &caller_files, resolution);
         Self {
             callers,
             nodes,
