@@ -169,7 +169,11 @@ configured assertion. Cleanup callbacks selected from injected dependencies or
 mutable registrations, logger and error-reporter calls, and unresolved `map` or
 `flatMap` callbacks do not undo that proof. Without the assertion-bearing path,
 the same unresolved calls remain unanalyzable; registering a callback alone does
-not establish that an assertion executes.
+not establish that an assertion executes. The cleanup regression fixture uses
+executable rows and a runtime harness that observes each row callback and the
+configured assertion. Its six assertion-bearing producers reach the real
+assertion; its seven no-owner controls execute without one. The static snapshot
+separately requires the row callbacks to remain unresolved.
 
 A named imported shutdown function passed to `.then`, `.catch`, or `.finally`
 follows the same rule. An opaque receiver might implement a custom method, so
