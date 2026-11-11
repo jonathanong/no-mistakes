@@ -633,6 +633,7 @@ jobs:
             cargo test --locked -p no-mistakes --test windows_job_object -- --exact --test-threads=1
           else
             cargo test --locked -p no-mistakes --test macos_invocation
+            cargo test --locked -p no-mistakes --bin no-mistakes invocation::tests::blocked_check::
           fi
           # Compare the same committed JSON snapshots on both native platforms.
           # Markdown, Rust, and file-rule snapshots live in this suite so native

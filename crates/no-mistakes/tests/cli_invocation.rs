@@ -1,7 +1,10 @@
+#[cfg(unix)]
 use std::io::Read;
 use std::path::PathBuf;
 use std::process::{Command, Output, Stdio};
-use std::time::{Duration, Instant};
+use std::time::Duration;
+#[cfg(unix)]
+use std::time::Instant;
 use wait_timeout::ChildExt;
 
 #[cfg(unix)]
@@ -140,61 +143,6 @@ fn invocation_options_are_global_at_root_command_and_leaf_boundaries() {
             stderr(&output)
         );
     }
-}
-
-#[cfg(unix)]
-#[test]
-fn check_timeout_stops_a_blocked_repository_check_and_names_the_phase() {
-    let root = tempfile::tempdir().expect("temp root");
-    let config = root.path().join("blocked.yml");
-    // A named pipe blocks inside config loading. The fifo is created by the
-    // system utility so this test crate does not need the nix `fs` feature.
-    let created = Command::new("mkfifo")
-        .arg(&config)
-        .status()
-        .expect("mkfifo");
-    assert!(created.success(), "mkfifo");
-    let started = Instant::now();
-    let mut child = Command::new(bin())
-        .args([
-            "--timeout",
-            "1",
-            "--lock-timeout",
-            "5",
-            "check",
-            "--root",
-            root.path().to_str().expect("utf8 root"),
-            "--config",
-            config.to_str().expect("utf8 config"),
-        ])
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .expect("spawn check");
-    let status = child
-        .wait_timeout(Duration::from_secs(8))
-        .expect("wait for check");
-    let elapsed = started.elapsed();
-    let status = status.unwrap_or_else(|| {
-        let _ = child.kill();
-        let _ = child.wait();
-        panic!("check kept running past the timeout backstop");
-    });
-    let mut stderr = String::new();
-    child
-        .stderr
-        .take()
-        .expect("stderr")
-        .read_to_string(&mut stderr)
-        .expect("read stderr");
-    assert_eq!(status.code(), Some(124), "{stderr}");
-    assert!(
-        stderr.contains("command timed out after 1 seconds during check"),
-        "{stderr}"
-    );
-    assert!(elapsed >= Duration::from_millis(900), "{elapsed:?}");
-    assert!(elapsed < Duration::from_secs(5), "{elapsed:?} {stderr}");
-    assert!(child.try_wait().expect("poll").is_some());
 }
 
 #[test]
