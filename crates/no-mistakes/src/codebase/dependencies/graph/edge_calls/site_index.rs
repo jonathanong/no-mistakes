@@ -64,3 +64,30 @@ impl DepGraph {
 }
 
 include!("module_matches.rs");
+
+impl DepGraph {
+    pub(crate) fn file_export_node(&self, file: &std::path::Path, export: &str) -> Option<NodeId> {
+        match self
+            .callable_export_resolutions
+            .get(&(file.to_path_buf(), export.to_string()))?
+        {
+            ExportedCallableResolution::Callable(file, scope, Some(id)) => {
+                Some(NodeId::callable(file, scope.clone(), *id))
+            }
+            ExportedCallableResolution::Callable(file, scope, None) => {
+                Some(NodeId::symbol(file, scope.clone()))
+            }
+            ExportedCallableResolution::Value(file, local) => Some(NodeId::symbol(file, local.clone())),
+            _ => None,
+        }
+    }
+}
+
+impl DepGraph {
+    pub(crate) fn file_export_receiver_safe(&self, file: &std::path::Path, export: &str, facts: &dyn TsFactLookup) -> bool {
+        let Some(ExportedCallableResolution::Callable(producer, local, _)) = self.callable_export_resolutions.get(&(file.to_path_buf(), export.to_string())) else { return false; };
+        facts.get_ts_facts(producer).and_then(|facts| facts.module_bindings.as_deref()).is_some_and(|module| {
+            module.exports.iter().any(|export| export.specifier.is_none() && export.local == *local && module.receiver_safe_exports.contains(&export.exported))
+        })
+    }
+}

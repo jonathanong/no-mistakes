@@ -91,9 +91,10 @@ pub(super) fn from_facts(
 ) {
     for import in &facts.imports {
         let unsafe_binding = import.bindings.iter().any(|binding| {
-            binding.kind != "named"
-                || binding.imported == "default"
-                || out.value_refs.contains(&binding.local)
+            !binding.type_only
+                && (binding.kind != "named"
+                    || binding.imported == "default"
+                    || out.value_refs.contains(&binding.local))
         });
         if unsafe_binding {
             out.unsafe_modules.insert(import.specifier.clone());
@@ -103,7 +104,7 @@ pub(super) fn from_facts(
             .entry(import.specifier.clone())
             .and_modify(|prior| *prior = (*prior).min(line))
             .or_insert(line);
-        for binding in &import.bindings {
+        for binding in import.bindings.iter().filter(|binding| !binding.type_only) {
             let kind = if binding.kind == "namespace" {
                 Some(RouteKind::Namespace)
             } else if binding.kind == "default" || binding.imported == "default" {
@@ -122,25 +123,17 @@ pub(super) fn from_facts(
         }
     }
     for export in &facts.exports {
+        if export.type_only || export.local != "*" || export.exported == "*" {
+            continue;
+        }
         if let Some(specifier) = &export.specifier {
-            let named = !export.type_only
-                && [&export.local, &export.exported]
-                    .iter()
-                    .all(|name| !matches!(name.as_str(), "" | "*" | "default"));
-            if !named {
-                out.unsafe_modules.insert(specifier.clone());
-                let kind = if export.local == "*" || export.exported == "*" {
-                    RouteKind::Namespace
-                } else {
-                    RouteKind::Default
-                };
-                out.route_sites.push(RouteSite::at(
-                    source,
-                    export.span.start,
-                    kind,
-                    specifier.clone(),
-                ));
-            }
+            out.unsafe_modules.insert(specifier.clone());
+            out.route_sites.push(RouteSite::at(
+                source,
+                export.span.start,
+                RouteKind::Namespace,
+                specifier.clone(),
+            ));
         }
     }
 }

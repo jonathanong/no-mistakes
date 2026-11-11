@@ -13,6 +13,7 @@ pub(super) struct RouteHit {
     pub(super) kind: RouteKind,
     pub(super) detail: String,
     target: PathBuf,
+    pub(super) symbol: Option<String>,
 }
 
 pub(super) fn note_resolved(
@@ -21,9 +22,17 @@ pub(super) fn note_resolved(
     provenance: &PathProvenance,
     specifier: &str,
     target: &Path,
-) {
+    selected: &crate::fx::FxHashSet<u32>,
+) -> bool {
+    let mut matching = false;
+    let mut broad = false;
     for site in &provenance.route_sites {
         if site.detail == specifier && is_import(site.kind) {
+            matching = true;
+            if selected.contains(&site.start) {
+                continue;
+            }
+            broad = true;
             push(
                 hits,
                 file,
@@ -35,6 +44,7 @@ pub(super) fn note_resolved(
             );
         }
     }
+    broad || !matching
 }
 
 /// Line of the import that names `specifier`. Recorded lines survive a dropped source.
@@ -125,9 +135,17 @@ pub(super) fn targeting_indexes(
     file: &Path,
 ) -> Vec<usize> {
     let accepted = reachable_forms(via, file);
+    let exact = forms(file);
     hits.iter()
         .enumerate()
-        .filter(|(_, hit)| accepted.iter().any(|path| path == &hit.target))
+        .filter(|(_, hit)| {
+            let targets = if hit.symbol.is_some() {
+                &exact
+            } else {
+                &accepted
+            };
+            targets.iter().any(|path| path == &hit.target)
+        })
         .map(|(index, _)| index)
         .collect()
 }
@@ -149,27 +167,6 @@ fn reachable_forms(via: &[(PathBuf, PathBuf)], file: &Path) -> Vec<PathBuf> {
     accepted
 }
 
-fn push(
-    hits: &mut Vec<RouteHit>,
-    file: &Path,
-    start: u32,
-    line: u32,
-    kind: RouteKind,
-    detail: &str,
-    target: &Path,
-) {
-    for target in forms(target) {
-        hits.push(RouteHit {
-            file: file.to_path_buf(),
-            start,
-            line,
-            kind,
-            detail: detail.to_string(),
-            target,
-        });
-    }
-}
-
 fn forms(path: &Path) -> Vec<PathBuf> {
     let mut forms = vec![normalize_path(path)];
     if let Ok(real) = path.canonicalize() {
@@ -181,7 +178,7 @@ fn forms(path: &Path) -> Vec<PathBuf> {
     forms
 }
 
-fn is_import(kind: RouteKind) -> bool {
+pub(super) fn is_import(kind: RouteKind) -> bool {
     matches!(
         kind,
         RouteKind::Namespace
@@ -191,6 +188,10 @@ fn is_import(kind: RouteKind) -> bool {
             | RouteKind::ViMock
     )
 }
+
+#[path = "route_hit.rs"]
+mod hit;
+use hit::push;
 
 #[cfg(test)]
 #[path = "route_index/tests.rs"]

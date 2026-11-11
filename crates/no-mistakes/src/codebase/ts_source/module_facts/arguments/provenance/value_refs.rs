@@ -11,6 +11,26 @@ fn is_callee(nodes: &AstNodes<'_>, node: NodeId, span: Span) -> bool {
     matches!(nodes.parent_kind(node), AstKind::CallExpression(call) if call.callee.span() == span)
 }
 
+fn discarded(nodes: &AstNodes<'_>, node: NodeId) -> bool {
+    nodes
+        .ancestor_kinds(node)
+        .find(|kind| {
+            !matches!(
+                kind,
+                AstKind::ParenthesizedExpression(_)
+                    | AstKind::TSAsExpression(_)
+                    | AstKind::TSSatisfiesExpression(_)
+                    | AstKind::TSNonNullExpression(_)
+                    | AstKind::TSInstantiationExpression(_)
+                    | AstKind::TSTypeAssertion(_)
+            )
+        })
+        .is_some_and(|kind| {
+            matches!(kind, AstKind::UnaryExpression(value)
+        if value.operator == oxc_syntax::operator::UnaryOperator::Void)
+        })
+}
+
 /// `export { name }` names the binding for importers. It does not call it.
 fn is_reexport(nodes: &AstNodes<'_>, node: NodeId) -> bool {
     matches!(nodes.parent_kind(node), AstKind::ExportSpecifier(_))
@@ -93,7 +113,15 @@ pub(super) fn from_identifier(
     id: &IdentifierReference<'_>,
     out: &mut PathProvenance,
 ) {
-    if is_callee(semantic.nodes(), node, id.span) || is_reexport(semantic.nodes(), node) {
+    let runtime = id.reference_id.get().is_some_and(|reference| {
+        let flags = semantic.scoping().get_reference(reference).flags();
+        flags.is_value() && !flags.is_value_as_type()
+    });
+    if !runtime
+        || discarded(semantic.nodes(), node)
+        || is_callee(semantic.nodes(), node, id.span)
+        || is_reexport(semantic.nodes(), node)
+    {
         return;
     }
     if let Some(keys) = function_like(semantic, id) {

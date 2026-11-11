@@ -2,6 +2,7 @@ use super::*;
 use oxc_syntax::node::NodeId;
 
 mod all;
+mod discarded;
 mod loader;
 mod member;
 mod registry;
@@ -17,6 +18,9 @@ pub(super) fn proven(
     semantic: &Semantic<'_>,
     calls: &mut Vec<String>,
 ) -> Option<Vec<String>> {
+    if discarded::unused(node, semantic) {
+        return Some(Vec::new());
+    }
     let (id, kind) = parent(node, semantic)?;
     match kind {
         AstKind::StaticMemberExpression(member)

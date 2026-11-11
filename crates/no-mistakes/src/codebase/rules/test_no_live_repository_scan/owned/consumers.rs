@@ -105,6 +105,7 @@ impl Consumed {
                 workspace,
                 visible,
                 resolver_name,
+                selection: Some((graph, facts)),
             };
             resolve::apply(&gate, &mut consumed, file, ts, provenance);
             if let Some(module) = ts.module_bindings.as_deref() {
