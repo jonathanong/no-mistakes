@@ -16,7 +16,9 @@ pub(super) fn collect<'a>(
         let Some(expression) = projector.argument_expression(call, index) else {
             break;
         };
-        let literal_texts = literal_texts(source, index, expression);
+        let literal_texts = projector
+            .argument_object(expression)
+            .and_then(|object| literal_texts(source, index, object));
         let recorded_literal = literal_texts.is_some();
         texts.extend(literal_texts.into_iter().flatten());
         MemberPaths {
@@ -99,11 +101,8 @@ impl MemberPaths<'_, '_> {
 fn literal_texts(
     source: &ArgumentSource<'_>,
     index: usize,
-    expression: &Expression<'_>,
+    object: &ObjectExpression<'_>,
 ) -> Option<Vec<ArgumentText>> {
-    let Expression::ObjectExpression(object) = expression.get_inner_expression() else {
-        return None;
-    };
     if object.properties.len() > 32 {
         return None;
     }
