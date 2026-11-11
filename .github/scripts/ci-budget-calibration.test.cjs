@@ -56,7 +56,7 @@ test("macOS build and Rust deadlines reserve time beyond completed observations"
   assert.ok(rustRequired > 900);
   const native = job("native-tests");
   assert.ok(stepBudget(native, buildName) >= buildRequired);
-  assert.ok(stepBudget(native, buildName) <= 720);
+  assert.ok(stepBudget(native, buildName) <= 900);
   assert.ok(stepBudget(native, rustName) >= rustRequired);
   assert.ok(stepBudget(native, rustName) <= 1080);
   const required = completed.map(
@@ -69,6 +69,30 @@ test("macOS build and Rust deadlines reserve time beyond completed observations"
   assert.ok(Math.max(...required) > 1800);
   for (const budget of required) assert.ok(jobBudget(native) >= budget);
   assert.ok(jobBudget(native) <= 2100);
+});
+
+test("same-head macOS timeout keeps censored evidence and bounded build headroom", () => {
+  const data = observed("macos-native-same-head-build-variance");
+  const [completed, censored] = data.attempts;
+  assert.equal(completed.conclusion, "success");
+  assert.equal(
+    completed.elapsedSeconds,
+    elapsed(completed.buildStartedAt, completed.buildCompletedAt),
+  );
+  assert.equal(censored.conclusion, "failure");
+  assert.match(censored.outcome, /censored timeout/);
+  assert.equal(censored.elapsedSeconds, undefined);
+  assert.equal(censored.buildCompletedAt, undefined);
+  assert.ok(
+    elapsed(censored.buildCommandStartedAt, censored.timedOutAt) >= censored.stepLimitSeconds,
+  );
+  assert.equal(data.rustCache.result, "exact hit on both attempts");
+  assert.ok(data.unavailable.includes("CPU utilization samples"));
+  const native = job("native-tests");
+  assert.equal(stepBudget(native, buildName), censored.stepLimitSeconds + 180);
+  assert.equal(jobBudget(native), 2100);
+  assert.equal(stepBudget(native, rustName), 1080);
+  assert.equal(stepBudget(native, apiName), 420);
 });
 
 test("six-minute Windows timeout after 629 passing tests reserves launcher and teardown time", () => {
