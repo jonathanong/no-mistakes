@@ -301,9 +301,13 @@ the call graph cannot see may pass anything:
   names a recursive inner helper only when the judged root itself flows
   through the recursive argument. An outer parameter captured by an inner
   helper, while that helper recurses on a relative suffix, is traced to the
-  outer function's callers. Otherwise the advisory names the first caller
-  whose argument is not proven, with that call's file, line, and argument
-  text, and follows that caller when its own parameter can be traced. It does
+  outer function's callers, following forwarded parameters until the first
+  unproven argument. For example, when `listFiles(root)` captures `root` in
+  `visit(rel)`, `update(root)` calls `listFiles(root)`, and a test calls
+  `update(target)`, the advisory names the test's `update(target)` call and
+  `target`. A file-wide consumer without a named route still retains the
+  advisory when all visible callers pass owned roots. The diagnostic includes
+  the unproven call's file, line, and argument text. It does
   not stop at the function declaration when a caller exists, and it does not
   describe that declaration as an unreadable module.
 

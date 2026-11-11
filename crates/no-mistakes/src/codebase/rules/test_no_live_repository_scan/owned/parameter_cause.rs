@@ -69,6 +69,7 @@ impl Owners<'_> {
         let mut seen = FxHashSet::default();
         let mut seeded = false;
         let mut forwarded = None;
+        let mut blocker = None;
         while let Some((source, index, member, line)) = pending.pop() {
             if !seen.insert((source.clone(), index, member.clone())) {
                 continue;
@@ -86,7 +87,10 @@ impl Owners<'_> {
                 }
             }
             if let Some(cause) = self.caller_blocked(&source, facts) {
-                return Err(cause);
+                if cause.kind != CauseKind::CallersNotProven {
+                    return Err(cause);
+                }
+                blocker.get_or_insert(cause);
             }
             let Some(callers) = self
                 .callers
@@ -110,7 +114,7 @@ impl Owners<'_> {
             }
         }
         if seeded {
-            Ok(())
+            blocker.map_or(Ok(()), Err)
         } else {
             Err(forwarded.unwrap_or_else(|| missing_caller(facts, &start, declared)))
         }

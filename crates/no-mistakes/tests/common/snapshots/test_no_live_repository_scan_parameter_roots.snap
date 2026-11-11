@@ -48,6 +48,50 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "captured-root-caller": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/fn.mts",
+          "import": "readdirSync",
+          "line": 7,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/fn.test.mts:4 passes `target`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "for (const entry of readdirSync(join(root, rel), { withFileTypes: true })) {",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "captured-root-owned-caller": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/fn.mts",
+          "import": "readdirSync",
+          "line": 7,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are not proven (src/update.mts:1 declares it). Fix: pass an owned root from a caller this analysis can see. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "for (const entry of readdirSync(join(root, rel), { withFileTypes: true })) {",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "deep-unreadable": {
     "exitCode": 0,
     "report": {
