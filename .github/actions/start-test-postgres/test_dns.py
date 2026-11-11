@@ -20,14 +20,16 @@ helper_spec.loader.exec_module(helper_tests)
 
 
 class DNSRunner:
-    def __init__(self, root: Path, apt: Path, probe_code: int, apt_timeout_without_dns: bool = False):
+    def __init__(self, root: Path, apt: Path, probe_code: int, apt_timeout_without_dns: bool = False, kernel_timeout: bool = False):
         self.base = helper_tests.FakeInstallerRunner(install_server=True)
         self.base.server_root = root
         self.apt = apt
         self.probe_code = probe_code
         self.apt_timeout_without_dns = apt_timeout_without_dns
+        self.kernel_timeout = kernel_timeout
         self.calls = []
-        self.transcript = (FIXTURES / "azure-update-timeout.txt").read_text()
+        self.azure_transcript = (FIXTURES / "azure-update-timeout.txt").read_text()
+        self.canonical_transcript = (FIXTURES / "azure-recovery-timeout.txt").read_text()
 
     def __call__(self, command, **options):
         self.calls.append(command)
@@ -35,10 +37,14 @@ class DNSRunner:
             return subprocess.CompletedProcess(command, self.probe_code, "", "")
         if "apt-get" in command and "update" in command:
             mirror = (self.apt / "apt-mirrors.txt").read_text()
-            if "azure.archive.ubuntu.com" not in mirror:
+            if "mirrors.edge.kernel.org" in mirror:
+                if self.kernel_timeout:
+                    return subprocess.CompletedProcess(command, 124, "", "")
                 return subprocess.CompletedProcess(command, 0, "Hit: apt sources refreshed\n", "")
+            if "archive.ubuntu.com" in mirror and "azure.archive.ubuntu.com" not in mirror:
+                return subprocess.CompletedProcess(command, 124, "", self.canonical_transcript)
             if self.apt_timeout_without_dns:
-                return subprocess.CompletedProcess(command, 124, "", self.transcript)
+                return subprocess.CompletedProcess(command, 124, "", self.azure_transcript)
         return self.base(command, **options)
 
 
@@ -64,17 +70,22 @@ class DNSProbeTests(unittest.TestCase):
     def test_saved_apt_timeout_transcript_has_mirror_retries_but_no_dns_diagnostic(self):
         transcript = (FIXTURES / "azure-update-timeout.txt").read_text()
         self.assertIn("Ign:2 http://azure.archive.ubuntu.com", transcript)
-        self.assertNotRegex(transcript, r"Could not resolve|Temporary failure resolving")
+        recovery = (FIXTURES / "azure-recovery-timeout.txt").read_text()
+        self.assertIn("Ign:2 http://archive.ubuntu.com", recovery)
+        self.assertNotRegex(transcript + recovery, r"Could not resolve|Temporary failure resolving")
 
     def test_unresolved_probe_rewrites_before_single_update_and_install(self):
         with tempfile.TemporaryDirectory() as temp:
-            installer, runner, apt = self.prepare(temp, 2, apt_timeout=True)
+            installer, runner, apt = self.prepare(temp, 2)
             try:
                 self.run_silently(installer.install)
             finally:
                 installer.close()
             self.assertTrue(installer.recovery_used)
-            self.assertNotIn("azure.archive.ubuntu.com", (apt / "apt-mirrors.txt").read_text())
+            mirror = (apt / "apt-mirrors.txt").read_text()
+            self.assertNotIn("azure.archive.ubuntu.com", mirror)
+            self.assertNotIn("archive.ubuntu.com", mirror)
+            self.assertIn("https://mirrors.edge.kernel.org/ubuntu/", mirror)
             update = next(i for i, command in enumerate(runner.calls) if "apt-get" in command and "update" in command)
             probe = next(i for i, command in enumerate(runner.calls) if "getent" in command)
             self.assertLess(probe, update)
@@ -102,6 +113,21 @@ class DNSProbeTests(unittest.TestCase):
                 installer.close()
             self.assertFalse(installer.recovery_used)
             self.assertIn("azure.archive.ubuntu.com", (apt / "apt-mirrors.txt").read_text())
+            self.assertEqual(sum("update" in command for command in runner.calls if "apt-get" in command), 1)
+
+    def test_failed_recovery_destination_does_not_fallback_to_archive_or_retry(self):
+        with tempfile.TemporaryDirectory() as temp:
+            installer, runner, apt = self.prepare(temp, 2)
+            runner.kernel_timeout = True
+            try:
+                with self.assertRaises(setup.CommandFailure):
+                    self.run_silently(installer.install)
+            finally:
+                installer.close()
+            mirror = (apt / "apt-mirrors.txt").read_text()
+            self.assertIn("https://mirrors.edge.kernel.org/ubuntu/", mirror)
+            self.assertNotIn("archive.ubuntu.com", mirror)
+            self.assertNotIn("azure.archive.ubuntu.com", mirror)
             self.assertEqual(sum("update" in command for command in runner.calls if "apt-get" in command), 1)
 
     def test_other_probe_exit_fails_closed_before_apt(self):

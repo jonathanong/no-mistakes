@@ -21,7 +21,9 @@ AZURE_DNS_ERROR = re.compile(
     r"azure\.archive\.ubuntu\.com",
     re.IGNORECASE,
 )
-AZURE_HOST = re.compile(r"(?<![A-Za-z0-9.-])azure\.archive\.ubuntu\.com(?![A-Za-z0-9.-])")
+AZURE_URL = re.compile(r"https?://azure\.archive\.ubuntu\.com(?=/|\s|$)")
+UBUNTU_URL = re.compile(r"https?://(?:azure\.)?archive\.ubuntu\.com(?=/|\s|$)")
+RECOVERY_MIRROR = "https://mirrors.edge.kernel.org"
 
 
 class CommandFailure(RuntimeError):
@@ -31,7 +33,7 @@ class CommandFailure(RuntimeError):
         self.returncode = result.returncode
 
 
-def replace_azure_source(text: str, kind: str) -> str:
+def replace_azure_source(text: str, kind: str, include_canonical: bool = False) -> str:
     """Rewrite only active APT source URLs or Ubuntu mirror-list entries."""
     output = []
     in_uri_field = False
@@ -47,7 +49,8 @@ def replace_azure_source(text: str, kind: str) -> str:
                 active = in_uri_field
         else:
             active = not stripped.startswith("#")
-        output.append(AZURE_HOST.sub("archive.ubuntu.com", line) if active else line)
+        urls = UBUNTU_URL if include_canonical else AZURE_URL
+        output.append(urls.sub(RECOVERY_MIRROR, line) if active else line)
     return "".join(output)
 
 
@@ -104,7 +107,7 @@ class Installer:
             raise CommandFailure(command, result)
         return result
 
-    def _azure_sources(self):
+    def _azure_sources(self, include_canonical: bool = False):
         candidates = [
             self.sources_dir / "sources.list",
             self.sources_dir / "apt-mirrors.txt",
@@ -115,7 +118,7 @@ class Installer:
                 continue
             kind = "mirror-list" if path.name == "apt-mirrors.txt" else "sources" if path.suffix == ".sources" else "list"
             original = path.read_text()
-            updated = replace_azure_source(original, kind)
+            updated = replace_azure_source(original, kind, include_canonical)
             if updated != original:
                 yield path, updated
 
@@ -123,7 +126,7 @@ class Installer:
         staging = Path(self.temp.name) / "rewritten"
         staging.mkdir(exist_ok=True)
         changed = 0
-        for index, (path, updated) in enumerate(self._azure_sources()):
+        for index, (path, updated) in enumerate(self._azure_sources(include_canonical=True)):
             staged = staging / str(index)
             staged.write_text(updated)
             self._run(["install", "-m", "0644", str(staged), str(path)], privileged=True)
@@ -139,7 +142,7 @@ class Installer:
             if error.returncode not in (2, 124):
                 raise
             self.recovery_used = True
-            print("Azure Ubuntu mirror DNS unavailable; selecting the canonical archive", flush=True)
+            print("Azure Ubuntu mirror DNS unavailable; selecting the HTTPS recovery mirror", flush=True)
             if not self._install_recovery_mirror():
                 raise
 
