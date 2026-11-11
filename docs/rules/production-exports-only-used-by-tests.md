@@ -667,7 +667,11 @@ options:
 The file must be nonempty, root-relative, and remain within the analysis root;
 `exports` must contain at least one nonempty name. No filenames or platform
 conventions are inferred. Omit the option (or use `[]`) to retain the default
-behavior. This declaration does not suppress findings for another file exporting
+behavior. Names resolve through named and renamed re-exports, `export *` chains,
+and imported bindings exported again by the entry. The resolved declaring
+binding counts as production-consumed. Unresolved chains retain the declared
+entry name as consumed and preserve the rule's conservative uncertainty handling.
+This declaration does not suppress findings for an unrelated file exporting
 `Worker`, or for unlisted exports of `src/worker.mts`.
 
 ## Suppression and custom messages

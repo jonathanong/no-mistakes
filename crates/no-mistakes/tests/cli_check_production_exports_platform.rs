@@ -119,3 +119,16 @@ fn external_star_exports_check_json_snapshot_without_git() {
         .is_file());
     assert_external_star_snapshot(&root, controls.path());
 }
+
+#[test]
+fn platform_consumed_reexports_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "production-exports-only-used-by-tests",
+        "fixture",
+        "platform-reexports",
+    );
+    crate::check_json_snapshot::assert_saved_fixture(
+        "production_exports_platform_reexports",
+        &[("reexports", root.clone(), root.join(".no-mistakes.yml"))],
+    );
+}

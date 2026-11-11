@@ -99,6 +99,8 @@ fn uncertain(
 #[cfg(test)]
 mod budget_tests;
 #[cfg(test)]
+mod config_tests;
+#[cfg(test)]
 mod nextjs_tests;
 #[cfg(test)]
 mod tests;
