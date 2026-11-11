@@ -362,6 +362,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "owned-tmpdir-array-binding": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "owned-tmpdir-captured": {
     "exitCode": 0,
     "report": {
@@ -434,6 +446,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "owned-tmpdir-member-loader": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "owned-tmpdir-missing": {
     "exitCode": 0,
     "report": {
@@ -471,6 +495,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "owned-tmpdir-namespace-fake": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "owned-tmpdir-nested-receiver": {
     "exitCode": 0,
     "report": {
       "advisories": [],

@@ -562,6 +562,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "owned-tmpdir-array-binding": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scan.mts",
+          "import": "readdir",
+          "line": 3,
+          "message": "live repository scan: `readdir` enumerates the shared temporary directory, which the test does not own, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function scan() { return readdir(tmpdir()); }",
+          "target": "live repository scan"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "owned-tmpdir-captured": {
     "exitCode": 0,
     "report": {
@@ -684,6 +706,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "owned-tmpdir-member-loader": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scan.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "live repository scan: `readdir` enumerates the shared temporary directory, which the test does not own, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function scan() { return readdir(os.tmpdir()); }",
+          "target": "live repository scan"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "owned-tmpdir-missing": {
     "exitCode": 1,
     "report": {
@@ -756,6 +800,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "live repository scan: `readdir` enumerates the shared temporary directory, which the test does not own, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function scan() { return readdir(os.tmpdir()); }",
+          "target": "live repository scan"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "owned-tmpdir-nested-receiver": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scan.mts",
+          "import": "readdir",
+          "line": 3,
+          "message": "live repository scan: `readdir` enumerates the shared temporary directory, which the test does not own, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function scan() { return readdir(getOS().tmpdir()); }",
           "target": "live repository scan"
         }
       ],
