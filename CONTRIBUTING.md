@@ -137,7 +137,16 @@ module and fixture paths stay unchanged. To run one former target, use, for exam
 `cargo test --locked -p no-mistakes --test suite_cli_queries cli_queries::`.
 Use the full module-qualified name with `-- --exact` for a single test.
 `windows_job_object` and `macos_invocation` remain separate platform harnesses
-for their process and crate-root requirements.
+for their process and crate-root requirements. The native macOS job also runs
+`cargo test --locked -p no-mistakes --bin no-mistakes invocation::tests::blocked_check::`
+for the blocked-check timeout regression. This binary subprocess test opens the
+configuration FIFO from the writer side to prove the real check reader reached
+config loading, then waits for the parent to arm its one-second production
+watchdog. Startup and readiness have their own bounded wait, so coverage startup
+load cannot consume the deadline intended for blocked check execution. The parent
+also verifies the blocked helper survives longer than its command budget while
+the start gate remains closed. It always kills and reaps the helper when readiness
+or timeout assertions fail.
 
 Mermaid validation tests require the default `mermaid-validation` feature. The
 suites gate only those modules, so other tests remain available without default
