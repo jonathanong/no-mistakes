@@ -93,12 +93,7 @@ impl<'a> Projector<'a, '_> {
                             }
                             if crate::ast::property_key_name(&property.key).as_deref() == Some(key)
                             {
-                                supplied = if property.method || property.kind != PropertyKind::Init
-                                {
-                                    Supplied::Unknown
-                                } else {
-                                    Supplied::Value(&property.value)
-                                };
+                                supplied = Supplied::Value(&property.value);
                             }
                         }
                     }
