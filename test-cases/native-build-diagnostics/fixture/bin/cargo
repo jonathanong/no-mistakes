@@ -18,6 +18,7 @@ fs.copyFileSync("timing.html", path.join(timings, "cargo-timing.html"));
 console.log("fixture compiler stdout");
 console.error("fixture compiler stderr");
 if (process.env.NATIVE_BUILD_FIXTURE === "signal") process.kill(process.pid, "SIGKILL");
+if (process.env.NATIVE_BUILD_FIXTURE === "exit-137") process.exit(137);
 if (process.env.NATIVE_BUILD_FIXTURE === "cancel") {
   console.log("fixture-ready");
   setInterval(() => {}, 1000);

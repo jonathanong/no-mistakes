@@ -30,6 +30,31 @@ test("native workflow retains failure artifacts, literal deadlines and shared bu
   assert.match(workflow, /node --test[^\n]*\.github\/scripts\/build-native.test.cjs/);
 });
 
+function assertSignalTermination(completed, platform = process.platform) {
+  if (platform === "darwin") {
+    assert.equal(completed.exitCode, 137);
+    assert.equal(completed.signal, null);
+  } else {
+    assert.equal(completed.exitCode, null);
+    assert.equal(completed.signal, "SIGKILL");
+  }
+}
+
+test("signal diagnostics distinguish raw termination from macOS normalization", () => {
+  const report = (name) =>
+    JSON.parse(fs.readFileSync(path.join(saved, "../reports", `${name}.json`), "utf8"));
+  assertSignalTermination(report("raw-sigkill"), "linux");
+  assert.throws(
+    () => assertSignalTermination(report("normalized-sigkill"), "linux"),
+    assert.AssertionError,
+  );
+  assert.throws(
+    () => assertSignalTermination(report("missing-signal"), "linux"),
+    assert.AssertionError,
+  );
+  assertSignalTermination(report("normalized-sigkill"), "darwin");
+});
+
 function fixture(scenario, logFailure) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "native-build-test-"));
   fs.cpSync(saved, directory, { recursive: true });
@@ -74,6 +99,7 @@ for (const [scenario, status] of [
   ["failure", 17],
   ["missing", 1],
   ["signal", 137],
+  ["exit-137", 137],
 ]) {
   test(
     `native build retains diagnostics and preserves ${scenario} status`,
@@ -94,8 +120,7 @@ for (const [scenario, status] of [
           if (process.platform === "darwin") assert.match(result.stderr, /No such file|not found/i);
           else assert.match(input.read("spawn-error.txt"), /ENOENT/);
         } else {
-          if (scenario === "signal")
-            assert.ok(completed.signal === "SIGKILL" || completed.exitCode === 137);
+          if (scenario === "signal") assertSignalTermination(completed);
           else assert.equal(completed.exitCode, status);
           assert.match(result.stdout, /fixture compiler stdout/);
           assert.match(result.stderr, /fixture compiler stderr/);
@@ -150,6 +175,7 @@ for (const logFailure of ["open", "midwrite"]) {
     ["success", 0],
     ["failure", 17],
     ["signal", 137],
+    ["exit-137", 137],
   ]) {
     test(
       `native build preserves ${scenario} status after ${logFailure} log failure`,
@@ -160,7 +186,8 @@ for (const logFailure of ["open", "midwrite"]) {
           const result = spawnSync(process.execPath, [wrapper], input.options);
           assert.equal(result.status, status, result.stderr);
           const completed = JSON.parse(input.read("result.json"));
-          if (scenario !== "signal") assert.equal(completed.exitCode, status);
+          if (scenario === "signal") assertSignalTermination(completed);
+          else assert.equal(completed.exitCode, status);
           assert.match(input.read("log-error.txt"), logFailure === "open" ? /EISDIR/ : /ENOSPC/);
           assert.match(result.stdout, /fixture compiler stdout/);
           assert.match(result.stderr, /fixture compiler stderr/);
