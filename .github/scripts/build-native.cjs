@@ -2,6 +2,7 @@ const { spawn, spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { captureBuildOutput } = require("./native-build-output.cjs");
 
 const directory = path.resolve("target/native-build-diagnostics");
 
@@ -125,32 +126,12 @@ function main() {
         ...args,
       ]
     : args;
-  const log = fs.createWriteStream(path.join(directory, "cargo.log"));
-  let logFailed = false;
-  log.on("error", (error) => {
-    logFailed = true;
-    console.warn(`Native build cargo.log: ${error.message}`);
-    diagnostic(() =>
-      fs.writeFileSync(
-        path.join(directory, "log-error.txt"),
-        `${error.code || "ERROR"}: ${error.message}\n`,
-      ),
-    );
-  });
   const started = Date.now();
   const child = spawn(command, commandArgs, {
     stdio: ["inherit", "pipe", "pipe"],
     detached: process.platform !== "win32",
   });
-  for (const [source, destination] of [
-    [child.stdout, process.stdout],
-    [child.stderr, process.stderr],
-  ]) {
-    source.on("data", (data) => {
-      destination.write(data);
-      if (!logFailed && !log.destroyed) log.write(data);
-    });
-  }
+  const finishLog = captureBuildOutput(child, directory);
   diagnostic(sample);
   const interval = setInterval(() => diagnostic(sample), 30000);
   let cancelledSignal;
@@ -218,7 +199,7 @@ function main() {
       : code >= 0
         ? code
         : 1;
-    if (!logFailed && !log.destroyed) log.end();
+    finishLog();
   });
 }
 

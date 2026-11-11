@@ -101,6 +101,8 @@ The `native-build-diagnostics-*` artifact is uploaded after failed or cancelled
 builds as well; a killed build may lack a terminal resource record. Those partial
 samples remain diagnostic evidence, not completed-run resource maxima. Build
 errors and cancellation still fail the job; there are no automatic retries.
+Log failures are reported on stderr and, when possible, in `log-error.txt`.
+Compiler output and Cargo's exit status remain independent of log completion.
 
 A green macOS job spent 1,502 seconds before starting its API step; adding its
 420-second API budget and 120 seconds for reporting and cleanup requires
