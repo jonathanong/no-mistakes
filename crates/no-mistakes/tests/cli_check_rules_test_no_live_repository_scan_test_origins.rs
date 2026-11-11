@@ -48,6 +48,21 @@ const CASES: &[&str] = &[
     "cli",
     "cli-guarded",
     "cli-argv-cleanup",
+    "cli-argv-pattern-parameter",
+    "cli-argv-literal-initializer",
+    "cli-argv-arrow-cleanup",
+    "cli-argv-numeric-mismatch",
+    "cli-argv-numeric-live",
+    "cli-argv-empty-command",
+    "cli-argv-unknown-command",
+    "cli-argv-local-source",
+    "cli-argv-single-default",
+    "cli-argv-preceding-statement",
+    "cli-argv-nested-pattern",
+    "cli-argv-initializer-factory",
+    "cli-argv-member-object",
+    "cli-argv-deep-and",
+    "cli-argv-nonfinite-arity",
     "cli-argv-default-parameter",
     "cli-argv-nested-owner",
     "cli-argv-deep-owner",
@@ -165,7 +180,12 @@ fn test_no_live_repository_scan_only_test_originating_callers_decide_ownership()
         let expected = if name.starts_with("cli-argv-")
             && !matches!(
                 *name,
-                "cli-argv-cleanup" | "cli-argv-short" | "cli-argv-long"
+                "cli-argv-cleanup"
+                    | "cli-argv-short"
+                    | "cli-argv-long"
+                    | "cli-argv-arrow-cleanup"
+                    | "cli-argv-numeric-mismatch"
+                    | "cli-argv-empty-command"
             ) {
             2
         } else {

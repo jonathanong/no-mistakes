@@ -490,10 +490,53 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "cli-argv-arrow-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "cli-argv-cleanup": {
     "exitCode": 0,
     "report": {
       "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "cli-argv-deep-and": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const files = readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root).slice(0, opts?.maxFiles ?? files.length);",
+          "target": "unresolved root"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -595,6 +638,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "cli-argv-empty-command": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "cli-argv-escaped": {
     "exitCode": 0,
     "report": {
@@ -613,6 +668,68 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "import": "readdirSync",
           "line": 4,
           "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because pages.test.mts:11 references `main` other than as a direct call. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root).slice(0, opts?.maxFiles ?? files.length);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "cli-argv-initializer-factory": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const files = readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root).slice(0, opts?.maxFiles ?? files.length);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "cli-argv-literal-initializer": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const files = readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(root).slice(0, opts?.maxFiles ?? files.length);",
           "target": "unresolved root"
@@ -688,10 +805,72 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "cli-argv-local-source": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:5 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const files = readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:5 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root).slice(0, opts?.maxFiles ?? files.length);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "cli-argv-long": {
     "exitCode": 0,
     "report": {
       "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "cli-argv-member-object": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const files = readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root).slice(0, opts?.maxFiles ?? files.length);",
+          "target": "unresolved root"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -824,6 +1003,173 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "cli-argv-nested-pattern": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const files = readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root).slice(0, opts?.maxFiles ?? files.length);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "cli-argv-nonfinite-arity": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const files = readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root).slice(0, opts?.maxFiles ?? files.length);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "cli-argv-numeric-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const files = readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root).slice(0, opts?.maxFiles ?? files.length);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "cli-argv-numeric-mismatch": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "cli-argv-pattern-parameter": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const files = readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root).slice(0, opts?.maxFiles ?? files.length);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "cli-argv-preceding-statement": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:5 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const files = readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:5 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root).slice(0, opts?.maxFiles ?? files.length);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "cli-argv-reassigned": {
     "exitCode": 0,
     "report": {
@@ -859,6 +1205,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "exitCode": 0,
     "report": {
       "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "cli-argv-single-default": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const files = readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root).slice(0, opts?.maxFiles ?? files.length);",
+          "target": "unresolved root"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -930,6 +1307,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "cli-argv-unknown-array": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const files = readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "artifact.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but pages.mts:4 passes `args[0]!`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root).slice(0, opts?.maxFiles ?? files.length);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "cli-argv-unknown-command": {
     "exitCode": 0,
     "report": {
       "advisories": [
