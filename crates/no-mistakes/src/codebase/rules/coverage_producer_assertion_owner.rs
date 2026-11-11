@@ -169,7 +169,7 @@ fn declaration_line(node: &NodeId, sources: &crate::codebase::ts_source::SourceS
         _ => 0,
     };
     sources
-        .read_path(node.as_file().expect("callable file"))
+        .read_source_path(node.as_file().expect("callable file"))
         .map(|source| {
             source
                 .bytes()

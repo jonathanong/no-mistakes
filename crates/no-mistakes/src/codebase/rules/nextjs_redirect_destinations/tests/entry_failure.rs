@@ -56,8 +56,8 @@ fn malformed_and_invalid_utf8_entry_configs_follow_each_policy_at_both_efforts()
                 &findings,
                 &advisories,
                 policy,
-                "could not read config",
-                "invalid utf-8 sequence",
+                "could not parse config",
+                "File appears to be binary",
                 1,
             );
         }
@@ -144,5 +144,28 @@ fn entry_parse_failure_honors_file_line_and_next_line_directives() {
                 );
             }
         }
+    }
+}
+
+#[test]
+fn invalid_bytes_in_comments_and_strings_preserve_redirect_extraction() {
+    for effort in ["low", "max"] {
+        let (findings, advisories) = run_prepared(
+            "entry-invalid-byte-trivia",
+            &format!("{{ effort: {effort} }}"),
+        );
+        assert!(advisories.is_empty(), "{advisories:?}");
+        assert_eq!(findings.len(), 1, "{findings:?}");
+        assert_eq!(findings[0].file, "next.config.ts");
+        assert!(
+            findings[0]
+                .message
+                .contains("redirect destination '/missing'"),
+            "{findings:?}"
+        );
+        assert!(
+            !findings[0].message.contains("could not parse"),
+            "{findings:?}"
+        );
     }
 }

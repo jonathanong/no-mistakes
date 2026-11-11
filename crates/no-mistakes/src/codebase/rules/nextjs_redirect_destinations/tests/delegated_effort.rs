@@ -194,9 +194,9 @@ fn unresolved_delegates_respect_entry_config_suppressions_in_both_channels() {
 }
 
 #[test]
-fn resolved_delegate_read_and_parse_errors_follow_policy_at_both_efforts() {
+fn resolved_delegate_invalid_code_and_parse_errors_follow_policy_at_both_efforts() {
     for (fixture, error) in [
-        ("fail-delegate-read", "utf-8"),
+        ("fail-delegate-read", "File appears to be binary"),
         ("fail-delegate-parse", "failed to parse"),
     ] {
         for effort in ["low", "max"] {

@@ -90,10 +90,10 @@
     "expected": null
   },
   {
-    "name": "unreadable declaration text",
+    "name": "invalid UTF-8 declaration resolves for parser diagnostics",
     "specifier": "./relative/binary.d.ts",
     "importer": "src/main.ts",
-    "expected": null
+    "expected": "src/relative/binary.d.ts"
   },
   {
     "name": "declaration path is directory",
@@ -492,9 +492,9 @@
     "importer": "src/main.ts"
   },
   {
-    "name": "unreadable runtime declaration never permits @types",
+    "name": "invalid UTF-8 runtime declaration remains authoritative over @types",
     "specifier": "runtime-unreadable",
-    "expected": null,
+    "expected": "node_modules/runtime-unreadable/index.d.ts",
     "importer": "src/main.ts"
   },
   {
@@ -702,9 +702,9 @@
     "importer": "src/main.ts"
   },
   {
-    "name": "unreadable explicit types target is unknown",
+    "name": "invalid UTF-8 explicit types target resolves for parser diagnostics",
     "specifier": "unreadable-types",
-    "expected": null,
+    "expected": "node_modules/unreadable-types/index.d.ts",
     "importer": "src/main.ts"
   },
   {

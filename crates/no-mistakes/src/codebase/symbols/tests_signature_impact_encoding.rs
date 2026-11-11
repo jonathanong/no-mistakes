@@ -99,6 +99,8 @@ fn signature_impact_rejects_potentially_related_unanalyzed_files() {
         "importer-dependency",
         "opaque-barrel",
         "opaque-reexport",
+        "opaque-renamed-barrel",
+        "opaque-namespace-barrel",
     ] {
         let fixture = encoding_fixture(case);
         let root = fixture.path().canonicalize().unwrap();
@@ -114,3 +116,16 @@ fn signature_impact_rejects_potentially_related_unanalyzed_files() {
 }
 
 include!("tests_signature_impact_encoding_text.rs");
+
+#[test]
+fn signature_impact_rejects_target_parse_failure_before_export_projection() {
+    let fixture = encoding_fixture("invalid-target");
+    let root = fixture.path().canonicalize().unwrap();
+    let error = impact::report_json(encoding_args(&root)).unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("signature-impact could not analyze `target.mts`"),
+        "{error}"
+    );
+}

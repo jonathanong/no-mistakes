@@ -39,7 +39,7 @@ pub(crate) fn resolve_source(
                 return None;
             }
             let path = contained(&root, &target.path, true).ok()?;
-            sources.read_path(&path).ok()?;
+            SourceStore::read_prepared_or_open(Some(sources), &path).ok()?;
             if found.as_ref().is_some_and(|prior| prior != &path) {
                 return None;
             }

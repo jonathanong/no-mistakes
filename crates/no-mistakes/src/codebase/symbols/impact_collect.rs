@@ -28,7 +28,7 @@ fn build_report_from_prepared(
         graph,
         facts,
     } = context;
-    let unanalyzed = signature_impact_unanalyzed(context, target_file, symbol)?;
+    ensure_signature_impact_target_analyzed(context, target_file)?;
     let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
         graph_files.iter_visible().cloned(),
     );
@@ -63,6 +63,7 @@ fn build_report_from_prepared(
         export_paths(graph, facts, &target, symbol, root, &definition, interner);
     let target_symbols =
         signature_target_symbols(target_file, symbol, &export_nodes, &visible_files, facts);
+    let unanalyzed = signature_impact_unanalyzed(context, target_file, &exports)?;
     let file_import_edges = HashSet::from([EdgeKind::DynamicImport, EdgeKind::Require]);
     let mut file_entry_target_symbols: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     for root_path in interned_file_root_paths(&export_nodes, target_file) {

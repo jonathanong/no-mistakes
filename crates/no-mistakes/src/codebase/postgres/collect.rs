@@ -166,7 +166,7 @@ pub(super) fn read_source(
     sources: &SourceStore,
 ) -> Result<std::sync::Arc<str>, PostgresFactError> {
     sources
-        .read_path(path)
+        .read_source_path(path)
         .map_err(|error| PostgresFactError::for_path(path, format!("failed to read: {error}")))
 }
 

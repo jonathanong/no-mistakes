@@ -26,7 +26,7 @@ pub(super) fn cached_config_file_facts(
             })
             .filter(|path| universe.contains(path) || plan.legacy_symbol_paths.contains(*path))
             .filter_map(|path| {
-                let source = sources.read_path(path).ok()?;
+                let source = sources.read_source_path(path).ok()?;
                 let variants = [super::super::file::CheckFactVariant {
                     collect_tests: session.collect_tests(plan, path),
                     root,

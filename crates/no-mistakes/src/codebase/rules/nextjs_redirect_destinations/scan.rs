@@ -53,7 +53,7 @@ fn scan_target(
         return AnalysisDiagnostics::default();
     };
     let rel = relative_slash_path(root, &config_path);
-    let source = match sources.read_path(&config_path) {
+    let source = match sources.read_source_path(&config_path) {
         Ok(source) => source,
         Err(error) => {
             return entry_failure(analysis, &rel, 1, format!("could not read config: {error}"));

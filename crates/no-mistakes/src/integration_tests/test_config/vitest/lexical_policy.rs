@@ -83,7 +83,7 @@ impl<'a> Reader<'a> {
         }
         let result = self
             .sources
-            .read_path(path)
+            .read_source_path(path)
             .ok()
             .and_then(|source| {
                 let programs = self.programs.clone();

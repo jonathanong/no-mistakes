@@ -9,9 +9,16 @@ impl SourceStore {
         sources: Option<&Self>,
         path: &Path,
     ) -> super::SourceReadOutcome {
+        let read = |store: &Self| {
+            if crate::codebase::dependencies::extract::is_indexable(path) {
+                store.read_source_path(path)
+            } else {
+                store.read_path(path)
+            }
+        };
         match sources {
-            Some(store) => store.read_path(path),
-            None => one_file_store(path).read_path(path),
+            Some(store) => read(store),
+            None => read(&one_file_store(path)),
         }
     }
 

@@ -1,7 +1,28 @@
+fn ensure_signature_impact_target_analyzed(
+    context: &PreparedReportContext<'_>,
+    target_file: &Path,
+) -> Result<()> {
+    if let Some(reason) = context.facts.get(target_file).and_then(|facts| {
+        facts
+            .operational_error
+            .as_ref()
+            .or(facts.parse_error.as_ref())
+    }) {
+        ensure_signature_impact_failure_unrelated(
+            &UnanalyzedFile {
+                file: relative_slash_path(context.root, target_file),
+                reason: reason.clone(),
+            },
+            true,
+        )?;
+    }
+    Ok(())
+}
+
 fn signature_impact_unanalyzed(
     context: &PreparedReportContext<'_>,
     target_file: &Path,
-    symbol: &str,
+    exports: &[SymbolLocation],
 ) -> Result<Vec<UnanalyzedFile>> {
     let mut failures = context
         .facts
@@ -27,7 +48,11 @@ fn signature_impact_unanalyzed(
     if failures.is_empty() {
         return Ok(Vec::new());
     }
-    let relevant = signature_impact_relevant_files(context, target_file, symbol);
+    let names = exports
+        .iter()
+        .map(|export| export.symbol.clone())
+        .collect::<BTreeSet<_>>();
+    let relevant = signature_impact_relevant_files(context, target_file, &names);
     for (path, facts, failure) in &failures {
         ensure_signature_impact_failure_unrelated(
             failure,
@@ -36,7 +61,7 @@ fn signature_impact_unanalyzed(
                 || facts
                     .source
                     .as_ref()
-                    .is_some_and(|source| source.contains(symbol)),
+                    .is_some_and(|source| names.iter().any(|name| source.contains(name.as_str()))),
         )?;
     }
     Ok(failures
@@ -62,7 +87,7 @@ fn ensure_signature_impact_failure_unrelated(
 fn signature_impact_relevant_files(
     context: &PreparedReportContext<'_>,
     target_file: &Path,
-    symbol: &str,
+    names: &BTreeSet<String>,
 ) -> BTreeSet<PathBuf> {
     let target = NodeId::file_in(context.session.interner(), target_file);
     let allowed = signature_impact_edges();
@@ -70,15 +95,14 @@ fn signature_impact_relevant_files(
     roots.extend(context.facts.iter().filter_map(|(path, facts)| {
         let imports_target = facts.symbols.as_ref().is_some_and(|symbols| {
             symbols.imports.iter().any(|import| {
-                import.imported == symbol
+                names.contains(&import.imported)
                     || (import.imported == "*"
-                        && facts
-                            .source
-                            .as_ref()
-                            .is_some_and(|source| source.contains(symbol)))
+                        && facts.source.as_ref().is_some_and(|source| {
+                            names.iter().any(|name| source.contains(name.as_str()))
+                        }))
             }) || symbols.exports.iter().any(|export| {
                 matches!(&export.kind, ExportKind::ReExport { imported, .. }
-                    if imported == symbol || export.name == symbol)
+                    if names.contains(imported) || names.contains(&export.name))
             })
         });
         imports_target.then(|| NodeId::file_in(context.session.interner(), path))

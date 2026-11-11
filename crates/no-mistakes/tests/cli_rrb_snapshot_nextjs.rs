@@ -43,6 +43,12 @@ fn nextjs_redirect_destinations_json_matches_snapshot() {
         "nextjs_redirect_destinations",
         &[
             redirect("pass", "pass", max),
+            redirect("invalid_byte_trivia", "entry-invalid-byte-trivia", max),
+            redirect(
+                "invalid_byte_trivia_low",
+                "entry-invalid-byte-trivia",
+                ".no-mistakes-low.yml",
+            ),
             redirect("missing", "fail-missing", max),
             redirect("missing_low", "fail-missing", ".no-mistakes-low.yml"),
             redirect("rewrite_fail", "rewrite-fail", max),

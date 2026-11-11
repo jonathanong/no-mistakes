@@ -91,7 +91,7 @@ pub(super) fn append_delegated(request: &DelegateRequest<'_>) -> AnalysisDiagnos
         }
         return diagnostics;
     };
-    let delegated_source = match request.sources.read_path(&delegated) {
+    let delegated_source = match request.sources.read_source_path(&delegated) {
         Ok(source) => source,
         Err(error) => {
             return delegation_error(request, line, &delegated, "read", &error.to_string())
