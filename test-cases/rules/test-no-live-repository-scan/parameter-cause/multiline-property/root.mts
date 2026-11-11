@@ -9,7 +9,7 @@ function renamed(options: { directory: string }) {
 function positional(root: string) {
   return readdirSync(root)
 }
-function bounded(options: { root: string }) {
+function bounded(options: { root: URL }) {
   return readdirSync(options.root)
 }
 
@@ -27,5 +27,5 @@ positional(
   directory,
 )
 bounded({
-  root: new URL('./fixtures', import.meta.url).pathname,
+  root: new URL('./fixtures', import.meta.url),
 })

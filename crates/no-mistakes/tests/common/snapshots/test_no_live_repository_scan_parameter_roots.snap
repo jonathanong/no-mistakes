@@ -355,7 +355,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/list.mts",
           "import": "readdirSync",
           "line": 9,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/list.test.mts:13 passes `{ outputRoot: \"/var/empty/no-such-live-root\" }`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/list.test.mts:13 passes `\"/var/empty/no-such-live-root\"`, a live path, as property `outputRoot`. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(join(dir, root), { withFileTypes: true }).map((entry) => {",
           "target": "unresolved root"
