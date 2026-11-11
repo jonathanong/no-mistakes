@@ -64,3 +64,20 @@ fn multiline_arguments_name_the_selected_value_and_its_line() {
         );
     }
 }
+
+#[test]
+fn temporary_directory_parent_stays_unproven() {
+    let root = root("temp-climbs");
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--format", "json", "--root"])
+        .arg(&root)
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let advisories = report["advisories"].as_array().unwrap();
+    assert!(report["rules"].as_array().unwrap().is_empty(), "{report}");
+    assert_eq!(advisories.len(), 1, "{report}");
+    assert_eq!(advisories[0]["file"], "root.mts");
+    assert_eq!(advisories[0]["line"], 4);
+    assert_eq!(advisories[0]["target"], "unresolved root");
+}
