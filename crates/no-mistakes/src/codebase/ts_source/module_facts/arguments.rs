@@ -127,12 +127,3 @@ struct Projector<'a, 's> {
     immutable: &'s mut AliasSafety,
     temp_factories: &'s path_origin::TempFactories,
 }
-impl Projector<'_, '_> {
-    fn take(&mut self) -> bool {
-        if self.remaining == 0 {
-            return false;
-        }
-        self.remaining -= 1;
-        true
-    }
-}
