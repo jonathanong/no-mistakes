@@ -112,8 +112,18 @@ function main() {
   const args = ["build", "--locked", "-p", "no-mistakes", "--timings", "--verbose"];
   const timed = process.platform === "darwin";
   const command = timed ? "/usr/bin/time" : "cargo";
+  // Normalize Cargo signals before BSD time handles them; see docs/development/ci-builds.md.
   const commandArgs = timed
-    ? ["-l", "-o", path.join(directory, "time.txt"), "cargo", ...args]
+    ? [
+        "-l",
+        "-o",
+        path.join(directory, "time.txt"),
+        "/bin/sh",
+        "-c",
+        'cargo "$@"; status=$?; exit "$status"',
+        "native-build",
+        ...args,
+      ]
     : args;
   const log = fs.createWriteStream(path.join(directory, "cargo.log"));
   const started = Date.now();

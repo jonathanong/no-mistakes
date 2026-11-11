@@ -94,6 +94,9 @@ The native build wrapper retains Cargo's verbose output and `--timings` report,
 the Rust cache-hit result, compiler/linker versions, runner image and CPU/memory
 metadata, and periodic local compiler/linker CPU and RSS samples. macOS also
 records `/usr/bin/time -l` wall/user/system time and peak RSS for completed builds.
+A small shell converts Cargo signal termination to its conventional failing exit
+status before BSD `time` observes it. This preserves a killed Cargo command's
+status instead of BSD `time` returning its own signal-handling error.
 The `native-build-diagnostics-*` artifact is uploaded after failed or cancelled
 builds as well; a killed build may lack a terminal resource record. Those partial
 samples remain diagnostic evidence, not completed-run resource maxima. Build
