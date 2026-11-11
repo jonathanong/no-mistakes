@@ -5,10 +5,10 @@ use crate::codebase::ts_source::{FileInventory, SourceStore};
 
 #[test]
 fn panicked_variants_preserve_declared_source_without_ast_facts_or_extra_reads() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/symbols/signature-impact-encoding/tolerated")
-        .canonicalize()
-        .unwrap();
+    let saved = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/symbols/signature-impact-encoding/tolerated");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    let root = fixture.path().canonicalize().unwrap();
     let path = root.join("comment.mts");
     let sources = SourceStore::new(Arc::new(FileInventory::from_paths(std::slice::from_ref(
         &path,
