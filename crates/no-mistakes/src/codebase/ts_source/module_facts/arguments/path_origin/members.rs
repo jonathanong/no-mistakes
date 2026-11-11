@@ -74,18 +74,9 @@ impl<'a> Projector<'a, '_> {
                 let origin = self.member_origin(returned, key, depth + 1)?;
                 accept_parameterized(parameterized, origin)
             }
-            Expression::AwaitExpression(awaited) => {
-                if key == "path" {
-                    if let Expression::CallExpression(call) =
-                        awaited.argument.get_inner_expression()
-                    {
-                        if self.disposable_factory(call, true) {
-                            return Some(super::composite::disposable_origin(call));
-                        }
-                    }
-                }
-                self.member_origin(&awaited.argument, key, depth + 1)
-            }
+            Expression::AwaitExpression(awaited) => self
+                .awaited_disposable_origin(awaited, key)
+                .or_else(|| self.member_origin(&awaited.argument, key, depth + 1)),
             _ => None,
         }
     }

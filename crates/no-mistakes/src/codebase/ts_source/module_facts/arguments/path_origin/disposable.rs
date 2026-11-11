@@ -1,6 +1,21 @@
 use super::*;
 
 impl<'a> Projector<'a, '_> {
+    pub(super) fn awaited_disposable_origin(
+        &mut self,
+        awaited: &AwaitExpression<'a>,
+        key: &str,
+    ) -> Option<PathOrigin> {
+        if key != "path" {
+            return None;
+        }
+        let Expression::CallExpression(call) = awaited.argument.get_inner_expression() else {
+            return None;
+        };
+        self.disposable_factory(call, true)
+            .then(|| super::super::composite::disposable_origin(call))
+    }
+
     pub(super) fn disposable_factory(
         &mut self,
         call: &CallExpression<'a>,
