@@ -6,3 +6,6 @@ export async function runX() {
   assert.deepEqual(await listPage(), []);
 }
 export async function withoutAssertion() { await listPage(); }
+
+export async function throwsWithoutAssertion() { throw new Error('stop before owner'); }
+export async function withArgument(_input: unknown) { await runX(); }

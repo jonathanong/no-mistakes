@@ -366,6 +366,7 @@ fn production_scenario_table_reaches_default_member_assertions() {
         "mixed-first",
         "mixed-last",
         "direct-module",
+        "literal-catch",
         ".no-mistakes",
     ] {
         let report = check_json(&root, config);
@@ -417,9 +418,36 @@ fn scenario_table_guards_and_policy_check_json_snapshot() {
             "earlierEscapeLoop",
             "earlierMutationLoop",
             "opaqueWithoutOwner",
-            "onlyOpaque"
+            "onlyOpaque",
+            "exitingCatch",
+            "abortingCatch",
+            "exitingCatchWithCode",
+            "aliasedExitingCatch"
         ],
         "{report}"
+    );
+    let boundaries = check_json(&root, "boundaries");
+    assert!(boundaries["rules"].as_array().unwrap().is_empty());
+    let boundary_targets: Vec<_> = boundaries["advisories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| finding["target"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        boundary_targets,
+        [
+            "excessiveBody",
+            "nestedReceiver",
+            "sourceReceiver",
+            "rowArgument",
+            "unrelatedBody",
+            "structuredCatch",
+            "factoryTable",
+            "nestedMetadata",
+            "localCallback",
+        ],
+        "{boundaries}"
     );
     let cases: Vec<_> = [
         ".no-mistakes",
@@ -430,8 +458,10 @@ fn scenario_table_guards_and_policy_check_json_snapshot() {
         "mixed-first",
         "mixed-last",
         "direct-module",
+        "literal-catch",
         "no-owner",
         "guards",
+        "boundaries",
     ]
     .into_iter()
     .map(|name| (name, root.clone(), root.join(format!("{name}.yml"))))

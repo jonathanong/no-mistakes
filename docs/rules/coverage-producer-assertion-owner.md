@@ -314,11 +314,21 @@ export function opaque(items: number[], fn: (item: number) => void) { items.map(
 
 A narrow production scenario table can supply an owner through a `for...of`
 loop: a local or module-private `const` literal array of at most 32 plain object rows, with the
-called field naming a static import. The loop uses a simple `const` identifier
+called field naming a static import. Other row fields must contain primitive
+metadata; nested objects and additional callbacks remain unproven. Local
+callback aliases and factory-returned tables are also outside this projection.
+The loop uses a simple `const` identifier
 and invokes that row member with no arguments in an unconditional expression
 or `await` expression. Plain blocks and a `try` body with a non-abrupt catch are
-supported. This projects opt-in `assertion-owner` edges; ordinary call reports
-retain their existing output.
+supported. Catch-side methods named `exit` or `abort` are excluded regardless of
+receiver, including `process.exit()`, `process.abort()`, and namespace aliases:
+they may terminate before a later row executes. Record the error in the catch
+and validate the collected failures after the loop, or call scenarios directly.
+This projects opt-in `assertion-owner` edges; ordinary call reports retain their
+existing output. Catch calls accept identifier or literal arguments, such as
+`errors.push(error)` or `errors.push('scenario failed')`; structured argument
+expressions remain unproven. Bodies exceeding 128 statement checks also remain
+unproven; split larger runners into smaller direct calls.
 
 Dynamic, escaped, or mutated tables, array destructuring, empty tables or entries
 never called, row shadowing or reassignment, filters, early exits, and unsupported

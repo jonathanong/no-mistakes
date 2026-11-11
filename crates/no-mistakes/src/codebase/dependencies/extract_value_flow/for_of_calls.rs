@@ -37,6 +37,9 @@ fn statements(
             let Expression::Identifier(receiver) = &member.object else {
                 return false;
             };
+            if !project && matches!(member.property.name.as_str(), "exit" | "abort") {
+                return false;
+            }
             if Some(receiver.name.as_str()) == source {
                 return false;
             }

@@ -25,6 +25,10 @@ rules:
         - { file: scripts/runner/guards.mts, symbol: earlierMutationLoop }
         - { file: scripts/runner/guards.mts, symbol: opaqueWithoutOwner }
         - { file: scripts/runner/guards.mts, symbol: onlyOpaque }
+        - { file: scripts/runner/guards.mts, symbol: exitingCatch }
+        - { file: scripts/runner/guards.mts, symbol: abortingCatch }
+        - { file: scripts/runner/guards.mts, symbol: exitingCatchWithCode }
+        - { file: scripts/runner/guards.mts, symbol: aliasedExitingCatch }
       assertions:
         - { module: "node:assert/strict", export: ok }
         - { module: "node:assert/strict", export: equal }

@@ -1,7 +1,8 @@
+import * as proc from 'node:process';
 import { opaque } from '../../scenarios/opaque.mts';
 import { gracefulShutdown } from '@fixture/shutdown';
 import { mutate } from 'fixture-runtime';
-import { runX, withoutAssertion } from '../../scenarios/run-x.mts';
+import { runX, withoutAssertion, throwsWithoutAssertion } from '../../scenarios/run-x.mts';
 
 export async function dynamic(table: any) {
   for (const scenario of table) await scenario.run();
@@ -118,5 +119,36 @@ export async function opaqueWithoutOwner() {
 export async function onlyOpaque() {
   const table = [{ run: opaque }];
   for (const row of table) await row.run();
+  await gracefulShutdown();
+}
+
+export async function exitingCatch() {
+  const table = [{ run: throwsWithoutAssertion }, { run: runX }];
+  for (const row of table) {
+    try { await row.run(); } catch { process.exit(); }
+  }
+  await gracefulShutdown();
+}
+export async function abortingCatch() {
+  const table = [{ run: throwsWithoutAssertion }, { run: runX }];
+  for (const row of table) {
+    try { await row.run(); } catch { process.abort(); }
+  }
+  await gracefulShutdown();
+}
+
+export async function exitingCatchWithCode() {
+  const table = [{ run: throwsWithoutAssertion }, { run: runX }];
+  for (const row of table) {
+    try { await row.run(); } catch { process.exit(1); }
+  }
+  await gracefulShutdown();
+}
+
+export async function aliasedExitingCatch() {
+  const table = [{ run: throwsWithoutAssertion }, { run: runX }];
+  for (const row of table) {
+    try { await row.run(); } catch { proc.exit(); }
+  }
   await gracefulShutdown();
 }
