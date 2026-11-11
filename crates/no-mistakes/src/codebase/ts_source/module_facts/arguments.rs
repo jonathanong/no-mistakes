@@ -2,6 +2,7 @@
 use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::{ast::*, AstKind};
 use oxc_semantic::Semantic;
+use serde_json::Value;
 mod aliases;
 use aliases::AliasSafety;
 mod path_origin;
@@ -120,14 +121,4 @@ struct Projector<'a, 's> {
     exported: &'s FxHashSet<usize>,
     immutable: &'s mut AliasSafety,
     temp_factories: &'s path_origin::TempFactories,
-}
-
-impl Projector<'_, '_> {
-    fn take(&mut self) -> bool {
-        if self.remaining == 0 {
-            return false;
-        }
-        self.remaining -= 1;
-        true
-    }
 }
