@@ -6,6 +6,7 @@ use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 use crate::codebase::workspaces::IndexedWorkspaceMap;
 use std::path::{Path, PathBuf};
 
+#[derive(Clone)]
 pub(super) struct RouteHit {
     pub(super) file: PathBuf,
     pub(super) start: u32,

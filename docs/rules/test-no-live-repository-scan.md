@@ -688,7 +688,9 @@ setup files. Every such path must supply an owned fixture or `mkdtemp` root.
 A production or CLI caller outside those paths does not invalidate that proof,
 including a caller that supplies a repository path, forwards through a helper,
 or reads its root from CLI arguments. The same rule applies to a destructured
-root such as `check({ root, paths })`.
+root such as `check({ root, paths })`. Explicit `file` or `glob` roots use the
+same execution scope: the conservative environment-write fallback used when no
+runner config is selected does not add unrelated production callers.
 
 Calling production code from a test makes that path relevant. A test that calls
 `production()` when `production(root = process.cwd())` forwards to the scanner

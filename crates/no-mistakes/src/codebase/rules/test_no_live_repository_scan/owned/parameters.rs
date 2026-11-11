@@ -34,7 +34,7 @@ impl Owners<'_> {
                         &site.file,
                         name,
                         facts,
-                        &self.consumed,
+                        &self.environment_consumed,
                         &self.fixture_dirs,
                     )
                     || self.setups.owns(
@@ -42,7 +42,7 @@ impl Owners<'_> {
                         name,
                         facts,
                         &self.imported,
-                        &self.consumed,
+                        &self.environment_consumed,
                         &self.fixture_dirs,
                     )
             })

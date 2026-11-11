@@ -4,7 +4,7 @@ use crate::codebase::ts_resolver::normalize_path;
 use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(super) struct ScanMemo {
     cache: FxHashMap<PathBuf, Vec<usize>>,
     pub(in super::super) walks: u64,

@@ -7,6 +7,15 @@ const CASES: &[&str] = &[
     "destructured",
     "forwarding",
     "cli",
+    "cli-guarded",
+    "explicit-roots",
+    "explicit-destructured",
+    "explicit-cli",
+    "global-setup-escape",
+    "explicit-roots-imported",
+    "explicit-roots-live",
+    "explicit-roots-unknown",
+    "explicit-roots-loader",
     "production-default",
     "production-owned",
     "production-module",
@@ -51,7 +60,12 @@ fn test_no_live_repository_scan_only_test_originating_callers_decide_ownership()
             .collect();
         let expected = usize::from(matches!(
             *name,
-            "production-default"
+            "global-setup-escape"
+                | "explicit-roots-imported"
+                | "explicit-roots-live"
+                | "explicit-roots-unknown"
+                | "explicit-roots-loader"
+                | "production-default"
                 | "production-module"
                 | "live-test"
                 | "unknown-test"

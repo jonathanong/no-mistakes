@@ -71,6 +71,7 @@ pub(super) struct Owners<'g> {
     escaped: escapes::Escapes,
     /// Files consumed other than by named static imports used only as calls.
     consumed: consumers::Consumed,
+    environment_consumed: consumers::Consumed,
     graph: &'g DepGraph,
     /// Test files, setupFiles, globalSetup, and their import closure.
     test_closure: FxHashSet<PathBuf>,
@@ -121,18 +122,12 @@ impl<'g> Owners<'g> {
             }
         }
         let relevant_files = &scope.files;
-        let mut caller_files = scope.test_closure.clone();
-        caller_files.extend(
-            scope
-                .sources
-                .iter()
-                .filter_map(NodeId::as_file)
-                .map(std::path::Path::to_path_buf),
-        );
+        let mut caller_files = scope.proof_files.clone();
         caller_files.extend(scope.config_files.iter().flatten().cloned());
         let escaped = escapes::Escapes::new(facts, graph_files, &caller_files);
-        let consumed =
-            consumers::Consumed::new(graph, facts, graph_files, &caller_files, resolution);
+        let environment_consumed =
+            consumers::Consumed::new(graph, facts, graph_files, relevant_files, resolution);
+        let consumed = environment_consumed.narrowed(&caller_files);
         Self {
             callers,
             nodes,
@@ -156,7 +151,18 @@ impl<'g> Owners<'g> {
             fixture_dirs: environment.fixture_dirs,
             escaped,
             consumed,
+            environment_consumed,
         }
+    }
+
+    /// A named function, referenced only as a direct callee, in a module
+    /// every consumer imports by name and only calls.
+    fn proven_target(&self, source: &NodeId) -> bool {
+        let NodeId::Symbol { file, symbol, .. } = source else {
+            return false;
+        };
+        !self.escaped.contains(file, symbol)
+            && !symbol_block::blocks(&self.environment_consumed, file, symbol)
     }
 
     pub(super) fn report_scan_stats(&self) {
