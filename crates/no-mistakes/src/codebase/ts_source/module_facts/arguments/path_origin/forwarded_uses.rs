@@ -46,3 +46,21 @@ fn known_path_read(semantic: &Semantic<'_>, call: &CallExpression<'_>) -> bool {
             if matches!(import.source.value.as_str(), Some("node:path" | "path")))
     })
 }
+
+pub(super) fn later_write_repeats(semantic: &Semantic<'_>, node: NodeId, offset: u32) -> bool {
+    let nodes = semantic.nodes();
+    if nodes.kind(nodes.parent_id(node)).span().end < offset {
+        return false;
+    }
+    nodes.ancestors(node).any(|ancestor| {
+        matches!(
+            ancestor.kind(),
+            AstKind::ForStatement(_)
+                | AstKind::ForInStatement(_)
+                | AstKind::ForOfStatement(_)
+                | AstKind::WhileStatement(_)
+                | AstKind::DoWhileStatement(_)
+        ) && ancestor.kind().span().start <= offset
+            && offset < ancestor.kind().span().end
+    })
+}

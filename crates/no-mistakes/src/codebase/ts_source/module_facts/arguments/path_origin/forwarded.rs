@@ -140,10 +140,13 @@ impl<'a> Projector<'a, '_> {
                         {
                             return None;
                         }
-                        if position.value as usize == index
-                            && assignment.span.end < self.call_offset
-                        {
-                            writes.push((semantic.nodes().parent_id(parent.id()), assignment));
+                        if position.value as usize == index {
+                            if uses::later_write_repeats(semantic, parent.id(), self.call_offset) {
+                                return None;
+                            }
+                            if assignment.span.end < self.call_offset {
+                                writes.push((semantic.nodes().parent_id(parent.id()), assignment));
+                            }
                         }
                     } else if !uses::slot_read_safe(semantic, parent.id()) {
                         return None;

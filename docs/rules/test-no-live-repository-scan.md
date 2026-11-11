@@ -731,7 +731,10 @@ spreads and a helper's rest parameter can carry an owned root to an enumerator.
 For object spreads, the last property wins: `{ ...inputs, outputRoot: root }`
 retains the explicit owned root, while `{ outputRoot: root, ...inputs }` stays
 unresolved when `inputs` is unknown. Writes to a rest slot are followed in source
-order; a conditional write also retains the unchanged input alternative.
+order; a conditional write also retains the unchanged input alternative. A slot
+write after an enumeration in the same loop keeps the root unresolved because
+the next iteration can read that write. Pass an owned root directly at the
+enumeration to avoid relying on mutable forwarded arguments across iterations.
 
 A destructuring default applies only when a caller demonstrably omits that
 property. A whole-parameter default other than `{}` is not used to prove a

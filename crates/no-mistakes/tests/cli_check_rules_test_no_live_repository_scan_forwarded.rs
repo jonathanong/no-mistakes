@@ -1,6 +1,14 @@
 use std::path::PathBuf;
 
 const CASES: &[&str] = &[
+    "rest-after-loop-owned",
+    "rest-loop-other-slot-owned",
+    "rest-for-backedge-live",
+    "rest-while-backedge-live",
+    "rest-do-backedge-live",
+    "rest-for-in-backedge-live",
+    "rest-for-of-backedge-live",
+    "rest-straight-after-owned",
     "nullish-spread-owned",
     "nullish-empty-spread-owned",
     "nullish-spread-unknown",
@@ -145,6 +153,9 @@ fn forwarded_roots_check_json_snapshot() {
 
 fn forwarded_roots_preserve_positive_and_negative_controls(reports: &serde_json::Value) {
     let allowed = [
+        "rest-after-loop-owned",
+        "rest-loop-other-slot-owned",
+        "rest-straight-after-owned",
         "nullish-spread-owned",
         "nullish-empty-spread-owned",
         "nullish-nested-owned",
