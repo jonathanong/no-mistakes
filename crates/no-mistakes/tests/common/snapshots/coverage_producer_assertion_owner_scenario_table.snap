@@ -26,6 +26,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "direct-module": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "direct-object": {
     "exitCode": 0,
     "report": {
@@ -69,7 +81,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
               "detail": "external call has no ownership model",
               "file": "scripts/runner/guards.mts",
               "kind": "unresolved-dispatch",
-              "line": 101,
+              "line": 102,
               "sourceLine": "for (const row of table) { mutate(row); }"
             },
             {
@@ -85,13 +97,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
               "detail": "callee target is unknown",
               "file": "scripts/runner/guards.mts",
               "kind": "unresolved-dispatch",
-              "line": 102,
+              "line": 103,
               "sourceLine": "for (const row of table) { await row.run(); }"
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 99,
-          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:101 callee `mutate` (external call has no ownership model); unresolved dispatch at scripts/runner/guards.mts:102 callee `row.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#earlierEscapeLoop",
+          "line": 100,
+          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:102 callee `mutate` (external call has no ownership model); unresolved dispatch at scripts/runner/guards.mts:103 callee `row.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#earlierEscapeLoop",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function earlierEscapeLoop() {",
           "target": "earlierEscapeLoop"
@@ -111,7 +123,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
               "detail": "external call has no ownership model",
               "file": "scripts/runner/guards.mts",
               "kind": "unresolved-dispatch",
-              "line": 17,
+              "line": 18,
               "sourceLine": "mutate(table);"
             },
             {
@@ -127,13 +139,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
               "detail": "callee target is unknown",
               "file": "scripts/runner/guards.mts",
               "kind": "unresolved-dispatch",
-              "line": 18,
+              "line": 19,
               "sourceLine": "for (const scenario of table) await scenario.run();"
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 15,
-          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:17 callee `mutate` (external call has no ownership model); unresolved dispatch at scripts/runner/guards.mts:18 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#escaped",
+          "line": 16,
+          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:18 callee `mutate` (external call has no ownership model); unresolved dispatch at scripts/runner/guards.mts:19 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#escaped",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function escaped() {",
           "target": "escaped"
@@ -161,16 +173,84 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
               "detail": "callee target is unknown",
               "file": "scripts/runner/guards.mts",
               "kind": "unresolved-dispatch",
-              "line": 108,
+              "line": 109,
               "sourceLine": "for (const row of table) { await row.run(); }"
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 105,
-          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:108 callee `row.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#earlierMutationLoop",
+          "line": 106,
+          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:109 callee `row.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#earlierMutationLoop",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function earlierMutationLoop() {",
           "target": "earlierMutationLoop"
+        },
+        {
+          "causes": [
+            {
+              "callee": "deps.onError",
+              "detail": "callee target is unknown",
+              "file": "packages/shutdown/src/index.mts",
+              "kind": "unresolved-dispatch",
+              "line": 8,
+              "sourceLine": "for (const error of errors) deps.onError?.(error);"
+            },
+            {
+              "callee": "registry.close",
+              "detail": "callee target is unknown",
+              "file": "packages/shutdown/src/index.mts",
+              "kind": "unresolved-dispatch",
+              "line": 7,
+              "sourceLine": "const errors = await registry.close(deps);"
+            },
+            {
+              "callee": "row.run",
+              "detail": "callee target is unknown",
+              "file": "scripts/runner/guards.mts",
+              "kind": "unresolved-dispatch",
+              "line": 115,
+              "sourceLine": "for (const row of table) await row.run();"
+            }
+          ],
+          "file": "scripts/runner/guards.mts",
+          "line": 113,
+          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:115 callee `row.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#opaqueWithoutOwner",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export async function opaqueWithoutOwner() {",
+          "target": "opaqueWithoutOwner"
+        },
+        {
+          "causes": [
+            {
+              "callee": "deps.onError",
+              "detail": "callee target is unknown",
+              "file": "packages/shutdown/src/index.mts",
+              "kind": "unresolved-dispatch",
+              "line": 8,
+              "sourceLine": "for (const error of errors) deps.onError?.(error);"
+            },
+            {
+              "callee": "registry.close",
+              "detail": "callee target is unknown",
+              "file": "packages/shutdown/src/index.mts",
+              "kind": "unresolved-dispatch",
+              "line": 7,
+              "sourceLine": "const errors = await registry.close(deps);"
+            },
+            {
+              "callee": "row.run",
+              "detail": "callee target is unknown",
+              "file": "scripts/runner/guards.mts",
+              "kind": "unresolved-dispatch",
+              "line": 120,
+              "sourceLine": "for (const row of table) await row.run();"
+            }
+          ],
+          "file": "scripts/runner/guards.mts",
+          "line": 118,
+          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:120 callee `row.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#onlyOpaque",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export async function onlyOpaque() {",
+          "target": "onlyOpaque"
         },
         {
           "causes": [
@@ -195,13 +275,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
               "detail": "callee target is unknown",
               "file": "scripts/runner/guards.mts",
               "kind": "unresolved-dispatch",
-              "line": 12,
+              "line": 13,
               "sourceLine": "for (const scenario of table) await scenario.run();"
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 9,
-          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:12 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#mutated",
+          "line": 10,
+          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:13 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#mutated",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function mutated() {",
           "target": "mutated"
@@ -229,13 +309,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
               "detail": "callee target is unknown",
               "file": "scripts/runner/guards.mts",
               "kind": "unresolved-dispatch",
-              "line": 23,
+              "line": 24,
               "sourceLine": "for (const scenario of table) await scenario.run();"
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 21,
-          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:23 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#empty",
+          "line": 22,
+          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:24 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#empty",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function empty() {",
           "target": "empty"
@@ -263,13 +343,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
               "detail": "callee target is unknown",
               "file": "scripts/runner/guards.mts",
               "kind": "unresolved-dispatch",
-              "line": 38,
+              "line": 39,
               "sourceLine": "for (const scenario of table) { await scenario.run(); break; }"
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 36,
-          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:38 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#earlyBreak",
+          "line": 37,
+          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:39 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#earlyBreak",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function earlyBreak() {",
           "target": "earlyBreak"
@@ -297,13 +377,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
               "detail": "callee target is unknown",
               "file": "scripts/runner/guards.mts",
               "kind": "unresolved-dispatch",
-              "line": 47,
+              "line": 48,
               "sourceLine": "for (const scenario of table) { if (scenario.enabled) await scenario.run(); }"
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 45,
-          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:47 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#filtered",
+          "line": 46,
+          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:48 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#filtered",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function filtered() {",
           "target": "filtered"
@@ -331,13 +411,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
               "detail": "callee target is unknown",
               "file": "scripts/runner/guards.mts",
               "kind": "unresolved-dispatch",
-              "line": 59,
+              "line": 60,
               "sourceLine": "for (const scenario of table) { scenario.run = withoutAssertion; await scenario.run(); }"
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 57,
-          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:59 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#overwrittenRow",
+          "line": 58,
+          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:60 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#overwrittenRow",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function overwrittenRow() {",
           "target": "overwrittenRow"
@@ -365,13 +445,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
               "detail": "callee target is unknown",
               "file": "scripts/runner/guards.mts",
               "kind": "unresolved-dispatch",
-              "line": 6,
+              "line": 7,
               "sourceLine": "for (const scenario of table) await scenario.run();"
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 5,
-          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:6 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#dynamic",
+          "line": 6,
+          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:7 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#dynamic",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function dynamic(table: any) {",
           "target": "dynamic"
@@ -399,13 +479,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
               "detail": "callee target is unknown",
               "file": "scripts/runner/guards.mts",
               "kind": "unresolved-dispatch",
-              "line": 71,
+              "line": 72,
               "sourceLine": "for (const scenario of alias) await scenario.run();"
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 68,
-          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:71 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#aliasedTable",
+          "line": 69,
+          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:72 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#aliasedTable",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function aliasedTable() {",
           "target": "aliasedTable"
@@ -433,13 +513,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
               "detail": "callee target is unknown",
               "file": "scripts/runner/guards.mts",
               "kind": "unresolved-dispatch",
-              "line": 75,
+              "line": 76,
               "sourceLine": "for (const scenario of [null, { run: runX }]) await scenario.run();"
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 74,
-          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:75 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#malformedRow",
+          "line": 75,
+          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:76 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#malformedRow",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function malformedRow() {",
           "target": "malformedRow"
@@ -467,13 +547,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
               "detail": "callee target is unknown",
               "file": "scripts/runner/guards.mts",
               "kind": "unresolved-dispatch",
-              "line": 81,
+              "line": 82,
               "sourceLine": "for (const scenario of MUTATED_GLOBAL) await scenario.run();"
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 80,
-          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:81 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#globalMutated",
+          "line": 81,
+          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:82 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#globalMutated",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function globalMutated() {",
           "target": "globalMutated"
@@ -501,13 +581,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
               "detail": "callee target is unknown",
               "file": "scripts/runner/guards.mts",
               "kind": "unresolved-dispatch",
-              "line": 87,
+              "line": 88,
               "sourceLine": "for (const scenario of ESCAPED_GLOBAL) await scenario.run();"
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 86,
-          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:87 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#globalEscaped",
+          "line": 87,
+          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:88 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#globalEscaped",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function globalEscaped() {",
           "target": "globalEscaped"
@@ -535,13 +615,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
               "detail": "callee target is unknown",
               "file": "scripts/runner/guards.mts",
               "kind": "unresolved-dispatch",
-              "line": 94,
+              "line": 95,
               "sourceLine": "for (const scenario of table) await scenario.run();"
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 91,
-          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:94 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#captured",
+          "line": 92,
+          "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); unresolved dispatch at scripts/runner/guards.mts:95 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#captured",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function captured() {",
           "target": "captured"
@@ -566,7 +646,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 26,
+          "line": 27,
           "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#uninvoked",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function uninvoked() {",
@@ -592,7 +672,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 31,
+          "line": 32,
           "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#firstDestructured",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function firstDestructured() {",
@@ -618,7 +698,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 50,
+          "line": 51,
           "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#shadowed",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function shadowed() {",
@@ -631,13 +711,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
               "detail": "callee target is unknown",
               "file": "scripts/runner/guards.mts",
               "kind": "unresolved-dispatch",
-              "line": 43,
+              "line": 44,
               "sourceLine": "for (const scenario of table) { await scenario.run(); return; }"
             }
           ],
           "file": "scripts/runner/guards.mts",
-          "line": 41,
-          "message": "unanalyzable coverage producer: unresolved dispatch at scripts/runner/guards.mts:43 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#earlyReturn",
+          "line": 42,
+          "message": "unanalyzable coverage producer: unresolved dispatch at scripts/runner/guards.mts:44 callee `scenario.run` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/guards.mts#earlyReturn",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function earlyReturn() {",
           "target": "earlyReturn"
@@ -652,6 +732,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "inline-table": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "mixed-first": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "mixed-last": {
     "exitCode": 0,
     "report": {
       "advisories": [],
@@ -687,7 +791,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
             }
           ],
           "file": "scripts/runner/run.mts",
-          "line": 26,
+          "line": 28,
           "message": "unanalyzable coverage producer: unresolved dispatch at packages/shutdown/src/index.mts:7 callee `registry.close` (callee target is unknown); unresolved dispatch at packages/shutdown/src/index.mts:8 callee `deps.onError` (callee target is unknown); model the dispatch ownership, rewrite it statically, or adjust the named traversal limit: scripts/runner/run.mts#noOwner",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function noOwner() {",

@@ -1,0 +1,27 @@
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    severity: error
+    options:
+      unanalyzable: advise
+      producers:
+        - { file: scripts/runner/run.mts, symbol: mixedFirst }
+      assertions:
+        - { module: "node:assert/strict", export: ok }
+        - { module: "node:assert/strict", export: equal }
+        - { module: "node:assert/strict", export: notEqual }
+        - { module: "node:assert/strict", export: deepEqual }
+        - { module: "node:assert/strict", export: notDeepEqual }
+        - { module: "node:assert/strict", export: strictEqual }
+        - { module: "node:assert/strict", export: notStrictEqual }
+        - { module: "node:assert/strict", export: deepStrictEqual }
+        - { module: "node:assert/strict", export: notDeepStrictEqual }
+        - { module: "node:assert/strict", export: fail }
+        - { module: "node:assert/strict", export: ifError }
+        - { module: "node:assert/strict", export: match }
+        - { module: "node:assert/strict", export: doesNotMatch }
+        - { module: "node:assert/strict", export: throws }
+        - { module: "node:assert/strict", export: doesNotThrow }
+        - { module: "node:assert/strict", export: rejects }
+        - { module: "node:assert/strict", export: doesNotReject }
+        - { module: "node:assert/strict", export: partialDeepStrictEqual }

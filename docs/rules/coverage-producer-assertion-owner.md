@@ -320,11 +320,13 @@ or `await` expression. Plain blocks and a `try` body with a non-abrupt catch are
 supported. This projects opt-in `assertion-owner` edges; ordinary call reports
 retain their existing output.
 
-Dynamic, escaped, or mutated tables, array destructuring, empty or uninvoked
-tables, row shadowing or reassignment, filters, early exits, and unsupported
+Dynamic, escaped, or mutated tables, array destructuring, empty tables or entries
+never called, row shadowing or reassignment, filters, early exits, and unsupported
 loop-body statements do not establish an owner through this projection. Table
 contents alone never prove that an unused callback executes. Incomplete cleanup
-calls still cannot undo an assertion reached through a proven scenario.
+calls still cannot undo an assertion reached through a proven scenario. A table
+with both known and unresolved callbacks retains its known assertion owners;
+without a known owner, unresolved rows still follow `unanalyzable`.
 
 Stored callbacks remain dispatch even on proven built-ins. For example,
 `const handler = handlers.get('check'); handler?.()` stays uncertain when

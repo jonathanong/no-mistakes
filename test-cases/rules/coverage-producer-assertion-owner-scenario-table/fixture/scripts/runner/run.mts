@@ -1,3 +1,5 @@
+import { equal } from 'node:assert/strict';
+import { opaque } from '../../scenarios/opaque.mts';
 import { gracefulShutdown } from '@fixture/shutdown';
 import { runX, withoutAssertion } from '../../scenarios/run-x.mts';
 
@@ -31,5 +33,21 @@ export async function noOwner() {
 
 export async function inlineTable() {
   for (const scenario of [{ run: runX }]) await scenario.run();
+  await gracefulShutdown();
+}
+
+export async function mixedFirst() {
+  const table = [{ run: opaque }, { run: runX }];
+  for (const row of table) await row.run();
+  await gracefulShutdown();
+}
+export async function mixedLast() {
+  const table = [{ run: runX }, { run: opaque }];
+  for (const row of table) await row.run();
+  await gracefulShutdown();
+}
+export async function directModuleOwner() {
+  const table = [{ run: equal }];
+  for (const row of table) await row.run();
   await gracefulShutdown();
 }

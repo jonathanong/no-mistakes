@@ -1,3 +1,4 @@
+import { opaque } from '../../scenarios/opaque.mts';
 import { gracefulShutdown } from '@fixture/shutdown';
 import { mutate } from 'fixture-runtime';
 import { runX, withoutAssertion } from '../../scenarios/run-x.mts';
@@ -106,5 +107,16 @@ export async function earlierMutationLoop() {
   const table = [{ run: runX }];
   for (const row of table) { row.run = withoutAssertion; }
   for (const row of table) { await row.run(); }
+  await gracefulShutdown();
+}
+
+export async function opaqueWithoutOwner() {
+  const table = [{ run: opaque }, { run: withoutAssertion }];
+  for (const row of table) await row.run();
+  await gracefulShutdown();
+}
+export async function onlyOpaque() {
+  const table = [{ run: opaque }];
+  for (const row of table) await row.run();
   await gracefulShutdown();
 }

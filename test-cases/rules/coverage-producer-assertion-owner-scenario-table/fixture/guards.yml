@@ -23,6 +23,8 @@ rules:
         - { file: scripts/runner/guards.mts, symbol: captured }
         - { file: scripts/runner/guards.mts, symbol: earlierEscapeLoop }
         - { file: scripts/runner/guards.mts, symbol: earlierMutationLoop }
+        - { file: scripts/runner/guards.mts, symbol: opaqueWithoutOwner }
+        - { file: scripts/runner/guards.mts, symbol: onlyOpaque }
       assertions:
         - { module: "node:assert/strict", export: ok }
         - { module: "node:assert/strict", export: equal }

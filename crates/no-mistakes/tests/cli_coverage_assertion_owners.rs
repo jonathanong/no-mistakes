@@ -363,6 +363,9 @@ fn production_scenario_table_reaches_default_member_assertions() {
         "direct-object",
         "inline-table",
         "global-private",
+        "mixed-first",
+        "mixed-last",
+        "direct-module",
         ".no-mistakes",
     ] {
         let report = check_json(&root, config);
@@ -412,7 +415,9 @@ fn scenario_table_guards_and_policy_check_json_snapshot() {
             "globalEscaped",
             "captured",
             "earlierEscapeLoop",
-            "earlierMutationLoop"
+            "earlierMutationLoop",
+            "opaqueWithoutOwner",
+            "onlyOpaque"
         ],
         "{report}"
     );
@@ -422,6 +427,9 @@ fn scenario_table_guards_and_policy_check_json_snapshot() {
         "direct-object",
         "inline-table",
         "global-private",
+        "mixed-first",
+        "mixed-last",
+        "direct-module",
         "no-owner",
         "guards",
     ]

@@ -51,6 +51,17 @@ fn scenario_ownership_projection_preserves_ordinary_call_queries() {
     assert!(projected
         .target_nodes()
         .any(|node| matches!(node, NodeId::Symbol { symbol, .. } if symbol.as_ref() == "runX")));
+    for caller in ["mixedFirst", "mixedLast"] {
+        let mixed = ownership
+            .assertion_call_sites()
+            .iter()
+            .find(|site| site.caller.as_deref() == Some(caller) && site.source_callee == "row.run")
+            .unwrap();
+        assert!(mixed.has_unknown_target());
+        assert!(mixed.target_nodes().any(
+            |node| matches!(node, NodeId::Symbol { symbol, .. } if symbol.as_ref() == "runX")
+        ));
+    }
     let source = NodeId::callable(&main.file, "main", main.caller_id.unwrap());
     let calls = |graph: &DepGraph| {
         graph
