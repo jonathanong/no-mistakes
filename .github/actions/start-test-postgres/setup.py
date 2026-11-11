@@ -28,6 +28,7 @@ class CommandFailure(RuntimeError):
     def __init__(self, command: list[str], result: subprocess.CompletedProcess[str]):
         super().__init__(f"command failed ({result.returncode}): {' '.join(command)}\n{result.stdout}{result.stderr}")
         self.transcript = result.stdout + result.stderr
+        self.returncode = result.returncode
 
 
 def replace_azure_source(text: str, kind: str) -> str:
@@ -103,28 +104,44 @@ class Installer:
             raise CommandFailure(command, result)
         return result
 
-    def _install_recovery_mirror(self) -> int:
+    def _azure_sources(self):
         candidates = [
             self.sources_dir / "sources.list",
             self.sources_dir / "apt-mirrors.txt",
             *self.sources_dir.glob("sources.list.d/*"),
         ]
-        staging = Path(self.temp.name) / "rewritten"
-        staging.mkdir(exist_ok=True)
-        changed = 0
-        for index, path in enumerate(candidates):
+        for path in candidates:
             if not path.is_file() or path.is_symlink() or path.suffix not in ("", ".list", ".sources", ".txt"):
                 continue
             kind = "mirror-list" if path.name == "apt-mirrors.txt" else "sources" if path.suffix == ".sources" else "list"
             original = path.read_text()
             updated = replace_azure_source(original, kind)
-            if updated == original:
-                continue
+            if updated != original:
+                yield path, updated
+
+    def _install_recovery_mirror(self) -> int:
+        staging = Path(self.temp.name) / "rewritten"
+        staging.mkdir(exist_ok=True)
+        changed = 0
+        for index, (path, updated) in enumerate(self._azure_sources()):
             staged = staging / str(index)
             staged.write_text(updated)
             self._run(["install", "-m", "0644", str(staged), str(path)], privileged=True)
             changed += 1
         return changed
+
+    def _probe_mirror_dns(self) -> None:
+        if not any(self._azure_sources()):
+            return
+        try:
+            self._run(["timeout", "--kill-after=1s", "5s", "getent", "ahosts", "azure.archive.ubuntu.com"])
+        except CommandFailure as error:
+            if error.returncode not in (2, 124):
+                raise
+            self.recovery_used = True
+            print("Azure Ubuntu mirror DNS unavailable; selecting the canonical archive", flush=True)
+            if not self._install_recovery_mirror():
+                raise
 
     def _run_apt(self, args: list[str]) -> None:
         command = ["env", f"APT_CONFIG={self.apt_config}", "DEBIAN_FRONTEND=noninteractive", *args]
@@ -192,6 +209,7 @@ class Installer:
             'APT::Update::Error-Mode "any";\n'
         )
         self._configure_pgdg()
+        self._probe_mirror_dns()
         self._run_apt(["apt-get", "update"])
         self._run_apt(["apt-get", "install", "-y", "postgresql-18"])
         if not installed(self.root, self.runner):
