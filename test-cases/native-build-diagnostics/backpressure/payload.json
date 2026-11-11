@@ -1,0 +1,6 @@
+{
+  "chunks": 64,
+  "chunkBytes": 8192,
+  "stdoutPrefix": "stdout",
+  "stderrPrefix": "stderr"
+}
