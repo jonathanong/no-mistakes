@@ -520,7 +520,22 @@ jobs:
 
       - name: Run timeout-policy browser tests
         timeout-minutes: 5
-        run: pnpm run test:timeout-policy-browser
+        env:
+          SDK_CHILD_RECEIPT_FILE: ${{ runner.temp }}/timeout-policy-browser/receipts.jsonl
+          SDK_CHILD_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/timeout-policy-browser"
+          pnpm run test:timeout-policy-browser
+
+      - name: Upload timeout-policy browser lifecycle
+        if: ${{ always() }}
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: timeout-policy-browser-lifecycle
+          path: ${{ runner.temp }}/timeout-policy-browser
+          if-no-files-found: warn
+          retention-days: 7
 
   native-tests:
     name: Native tests (${{ matrix.name }})

@@ -1,5 +1,6 @@
 
       import { browserTestTimeoutPolicyPlugin } from {{0}}
+      import { installBrowserLifecycleReceipts, recordBrowserLifecycle, observeBrowserProvider } from {{8}}
       {{1}}
       import { playwright } from '@vitest/browser-playwright'
       import { configDefaults } from 'vitest/config'
@@ -16,6 +17,7 @@
             typeof value === 'string' ? value : 'lifecycle'),
         }))
         lifecycle.onUserConsoleLog = (log) => appendFileSync('browser-console.log', log.content)
+        installBrowserLifecycleReceipts(lifecycle)
         return configured
       }
       policy.resolveId = (source, importer) => {
@@ -31,11 +33,16 @@
         resolve: { alias: {{5}} },
         plugins: [policy, {{6}} {
           name: 'public-browser-routing-receipt', enforce: 'post',
-          configureServer(value) { server = value },
+          configureServer(value) {
+            server = value
+            recordBrowserLifecycle('vite-server-configured')
+            value.httpServer?.once('close', () => recordBrowserLifecycle('vite-http-server-close'))
+          },
           transform(code, id) {
             if (id.includes('storybook-registrar')) appendFileSync('registrar-source.jsonl', JSON.stringify({ id, code }) + '\n')
             if (server && this.environment.name === 'client' &&
                 (id.includes('case.test.mts') || id.includes('example.stories.mjs') || id.includes('tester-'))) {
+              recordBrowserLifecycle('client-transform', { moduleId: id })
               appendFileSync('optimizer.jsonl', JSON.stringify({
                 phase: 'client-transform', moduleId: id,
                 server: server.config.optimizeDeps,
@@ -48,6 +55,6 @@
           },
         }],
         test: { testTimeout: {{7}}, hookTimeout: 5000,
-          browser: { enabled: true, provider: playwright(), headless: true,
+          browser: { enabled: true, provider: observeBrowserProvider(playwright()), headless: true,
             instances: [{ browser: 'chromium' }] } },
       }

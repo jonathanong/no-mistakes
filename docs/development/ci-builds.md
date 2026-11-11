@@ -55,6 +55,24 @@ python3 -m unittest discover -s .github/actions/start-test-postgres -p 'test_*.p
 These tests run in the lint job. The standalone library, coverage, and release
 jobs still start a real isolated server before running their catalog tests.
 
+Browser timeout-policy qualification retains its 18 acceptance and rejection
+cases, 15-second Browser Mode and 20-second Storybook child watchdogs, and
+30-second parent test deadlines. Its CI artifact records separate output byte
+counts, child exit versus pipe closure, process-group drainage, public reporter
+and provider lifecycle boundaries, and bounded owned-process snapshots near a
+watchdog termination. Receipt metadata identifies the source, runtime, SDK
+versions, runner image, and available CPUs. Diagnostic failures do not replace
+policy failures or authorize removal of resources whose group has not drained.
+
+[Historical observations](../../test-cases/browser-child-lifecycle/historical-run.json)
+retain both attempts of run `43016434597`: two watchdog terminations followed
+by 18 passes on the same source, Node version, and runner image. Those killed
+samples are censored. Their test durations do not identify the failed child
+stage or establish completed runtime or resource maxima. The passing 4 ms
+Chromium body in one killed child does not establish that shutdown completed.
+The three outer test files can launch independent browser children concurrently;
+each child's `--maxWorkers=1` only bounds that child's SDK workers.
+
 The real-addon API steps load `inline-owned-member-api.test.js` through
 `real-napi-api.test.js` on Linux, macOS, and Windows with
 `NO_MISTAKES_TEST_NAPI_ADDON_PATH` pointing to the compiled addon. This exercises async CJS/ESM method-acquisition parity; ordinary

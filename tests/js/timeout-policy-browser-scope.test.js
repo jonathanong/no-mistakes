@@ -255,6 +255,30 @@ test("CI installs Chromium only on the path-filtered browser job", () => {
   assert.notEqual(run({ changed: "false", result: "failure" }).status, 0);
 });
 
+test("browser qualification retains lifecycle artifacts after failures within existing deadlines", () => {
+  const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
+  const job = workflow.match(/^ {2}timeout-policy-browser-tests:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
+  assert.ok(job);
+  assert.match(job, /timeout-minutes: 20/);
+  assert.match(
+    job,
+    /SDK_CHILD_RECEIPT_FILE: \$\{\{ runner.temp \}\}\/timeout-policy-browser\/receipts.jsonl/,
+  );
+  assert.match(
+    job,
+    /SDK_CHILD_HEAD_SHA: \$\{\{ github.event.pull_request.head.sha \|\| github.sha \}\}/,
+  );
+  assert.match(job, /mkdir -p "\$RUNNER_TEMP\/timeout-policy-browser"/);
+  assert.match(job, /pnpm run test:timeout-policy-browser/);
+  const upload = job.split("- name: Upload timeout-policy browser lifecycle\n")[1];
+  assert.ok(upload);
+  assert.match(upload, /if: \$\{\{ always\(\) \}\}/);
+  assert.match(upload, /timeout-minutes: 2/);
+  assert.match(upload, /uses: actions\/upload-artifact@[a-f0-9]{40} # v7/);
+  assert.match(upload, /path: \$\{\{ runner.temp \}\}\/timeout-policy-browser/);
+  assert.match(upload, /retention-days: 7/);
+});
+
 test("release validation gives browser and other JavaScript tests separate timeouts", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
   const js = workflow.match(/^ {2}validate-js:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
