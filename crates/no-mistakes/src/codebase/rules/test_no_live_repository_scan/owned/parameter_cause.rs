@@ -1,8 +1,9 @@
 //! The parameter-root walk. A failure names the caller or route that stopped it.
 use super::cause::{missing_caller, Cause, CauseKind, Ownership};
+use super::parameters::Parameter;
 use super::Owners;
 use crate::codebase::dependencies::graph::{NodeId, ResolvedCallSite, TsFactLookup};
-use crate::codebase::ts_source::module_facts::arguments::{PathAnchor, PathOrigin};
+use crate::codebase::ts_source::module_facts::arguments::{PathAnchor, PathDefault, PathOrigin};
 use crate::fx::FxHashSet;
 
 impl Owners<'_> {
@@ -98,7 +99,7 @@ impl Owners<'_> {
     ) -> Result<(), Cause> {
         let source = self
             .parameter_source(origin, site)
-            .ok_or_else(|| not_named(site, origin))?;
+            .ok_or_else(|| step::not_named(site, origin))?;
         let start = source.clone();
         let declared = origin.owner_line.unwrap_or(1);
         let mut pending = vec![(
@@ -107,13 +108,20 @@ impl Owners<'_> {
             origin.param_member.clone(),
             declared,
             origin.param_default.clone(),
+            origin.relative,
         )];
         let mut seen = FxHashSet::default();
         let mut seeded = false;
         let mut forwarded = None;
         let mut blocker = None;
-        while let Some((source, index, member, line, default)) = pending.pop() {
-            if !seen.insert((source.clone(), index, member.clone(), default.clone())) {
+        while let Some((source, index, member, line, default, relative)) = pending.pop() {
+            if !seen.insert((
+                source.clone(),
+                index,
+                member.clone(),
+                default.clone(),
+                relative,
+            )) {
                 continue;
             }
             let Some(module) = source.as_file() else {
@@ -146,9 +154,12 @@ impl Owners<'_> {
             for caller in callers.iter().copied() {
                 let steps = self.caller_steps(
                     caller,
-                    index,
-                    member.as_deref(),
-                    default.as_deref(),
+                    Parameter {
+                        index,
+                        member: member.as_deref(),
+                        default: default.as_ref(),
+                        relative,
+                    },
                     facts,
                     fixture_dirs,
                 );
@@ -163,9 +174,17 @@ impl Owners<'_> {
                             cause,
                             next_line,
                             next_default,
+                            next_relative,
                         ) => {
                             forwarded = Some(cause);
-                            pending.push((next, next_index, next_member, next_line, next_default));
+                            pending.push((
+                                next,
+                                next_index,
+                                next_member,
+                                next_line,
+                                next_default,
+                                next_relative,
+                            ));
                         }
                     }
                 }
@@ -179,7 +198,7 @@ impl Owners<'_> {
     }
 }
 
-enum Step {
+pub(super) enum Step {
     Block(Cause),
     Seed,
     Follow(
@@ -188,17 +207,13 @@ enum Step {
         Option<String>,
         Cause,
         u32,
-        Option<Box<PathOrigin>>,
+        Option<PathDefault>,
+        bool,
     ),
 }
 
 #[path = "parameter_cause_step.rs"]
-mod step;
-
-fn not_named(site: &ResolvedCallSite, origin: &PathOrigin) -> Cause {
-    let line = origin.owner_line.unwrap_or(1);
-    Cause::new(CauseKind::NotNamedFunction, site.file.clone(), line, "")
-}
+pub(super) mod step;
 
 #[cfg(test)]
 #[path = "parameter_cause/tests.rs"]

@@ -1,7 +1,8 @@
 //! One caller of a parameter root: seed, block, or follow that caller's parameter.
 use super::super::cause::{Cause, CauseKind};
 use super::super::parameters::{
-    argument_omitted, argument_path, argument_present, argument_text, unproven_argument,
+    argument_missing_member, argument_omitted, argument_path, argument_present, argument_text,
+    unproven_argument, Parameter,
 };
 use super::super::{path_provenance, Owners};
 use super::Step;
@@ -9,18 +10,24 @@ use crate::codebase::dependencies::graph::{ResolvedCallSite, TsFactLookup};
 use crate::codebase::rules::test_no_live_repository_scan::provenance::{
     arg_block, classify, live_or_variable, missing_block, ArgBlock, Verdict,
 };
-use crate::codebase::ts_source::module_facts::arguments::{ArgumentText, PathOrigin, PathProvenance};
+use crate::codebase::ts_source::module_facts::arguments::{
+    ArgumentText, PathOrigin, PathProvenance,
+};
 
 impl Owners<'_> {
-    pub(super) fn caller_steps(
+    pub(in super::super) fn caller_steps(
         &self,
         caller: &ResolvedCallSite,
-        index: usize,
-        member: Option<&str>,
-        default: Option<&PathOrigin>,
+        parameter: Parameter<'_>,
         facts: &dyn TsFactLookup,
         fixture_dirs: &[&str],
     ) -> Vec<Step> {
+        let Parameter {
+            index,
+            member,
+            default,
+            relative,
+        } = parameter;
         let empty = PathProvenance::default();
         let provenance = facts
             .get_ts_facts(&caller.file)
@@ -41,7 +48,9 @@ impl Owners<'_> {
                     }
                     let mut atom = atom.clone();
                     atom.param_member = Some(member.to_owned());
-                    atom.param_default = default.cloned().map(Box::new);
+                    atom.param_default = default.map(|default| {
+                        super::super::defaults::forward_default(default, index, &atom)
+                    });
                     Some(atom)
                 })
                 .collect::<Option<Vec<_>>>()?;
@@ -50,15 +59,45 @@ impl Owners<'_> {
         let argument = argument.or(forwarded.as_ref());
         let present = argument_present(provenance, caller.offset, index);
         let text = argument_text(provenance, caller.offset, index, member);
-        let closed = provenance
-            .arg_closed_objects
-            .get(&caller.offset)
-            .is_some_and(|positions| positions.contains(&index));
-        let argument = argument.or_else(|| {
-            (argument_omitted(provenance, caller.offset, index) || (member.is_some() && closed))
-                .then_some(default)
-                .flatten()
-        });
+        let use_default = argument.is_none()
+            && (argument_omitted(provenance, caller.offset, index)
+                || member.is_some_and(|member| {
+                    argument_missing_member(
+                        provenance,
+                        caller.offset,
+                        index,
+                        member,
+                        default.is_some_and(|fallback| fallback.nullish),
+                    )
+                }))
+            || argument.is_some_and(|argument| argument.nullish)
+                && default.is_some_and(|fallback| fallback.nullish);
+        if use_default {
+            if let Some(default) = default {
+                let steps = self.fallback_steps(
+                    default,
+                    caller,
+                    Parameter {
+                        index,
+                        member,
+                        default: Some(default),
+                        relative,
+                    },
+                    facts,
+                    fixture_dirs,
+                );
+                return steps
+                    .into_iter()
+                    .map(|step| {
+                        if !present && matches!(step, Step::Block(_)) {
+                            Step::Block(caller_cause(caller, ArgBlock::Omitted, text))
+                        } else {
+                            step
+                        }
+                    })
+                    .collect();
+            }
+        }
         if argument.is_none() {
             if let Some(observed) = unproven_argument(provenance, caller.offset, index) {
                 if matches!(classify(Some(observed), fixture_dirs), Verdict::Live(_)) {
@@ -77,9 +116,11 @@ impl Owners<'_> {
             .atoms()
             .iter()
             .map(|argument| {
-                let step = self.argument_step(argument, caller, facts, fixture_dirs, text.clone());
+                let mut argument = argument.clone();
+                argument.relative |= relative;
+                let step = self.argument_step(&argument, caller, facts, fixture_dirs, text);
                 if !present && matches!(step, Step::Block(_)) {
-                    Step::Block(caller_cause(caller, ArgBlock::Omitted, text.clone()))
+                    Step::Block(caller_cause(caller, ArgBlock::Omitted, text))
                 } else {
                     step
                 }
@@ -87,7 +128,7 @@ impl Owners<'_> {
             .collect()
     }
 
-    fn argument_step(
+    pub(in super::super) fn argument_step(
         &self,
         argument: &PathOrigin,
         caller: &ResolvedCallSite,
@@ -95,6 +136,9 @@ impl Owners<'_> {
         fixture_dirs: &[&str],
         text: Option<&ArgumentText>,
     ) -> Step {
+        if argument.relative && argument.env.is_some() {
+            return Step::Block(caller_cause(caller, ArgBlock::Variable, text));
+        }
         if let Some(block) = arg_block(argument, fixture_dirs) {
             return Step::Block(caller_cause(caller, block, text));
         }
@@ -124,11 +168,16 @@ impl Owners<'_> {
             caller_cause(caller, ArgBlock::Forwarded, text),
             argument.owner_line.unwrap_or(caller.line),
             argument.param_default.clone(),
+            argument.relative,
         )
     }
 }
 
-fn caller_cause(caller: &ResolvedCallSite, block: ArgBlock, text: Option<&ArgumentText>) -> Cause {
+pub(in super::super) fn caller_cause(
+    caller: &ResolvedCallSite,
+    block: ArgBlock,
+    text: Option<&ArgumentText>,
+) -> Cause {
     let kind = match block {
         ArgBlock::Live => CauseKind::LivePath,
         ArgBlock::Omitted => CauseKind::OmittedArgument,
@@ -142,4 +191,9 @@ fn caller_cause(caller: &ResolvedCallSite, block: ArgBlock, text: Option<&Argume
         text.map_or("", |argument| argument.text.as_str()),
     )
     .with_property(text.and_then(|argument| argument.property.clone()))
+}
+
+pub(super) fn not_named(site: &ResolvedCallSite, origin: &PathOrigin) -> Cause {
+    let line = origin.owner_line.unwrap_or(1);
+    Cause::new(CauseKind::NotNamedFunction, site.file.clone(), line, "")
 }

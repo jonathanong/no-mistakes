@@ -10,6 +10,7 @@ mod consumers;
 #[cfg(test)]
 #[path = "owned/coverage/tests.rs"]
 mod coverage;
+mod defaults;
 mod entry_memo;
 pub(super) mod env;
 mod env_query;

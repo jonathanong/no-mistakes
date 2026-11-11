@@ -39,6 +39,8 @@ pub(crate) enum PathAnchor {
 /// Static provenance of a path-valued expression; it never evaluates code.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct PathOrigin {
+    pub(crate) relative: bool,
+    pub(crate) nullish: bool,
     pub(crate) anchor: PathAnchor,
     /// Literal segments in source order, anchor excluded.
     pub(crate) segments: Vec<String>,
@@ -59,7 +61,13 @@ pub(crate) struct PathOrigin {
     /// stays unset, so caller-proof acceptance is unchanged.
     pub(crate) reassigned_at: Option<u32>,
     pub(crate) alternatives: Vec<PathOrigin>,
-    pub(crate) param_default: Option<Box<PathOrigin>>,
+    pub(crate) param_default: Option<PathDefault>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub(crate) struct PathDefault {
+    pub(crate) value: Box<PathOrigin>,
+    pub(crate) nullish: bool,
 }
 
 /// Where a `process.env` write sits relative to the code it must dominate.
@@ -100,6 +108,7 @@ pub(crate) struct ArgumentText {
 pub(crate) struct PathProvenance {
     pub(crate) arg_counts: FxHashMap<u32, Option<usize>>,
     pub(crate) arg_closed_objects: FxHashMap<u32, Vec<usize>>,
+    pub(crate) arg_closed_members: FxHashMap<u32, Vec<(usize, String)>>,
     pub(crate) arg_member_paths: FxHashMap<u32, Vec<(usize, String, PathOrigin)>>,
     pub(crate) arg_paths: FxHashMap<u32, Vec<(usize, PathOrigin)>>,
     /// Calls that forward their enclosing mock implementation's rest arguments unchanged.

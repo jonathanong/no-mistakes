@@ -1,0 +1,669 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "disjoint-trailing-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "glob-absolute-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/count.mts",
+          "import": "globSync",
+          "line": 5,
+          "message": "unresolved root: `globSync` enumerates a directory whose root is a parameter, but tests/root.test.mts:7 passes `{ root: \"/var/live\" }`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return globSync(\"**/*\", { cwd: projectRoot });",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "glob-climb-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/count.mts",
+          "import": "globSync",
+          "line": 5,
+          "message": "unresolved root: `globSync` enumerates a directory whose root is a parameter, but tests/root.test.mts:7 passes `{ root: \"../repo\" }`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return globSync(\"**/*\", { cwd: projectRoot });",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "glob-dot-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "glob-dotted-key-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/count.mts",
+          "import": "globSync",
+          "line": 5,
+          "message": "unresolved root: `globSync` enumerates a directory whose root is a parameter, but tests/root.test.mts:7 passes `{ test: { root: \"tests\" }, \"test.root\": process.cwd() }`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return globSync(\"**/*\", { cwd: projectRoot });",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "glob-nested-absolute-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/count.mts",
+          "import": "globSync",
+          "line": 5,
+          "message": "unresolved root: `globSync` enumerates a directory whose root is a parameter, but tests/root.test.mts:7 passes `{ test: { root: \"/var/live\" } }`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return globSync(\"**/*\", { cwd: projectRoot });",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "glob-nested-climb-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/count.mts",
+          "import": "globSync",
+          "line": 5,
+          "message": "unresolved root: `globSync` enumerates a directory whose root is a parameter, but tests/root.test.mts:7 passes `{ test: { root: \"../repo\" } }`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return globSync(\"**/*\", { cwd: projectRoot });",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "glob-nested-dot-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "glob-nested-null-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "glob-nested-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "glob-nested-unknown-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/count.mts",
+          "import": "globSync",
+          "line": 5,
+          "message": "unresolved root: `globSync` enumerates a directory whose root is a parameter, but tests/root.test.mts:7 passes `{ test: unknownProject }`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return globSync(\"**/*\", { cwd: projectRoot });",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "glob-null-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "glob-owned-env-suffix-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/count.mts",
+          "import": "globSync",
+          "line": 5,
+          "message": "unresolved root: `globSync` enumerates a directory whose root is a parameter, but tests/root.test.mts:9 passes `{ root: process.env.SCAN_PROJECT_ROOT }`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return globSync(\"**/*\", { cwd: projectRoot });",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "glob-relative-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "glob-undefined-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "glob-unknown-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/count.mts",
+          "import": "globSync",
+          "line": 5,
+          "message": "unresolved root: `globSync` enumerates a directory whose root is a parameter, but tests/root.test.mts:7 passes `unknownProject`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return globSync(\"**/*\", { cwd: projectRoot });",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "opaque-trailing-unknown": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/writer.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but src/main.mts:2 passes `{ outputRoot, consumerRoot, check, ...inputs }`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(outputRoot);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "override-trailing-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/writer.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but src/main.mts:2 passes `{ outputRoot, consumerRoot, check, ...inputs }`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(outputRoot);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "rest-leading-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "rest-live-caller": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/writer.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/root.test.mts:6 passes `{ outputRoot: process.cwd(), consumerRoot: root, check: false, language: \"ts\" }`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(outputRoot);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "rest-trailing-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema-both-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema-direct-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema-entry-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema-explicit-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/writer.mts",
+          "import": "readdirSync",
+          "line": 2,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/root.test.mts:7 passes `{ outputDir: root, schemaDir: process.cwd() }`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function writeResources({ outputDir, schemaDir }) { return readdirSync(schemaDir); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema-missing-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/writer.mts",
+          "import": "readdirSync",
+          "line": 2,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/root.test.mts:7 passes `{ outputDir: root }`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function writeResources({ outputDir, schemaDir }) { return readdirSync(schemaDir); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema-mixed-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/writer.mts",
+          "import": "readdirSync",
+          "line": 2,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/root.test.mts:8 passes `{ outputDir: root, schemaDir: process.cwd() }`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function writeResources({ outputDir, schemaDir }) { return readdirSync(schemaDir); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema-null-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/writer.mts",
+          "import": "readdirSync",
+          "line": 2,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/root.test.mts:7 passes `{ outputDir: root, schemaDir: null }`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function writeResources({ outputDir, schemaDir }) { return readdirSync(schemaDir); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema-or-empty-live": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/main.mts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "live repository scan: `readdirSync` enumerates a path under process.cwd(), and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(paths.schemaDir || process.cwd());",
+          "target": "live repository scan"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "schema-rest-default-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/writer.mts",
+          "import": "readdirSync",
+          "line": 2,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but src/main.mts:3 passes `{ outputDir, schemaDir: paths.schemaDir ?? DEFAULT_SCHEMA_DIR }`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function writeResources({ outputDir, schemaDir }) { return readdirSync(schemaDir); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema-rest-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/writer.mts",
+          "import": "readdirSync",
+          "line": 2,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/root.test.mts:7 passes `{ outputDir: root, schemaDir: process.cwd() }`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function writeResources({ outputDir, schemaDir }) { return readdirSync(schemaDir); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema-rest-local-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema-rest-mutated-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/writer.mts",
+          "import": "readdirSync",
+          "line": 2,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but src/main.mts:3 passes `{ outputDir, schemaDir: paths.schemaDir ?? DEFAULT_SCHEMA_DIR }`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function writeResources({ outputDir, schemaDir }) { return readdirSync(schemaDir); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema-rest-param-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema-rest-unknown": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/writer.mts",
+          "import": "readdirSync",
+          "line": 2,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/root.test.mts:7 passes `{ outputDir: root, schemaDir: unknownSchema }`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function writeResources({ outputDir, schemaDir }) { return readdirSync(schemaDir); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema-undefined-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/writer.mts",
+          "import": "readdirSync",
+          "line": 2,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/root.test.mts:7 passes `{ outputDir: root, schemaDir: undefined }`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function writeResources({ outputDir, schemaDir }) { return readdirSync(schemaDir); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema-unknown-live": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/writer.mts",
+          "import": "readdirSync",
+          "line": 2,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/root.test.mts:7 passes `{ outputDir: root, schemaDir: unknownSchema }`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function writeResources({ outputDir, schemaDir }) { return readdirSync(schemaDir); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

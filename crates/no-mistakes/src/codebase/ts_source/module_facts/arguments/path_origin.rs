@@ -14,6 +14,7 @@ mod forwarded;
 mod members;
 mod nullish;
 mod object_paths;
+mod object_rest;
 mod origins;
 mod patterns;
 mod positions;
@@ -30,6 +31,10 @@ impl<'a> Projector<'a, '_> {
             return PathOrigin::unknown();
         }
         match expression.get_inner_expression() {
+            Expression::NullLiteral(_) => PathOrigin {
+                nullish: true,
+                ..PathOrigin::unknown()
+            },
             Expression::StringLiteral(text) => PathOrigin::literal(&crate::ast::js_literal(text)),
             Expression::TemplateLiteral(template) => self.template(template, depth),
             Expression::Identifier(id) => self.identifier(id, depth),
@@ -62,7 +67,11 @@ impl<'a> Projector<'a, '_> {
                     left
                 } else {
                     let right = self.origin(&logical.right, depth + 1);
-                    PathOrigin::alternatives(vec![left, right])
+                    if logical.operator == LogicalOperator::Coalesce {
+                        left.coalesced(right)
+                    } else {
+                        PathOrigin::alternatives(vec![left, right])
+                    }
                 }
             }
             Expression::ChainExpression(chain) => self.chain_origin(chain, depth),
@@ -73,6 +82,12 @@ impl<'a> Projector<'a, '_> {
     }
 
     fn identifier(&mut self, id: &IdentifierReference<'a>, depth: usize) -> PathOrigin {
+        if id.name == "undefined" && self.binding_symbol(id).is_none() {
+            return PathOrigin {
+                nullish: true,
+                ..PathOrigin::unknown()
+            };
+        }
         let global = matches!(id.name.as_str(), "__dirname" | "__filename");
         if global && self.binding_symbol(id).is_none() {
             return PathOrigin::anchored(PathAnchor::Module);

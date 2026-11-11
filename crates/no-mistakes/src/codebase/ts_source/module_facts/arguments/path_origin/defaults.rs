@@ -1,3 +1,4 @@
+use super::super::PathDefault;
 use super::{PathOrigin, Projector};
 use oxc_ast::{ast::*, AstKind};
 use oxc_span::GetSpan;
@@ -64,7 +65,10 @@ impl<'a> Projector<'a, '_> {
             });
         Some(PathOrigin {
             param: Some(index),
-            param_default: default.map(Box::new),
+            param_default: default.map(|value| PathDefault {
+                value: Box::new(value),
+                nullish: false,
+            }),
             param_member: member,
             param_owner: Some(start),
             owner_line: Some(super::super::line_in(semantic.source_text(), start)),

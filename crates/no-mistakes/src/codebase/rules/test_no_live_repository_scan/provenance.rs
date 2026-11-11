@@ -28,6 +28,16 @@ pub(super) fn classify(origin: Option<&PathOrigin>, fixture_dirs: &[&str]) -> Ve
         }
         return result;
     }
+    if origin.relative {
+        return if origin.anchor == PathAnchor::Relative
+            && !origin.dynamic
+            && !origin.segments.iter().any(|part| part == "..")
+        {
+            Verdict::Allowed
+        } else {
+            Verdict::Unresolved("the suffix is not a proven relative path within the owned root")
+        };
+    }
     if origin.anchor == PathAnchor::Temp && origin.root_tails.is_empty() {
         if origin.segments.iter().any(|segment| segment == "..") {
             return Verdict::Unresolved("the path climbs out of the owned temporary directory");

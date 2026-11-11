@@ -40,7 +40,7 @@ impl<'a> Projector<'a, '_> {
                     let (spread_paths, opaque) = self.object_shape(&spread.argument, depth + 1);
                     // An unknown spread may replace any earlier property.
                     if opaque {
-                        paths.clear();
+                        paths.retain(|key, _| self.spread_excludes(&spread.argument, key));
                         unknown = true;
                     }
                     paths.extend(spread_paths);
@@ -59,7 +59,7 @@ impl<'a> Projector<'a, '_> {
                         unknown = true;
                         continue;
                     };
-                    if key == "__proto__" {
+                    if key == "__proto__" || key.contains('.') {
                         return (FxHashMap::default(), true);
                     }
                     let origin = self.origin(&property.value, depth + 1);

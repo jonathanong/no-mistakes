@@ -27,6 +27,9 @@ impl<'a> Projector<'a, '_> {
                     origin.param_member = Some(key.to_owned());
                     return Some(origin);
                 }
+                if let Some(origin) = self.rest_member_origin(id, key, depth + 1) {
+                    return Some(origin);
+                }
                 let init = self.const_init(id)?;
                 self.member_origin(init, key, depth + 1)
             }
@@ -46,6 +49,12 @@ impl<'a> Projector<'a, '_> {
                 value.map(|value| self.origin(value, depth + 1))
             }
             Expression::StaticMemberExpression(_) => {
+                let mut origin = self.origin(object, depth + 1);
+                if origin.param.is_some() {
+                    let prefix = origin.param_member.as_ref()?;
+                    origin.param_member = Some(format!("{prefix}.{key}"));
+                    return Some(origin);
+                }
                 let value = self.member_initializer(object, key, depth + 1)?;
                 Some(self.origin(value, depth + 1))
             }

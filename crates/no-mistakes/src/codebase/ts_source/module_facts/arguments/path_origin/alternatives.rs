@@ -1,3 +1,4 @@
+use super::super::PathDefault;
 use super::{PathAnchor, PathOrigin, Projector};
 use oxc_ast::ast::*;
 
@@ -31,10 +32,46 @@ impl PathOrigin {
         }
     }
 
+    pub(super) fn coalesced(mut self, right: Self) -> Self {
+        if self.nullish {
+            return right;
+        }
+        if self.param.is_none() || self.param_member.is_none() {
+            return Self::alternatives(vec![self, right]);
+        }
+        match self.param_default.take() {
+            Some(default) if default.nullish => {
+                self.param_default = Some(PathDefault {
+                    value: Box::new(default.value.coalesced(right)),
+                    nullish: true,
+                });
+            }
+            Some(default) => {
+                self.param_default = Some(default);
+                return Self::alternatives(vec![self, right]);
+            }
+            None => {
+                self.param_default = Some(PathDefault {
+                    value: Box::new(right),
+                    nullish: true,
+                })
+            }
+        }
+        self
+    }
+
     pub(super) fn resolve_append(self, tail: Self) -> Self {
         if self.alternatives.is_empty() && tail.alternatives.is_empty() {
             return if tail.anchor == PathAnchor::Relative {
                 self.append(tail)
+            } else if tail.param.is_some() && tail.param_member.is_some() {
+                Self::alternatives(vec![
+                    self,
+                    Self {
+                        relative: true,
+                        ..tail
+                    },
+                ])
             } else {
                 tail
             };
@@ -46,6 +83,14 @@ impl PathOrigin {
                 tail.atoms().iter().map(|tail| {
                     if tail.anchor == PathAnchor::Relative {
                         base.clone().append(tail.clone())
+                    } else if tail.param.is_some() && tail.param_member.is_some() {
+                        Self::alternatives(vec![
+                            base.clone(),
+                            Self {
+                                relative: true,
+                                ..tail.clone()
+                            },
+                        ])
                     } else {
                         tail.clone()
                     }
@@ -66,7 +111,7 @@ impl<'a> Projector<'a, '_> {
         }
     }
 
-    pub(super) fn member_initializer<'b>(
+    pub(in super::super) fn member_initializer<'b>(
         &mut self,
         object: &'b Expression<'a>,
         key: &str,

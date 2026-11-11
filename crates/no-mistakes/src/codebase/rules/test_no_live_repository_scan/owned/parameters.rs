@@ -1,8 +1,15 @@
 use super::{env, path_provenance, Owners};
 use crate::codebase::dependencies::graph::{NodeId, ResolvedCallSite, TsFactLookup};
 use crate::codebase::ts_source::module_facts::arguments::{
-    ArgumentText, PathOrigin, PathProvenance,
+    ArgumentText, PathDefault, PathOrigin, PathProvenance,
 };
+
+pub(super) struct Parameter<'a> {
+    pub(super) index: usize,
+    pub(super) member: Option<&'a str>,
+    pub(super) default: Option<&'a PathDefault>,
+    pub(super) relative: bool,
+}
 
 impl Owners<'_> {
     pub(super) fn env_argument_owned(
@@ -89,7 +96,10 @@ pub(super) fn argument_text<'a>(
 
 pub(super) fn argument_present(paths: &PathProvenance, offset: u32, index: usize) -> bool {
     paths.arg_text.get(&offset).is_some_and(|args| {
-        args.iter().any(|arg| arg.property.is_none() && (arg.index == index || (arg.index <= index && arg.text.starts_with("..."))))
+        args.iter().any(|arg| {
+            arg.property.is_none()
+                && (arg.index == index || (arg.index <= index && arg.text.starts_with("...")))
+        })
     })
 }
 
@@ -112,4 +122,35 @@ pub(super) fn argument_omitted(paths: &PathProvenance, offset: u32, index: usize
         .copied()
         .flatten()
         .is_some_and(|count| index >= count)
+}
+
+pub(super) fn argument_missing_member(
+    paths: &PathProvenance,
+    offset: u32,
+    index: usize,
+    member: &str,
+    nullish: bool,
+) -> bool {
+    let mut closed = paths
+        .arg_closed_objects
+        .get(&offset)
+        .is_some_and(|positions| positions.contains(&index));
+    let mut prefix = String::new();
+    for part in member.split('.') {
+        if !prefix.is_empty() {
+            prefix.push('.');
+        }
+        prefix.push_str(part);
+        let Some(origin) = argument_path(paths, offset, index, Some(&prefix)) else {
+            return closed;
+        };
+        if nullish && origin.nullish {
+            return true;
+        }
+        closed = paths
+            .arg_closed_members
+            .get(&offset)
+            .is_some_and(|members| members.contains(&(index, prefix.clone())));
+    }
+    false
 }

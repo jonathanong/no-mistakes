@@ -66,7 +66,8 @@ pub(super) fn collect(
                 }
                 consumers::from_call(&mut projector, call, &mut result);
                 if callee_root(&call.callee).is_some() && !call_args::rebinds_callee(&call.callee) {
-                    let (members, texts) = member_paths::collect(&mut projector, call, &source, &mut result);
+                    let (members, texts) =
+                        member_paths::collect(&mut projector, call, &source, &mut result);
                     if !members.is_empty() {
                         result.arg_member_paths.insert(call.span.start, members);
                     }

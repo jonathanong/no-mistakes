@@ -730,7 +730,10 @@ Argument forwarding preserves each known position and property. Literal array
 spreads and a helper's rest parameter can carry an owned root to an enumerator.
 For object spreads, the last property wins: `{ ...inputs, outputRoot: root }`
 retains the explicit owned root, while `{ outputRoot: root, ...inputs }` stays
-unresolved when `inputs` is unknown. Writes to a rest slot are followed in source
+unresolved when `inputs` is unknown. Object rest destructuring proves excluded
+keys: in `main({ outputRoot, ...inputs })`, spreading `inputs` after the explicit
+`outputRoot` cannot replace it. A real override or an opaque spread retains the
+finding. Writes to a rest slot are followed in source
 order; a conditional write also retains the unchanged input alternative. A slot
 write after an enumeration in the same loop keeps the root unresolved because
 the next iteration can read that write. Pass an owned root directly at the
@@ -743,12 +746,23 @@ default keeps the property unresolved. Pass an explicit owned property to make
 that input provable. Passing an explicit owned `schemaDir` proves
 `function main({ schemaDir = process.cwd() } = {})`; omitting it retains the live
 default. An unknown object or an explicitly unknown property is unresolved.
+A fallback on a parameter property, such as `paths.schemaDir ?? DEFAULT`, is
+checked against each reachable test caller. An explicit owned property supplies
+the root for that call; a missing, nullish, live, or unknown property cannot
+inherit that proof. Production call paths that the selected tests never execute
+do not supply additional arguments to that proof.
+
 Missing bounded argument facts do not establish omission: defaults require a
 known argument count or a known missing property on a closed object.
-`??` and `||` fallbacks retain every alternative, including optional-chain
-fallbacks. Each alternative must be owned, a fixture path, or a known relative
-suffix resolved under an owned base. A live or unknown alternative keeps the
-finding; rewrite it to a literal bounded path or pass an owned root explicitly.
+Fallbacks that cannot be selected from proven caller properties retain every
+finite alternative, including optional-chain and `||` fallbacks. Each reachable
+alternative must be owned, a fixture path, or a known relative suffix resolved
+under an owned base. For `resolve(worktreeRoot, project.root ??
+project.test?.root ?? '.')`, the base and suffix are proved independently from
+the same selected test callers. Closed literal objects establish missing nested
+properties; unknown objects do not. Absolute, unknown, and climbing suffixes
+keep the finding. Rewrite them to literal relative paths or pass an owned root
+explicitly.
 A relative suffix that climbs above the owned directory, or `dirname` of the
 owned directory itself, does not remain owned. Accessor-bearing objects and
 object literals that set `__proto__` remain opaque to property/default proofs.

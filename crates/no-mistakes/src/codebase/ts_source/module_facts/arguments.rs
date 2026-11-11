@@ -14,8 +14,8 @@ pub(crate) use transparent_writes::{
 };
 mod types;
 pub(crate) use types::{
-    line_in, ArgumentText, ArgumentValue, ArgumentValues, EnvWrite, PathAnchor, PathOrigin,
-    PathProvenance, RouteKind, RouteSite, WriteScope,
+    line_in, ArgumentText, ArgumentValue, ArgumentValues, EnvWrite, PathAnchor, PathDefault,
+    PathOrigin, PathProvenance, RouteKind, RouteSite, WriteScope,
 };
 pub(super) fn collect(
     semantic: &Semantic<'_>,

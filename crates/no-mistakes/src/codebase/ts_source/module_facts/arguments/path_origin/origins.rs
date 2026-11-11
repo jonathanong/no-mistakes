@@ -3,6 +3,8 @@ use super::{PathAnchor, PathOrigin};
 impl PathOrigin {
     pub(crate) fn unknown() -> Self {
         Self {
+            relative: false,
+            nullish: false,
             anchor: PathAnchor::Unknown,
             segments: Vec::new(),
             dynamic: true,
@@ -21,6 +23,8 @@ impl PathOrigin {
 
     pub(super) fn anchored(anchor: PathAnchor) -> Self {
         Self {
+            relative: false,
+            nullish: false,
             anchor,
             segments: Vec::new(),
             dynamic: false,
@@ -40,6 +44,8 @@ impl PathOrigin {
     pub(super) fn literal(text: &str) -> Self {
         let absolute = text.starts_with(['/', '\\']) || text.as_bytes().get(1) == Some(&b':');
         let mut origin = Self {
+            relative: false,
+            nullish: false,
             anchor: if absolute {
                 PathAnchor::Absolute
             } else {
