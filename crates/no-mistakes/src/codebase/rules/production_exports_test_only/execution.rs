@@ -20,6 +20,7 @@ pub(crate) fn check_with_graph_and_session(
         let mut chunk = AnalysisDiagnostics::default();
         let result = (|| -> Result<()> {
             let options = config::Selection::new(&root, application)?;
+            let platform_exports = options.platform_consumed_exports(graph);
             let filter = RulePathFilter::new(&root, config, application)?;
             let policy = config.effective_rule_analysis(application)?.unanalyzable;
             let files = facts.graph_file_universe();
@@ -78,8 +79,9 @@ pub(crate) fn check_with_graph_and_session(
                         {
                             continue;
                         }
-                        if options.platform_consumed(file, name)
-                            || local_uses.as_ref().is_some_and(|uses| uses.contains(name))
+                        if platform_exports.contains(
+                            &crate::codebase::dependencies::graph::NodeId::symbol(file, name),
+                        ) || local_uses.as_ref().is_some_and(|uses| uses.contains(name))
                         {
                             continue;
                         }

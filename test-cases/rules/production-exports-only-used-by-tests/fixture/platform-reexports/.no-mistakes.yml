@@ -1,0 +1,17 @@
+rules:
+  - rule: production-exports-only-used-by-tests
+    scope: repository
+    options:
+      productionRoots: [src]
+      testGlobs: ["tests/**"]
+      platformConsumedExports:
+        - file: src/named-entry.mts
+          exports: [Named]
+        - file: src/renamed-entry.mts
+          exports: [Renamed]
+        - file: src/star-entry.mts
+          exports: [Star]
+        - file: src/imported-entry.mts
+          exports: [Imported]
+        - file: src/control-entry.mts
+          exports: [Consumed]

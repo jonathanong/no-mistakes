@@ -1,8 +1,10 @@
 use super::RULE_ID;
+use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use crate::codebase::rules::path_filter::GlobMatcher;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::schema::RuleDef;
+use crate::fx::FxHashSet;
 use anyhow::{bail, Result};
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
@@ -86,10 +88,25 @@ impl Selection {
         })
     }
 
-    pub(super) fn platform_consumed(&self, file: &Path, name: &str) -> bool {
-        self.platform_exports
-            .get(file)
-            .is_some_and(|names| names.contains(name))
+    pub(super) fn platform_consumed_exports(&self, graph: &DepGraph) -> FxHashSet<NodeId> {
+        let mut consumed: FxHashSet<_> = self
+            .platform_exports
+            .iter()
+            .flat_map(|(file, names)| names.iter().map(|name| NodeId::symbol(file, name.as_str())))
+            .collect();
+        let mut queue: std::collections::VecDeque<_> = consumed.iter().cloned().collect();
+        while let Some(node) = queue.pop_front() {
+            for (target, kind) in graph.dependencies_of_node(&node).into_iter().flatten() {
+                if matches!(
+                    kind,
+                    EdgeKind::SymbolReexport | EdgeKind::SymbolTypeReexport
+                ) && consumed.insert(target.clone())
+                {
+                    queue.push_back(target.clone());
+                }
+            }
+        }
+        consumed
     }
 
     pub(super) fn production(&self, file: &Path) -> bool {
