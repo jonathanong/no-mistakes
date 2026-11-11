@@ -16,13 +16,16 @@
     "testing",
     "postgresql",
     "typescript",
-    "codex"
+    "codex",
+    "integrations",
+    "rollout",
+    "observability"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "No Mistakes Rules",
     "shortDescription": "What not to do, by topic.",
-    "longDescription": "Short lists of MUST NOT and SHOULD NOT rules for code an agent writes or reviews: tests, Playwright, PostgreSQL, queues, TypeScript and Node, React and Next.js, Rust, GitHub Actions, and packages.",
+    "longDescription": "Short lists of MUST NOT and SHOULD NOT rules for code an agent writes or reviews: tests, Playwright, PostgreSQL, queues, TypeScript and Node, React and Next.js, Rust, GitHub Actions, packages, integrations, rollout, and observability.",
     "developerName": "Jonathan Ong",
     "category": "Coding",
     "capabilities": ["Read"],

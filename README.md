@@ -243,8 +243,8 @@ which calls the `no-mistakes` CLI, so the CLI must be on `PATH` (for example
 The `no-mistakes-rules` plugin needs no CLI. It ships
 [concise MUST NOT / SHOULD NOT rules](plugins/no-mistakes-rules/README.md) by
 topic (testing, Playwright, PostgreSQL, queues, TypeScript, React, Rust,
-GitHub Actions, dependencies, security, git, infrastructure, native apps), each
-loaded only when that topic comes up.
+GitHub Actions, dependencies, security, git, infrastructure, integrations,
+rollout, observability, native apps), each loaded only when that topic comes up.
 
 ```sh
 # Claude Code

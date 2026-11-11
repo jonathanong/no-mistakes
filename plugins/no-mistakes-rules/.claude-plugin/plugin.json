@@ -1,6 +1,6 @@
 {
   "name": "no-mistakes-rules",
-  "description": "Concise MUST NOT and SHOULD NOT rules for coding agents: testing, PostgreSQL, queues, TypeScript, React, Rust, CI, and more",
+  "description": "Concise MUST NOT and SHOULD NOT rules for coding agents: testing, PostgreSQL, queues, TypeScript, React, Rust, CI, integrations, rollout, observability, and more",
   "version": "0.109.42",
   "author": {
     "name": "Jonathan Ong",
@@ -14,7 +14,10 @@
     "guardrails",
     "testing",
     "postgresql",
-    "typescript"
+    "typescript",
+    "integrations",
+    "rollout",
+    "observability"
   ],
   "skills": "./skills/"
 }
