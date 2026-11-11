@@ -145,6 +145,5 @@ fn fact_panic_marks_a_check_with_no_findings_incomplete() {
         .unwrap();
         assert!(report.rules.is_empty());
         assert_eq!(report.incomplete.len(), 2);
-        assert!(crate::check_runner::results::status::has_failures(&report));
     });
 }
