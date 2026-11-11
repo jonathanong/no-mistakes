@@ -7,7 +7,7 @@ use crate::codebase::dependencies::graph::{ResolvedCallSite, TsFactLookup};
 use crate::codebase::rules::test_no_live_repository_scan::provenance::{
     arg_block, classify, live_or_variable, missing_block, ArgBlock, Verdict,
 };
-use crate::codebase::ts_source::module_facts::arguments::PathProvenance;
+use crate::codebase::ts_source::module_facts::arguments::{ArgumentText, PathProvenance};
 
 impl Owners<'_> {
     pub(super) fn caller_step(
@@ -25,7 +25,7 @@ impl Owners<'_> {
             .unwrap_or(&empty);
         let argument = argument_path(provenance, caller.offset, index, member);
         let present = argument_present(provenance, caller.offset, index);
-        let text = argument_text(provenance, caller.offset, index);
+        let text = argument_text(provenance, caller.offset, index, member);
         if argument.is_none() {
             if let Some(observed) = unproven_argument(provenance, caller.offset, index) {
                 if matches!(classify(Some(observed), fixture_dirs), Verdict::Live(_)) {
@@ -63,12 +63,18 @@ impl Owners<'_> {
     }
 }
 
-fn caller_cause(caller: &ResolvedCallSite, block: ArgBlock, text: String) -> Cause {
+fn caller_cause(caller: &ResolvedCallSite, block: ArgBlock, text: Option<&ArgumentText>) -> Cause {
     let kind = match block {
         ArgBlock::Live => CauseKind::LivePath,
         ArgBlock::Omitted => CauseKind::OmittedArgument,
         ArgBlock::Variable => CauseKind::UnprovenVariable,
         ArgBlock::Forwarded => CauseKind::ForwardedParameter,
     };
-    Cause::new(kind, caller.file.clone(), caller.line, text)
+    Cause::new(
+        kind,
+        caller.file.clone(),
+        text.map_or(caller.line, |argument| argument.line),
+        text.map_or("", |argument| argument.text.as_str()),
+    )
+    .with_property(text.and_then(|argument| argument.property.clone()))
 }

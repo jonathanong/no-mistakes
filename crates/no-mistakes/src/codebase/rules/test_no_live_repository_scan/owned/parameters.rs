@@ -1,6 +1,8 @@
 use super::{env, path_provenance, Owners};
 use crate::codebase::dependencies::graph::{NodeId, ResolvedCallSite, TsFactLookup};
-use crate::codebase::ts_source::module_facts::arguments::{PathOrigin, PathProvenance};
+use crate::codebase::ts_source::module_facts::arguments::{
+    ArgumentText, PathOrigin, PathProvenance,
+};
 
 impl Owners<'_> {
     pub(super) fn env_argument_owned(
@@ -67,20 +69,26 @@ pub(super) fn argument_path<'a>(
     }
 }
 
-pub(super) fn argument_text(paths: &PathProvenance, offset: u32, index: usize) -> String {
-    paths
-        .arg_text
-        .get(&offset)
-        .and_then(|args| args.iter().find(|(position, _)| *position == index))
-        .map(|(_, text)| text.clone())
-        .unwrap_or_default()
+pub(super) fn argument_text<'a>(
+    paths: &'a PathProvenance,
+    offset: u32,
+    index: usize,
+    member: Option<&str>,
+) -> Option<&'a ArgumentText> {
+    let args = paths.arg_text.get(&offset)?;
+    args.iter()
+        .find(|arg| arg.index == index && arg.property.as_deref() == member)
+        .or_else(|| {
+            args.iter()
+                .find(|arg| arg.index == index && arg.property.is_none())
+        })
 }
 
 pub(super) fn argument_present(paths: &PathProvenance, offset: u32, index: usize) -> bool {
-    paths
-        .arg_text
-        .get(&offset)
-        .is_some_and(|args| args.iter().any(|(position, _)| *position == index))
+    paths.arg_text.get(&offset).is_some_and(|args| {
+        args.iter()
+            .any(|arg| arg.index == index && arg.property.is_none())
+    })
 }
 
 pub(super) fn unproven_argument(

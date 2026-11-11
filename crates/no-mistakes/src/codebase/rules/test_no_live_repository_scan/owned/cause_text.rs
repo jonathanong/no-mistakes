@@ -6,13 +6,17 @@ use std::path::Path;
 pub(super) fn detail(cause: &Cause, root: &Path) -> String {
     let place = format!("{}:{}", relative_slash_path(root, &cause.file), cause.line);
     let expr = cause.expression.as_str();
+    let property = cause.property.as_deref();
     match cause.kind {
-        CauseKind::LivePath => passed(&place, expr, "a live path"),
+        CauseKind::LivePath => passed(&place, expr, "a live path", property),
         CauseKind::OmittedArgument => format!("{place} omits the root argument"),
-        CauseKind::UnprovenVariable => passed(&place, expr, "an unproven variable"),
-        CauseKind::ForwardedParameter => {
-            passed(&place, expr, "a value forwarded through another parameter")
-        }
+        CauseKind::UnprovenVariable => passed(&place, expr, "an unproven variable", property),
+        CauseKind::ForwardedParameter => passed(
+            &place,
+            expr,
+            "a value forwarded through another parameter",
+            property,
+        ),
         CauseKind::NamespaceImport => route(&place, expr, "a namespace import"),
         CauseKind::DefaultImport => route(&place, expr, "a default import"),
         CauseKind::DynamicImport => route(&place, expr, "a dynamic import()"),
@@ -106,11 +110,12 @@ fn more(text: &str, extra: u32) -> String {
     }
 }
 
-fn passed(place: &str, expr: &str, why: &str) -> String {
+fn passed(place: &str, expr: &str, why: &str, property: Option<&str>) -> String {
+    let suffix = property.map_or(String::new(), |key| format!(", as property `{key}`"));
     if expr.is_empty() {
-        format!("{place} passes an argument that is {why}")
+        format!("{place} passes an argument that is {why}{suffix}")
     } else {
-        format!("{place} passes `{expr}`, {why}")
+        format!("{place} passes `{expr}`, {why}{suffix}")
     }
 }
 

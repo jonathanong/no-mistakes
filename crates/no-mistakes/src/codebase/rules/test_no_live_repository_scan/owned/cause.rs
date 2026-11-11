@@ -17,6 +17,7 @@ pub(in super::super) struct Cause {
     pub(super) file: PathBuf,
     pub(super) line: u32,
     pub(super) expression: String,
+    pub(super) property: Option<String>,
     /// Blockers after the one named in the message.
     pub(super) extra: u32,
     /// Test-root path that reaches an unread module, when one is known.
@@ -61,9 +62,15 @@ impl Cause {
             file,
             line,
             expression: expression.into(),
+            property: None,
             extra: 0,
             reached: String::new(),
         }
+    }
+
+    pub(super) fn with_property(mut self, property: Option<String>) -> Self {
+        self.property = property;
+        self
     }
 
     pub(super) fn with_extra(mut self, extra: u32) -> Self {

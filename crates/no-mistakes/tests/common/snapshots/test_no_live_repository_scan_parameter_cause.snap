@@ -168,6 +168,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "multiline-property": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "root.mts",
+          "import": "readdirSync",
+          "line": 10,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.mts:27 passes `directory`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root)",
+          "target": "unresolved root"
+        },
+        {
+          "file": "root.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.mts:20 passes `root`, an unproven variable, as property `root`. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(options.root)",
+          "target": "unresolved root"
+        },
+        {
+          "file": "root.mts",
+          "import": "readdirSync",
+          "line": 7,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but root.mts:24 passes `directory`, an unproven variable, as property `directory`. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(options.directory)",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "namespace-import": {
     "exitCode": 0,
     "report": {

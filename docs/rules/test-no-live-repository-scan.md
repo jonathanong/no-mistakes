@@ -199,7 +199,12 @@ unproven variable, or a value forwarded through another parameter), or the
 route that made callers unknowable (a namespace import, a default import,
 `import()`, `require`, `vi.mock`, a reference other than a direct call, a
 callee that is not a named function, or a reassigned parameter), with that
-file and line. When several modules in the test-root closure are unreadable,
+file and line. For a static literal-object property, the diagnostic names the
+property's value and its own line, followed by `as property` and the selected key.
+For example, a multi-line `{ include: [...], root }` caller names `root` on the
+shorthand property's line rather than truncating the outer object. A positional
+argument likewise uses the argument expression's line. Opaque object shapes
+retain the outer argument as context. When several modules in the test-root closure are unreadable,
 or several `setupFiles` entries do not resolve, the advisory names the first
 and the count of the rest. A Vitest config that cannot be read or does not
 match the selected tests is a different cause from an unresolved `setupFiles`
