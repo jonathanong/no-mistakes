@@ -392,7 +392,9 @@ The command binding must be immutable; rest-length proof also requires only
 length comparisons and direct element reads. Mutating or escaping the rest
 array prevents the length proof. Unknown argument arrays, matching command/length
 pairs, and unknowable callers keep the call in the proof. This bounded guard
-check uses the shared parsed facts and does not evaluate the function.
+check uses the shared parsed facts and does not evaluate the function. Guard
+pruning applies only in helper files outside configured root files and setup
+entry files, whose entry invocations can supply unknown arguments.
 
 An unreadable module that no test, `setupFiles`, or `globalSetup` reaches does not erase a caller proof,
 including a lint config such as `.dependency-cruiser.cjs` loaded only from the

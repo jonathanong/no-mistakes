@@ -26,6 +26,9 @@ impl Owners<'_> {
         else {
             return false;
         };
+        if self.gate_roots.contains(&site.file) {
+            return false;
+        }
         let source = site_source_node(site);
         if !self.proven_target(&source) || self.closure_unknown(&site.file) {
             return false;
