@@ -243,6 +243,8 @@ test("CI installs Chromium only on the path-filtered browser job", () => {
         RUST_RESULT: "success",
         STANDALONE_RESULT: "success",
         CHANGE_RESULT: "success",
+        DOCS_ONLY: "false",
+        DOCS_RESULT: "skipped",
         BROWSER_CHANGED: browser.changed,
         BROWSER_RESULT: browser.result,
       },
