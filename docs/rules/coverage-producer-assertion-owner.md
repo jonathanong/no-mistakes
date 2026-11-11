@@ -317,6 +317,9 @@ loop: a local or module-private `const` literal array of at most 32 plain object
 called field naming a static import. Other row fields must contain primitive
 metadata; nested objects and additional callbacks remain unproven. Local
 callback aliases and factory-returned tables are also outside this projection.
+The iterable expression must be a simple identifier or literal array. Expressions
+with side effects, such as `(swap(table), table)`, remain unproven even when their
+final value names a literal table.
 The loop uses a simple `const` identifier
 and invokes that row member with no arguments in an unconditional expression
 or `await` expression. Plain blocks and a `try` body with a non-abrupt catch are

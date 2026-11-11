@@ -132,7 +132,10 @@ impl ImportCollector {
             return false;
         }
         let Expression::Identifier(identifier) = source.get_inner_expression() else {
-            return true;
+            return matches!(
+                source.get_inner_expression(),
+                Expression::ArrayExpression(_)
+            );
         };
         self.callee_binding_scope(identifier.name.as_str())
             .is_none_or(|scope| {

@@ -29,6 +29,7 @@ rules:
         - { file: scripts/runner/guards.mts, symbol: abortingCatch }
         - { file: scripts/runner/guards.mts, symbol: exitingCatchWithCode }
         - { file: scripts/runner/guards.mts, symbol: aliasedExitingCatch }
+        - { file: scripts/runner/guards.mts, symbol: effectfulIterable }
       assertions:
         - { module: "node:assert/strict", export: ok }
         - { module: "node:assert/strict", export: equal }

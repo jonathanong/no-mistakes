@@ -152,3 +152,9 @@ export async function aliasedExitingCatch() {
   }
   await gracefulShutdown();
 }
+
+export async function effectfulIterable() {
+  const table = [{ run: runX }];
+  for (const row of (mutate(table), table)) await row.run();
+  await gracefulShutdown();
+}

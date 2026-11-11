@@ -422,7 +422,8 @@ fn scenario_table_guards_and_policy_check_json_snapshot() {
             "exitingCatch",
             "abortingCatch",
             "exitingCatchWithCode",
-            "aliasedExitingCatch"
+            "aliasedExitingCatch",
+            "effectfulIterable"
         ],
         "{report}"
     );
