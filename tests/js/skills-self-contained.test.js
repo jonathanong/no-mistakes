@@ -3,7 +3,11 @@ const { existsSync, readdirSync, readFileSync } = require("node:fs");
 const { dirname, join, relative, resolve, sep } = require("node:path");
 
 const repoRoot = join(__dirname, "..", "..");
-const skillsDir = join(repoRoot, "plugins", "no-mistakes", "skills");
+const pluginsDir = join(repoRoot, "plugins");
+const skillsDirs = readdirSync(pluginsDir, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => join(pluginsDir, entry.name, "skills"))
+  .filter((dir) => existsSync(dir));
 
 // Absolute URLs (https://…, etc.) travel with the skill, so they are allowed.
 // Bare relative paths do not — they only resolve in this repo, not in a consumer
@@ -23,8 +27,8 @@ function walkMarkdown(dir) {
   return files;
 }
 
-// A skill's own root is `plugins/no-mistakes/skills/<name>`; only files under it survive the sync.
-function skillRootFor(file) {
+// A skill's own root is `plugins/<plugin>/skills/<name>`; only files under it survive the sync.
+function skillRootFor(skillsDir, file) {
   const [name] = relative(skillsDir, file).split(sep);
   return join(skillsDir, name);
 }
@@ -45,8 +49,11 @@ function extractMarkdownRefs(content) {
 test("skill markdown only references documents inside its own skill directory", () => {
   const violations = [];
 
-  for (const file of walkMarkdown(skillsDir)) {
-    const skillRoot = skillRootFor(file);
+  const files = skillsDirs.flatMap((skillsDir) =>
+    walkMarkdown(skillsDir).map((file) => [skillsDir, file]),
+  );
+  for (const [skillsDir, file] of files) {
+    const skillRoot = skillRootFor(skillsDir, file);
     const where = relative(repoRoot, file);
 
     for (const ref of extractMarkdownRefs(readFileSync(file, "utf8"))) {

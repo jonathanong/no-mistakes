@@ -38,5 +38,5 @@ the job you have; the rest of this index is reference.
 ## Validation
 
 ```sh
-lychee --no-progress --exclude-path '^fixtures/' README.md 'docs/**/*.md' 'plugins/no-mistakes/skills/**/*.md' 'packages/*/README.md' 'crates/*/README.md' AGENTS.md
+lychee --no-progress --exclude-path '^fixtures/' README.md 'docs/**/*.md' 'plugins/*/skills/**/*.md' 'packages/*/README.md' 'crates/*/README.md' AGENTS.md
 ```

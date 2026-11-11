@@ -2,7 +2,7 @@ checks:
   commands:
     - name: skills-self-contained
       include:
-        - "plugins/no-mistakes/skills/**/*.md"
+        - "plugins/*/skills/**/*.md"
         - tests/js/skills-self-contained.test.js
       command: [pnpm, exec, vitest, run, tests/js/skills-self-contained.test.js]
       fileArgs: none

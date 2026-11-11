@@ -284,6 +284,8 @@ jobs:
               .filter((file) => fs.existsSync(file)),
             "plugins/no-mistakes/.claude-plugin/plugin.json",
             "plugins/no-mistakes/.codex-plugin/plugin.json",
+            "plugins/no-mistakes-rules/.claude-plugin/plugin.json",
+            "plugins/no-mistakes-rules/.codex-plugin/plugin.json",
           ];
           const mismatches = files
             .map((file) => [file, JSON.parse(fs.readFileSync(file, "utf8")).version])

@@ -240,12 +240,19 @@ This repository is a plugin marketplace for Claude Code and Codex. The
 which calls the `no-mistakes` CLI, so the CLI must be on `PATH` (for example
 `npm install --global no-mistakes`).
 
+The `no-mistakes-rules` plugin needs no CLI. It ships
+[concise MUST NOT / SHOULD NOT rules](plugins/no-mistakes-rules/README.md) by
+topic (testing, Playwright, PostgreSQL, queues, TypeScript, React, Rust,
+GitHub Actions, dependencies, security, git, infrastructure, native apps), each
+loaded only when that topic comes up.
+
 ```sh
 # Claude Code
 claude plugin marketplace add jonathanong/no-mistakes
 claude plugin install no-mistakes@no-mistakes
+claude plugin install no-mistakes-rules@no-mistakes
 
-# Codex (then enable the no-mistakes plugin)
+# Codex (then enable the no-mistakes and no-mistakes-rules plugins)
 codex plugin marketplace add jonathanong/no-mistakes
 ```
 
