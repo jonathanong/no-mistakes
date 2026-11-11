@@ -125,3 +125,47 @@ fn caller_reference_owned_roots_clear_and_recall_controls_report() {
         }
     }
 }
+
+const DYNAMIC_ORIGINS: [(&str, usize); 10] = [
+    ("production-only", 0),
+    ("test-reachable", 1),
+    ("production-live", 1),
+    ("production-unconditional", 0),
+    ("production-opaque", 0),
+    ("test-opaque", 1),
+    ("test-dynamic-escape", 1),
+    ("setup-dynamic-escape", 1),
+    ("global-setup-dynamic-escape", 1),
+    ("config-dynamic-escape", 1),
+];
+
+#[test]
+fn dynamic_origins_check_json_snapshot() {
+    let cases: Vec<_> = DYNAMIC_ORIGINS
+        .into_iter()
+        .map(|(name, _)| {
+            let root = crate::check_json_snapshot::rules_path(RULE, "dynamic-origins", name);
+            (name, root.clone(), root.join(".no-mistakes.yml"))
+        })
+        .collect();
+    crate::check_json_snapshot::assert_saved_fixture(
+        "test_no_live_repository_scan_dynamic_origins",
+        &cases,
+    );
+}
+
+#[test]
+fn only_test_originating_dynamic_importers_block_owned_callers() {
+    for (name, expected) in DYNAMIC_ORIGINS {
+        let root = crate::check_json_snapshot::rules_path(RULE, "dynamic-origins", name);
+        let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+            .args(["check", "--format", "json", "--root"])
+            .arg(root)
+            .output()
+            .unwrap();
+        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        let count = report["rules"].as_array().unwrap().len()
+            + report["advisories"].as_array().unwrap().len();
+        assert_eq!(count, expected, "{name}: {report}");
+    }
+}
