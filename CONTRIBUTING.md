@@ -162,6 +162,15 @@ warnings remain in force. The native job retains its thirty-minute limit.
 Saved timing records distinguish historical censored progress from current
 completed setup and Rust work; neither observation guarantees tail duration.
 
+Pull requests that change only Markdown run `Docs tests` (the `suite_contracts`
+docs checks) instead of the full test jobs. Quality and AST analysis still run,
+and pushes to `main` run everything. Markdown under `crates/`, `packages/`,
+`plugins/`, `fixtures/`, `test-cases/`, `tests/`, `evals/`, `.ast-grep/`, and
+`docs/eslint-rules/`, plus the pages that unit and package tests read, is test
+input and runs the full suite. `.github/scripts/docs-only-scope.cjs` owns the
+list, and `tests/js/docs-only-scope.test.js` fails when a test reads a page
+missing from it.
+
 ## Shared machines and memory
 
 Release builds, full-workspace tests, `cargo llvm-cov`, and Criterion each use a

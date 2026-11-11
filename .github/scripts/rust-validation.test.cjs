@@ -193,14 +193,27 @@ test("the actual required aggregate rejects every unsuccessful package result", 
     CHANGE_RESULT: "success",
     BROWSER_CHANGED: "false",
     BROWSER_RESULT: "skipped",
+    DOCS_ONLY: "false",
+    DOCS_RESULT: "skipped",
   };
-  for (const result of ["success", "failure", "cancelled", "skipped"]) {
-    const output = spawnSync("bash", ["-eu", "-c", script], {
+  const run = (env) =>
+    spawnSync("bash", ["-eu", "-c", script], {
       encoding: "utf8",
-      env: { ...process.env, ...successful, PACKAGES_RESULT: result },
+      env: { ...process.env, ...successful, ...env },
     });
+  for (const result of ["success", "failure", "cancelled", "skipped"]) {
+    const output = run({ PACKAGES_RESULT: result });
     assert.equal(output.status, result === "success" ? 0 : 1, output.stderr);
   }
+  assert.equal(run({ DOCS_RESULT: "success" }).status, 1);
+  const docsOnly = { DOCS_ONLY: "true", DOCS_RESULT: "success" };
+  for (const job of ["PACKAGES", "JAVASCRIPT", "NATIVE", "RUST", "STANDALONE"])
+    docsOnly[`${job}_RESULT`] = "skipped";
+  assert.equal(run(docsOnly).status, 0, run(docsOnly).stderr);
+  for (const result of ["failure", "cancelled", "skipped"])
+    assert.equal(run({ ...docsOnly, DOCS_RESULT: result }).status, 1);
+  assert.equal(run({ ...docsOnly, RUST_RESULT: "success" }).status, 1);
+  assert.equal(run({ ...docsOnly, QUALITY_RESULT: "failure" }).status, 1);
 });
 
 test("pre-push Clippy uses the workflow scope", () => {
