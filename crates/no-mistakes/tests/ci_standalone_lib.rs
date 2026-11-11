@@ -63,9 +63,11 @@ fn standalone_lib_job_starts_catalog_postgres_before_uninstrumented_lib_tests() 
         steps[postgres]["uses"].as_str(),
         Some("./.github/actions/start-test-postgres")
     );
-    assert_catalog_postgres_setup(include_str!(
-        "../../../.github/actions/start-test-postgres/action.yml"
-    ));
+    let action = include_str!("../../../.github/actions/start-test-postgres/action.yml");
+    let installer = include_str!("../../../.github/actions/start-test-postgres/setup.py");
+    assert_catalog_postgres_setup(&format!("{action}\n{installer}"));
+    assert!(action.contains("setup.py"));
+    assert_eq!(steps[postgres]["timeout-minutes"].as_u64(), Some(5));
 
     let test_step = &steps[tests];
     let run = test_step["run"].as_str().unwrap();
@@ -109,5 +111,13 @@ fn tests_gate_requires_standalone_lib_and_coverage_keeps_catalog_postgres() {
     assert_eq!(
         coverage_postgres["uses"].as_str(),
         Some("./.github/actions/start-test-postgres")
+    );
+    assert_eq!(coverage_postgres["timeout-minutes"].as_u64(), Some(5));
+    let quality_steps = workflow["jobs"]["quality"]["steps"].as_sequence().unwrap();
+    let policy = step_named(quality_steps, "Test PostgreSQL setup policy");
+    assert_eq!(policy["timeout-minutes"].as_u64(), Some(2));
+    assert_eq!(
+        policy["run"].as_str(),
+        Some("python3 -m unittest discover -s .github/actions/start-test-postgres -p 'test_*.py'")
     );
 }

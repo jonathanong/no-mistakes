@@ -1,0 +1,9 @@
+Types: deb
+URIs: mirror+file:/etc/apt/apt-mirrors.txt
+Suites: noble noble-updates noble-backports
+Components: main universe
+
+Types: deb
+URIs: http://azure.archive.ubuntu.com/ubuntu/
+Suites: noble-security
+Components: main universe
