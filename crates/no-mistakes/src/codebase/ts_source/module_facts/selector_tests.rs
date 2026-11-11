@@ -80,3 +80,11 @@ fn dynamic_import_selectors_record_only_proven_forms() {
     ];
     assert_eq!(names, expected);
 }
+
+#[test]
+fn discarded_import_results_select_no_exports_without_hiding_escapes() {
+    assert_eq!(
+        selectors("dynamic-selectors-unused.mts"),
+        vec![Vec::<String>::new(); 5]
+    );
+}

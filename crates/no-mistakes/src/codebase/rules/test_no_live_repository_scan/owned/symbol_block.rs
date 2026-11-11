@@ -9,7 +9,7 @@ pub(super) fn blocks(consumed: &Consumed, file: &Path, symbol: &str) -> bool {
     if hits.iter().any(|hit| applies(hit, symbol)) {
         return true;
     }
-    consumed.contains(file) && hits.is_empty()
+    consumed.contains(file) && hits.iter().all(|hit| hit.symbol.is_some())
 }
 
 /// Prefer a non-call reference to this symbol over any other hit on its module.
@@ -26,7 +26,7 @@ pub(super) fn route<'a>(consumed: &'a Consumed, file: &Path, symbol: &str) -> Op
         .or_else(|| {
             hits.iter()
                 .copied()
-                .filter(|hit| applies(hit, symbol))
+                .filter(|hit| hit.symbol.is_none() || applies(hit, symbol))
                 .min_by(|left, right| (&left.file, left.start).cmp(&(&right.file, right.start)))
         })
 }
