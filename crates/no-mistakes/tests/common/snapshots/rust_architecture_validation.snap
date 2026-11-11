@@ -1,0 +1,291 @@
+---
+source: crates/no-mistakes/tests/support/architecture_validation.rs
+---
+{
+  ".no-mistakes.yml": {
+    "changed_files": [
+      ".no-mistakes.yml"
+    ],
+    "checks": [
+      {
+        "command": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "no-mistakes",
+          "--lib",
+          "architecture"
+        ],
+        "files": [
+          ".no-mistakes.yml"
+        ],
+        "kind": "generic",
+        "name": "rust-architecture-validation"
+      }
+    ],
+    "fallback_triggered": false,
+    "warnings": []
+  },
+  "Cargo.lock": {
+    "changed_files": [
+      "Cargo.lock"
+    ],
+    "checks": [
+      {
+        "command": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "no-mistakes",
+          "--lib",
+          "architecture"
+        ],
+        "files": [
+          "Cargo.lock"
+        ],
+        "kind": "generic",
+        "name": "rust-architecture-validation"
+      }
+    ],
+    "fallback_triggered": false,
+    "warnings": []
+  },
+  "Cargo.toml": {
+    "changed_files": [
+      "Cargo.toml"
+    ],
+    "checks": [
+      {
+        "command": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "no-mistakes",
+          "--lib",
+          "architecture"
+        ],
+        "files": [
+          "Cargo.toml"
+        ],
+        "kind": "generic",
+        "name": "rust-architecture-validation"
+      }
+    ],
+    "fallback_triggered": false,
+    "warnings": []
+  },
+  "crates/no-mistakes/Cargo.toml": {
+    "changed_files": [
+      "crates/no-mistakes/Cargo.toml"
+    ],
+    "checks": [
+      {
+        "command": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "no-mistakes",
+          "--lib",
+          "architecture"
+        ],
+        "files": [
+          "crates/no-mistakes/Cargo.toml"
+        ],
+        "kind": "generic",
+        "name": "rust-architecture-validation"
+      }
+    ],
+    "fallback_triggered": false,
+    "warnings": []
+  },
+  "crates/no-mistakes/src/check_runner.rs": {
+    "changed_files": [
+      "crates/no-mistakes/src/check_runner.rs"
+    ],
+    "checks": [
+      {
+        "command": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "no-mistakes",
+          "--lib",
+          "architecture"
+        ],
+        "files": [
+          "crates/no-mistakes/src/check_runner.rs"
+        ],
+        "kind": "generic",
+        "name": "rust-architecture-validation"
+      }
+    ],
+    "fallback_triggered": false,
+    "warnings": []
+  },
+  "crates/no-mistakes/src/check_runner/tests/architecture.rs": {
+    "changed_files": [
+      "crates/no-mistakes/src/check_runner/tests/architecture.rs"
+    ],
+    "checks": [
+      {
+        "command": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "no-mistakes",
+          "--lib",
+          "architecture"
+        ],
+        "files": [
+          "crates/no-mistakes/src/check_runner/tests/architecture.rs"
+        ],
+        "kind": "generic",
+        "name": "rust-architecture-validation"
+      }
+    ],
+    "fallback_triggered": false,
+    "warnings": []
+  },
+  "crates/no-mistakes/src/check_tasks/react.rs": {
+    "changed_files": [
+      "crates/no-mistakes/src/check_tasks/react.rs"
+    ],
+    "checks": [
+      {
+        "command": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "no-mistakes",
+          "--lib",
+          "architecture"
+        ],
+        "files": [
+          "crates/no-mistakes/src/check_tasks/react.rs"
+        ],
+        "kind": "generic",
+        "name": "rust-architecture-validation"
+      }
+    ],
+    "fallback_triggered": false,
+    "warnings": []
+  },
+  "crates/no-mistakes/src/deleted.rs": {
+    "changed_files": [
+      "crates/no-mistakes/src/deleted.rs"
+    ],
+    "checks": [
+      {
+        "command": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "no-mistakes",
+          "--lib",
+          "architecture"
+        ],
+        "files": [
+          "crates/no-mistakes/src/deleted.rs"
+        ],
+        "kind": "generic",
+        "name": "rust-architecture-validation"
+      }
+    ],
+    "fallback_triggered": false,
+    "warnings": []
+  },
+  "crates/no-mistakes/src/tests/plan/framework.rs": {
+    "changed_files": [
+      "crates/no-mistakes/src/tests/plan/framework.rs"
+    ],
+    "checks": [
+      {
+        "command": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "no-mistakes",
+          "--lib",
+          "architecture"
+        ],
+        "files": [
+          "crates/no-mistakes/src/tests/plan/framework.rs"
+        ],
+        "kind": "generic",
+        "name": "rust-architecture-validation"
+      }
+    ],
+    "fallback_triggered": false,
+    "warnings": []
+  },
+  "crates/no-mistakes/tests/cli.rs": {
+    "changed_files": [
+      "crates/no-mistakes/tests/cli.rs"
+    ],
+    "checks": [],
+    "empty_result": {
+      "code": "no-impacted-checks",
+      "message": "No checks matched the changed files."
+    },
+    "fallback_triggered": false,
+    "warnings": []
+  },
+  "crates/other/src/lib.rs": {
+    "changed_files": [
+      "crates/other/src/lib.rs"
+    ],
+    "checks": [],
+    "empty_result": {
+      "code": "no-impacted-checks",
+      "message": "No checks matched the changed files."
+    },
+    "fallback_triggered": false,
+    "warnings": []
+  },
+  "docs/cli/impacted-checks.md": {
+    "changed_files": [
+      "docs/cli/impacted-checks.md"
+    ],
+    "checks": [],
+    "empty_result": {
+      "code": "no-impacted-checks",
+      "message": "No checks matched the changed files."
+    },
+    "fallback_triggered": false,
+    "warnings": []
+  },
+  "rust-toolchain.toml": {
+    "changed_files": [
+      "rust-toolchain.toml"
+    ],
+    "checks": [
+      {
+        "command": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "no-mistakes",
+          "--lib",
+          "architecture"
+        ],
+        "files": [
+          "rust-toolchain.toml"
+        ],
+        "kind": "generic",
+        "name": "rust-architecture-validation"
+      }
+    ],
+    "fallback_triggered": false,
+    "warnings": []
+  }
+}
