@@ -4,6 +4,12 @@ use std::process::Command;
 
 const RULE: &str = "test-no-live-repository-scan";
 const CASES: &[(&str, usize, usize)] = &[
+    ("sync-hook-reset-intersection", 0, 0),
+    ("sync-hook-helper-member-suffix", 0, 1),
+    ("sync-hook-helper-unknown-suffix", 0, 1),
+    ("sync-hook-parameter-cleanup-read", 0, 1),
+    ("sync-hook-configured-only-cleanup", 0, 1),
+    ("sync-hook-configured-parameter-cleanup", 0, 1),
     ("sync-hook-config-concurrent-cleanup", 0, 1),
     ("sync-hook-config-unknown-concurrent-cleanup", 0, 1),
     ("sync-hook-config-sequential-cleanup", 0, 0),
@@ -221,6 +227,14 @@ fn env_provenance_preserves_unknown_roots_and_actionable_hints() {
         );
         for advisory in report["advisories"].as_array().unwrap() {
             let message = advisory["message"].as_str().unwrap();
+            if matches!(
+                *name,
+                "sync-hook-parameter-cleanup-read" | "sync-hook-configured-parameter-cleanup"
+            ) {
+                assert!(message.contains("passes `process.env.X`, an unproven variable"));
+                assert!(message.contains("pass a const fixture path or an owned mkdtemp root"));
+                continue;
+            }
             let local = message.find("inside the enumerating function").unwrap();
             let callers = message
                 .find("every statically resolved test caller")

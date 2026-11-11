@@ -33,10 +33,7 @@ pub(crate) fn transparent_receiver_writes(semantic: &Semantic<'_>) -> FxHashSet<
         if calls.get(&function.id()) != Some(&1) {
             continue;
         }
-        let Some(parent) = assignment_parent(semantic, function.id()) else {
-            continue;
-        };
-        let AstKind::AssignmentExpression(assignment) = semantic.nodes().kind(parent) else {
+        let Some(assignment) = assignment_parent(semantic, function.id()) else {
             continue;
         };
         let AssignmentTarget::StaticMemberExpression(member) = &assignment.left else {
@@ -140,18 +137,11 @@ fn restores_capture(
     {
         return false;
     }
-    let AstKind::VariableDeclarator(capture) = semantic
-        .nodes()
-        .kind(semantic.scoping().symbol_declaration(symbol))
-    else {
-        return false;
-    };
-    if !matches!(&capture.id, BindingPattern::BindingIdentifier(id) if id.symbol_id.get() == Some(symbol))
-        || capture.span.end >= id.span.start
-    {
-        return false;
-    }
-    matches!(capture.init.as_ref().map(Expression::get_inner_expression), Some(Expression::StaticMemberExpression(member)) if member.property.name == property && object_symbol(semantic, &member.object) == Some(object))
+    semantic.nodes().kind(semantic.scoping().symbol_declaration(symbol)).as_variable_declarator().is_some_and(|capture| {
+        matches!(&capture.id, BindingPattern::BindingIdentifier(binding) if binding.symbol_id.get() == Some(symbol))
+            && capture.span.end < id.span.start
+            && matches!(capture.init.as_ref().map(Expression::get_inner_expression), Some(Expression::StaticMemberExpression(member)) if member.property.name == property && object_symbol(semantic, &member.object) == Some(object))
+    })
 }
 
 pub(crate) fn transparent_receiver_writes_from_program(

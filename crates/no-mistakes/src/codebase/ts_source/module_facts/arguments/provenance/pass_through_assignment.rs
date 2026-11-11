@@ -7,12 +7,7 @@ pub(super) fn assigned_capture(
     function: NodeId,
     call: &CallExpression<'_>,
 ) -> Option<String> {
-    let AstKind::AssignmentExpression(assignment) = semantic
-        .nodes()
-        .kind(assignment_parent(semantic, function)?)
-    else {
-        return None;
-    };
+    let assignment = assignment_parent(semantic, function)?;
     if assignment.operator != AssignmentOperator::Assign {
         return None;
     }
@@ -31,12 +26,10 @@ pub(super) fn assigned_capture(
     {
         return None;
     }
-    let AstKind::VariableDeclarator(capture) = semantic
+    let capture = semantic
         .nodes()
         .kind(semantic.scoping().symbol_declaration(symbol))
-    else {
-        return None;
-    };
+        .as_variable_declarator()?;
     if !matches!(&capture.id, BindingPattern::BindingIdentifier(id) if id.symbol_id.get() == Some(symbol))
         || capture.span.end > assignment.span.start
     {
@@ -76,9 +69,10 @@ fn imported_object(semantic: &Semantic<'_>, object: &Expression<'_>) -> Option<S
         }
         _ => return None,
     };
-    let AstKind::ImportDeclaration(import) = semantic.nodes().parent_kind(declaration) else {
-        return None;
-    };
+    let import = semantic
+        .nodes()
+        .parent_kind(declaration)
+        .as_import_declaration()?;
     let source = crate::ast::js_literal(&import.source);
     let module = source.strip_prefix("node:").unwrap_or(&source);
     (semantic.scoping().symbol_redeclarations(symbol).is_empty()
@@ -95,11 +89,14 @@ fn imported_object(semantic: &Semantic<'_>, object: &Expression<'_>) -> Option<S
     .then_some(symbol)
 }
 
-pub(crate) fn assignment_parent(semantic: &Semantic<'_>, function: NodeId) -> Option<NodeId> {
+pub(crate) fn assignment_parent<'a>(
+    semantic: &Semantic<'a>,
+    function: NodeId,
+) -> Option<&'a AssignmentExpression<'a>> {
     let mut current = semantic.nodes().parent_id(function);
     for _ in 0..16 {
         match semantic.nodes().kind(current) {
-            AstKind::AssignmentExpression(_) => return Some(current),
+            AstKind::AssignmentExpression(assignment) => return Some(assignment),
             AstKind::ParenthesizedExpression(_)
             | AstKind::TSAsExpression(_)
             | AstKind::TSSatisfiesExpression(_)

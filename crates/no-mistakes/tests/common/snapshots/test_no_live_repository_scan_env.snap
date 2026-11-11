@@ -2483,6 +2483,50 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "sync-hook-configured-only-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-configured-parameter-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 2,
+          "message": "unresolved root: `readdir` enumerates a directory whose root is a parameter, but root.mts:3 passes `process.env.X`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(root) { return readdir(root); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "sync-hook-custom-import-cleanup": {
     "exitCode": 0,
     "report": {
@@ -2519,6 +2563,84 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unresolved root"
         }
       ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-helper-member-suffix": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(options) { return readdir(path.join(getLocalDir(), options.table)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-helper-unknown-suffix": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 4,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-parameter-cleanup-read": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "query-files.mts",
+          "import": "readdir",
+          "line": 2,
+          "message": "unresolved root: `readdir` enumerates a directory whose root is a parameter, but root.mts:8 passes `process.env.X`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export function query(root) { return readdir(root); }",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-reset-intersection": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],

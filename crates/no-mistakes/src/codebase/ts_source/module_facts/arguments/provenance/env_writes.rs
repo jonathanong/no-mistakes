@@ -41,8 +41,15 @@ pub(super) fn from_assignment<'a>(
     } else {
         PathOrigin::unknown()
     };
-    record(out, projector, node, name, origin, assignment.span.end);
-    reject_cleanup_assignment(out);
+    record(
+        out,
+        projector,
+        node,
+        name,
+        origin,
+        assignment.span.end,
+        false,
+    );
 }
 
 pub(super) fn from_delete<'a>(
@@ -71,6 +78,7 @@ pub(super) fn from_delete<'a>(
             name,
             PathOrigin::unknown(),
             unary.span.end,
+            true,
         ),
         None => out.poison_env(),
     }
@@ -103,8 +111,7 @@ pub(super) fn from_call<'a>(
                     .get(1)
                     .and_then(Argument::as_expression)
                     .map_or_else(PathOrigin::unknown, |value| projector.path_of(value));
-                record(out, projector, node, name, origin, call.span.end);
-                reject_cleanup_assignment(out);
+                record(out, projector, node, name, origin, call.span.end, false);
             }
             None => out.poison_env(),
         }
@@ -144,23 +151,22 @@ fn record(
     name: String,
     origin: PathOrigin,
     end: u32,
+    cleanup: bool,
 ) {
+    let scope = super::scope::write_scope(projector.semantic, node);
+    let scope = if !cleanup
+        && matches!(
+            scope,
+            super::super::WriteScope::AfterEach(..) | super::super::WriteScope::AfterAll(..)
+        ) {
+        super::super::WriteScope::Conditional
+    } else {
+        scope
+    };
     out.env_writes.push(EnvWrite {
         name,
         end,
         origin,
-        scope: super::scope::write_scope(projector.semantic, node),
+        scope,
     });
-}
-
-fn reject_cleanup_assignment(out: &mut PathProvenance) {
-    let Some(write) = out.env_writes.last_mut() else {
-        return;
-    };
-    if matches!(
-        write.scope,
-        super::super::WriteScope::AfterEach(..) | super::super::WriteScope::AfterAll(..)
-    ) {
-        write.scope = super::super::WriteScope::Conditional;
-    }
 }

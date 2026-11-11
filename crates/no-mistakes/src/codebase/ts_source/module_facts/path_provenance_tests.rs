@@ -211,3 +211,9 @@ mod tmpdir;
 mod captured_wrappers;
 
 mod getters;
+
+mod lifecycle_boundaries;
+
+mod captured_wrapper_edges;
+
+mod getter_import_kinds;

@@ -52,3 +52,7 @@ impl Owners<'_> {
         })
     }
 }
+
+#[cfg(test)]
+#[path = "root_tails/tests.rs"]
+mod tests;

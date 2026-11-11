@@ -25,6 +25,15 @@ impl Owners<'_> {
         let Some(call) = sites.get(index).filter(|call| call.offset == offset) else {
             return false;
         };
+        self.getter_call_owned(call, site, facts)
+    }
+
+    fn getter_call_owned(
+        &self,
+        call: &ResolvedCallSite,
+        site: &ResolvedCallSite,
+        facts: &dyn TsFactLookup,
+    ) -> bool {
         let Some(
             target @ NodeId::Symbol {
                 file,
@@ -55,3 +64,7 @@ impl Owners<'_> {
                 .is_some_and(|name| self.env_owned(name, site, facts))
     }
 }
+
+#[cfg(test)]
+#[path = "getters/tests.rs"]
+mod tests;

@@ -90,3 +90,5 @@ fn json_project_parse_keeps_string_and_negated_workspace_entries() {
     assert_eq!(projects.len(), 1);
     assert_eq!(projects[0].policy_name.as_deref(), Some("inline"));
 }
+
+mod concurrency;

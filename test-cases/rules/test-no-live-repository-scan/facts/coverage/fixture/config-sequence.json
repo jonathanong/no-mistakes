@@ -1,0 +1,8 @@
+[
+  { "test": { "name": "enabled", "sequence": { "concurrent": true } } },
+  { "test": { "name": "disabled", "sequence": { "concurrent": false } } },
+  { "test": { "name": "unknown value", "sequence": { "concurrent": "unknown" } } },
+  { "test": { "name": "unknown object", "sequence": null } },
+  { "test": { "name": "other key", "sequence": { "shuffle": true } } },
+  { "test": { "name": "absent" } }
+]

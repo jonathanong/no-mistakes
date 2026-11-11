@@ -71,25 +71,23 @@ pub(super) fn hook_name(
         return None;
     };
     let reference = semantic.scoping().get_reference(id.reference_id.get()?);
+    let imported;
     let name = if let Some(symbol) = reference.symbol_id() {
         let declaration = semantic.scoping().symbol_declaration(symbol);
-        let AstKind::ImportSpecifier(binding) = semantic.nodes().kind(declaration) else {
+        let (AstKind::ImportSpecifier(binding), AstKind::ImportDeclaration(import)) = (
+            semantic.nodes().kind(declaration),
+            semantic.nodes().parent_kind(declaration),
+        ) else {
             return None;
         };
-        if binding.import_kind.is_type() {
+        if binding.import_kind.is_type()
+            || import.import_kind.is_type()
+            || crate::ast::js_literal(&import.source) != "vitest"
+        {
             return None;
         }
-        let AstKind::ImportDeclaration(import) = semantic.nodes().parent_kind(declaration) else {
-            return None;
-        };
-        if import.import_kind.is_type() || crate::ast::js_literal(&import.source) != "vitest" {
-            return None;
-        }
-        match &binding.imported {
-            ModuleExportName::IdentifierName(name) => name.name.as_str(),
-            ModuleExportName::IdentifierReference(name) => name.name.as_str(),
-            ModuleExportName::StringLiteral(name) => name.value.as_str()?,
-        }
+        imported = crate::ast::module_export_name(&binding.imported);
+        imported.as_ref()
     } else {
         id.name.as_str()
     };

@@ -35,12 +35,13 @@ fn option(property: &ObjectPropertyKind<'_>) -> bool {
     if property.computed {
         return true;
     }
-    match crate::ast::property_key_name(&property.key).as_deref() {
-        Some("concurrent") => !matches!(property.value.get_inner_expression(),
-            Expression::BooleanLiteral(value) if !value.value),
-        Some(_) => false,
-        None => true,
-    }
+    crate::ast::property_key_name(&property.key)
+        .as_deref()
+        .is_none_or(|name| {
+            name == "concurrent"
+                && !matches!(property.value.get_inner_expression(),
+            Expression::BooleanLiteral(value) if !value.value)
+        })
 }
 
 fn root<'a, 'b>(
@@ -65,30 +66,25 @@ fn root<'a, 'b>(
 }
 
 fn runner(semantic: &Semantic<'_>, id: &IdentifierReference<'_>) -> bool {
-    let Some(reference) = id.reference_id.get() else {
-        return false;
-    };
-    let Some(symbol) = semantic.scoping().get_reference(reference).symbol_id() else {
-        return test_name(id.name.as_str());
-    };
-    let declaration = semantic.scoping().symbol_declaration(symbol);
-    let AstKind::ImportSpecifier(binding) = semantic.nodes().kind(declaration) else {
-        return false;
-    };
-    let AstKind::ImportDeclaration(import) = semantic.nodes().parent_kind(declaration) else {
-        return false;
-    };
-    if binding.import_kind.is_type()
-        || import.import_kind.is_type()
-        || crate::ast::js_literal(&import.source) != "vitest"
-    {
-        return false;
-    }
-    match &binding.imported {
-        ModuleExportName::IdentifierName(name) => test_name(name.name.as_str()),
-        ModuleExportName::IdentifierReference(name) => test_name(name.name.as_str()),
-        ModuleExportName::StringLiteral(name) => test_name(&crate::ast::js_literal(name)),
-    }
+    id.reference_id.get().is_some_and(|reference| {
+        let Some(symbol) = semantic.scoping().get_reference(reference).symbol_id() else {
+            return test_name(id.name.as_str());
+        };
+        let declaration = semantic.scoping().symbol_declaration(symbol);
+        match (
+            semantic.nodes().kind(declaration),
+            semantic.nodes().parent_kind(declaration),
+        ) {
+            (AstKind::ImportSpecifier(binding), AstKind::ImportDeclaration(import))
+                if !binding.import_kind.is_type()
+                    && !import.import_kind.is_type()
+                    && crate::ast::js_literal(&import.source) == "vitest" =>
+            {
+                test_name(&crate::ast::module_export_name(&binding.imported))
+            }
+            _ => false,
+        }
+    })
 }
 
 fn test_name(name: &str) -> bool {

@@ -20,3 +20,5 @@ pub(in crate::integration_tests) fn parse_program(
     };
     parse_program_with_resolver(program, source, path, config_dir, root, &resolver)
 }
+
+mod concurrency;

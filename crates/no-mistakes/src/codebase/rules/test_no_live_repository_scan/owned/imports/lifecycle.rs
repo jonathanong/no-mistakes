@@ -45,3 +45,7 @@ impl ImportedWrites<'_> {
         summary.lifecycle.cleanup_all || summary.lifecycle.cleanup_names.contains(name)
     }
 }
+
+#[cfg(test)]
+#[path = "lifecycle_tests.rs"]
+mod tests;

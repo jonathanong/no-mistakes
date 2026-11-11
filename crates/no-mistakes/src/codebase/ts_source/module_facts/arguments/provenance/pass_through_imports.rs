@@ -30,19 +30,17 @@ pub(super) fn unique_receivers(semantic: &Semantic<'_>) -> FxHashSet<SymbolId> {
                 }
                 _ => continue,
             };
-            if let Some(symbol) = binding.symbol_id.get() {
-                groups
-                    .entry(
-                        if module == "fs-extra" {
-                            "fs-extra"
-                        } else {
-                            "fs"
-                        }
-                        .into(),
-                    )
-                    .or_default()
-                    .push(symbol);
-            }
+            groups
+                .entry(
+                    if module == "fs-extra" {
+                        "fs-extra"
+                    } else {
+                        "fs"
+                    }
+                    .into(),
+                )
+                .or_default()
+                .extend(binding.symbol_id.get());
         }
     }
     groups
