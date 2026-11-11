@@ -81,16 +81,21 @@ fn check_timeout_stops_a_blocked_repository_check_and_names_the_phase() {
         .recv_timeout(Duration::from_secs(15))
         .expect("check must reach blocked config loading before its deadline is armed");
     reader.join().unwrap();
-    assert!(
+    // ChildExt::wait_timeout closes Child::stdin; retain the start gate separately.
+    let mut start_gate = child.0.stdin.take().unwrap();
+    if let Some(status) = child.0.wait_timeout(Duration::from_millis(1100)).unwrap() {
+        let mut stderr = String::new();
         child
             .0
-            .wait_timeout(Duration::from_millis(1100))
+            .stderr
+            .take()
             .unwrap()
-            .is_none(),
-        "blocked check must survive longer than its command budget before the start gate opens"
-    );
+            .read_to_string(&mut stderr)
+            .unwrap();
+        panic!("blocked check exited before the start gate opened: {status}: {stderr}");
+    }
     let started = Instant::now();
-    child.0.stdin.take().unwrap().write_all(&[1]).unwrap();
+    start_gate.write_all(&[1]).unwrap();
     let status = child
         .0
         .wait_timeout(Duration::from_secs(8))
