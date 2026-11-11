@@ -37,14 +37,6 @@ impl<'a> Projector<'a, '_> {
                     AstKind::StaticMemberExpression(member) if member.object.span() == span => {
                         Some(member.property.name.as_str())
                     }
-                    AstKind::ComputedMemberExpression(member) if member.object.span() == span => {
-                        let Expression::StringLiteral(value) =
-                            member.expression.get_inner_expression()
-                        else {
-                            return false;
-                        };
-                        value.value.as_str()
-                    }
                     _ => return false,
                 };
                 if name != Some(*key) {

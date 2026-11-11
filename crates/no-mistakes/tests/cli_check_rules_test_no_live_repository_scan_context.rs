@@ -1,6 +1,18 @@
 use std::path::PathBuf;
 
 const CASES: &[(&str, bool)] = &[
+    ("url-destructured-carrier-escape-live", false),
+    ("url-object-carrier-escape-live", false),
+    ("local-whole-carrier-reassigned-live", false),
+    ("forwarded-whole-carrier-reassigned-live", false),
+    ("computed-container-url-escape-live", false),
+    ("static-container-read-owned", true),
+    ("unknown-container-write-live", false),
+    ("local-url-alias-mutation-live", false),
+    ("local-url-direct-call-live", false),
+    ("disposable-buffer-path-escape-live", false),
+    ("unknown-rest-root-live", false),
+    ("computed-object-root-live", false),
     ("nested-forwarded-url-leaf-escape-live", false),
     ("forwarded-url-no-escape-owned", true),
     ("forwarded-string-mutator-owned", true),

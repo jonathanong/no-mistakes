@@ -49,12 +49,10 @@ impl<'a> Projector<'a, '_> {
                     if property.method || property.kind != PropertyKind::Init {
                         return (FxHashMap::default(), true);
                     }
-                    if property.computed {
-                        paths.clear();
-                        unknown = true;
-                        continue;
-                    }
-                    let Some(key) = crate::ast::property_key_name(&property.key) else {
+                    let key = (!property.computed)
+                        .then(|| crate::ast::property_key_name(&property.key))
+                        .flatten();
+                    let Some(key) = key else {
                         paths.clear();
                         unknown = true;
                         continue;
