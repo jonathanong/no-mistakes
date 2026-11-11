@@ -33,7 +33,12 @@ impl<'a> Projector<'a, '_> {
             .then(|| PathOrigin::alternatives(origins))
     }
 
-    fn owned_statements(&mut self, statements: &[Statement<'a>], depth: usize, origins: &mut Vec<PathOrigin>) -> Option<bool> {
+    fn owned_statements(
+        &mut self,
+        statements: &[Statement<'a>],
+        depth: usize,
+        origins: &mut Vec<PathOrigin>,
+    ) -> Option<bool> {
         let mut falls_through = true;
         for statement in statements {
             falls_through &= self.owned_statement(statement, depth + 1, origins)?;
@@ -41,7 +46,12 @@ impl<'a> Projector<'a, '_> {
         Some(falls_through)
     }
 
-    fn owned_statement(&mut self, statement: &Statement<'a>, depth: usize, origins: &mut Vec<PathOrigin>) -> Option<bool> {
+    fn owned_statement(
+        &mut self,
+        statement: &Statement<'a>,
+        depth: usize,
+        origins: &mut Vec<PathOrigin>,
+    ) -> Option<bool> {
         if depth >= 16 || !self.take() {
             return None;
         }
@@ -52,15 +62,19 @@ impl<'a> Projector<'a, '_> {
                     && origin.root_tails.is_empty()
                     && !origin.dynamic
                     && !origin.segments.iter().any(|part| part == ".."))
-                { return None; }
+                {
+                    return None;
+                }
                 origins.push(origin);
                 Some(false)
             }
-            Statement::BlockStatement(block) => self.owned_statements(&block.body, depth + 1, origins),
+            Statement::BlockStatement(block) => {
+                self.owned_statements(&block.body, depth + 1, origins)
+            }
             Statement::IfStatement(branch) => {
                 let consequent = self.owned_statement(&branch.consequent, depth + 1, origins)?;
                 let alternate = match &branch.alternate {
-                    Some(alternate) => self.owned_statement(alternate, depth + 1)?,
+                    Some(alternate) => self.owned_statement(alternate, depth + 1, origins)?,
                     None => true,
                 };
                 Some(consequent || alternate)
