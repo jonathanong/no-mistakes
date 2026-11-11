@@ -100,6 +100,16 @@ fn located(items: &Value) -> Vec<String> {
     found
 }
 
+fn enumeration_locations(items: &Value) -> Vec<String> {
+    items
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|item| matches!(item["import"].as_str(), Some("readdir" | "readdirSync")))
+        .map(|item| format!("{}:{}", item["file"].as_str().unwrap(), item["line"]))
+        .collect()
+}
+
 #[test]
 fn provenance_json_snapshot() {
     let (provenance, bulk) = (root("provenance"), root("bulk"));
@@ -145,6 +155,8 @@ fn node_temp_factories_need_their_original_binding() {
     let mut findings = located(&report["rules"]);
     findings.extend(located(&report["advisories"]));
     findings.sort();
+    let mut enumerations = enumeration_locations(&report["rules"]);
+    enumerations.extend(enumeration_locations(&report["advisories"]));
     for line in [24, 27, 30, 31, 32] {
         let expected = format!("tests/scan.test.mts:{line}");
         assert!(findings.contains(&expected), "{expected}: {findings:?}");
@@ -244,6 +256,72 @@ fn node_temp_factories_need_their_original_binding() {
     assert!(
         findings.contains(&"tests/promises-getter-spy.test.mts:9".to_string()),
         "{findings:?}"
+    );
+    for line in 18..=21 {
+        let owned = format!("tests/require-member.test.cts:{line}");
+        assert!(!findings.contains(&owned), "{owned}: {findings:?}");
+    }
+    for line in 24..=28 {
+        let unknown = format!("tests/require-member.test.cts:{line}");
+        assert!(
+            enumerations.contains(&unknown),
+            "{unknown}: {enumerations:?}"
+        );
+    }
+    for file in [
+        "require-direct-mutation",
+        "require-direct-promises-mutation",
+        "require-direct-computed-mutation",
+        "require-direct-nested-computed-mutation",
+    ] {
+        let line = if file.contains("computed") { 10 } else { 9 };
+        let unknown = format!("tests/{file}.test.cts:{line}");
+        assert!(
+            enumerations.contains(&unknown),
+            "{unknown}: {enumerations:?}"
+        );
+    }
+    for line in [11, 12, 13] {
+        let owned = format!("tests/require-direct-calls.test.cts:{line}");
+        assert!(!enumerations.contains(&owned), "{owned}: {enumerations:?}");
+    }
+    for line in [16, 17, 18, 19] {
+        let unknown = format!("tests/require-direct-calls.test.cts:{line}");
+        assert!(
+            enumerations.contains(&unknown),
+            "{unknown}: {enumerations:?}"
+        );
+    }
+    for file in [
+        "require-direct-mutation",
+        "require-direct-promises-mutation",
+    ] {
+        for line in [9, 10] {
+            let unknown = format!("tests/{file}.test.cts:{line}");
+            assert!(
+                enumerations.contains(&unknown),
+                "{unknown}: {enumerations:?}"
+            );
+        }
+    }
+    for file in ["require-view-escape", "require-promises-escape"] {
+        let unknown = format!("tests/{file}.test.cts:12");
+        assert!(
+            enumerations.contains(&unknown),
+            "{unknown}: {enumerations:?}"
+        );
+    }
+    assert!(
+        !enumerations.contains(&"tests/require-safe-spy.test.cts:9".to_string()),
+        "{enumerations:?}"
+    );
+    assert!(
+        !enumerations.contains(&"tests/require-wrong-module-escape.test.cts:12".to_string()),
+        "{enumerations:?}"
+    );
+    assert!(
+        enumerations.contains(&"tests/require-nested-result.test.cts:7".to_string()),
+        "{enumerations:?}"
     );
 }
 

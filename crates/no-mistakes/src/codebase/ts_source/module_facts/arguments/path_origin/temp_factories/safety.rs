@@ -78,7 +78,10 @@ pub(super) fn factory_view_safe(semantic: &Semantic<'_>, symbol: SymbolId, sync:
     true
 }
 
-fn promises_member_safe(nodes: &oxc_semantic::AstNodes<'_>, member: oxc_semantic::NodeId) -> bool {
+pub(super) fn promises_member_safe(
+    nodes: &oxc_semantic::AstNodes<'_>,
+    member: oxc_semantic::NodeId,
+) -> bool {
     if super::super::super::super::modules::imports_namespace::writes_member(nodes, member) {
         return false;
     }
@@ -100,7 +103,7 @@ fn promises_member_safe(nodes: &oxc_semantic::AstNodes<'_>, member: oxc_semantic
         || !super::super::super::super::modules::imports_namespace::writes_member(nodes, next)
 }
 
-fn safe_nonfactory_spy(semantic: &Semantic<'_>, node: oxc_semantic::NodeId) -> bool {
+pub(super) fn safe_nonfactory_spy(semantic: &Semantic<'_>, node: oxc_semantic::NodeId) -> bool {
     let nodes = semantic.nodes();
     let AstKind::CallExpression(call) = nodes.parent_kind(node) else {
         return false;

@@ -26,7 +26,7 @@ fn popular_alias_scans_once_and_memoizes_budget_failure() {
         300
     );
     let exported = FxHashSet::default();
-    let temp_factories = FxHashMap::default();
+    let temp_factories = path_origin::TempFactories::default();
     let mut immutable = AliasSafety::default();
     let mut projector = Projector {
         semantic: &semantic,

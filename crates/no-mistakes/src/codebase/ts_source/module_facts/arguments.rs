@@ -119,7 +119,7 @@ struct Projector<'a, 's> {
     remaining: usize,
     exported: &'s FxHashSet<usize>,
     immutable: &'s mut AliasSafety,
-    temp_factories: &'s FxHashMap<usize, path_origin::TempFactoryBinding>,
+    temp_factories: &'s path_origin::TempFactories,
 }
 
 impl Projector<'_, '_> {

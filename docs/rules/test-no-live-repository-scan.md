@@ -110,6 +110,13 @@ An enumeration passes when its root is provably bounded:
   A `promises` binding from Node `fs` is also recognized as `fs/promises`.
   A stable Node `fs.promises.mkdtemp` call is recognized; `fs.promises.mkdtempSync`
   is unresolved because the promises API has no synchronous factory.
+  Static CommonJS selections such as `require('fs').mkdtempSync` and
+  `require('fs').promises.mkdtemp` keep their Node factory identity when bound
+  locally or called directly. Unknown selections, shadowed loaders, and
+  mutations or opaque escapes of a Node factory view stay unresolved. A genuine
+  `vi.spyOn(require('fs'), 'readdirSync')` leaves the factory identity intact.
+  Direct `require(...)` calls may still produce the existing conservative loader
+  advisory even when an enumerator's temporary root is proven owned.
   A same-named local function, parameter, or import from another module does not establish an
   owned root. A mutated or escaping module receiver is unresolved. Use a
   direct Node import when creating the directory.
