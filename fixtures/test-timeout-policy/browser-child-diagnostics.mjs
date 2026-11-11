@@ -2,8 +2,16 @@ import { createHash } from "node:crypto";
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { availableParallelism, cpus, totalmem } from "node:os";
 import { join } from "node:path";
+// cspell:ignore GOMEMLIMIT
 
 export async function recordBrowserChildDiagnostics(outcome, options) {
+  async function bestEffort(label, action) {
+    try {
+      return await action();
+    } catch (error) {
+      console.warn(`Browser SDK ${label} unavailable: ${error.message}`);
+    }
+  }
   if (outcome.forcedCleanup || outcome.errors.length) {
     try {
       const chronology = outcome.lifecycle.events
@@ -66,25 +74,39 @@ export async function recordBrowserChildDiagnostics(outcome, options) {
     };
     let browserLifecycle = "";
     if (outcome.drained) {
-      try {
-        browserLifecycle = await readFile(join(directory, "lifecycle.jsonl"), "utf8");
-      } catch (error) {
-        if (error.code !== "ENOENT") throw error;
-      }
+      browserLifecycle =
+        (await bestEffort("child lifecycle", async () => {
+          try {
+            return await readFile(join(directory, "lifecycle.jsonl"), "utf8");
+          } catch (error) {
+            if (error.code !== "ENOENT") throw error;
+          }
+        })) ?? "";
     }
     if (process.env.SDK_CHILD_RECEIPT_FILE) {
-      await appendFile(process.env.SDK_CHILD_RECEIPT_FILE, JSON.stringify(receipt) + "\n");
-      const artifacts = process.env.SDK_CHILD_RECEIPT_FILE + "-artifacts/" + child.pid;
-      await mkdir(artifacts, { recursive: true });
-      await writeFile(
-        join(artifacts, "lifecycle.jsonl"),
-        outcome.lifecycle.events
-          .map((event) => JSON.stringify({ origin: "observer", ...event }))
-          .join("\n") +
-          "\n" +
-          browserLifecycle,
+      await bestEffort("receipt", () =>
+        appendFile(process.env.SDK_CHILD_RECEIPT_FILE, JSON.stringify(receipt) + "\n"),
       );
-      await writeFile(join(artifacts, "output.log"), outcome.output);
+      const artifacts = process.env.SDK_CHILD_RECEIPT_FILE + "-artifacts/" + child.pid;
+      const created = await bestEffort("artifact directory", async () => {
+        await mkdir(artifacts, { recursive: true });
+        return true;
+      });
+      if (created) {
+        await bestEffort("lifecycle artifact", () =>
+          writeFile(
+            join(artifacts, "lifecycle.jsonl"),
+            outcome.lifecycle.events
+              .map((event) => JSON.stringify({ origin: "observer", ...event }))
+              .join("\n") +
+              "\n" +
+              browserLifecycle,
+          ),
+        );
+        await bestEffort("output artifact", () =>
+          writeFile(join(artifacts, "output.log"), outcome.output),
+        );
+      }
     }
     if ((outcome.forcedCleanup || outcome.errors.length) && browserLifecycle) {
       const events = browserLifecycle.trim().split("\n");

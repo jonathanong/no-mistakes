@@ -62,7 +62,58 @@ for (const mode of ["pass", "reject", "startup-stall", "shutdown-stall"]) {
         ])
           assert.ok(phases.includes(phase), phase);
         assert.equal(phases.includes("watchdog"), stalled);
-        assert.ok(outcome.lifecycle.streams.stderr.bytes > 0);
+        const stdoutBytes = outcome.lifecycle.streams.stdout?.bytes ?? 0;
+        const stderrBytes = outcome.lifecycle.streams.stderr.bytes;
+        assert.equal(
+          stdoutBytes,
+          mode === "startup-stall" ? 0 : Buffer.byteLength("FIXTURE_BODY_COMPLETED\n"),
+        );
+        assert.ok(stderrBytes >= Buffer.byteLength(`fixture-mode:${mode}\n`));
+        assert.equal(stdoutBytes + stderrBytes, Buffer.byteLength(outcome.output));
+        for (const [name, stream] of Object.entries(outcome.lifecycle.streams)) {
+          assert.ok(stream.first.elapsedMs <= stream.last.elapsedMs);
+          assert.equal(
+            outcome.lifecycle.events.find((event) => event.phase === `${name}-first`).elapsedMs,
+            stream.first.elapsedMs,
+          );
+          assert.equal(
+            outcome.lifecycle.events.find((event) => event.phase === `${name}-last`).bytes,
+            stream.bytes,
+          );
+        }
+        assert.ok(
+          outcome.lifecycle.events.every(
+            (event, index, events) => index === 0 || events[index - 1].elapsedMs <= event.elapsedMs,
+          ),
+        );
+        const snapshot = outcome.lifecycle.events.find(
+          (event) => event.phase === "watchdog-processes",
+        );
+        assert.equal(Boolean(snapshot), stalled);
+        if (snapshot) {
+          assert.ok(snapshot.scanned > 0 && snapshot.scanned <= 4096);
+          if (!snapshot.truncated)
+            assert.ok(snapshot.processes.some((process) => process.pid === child.pid));
+          for (const process of snapshot.processes) {
+            assert.deepEqual(Object.keys(process).sort(), [
+              "comm",
+              "group",
+              "pid",
+              "rssPages",
+              "session",
+              "start",
+              "state",
+              "systemTicks",
+              "userTicks",
+            ]);
+            assert.equal(process.group, child.pid);
+            assert.equal(typeof process.comm, "string");
+            assert.ok(Number.isFinite(process.rssPages) && process.rssPages >= 0);
+            assert.ok(Number.isFinite(process.userTicks) && process.userTicks >= 0);
+            assert.ok(Number.isFinite(process.systemTicks) && process.systemTicks >= 0);
+          }
+          assert.ok(!JSON.stringify(snapshot).includes("child-lifecycle/child.mjs"));
+        }
         if (mode !== "startup-stall") assert.match(outcome.output, /FIXTURE_BODY_COMPLETED/);
         await recordBrowserChildDiagnostics(outcome, {
           child,

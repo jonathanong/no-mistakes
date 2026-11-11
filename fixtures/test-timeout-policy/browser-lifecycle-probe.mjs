@@ -5,9 +5,27 @@ const wrappedReporters = new WeakSet();
 const wrappedProviders = new WeakSet();
 
 function errorDetails(error) {
-  return {
-    errorName: error instanceof Error ? error.name : typeof error,
-  };
+  return { errorName: error instanceof Error ? error.name : typeof error };
+}
+function observeCompletion(result, phase, details) {
+  let then;
+  try {
+    then = result?.then;
+  } catch {
+    recordBrowserLifecycle(`${phase}:completion-observer-error`, details);
+    return true;
+  }
+  if (typeof then !== "function") return false;
+  try {
+    then.call(
+      result,
+      () => recordBrowserLifecycle(`${phase}:complete`, details),
+      (error) => recordBrowserLifecycle(`${phase}:error`, { ...details, ...errorDetails(error) }),
+    );
+  } catch {
+    recordBrowserLifecycle(`${phase}:completion-observer-error`, details);
+  }
+  return true;
 }
 
 /** Write a bounded, best-effort lifecycle record without affecting test behavior. */
@@ -83,18 +101,7 @@ function wrapReporterHook(reporter, name) {
         throw error;
       }
       if (name === "onInit") registerVitestClose(args[0]);
-      if (result && typeof result.then === "function") {
-        try {
-          result.then(
-            () => recordBrowserLifecycle(`${name}:complete`, details),
-            (error) =>
-              recordBrowserLifecycle(`${name}:error`, { ...details, ...errorDetails(error) }),
-          );
-        } catch {
-          recordBrowserLifecycle(`${name}:completion-observer-error`, details);
-        }
-        return result;
-      }
+      if (observeCompletion(result, name, details)) return result;
       recordBrowserLifecycle(`${name}:complete`, details);
       return result;
     };
@@ -140,18 +147,7 @@ function wrapProviderMethod(provider, name) {
         recordBrowserLifecycle(`${phase}:error`, { ...details, ...errorDetails(error) });
         throw error;
       }
-      if (result && typeof result.then === "function") {
-        try {
-          result.then(
-            () => recordBrowserLifecycle(`${phase}:complete`, details),
-            (error) =>
-              recordBrowserLifecycle(`${phase}:error`, { ...details, ...errorDetails(error) }),
-          );
-        } catch {
-          recordBrowserLifecycle(`${phase}:completion-observer-error`, details);
-        }
-        return result;
-      }
+      if (observeCompletion(result, phase, details)) return result;
       recordBrowserLifecycle(`${phase}:complete`, details);
       return result;
     };

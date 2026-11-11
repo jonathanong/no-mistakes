@@ -266,3 +266,34 @@ test(
     });
   },
 );
+
+test(
+  "a throwing then getter cannot change reporter or provider return identity",
+  { timeout: 10000 },
+  async () => {
+    await withReceipt(async (records) => {
+      const { installBrowserLifecycleReceipts } = await probe();
+      // oxlint-disable-next-line unicorn/no-thenable -- Exercise a hostile callback result.
+      const strangeThenable = Object.defineProperty({}, "then", {
+        get() {
+          throw new Error("diagnostic must not read this");
+        },
+      });
+      const reporter = { onTestRunStart: () => strangeThenable };
+      installBrowserLifecycleReceipts(reporter);
+      assert.equal(reporter.onTestRunStart([]), strangeThenable);
+
+      const provider = { openPage: () => strangeThenable, close() {} };
+      const option = { providerFactory: () => provider };
+      const { observeBrowserProvider } = await probe();
+      observeBrowserProvider(option).providerFactory();
+      assert.equal(provider.openPage(), strangeThenable);
+
+      const events = await records();
+      assert.ok(events.some((event) => event.phase === "onTestRunStart:completion-observer-error"));
+      assert.ok(
+        events.some((event) => event.phase === "provider.openPage:completion-observer-error"),
+      );
+    });
+  },
+);
