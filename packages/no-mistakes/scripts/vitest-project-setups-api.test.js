@@ -8,30 +8,30 @@ const root = join(
   "../../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports-project-setups",
 );
 
-test(
-  "compiled selected Vitest executions retain each project's exclusions",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const fixture = join(
-      __dirname,
-      "../../../test-cases/codebase-analysis/selected-vitest-excludes/fixture",
-    );
-    for (const config of [
-      ".no-mistakes-a.yml",
-      ".no-mistakes-a-app.yml",
-      ".no-mistakes-a-inline-app.yml",
-      ".no-mistakes-a-b-app.yml",
-      ".no-mistakes.yml",
-      ".no-mistakes-b.yml",
-      ".no-mistakes-inline.yml",
-      ".no-mistakes-imported.yml",
-      ".no-mistakes-scope.yml",
-      ".no-mistakes-include.yml",
-      ".no-mistakes-missing-app-include.yml",
-      ".no-mistakes-rule-exclude.yml",
-    ]) {
+for (const config of [
+  ".no-mistakes-a.yml",
+  ".no-mistakes-a-app.yml",
+  ".no-mistakes-a-inline-app.yml",
+  ".no-mistakes-a-b-app.yml",
+  ".no-mistakes.yml",
+  ".no-mistakes-b.yml",
+  ".no-mistakes-inline.yml",
+  ".no-mistakes-imported.yml",
+  ".no-mistakes-scope.yml",
+  ".no-mistakes-include.yml",
+  ".no-mistakes-missing-app-include.yml",
+  ".no-mistakes-rule-exclude.yml",
+]) {
+  test(
+    `compiled selected Vitest executions retain each project's exclusions: ${config}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const fixture = join(
+        __dirname,
+        "../../../test-cases/codebase-analysis/selected-vitest-excludes/fixture",
+      );
       const options = { root: fixture, config: join(fixture, config) };
       const report = await cjs.check(options);
       assert.deepEqual(await esm.check(options), report);
@@ -60,9 +60,9 @@ test(
       );
       const prepared = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
       assert.deepEqual(prepared.reports[0].result, report);
-    }
-  },
-);
+    },
+  );
+}
 
 test(
   "compiled broad checks retain imported Vitest project matchers",
