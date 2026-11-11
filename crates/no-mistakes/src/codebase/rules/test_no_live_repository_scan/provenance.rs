@@ -17,10 +17,22 @@ pub(super) fn classify(origin: Option<&PathOrigin>, fixture_dirs: &[&str]) -> Ve
             "the path argument was not recorded (spread argument or unparsed module)",
         );
     };
+    if !origin.alternatives.is_empty() {
+        let mut result = Verdict::Allowed;
+        for atom in origin.atoms() {
+            match classify(Some(atom), fixture_dirs) {
+                verdict @ Verdict::Live(_) => return verdict,
+                verdict @ Verdict::Unresolved(_) => result = verdict,
+                Verdict::Allowed => {}
+            }
+        }
+        return result;
+    }
     if origin.anchor == PathAnchor::Temp
         && origin.root_tails.is_empty()
         && !origin.segments.iter().any(|part| part == "..")
     {
+
         return Verdict::Allowed;
     }
     if origin

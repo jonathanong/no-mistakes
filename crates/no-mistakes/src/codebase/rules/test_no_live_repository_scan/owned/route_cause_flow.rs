@@ -48,8 +48,12 @@ fn carries_parameter(
     span: u32,
 ) -> bool {
     args.is_some_and(|args| {
-        args.iter()
-            .any(|(_, origin)| origin.param == Some(index) && origin.param_owner == Some(span))
+        args.iter().any(|(_, origin)| {
+            origin
+                .atoms()
+                .iter()
+                .any(|atom| atom.param == Some(index) && atom.param_owner == Some(span))
+        })
     })
 }
 

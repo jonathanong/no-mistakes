@@ -70,11 +70,10 @@ pub(super) fn argument_paths<'a>(
 ) -> Vec<(usize, PathOrigin)> {
     let mut paths = Vec::new();
     let mut unproven = Vec::new();
-    for (index, argument) in call.arguments.iter().take(MAX_ARGUMENTS).enumerate() {
-        let Some(expression) = argument.as_expression() else {
+    for index in 0..MAX_ARGUMENTS {
+        let Some(origin) = projector.argument_origin(call, index) else {
             break;
         };
-        let origin = projector.path_of(expression);
         if kept(&origin) {
             paths.push((index, origin));
         } else {
@@ -88,12 +87,14 @@ pub(super) fn argument_paths<'a>(
 }
 
 fn kept(origin: &PathOrigin) -> bool {
-    matches!(
-        origin.anchor,
-        PathAnchor::Temp | PathAnchor::Module | PathAnchor::Cwd
-    ) || origin.param.is_some()
-        || origin.env.is_some()
-        || origin.getter.is_some()
+    origin.atoms().iter().any(|origin| {
+        matches!(
+            origin.anchor,
+            PathAnchor::Temp | PathAnchor::Module | PathAnchor::Cwd
+        ) || origin.param.is_some()
+            || origin.env.is_some()
+                || origin.getter.is_some()
+    })
 }
 
 /// `it(...)` / `test(...)` (including `.only` / `.skip`) with a function body.

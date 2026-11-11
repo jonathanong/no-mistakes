@@ -638,6 +638,11 @@ rebound rest parameter keeps the advisory; so does any other use of the rest
 binding (an index write, `splice`, `push`, `length = ...`, or a nested closure), as does forwarding outside
 `mockImplementation`/`mockImplementationOnce`.
 
+Ordinary root provenance can independently prove a rewritten argument. For example,
+an unconditional `args[0] = ownedRoot` before forwarding passes when `ownedRoot`
+is a fixture path or owned temporary root. This does not use the identity-only
+mock exemption.
+
 A conditional rewrite such as `if (args[0] === migrations) args[0] = root`
 before `original(...args)` remains unresolved. This is no longer identity
 forwarding: the analysis does not connect every mocked caller to the rewritten
@@ -720,6 +725,22 @@ writeFileSync(join(root, "ci.yml"), "name: ci\n");
 const names = readdirSync(root);
 const bounded = readdirSync(join(import.meta.dirname, "fixtures", "workflows"));
 ```
+
+Argument forwarding preserves each known position and property. Literal array
+spreads and a helper's rest parameter can carry an owned root to an enumerator.
+For object spreads, the last property wins: `{ ...inputs, outputRoot: root }`
+retains the explicit owned root, while `{ outputRoot: root, ...inputs }` stays
+unresolved when `inputs` is unknown. Writes to a rest slot are followed in source
+order; a conditional write also retains the unchanged input alternative.
+
+A destructuring default applies only when a caller demonstrably omits that
+property. Passing an explicit owned `schemaDir` proves
+`function main({ schemaDir = process.cwd() } = {})`; omitting it retains the live
+default. An unknown object or an explicitly unknown property is unresolved.
+`??` and `||` fallbacks retain every alternative, including optional-chain
+fallbacks. Each alternative must be owned, a fixture path, or a known relative
+suffix resolved under an owned base. A live or unknown alternative keeps the
+finding; rewrite it to a literal bounded path or pass an owned root explicitly.
 
 ## Counterexample
 

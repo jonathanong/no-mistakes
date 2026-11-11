@@ -77,7 +77,7 @@ impl Projector<'_, '_> {
         known
     }
 
-    fn safe_uses(&mut self, symbol: SymbolId, depth: usize) -> bool {
+    pub(super) fn safe_uses(&mut self, symbol: SymbolId, depth: usize) -> bool {
         if depth >= 16 || self.exported.contains(&symbol.index()) {
             return false;
         }

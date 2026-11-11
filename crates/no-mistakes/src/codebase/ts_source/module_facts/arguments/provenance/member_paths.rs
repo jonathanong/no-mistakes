@@ -1,4 +1,4 @@
-use super::super::{ArgumentText, PathOrigin, Projector};
+use super::super::{ArgumentText, PathOrigin, PathProvenance, Projector};
 use super::argument_source::ArgumentSource;
 use super::call_args::MAX_ARGUMENTS;
 use oxc_ast::ast::*;
@@ -8,50 +8,24 @@ pub(super) fn collect<'a>(
     projector: &mut Projector<'a, '_>,
     call: &CallExpression<'a>,
     source: &ArgumentSource<'_>,
+    out: &mut PathProvenance,
 ) -> (Vec<(usize, String, PathOrigin)>, Vec<ArgumentText>) {
     let mut members = Vec::new();
     let mut texts = Vec::new();
-    for (index, argument) in call.arguments.iter().take(MAX_ARGUMENTS).enumerate() {
-        let Some(Expression::ObjectExpression(object)) = argument
-            .as_expression()
-            .map(Expression::get_inner_expression)
-        else {
-            continue;
-        };
-        if object.properties.len() > 32 {
-            continue;
-        }
-        let mut paths = crate::fx::FxHashMap::default();
-        let mut valid = true;
-        for property in &object.properties {
-            let ObjectPropertyKind::ObjectProperty(property) = property else {
-                valid = false;
-                break;
-            };
-            if property.computed || property.method || property.kind != PropertyKind::Init {
-                valid = false;
-                break;
+    for index in 0..MAX_ARGUMENTS {
+        let Some(expression) = projector.argument_expression(call, index) else { break; };
+        let (paths, unknown) = projector.object_shape(expression, 0);
+        if !unknown { out.arg_closed_objects.entry(call.span.start).or_default().push(index); }
+        for (key, origin) in paths {
+            if let Expression::ObjectExpression(object) = expression.get_inner_expression() {
+                if let Some(value) = object.properties.iter().rev().find_map(|property| {
+                    let ObjectPropertyKind::ObjectProperty(property) = property else { return None; };
+                    (!property.computed && crate::ast::property_key_name(&property.key).as_deref() == Some(&key)).then_some(&property.value)
+                }) {
+                    texts.push(super::call_args::argument_text(source, index, Some(key.clone()), value.span()));
+                }
             }
-            if let Some(key) = crate::ast::property_key_name(&property.key) {
-                paths.insert(
-                    key.to_string(),
-                    (
-                        projector.path_of(&property.value),
-                        super::call_args::argument_text(
-                            source,
-                            index,
-                            Some(key.to_string()),
-                            property.value.span(),
-                        ),
-                    ),
-                );
-            }
-        }
-        if valid {
-            for (key, (origin, text)) in paths {
-                members.push((index, key, origin));
-                texts.push(text);
-            }
+            members.push((index, key, origin));
         }
     }
     members.sort_by(|a, b| (&a.0, &a.1).cmp(&(&b.0, &b.1)));

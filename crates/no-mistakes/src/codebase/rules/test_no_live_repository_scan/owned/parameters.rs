@@ -89,8 +89,7 @@ pub(super) fn argument_text<'a>(
 
 pub(super) fn argument_present(paths: &PathProvenance, offset: u32, index: usize) -> bool {
     paths.arg_text.get(&offset).is_some_and(|args| {
-        args.iter()
-            .any(|arg| arg.index == index && arg.property.is_none())
+        args.iter().any(|arg| arg.property.is_none() && (arg.index == index || (arg.index <= index && arg.text.starts_with("..."))))
     })
 }
 

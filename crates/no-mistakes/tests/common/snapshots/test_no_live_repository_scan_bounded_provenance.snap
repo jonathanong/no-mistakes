@@ -129,7 +129,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "root.mts",
           "import": "original",
           "line": 10,
-          "message": "unresolved root: `original` enumerates a directory, but the path argument was not recorded (spread argument or unparsed module), so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `original` enumerates a directory whose root is a parameter, but callers are unknowable because root.mts:8 is not a named function. Fix: declare the helper as a named function and pass an owned root from each caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return original(...args)",
           "target": "unresolved root"
@@ -739,7 +739,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "root.mts",
           "import": "original",
           "line": 11,
-          "message": "unresolved root: `original` enumerates a directory, but the path argument was not recorded (spread argument or unparsed module), so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `original` enumerates a directory whose root is a parameter, but callers are unknowable because root.mts:9 is not a named function. Fix: declare the helper as a named function and pass an owned root from each caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return original(...args)",
           "target": "unresolved root"

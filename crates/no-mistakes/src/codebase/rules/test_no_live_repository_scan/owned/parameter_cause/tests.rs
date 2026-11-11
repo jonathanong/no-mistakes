@@ -25,6 +25,7 @@ fn parameter_origin(owner: u32) -> PathOrigin {
         param_owner: Some(owner),
         owner_line: Some(3),
         reassigned_at: None,
+        ..PathOrigin::unknown()
     }
 }
 

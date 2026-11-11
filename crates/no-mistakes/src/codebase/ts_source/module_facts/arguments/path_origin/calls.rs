@@ -5,20 +5,41 @@ use crate::fx::FxHashSet;
 use oxc_ast::ast::*;
 
 impl<'a> Projector<'a, '_> {
+    fn imported_callee(
+        &mut self,
+        callee: &Expression<'a>,
+        imported: &FxHashSet<&str>,
+        depth: usize,
+    ) -> bool {
+        if depth >= 16 || !self.take() {
+            return false;
+        }
+        let Some(root) = callee_root(callee) else {
+            return false;
+        };
+        if imported.contains(root) {
+            return true;
+        }
+        let Expression::Identifier(id) = callee.get_inner_expression() else {
+            return false;
+        };
+        self.const_init(id)
+            .is_some_and(|init| self.imported_callee(init, imported, depth + 1))
+    }
+
     pub(in super::super) fn call_path(
         &mut self,
         call: &CallExpression<'a>,
         imported: &FxHashSet<&str>,
     ) -> Option<PathOrigin> {
         let meta_glob = is_import_meta_glob(&call.callee);
-        if !meta_glob && !callee_root(&call.callee).is_some_and(|root| imported.contains(root)) {
+        if !meta_glob && !self.imported_callee(&call.callee, imported, 0) {
             return None;
         }
-        let first = call.arguments.first()?;
-        let Some(first) = first.as_expression() else {
-            return Some(PathOrigin::unknown());
-        };
-        let mut origin = self.origin(first, 0);
+        call.arguments.first()?;
+        let mut origin = self
+            .argument_origin(call, 0)
+            .unwrap_or_else(PathOrigin::unknown);
         if meta_glob {
             // Vite patterns are relative to the module, not the process cwd.
             if origin.anchor == PathAnchor::Relative {

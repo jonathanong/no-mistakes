@@ -13,6 +13,19 @@ impl Owners<'_> {
         facts: &dyn TsFactLookup,
         fixture_dirs: &[&str],
     ) -> Ownership {
+        if !origin.alternatives.is_empty() {
+            for atom in origin.atoms() {
+                use super::super::provenance::{classify, Verdict};
+                if classify(Some(atom), fixture_dirs) == Verdict::Allowed {
+                    continue;
+                }
+                let ownership = self.ownership(atom, site, facts, fixture_dirs);
+                if !matches!(ownership, Ownership::Yes) {
+                    return ownership;
+                }
+            }
+            return Ownership::Yes;
+        }
         if origin.getter.is_some() {
             return if self.getter_owned(origin, site, facts) {
                 Ownership::Yes
@@ -88,13 +101,19 @@ impl Owners<'_> {
             .ok_or_else(|| not_named(site, origin))?;
         let start = source.clone();
         let declared = origin.owner_line.unwrap_or(1);
-        let mut pending = vec![(source, index, origin.param_member.clone(), declared)];
+        let mut pending = vec![(
+            source,
+            index,
+            origin.param_member.clone(),
+            declared,
+            origin.param_default.clone(),
+        )];
         let mut seen = FxHashSet::default();
         let mut seeded = false;
         let mut forwarded = None;
         let mut blocker = None;
-        while let Some((source, index, member, line)) = pending.pop() {
-            if !seen.insert((source.clone(), index, member.clone())) {
+        while let Some((source, index, member, line, default)) = pending.pop() {
+            if !seen.insert((source.clone(), index, member.clone(), default.clone())) {
                 continue;
             }
             let Some(module) = source.as_file() else {
@@ -125,13 +144,29 @@ impl Owners<'_> {
                     .unwrap_or_else(|| missing_caller(facts, &source, line)));
             };
             for caller in callers.iter().copied() {
-                let step = self.caller_step(caller, index, member.as_deref(), facts, fixture_dirs);
-                match step {
-                    Step::Block(cause) => return Err(cause),
-                    Step::Seed => seeded = true,
-                    Step::Follow(next, next_index, next_member, cause, next_line) => {
-                        forwarded = Some(cause);
-                        pending.push((next, next_index, next_member, next_line));
+                let steps = self.caller_steps(
+                    caller,
+                    index,
+                    member.as_deref(),
+                    default.as_deref(),
+                    facts,
+                    fixture_dirs,
+                );
+                for step in steps {
+                    match step {
+                        Step::Block(cause) => return Err(cause),
+                        Step::Seed => seeded = true,
+                        Step::Follow(
+                            next,
+                            next_index,
+                            next_member,
+                            cause,
+                            next_line,
+                            next_default,
+                        ) => {
+                            forwarded = Some(cause);
+                            pending.push((next, next_index, next_member, next_line, next_default));
+                        }
                     }
                 }
             }
@@ -147,7 +182,14 @@ impl Owners<'_> {
 enum Step {
     Block(Cause),
     Seed,
-    Follow(NodeId, usize, Option<String>, Cause, u32),
+    Follow(
+        NodeId,
+        usize,
+        Option<String>,
+        Cause,
+        u32,
+        Option<Box<PathOrigin>>,
+    ),
 }
 
 #[path = "parameter_cause_step.rs"]

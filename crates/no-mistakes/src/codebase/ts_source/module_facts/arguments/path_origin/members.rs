@@ -45,6 +45,10 @@ impl<'a> Projector<'a, '_> {
                 }
                 value.map(|value| self.origin(value, depth + 1))
             }
+            Expression::StaticMemberExpression(_) => {
+                let value = self.member_initializer(object, key, depth + 1)?;
+                Some(self.origin(value, depth + 1))
+            }
             Expression::CallExpression(call) => {
                 let disposable = matches!(call.callee.get_inner_expression(),
                     Expression::Identifier(id) if id.name == "mkdtempDisposableSync")
@@ -64,7 +68,7 @@ impl<'a> Projector<'a, '_> {
         }
     }
 
-    fn member_reads_only(&mut self, symbol: oxc_semantic::SymbolId) -> bool {
+    pub(super) fn member_reads_only(&mut self, symbol: oxc_semantic::SymbolId) -> bool {
         self.member_uses_stable(symbol, None)
     }
 

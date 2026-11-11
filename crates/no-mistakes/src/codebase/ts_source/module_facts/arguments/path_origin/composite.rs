@@ -58,22 +58,13 @@ impl<'a> Projector<'a, '_> {
                 let mut acc: Option<PathOrigin> = None;
                 for arg in args {
                     let part = arg.map_or_else(PathOrigin::unknown, |e| self.origin(e, depth + 1));
-                    acc = Some(
-                        if name == "resolve"
-                            && matches!(
-                                part.anchor,
-                                PathAnchor::Absolute
-                                    | PathAnchor::Cwd
-                                    | PathAnchor::Module
-                                    | PathAnchor::SharedTemp
-                            )
-                        {
-                            part
+                    acc = Some(acc.take().map_or(part.clone(), |prefix| {
+                        if name == "resolve" {
+                            prefix.resolve_append(part)
                         } else {
-                            acc.take()
-                                .map_or(part.clone(), |prefix| prefix.append(part))
-                        },
-                    );
+                            prefix.append(part)
+                        }
+                    }));
                 }
                 acc.unwrap_or_else(PathOrigin::unknown)
             }
@@ -83,7 +74,20 @@ impl<'a> Projector<'a, '_> {
                 };
                 let mut origin = self.origin(inner, depth + 1);
                 if name == "dirname" {
-                    origin.extend([".."]);
+                    if !origin.alternatives.is_empty() {
+                        return PathOrigin::alternatives(
+                            origin
+                                .atoms()
+                                .iter()
+                                .map(|atom| {
+                                    let mut atom = atom.clone();
+                                    atom.segments.pop();
+                                    atom
+                                })
+                                .collect(),
+                        );
+                    }
+                    origin.segments.pop();
                 }
                 origin
             }
