@@ -160,8 +160,13 @@ test(
     }
     try {
       const closed = input.close();
-      input.finish.cancel();
+      let cancelled = false;
+      input.child.stdout.once("data", () => {
+        cancelled = true;
+        input.finish.cancel();
+      });
       assert.deepEqual(await closed, [0, null]);
+      assert.ok(cancelled);
       await finishHealthy(input, [input.stdout, input.stderr, input.log]);
       assert.deepEqual(input.stdout.bytes, expected(payload.stdoutPrefix));
       assert.deepEqual(input.stderr.bytes, expected(payload.stderrPrefix));
