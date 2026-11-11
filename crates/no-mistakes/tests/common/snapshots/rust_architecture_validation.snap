@@ -8,6 +8,8 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
     ],
     "checks": [
       {
+        "name": "rust-architecture-validation",
+        "kind": "generic",
         "command": [
           "cargo",
           "test",
@@ -19,13 +21,11 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
         ],
         "files": [
           ".no-mistakes.yml"
-        ],
-        "kind": "generic",
-        "name": "rust-architecture-validation"
+        ]
       }
     ],
-    "fallback_triggered": false,
-    "warnings": []
+    "warnings": [],
+    "fallback_triggered": false
   },
   "Cargo.lock": {
     "changed_files": [
@@ -33,6 +33,8 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
     ],
     "checks": [
       {
+        "name": "rust-architecture-validation",
+        "kind": "generic",
         "command": [
           "cargo",
           "test",
@@ -44,13 +46,11 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
         ],
         "files": [
           "Cargo.lock"
-        ],
-        "kind": "generic",
-        "name": "rust-architecture-validation"
+        ]
       }
     ],
-    "fallback_triggered": false,
-    "warnings": []
+    "warnings": [],
+    "fallback_triggered": false
   },
   "Cargo.toml": {
     "changed_files": [
@@ -58,6 +58,8 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
     ],
     "checks": [
       {
+        "name": "rust-architecture-validation",
+        "kind": "generic",
         "command": [
           "cargo",
           "test",
@@ -69,13 +71,11 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
         ],
         "files": [
           "Cargo.toml"
-        ],
-        "kind": "generic",
-        "name": "rust-architecture-validation"
+        ]
       }
     ],
-    "fallback_triggered": false,
-    "warnings": []
+    "warnings": [],
+    "fallback_triggered": false
   },
   "crates/no-mistakes/Cargo.toml": {
     "changed_files": [
@@ -83,6 +83,8 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
     ],
     "checks": [
       {
+        "name": "rust-architecture-validation",
+        "kind": "generic",
         "command": [
           "cargo",
           "test",
@@ -94,13 +96,11 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
         ],
         "files": [
           "crates/no-mistakes/Cargo.toml"
-        ],
-        "kind": "generic",
-        "name": "rust-architecture-validation"
+        ]
       }
     ],
-    "fallback_triggered": false,
-    "warnings": []
+    "warnings": [],
+    "fallback_triggered": false
   },
   "crates/no-mistakes/src/check_runner.rs": {
     "changed_files": [
@@ -108,6 +108,8 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
     ],
     "checks": [
       {
+        "name": "rust-architecture-validation",
+        "kind": "generic",
         "command": [
           "cargo",
           "test",
@@ -119,13 +121,11 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
         ],
         "files": [
           "crates/no-mistakes/src/check_runner.rs"
-        ],
-        "kind": "generic",
-        "name": "rust-architecture-validation"
+        ]
       }
     ],
-    "fallback_triggered": false,
-    "warnings": []
+    "warnings": [],
+    "fallback_triggered": false
   },
   "crates/no-mistakes/src/check_runner/tests/architecture.rs": {
     "changed_files": [
@@ -133,6 +133,8 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
     ],
     "checks": [
       {
+        "name": "rust-architecture-validation",
+        "kind": "generic",
         "command": [
           "cargo",
           "test",
@@ -144,13 +146,11 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
         ],
         "files": [
           "crates/no-mistakes/src/check_runner/tests/architecture.rs"
-        ],
-        "kind": "generic",
-        "name": "rust-architecture-validation"
+        ]
       }
     ],
-    "fallback_triggered": false,
-    "warnings": []
+    "warnings": [],
+    "fallback_triggered": false
   },
   "crates/no-mistakes/src/check_tasks/react.rs": {
     "changed_files": [
@@ -158,6 +158,8 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
     ],
     "checks": [
       {
+        "name": "rust-architecture-validation",
+        "kind": "generic",
         "command": [
           "cargo",
           "test",
@@ -169,13 +171,11 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
         ],
         "files": [
           "crates/no-mistakes/src/check_tasks/react.rs"
-        ],
-        "kind": "generic",
-        "name": "rust-architecture-validation"
+        ]
       }
     ],
-    "fallback_triggered": false,
-    "warnings": []
+    "warnings": [],
+    "fallback_triggered": false
   },
   "crates/no-mistakes/src/deleted.rs": {
     "changed_files": [
@@ -183,6 +183,8 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
     ],
     "checks": [
       {
+        "name": "rust-architecture-validation",
+        "kind": "generic",
         "command": [
           "cargo",
           "test",
@@ -194,13 +196,11 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
         ],
         "files": [
           "crates/no-mistakes/src/deleted.rs"
-        ],
-        "kind": "generic",
-        "name": "rust-architecture-validation"
+        ]
       }
     ],
-    "fallback_triggered": false,
-    "warnings": []
+    "warnings": [],
+    "fallback_triggered": false
   },
   "crates/no-mistakes/src/tests/plan/framework.rs": {
     "changed_files": [
@@ -208,6 +208,8 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
     ],
     "checks": [
       {
+        "name": "rust-architecture-validation",
+        "kind": "generic",
         "command": [
           "cargo",
           "test",
@@ -219,49 +221,47 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
         ],
         "files": [
           "crates/no-mistakes/src/tests/plan/framework.rs"
-        ],
-        "kind": "generic",
-        "name": "rust-architecture-validation"
+        ]
       }
     ],
-    "fallback_triggered": false,
-    "warnings": []
+    "warnings": [],
+    "fallback_triggered": false
   },
   "crates/no-mistakes/tests/cli.rs": {
     "changed_files": [
       "crates/no-mistakes/tests/cli.rs"
     ],
     "checks": [],
+    "warnings": [],
+    "fallback_triggered": false,
     "empty_result": {
       "code": "no-impacted-checks",
       "message": "No checks matched the changed files."
-    },
-    "fallback_triggered": false,
-    "warnings": []
+    }
   },
   "crates/other/src/lib.rs": {
     "changed_files": [
       "crates/other/src/lib.rs"
     ],
     "checks": [],
+    "warnings": [],
+    "fallback_triggered": false,
     "empty_result": {
       "code": "no-impacted-checks",
       "message": "No checks matched the changed files."
-    },
-    "fallback_triggered": false,
-    "warnings": []
+    }
   },
   "docs/cli/impacted-checks.md": {
     "changed_files": [
       "docs/cli/impacted-checks.md"
     ],
     "checks": [],
+    "warnings": [],
+    "fallback_triggered": false,
     "empty_result": {
       "code": "no-impacted-checks",
       "message": "No checks matched the changed files."
-    },
-    "fallback_triggered": false,
-    "warnings": []
+    }
   },
   "rust-toolchain.toml": {
     "changed_files": [
@@ -269,6 +269,8 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
     ],
     "checks": [
       {
+        "name": "rust-architecture-validation",
+        "kind": "generic",
         "command": [
           "cargo",
           "test",
@@ -280,12 +282,10 @@ source: crates/no-mistakes/tests/support/architecture_validation.rs
         ],
         "files": [
           "rust-toolchain.toml"
-        ],
-        "kind": "generic",
-        "name": "rust-architecture-validation"
+        ]
       }
     ],
-    "fallback_triggered": false,
-    "warnings": []
+    "warnings": [],
+    "fallback_triggered": false
   }
 }
