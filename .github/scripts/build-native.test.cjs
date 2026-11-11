@@ -122,6 +122,7 @@ for (const [scenario, status] of [
         } else {
           if (scenario === "signal") assertSignalTermination(completed);
           else assert.equal(completed.exitCode, status);
+          if (scenario === "exit-137") assert.equal(completed.signal, null);
           assert.match(result.stdout, /fixture compiler stdout/);
           assert.match(result.stderr, /fixture compiler stderr/);
           assert.match(input.read("cargo.log"), /fixture compiler stderr/);
@@ -188,6 +189,7 @@ for (const logFailure of ["open", "midwrite"]) {
           const completed = JSON.parse(input.read("result.json"));
           if (scenario === "signal") assertSignalTermination(completed);
           else assert.equal(completed.exitCode, status);
+          if (scenario === "exit-137") assert.equal(completed.signal, null);
           assert.match(input.read("log-error.txt"), logFailure === "open" ? /EISDIR/ : /ENOSPC/);
           assert.match(result.stdout, /fixture compiler stdout/);
           assert.match(result.stderr, /fixture compiler stderr/);
