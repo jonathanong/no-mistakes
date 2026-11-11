@@ -87,3 +87,15 @@ pub(crate) fn ts_facts(
         ..Default::default()
     }
 }
+
+pub(crate) fn panic_facts(
+    root: &std::path::Path,
+    path: &std::path::Path,
+    plan: &CheckFactPlan,
+    error: String,
+) -> super::CheckFileFacts {
+    super::CheckFileFacts {
+        fact_extraction_panicked: true,
+        ..failure_facts(root, path, plan, error)
+    }
+}

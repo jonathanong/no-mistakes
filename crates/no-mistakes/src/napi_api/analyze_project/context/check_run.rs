@@ -58,6 +58,13 @@ impl SharedCheckContext {
     ) -> Result<crate::check_runner::CheckResults> {
         use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
         let session = self.session.clone();
+        facts.register_fact_panics(
+            &session,
+            self.fact_files
+                .iter()
+                .chain(&self.graph_files)
+                .chain(&self.supplemental_call_site_files),
+        );
         if let Some(prepared) = &self.prepared.playwright {
             for failure in prepared.failures() {
                 session.record_check_failure(failure.clone());

@@ -5,6 +5,9 @@ use no_mistakes::cli::{resolve_root, Format};
 use std::path::PathBuf;
 use std::process::ExitCode;
 mod output;
+#[path = "check_runner/results/status.rs"]
+mod status;
+use status::has_failures;
 
 #[derive(Args, Debug)]
 pub(crate) struct CheckArgs {
@@ -174,16 +177,6 @@ fn timing_metadata(
         ),
         _ => return None,
     })
-}
-
-fn has_failures(results: &check_runner::CheckResults) -> bool {
-    !results.incomplete.is_empty()
-        || !results.react.is_empty()
-        || !results.queues.is_empty()
-        || !results.rules.is_empty()
-        || !results.integration.is_empty()
-        || !results.codebase.is_empty()
-        || results.warnings.len() > results.analysis_warning_count
 }
 
 #[cfg(test)]

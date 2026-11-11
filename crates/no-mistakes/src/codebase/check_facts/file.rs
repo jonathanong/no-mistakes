@@ -34,7 +34,7 @@ pub(crate) fn collect_file_facts_with_request(
         collect_file_facts_unchecked(session, root, path, plan, playwright, sources, retain_parse)
     })
     .unwrap_or_else(|error| {
-        Some(super::file_parse_error::failure_facts(
+        Some(super::file_parse_error::panic_facts(
             root, path, plan, error,
         ))
     })

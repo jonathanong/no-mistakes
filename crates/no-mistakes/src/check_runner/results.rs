@@ -15,6 +15,8 @@ mod empty;
 pub(crate) use empty::empty_results;
 mod render;
 pub(crate) use render::json_value;
+#[cfg(test)]
+pub(crate) mod status;
 pub(crate) mod suppression;
 #[cfg(test)]
 mod suppression_tests;

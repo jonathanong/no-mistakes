@@ -2,6 +2,12 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, Mutex};
 
+macro_rules! inject_fact_panic {
+    ($path:expr) => {
+        crate::codebase::fact_panic::tests::inject($path)
+    };
+}
+
 static INJECTED: LazyLock<Mutex<BTreeSet<PathBuf>>> = LazyLock::new(Mutex::default);
 
 pub(super) fn inject(path: &Path) {
@@ -43,3 +49,5 @@ fn panic_payloads_preserve_strings_and_identify_unknown_payloads() {
     assert_eq!(session.check_failures().len(), 3);
     assert_eq!(super::isolate(&session, path, || 42).unwrap(), 42);
 }
+
+mod collection;

@@ -1,0 +1,35 @@
+---
+source: crates/no-mistakes/src/codebase/fact_panic/tests/collection.rs
+expression: "reports[0]"
+---
+{
+  "advisories": [],
+  "codebase": [],
+  "incomplete": [
+    {
+      "consumer": "fact-extraction",
+      "file": "first.ts",
+      "message": "fact extraction panicked for first.ts: injected fact extraction failure. Report this analyzer bug; analysis is incomplete"
+    },
+    {
+      "consumer": "fact-extraction",
+      "file": "second.ts",
+      "message": "fact extraction panicked for second.ts: injected fact extraction failure. Report this analyzer bug; analysis is incomplete"
+    }
+  ],
+  "integration": [],
+  "queues": [],
+  "react": [],
+  "rules": [
+    {
+      "file": "healthy.ts",
+      "import": "import",
+      "line": 1,
+      "message": "healthy.ts reaches forbidden module 'sharp' via import. Reproduce: no-mistakes dependencies 'healthy.ts' --target-module 'sharp' --relationship all --format json",
+      "rule": "forbidden-dependencies",
+      "sourceLine": "import sharp from \"sharp\";",
+      "target": "sharp"
+    }
+  ],
+  "warnings": []
+}

@@ -43,7 +43,7 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session(
         variants
             .iter()
             .map(|variant| {
-                Some(super::super::file_parse_error::failure_facts(
+                Some(super::super::file_parse_error::panic_facts(
                     variant.root,
                     path,
                     variant.plan,

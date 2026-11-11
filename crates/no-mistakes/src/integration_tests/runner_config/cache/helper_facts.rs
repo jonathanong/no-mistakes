@@ -33,22 +33,27 @@ pub(super) fn collect_helper_facts(path: &Path, program: &oxc_ast::ast::Program<
             graph_only
         });
     let plan = graph_only_plan.as_ref().unwrap_or(plan);
-    let facts = crate::codebase::check_facts::file_program_with_discovery(
-        &crate::codebase::check_facts::CheckFactVariant {
-            root: &request.root,
-            plan,
-            playwright,
-            collect_tests: !plan.integration
-                || crate::codebase::check_facts::discovery_applies(
-                    &request.integration_discovery,
-                    &path,
-                ),
-        },
-        &path,
-        source,
-        program,
-        None,
-    );
+    let facts = crate::codebase::fact_panic::isolate_untracked(&path, || {
+        crate::codebase::check_facts::file_program_with_discovery(
+            &crate::codebase::check_facts::CheckFactVariant {
+                root: &request.root,
+                plan,
+                playwright,
+                collect_tests: !plan.integration
+                    || crate::codebase::check_facts::discovery_applies(
+                        &request.integration_discovery,
+                        &path,
+                    ),
+            },
+            &path,
+            source,
+            program,
+            None,
+        )
+    })
+    .unwrap_or_else(|error| {
+        crate::codebase::check_facts::panicked_file_facts(&request.root, &path, plan, error)
+    });
     REQUEST_CACHES.with(|caches| {
         if let Some(cache) = caches.borrow_mut().last_mut() {
             cache.helper_facts.insert(path, facts);

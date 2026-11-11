@@ -149,6 +149,7 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
         super::sql_identifier::collect(root, path, source, program, &ts, plan);
     let symbols = ts.symbols.clone();
     CheckFileFacts {
+        fact_extraction_panicked: false,
         lint_suppressions: plan.collect_lint_suppressions(path, program, source),
         ts: ts.into(),
         production_imports: None,
