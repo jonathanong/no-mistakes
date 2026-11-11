@@ -166,8 +166,8 @@ fn link_barrels(consumed: &mut Consumed, graph: &DepGraph, facts: &dyn TsFactLoo
                 continue;
             }
             if let NodeId::File(target) = target {
+                super::route_index::link(&mut consumed.via, target, &file);
                 if !consumed.contains(target) {
-                    super::route_index::link(&mut consumed.via, target, &file);
                     consumed.insert(target);
                     pending.push(target.to_path_buf());
                 }

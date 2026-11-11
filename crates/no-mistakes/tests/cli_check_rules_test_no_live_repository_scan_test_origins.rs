@@ -9,6 +9,7 @@ const CASES: &[&str] = &[
     "cli",
     "cli-guarded",
     "explicit-roots",
+    "explicit-roots-barrel",
     "explicit-destructured",
     "explicit-cli",
     "global-setup-escape",
@@ -61,6 +62,7 @@ fn test_no_live_repository_scan_only_test_originating_callers_decide_ownership()
         let expected = usize::from(matches!(
             *name,
             "global-setup-escape"
+                | "explicit-roots-barrel"
                 | "explicit-roots-imported"
                 | "explicit-roots-live"
                 | "explicit-roots-unknown"

@@ -698,6 +698,9 @@ retains the finding. So does a test that forwards unknown CLI arguments or passe
 an unknown or live root alongside otherwise owned callers. Importing a module
 also executes its top level; a production call at that top level is relevant
 when a test imports it.
+An indirect test reference through a barrel remains unproven even when unrelated
+production code also consumes the scanner. Call the scanner directly with an
+owned root so every test-originating route can be checked.
 
 ## Pass-through mocks
 
