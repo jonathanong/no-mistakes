@@ -9,8 +9,8 @@ mod calls;
 mod composite;
 mod defaults;
 mod destructure;
-mod getters;
 mod forwarded;
+mod getters;
 mod member_effects;
 mod member_mutations;
 mod members;
@@ -102,7 +102,11 @@ impl<'a> Projector<'a, '_> {
                 let origin = self.origin(init, depth + 1);
                 // A captured env read ran when the alias was initialised, not at the
                 // call, so a later owned write does not cover it.
-                if origin.atoms().iter().any(|atom| atom.env.is_some() || atom.getter.is_some()) {
+                if origin
+                    .atoms()
+                    .iter()
+                    .any(|atom| atom.env.is_some() || atom.getter.is_some())
+                {
                     PathOrigin::unknown()
                 } else {
                     self.value_requirement(id, origin)

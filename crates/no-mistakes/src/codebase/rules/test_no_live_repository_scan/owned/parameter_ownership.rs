@@ -52,7 +52,11 @@ impl Owners<'_> {
             return Ownership::No;
         }
         if origin.anchor == PathAnchor::Temp {
-            return if origin.root_tails.iter().all(|tail| self.safe_suffix(tail, site, facts, 0)) {
+            return if origin
+                .root_tails
+                .iter()
+                .all(|tail| self.safe_suffix(tail, site, facts, 0))
+            {
                 Ownership::Yes
             } else {
                 Ownership::No
@@ -60,8 +64,12 @@ impl Owners<'_> {
         }
         match (&origin.env, origin.param) {
             (Some(name), _) => {
-                if origin.root_tails.iter().all(|tail| self.safe_suffix(tail, site, facts, 0))
-                    && self.env_owned(name, site, facts) {
+                if origin
+                    .root_tails
+                    .iter()
+                    .all(|tail| self.safe_suffix(tail, site, facts, 0))
+                    && self.env_owned(name, site, facts)
+                {
                     Ownership::Yes
                 } else {
                     Ownership::No

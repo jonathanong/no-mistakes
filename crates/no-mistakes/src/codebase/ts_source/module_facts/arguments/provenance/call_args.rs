@@ -115,7 +115,7 @@ fn kept(origin: &PathOrigin) -> bool {
             PathAnchor::Temp | PathAnchor::Module | PathAnchor::Cwd
         ) || origin.param.is_some()
             || origin.env.is_some()
-                || origin.getter.is_some()
+            || origin.getter.is_some()
     })
 }
 

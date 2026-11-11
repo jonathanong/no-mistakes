@@ -151,6 +151,8 @@ fn function_value<'a>(init: &'a Expression<'a>) -> Option<(&'a Expression<'a>, b
 
 fn owned(origin: &PathOrigin) -> bool {
     origin.atoms().iter().all(|atom| {
-        atom.anchor == PathAnchor::Temp && atom.root_tails.is_empty() && !atom.segments.iter().any(|part| part == "..")
+        atom.anchor == PathAnchor::Temp
+            && atom.root_tails.is_empty()
+            && !atom.segments.iter().any(|part| part == "..")
     })
 }
