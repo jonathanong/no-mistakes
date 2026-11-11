@@ -92,7 +92,11 @@ impl Selection {
         let mut consumed: FxHashSet<_> = self
             .platform_exports
             .iter()
-            .flat_map(|(file, names)| names.iter().map(|name| NodeId::symbol(file, name.as_str())))
+            .flat_map(|(file, names)| {
+                names
+                    .iter()
+                    .map(move |name| NodeId::symbol(file, name.as_str()))
+            })
             .collect();
         let mut queue: std::collections::VecDeque<_> = consumed.iter().cloned().collect();
         while let Some(node) = queue.pop_front() {

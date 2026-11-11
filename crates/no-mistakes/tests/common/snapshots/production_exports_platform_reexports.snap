@@ -1,0 +1,42 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "reexports": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/control.mts",
+          "line": 1,
+          "message": "production export `Unlisted` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export class Unlisted {}",
+          "target": "Unlisted"
+        },
+        {
+          "file": "src/unrelated.mts",
+          "line": 1,
+          "message": "production export `Named` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export class Named {}",
+          "target": "Named"
+        },
+        {
+          "file": "src/unresolved-entry.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: unresolved module selector `./missing.mts` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export * from './missing.mts';",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

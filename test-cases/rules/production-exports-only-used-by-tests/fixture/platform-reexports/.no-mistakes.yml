@@ -15,3 +15,5 @@ rules:
           exports: [Imported]
         - file: src/control-entry.mts
           exports: [Consumed]
+        - file: src/unresolved-entry.mts
+          exports: [Conservative]
