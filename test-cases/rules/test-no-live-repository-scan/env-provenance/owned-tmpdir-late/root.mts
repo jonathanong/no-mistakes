@@ -1,0 +1,9 @@
+import { mkdtemp } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { vi, it } from "vitest";
+import { scan } from "./scan.mjs";
+it("scan", async () => {
+  await scan();
+  vi.stubEnv("TMPDIR", await mkdtemp(join(tmpdir(), "owned-")));
+});

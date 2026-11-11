@@ -10,7 +10,7 @@ mod destructure;
 mod members;
 mod patterns;
 mod sources;
-
+mod tmpdir;
 pub(super) use self::composite::{callee_root, imported_locals};
 pub(super) use self::sources::{env_name, is_process_env, process_global};
 use super::{PathAnchor, PathOrigin, Projector};

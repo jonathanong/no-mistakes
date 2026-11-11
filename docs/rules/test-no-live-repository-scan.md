@@ -114,7 +114,14 @@ An enumeration passes when its root is provably bounded:
 `readdirSync(tmpdir())` and a predictable child such as
 `readdirSync(join(tmpdir(), "policy"))` are reported: the shared temporary
 directory is not owned by the test. Create a fresh directory with `mkdtemp`
-instead. A matching `fixtureDirs` segment remains an explicit allowance.
+instead. When every reaching test establishes `TMPDIR` as an owned root before
+calling the scanner, `os.tmpdir()` and `tmpdir()` use the same environment
+ownership proof as `process.env.TMPDIR`. This requires a static `os` or `node:os`
+import (named, default, or namespace) or an immutable CommonJS binding;
+a local function or object merely named `tmpdir` does not gain ownership from
+`TMPDIR`. A live or missing `TMPDIR` assignment
+keeps the shared-directory finding. A matching `fixtureDirs` segment remains
+an explicit allowance.
 
 ## Unresolved roots
 
@@ -214,6 +221,16 @@ enumerate with a path the helper builds itself from a fixture root, or suppress
 the helper.
 
 ## Owned parameters and env vars
+
+A same-file helper such as `const getDataDir = () => process.env.DATA_DIR ??
+"./tmp/data"` keeps the environment origin in `readdir(join(getDataDir(), table))`.
+The fallback remains the production root: tests must assign `DATA_DIR` to an
+owned root before every reaching call, for example
+`process.env.DATA_DIR = await mkdtemp(join(tmpdir(), "case-"))`. A late assignment,
+a caller with no assignment, or an assignment from `process.cwd()` cannot prove
+ownership. `vi.stubEnv("TMPDIR", fixture)` supplies the same proof when `fixture`
+is an owned `mkdtemp` result. A nested `mkdtemp(join(parent, "impact."))` creates
+a fresh owned directory even when `parent` comes from that environment.
 
 Two provenance gaps resolve when every route into the enumeration is proven.
 

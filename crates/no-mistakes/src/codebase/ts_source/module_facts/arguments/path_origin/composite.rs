@@ -37,6 +37,12 @@ impl<'a> Projector<'a, '_> {
 
     pub(super) fn call(&mut self, call: &CallExpression<'a>, depth: usize) -> PathOrigin {
         let callee = call.callee.get_inner_expression();
+        if self.node_tmpdir(callee) {
+            return PathOrigin {
+                env: Some("TMPDIR".to_owned()),
+                ..PathOrigin::anchored(PathAnchor::SharedTemp)
+            };
+        }
         let (name, receiver) = match callee {
             Expression::Identifier(id) => (id.name.as_str(), None),
             Expression::StaticMemberExpression(member) => {
