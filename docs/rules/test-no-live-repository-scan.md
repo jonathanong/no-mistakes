@@ -114,14 +114,21 @@ An enumeration passes when its root is provably bounded:
 `readdirSync(tmpdir())` and a predictable child such as
 `readdirSync(join(tmpdir(), "policy"))` are reported: the shared temporary
 directory is not owned by the test. Create a fresh directory with `mkdtemp`
-instead. When every reaching test establishes `TMPDIR` as an owned root before
-calling the scanner, `os.tmpdir()` and `tmpdir()` use the same environment
-ownership proof as `process.env.TMPDIR`. This requires a static `os` or `node:os`
-import (named, default, or namespace) or an immutable CommonJS binding;
-a local function or object merely named `tmpdir` does not gain ownership from
-`TMPDIR`. A live or missing `TMPDIR` assignment
-keeps the shared-directory finding. A matching `fixtureDirs` segment remains
-an explicit allowance.
+instead. A trusted Node `os.tmpdir()` or `tmpdir()` call can use the same
+ownership proof as a direct environment read when every reaching test establishes
+its primary environment variable as an owned, nonempty root before the scanner
+runs. The primary variable is `TEMP` on Windows and `TMPDIR` on POSIX. Owning only
+`TMPDIR` does not prove a Windows temporary root, and owning only `TEMP` does not
+prove a POSIX root. Later environment fallbacks remain unproven.
+
+This requires a static `os` or `node:os` import (named, default, or namespace)
+or an immutable CommonJS binding; a local function or object merely named
+`tmpdir` does not gain environment ownership. A live, missing, late, or mixed
+assignment keeps the shared-directory finding. For portable tests, create one
+`const fixture = await mkdtemp(join(tmpdir(), "owned-"))`, then call both
+`vi.stubEnv("TMPDIR", fixture)` and `vi.stubEnv("TEMP", fixture)` before the scanner.
+Direct `process.env.TMPDIR` reads always use `TMPDIR`, regardless of host platform.
+A matching `fixtureDirs` segment remains an explicit allowance.
 
 ## Unresolved roots
 

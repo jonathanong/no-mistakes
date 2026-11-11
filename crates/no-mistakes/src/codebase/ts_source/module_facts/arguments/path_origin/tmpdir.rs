@@ -1,4 +1,4 @@
-use super::Projector;
+use super::{PathAnchor, PathOrigin, Projector};
 use oxc_ast::{ast::*, AstKind};
 
 impl<'a> Projector<'a, '_> {
@@ -64,5 +64,14 @@ impl<'a> Projector<'a, '_> {
             && call.arguments.len() == 1
             && matches!(call.arguments.first().and_then(Argument::as_expression).map(Expression::get_inner_expression),
                 Some(Expression::StringLiteral(source)) if matches!(crate::ast::js_literal(source).as_ref(), "os" | "node:os"))
+    }
+}
+
+impl PathOrigin {
+    pub(crate) fn tmpdir(windows: bool) -> Self {
+        Self {
+            env: Some(if windows { "TEMP" } else { "TMPDIR" }.to_owned()),
+            ..Self::anchored(PathAnchor::SharedTemp)
+        }
     }
 }

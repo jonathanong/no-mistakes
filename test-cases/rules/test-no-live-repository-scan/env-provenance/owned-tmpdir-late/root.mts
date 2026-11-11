@@ -5,5 +5,7 @@ import { vi, it } from "vitest";
 import { scan } from "./scan.mjs";
 it("scan", async () => {
   await scan();
-  vi.stubEnv("TMPDIR", await mkdtemp(join(tmpdir(), "owned-")));
+  const fixture = await mkdtemp(join(tmpdir(), "owned-"));
+  vi.stubEnv("TMPDIR", fixture);
+  vi.stubEnv("TEMP", fixture);
 });

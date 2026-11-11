@@ -169,3 +169,6 @@ fn contains_unstub(value: &serde_json::Value) -> bool {
         _ => false,
     }
 }
+
+#[cfg(test)]
+mod tests;
