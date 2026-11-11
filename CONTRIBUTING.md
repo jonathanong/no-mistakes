@@ -150,6 +150,9 @@ For this repository, use `no-mistakes impacted-checks <changed-file> --root .
 planner currently derives integration target names from source filenames; it
 cannot project a changed suite module onto an explicit `[[test]]` target.
 Run the returned workspace test command or the suite commands above.
+Production Rust changes under `crates/no-mistakes/src/` also select
+`cargo test --locked -p no-mistakes --lib architecture` to validate prepared
+analysis ownership and canonical graph reuse, even when only a source file changes.
 
 CI checks links to this repository's `main` documentation against the checked-out
 `docs/` files, including new pages in a pull request. Missing targets still fail;

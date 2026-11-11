@@ -91,16 +91,21 @@ fn repository_quality_checks_stay_scoped_and_skip_empty_changes() {
     ] {
         assert!(repository_report(&files).checks.is_empty(), "{files:?}");
     }
-    for file in [
-        "crates/no-mistakes/src/impacted_checks.rs",
-        "packages/no-mistakes/vendor/generated.js",
-    ] {
-        assert_eq!(
-            command_strings(&repository_report(&[file])),
-            ["pnpm run lint:duplicates"],
-            "{file}"
-        );
-    }
+    assert_eq!(
+        command_strings(&repository_report(&[
+            "crates/no-mistakes/src/impacted_checks.rs"
+        ])),
+        [
+            "cargo test --locked -p no-mistakes --lib architecture",
+            "pnpm run lint:duplicates"
+        ]
+    );
+    assert_eq!(
+        command_strings(&repository_report(&[
+            "packages/no-mistakes/vendor/generated.js"
+        ])),
+        ["pnpm run lint:duplicates"]
+    );
 }
 
 #[test]
@@ -126,7 +131,10 @@ fn repository_duplicate_gate_excludes_test_helpers_but_keeps_production_analyzer
     ] {
         assert_eq!(
             command_strings(&repository_report(&[file])),
-            ["pnpm run lint:duplicates"],
+            [
+                "cargo test --locked -p no-mistakes --lib architecture",
+                "pnpm run lint:duplicates"
+            ],
             "{file}"
         );
     }

@@ -1,5 +1,7 @@
 //! Contracts integration tests, linked in one harness.
 
+#[path = "support/architecture_validation.rs"]
+mod architecture_validation;
 #[path = "ci_complexity_gate.rs"]
 mod ci_complexity_gate;
 #[path = "ci_standalone_lib.rs"]

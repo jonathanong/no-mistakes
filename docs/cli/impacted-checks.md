@@ -16,6 +16,13 @@ files and `vitest.config.js`, and CSpell for its documented spelling scope.
 Changes to the corresponding tool configuration, root package manifest, or
 lockfile also select those checks. Commands use the same whole-project scripts
 as CI, without appending changed paths; deleted files still select validation.
+Rust source changes under `crates/no-mistakes/src/` select the focused
+`cargo test --locked -p no-mistakes --lib architecture` command, including
+source deletions and nested architecture tests. Root and crate Cargo manifests,
+`Cargo.lock`, `rust-toolchain.toml`, and `.no-mistakes.yml` also select this
+command. It runs once without appending changed paths and protects prepared
+analysis ownership, canonical graph reuse, and source-session invariants.
+Integration source changes retain the separate workspace validation command.
 These entries do not model every CI job.
 
 ```sh

@@ -16,6 +16,16 @@ checks:
         - .no-mistakes.yml
       command: [cargo, test, --locked, --workspace, --all-features, --lib, --bins, --tests]
       fileArgs: none
+    - name: rust-architecture-validation
+      include:
+        - "crates/no-mistakes/src/**/*.rs"
+        - crates/no-mistakes/Cargo.toml
+        - Cargo.toml
+        - Cargo.lock
+        - rust-toolchain.toml
+        - .no-mistakes.yml
+      command: [cargo, test, --locked, -p, no-mistakes, --lib, architecture]
+      fileArgs: none
     - name: rule-doc-snippets
       include:
         - "docs/rules/**/*.md"
