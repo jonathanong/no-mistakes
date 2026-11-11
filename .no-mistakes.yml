@@ -141,5 +141,7 @@ rules:
       allow:
         - job: .github/workflows/ci.yml#native-tests
           maxMinutes: 35
+        - job: .github/workflows/ci.yml#tests
+          maxMinutes: 40
         - job: .github/workflows/ci.yml#bench
           maxMinutes: 60
