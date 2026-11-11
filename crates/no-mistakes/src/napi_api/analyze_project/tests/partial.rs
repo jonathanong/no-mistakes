@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "fact_panic.rs"]
+mod fact_panic;
+
 fn partial_fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

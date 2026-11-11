@@ -36,6 +36,30 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session(
     source: Arc<str>,
     variants: &[CheckFactVariant<'_>],
 ) -> Vec<Option<CheckFileFacts>> {
+    crate::codebase::fact_panic::isolate(session, path, || {
+        collect_variants_unchecked(session, path, source, variants)
+    })
+    .unwrap_or_else(|error| {
+        variants
+            .iter()
+            .map(|variant| {
+                Some(super::super::file_parse_error::panic_facts(
+                    variant.root,
+                    path,
+                    variant.plan,
+                    error.clone(),
+                ))
+            })
+            .collect()
+    })
+}
+
+fn collect_variants_unchecked(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    path: &Path,
+    source: Arc<str>,
+    variants: &[CheckFactVariant<'_>],
+) -> Vec<Option<CheckFileFacts>> {
     let mut results = (0..variants.len()).map(|_| None).collect::<Vec<_>>();
     let mut parse_variants = Vec::new();
     for (index, variant) in variants.iter().enumerate() {

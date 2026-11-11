@@ -45,6 +45,26 @@ JavaScript-family, explicit module-kind, and declaration inputs do not. Legacy
 results remain isolated to list-symbols output, while graph and check facts
 retain extension-based semantics.
 
+### Per-file fact extraction failures
+
+Each file's fact extraction runs inside `catch_unwind`, including parallel
+workers, prepared parser-cache reuse, and batched check projections. An unwinding
+panic discards that file's entire fact result and evicts its prepared parser
+entry. The failure retains the file and panic message as an operational error;
+`check` also records an unsuppressible `fact-extraction` entry in `incomplete`
+and exits 1, even when no ordinary findings exist. Other files continue and
+successful results retain deterministic ordering across worker counts.
+
+The boundary covers only per-file fact extraction. Panics during discovery,
+resolution, graph construction, or check execution still propagate. Process
+aborts, including aborting panics, are not recoverable through `catch_unwind`.
+
+Text bounds must respect UTF-8 before slicing or truncating. Call-argument
+provenance keeps at most 80 bytes of diagnostic text using
+`text.floor_char_boundary(80)` before `truncate`; saved multibyte fixtures guard
+that boundary. Panic isolation preserves partial analysis when a new extractor
+bug appears; UTF-8 boundary checks prevent the underlying class of bug.
+
 ### Literal identity at the parser boundary
 
 OXC strings can contain lone UTF-16 surrogates that Rust strings cannot hold.

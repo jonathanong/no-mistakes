@@ -98,6 +98,13 @@ failures. Prerequisites follow each consumer's source and configuration input
 selection, independently of other enabled rules. Binary assets, directories, and
 dangling links outside that selection do not make a consumer incomplete. A required
 source that fails to read or parse still names that consumer and input.
+An unwinding panic during per-file fact extraction uses the same existing
+`CheckFailure` shape with consumer `fact-extraction`, the file, and the panic
+message. `check()` and check reports in `analyzeProject()` resolve with that
+`incomplete` entry and independent findings; facts from the failed file are
+discarded. The async bindings and exported types are unchanged. Other analysis
+phases and process aborts remain outside this recovery boundary.
+
 Per-file foreign receiver work-budget exhaustion uses the same `incomplete`
 contract, with the affected file and an actionable message. `check()` and
 `analyzeProject()` discard partial value-flow facts and preserve independent

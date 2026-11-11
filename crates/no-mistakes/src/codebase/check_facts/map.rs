@@ -86,6 +86,23 @@ pub struct CheckFactMap {
 }
 
 impl CheckFactMap {
+    pub(crate) fn register_fact_panics<'a>(
+        &self,
+        session: &crate::codebase::analysis_session::AnalysisSession,
+        paths: impl IntoIterator<Item = &'a PathBuf>,
+    ) {
+        for path in paths {
+            if let Some(error) = self
+                .ts
+                .get(path)
+                .filter(|facts| facts.fact_extraction_panicked)
+                .and_then(|facts| facts.ts.operational_error.as_deref())
+            {
+                crate::codebase::fact_panic::record(session, path, error);
+            }
+        }
+    }
+
     /// SQL-looking member `.query` calls that were not proven to be executors.
     #[doc(hidden)]
     pub fn unproven_member_query_sql(&self) -> u32 {
@@ -111,6 +128,7 @@ impl CheckFactMap {
 
 #[derive(Default)]
 pub(crate) struct CheckFileFacts {
+    pub(crate) fact_extraction_panicked: bool,
     pub(crate) sql_source_prerequisites: super::SqlSourcePrerequisites,
     pub ts: Arc<TsFileFacts>,
     pub(crate) lint_suppressions:

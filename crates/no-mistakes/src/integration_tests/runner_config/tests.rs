@@ -481,3 +481,5 @@ mod review_deadlines;
 mod runner_roots;
 
 mod partial_input;
+
+mod fact_panic;

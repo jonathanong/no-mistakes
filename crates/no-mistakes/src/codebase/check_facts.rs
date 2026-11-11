@@ -7,6 +7,7 @@ mod request;
 pub(crate) use request::FactRequest;
 mod file;
 mod file_parse_error;
+pub(crate) use file_parse_error::panic_facts as panicked_file_facts;
 mod file_playwright;
 mod map;
 mod plan;

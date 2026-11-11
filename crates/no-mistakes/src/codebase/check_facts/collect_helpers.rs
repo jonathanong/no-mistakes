@@ -56,7 +56,7 @@ pub(super) fn extend_missing_helper_facts(
     for (path, helper) in helpers {
         // A strict runner failure is only a placeholder. The union collector
         // may already provide recovered imports, exports, and symbols here.
-        if !facts.contains_key(&path) {
+        if helper.fact_extraction_panicked || !facts.contains_key(&path) {
             facts.insert(path, helper);
         }
     }
@@ -158,3 +158,6 @@ pub(crate) fn graph_only_files(files: &[PathBuf], graph_files: &[PathBuf]) -> Ve
         .cloned()
         .collect()
 }
+
+#[cfg(test)]
+mod tests;

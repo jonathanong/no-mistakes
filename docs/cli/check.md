@@ -178,6 +178,14 @@ failures were captured; absence does not prove arbitrary dynamic JavaScript
 configuration was evaluated. Global invocation or configuration errors that
 make the request unusable still fail with an error.
 
+An unwinding panic inside one file's fact extraction discards all facts for that
+file and records an unsuppressible `incomplete` entry with consumer
+`fact-extraction`, the file, and the panic message. Other files continue to
+produce findings. The command exits 1 even if no ordinary findings remain.
+Report the analyzer bug with the named source and panic message. This recovery
+boundary does not cover discovery, resolution, graph construction, check
+execution, or process aborts.
+
 Value-flow extraction bounds foreign receiver finalization to 100,000 work units
 per file, including retained paths, provider scans, argument expansion, and replay.
 If a file exceeds that budget, dependent graph checks are `incomplete`; each

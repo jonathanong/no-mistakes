@@ -197,3 +197,13 @@ Readiness is per action path and per job; an unconditional foreign root checkout
 invalidates every path. Conditional, nonroot, and noncovering self checkouts
 preserve the previous state. Use `check()` or an `analyzeProject()` check report for repeated
 in-process queries. See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-local-action-checkout.md).
+
+## Fact extraction failures
+
+`check` isolates an unwinding panic during a single file's fact extraction.
+Its facts are discarded; other files continue. An unsuppressible `incomplete`
+entry with consumer `fact-extraction` names the file and panic message, and the
+CLI exits 1 even without ordinary findings. Report that analyzer bug instead
+of treating the partial report as complete. The async Node check APIs expose
+the same existing `CheckFailure` shape. Discovery, resolution, graph building,
+check execution, and process aborts remain outside this boundary.

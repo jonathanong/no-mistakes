@@ -94,6 +94,13 @@ fn collect_check_facts_inner(
         integration_runner_configs.extend(super::runner_config_facts(&ts));
         (ts, integration_runner_configs)
     });
+    for (path, facts) in &ts {
+        if facts.fact_extraction_panicked {
+            if let Some(error) = &facts.ts.operational_error {
+                crate::codebase::fact_panic::record(session.session, path, error);
+            }
+        }
+    }
     let files_parsed = ts.values().filter(|facts| facts.parsed).count();
     let parse_errors = ts
         .values()

@@ -84,22 +84,30 @@ pub(crate) fn collect_prepared_runner_facts(
         collect,
     );
     for (path, helper) in &mut helper_facts {
-        if plan.production_import_paths.contains(path) && helper.production_imports.is_none() {
+        if !helper.fact_extraction_panicked
+            && plan.production_import_paths.contains(path)
+            && helper.production_imports.is_none()
+        {
             if let Ok(source) = sources.read_path(path) {
                 let mut results = [Some(std::mem::take(helper))];
-                super::file::production_imports::project(
-                    session.session,
-                    path,
-                    &source,
-                    &[super::file::CheckFactVariant {
-                        collect_tests: session.collect_tests(plan, path),
-                        root,
-                        plan,
-                        playwright,
-                    }],
-                    &mut results,
-                );
-                *helper = results.into_iter().next().flatten().unwrap_or_default();
+                let projected = crate::codebase::fact_panic::isolate(session.session, path, || {
+                    super::file::production_imports::project(
+                        session.session,
+                        path,
+                        &source,
+                        &[super::file::CheckFactVariant {
+                            collect_tests: session.collect_tests(plan, path),
+                            root,
+                            plan,
+                            playwright,
+                        }],
+                        &mut results,
+                    );
+                    results.into_iter().next().flatten().unwrap_or_default()
+                });
+                *helper = projected.unwrap_or_else(|error| {
+                    super::file_parse_error::panic_facts(root, path, plan, error)
+                });
             }
         }
     }

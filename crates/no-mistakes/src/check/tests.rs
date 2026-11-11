@@ -62,3 +62,16 @@ fn effort_partner_warnings_are_non_failing_without_changing_old_warnings() {
     results.warnings.push("existing domain warning".into());
     assert!(has_failures(&results));
 }
+
+#[test]
+fn incomplete_fact_extraction_fails_without_ordinary_findings() {
+    let mut results = check_runner::empty_results([None]);
+    assert!(!has_failures(&results));
+    results
+        .incomplete
+        .push(no_mistakes::codebase::check_outcome::CheckFailure::new(
+            "fact-extraction",
+            "fact extraction panicked for first.ts: injected fact extraction failure",
+        ));
+    assert!(has_failures(&results));
+}

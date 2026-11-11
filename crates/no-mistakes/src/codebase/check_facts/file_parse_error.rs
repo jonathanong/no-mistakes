@@ -8,7 +8,20 @@ pub(crate) fn read_facts(
     plan: &CheckFactPlan,
     error: impl std::fmt::Display,
 ) -> super::CheckFileFacts {
-    let parse_error = format!("failed to read {}: {error}", path.display());
+    failure_facts(
+        root,
+        path,
+        plan,
+        format!("failed to read {}: {error}", path.display()),
+    )
+}
+
+pub(crate) fn failure_facts(
+    root: &std::path::Path,
+    path: &std::path::Path,
+    plan: &CheckFactPlan,
+    parse_error: String,
+) -> super::CheckFileFacts {
     super::CheckFileFacts {
         sql_source_prerequisites: super::SqlSourcePrerequisites::failed_source(root, path, plan),
         sql_identifier_syntax: crate::codebase::postgres::sql_identifier_syntax::FileFacts {
@@ -72,5 +85,17 @@ pub(crate) fn ts_facts(
         exported_functions: import_facts.exported_functions,
         has_unknown_top_level_call: import_facts.has_unknown_top_level_call,
         ..Default::default()
+    }
+}
+
+pub(crate) fn panic_facts(
+    root: &std::path::Path,
+    path: &std::path::Path,
+    plan: &CheckFactPlan,
+    error: String,
+) -> super::CheckFileFacts {
+    super::CheckFileFacts {
+        fact_extraction_panicked: true,
+        ..failure_facts(root, path, plan, error)
     }
 }
