@@ -10,6 +10,11 @@ use std::path::{Path, PathBuf};
 
 pub(super) use setups_gap::SetupGap;
 
+pub(super) enum ReadSite<'a> {
+    Call(&'a Path),
+    Capture { test: &'a Path, module: &'a Path },
+}
+
 #[derive(Clone)]
 struct Project {
     filter: ProjectTestFilter,
@@ -131,10 +136,8 @@ impl ConfiguredSetups {
         consumed: &Consumed,
         fixture_dirs: &[String],
     ) -> bool {
-        self.owns_in_project(
-            file,
-            file,
-            false,
+        self.owns_at(
+            ReadSite::Call(file),
             name,
             facts,
             imports,
@@ -143,39 +146,19 @@ impl ConfiguredSetups {
         )
     }
 
-    pub(super) fn owns_before_capture(
+    pub(super) fn owns_at(
         &self,
-        test: &Path,
-        capture: &Path,
+        site: ReadSite<'_>,
         name: &str,
         facts: &dyn TsFactLookup,
         imports: &ImportedWrites<'_>,
         consumed: &Consumed,
         fixture_dirs: &[String],
     ) -> bool {
-        self.owns_in_project(
-            test,
-            capture,
-            true,
-            name,
-            facts,
-            imports,
-            consumed,
-            fixture_dirs,
-        )
-    }
-
-    fn owns_in_project(
-        &self,
-        test: &Path,
-        capture: &Path,
-        captured: bool,
-        name: &str,
-        facts: &dyn TsFactLookup,
-        imports: &ImportedWrites<'_>,
-        consumed: &Consumed,
-        fixture_dirs: &[String],
-    ) -> bool {
+        let (test, capture, captured) = match site {
+            ReadSite::Call(file) => (file, file, false),
+            ReadSite::Capture { test, module } => (test, module, true),
+        };
         let relative = crate::codebase::ts_source::relative_slash_path(&self.root, test);
         let mut matched = false;
         for project in &self.projects {

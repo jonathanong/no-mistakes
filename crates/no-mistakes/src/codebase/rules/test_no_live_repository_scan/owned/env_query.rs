@@ -113,9 +113,11 @@ impl Owners<'_> {
         };
         !entries.is_empty()
             && entries.iter().all(|entry| {
-                self.setups.owns_before_capture(
-                    &entry.file,
-                    &site.file,
+                self.setups.owns_at(
+                    super::setups::ReadSite::Capture {
+                        test: &entry.file,
+                        module: &site.file,
+                    },
                     name,
                     facts,
                     &self.imported,
