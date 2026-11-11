@@ -3,18 +3,20 @@ use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::{ast::*, AstKind};
 use oxc_semantic::Semantic;
 use serde_json::Value;
-
 mod aliases;
 use aliases::AliasSafety;
-
 mod path_origin;
 mod provenance;
+#[path = "arguments/provenance/pass_through_writes.rs"]
+mod transparent_writes;
+pub(crate) use transparent_writes::{
+    transparent_receiver_writes, transparent_receiver_writes_from_program,
+};
 mod types;
 pub(crate) use types::{
     line_in, ArgumentText, ArgumentValue, ArgumentValues, EnvWrite, PathAnchor, PathOrigin,
     PathProvenance, RouteKind, RouteSite, WriteScope,
 };
-
 pub(super) fn collect(
     semantic: &Semantic<'_>,
     facts: &super::TypeScriptModuleFacts,
@@ -108,7 +110,6 @@ pub(super) fn collect(
     }
     (result, provenance)
 }
-
 struct Projector<'a, 's> {
     semantic: &'s Semantic<'a>,
     call_offset: u32,

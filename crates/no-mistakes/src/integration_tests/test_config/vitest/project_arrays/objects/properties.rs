@@ -12,6 +12,7 @@ pub(super) fn merge_property(
 ) -> Result<()> {
     if !nested_test {
         match name.as_deref() {
+            Some("sequence") => options.concurrent = super::concurrent::sequence(value, ctx),
             Some("testTimeout") => {
                 options.deadlines.case = Some(deadlines::declaration(value, ctx.path))
             }

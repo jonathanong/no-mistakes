@@ -12,7 +12,6 @@ fn visit_static_member_expression_with_getters<'a>(
     }
     walk::walk_static_member_expression(collector, member);
 }
-
 fn visit_computed_member_expression_with_getters<'a>(
     collector: &mut ImportCollector,
     member: &ComputedMemberExpression<'a>,
@@ -127,6 +126,14 @@ fn visit_assignment_expression_with_calls<'a>(
     collector: &mut ImportCollector,
     assignment: &AssignmentExpression<'a>,
 ) {
+    if collector
+        .transparent_receiver_writes
+        .contains(&assignment.span.start)
+    {
+        walk_assignment_lhs_without_written_getter(collector, &assignment.left);
+        collector.visit_expression(&assignment.right);
+        return;
+    }
     collector.record_replacement_assignment(assignment);
     collector.note_closed_registry_write(&assignment.left, assignment.span.start);
     if collector.collect_value_flow {

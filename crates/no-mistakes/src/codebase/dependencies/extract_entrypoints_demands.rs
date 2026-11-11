@@ -46,23 +46,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_demands(
             identifier_provenance: collect_value_flow,
             ..Default::default()
         },
-        #[cfg(feature = "test-instrumentation")]
         None,
-    )
-}
-
-pub(crate) fn extract_import_facts_with_plan(
-    program: &Program<'_>,
-    source: &str,
-    plan: TsFactPlan,
-) -> ImportFacts {
-    extract_import_facts_with_plan_and_rhs_probe(
-        program,
-        source,
-        TsFactPlan {
-            value_flow: plan.needs_value_flow(),
-            ..plan
-        },
         #[cfg(feature = "test-instrumentation")]
         None,
     )
@@ -93,6 +77,26 @@ fn extract_import_facts_with_rhs_probe(
             call_eligibility: collect_call_eligibility,
             ..Default::default()
         },
+        None,
         probe,
+    )
+}
+
+pub(crate) fn extract_import_facts_with_forwarders(
+    program: &Program<'_>,
+    source: &str,
+    plan: TsFactPlan,
+    forwarders: std::sync::Arc<FxHashSet<u32>>,
+) -> ImportFacts {
+    extract_import_facts_with_plan_and_rhs_probe(
+        program,
+        source,
+        TsFactPlan {
+            value_flow: plan.needs_value_flow(),
+            ..plan
+        },
+        Some(forwarders),
+        #[cfg(feature = "test-instrumentation")]
+        None,
     )
 }

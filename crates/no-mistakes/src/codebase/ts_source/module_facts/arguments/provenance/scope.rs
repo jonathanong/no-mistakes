@@ -36,11 +36,9 @@ pub(super) fn write_scope(semantic: &oxc_semantic::Semantic<'_>, node: NodeId) -
     let AstKind::CallExpression(registration) = nodes.parent_kind(function) else {
         return WriteScope::Function(span.start, span.end);
     };
-    let hook = matches!(&registration.callee, Expression::Identifier(id)
-        if matches!(id.name.as_str(), "beforeAll" | "beforeEach"));
-    if !hook {
+    let Some(hook) = hook_name(semantic, &registration.callee) else {
         return WriteScope::Function(span.start, span.end);
-    }
+    };
     // A hook registered inside a branch may never run.
     if unconditional_body(nodes, nodes.parent_id(function)).is_none() {
         return WriteScope::Conditional;
@@ -57,5 +55,47 @@ pub(super) fn write_scope(semantic: &oxc_semantic::Semantic<'_>, node: NodeId) -
             let span = ancestor.kind().span();
             (span.start, span.end)
         });
-    WriteScope::Hook(container.0, container.1)
+    match hook {
+        "beforeEach" => WriteScope::BeforeEach(container.0, container.1),
+        "afterEach" => WriteScope::AfterEach(container.0, container.1),
+        "afterAll" => WriteScope::AfterAll(container.0, container.1),
+        _ => WriteScope::Hook(container.0, container.1),
+    }
+}
+
+pub(super) fn hook_name(
+    semantic: &oxc_semantic::Semantic<'_>,
+    callee: &Expression<'_>,
+) -> Option<&'static str> {
+    let Expression::Identifier(id) = callee.get_inner_expression() else {
+        return None;
+    };
+    let reference = semantic.scoping().get_reference(id.reference_id.get()?);
+    let imported;
+    let name = if let Some(symbol) = reference.symbol_id() {
+        let declaration = semantic.scoping().symbol_declaration(symbol);
+        let (AstKind::ImportSpecifier(binding), AstKind::ImportDeclaration(import)) = (
+            semantic.nodes().kind(declaration),
+            semantic.nodes().parent_kind(declaration),
+        ) else {
+            return None;
+        };
+        if binding.import_kind.is_type()
+            || import.import_kind.is_type()
+            || crate::ast::js_literal(&import.source) != "vitest"
+        {
+            return None;
+        }
+        imported = crate::ast::module_export_name(&binding.imported);
+        imported.as_ref()
+    } else {
+        id.name.as_str()
+    };
+    match name {
+        "beforeEach" => Some("beforeEach"),
+        "beforeAll" => Some("beforeAll"),
+        "afterEach" => Some("afterEach"),
+        "afterAll" => Some("afterAll"),
+        _ => None,
+    }
 }

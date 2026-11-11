@@ -17,7 +17,10 @@ pub(super) fn classify(origin: Option<&PathOrigin>, fixture_dirs: &[&str]) -> Ve
             "the path argument was not recorded (spread argument or unparsed module)",
         );
     };
-    if origin.anchor == PathAnchor::Temp {
+    if origin.anchor == PathAnchor::Temp
+        && origin.root_tails.is_empty()
+        && !origin.segments.iter().any(|part| part == "..")
+    {
         return Verdict::Allowed;
     }
     if origin

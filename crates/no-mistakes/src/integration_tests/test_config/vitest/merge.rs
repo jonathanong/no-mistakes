@@ -23,7 +23,15 @@ pub(super) fn merge_options(root: &Options, project: Options) -> Options {
             },
         );
     }
+    let concurrent = project
+        .concurrent
+        .or(match project.deadline_extends.as_ref() {
+            Some(Extends::False) => None,
+            Some(Extends::Unknown { .. }) => Some(true),
+            _ => root.concurrent,
+        });
     Options {
+        concurrent,
         deadlines,
         name: project.name.or_else(|| root.name.clone()),
         root: project.root.or_else(|| root.root.clone()),

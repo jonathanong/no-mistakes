@@ -13,6 +13,13 @@ impl Owners<'_> {
         facts: &dyn TsFactLookup,
         fixture_dirs: &[&str],
     ) -> Ownership {
+        if origin.getter.is_some() {
+            return if self.getter_owned(origin, site, facts) {
+                Ownership::Yes
+            } else {
+                Ownership::No
+            };
+        }
         let climbs = origin.segments.iter().any(|segment| segment == "..")
             && (origin.param.is_some()
                 || origin.env.is_some()
@@ -28,9 +35,25 @@ impl Owners<'_> {
             }
             return Ownership::No;
         }
+        if origin.anchor == PathAnchor::Temp {
+            return if origin
+                .root_tails
+                .iter()
+                .all(|tail| self.safe_suffix(tail, site, facts, 0))
+            {
+                Ownership::Yes
+            } else {
+                Ownership::No
+            };
+        }
         match (&origin.env, origin.param) {
             (Some(name), _) => {
-                if self.env_owned(name, site, facts) {
+                if origin
+                    .root_tails
+                    .iter()
+                    .all(|tail| self.safe_suffix(tail, site, facts, 0))
+                    && self.env_owned(name, site, facts)
+                {
                     Ownership::Yes
                 } else {
                     Ownership::No

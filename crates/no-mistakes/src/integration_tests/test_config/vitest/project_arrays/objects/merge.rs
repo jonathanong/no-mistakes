@@ -1,6 +1,9 @@
 use crate::integration_tests::test_config::vitest::Options;
 
 pub(super) fn merge_options(base: &mut Options, next: Options) {
+    if next.nested_test_scope || (!base.nested_test_scope && next.concurrent.is_some()) {
+        base.concurrent = next.concurrent;
+    }
     if next.nested_test_scope {
         base.deadlines = next.deadlines;
     } else if !base.nested_test_scope {

@@ -4,6 +4,7 @@ fn extract_import_facts_with_plan_and_rhs_probe(
     program: &Program<'_>,
     source: &str,
     plan: TsFactPlan,
+    forwarders: Option<std::sync::Arc<FxHashSet<u32>>>,
     #[cfg(feature = "test-instrumentation")] probe: Option<
         std::rc::Rc<
             std::cell::RefCell<extract_value_flow::inert_receiver_rhs::tests_support::Probe>,
@@ -15,6 +16,7 @@ fn extract_import_facts_with_plan_and_rhs_probe(
         source.len() as u64,
         || {
             let mut collector = ImportCollector {
+                transparent_receiver_writes: forwarders.unwrap_or_else(|| crate::codebase::ts_source::module_facts::arguments::transparent_receiver_writes_from_program(program)),
                 collect_per_item_calls: plan.per_item_calls,
                 collect_value_flow: plan.value_flow,
                 collect_identifier_provenance: plan.identifier_provenance,

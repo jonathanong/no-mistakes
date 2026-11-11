@@ -206,3 +206,14 @@ fn argument_lines_share_one_index_across_calls_and_properties() {
         (41, "label")
     );
 }
+mod tmpdir;
+
+mod captured_wrappers;
+
+mod getters;
+
+mod lifecycle_boundaries;
+
+mod captured_wrapper_edges;
+
+mod getter_import_kinds;

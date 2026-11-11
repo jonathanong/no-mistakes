@@ -46,6 +46,9 @@ pub(crate) struct PathOrigin {
     pub(crate) dynamic: bool,
     /// The `process.env` variable the leading component reads, if any.
     pub(crate) env: Option<String>,
+    /// Offset of a named imported zero-argument getter call.
+    pub(crate) getter: Option<u32>,
+    pub(crate) root_tails: Vec<PathOrigin>,
     /// Index of the enclosing function's parameter the leading component reads.
     pub(crate) param: Option<usize>,
     pub(crate) param_member: Option<String>,
@@ -64,9 +67,12 @@ pub(crate) enum WriteScope {
     Program,
     /// An unconditional statement of a function body spanning these offsets.
     Function(u32, u32),
-    /// An unconditional statement of a `beforeAll`/`beforeEach` callback whose
+    /// An unconditional statement of a `beforeAll` callback whose
     /// registering scope spans these offsets.
     Hook(u32, u32),
+    BeforeEach(u32, u32),
+    AfterEach(u32, u32),
+    AfterAll(u32, u32),
     /// Nested in a branch, loop, or handler, so it may not have run.
     Conditional,
 }
@@ -95,6 +101,10 @@ pub(crate) struct PathProvenance {
     /// Calls that forward their enclosing mock implementation's rest arguments unchanged.
     pub(crate) pass_through: crate::fx::FxHashMap<u32, String>,
     pub(crate) env_writes: Vec<EnvWrite>,
+    pub(crate) env_resets: Vec<WriteScope>,
+    /// Env-root returns keyed by callable start offset.
+    pub(crate) env_getters: FxHashMap<u32, PathOrigin>,
+    pub(crate) parameter_defaults: FxHashMap<u32, FxHashMap<usize, PathOrigin>>,
     /// A `process.env` mutation whose variable cannot be named.
     pub(crate) env_unknown_write: bool,
     pub(crate) env_opaque_write: bool,
@@ -104,6 +114,8 @@ pub(crate) struct PathProvenance {
     pub(crate) opaque_config_key: bool,
     /// Function spans of `it`/`test` callbacks.
     pub(crate) test_callbacks: Vec<(u32, u32)>,
+    pub(crate) cleanup_callbacks: Vec<(u32, u32)>,
+    pub(crate) lifecycle_overlaps: Vec<(u32, u32)>,
     /// Names of functions referenced other than as the callee of a direct call.
     pub(crate) value_refs: crate::fx::FxHashSet<String>,
     /// Specifiers reached other than by named static imports used only as calls.

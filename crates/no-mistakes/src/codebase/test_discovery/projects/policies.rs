@@ -6,6 +6,13 @@ use crate::integration_tests::types::{ConfigProject, DeclaredDeadlines, VitestSe
 use std::collections::BTreeMap;
 use std::path::Path;
 
+#[derive(Default)]
+struct RunnerDetails {
+    setups: Vec<VitestSetupDependency>,
+    deadlines: DeclaredDeadlines,
+    concurrent: bool,
+}
+
 /// Build only projects described directly by no-mistakes policy without
 /// preparing their runner. This reserves explicit cross-runner ownership.
 pub(in crate::codebase::test_discovery) fn explicit_policy_projects(
@@ -25,8 +32,7 @@ pub(in crate::codebase::test_discovery) fn explicit_policy_projects(
                 policy,
                 config,
                 workspace,
-                Vec::new(),
-                Default::default(),
+                RunnerDetails::default(),
             )
         })
         .collect()
@@ -46,8 +52,11 @@ pub(super) fn apply_explicit_policy_projects(
                 (
                     candidate.config.clone(),
                     candidate.workspace,
-                    candidate.vitest_setup.clone(),
-                    candidate.declared_deadlines.clone(),
+                    RunnerDetails {
+                        setups: candidate.vitest_setup.clone(),
+                        deadlines: candidate.declared_deadlines.clone(),
+                        concurrent: candidate.vitest_concurrent,
+                    },
                 )
             })
             .collect::<Vec<_>>();
@@ -56,16 +65,15 @@ pub(super) fn apply_explicit_policy_projects(
             vec![(
                 config.clone(),
                 workspace_config(config.as_deref()),
-                Vec::new(),
-                Default::default(),
+                RunnerDetails::default(),
             )]
         } else {
             matching
         };
         let configured = configs
             .into_iter()
-            .filter_map(|(config, workspace, setups, deadlines)| {
-                configured_project(root, name, policy, config, workspace, setups, deadlines)
+            .filter_map(|(config, workspace, runtime)| {
+                configured_project(root, name, policy, config, workspace, runtime)
             })
             .collect::<Vec<_>>();
         if !configured.is_empty() {
@@ -81,16 +89,16 @@ fn configured_project(
     policy: &TestProjectPolicy,
     config: Option<String>,
     workspace: bool,
-    mut vitest_setup: Vec<VitestSetupDependency>,
-    declared_deadlines: DeclaredDeadlines,
+    mut runtime: RunnerDetails,
 ) -> Option<ConfigProject> {
     if policy.include.is_empty() {
         return None;
     }
-    vitest_setup
+    runtime
+        .setups
         .extend(crate::integration_tests::project_config::policy_setup_dependencies(root, policy));
     let mut seen = std::collections::HashSet::new();
-    vitest_setup.retain(|setup| {
+    runtime.setups.retain(|setup| {
         seen.insert((
             setup.field,
             setup.resolved_path.clone(),
@@ -108,8 +116,9 @@ fn configured_project(
         include: prefix_globs(root, root, &policy.include),
         exclude: prefix_globs(root, root, &policy.exclude),
         matcher_warnings: Vec::new(),
-        vitest_setup,
-        declared_deadlines,
+        vitest_setup: runtime.setups,
+        vitest_concurrent: runtime.concurrent,
+        declared_deadlines: runtime.deadlines,
     })
 }
 
@@ -127,3 +136,6 @@ fn workspace_config(config: Option<&str>) -> bool {
         crate::integration_tests::is_vitest_project_array_path(Path::new(config))
     })
 }
+
+#[cfg(test)]
+mod tests;

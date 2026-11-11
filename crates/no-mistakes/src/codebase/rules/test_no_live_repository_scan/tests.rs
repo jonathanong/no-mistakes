@@ -9,6 +9,8 @@ fn origin(anchor: PathAnchor, segments: &[&str]) -> PathOrigin {
         segments: segments.iter().map(|s| s.to_string()).collect(),
         dynamic: false,
         env: None,
+        getter: None,
+        root_tails: Vec::new(),
         param: None,
         param_member: None,
         param_owner: None,

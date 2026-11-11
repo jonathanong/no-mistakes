@@ -48,6 +48,7 @@ fn project_pattern_helpers_cover_roots_relative_patterns_and_excludes() {
         exclude: vec!["./src/generated/**".to_string()],
         declared_deadlines: Default::default(),
         matcher_warnings: Vec::new(),
+        vitest_concurrent: false,
         vitest_setup: Vec::new(),
     };
     assert_eq!(project_name(&project), "default");

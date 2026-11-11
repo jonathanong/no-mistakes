@@ -39,6 +39,7 @@ fn config_project(config: &str, policy_name: &str, include: &str) -> ConfigProje
         exclude: Vec::new(),
         declared_deadlines: Default::default(),
         matcher_warnings: Vec::new(),
+        vitest_concurrent: false,
         vitest_setup: Vec::new(),
     }
 }

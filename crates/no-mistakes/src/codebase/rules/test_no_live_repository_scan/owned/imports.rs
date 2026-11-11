@@ -1,3 +1,5 @@
+mod lifecycle;
+
 use super::{consumers::Consumed, path_provenance};
 use crate::codebase::dependencies::extract::ImportKind;
 use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId, TsFactLookup};
@@ -11,6 +13,7 @@ struct Summary {
     owned: FxHashSet<String>,
     imports: FxHashSet<NodeId>,
     cycle: bool,
+    lifecycle: lifecycle::Lifecycle,
 }
 
 pub(super) struct ImportedWrites<'g> {
@@ -79,6 +82,7 @@ impl<'g> ImportedWrites<'g> {
         let mut seen = FxHashSet::default();
         seen.insert(root.clone());
         let mut summary = Summary::default();
+        summary.lifecycle.record(file, facts);
         while let Some(node) = pending.pop() {
             let eager_workspace = node
                 .as_file()
@@ -106,6 +110,7 @@ impl<'g> ImportedWrites<'g> {
                 pending.push(target.clone());
                 summary.imports.insert(target.clone());
                 if let Some(file) = target.as_file() {
+                    summary.lifecycle.record(file, facts);
                     summary
                         .owned
                         .extend(program_writes(file, facts, fixture_dirs).map(str::to_owned));

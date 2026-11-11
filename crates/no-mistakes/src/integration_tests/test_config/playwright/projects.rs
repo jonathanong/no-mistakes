@@ -49,6 +49,7 @@ impl ParsedPlaywrightConfig {
                     ),
                     declared_deadlines: project.deadlines,
                     matcher_warnings,
+                    vitest_concurrent: false,
                     vitest_setup: Vec::new(),
                 }
             })

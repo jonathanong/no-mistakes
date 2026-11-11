@@ -28,6 +28,7 @@ pub(super) fn inherit_named_deadlines(options: &mut Options, inherited: &mut Opt
 }
 
 pub(super) fn inherit_unresolved_deadlines(options: &mut Options, ctx: &Ctx<'_, '_>) {
+    options.concurrent.get_or_insert(true);
     if matches!(options.deadline_extends, Some(Extends::Config(_))) {
         let mut unknown = crate::integration_tests::types::DeclaredDeadlines::default();
         crate::integration_tests::test_config::deadlines::obscure(

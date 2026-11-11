@@ -114,7 +114,26 @@ An enumeration passes when its root is provably bounded:
 `readdirSync(tmpdir())` and a predictable child such as
 `readdirSync(join(tmpdir(), "policy"))` are reported: the shared temporary
 directory is not owned by the test. Create a fresh directory with `mkdtemp`
-instead. A matching `fixtureDirs` segment remains an explicit allowance.
+instead. A trusted Node `os.tmpdir()` or `tmpdir()` call can use the same
+ownership proof as a direct environment read when every reaching test establishes
+its primary environment variable as an owned, nonempty root before the scanner
+runs. The primary variable is `TEMP` on Windows and `TMPDIR` on POSIX. Owning only
+`TMPDIR` does not prove a Windows temporary root, and owning only `TEMP` does not
+prove a POSIX root. Later environment fallbacks remain unproven.
+
+This requires a static `os` or `node:os` import (named, default, or namespace)
+or an immutable CommonJS binding; a local function or object merely named
+`tmpdir` does not gain environment ownership. A live, missing, late, or mixed
+assignment keeps the shared-directory finding. For portable tests, create one
+`const fixture = await mkdtemp(join(tmpdir(), "owned-"))`, then call both
+`vi.stubEnv("TMPDIR", fixture)` and `vi.stubEnv("TEMP", fixture)` before the scanner.
+Direct `process.env.TMPDIR` reads always use `TMPDIR`, regardless of host platform.
+`dirname(root)` escapes an opaque owned root and remains reported, including
+nested `dirname` calls. `dirname(join(root, "child"))` stays owned because it
+removes a known child rather than crossing the root boundary. This applies to
+Node `tmpdir()` calls and direct environment reads. An environment assignment
+from the parent of a fresh `mkdtemp` root also fails the ownership proof.
+A matching `fixtureDirs` segment remains an explicit allowance.
 
 ## Unresolved roots
 
@@ -214,6 +233,46 @@ enumerate with a path the helper builds itself from a fixture root, or suppress
 the helper.
 
 ## Owned parameters and env vars
+
+A statically named imported helper may return the environment root, such as
+`export function getLocalDir() { return process.env.X ?? "./tmp/data"; }`.
+The helper must have no parameters and a single direct return of `process.env.X`,
+optionally using `??` or `||` with a string literal fallback. Path operations
+inside the imported helper remain unproven. The canonical call graph resolves
+its source; arbitrary imports, captured helper results,
+side effects in the helper, and parent escapes retain unresolved-root findings.
+This includes `readdir(path.join(getLocalDir(), table))` when a hook establishes
+the environment root and every reaching caller supplies a provably relative
+child suffix, including a known constant or a safe string literal default.
+Unknown, escaping, or absolute parameter values remain unresolved. Static child
+and parent components normalize before this proof.
+
+Hook names must resolve to Vitest named imports (including aliases) or
+Vitest globals with no local binding. Local functions or custom imports with those names
+do not establish lifecycle ownership.
+Unconditional same-scope `beforeEach` setup may pair with `afterEach` cleanup,
+and `beforeAll` setup may pair with `afterAll` cleanup. Supported cleanup is a
+named `delete process.env.X` or a direct `vi.unstubAllEnvs()` through the named
+Vitest import. The owned write must still run before every reaching test call.
+A `beforeAll` write followed by an `afterEach` reset cannot prove later tests;
+conditional or live writes, arbitrary reset references, and scans from cleanup
+callbacks remain unresolved. Concurrent callbacks cannot rely on shared
+environment ownership when cleanup in their file, imports, or matched setup
+project may overlap. Use a local `mkdtemp` root or sequential tests. Unrelated
+sequential callbacks keep their ownership proof. This includes concurrency selected
+by a matched project's `test.sequence.concurrent`; unknown configured values
+remain conservative, and an unrelated sequential project keeps its own proof.
+Runner-level reset configuration stays conservative.
+
+A same-file helper such as `const getDataDir = () => process.env.DATA_DIR ??
+"./tmp/data"` keeps the environment origin in `readdir(join(getDataDir(), table))`.
+The fallback remains the production root: tests must assign `DATA_DIR` to an
+owned root before every reaching call, for example
+`process.env.DATA_DIR = await mkdtemp(join(tmpdir(), "case-"))`. A late assignment,
+a caller with no assignment, or an assignment from `process.cwd()` cannot prove
+ownership. `vi.stubEnv("TMPDIR", fixture)` supplies the same proof when `fixture`
+is an owned `mkdtemp` result. A nested `mkdtemp(join(parent, "impact."))` creates
+a fresh owned directory even when `parent` comes from that environment.
 
 Two provenance gaps resolve when every route into the enumeration is proven.
 
@@ -556,6 +615,16 @@ Long call chains use a cycle-safe traversal of the canonical graph without a
 fixed caller-state cutoff. Cycles need an independently owned entry argument.
 
 ## Pass-through mocks
+
+A wrapper may capture a Node filesystem enumerator in a `const`, replace that
+same member with a rest-argument function, and return the captured function's
+unchanged arguments. Read-only strict-equality checks on an argument are allowed
+for fixture failure injection. The ordinary filesystem call still receives root
+analysis. Mutating or escaping the argument array, replacing the arguments,
+unknown receiver writes, and competing aliases of the same filesystem module
+retain unresolved receiver findings. Extra opaque calls or constructors also
+keep the receiver unresolved; failure injection may throw global
+`new Error` with primitive literal arguments when `Error` has no local binding.
 
 `vi.spyOn(fs, "readdir").mockImplementation((...args) => original(...args))`
 forwards the caller's arguments, so the forwarding call is not a root of its

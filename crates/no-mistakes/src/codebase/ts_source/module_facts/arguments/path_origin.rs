@@ -7,10 +7,11 @@ mod bindings;
 mod calls;
 mod composite;
 mod destructure;
+mod getters;
 mod members;
 mod patterns;
 mod sources;
-
+mod tmpdir;
 pub(super) use self::composite::{callee_root, imported_locals};
 pub(super) use self::sources::{env_name, is_process_env, process_global};
 use super::{PathAnchor, PathOrigin, Projector};
@@ -23,6 +24,8 @@ impl PathOrigin {
             segments: Vec::new(),
             dynamic: true,
             env: None,
+            getter: None,
+            root_tails: Vec::new(),
             param: None,
             param_member: None,
             param_owner: None,
@@ -34,34 +37,18 @@ impl PathOrigin {
     fn anchored(anchor: PathAnchor) -> Self {
         Self {
             anchor,
-            segments: Vec::new(),
             dynamic: false,
-            env: None,
-            param: None,
-            param_member: None,
-            param_owner: None,
-            owner_line: None,
-            reassigned_at: None,
+            ..Self::unknown()
         }
     }
 
     fn literal(text: &str) -> Self {
         let absolute = text.starts_with(['/', '\\']) || text.as_bytes().get(1) == Some(&b':');
-        let mut origin = Self {
-            anchor: if absolute {
-                PathAnchor::Absolute
-            } else {
-                PathAnchor::Relative
-            },
-            segments: Vec::new(),
-            dynamic: false,
-            env: None,
-            param: None,
-            param_member: None,
-            param_owner: None,
-            owner_line: None,
-            reassigned_at: None,
-        };
+        let mut origin = Self::anchored(if absolute {
+            PathAnchor::Absolute
+        } else {
+            PathAnchor::Relative
+        });
         origin.extend(
             text.split(['/', '\\'])
                 .filter(|part| !part.is_empty() && *part != ".")
@@ -83,6 +70,11 @@ impl PathOrigin {
 
     /// Append `tail` as trailing components of `self`.
     fn append(mut self, tail: Self) -> Self {
+        if (self.getter.is_some() || self.env.is_some() || self.anchor == PathAnchor::Temp)
+            && (tail.dynamic || tail.anchor != PathAnchor::Relative)
+        {
+            self.root_tails.push(tail.clone());
+        }
         self.dynamic |=
             tail.dynamic || !matches!(tail.anchor, PathAnchor::Relative | PathAnchor::Absolute);
         self.extend(tail.segments.iter().map(String::as_str));
@@ -144,7 +136,7 @@ impl<'a> Projector<'a, '_> {
                 let origin = self.origin(init, depth + 1);
                 // A captured env read ran when the alias was initialised, not at the
                 // call, so a later owned write does not cover it.
-                if origin.env.is_some() {
+                if origin.env.is_some() || origin.getter.is_some() {
                     PathOrigin::unknown()
                 } else {
                     origin

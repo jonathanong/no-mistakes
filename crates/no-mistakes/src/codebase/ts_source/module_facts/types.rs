@@ -150,6 +150,8 @@ pub struct TypeScriptModuleFacts {
     #[serde(skip)]
     pub(crate) discarded_dynamic_imports: crate::fx::FxHashSet<u32>,
     #[serde(skip)]
+    pub(crate) transparent_receiver_writes: std::sync::Arc<crate::fx::FxHashSet<u32>>,
+    #[serde(skip)]
     pub(crate) call_arguments:
         Option<std::sync::Arc<crate::fx::FxHashMap<u32, super::arguments::ArgumentValues>>>,
     #[serde(skip)]

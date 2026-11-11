@@ -47,6 +47,7 @@ pub(super) fn select(
         match project_setups(&project) {
             Ok((setups, global_setups)) => selected.push(Project {
                 filter,
+                concurrent: project.vitest_concurrent,
                 setups,
                 global_setups,
                 config: declared_config(root, &project),

@@ -97,6 +97,8 @@ pub(crate) fn extract_from_semantic(
         .collect();
     modules::collect(semantic, &mut facts, collect);
     receiver_safety::collect(semantic, &mut facts);
+    facts.transparent_receiver_writes =
+        std::sync::Arc::new(arguments::transparent_receiver_writes(semantic));
     if collect && facts.diagnostics.iter().all(argument_safe_diagnostic) {
         modules::collect_require_bindings(semantic, &mut facts);
         if let Some(observer) = crate::diagnostics::current() {

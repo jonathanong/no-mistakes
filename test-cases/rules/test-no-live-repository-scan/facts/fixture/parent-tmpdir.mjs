@@ -1,0 +1,11 @@
+import { readdirSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+readdirSync(dirname(tmpdir()));
+readdirSync(dirname(dirname(tmpdir())));
+readdirSync(dirname(join(tmpdir(), "child")));
+readdirSync(dirname(dirname(join(tmpdir(), "child"))));
+readdirSync(dirname(process.env.TMPDIR));
+const owned = mkdtempSync(join(tmpdir(), "parent-"));
+readdirSync(dirname(owned));
+readdirSync(dirname(join(owned, "child")));

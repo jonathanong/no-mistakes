@@ -4,7 +4,6 @@ struct DecoratorApplications {
     any: bool,
     static_started: bool,
 }
-
 struct AggregateAliasCandidate {
     binding_scope: usize,
     lexical_scope_depth: usize,
@@ -14,9 +13,9 @@ struct AggregateAliasCandidate {
     owner: Option<String>,
     owner_id: Option<CallableId>,
 }
-
 #[derive(Default)]
 struct ImportCollector {
+    transparent_receiver_writes: std::sync::Arc<FxHashSet<u32>>,
     #[cfg(all(test, feature = "test-instrumentation"))]
     statement_mode: statement_mode::Mode,
     bare_callable_callee: Option<u32>,

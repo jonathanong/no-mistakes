@@ -16,6 +16,7 @@ struct Project {
     setups: Vec<PathBuf>,
     global_setups: Vec<PathBuf>,
     config: Option<PathBuf>,
+    concurrent: bool,
 }
 
 #[derive(Clone)]
@@ -91,6 +92,34 @@ impl ConfiguredSetups {
                 .filter_map(|project| project.config.clone())
                 .collect()
         })
+    }
+
+    pub(super) fn concurrent(&self, file: &Path) -> bool {
+        let relative = crate::codebase::ts_source::relative_slash_path(&self.root, file);
+        self.projects
+            .iter()
+            .any(|project| project.concurrent && project.filter.is_match(&relative))
+    }
+
+    pub(super) fn has_cleanup(
+        &self,
+        file: &Path,
+        name: &str,
+        facts: &dyn TsFactLookup,
+        imports: &ImportedWrites<'_>,
+        consumed: &Consumed,
+        fixture_dirs: &[String],
+    ) -> bool {
+        let relative = crate::codebase::ts_source::relative_slash_path(&self.root, file);
+        self.projects
+            .iter()
+            .filter(|project| project.filter.is_match(&relative))
+            .any(|project| {
+                project
+                    .setups
+                    .iter()
+                    .any(|setup| imports.has_cleanup(setup, name, facts, consumed, fixture_dirs))
+            })
     }
 
     pub(super) fn owns(

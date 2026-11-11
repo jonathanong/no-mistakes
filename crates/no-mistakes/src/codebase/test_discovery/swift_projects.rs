@@ -56,6 +56,7 @@ pub(super) fn swift_projects_from_facts(
                         exclude: Vec::new(),
                         declared_deadlines: Default::default(),
                         matcher_warnings: Vec::new(),
+                        vitest_concurrent: false,
                         vitest_setup: Vec::new(),
                     })
                     .collect::<Vec<_>>()
@@ -72,6 +73,7 @@ pub(super) fn swift_projects_from_facts(
                 exclude: Vec::new(),
                 declared_deadlines: Default::default(),
                 matcher_warnings: Vec::new(),
+                vitest_concurrent: false,
                 vitest_setup: Vec::new(),
             });
         } else {
@@ -116,6 +118,7 @@ fn configured_swift_project(
         exclude: prefix_globs(root, root, &policy.exclude),
         declared_deadlines: Default::default(),
         matcher_warnings: Vec::new(),
+        vitest_concurrent: false,
         vitest_setup: Vec::new(),
     })
 }

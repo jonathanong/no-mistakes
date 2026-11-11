@@ -13,6 +13,7 @@ mod requires;
 use super::analysis_policy::AnalysisDiagnostics;
 use super::forbidden_calls::{call_argument_values, expand_roots, site_source_node, SharedRoots};
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
+use crate::codebase::ts_source::module_facts::arguments::PathAnchor;
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig};
 use anyhow::Result;
 use config::{Options, UnresolvedRoot};
@@ -107,7 +108,11 @@ pub(crate) fn check_with_graph(
                 }
                 Scan::Resolved => classify(origin, &fixture_dirs),
             };
-            let ownership = (matches!(verdict, Verdict::Unresolved(_)) && scan == Scan::Resolved)
+            let ownership = ((matches!(verdict, Verdict::Unresolved(_))
+                || origin.is_some_and(|origin| {
+                    origin.anchor == PathAnchor::SharedTemp && origin.env.is_some()
+                }))
+                && scan == Scan::Resolved)
                 .then_some(origin)
                 .flatten()
                 .map(|origin| {

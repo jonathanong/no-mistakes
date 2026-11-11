@@ -18,6 +18,7 @@ fn project(
         exclude: exclude.iter().map(|item| item.to_string()).collect(),
         declared_deadlines: Default::default(),
         matcher_warnings: Vec::new(),
+        vitest_concurrent: false,
         vitest_setup: Vec::new(),
     }
 }

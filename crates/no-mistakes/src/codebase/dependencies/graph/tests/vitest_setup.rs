@@ -25,6 +25,7 @@ fn vitest_setup_edges_are_lazy_and_connect_setup_dependencies_to_tests() {
                 exclude: Vec::new(),
                 declared_deadlines: Default::default(),
                 matcher_warnings: Vec::new(),
+                vitest_concurrent: false,
                 vitest_setup: Vec::new(),
             },
         )
@@ -221,6 +222,7 @@ fn vitest_project(
         exclude: Vec::new(),
         declared_deadlines: Default::default(),
         matcher_warnings: Vec::new(),
+        vitest_concurrent: false,
         vitest_setup: Vec::new(),
     };
     VitestSetupProject {

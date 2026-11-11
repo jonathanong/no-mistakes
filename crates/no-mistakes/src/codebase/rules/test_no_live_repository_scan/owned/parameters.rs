@@ -11,13 +11,16 @@ impl Owners<'_> {
         site: &ResolvedCallSite,
         facts: &dyn TsFactLookup,
     ) -> bool {
-        if !self.env.all_owned(name) {
+        if !self.env.all_owned(name) || self.overlapping_env(&site.file, site.offset, name, facts) {
             return false;
         }
         facts
             .get_ts_facts(&site.file)
             .and_then(path_provenance)
             .is_some_and(|provenance| {
+                if env::cleanup_read(provenance, name, site.offset) {
+                    return false;
+                }
                 env::dominated(provenance, name, site.offset, &self.fixture_dirs)
                     || self.imported.owns(
                         &site.file,
