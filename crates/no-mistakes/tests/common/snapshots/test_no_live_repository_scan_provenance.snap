@@ -1479,6 +1479,132 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unresolved root"
         },
         {
+          "file": "tests/nested-factory.test.mts",
+          "import": "readdirSync",
+          "line": 12,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(await wrongFs.promises.mkdtemp(join(tmpdir(), 'scan-')));",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/nested-factory.test.mts",
+          "import": "readdirSync",
+          "line": 13,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(fs.promises.mkdtempSync(join(tmpdir(), 'scan-')));",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/promises-alias.test.mts",
+          "import": "readdir",
+          "line": 12,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "await readdir(await wrong.mkdtemp(join(tmpdir(), 'scan-')));",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/promises-getter-spy.test.mts",
+          "import": "readdir",
+          "line": 9,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "await readdir(await fs.promises.mkdtemp(join(tmpdir(), 'scan-')));",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/promises-mutation.test.mts",
+          "import": "readdir",
+          "line": 10,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "await readdir(await fs.mkdtemp(join(tmpdir(), 'scan-')));",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/promises-mutation.test.mts",
+          "import": "readdir",
+          "line": 11,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "await readdir(await create(join(tmpdir(), 'scan-')));",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/promises-mutation.test.mts",
+          "import": "readdir",
+          "line": 12,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "await readdir(await nodeFs.promises.mkdtemp(join(tmpdir(), 'scan-')));",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/promises-nested-mutation.test.cts",
+          "import": "readdir",
+          "line": 10,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "await readdir(await create(join(tmpdir(), 'scan-')));",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/promises-nested-mutation.test.cts",
+          "import": "require(\"fs\")",
+          "line": 6,
+          "message": "unresolved root: `require(\"fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under a fixtures or owned temporary directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const root = require('fs');",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/promises-nested-mutation.test.cts",
+          "import": "require(\"node:fs/promises\")",
+          "line": 8,
+          "message": "unresolved root: `require(\"node:fs/promises\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under a fixtures or owned temporary directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const { mkdtemp: create } = require('node:fs/promises');",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/promises-reflect-mutation.test.cts",
+          "import": "readdir",
+          "line": 10,
+          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "await readdir(await create(join(tmpdir(), 'scan-')));",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/promises-reflect-mutation.test.cts",
+          "import": "require(\"fs/promises\")",
+          "line": 8,
+          "message": "unresolved root: `require(\"fs/promises\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under a fixtures or owned temporary directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const { mkdtemp: create } = require('fs/promises');",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/promises-reflect-mutation.test.cts",
+          "import": "require(\"node:fs\")",
+          "line": 6,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under a fixtures or owned temporary directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const root = require('node:fs');",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/promises-require.test.cts",
+          "import": "require(\"node:fs\")",
+          "line": 6,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under a fixtures or owned temporary directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const { promises: fs } = require('node:fs');",
+          "target": "unresolved root"
+        },
+        {
           "file": "tests/require-mutation.test.cts",
           "import": "readdirSync",
           "line": 11,

@@ -203,6 +203,48 @@ fn node_temp_factories_need_their_original_binding() {
         !findings.contains(&"tests/unrelated-write.test.cts:10".to_string()),
         "{findings:?}"
     );
+    assert!(
+        findings.contains(&"tests/promises-alias.test.mts:12".to_string()),
+        "{findings:?}"
+    );
+    assert!(
+        !findings.contains(&"tests/promises-alias.test.mts:9".to_string()),
+        "{findings:?}"
+    );
+    for line in [10, 11, 12] {
+        let unsafe_path = format!("tests/promises-mutation.test.mts:{line}");
+        assert!(
+            findings.contains(&unsafe_path),
+            "{unsafe_path}: {findings:?}"
+        );
+    }
+    assert!(
+        !findings.contains(&"tests/promises-require.test.cts:8".to_string()),
+        "{findings:?}"
+    );
+    assert!(
+        findings.contains(&"tests/promises-nested-mutation.test.cts:10".to_string()),
+        "{findings:?}"
+    );
+    assert!(
+        findings.contains(&"tests/promises-reflect-mutation.test.cts:10".to_string()),
+        "{findings:?}"
+    );
+    for line in [12, 13] {
+        let unsafe_path = format!("tests/nested-factory.test.mts:{line}");
+        assert!(
+            findings.contains(&unsafe_path),
+            "{unsafe_path}: {findings:?}"
+        );
+    }
+    assert!(
+        !findings.contains(&"tests/nested-factory.test.mts:9".to_string()),
+        "{findings:?}"
+    );
+    assert!(
+        findings.contains(&"tests/promises-getter-spy.test.mts:9".to_string()),
+        "{findings:?}"
+    );
 }
 
 #[test]

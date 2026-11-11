@@ -1,14 +1,13 @@
-use super::Projector;
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 use crate::fx::FxHashMap;
-use oxc_ast::ast::*;
 use oxc_semantic::Semantic;
+mod call;
 mod safety;
 
 #[derive(Clone)]
 pub(in crate::codebase::ts_source::module_facts::arguments) enum TempFactoryBinding {
     Named(bool),
-    Module(bool),
+    Module { sync: bool, promises_safe: bool },
 }
 
 fn node_fs(specifier: &str) -> bool {
@@ -41,15 +40,21 @@ pub(in crate::codebase::ts_source::module_facts::arguments) fn temp_factories(
             && import.bindings.iter().any(|binding| {
                 !binding.type_only
                     && (factory(&binding.imported, &import.specifier)
+                        || binding.kind == "named"
+                            && binding.imported == "promises"
+                            && matches!(import.specifier.as_str(), "fs" | "node:fs")
                         || node_fs(&import.specifier)
                             && matches!(binding.kind.as_str(), "namespace" | "default"))
             })
     }) && !facts.require_bindings.iter().any(|binding| {
         loads.get(&binding.load_start).is_some_and(|specifier| {
-            binding
-                .imported
-                .as_deref()
-                .map_or_else(|| node_fs(specifier), |name| factory(name, specifier))
+            binding.imported.as_deref().map_or_else(
+                || node_fs(specifier),
+                |name| {
+                    factory(name, specifier)
+                        || name == "promises" && matches!(*specifier, "fs" | "node:fs")
+                },
+            )
         })
     }) {
         return bindings;
@@ -76,6 +81,7 @@ pub(in crate::codebase::ts_source::module_facts::arguments) fn temp_factories(
                 continue;
             }
             let symbol = symbols.get(&binding.binding_id).copied();
+            let promises = binding.kind == "named" && binding.imported == "promises" && sync;
             if binding.kind == "named"
                 && factory(&binding.imported, &import.specifier)
                 && symbol.is_some_and(|symbol| {
@@ -86,23 +92,22 @@ pub(in crate::codebase::ts_source::module_facts::arguments) fn temp_factories(
                 })
             {
                 bindings.insert(binding.binding_id, TempFactoryBinding::Named(sync));
-            } else if matches!(binding.kind.as_str(), "namespace" | "default") {
-                let stable =
-                    symbol.is_some_and(|symbol| safety::factory_view_safe(semantic, symbol));
-                if stable {
-                    bindings.insert(binding.binding_id, TempFactoryBinding::Module(sync));
-                } else if symbol.is_some_and(|symbol| {
-                    semantic
-                        .scoping()
-                        .get_resolved_references(symbol)
-                        .next()
-                        .is_some()
-                }) {
-                    if sync {
-                        unsafe_sync = true;
+            } else if promises || matches!(binding.kind.as_str(), "namespace" | "default") {
+                if let Some(symbol) = symbol {
+                    let module_sync = sync && !promises;
+                    let unsafe_family = if module_sync {
+                        &mut unsafe_sync
                     } else {
-                        unsafe_promises = true;
-                    }
+                        &mut unsafe_promises
+                    };
+                    safety::record_module(
+                        semantic,
+                        symbol,
+                        binding.binding_id,
+                        module_sync,
+                        &mut bindings,
+                        unsafe_family,
+                    );
                 }
             }
         }
@@ -128,27 +133,42 @@ pub(in crate::codebase::ts_source::module_facts::arguments) fn temp_factories(
                 })
             {
                 bindings.insert(id, TempFactoryBinding::Named(sync));
-            }
-        } else if let Some(&symbol) = symbols.get(&id) {
-            if safety::factory_view_safe(semantic, symbol) {
-                bindings.insert(id, TempFactoryBinding::Module(sync));
-            } else if semantic
-                .scoping()
-                .get_resolved_references(symbol)
-                .next()
-                .is_some()
-            {
-                if sync {
-                    unsafe_sync = true;
-                } else {
-                    unsafe_promises = true;
+            } else if name == "promises" && sync {
+                if let Some(&symbol) = symbols.get(&id) {
+                    safety::record_module(
+                        semantic,
+                        symbol,
+                        id,
+                        false,
+                        &mut bindings,
+                        &mut unsafe_promises,
+                    );
                 }
             }
+        } else if let Some(&symbol) = symbols.get(&id) {
+            let unsafe_family = if sync {
+                &mut unsafe_sync
+            } else {
+                &mut unsafe_promises
+            };
+            safety::record_module(semantic, symbol, id, sync, &mut bindings, unsafe_family);
         }
+    }
+    if unsafe_sync {
+        unsafe_promises = true;
     }
     bindings.retain(|_, binding| {
         let sync = match binding {
-            TempFactoryBinding::Named(sync) | TempFactoryBinding::Module(sync) => *sync,
+            TempFactoryBinding::Named(sync) => *sync,
+            TempFactoryBinding::Module {
+                sync,
+                promises_safe,
+            } => {
+                if *sync {
+                    *promises_safe = !unsafe_promises;
+                }
+                *sync
+            }
         };
         if sync {
             !unsafe_sync
@@ -157,30 +177,4 @@ pub(in crate::codebase::ts_source::module_facts::arguments) fn temp_factories(
         }
     });
     bindings
-}
-
-impl Projector<'_, '_> {
-    pub(super) fn is_temp_factory(&self, callee: &Expression<'_>) -> bool {
-        match callee {
-            Expression::Identifier(id) => self
-                .binding_symbol(id)
-                .and_then(|symbol| self.temp_factories.get(&symbol.index()))
-                .is_some_and(|binding| matches!(binding, TempFactoryBinding::Named(_))),
-            Expression::StaticMemberExpression(member) => {
-                let Expression::Identifier(id) = member.object.get_inner_expression() else {
-                    return false;
-                };
-                self.binding_symbol(id)
-                    .and_then(|symbol| self.temp_factories.get(&symbol.index()))
-                    .is_some_and(|binding| match binding {
-                        TempFactoryBinding::Module(sync) => {
-                            member.property.name == "mkdtemp"
-                                || *sync && member.property.name == "mkdtempSync"
-                        }
-                        TempFactoryBinding::Named(_) => false,
-                    })
-            }
-            _ => false,
-        }
-    }
 }

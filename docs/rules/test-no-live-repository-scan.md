@@ -106,8 +106,11 @@ An enumeration passes when its root is provably bounded:
   defaults, rest properties, computed keys, or spreads.
   The classic factories must resolve to Node `fs` or `fs/promises` imports
   (`fs` and `node:fs` specifiers are equivalent). Named imports, renamed
-  imports, direct `require` bindings, and stable module receivers are recognized. A same-named local
-  function, parameter, or import from another module does not establish an
+  imports, direct `require` bindings, and stable module receivers are recognized.
+  A `promises` binding from Node `fs` is also recognized as `fs/promises`.
+  A stable Node `fs.promises.mkdtemp` call is recognized; `fs.promises.mkdtempSync`
+  is unresolved because the promises API has no synchronous factory.
+  A same-named local function, parameter, or import from another module does not establish an
   owned root. A mutated or escaping module receiver is unresolved. Use a
   direct Node import when creating the directory.
   A statically bound Vitest or Jest spy on an unrelated member such as
