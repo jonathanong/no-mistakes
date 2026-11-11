@@ -285,3 +285,6 @@ mod cli_check_production_exports_precision;
 mod cli_call_site_assembly;
 #[path = "cli_check_production_exports_platform.rs"]
 mod cli_check_production_exports_platform;
+
+#[path = "cli_check_rules_test_no_live_repository_scan_forwarded.rs"]
+mod cli_check_rules_test_no_live_repository_scan_forwarded;
