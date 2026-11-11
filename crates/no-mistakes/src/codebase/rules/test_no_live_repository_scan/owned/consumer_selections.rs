@@ -23,6 +23,10 @@ pub(super) fn collect(
         .iter()
         .filter(|site| site.kind == RouteKind::Dynamic && site.detail == specifier)
     {
+        if module.discarded_dynamic_imports.contains(&site.start) {
+            selected.insert(site.start);
+            continue;
+        }
         let Some((_, names, calls)) = module
             .dynamic_import_selectors
             .iter()

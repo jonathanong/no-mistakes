@@ -40,7 +40,7 @@ export async function proven() {
 import("./a").then((m) => m?.A);
 import("./a").then((m) => m.a.b);
 import("./a").then((m) => { m.A; });
-// The remaining controls stay unproven except discarded imports; see docs/rules/test-no-live-repository-scan.md.
+// Everything below must stay unproven and so must not appear in the facts.
 import("./a").then((m) => m[key]);
 import("./a").then(onLoad);
 import("./a").then((m) => m.A, onError);

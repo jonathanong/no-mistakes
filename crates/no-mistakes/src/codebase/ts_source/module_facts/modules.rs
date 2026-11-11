@@ -66,6 +66,9 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
                 }
             }
             AstKind::ImportExpression(value) => {
+                if selectors::discarded::unused(node.id(), semantic) {
+                    facts.discarded_dynamic_imports.insert(value.span.start);
+                }
                 if mocks::typed_mock_import(value, node.id(), semantic) {
                     facts.mock_import_spans.push(value.span.into());
                 }

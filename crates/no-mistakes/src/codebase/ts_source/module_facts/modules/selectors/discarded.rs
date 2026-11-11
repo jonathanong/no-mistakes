@@ -1,6 +1,6 @@
 use super::*;
 
-pub(super) fn unused(node: NodeId, semantic: &Semantic<'_>) -> bool {
+pub(in super::super) fn unused(node: NodeId, semantic: &Semantic<'_>) -> bool {
     let mut current = node;
     loop {
         let Some((id, kind)) = parent(current, semantic) else {
