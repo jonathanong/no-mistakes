@@ -169,6 +169,12 @@ jobs:
               continue
             fi
 
+            # Preserve the exact binary input used by the source-decoding regression.
+            if [[ "$path" == fixtures/symbols/signature-impact-encoding/tolerated/binary.mts &&
+                  "$(git rev-parse --verify ":$path")" == e0563b2d6bce0d1f255e8f20befd1e8acd9ca2d9 ]]; then
+              continue
+            fi
+
             escaped_path="$(escape_workflow_command_property "$path")"
             printf '::error file=%s::Committed binary file detected; remove it from Git or replace it with a text placeholder.\n' "$escaped_path"
             fail=1

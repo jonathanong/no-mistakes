@@ -57,7 +57,8 @@ pub(super) fn fill_parse_errors(
             ts: Arc::new(TsFileFacts {
                 fatal_parse_error: legacy,
                 parse_error: Some(parse_error.clone()),
-                source: stored_source.clone(),
+                source: (variant.plan.graph.source || stored_source.is_some())
+                    .then(|| Arc::clone(source)),
                 ..TsFileFacts::default()
             }),
             source: stored_source,
@@ -84,7 +85,7 @@ pub(super) fn recovered_error_facts(
     let stored_source = super::should_store_source(plan, path).then(|| Arc::clone(source));
     let mut ts = super::super::super::file_parse_error::ts_facts(
         plan,
-        stored_source.clone(),
+        (plan.graph.source || stored_source.is_some()).then(|| Arc::clone(source)),
         parsed_source,
         program,
         parse_error.clone(),

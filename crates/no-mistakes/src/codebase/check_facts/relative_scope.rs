@@ -65,7 +65,7 @@ pub(super) fn project_relative_executor_scopes(
                 &resolver,
             );
             let source = sources
-                .read_path(path)
+                .read_source_path(path)
                 .unwrap_or_else(|_| std::sync::Arc::<str>::from(""));
             project_relative_scoped_facts(
                 embedded,

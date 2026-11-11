@@ -182,10 +182,10 @@ fn mixed_route_and_source_fact_consumers_keep_each_others_work() {
         Some(&22),
         "mixed consumer must retain its full selected source scope: {mixed_work:#?}"
     );
-    assert_eq!(mixed_work.get("parse.files"), Some(&20), "{mixed_work:#?}");
+    assert_eq!(mixed_work.get("parse.files"), Some(&21), "{mixed_work:#?}");
     assert_eq!(
         mixed_work.get("parse.files_after_extract"),
-        Some(&20),
+        Some(&21),
         "the mixed request must reuse extracted facts: {mixed_work:#?}"
     );
     assert!(raw_result.warnings.is_empty(), "{:?}", raw_result.warnings);

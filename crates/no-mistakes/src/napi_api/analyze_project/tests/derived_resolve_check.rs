@@ -400,20 +400,25 @@ fn derived_resolve_check_matches_standalone_for_recoverable_parse_diagnostics() 
 }
 
 #[test]
-fn derived_resolve_check_propagates_source_and_fatal_parse_failures() {
+fn derived_resolve_check_tolerates_invalid_utf8_and_propagates_fatal_parse_failures() {
     let root = derived_resolve_fact_parity_root();
+    let standalone: Value =
+        serde_json::from_str(&standalone_resolve_check(&root, "invalid-utf8.ts").unwrap()).unwrap();
+    let derived: Value =
+        serde_json::from_str(&derived_resolve_check(&root, "invalid-utf8.ts").unwrap()).unwrap();
+    assert_eq!(standalone["allResolve"], true);
+    assert_eq!(standalone["results"][0]["file"], "invalid-utf8.ts");
+    assert_eq!(standalone["results"][0]["imports"], json!([]));
+    assert_eq!(
+        derived["reports"][1]["result"]["results"][0],
+        standalone["results"][0]
+    );
 
-    for (file, expected) in [
-        ("invalid-utf8.ts", "failed to read"),
-        ("fatal.ts", "failed to parse"),
-    ] {
-        let standalone = standalone_resolve_check(&root, file).unwrap_err();
-        let derived = derived_resolve_check(&root, file).unwrap_err();
-
-        assert!(standalone.reason.contains(expected), "{standalone}");
-        assert!(standalone.reason.contains(file), "{standalone}");
-        assert!(derived.reason.contains(expected), "{derived}");
-        assert!(derived.reason.contains(file), "{derived}");
+    let standalone = standalone_resolve_check(&root, "fatal.ts").unwrap_err();
+    let derived = derived_resolve_check(&root, "fatal.ts").unwrap_err();
+    for error in [standalone, derived] {
+        assert!(error.reason.contains("failed to parse"), "{error}");
+        assert!(error.reason.contains("fatal.ts"), "{error}");
     }
 }
 

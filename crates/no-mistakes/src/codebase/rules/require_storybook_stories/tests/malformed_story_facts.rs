@@ -71,7 +71,7 @@ fn prepared_story_errors_use_authoritative_causes_and_sources() {
 }
 
 #[test]
-fn unreadable_story_reports_repo_relative_read_error_through_public_checks() {
+fn invalid_encoded_story_reports_repo_relative_parse_error_through_public_checks() {
     let root = fixture("unreadable-story");
     let cfg = crate::config::v2::load_v2_config(&root, None).unwrap();
     let direct = check(&root, &cfg, None).unwrap_err();
@@ -91,7 +91,7 @@ fn unreadable_story_reports_repo_relative_read_error_through_public_checks() {
     assert!(diagnostics[0]["message"]
         .as_str()
         .unwrap()
-        .contains("failed to read Card.stories.tsx:"));
+        .contains("parsing Card.stories.tsx:"));
     assert!(!diagnostics[0]["message"]
         .as_str()
         .unwrap()

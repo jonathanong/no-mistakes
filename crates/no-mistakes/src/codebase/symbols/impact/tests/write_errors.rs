@@ -75,7 +75,14 @@ fn impact_report_writers_surface_io_errors() {
             depth: 1,
             via: vec!["test"],
         }],
-        warnings: vec![],
+        warnings: vec![ImpactWarning {
+            r#type: "unanalyzed-files",
+            message: "One unrelated file could not be analyzed".to_string(),
+        }],
+        unanalyzed: vec![UnanalyzedFile {
+            file: "unrelated.mts".to_string(),
+            reason: "synthetic parse failure".to_string(),
+        }],
     };
     let empty = SignatureImpactReport {
         roots: vec![],
@@ -86,6 +93,7 @@ fn impact_report_writers_surface_io_errors() {
         test_callers: vec![],
         suggested_tests: vec![],
         warnings: vec![],
+        unanalyzed: vec![],
     };
     for format in [
         Format::Md,

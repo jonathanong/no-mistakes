@@ -1,0 +1,20 @@
+---
+source: crates/no-mistakes/src/codebase/symbols/tests_signature_impact_encoding_text.rs
+expression: "normalize_encoding_snapshot(&root, &rendered)"
+---
+Symbol: parseDate
+Defined in: target.mts:1
+## Exported via
+- `target.mts#parseDate` (function, line 1)
+## Production callers
+- `comment.mts#commentCaller`
+- `consumer.mts#consume`
+- `string.mts#stringCaller`
+## Test callers
+_None._
+Suggested tests:
+  (none)
+Unanalyzed files:
+Warning [unanalyzed-files]: 2 file(s) could not be analyzed; inspect unanalyzed for details
+  binary.mts: parsing <root>/binary.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: "Invalid Character `\0`", labels: [LabeledSpan { label: None, span: Span { start: 0, end: 1 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }
+  unrelated.mts: parsing <root>/unrelated.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: "File appears to be binary.", labels: [], help: None, note: None, severity: Error, code: OxcCode { scope: Some("TS"), number: Some("1490") }, url: None } }

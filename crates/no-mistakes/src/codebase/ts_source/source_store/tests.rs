@@ -312,16 +312,26 @@ fn optional_json_parses_use_a_one_file_store_when_no_session_is_prepared() {
 }
 
 #[test]
-fn invalid_utf8_source_reads_are_cached_as_invalid_data() {
-    // 0xFF 0xFE is not UTF-8. Checked in as bytes so the cache records InvalidData.
+fn invalid_utf8_source_projection_preserves_strict_errors_and_one_physical_read() {
     let path = fixture("invalid-utf8.ts");
-    let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&path)));
-    let store = SourceStore::new(inventory);
-    let first = store.read_path(&path).unwrap_err();
-    let second = store.read_path(&path).unwrap_err();
-    assert_eq!(first.kind(), ErrorKind::InvalidData);
-    assert!(Arc::ptr_eq(&first, &second));
-    assert_eq!(store.physical_read_count(), 1);
+    for source_first in [false, true] {
+        let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&path)));
+        let store = SourceStore::new(inventory);
+        let first_source = source_first.then(|| store.read_source_path(&path).unwrap());
+        let first_error = store.read_path(&path).unwrap_err();
+        let second_error = store.read_path(&path).unwrap_err();
+        assert_eq!(first_error.kind(), ErrorKind::InvalidData);
+        assert!(Arc::ptr_eq(&first_error, &second_error));
+        let source = store.read_source_path(&path).unwrap();
+        let alias = path.parent().unwrap().join(".").join("invalid-utf8.ts");
+        let alias_source = store.read_source_path(&alias).unwrap();
+        assert_eq!(&*source, "\u{fffd}\u{fffd}x");
+        assert!(Arc::ptr_eq(&source, &alias_source));
+        if let Some(first_source) = first_source {
+            assert!(Arc::ptr_eq(&source, &first_source));
+        }
+        assert_eq!(store.physical_read_count(), 1);
+    }
 }
 
 #[test]

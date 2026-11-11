@@ -7,12 +7,9 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - Local over Remote
 - Stateless across runs — no filesystem caches, databases, or services. In-memory
   per-run memoization and shared fact maps are allowed to avoid duplicate work.
-- One pass per invocation — discover files once, parse TS/JS once for the
-  requested facts, then reuse those facts across graph construction and checks.
-- Cache only in memory — parsed facts, resolver lookups, traversal results, and
-  forward/reverse dependency maps may be cached during a run, but never persisted.
-- Build one canonical graph — relationship features should produce typed edges
-  in the shared dependency graph instead of maintaining separate graph shapes.
+- One pass per invocation — discover files once, parse TS/JS once for the requested facts, then reuse those facts across graph construction and checks.
+- Cache only in memory — parsed facts, resolver lookups, traversal results, and forward/reverse dependency maps may be cached during a run, but never persisted.
+- Build one canonical graph — relationship features should produce typed edges in the shared dependency graph instead of maintaining separate graph shapes.
 - Programmatic API parity — every stable `no-mistakes` CLI capability must expose
   an equivalent N-API interface for Node/programmatic usage. Downstream tools should call
   structured in-process APIs instead of shelling out to `no-mistakes`, avoiding
@@ -20,8 +17,7 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - N-API functions must be asynchronous. CPU-heavy analysis must run through
   libuv async tasks and JS-facing helpers must return promises rather than
   blocking the Node event loop.
-- Fully parallel, deterministic output — independent file analysis and domain
-  checks should use rayon/concurrent data structures, then sort/merge before
+- Fully parallel, deterministic output — independent file analysis and domain checks should use rayon/concurrent data structures, then sort/merge before
   rendering results.
 - Narrow by configuration: analyze only configured locations (project roots,
   `include`) and targets (executor imports, factories, tags), not every file,
@@ -31,6 +27,11 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - Change the code, not the analyzer: rules ban hard-to-parse code (indirection,
   dynamism, runtime mutation) and name a static rewrite. Rules judge only what
   they can soundly judge; see [why](docs/why.md).
+- Tolerate input like the language's compiler: decode lossily, keep read and
+  parse failures scoped to the file, and analyze the rest. Never abort a whole
+  query over a file the compiler accepts; report files that still cannot be
+  analyzed in a structured field with a warning, and fail only when such a
+  file could change the answer.
 - Reduce Agent token usage
 - Allow custom error messages for agents
 - Automatically fix when possible

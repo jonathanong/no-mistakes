@@ -142,12 +142,12 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "nextjs-no-caching",
           "file": "app/page.ts",
-          "message": "failed to read app/page.ts: invalid utf-8 sequence of 1 bytes from index 0"
+          "message": "parsing app/page.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"File appears to be binary.\", labels: [], help: None, note: None, severity: Error, code: OxcCode { scope: Some(\"TS\"), number: Some(\"1490\") }, url: None } }"
         },
         {
           "consumer": "production-dependency-declarations",
           "file": "app/page.ts",
-          "message": "failed to read app/page.ts: invalid utf-8 sequence of 1 bytes from index 0"
+          "message": "parsing app/page.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"File appears to be binary.\", labels: [], help: None, note: None, severity: Error, code: OxcCode { scope: Some(\"TS\"), number: Some(\"1490\") }, url: None } }"
         }
       ],
       "integration": [],

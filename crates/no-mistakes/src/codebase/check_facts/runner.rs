@@ -88,7 +88,9 @@ pub(crate) fn collect_prepared_runner_facts(
             && plan.production_import_paths.contains(path)
             && helper.production_imports.is_none()
         {
-            if let Ok(source) = sources.read_path(path) {
+            if let Ok(source) =
+                crate::codebase::ts_source::SourceStore::read_prepared_or_open(Some(&sources), path)
+            {
                 let mut results = [Some(std::mem::take(helper))];
                 let projected = crate::codebase::fact_panic::isolate(session.session, path, || {
                     super::file::production_imports::project(
@@ -106,7 +108,7 @@ pub(crate) fn collect_prepared_runner_facts(
                     results.into_iter().next().flatten().unwrap_or_default()
                 });
                 *helper = projected.unwrap_or_else(|error| {
-                    super::file_parse_error::panic_facts(root, path, plan, error)
+                    super::file_parse_error::panic_facts(root, path, plan, error, Some(source))
                 });
             }
         }

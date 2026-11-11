@@ -204,3 +204,6 @@ fn recovered_legacy_variant_keeps_symbols_and_source() {
         Some("fixture parser diagnostic")
     );
 }
+
+#[path = "tests_panic_source.rs"]
+mod panic_source;

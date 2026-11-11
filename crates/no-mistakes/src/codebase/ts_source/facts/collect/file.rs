@@ -24,7 +24,14 @@ pub(super) fn collect_file_facts_with_sources_and_session(
     crate::codebase::fact_panic::isolate(session, path, || {
         collect_file_facts_unchecked(session, path, plan, context, sources, retain_parse)
     })
-    .unwrap_or_else(|error| Some(failure_facts(error)))
+    .unwrap_or_else(|error| {
+        let mut facts = failure_facts(error);
+        facts.source = plan
+            .source
+            .then(|| sources.read_source_path(path).ok())
+            .flatten();
+        Some(facts)
+    })
 }
 
 fn collect_file_facts_unchecked(
@@ -35,7 +42,7 @@ fn collect_file_facts_unchecked(
     sources: &crate::codebase::ts_source::SourceStore,
     retain_parse: bool,
 ) -> Option<TsFileFacts> {
-    let source = match sources.read_path(path) {
+    let source = match sources.read_source_path(path) {
         Ok(source) => source,
         Err(error) => {
             return Some(failure_facts(format!(
@@ -90,7 +97,9 @@ fn collect_file_facts_unchecked(
                         },
                     )
                 };
-                let facts = Some(facts_from_collection_result(result));
+                let mut facts = facts_from_collection_result(result);
+                facts.source = plan.source.then_some(source);
+                let facts = Some(facts);
                 if !retain_parse {
                     crate::ast::evict_request_parse_cache_path(path);
                 }

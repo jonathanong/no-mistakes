@@ -42,9 +42,12 @@ fn read_from_source_store(
     sources: &crate::codebase::ts_source::SourceStore,
     path: &Path,
 ) -> Result<Arc<str>> {
-    sources
-        .read_path(path)
-        .map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error))
+    let read = if crate::codebase::dependencies::extract::is_indexable(path) {
+        sources.read_source_path(path)
+    } else {
+        sources.read_path(path)
+    };
+    read.map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error))
 }
 
 pub(in crate::integration_tests) fn read_request_source(path: &Path) -> Result<Arc<str>> {

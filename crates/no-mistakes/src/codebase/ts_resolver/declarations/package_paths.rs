@@ -39,7 +39,7 @@ pub(super) fn declaration(path: &Path, sources: &SourceStore) -> Result<Option<P
 fn unique(paths: Vec<PathBuf>, sources: &SourceStore) -> Result<Option<PathBuf>, ()> {
     let mut found = None;
     for path in paths {
-        match sources.read_path(&path) {
+        match sources.read_source_path(&path) {
             Ok(_) if found.is_some() => return Err(()),
             Ok(_) => found = Some(path),
             Err(error) if error.kind() == ErrorKind::NotFound => {}

@@ -87,6 +87,15 @@ src/queues.mts:3:withRetry
 - Default `--include` is `exports` because the most common question is "what does this module expose?"
 - `--kind` filter only applies to exports, not imports
 - `--mode signature-impact` requires exactly one file and one exported symbol
+- Source text is decoded lossily before parsing. Signature-impact JSON includes
+  `unanalyzed: [{ file, reason }]` and an `unanalyzed-files` warning for unrelated
+  failures with retained source. Failures that could change the target result are errors:
+  the target file, transitive importers of the target and their transitive
+  dependencies, and retained source containing the requested symbol or a known
+  export alias. Imports or re-exports of those names through opaque failed
+  modules also fail conservatively.
+  Failures without retained source also fail because missing edges cannot prove
+  independence.
 - In signature-impact mode, `--format paths` emits only suggested test files
 - TSX/JSX files are auto-detected by extension and parsed with the appropriate grammar
 - Only top-level statements are walked — nested or conditional exports are not surfaced

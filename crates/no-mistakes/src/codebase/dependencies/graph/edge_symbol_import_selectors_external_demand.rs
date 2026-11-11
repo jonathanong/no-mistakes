@@ -75,7 +75,7 @@ impl ExternalStarProjection<'_> {
                         path.extension().and_then(|extension| extension.to_str()),
                         Some("js" | "mjs" | "cjs")
                     )
-                    .then(|| self.sources.read_path(&path).ok().map(|_| path))
+                    .then(|| self.sources.read_source_path(&path).ok().map(|_| path))
                     .flatten()
                 });
                 if let Some(path) = resolved {

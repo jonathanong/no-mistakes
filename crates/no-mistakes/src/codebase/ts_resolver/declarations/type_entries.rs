@@ -86,7 +86,7 @@ fn resolve_name(
             names_dir.join(name)
         };
         let path = normalize_path(&path);
-        return sources.read_path(&path).ok().map(|_| path);
+        return sources.read_source_path(&path).ok().map(|_| path);
     }
     let roots;
     let roots = match type_roots {
@@ -143,14 +143,14 @@ fn package_entry(dir: &Path, sources: &SourceStore) -> PackageEntry {
         {
             let path = normalize_path(&dir.join(relative));
             return sources
-                .read_path(&path)
+                .read_source_path(&path)
                 .map(|_| PackageEntry::File(path))
                 .unwrap_or(PackageEntry::Missing);
         }
     }
     for name in ["index.d.ts", "index.d.mts", "index.d.cts"] {
         let path = normalize_path(&dir.join(name));
-        if sources.read_path(&path).is_ok() {
+        if sources.read_source_path(&path).is_ok() {
             return PackageEntry::File(path);
         }
     }
@@ -160,3 +160,7 @@ fn package_entry(dir: &Path, sources: &SourceStore) -> PackageEntry {
 #[cfg(test)]
 #[path = "type_entries_tests.rs"]
 mod type_entries_tests;
+
+#[cfg(test)]
+#[path = "type_entries_encoding_tests.rs"]
+mod type_entries_encoding_tests;

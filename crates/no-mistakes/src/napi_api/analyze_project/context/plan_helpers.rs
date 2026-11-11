@@ -120,6 +120,7 @@ fn check_fact_plan(
         request.report_type == "symbols"
             && request.options.get("mode").and_then(Value::as_str) == Some("signature-impact")
     });
+    graph.0.source |= signature;
     if options
         .reports
         .iter()

@@ -30,6 +30,7 @@ export interface SymbolsResult {
 }
 
 export type {
+  UnanalyzedFile,
   SignatureImpactCaller,
   SignatureImpactLocation,
   SignatureImpactResult,

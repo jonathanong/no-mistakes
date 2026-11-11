@@ -18,6 +18,11 @@ export interface SignatureImpactTest {
   via: string[];
 }
 
+export interface UnanalyzedFile {
+  file: string;
+  reason: string;
+}
+
 export interface SignatureImpactWarning {
   type: string;
   message: string;
@@ -32,4 +37,5 @@ export interface SignatureImpactResult {
   testCallers: SignatureImpactCaller[];
   suggestedTests: SignatureImpactTest[];
   warnings: SignatureImpactWarning[];
+  unanalyzed: UnanalyzedFile[];
 }

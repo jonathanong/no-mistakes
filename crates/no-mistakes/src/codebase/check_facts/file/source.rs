@@ -51,7 +51,8 @@ fn collect_file_facts_from_source(
                             should_store_source(plan, path).then(|| Arc::clone(&source));
                         let mut ts = super::file_parse_error::ts_facts(
                             plan,
-                            stored_source.clone(),
+                            (plan.graph.source || stored_source.is_some())
+                                .then(|| Arc::clone(&source)),
                             parsed_source,
                             program,
                             parse_error.clone(),
@@ -147,7 +148,8 @@ fn collect_file_facts_from_source(
                             ts: Arc::new(TsFileFacts {
                                 fatal_parse_error: legacy_symbols,
                                 parse_error: Some(parse_error.clone()),
-                                source: stored_source.clone(),
+                                source: (plan.graph.source || stored_source.is_some())
+                                    .then(|| Arc::clone(&source)),
                                 ..TsFileFacts::default()
                             }),
                             source: stored_source,

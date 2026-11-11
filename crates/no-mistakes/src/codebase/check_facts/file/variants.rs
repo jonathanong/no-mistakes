@@ -37,7 +37,7 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session(
     variants: &[CheckFactVariant<'_>],
 ) -> Vec<Option<CheckFileFacts>> {
     crate::codebase::fact_panic::isolate(session, path, || {
-        collect_variants_unchecked(session, path, source, variants)
+        collect_variants_unchecked(session, path, Arc::clone(&source), variants)
     })
     .unwrap_or_else(|error| {
         variants
@@ -48,6 +48,7 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session(
                     path,
                     variant.plan,
                     error.clone(),
+                    Some(Arc::clone(&source)),
                 ))
             })
             .collect()

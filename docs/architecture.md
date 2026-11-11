@@ -102,6 +102,12 @@ first scope's manifest. Automatic and explicit aliases for the same effective
 path share one entry. Source reads and manifest loads memoize both successes and
 failures; graph and traversal caches use normalized effective plans.
 
+TS/JS compiler consumers use `SourceStore::read_source_path`, which replaces
+invalid UTF-8 with U+FFFD. Strict format readers keep `read_path`. Both views
+share one physical read; the lossy view derives from retained bytes and is
+memoized for the request. Extraction failures discard derived facts while
+retaining source text when the plan needs it for relevance checks.
+
 The session optionally carries one `InvocationObserver`. When diagnostics are
 disabled the observer is `None`: hot paths branch before reading the clock and
 do not allocate work ledgers. With `--verbose-timings`, the same gateways expose

@@ -93,9 +93,14 @@ pub(crate) fn panic_facts(
     path: &std::path::Path,
     plan: &CheckFactPlan,
     error: String,
+    source: Option<std::sync::Arc<str>>,
 ) -> super::CheckFileFacts {
-    super::CheckFileFacts {
-        fact_extraction_panicked: true,
-        ..failure_facts(root, path, plan, error)
+    let mut facts = failure_facts(root, path, plan, error);
+    facts.fact_extraction_panicked = true;
+    let store_source = super::file::should_store_source(plan, path);
+    if plan.graph.source || store_source {
+        std::sync::Arc::make_mut(&mut facts.ts).source = source.clone();
     }
+    facts.source = source.filter(|_| store_source);
+    facts
 }

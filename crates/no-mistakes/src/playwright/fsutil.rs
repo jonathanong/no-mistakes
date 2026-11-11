@@ -96,12 +96,8 @@ pub(crate) fn read_source_text(
     path: &Path,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> std::io::Result<std::sync::Arc<str>> {
-    match sources {
-        Some(store) => store
-            .read_path(path)
-            .map_err(|error| std::io::Error::new(error.kind(), error.to_string())),
-        None => std::fs::read_to_string(path).map(std::sync::Arc::from),
-    }
+    crate::codebase::ts_source::SourceStore::read_prepared_or_open(sources, path)
+        .map_err(|error| std::io::Error::new(error.kind(), error.to_string()))
 }
 
 pub(crate) fn read_snapshot_source(

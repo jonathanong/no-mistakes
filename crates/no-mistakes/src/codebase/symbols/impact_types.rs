@@ -9,6 +9,7 @@ pub struct SignatureImpactReport {
     test_callers: Vec<CallerEntry>,
     suggested_tests: Vec<TestSuggestion>,
     warnings: Vec<ImpactWarning>,
+    unanalyzed: Vec<UnanalyzedFile>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Serialize)]
@@ -43,4 +44,11 @@ struct TestSuggestion {
 struct ImpactWarning {
     r#type: &'static str,
     message: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct UnanalyzedFile {
+    file: String,
+    reason: String,
 }

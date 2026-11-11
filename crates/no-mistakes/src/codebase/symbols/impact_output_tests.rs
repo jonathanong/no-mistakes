@@ -128,6 +128,7 @@ fn markdown_report_uses_symbol_title_when_roots_are_empty() {
         test_callers: vec![],
         suggested_tests: vec![],
         warnings: vec![],
+        unanalyzed: vec![],
     };
     let mut out = Vec::new();
 
@@ -172,6 +173,7 @@ fn text_reports_render_callers_and_suggested_tests() {
             via: vec!["test"],
         }],
         warnings: vec![],
+        unanalyzed: vec![],
     };
     let mut markdown = Vec::new();
     write_report(&report, Format::Md, &mut markdown).unwrap();

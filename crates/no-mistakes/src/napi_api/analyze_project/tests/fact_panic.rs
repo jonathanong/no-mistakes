@@ -53,3 +53,47 @@ fn fact_panic_batch_check_matches_standalone_with_independent_findings() {
         })
     });
 }
+
+#[test]
+fn signature_impact_panic_relevance_matches_prepared_check_and_standalone() {
+    let saved = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/symbols/signature-impact-encoding/tolerated");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    let root = fixture.path().canonicalize().unwrap();
+    let failed = root.join("comment.mts");
+    with_injected_panic(&failed, || {
+        let standalone =
+            crate::napi_api::symbols_json_impl(crate::napi_api::options::test_json_arg(
+                json!({
+                    "root": root, "files": ["target.mts"],
+                    "mode": "signature-impact", "symbol": "parseDate"
+                })
+                .to_string(),
+            ))
+            .unwrap_err()
+            .to_string();
+        let batch = super::analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
+                "root": root,
+                "reports": [
+                    { "type": "check" },
+                    { "type": "symbols", "files": ["target.mts"],
+                      "mode": "signature-impact", "symbol": "parseDate" }
+                ]
+            })
+            .to_string(),
+        ))
+        .unwrap_err()
+        .to_string();
+        for error in [standalone, batch] {
+            assert!(
+                error.contains("signature-impact could not analyze `comment.mts`"),
+                "{error}"
+            );
+            assert!(
+                error.contains("injected fact extraction failure"),
+                "{error}"
+            );
+        }
+    });
+}

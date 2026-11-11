@@ -5,7 +5,10 @@ use std::path::Path;
 #[cfg(test)]
 mod tests;
 
-pub(super) fn should_store_source(plan: &CheckFactPlan, path: &Path) -> bool {
+pub(in crate::codebase::check_facts) fn should_store_source(
+    plan: &CheckFactPlan,
+    path: &Path,
+) -> bool {
     // React checks parse-error suppression before filtering target files.
     plan.source
         || (plan.raw_source
