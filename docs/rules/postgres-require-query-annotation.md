@@ -304,8 +304,8 @@ parameter. Prepared source facts and the configured resolver also prove named
 re-exports through workspace aliases, local exports of unique named imports
 (`import { add } from './helper'; export { add };`), and transitive imported
 append-only helpers. Type-only, namespace, ambiguous, and unresolved imports
-stay unanalyzable. This import projection uses at most sixteen active helper or re-export
-lookup levels. Cycles, ambiguous exports, and unresolved targets remain
+stay unanalyzable. This import projection uses at most sixteen active helper or
+re-export lookup levels. Cycles, ambiguous exports, and unresolved targets remain
 unanalyzable.
 The analyzer does not evaluate complete SQL to establish these prefixes.
 
