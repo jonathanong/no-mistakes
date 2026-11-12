@@ -105,17 +105,20 @@ impl<'a> Projector<'a, '_> {
             return false;
         }
         let name = crate::codebase::ts_source::module_facts::modules::name(&binding.imported);
-        let AstKind::ImportDeclaration(import) = semantic.nodes().parent_kind(declaration) else {
-            return false;
-        };
-        if import.import_kind.is_type() {
-            return false;
-        }
-        let source = crate::ast::js_literal(&import.source);
-        match name.as_str() {
-            "rmSync" => matches!(source.as_ref(), "fs" | "node:fs"),
-            "rm" => awaited && matches!(source.as_ref(), "fs/promises" | "node:fs/promises"),
-            _ => false,
-        }
+        semantic
+            .nodes()
+            .parent_kind(declaration)
+            .as_import_declaration()
+            .filter(|import| !import.import_kind.is_type())
+            .is_some_and(|import| {
+                let source = crate::ast::js_literal(&import.source);
+                match name.as_str() {
+                    "rmSync" => matches!(source.as_ref(), "fs" | "node:fs"),
+                    "rm" => {
+                        awaited && matches!(source.as_ref(), "fs/promises" | "node:fs/promises")
+                    }
+                    _ => false,
+                }
+            })
     }
 }

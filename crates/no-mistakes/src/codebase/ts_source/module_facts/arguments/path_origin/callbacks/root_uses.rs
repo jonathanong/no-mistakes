@@ -57,16 +57,10 @@ impl<'a> Projector<'a, '_> {
         {
             return None;
         }
-        if callback_call
-            && invocation
-                .arguments
-                .iter()
-                .filter(|argument| argument.span() == nodes.kind(argument_node).span())
-                .count()
-                != 1
-        {
-            return None;
-        }
         Some(())
     }
 }
+
+#[cfg(test)]
+#[path = "root_uses_tests.rs"]
+mod tests;

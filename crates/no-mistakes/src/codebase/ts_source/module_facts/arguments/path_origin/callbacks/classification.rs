@@ -27,10 +27,10 @@ impl<'a> Projector<'a, '_> {
         let BindingPattern::BindingIdentifier(binding) = &parameter.pattern else {
             return false;
         };
-        let Some(symbol) = binding.symbol_id.get() else {
-            return false;
-        };
-        self.callback_symbol_temp(symbol, index, 0)
+        binding
+            .symbol_id
+            .get()
+            .is_some_and(|symbol| self.callback_symbol_temp(symbol, index, 0))
     }
 
     fn callback_symbol_temp(&mut self, symbol: SymbolId, index: usize, depth: usize) -> bool {
@@ -63,10 +63,11 @@ impl<'a> Projector<'a, '_> {
                     let BindingPattern::BindingIdentifier(alias) = &declaration.id else {
                         continue;
                     };
-                    let Some(symbol) = alias.symbol_id.get() else {
-                        continue;
-                    };
-                    if self.callback_symbol_temp(symbol, index, depth + 1) {
+                    if alias
+                        .symbol_id
+                        .get()
+                        .is_some_and(|symbol| self.callback_symbol_temp(symbol, index, depth + 1))
+                    {
                         return true;
                     }
                 }
@@ -76,3 +77,7 @@ impl<'a> Projector<'a, '_> {
         false
     }
 }
+
+#[cfg(test)]
+#[path = "classification_tests.rs"]
+mod tests;

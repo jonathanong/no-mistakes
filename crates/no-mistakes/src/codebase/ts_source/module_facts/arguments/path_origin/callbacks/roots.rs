@@ -56,15 +56,11 @@ impl<'a> Projector<'a, '_> {
         let AstKind::VariableDeclarator(declaration) = nodes.kind(declaration_node) else {
             return None;
         };
-        if !matches!(declaration.id, BindingPattern::BindingIdentifier(_))
-            || self.exported.contains(&symbol.index())
-        {
+        if !matches!(declaration.id, BindingPattern::BindingIdentifier(_)) {
             return None;
         }
         let declaration_list = nodes.parent_id(declaration_node);
-        let AstKind::VariableDeclaration(list) = nodes.kind(declaration_list) else {
-            return None;
-        };
+        let list = nodes.kind(declaration_list).as_variable_declaration()?;
         let body = nodes.parent_id(declaration_list);
         if !matches!(nodes.kind(body), AstKind::FunctionBody(_))
             || nodes.parent_kind(body).span().start != helper
