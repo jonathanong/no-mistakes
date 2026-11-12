@@ -45,3 +45,7 @@ fn unresolved(
         .iter()
         .any(|import| import.computed || resolve(&import.specifier, from).is_none())
 }
+
+#[cfg(test)]
+#[path = "cov_p2_import_gate_tests.rs"]
+mod cov_p2_tests;
