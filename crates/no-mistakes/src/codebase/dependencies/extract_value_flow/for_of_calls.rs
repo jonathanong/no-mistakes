@@ -44,7 +44,7 @@ fn statements(
                 return false;
             }
             if receiver.name == name {
-                if !call.arguments.is_empty() {
+                if !safe_arguments(call, name, source) {
                     return false;
                 }
                 if project {
@@ -55,23 +55,7 @@ fn statements(
                 if project {
                     return false;
                 }
-                call.arguments.iter().all(|argument| {
-                    match argument
-                        .as_expression()
-                        .map(Expression::get_inner_expression)
-                    {
-                        Some(Expression::Identifier(value)) => {
-                            value.name != name && Some(value.name.as_str()) != source
-                        }
-                        Some(
-                            Expression::StringLiteral(_)
-                            | Expression::NumericLiteral(_)
-                            | Expression::BooleanLiteral(_)
-                            | Expression::NullLiteral(_),
-                        ) => true,
-                        _ => false,
-                    }
-                })
+                safe_arguments(call, name, source)
             }
         }
         Statement::TryStatement(statement) => {
@@ -95,6 +79,26 @@ fn statements(
         }
         _ => false,
     }
+}
+
+fn safe_arguments(call: &CallExpression<'_>, name: &str, source: Option<&str>) -> bool {
+    call.arguments.iter().all(|argument| {
+        match argument
+            .as_expression()
+            .map(Expression::get_inner_expression)
+        {
+            Some(Expression::Identifier(value)) => {
+                value.name != name && Some(value.name.as_str()) != source
+            }
+            Some(
+                Expression::StringLiteral(_)
+                | Expression::NumericLiteral(_)
+                | Expression::BooleanLiteral(_)
+                | Expression::NullLiteral(_),
+            ) => true,
+            _ => false,
+        }
+    })
 }
 
 impl ImportCollector {

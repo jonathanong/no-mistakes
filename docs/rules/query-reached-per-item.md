@@ -25,6 +25,22 @@ A finding identifies the construct, callee, effect kind, and deterministic
 shortest resolved call path to its sink. Transaction sinks are marked separately
 and recommend merging statements rather than parallelizing one client.
 Unresolved dynamic targets cannot prove sink reachability and are not reported.
+The shared graph follows visible function-valued methods on `const` object
+literals and closed `const` arrays of literal stage objects. For example,
+`for (const stage of STAGES) await stage.run(query, id, size)` reaches queries
+inside the literal `run` functions, including calls through their executor
+parameters. Stage calls accept identifier or primitive literal arguments;
+passing the stage or its source array elsewhere, mutating or escaping the
+array, using `this` in a stage function, or mixing unresolved methods prevents
+this proof. Rewrite dynamic
+registries as closed literal stages with explicit executor arguments.
+
+Arrow and function arguments also retain reachability when the resolved helper
+invokes the corresponding parameter, such as
+`both(() => query(sqlA), () => query(sqlB))` where `both(a, b)` calls `a()` and
+`b()`. Merely passing, retaining, or storing a callback does not execute it.
+Unknown or conflicting callback arguments remain unresolved. Keep callback
+invocation statically visible, or call the query helper directly in the loop.
 Imported receiver mutations remain visible through later object literals,
 identifier parameters, and destructured helper arguments or defaults. Replacing
 an imported method makes that method unresolved through those receivers; a
