@@ -254,3 +254,19 @@ fn terminal_guards_do_not_prove_every_imported_scenario_row_executes() {
             && site.target_nodes().next().is_some()
     }));
 }
+
+#[test]
+fn only_read_only_returning_guards_preserve_stage_reachability() {
+    let root = root().with_file_name("guard-shapes-fixture");
+    let findings =
+        crate::codebase::rules::run_check(&root, Some(&root.join(".no-mistakes.yml")), None)
+            .unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        (0..11).map(|index| 11 + 5 * index).collect::<Vec<_>>(),
+        "{findings:#?}"
+    );
+}
