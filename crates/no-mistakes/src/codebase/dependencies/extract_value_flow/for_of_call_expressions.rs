@@ -45,11 +45,11 @@ pub(super) fn expression(
 
 pub(super) fn safe_arguments(call: &CallExpression<'_>, name: &str, source: Option<&str>) -> bool {
     call.arguments.iter().all(|argument| {
-        argument
-            .as_expression()
-            .is_some_and(|value| {
-                !matches!(value.get_inner_expression(), Expression::ObjectExpression(_))
-                    && super::guards::read_only(value, name, source)
-            })
+        argument.as_expression().is_some_and(|value| {
+            !matches!(
+                value.get_inner_expression(),
+                Expression::ObjectExpression(_)
+            ) && super::guards::read_only(value, name, source)
+        })
     })
 }
