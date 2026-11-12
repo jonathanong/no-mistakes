@@ -1,0 +1,1 @@
+{"compilerOptions":{"baseUrl":".","paths":{"@pkg/psql":["packages/psql/src/index.mts"]}}}

@@ -85,6 +85,7 @@ impl ValueFlowResolution<'_, '_> {
             let Some(export) = type_export(binding, member) else {
                 return FlowValue::Unknown;
             };
+            let imported_origin = (binding.specifier.clone(), export.clone());
             let origin = self
                 .cache
                 .type_origin((path.to_path_buf(), reference.to_owned()), || {
@@ -109,7 +110,11 @@ impl ValueFlowResolution<'_, '_> {
                 });
             return FlowValue::Provenance {
                 executor: Box::new(inner),
-                typed: vec![origin],
+                typed: if imported_origin == origin {
+                    vec![origin]
+                } else {
+                    vec![origin, imported_origin]
+                },
                 members: Vec::new(),
                 receiver_factories: Vec::new(),
             };

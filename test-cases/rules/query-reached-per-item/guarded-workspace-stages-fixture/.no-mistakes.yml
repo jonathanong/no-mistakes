@@ -1,0 +1,21 @@
+projects:
+  db:
+    root: .
+    postgres:
+      executors:
+        importSpecifier: '@pkg/psql'
+        typeNames: [TransactionQuery]
+effects:
+  postgres:
+    functions: [query]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres]
+  - rule: postgres-require-query-annotation
+    scope: repository
+    enabled: false
+    options:
+      importSpecifier: '@pkg/psql'
+      executorTypeNames: [TransactionQuery]
