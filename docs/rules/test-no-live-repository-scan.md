@@ -605,6 +605,8 @@ env values stored inside const object properties, and hooks registered inside
 branches remain unresolved. If any configured setup or selected runner configuration
 loads the capturing module, the setup proof stays unresolved even when another
 setup writes an owned root. Keep root setup independent of the module under test.
+Naming an environment variable or fallback in a diagnostic does not establish
+ownership; the captured value still needs an owned write before its initialization.
 
 A hook setup-and-restore pair remains unresolved: assigning an owned root in
 `beforeAll` and restoring the prior value (or deleting the variable) in
