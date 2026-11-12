@@ -19,17 +19,8 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
     let collect_tests = variant.collect_tests;
     let embedded_sql = prepared_embedded_sql(root, path, source, program, plan);
     let mut head_candidates = heads::candidates(plan, &embedded_sql);
-    let helpers = embedded_sql
-        .iter()
-        .any(|(profile, _)| !profile.sql_literal_helpers.is_empty());
-    if helpers {
-        head_candidates.extend(
-            embedded_sql
-                .iter()
-                .filter(|(profile, _)| !profile.sql_literal_helpers.is_empty())
-                .flat_map(|(_, file)| file.call_spans.iter().copied()),
-        );
-    }
+    let (helpers, helper_candidates) = heads::helper_candidates(plan, &embedded_sql, program);
+    head_candidates.extend(helper_candidates);
     let loop_heads = (plan.query_annotation
         && !plan.query_annotation_heads
         && heads::has_annotation_executors(plan, &embedded_sql))

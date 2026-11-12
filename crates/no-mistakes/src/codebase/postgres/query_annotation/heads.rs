@@ -19,6 +19,7 @@ mod helper_records;
 mod import_gate;
 mod import_projection;
 mod literal_helpers;
+pub(crate) use literal_helpers::has_builtin_import;
 mod literal_tables;
 mod lookup;
 mod loop_carried;
@@ -69,7 +70,7 @@ pub(crate) struct AnnotationHeads {
     pub(crate) conditional_effects: Vec<effects::Conditional>,
     pub(crate) import_gated_finite: Vec<Span>,
     pub(crate) loop_carried_missing: BTreeMap<Span, Vec<Option<String>>>,
-    helper_calls: Option<BTreeMap<Span, (String, HeadProof)>>,
+    helper_calls: Option<BTreeMap<Span, literal_helpers::HelperProof>>,
     pub(crate) trusted_append_calls: crate::fx::FxHashSet<Span>,
 }
 pub(crate) use collect::collect_prepared;
@@ -78,3 +79,6 @@ pub(crate) use import_projection::project;
 
 #[cfg(test)]
 mod literal_helper_tests;
+
+#[cfg(test)]
+mod builtin_literal_helper_tests;

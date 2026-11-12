@@ -152,7 +152,7 @@ fn mixed_helper_profiles_do_not_share_configuration_authority() {
             let helper = row["profile"]["sqlLiteralHelpers"][0].as_str().unwrap();
             assert_eq!(
                 row["status"],
-                if helper == clear {
+                if clear == "pg-copy-streams#from" || helper == clear {
                     "proven-clear"
                 } else {
                     "abstain"
@@ -210,8 +210,15 @@ fn configured_helpers_override_favorable_max_inference_for_unsupported_arguments
             assert_eq!(verdicts.len(), 3, "{kind}/{policy}: {report}");
             assert_eq!(verdicts[0]["status"], "proven-clear");
             for verdict in &verdicts[1..] {
-                assert_eq!(verdict["status"], if configured { "abstain" } else { "proven-clear" },
-                    "known identifier and extra argument must not fall through to favorable inference: {kind}/{policy}");
+                assert_eq!(
+                    verdict["status"],
+                    if configured {
+                        "abstain"
+                    } else {
+                        "proven-clear"
+                    },
+                    "known identifier and extra argument must not fall through to favorable inference: {kind}/{policy}"
+                );
                 if configured {
                     assert_eq!(verdict["advisory"], policy == "advise");
                 }

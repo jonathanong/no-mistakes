@@ -1,0 +1,517 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "copy-streams-low-advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.mts",
+          "line": 12,
+          "message": "src/query.mts:12: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position; known SQL prefix \"/* \"",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* ${dynamic} */ COPY users FROM STDIN`));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 13,
+          "message": "src/query.mts:13: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position; known SQL prefix \"/* named *\"",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* named *${dynamic}/ COPY users FROM STDIN`));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 14,
+          "message": "src/query.mts:14: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position; known SQL prefix \"\"",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyTo(`${dynamic} /* named */ COPY users TO STDOUT`));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 15,
+          "message": "src/query.mts:15: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position; known SQL prefix \"   \"",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyTo(`   ${dynamic} COPY users TO STDOUT`));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 17,
+          "message": "src/query.mts:17: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position; known SQL prefix \"/* */ \"",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ ${dynamic}`));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 18,
+          "message": "src/query.mts:18: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copies[`from${dynamic}`](`/* named */ COPY users FROM STDIN`));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 19,
+          "message": "src/query.mts:19: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(otherFrom(`/* named */ COPY ${dynamic} FROM STDIN`));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 20,
+          "message": "src/query.mts:20: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(dynamic));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 21,
+          "message": "src/query.mts:21: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom?.(`/* named */ COPY ${dynamic} FROM STDIN`));",
+          "target": "leading-annotation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.mts",
+          "line": 16,
+          "message": "src/query.mts:16: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 22,
+          "message": "src/query.mts:22: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 23,
+          "message": "src/query.mts:23: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ /* named */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "copy-streams-low-ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.mts",
+          "line": 16,
+          "message": "src/query.mts:16: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 22,
+          "message": "src/query.mts:22: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 23,
+          "message": "src/query.mts:23: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ /* named */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "copy-streams-low-report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.mts",
+          "line": 12,
+          "message": "src/query.mts:12: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* ${dynamic} */ COPY users FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 13,
+          "message": "src/query.mts:13: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* named *${dynamic}/ COPY users FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 14,
+          "message": "src/query.mts:14: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyTo(`${dynamic} /* named */ COPY users TO STDOUT`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 15,
+          "message": "src/query.mts:15: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyTo(`   ${dynamic} COPY users TO STDOUT`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 16,
+          "message": "src/query.mts:16: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 17,
+          "message": "src/query.mts:17: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ ${dynamic}`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 18,
+          "message": "src/query.mts:18: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copies[`from${dynamic}`](`/* named */ COPY users FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 19,
+          "message": "src/query.mts:19: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(otherFrom(`/* named */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 20,
+          "message": "src/query.mts:20: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(dynamic));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 21,
+          "message": "src/query.mts:21: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom?.(`/* named */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 22,
+          "message": "src/query.mts:22: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 23,
+          "message": "src/query.mts:23: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ /* named */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "copy-streams-max-advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.mts",
+          "line": 12,
+          "message": "src/query.mts:12: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: nonliteral-sql-helper-argument; known SQL prefix \"/* \"",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* ${dynamic} */ COPY users FROM STDIN`));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 13,
+          "message": "src/query.mts:13: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: nonliteral-sql-helper-argument; known SQL prefix \"/* named *\"",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* named *${dynamic}/ COPY users FROM STDIN`));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 14,
+          "message": "src/query.mts:14: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: nonliteral-sql-helper-argument; known SQL prefix \"\"",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyTo(`${dynamic} /* named */ COPY users TO STDOUT`));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 15,
+          "message": "src/query.mts:15: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: nonliteral-sql-helper-argument; known SQL prefix \"   \"",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyTo(`   ${dynamic} COPY users TO STDOUT`));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 17,
+          "message": "src/query.mts:17: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: nonliteral-sql-helper-argument; known SQL prefix \"/* */ \"",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ ${dynamic}`));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 18,
+          "message": "src/query.mts:18: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copies[`from${dynamic}`](`/* named */ COPY users FROM STDIN`));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 19,
+          "message": "src/query.mts:19: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(otherFrom(`/* named */ COPY ${dynamic} FROM STDIN`));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 20,
+          "message": "src/query.mts:20: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: nonliteral-sql-helper-argument",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(dynamic));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 21,
+          "message": "src/query.mts:21: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: nonliteral-sql-helper-argument",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom?.(`/* named */ COPY ${dynamic} FROM STDIN`));",
+          "target": "leading-annotation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.mts",
+          "line": 16,
+          "message": "src/query.mts:16: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 22,
+          "message": "src/query.mts:22: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 23,
+          "message": "src/query.mts:23: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ /* named */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "copy-streams-max-ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.mts",
+          "line": 16,
+          "message": "src/query.mts:16: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 22,
+          "message": "src/query.mts:22: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 23,
+          "message": "src/query.mts:23: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ /* named */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "copy-streams-max-report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.mts",
+          "line": 12,
+          "message": "src/query.mts:12: query annotation cannot be verified because the configured SQL helper requires one static literal argument",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* ${dynamic} */ COPY users FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 13,
+          "message": "src/query.mts:13: query annotation cannot be verified because the configured SQL helper requires one static literal argument",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* named *${dynamic}/ COPY users FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 14,
+          "message": "src/query.mts:14: query annotation cannot be verified because the configured SQL helper requires one static literal argument",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyTo(`${dynamic} /* named */ COPY users TO STDOUT`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 15,
+          "message": "src/query.mts:15: query annotation cannot be verified because the configured SQL helper requires one static literal argument",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyTo(`   ${dynamic} COPY users TO STDOUT`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 16,
+          "message": "src/query.mts:16: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 17,
+          "message": "src/query.mts:17: query annotation cannot be verified because the configured SQL helper requires one static literal argument",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ ${dynamic}`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 18,
+          "message": "src/query.mts:18: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copies[`from${dynamic}`](`/* named */ COPY users FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 19,
+          "message": "src/query.mts:19: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(otherFrom(`/* named */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 20,
+          "message": "src/query.mts:20: query annotation cannot be verified because the configured SQL helper requires one static literal argument",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(dynamic));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 21,
+          "message": "src/query.mts:21: query annotation cannot be verified because the configured SQL helper requires one static literal argument",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom?.(`/* named */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 22,
+          "message": "src/query.mts:22: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 23,
+          "message": "src/query.mts:23: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ /* named */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

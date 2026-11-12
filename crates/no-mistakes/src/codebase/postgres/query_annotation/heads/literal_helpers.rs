@@ -1,15 +1,47 @@
-//! Direct configured wrappers use their sole literal argument, never its aliases.
+//! Direct imported wrappers retain exact arguments and separate template heads.
 use super::{bindings::Bindings, syntax::Syntax, HeadProof, Span};
 use crate::codebase::ts_source::{facts::TsFileFacts, unwrap_ts_wrappers};
 use crate::fx::FxHashMap;
 use oxc_ast::ast::{CallExpression, ChainElement, Expression};
 use std::collections::BTreeMap;
 
+pub(crate) fn has_builtin_import(program: &oxc_ast::ast::Program<'_>) -> bool {
+    use oxc_ast::ast::{ImportDeclarationSpecifier, ImportOrExportKind, Statement};
+    program.body.iter().any(|statement| {
+        let Statement::ImportDeclaration(import) = statement else {
+            return false;
+        };
+        import.import_kind != ImportOrExportKind::Type
+            && crate::ast::js_literal(&import.source) == "pg-copy-streams"
+            && import.specifiers.as_ref().is_some_and(|specifiers| {
+                specifiers.iter().any(|specifier| match specifier {
+                    ImportDeclarationSpecifier::ImportNamespaceSpecifier(_) => true,
+                    ImportDeclarationSpecifier::ImportSpecifier(named) => {
+                        named.import_kind != ImportOrExportKind::Type
+                            && matches!(
+                                crate::ast::module_export_name(&named.imported).as_ref(),
+                                "from" | "to"
+                            )
+                    }
+                    _ => false,
+                })
+            })
+    })
+}
+
 pub(super) struct Candidate {
     pub reference: Span,
     span: Span,
     export: Option<String>,
     proof: HeadProof,
+    prefix: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+pub(super) struct HelperProof {
+    pub identity: String,
+    pub exact: HeadProof,
+    pub prefix: Option<String>,
 }
 
 pub(super) fn candidate(outer: &CallExpression<'_>) -> Option<Candidate> {
@@ -46,6 +78,10 @@ pub(super) fn candidate(outer: &CallExpression<'_>) -> Option<Candidate> {
         }
         _ => return None,
     };
+    let prefix = match call.arguments.as_slice() {
+        [argument] if !optional => argument.as_expression().and_then(template_prefix),
+        _ => None,
+    };
     let text = match call.arguments.as_slice() {
         [argument] if !optional => argument.as_expression().and_then(literal_text),
         _ => None,
@@ -54,6 +90,7 @@ pub(super) fn candidate(outer: &CallExpression<'_>) -> Option<Candidate> {
         reference: (reference.start, reference.end),
         span: (outer.span.start, outer.span.end),
         export,
+        prefix,
         proof: text.map_or(HeadProof::Unproven, |sql| {
             if crate::codebase::postgres::sql_requires_query_annotation(&sql) {
                 HeadProof::Missing
@@ -62,6 +99,17 @@ pub(super) fn candidate(outer: &CallExpression<'_>) -> Option<Candidate> {
             }
         }),
     })
+}
+
+fn template_prefix(expression: &Expression<'_>) -> Option<String> {
+    let Expression::TemplateLiteral(template) = unwrap_ts_wrappers(expression) else {
+        return None;
+    };
+    (!template.expressions.is_empty())
+        .then(|| template.quasis.first())
+        .flatten()
+        .filter(|part| part.value.cooked.is_some())
+        .map(|part| crate::ast::template_quasi_text(part).into_owned())
 }
 
 // Share the exact literal grammar for SQL arguments and computed export keys.
@@ -83,7 +131,7 @@ pub(super) fn proofs(
     syntax: &Syntax,
     bindings: &Bindings<'_>,
     ts: &TsFileFacts,
-) -> Option<BTreeMap<Span, (String, HeadProof)>> {
+) -> Option<BTreeMap<Span, HelperProof>> {
     let candidates = syntax.literal_helpers.as_ref()?;
     if let Some(observer) = crate::diagnostics::current() {
         observer.increment(
@@ -119,7 +167,11 @@ pub(super) fn proofs(
                 };
                 Some((
                     candidate.span,
-                    (format!("{module}#{export}"), candidate.proof),
+                    HelperProof {
+                        identity: format!("{module}#{export}"),
+                        exact: candidate.proof,
+                        prefix: candidate.prefix.clone(),
+                    },
                 ))
             })
             .collect(),

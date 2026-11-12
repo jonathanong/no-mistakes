@@ -37,8 +37,9 @@ pub(super) fn scan(
             observer.increment("postgres.annotation.low.calls", file.calls.len() as u64);
         }
         for (call, span) in file.calls.iter().zip(&file.call_spans) {
-            let helper =
-                heads.and_then(|heads| heads.helper(*span, &opts.embedded.sql_literal_helpers));
+            let helper = heads.and_then(|heads| {
+                heads.annotation_helper(*span, &opts.embedded.sql_literal_helpers)
+            });
             use crate::codebase::postgres::query_annotation::heads::HeadProof;
             let visible = helper.map_or_else(
                 || heads.is_some_and(|heads| heads.accepts(*span)),
@@ -68,13 +69,18 @@ pub(super) fn scan(
                         && opts.unanalyzable_sql == UnanalyzableSql::Advise,
                     evidence: match status {
                         SqlVerdictStatus::ProvenClear => Some(SqlEvidenceKind::VerifiedPrefix),
-                        SqlVerdictStatus::Violation if call.kind == EmbeddedSqlKind::Dynamic => {
+                        SqlVerdictStatus::Violation
+                            if call.kind == EmbeddedSqlKind::Dynamic
+                                || super::literal_helpers::prefix(prepared, path, *span)
+                                    .is_some() =>
+                        {
                             Some(SqlEvidenceKind::VerifiedPrefix)
                         }
                         SqlVerdictStatus::Violation => Some(SqlEvidenceKind::Exact),
                         SqlVerdictStatus::Abstain => None,
                     },
-                    known_prefix: None,
+                    known_prefix: super::literal_helpers::prefix(prepared, path, *span)
+                        .map(str::to_owned),
                     helper_lines: Vec::new(),
                     residual_reasons: if status == SqlVerdictStatus::Abstain {
                         vec![format!(

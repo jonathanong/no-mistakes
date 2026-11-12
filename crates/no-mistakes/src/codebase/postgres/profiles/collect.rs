@@ -34,14 +34,10 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
                 &options.executor_type_names,
             )
             .with_executor_option_properties(&options.executor_option_properties)
-            .with_trusted_sql_tags(&options.trusted_sql_tags)
-            .with_sql_literal_helpers(
-                if *rule_id == "postgres-require-query-annotation" {
-                    &options.sql_literal_helpers
-                } else {
-                    &[]
-                },
-            );
+            .with_trusted_sql_tags(&options.trusted_sql_tags);
+            if *rule_id == "postgres-require-query-annotation" {
+                profile = profile.with_sql_literal_helpers(&options.sql_literal_helpers);
+            }
             profile.track_transaction_helpers = *rule_id == "postgres-lock-written-rows-only";
             // Legacy statement policies select only SQL files until executors
             // are explicitly configured; do not request an empty TS projection.

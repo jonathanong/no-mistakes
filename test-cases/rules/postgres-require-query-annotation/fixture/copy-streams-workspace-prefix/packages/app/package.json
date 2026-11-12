@@ -1,0 +1,1 @@
+{"name":"@fixture/copy-app","private":true,"type":"module","dependencies":{"@pkg/psql":"workspace:*","pg-copy-streams":"6"}}

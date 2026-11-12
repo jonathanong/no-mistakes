@@ -32,7 +32,7 @@ export function run(client: PoolClient, dynamic: string) {
   client.query(copyFrom()); // unknown
   client.query(copyFrom('/* named */ COPY users FROM STDIN', {})); // unknown
   client.query(copyFrom(dynamic)); // unknown
-  client.query(copyFrom(`/* named */ COPY ${dynamic} FROM STDIN`)); // unknown
+  client.query(copyFrom(`/* named */ COPY ${dynamic} FROM STDIN`)); // clear
   client.query(copyFrom(...['/* named */ COPY users FROM STDIN'])); // unknown
   client.query(copyFrom?.('/* named */ COPY users FROM STDIN')); // unknown
   client.query(copies.from?.('/* named */ COPY users FROM STDIN')); // unknown

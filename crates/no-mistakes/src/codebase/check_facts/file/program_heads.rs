@@ -2,6 +2,32 @@ use super::super::super::CheckFactPlan;
 use crate::codebase::postgres::{EmbeddedSqlFileFacts, EmbeddedSqlKind, EmbeddedSqlOptions};
 use crate::fx::FxHashSet;
 
+pub(super) fn helper_candidates(
+    plan: &CheckFactPlan,
+    embedded: &[(EmbeddedSqlOptions, EmbeddedSqlFileFacts)],
+    program: &oxc_ast::ast::Program<'_>,
+) -> (bool, FxHashSet<(u32, u32)>) {
+    let builtin = (plan.query_annotation || plan.query_annotation_heads)
+        && has_annotation_executors(plan, embedded)
+        && crate::codebase::postgres::query_annotation::heads::has_builtin_import(program);
+    let selected = |profile: &EmbeddedSqlOptions| {
+        !profile.sql_literal_helpers.is_empty()
+            || (builtin
+                && plan
+                    .query_annotation_options
+                    .as_ref()
+                    .is_none_or(|profiles| profiles.contains(profile)))
+    };
+    (
+        embedded.iter().any(|(profile, _)| selected(profile)),
+        embedded
+            .iter()
+            .filter(|(profile, _)| selected(profile))
+            .flat_map(|(_, file)| file.call_spans.iter().copied())
+            .collect(),
+    )
+}
+
 pub(super) fn call_spans(
     plan: &CheckFactPlan,
     embedded: &[(EmbeddedSqlOptions, EmbeddedSqlFileFacts)],

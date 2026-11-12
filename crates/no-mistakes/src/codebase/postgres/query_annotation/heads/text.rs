@@ -90,3 +90,11 @@ fn classify(text: &str) -> (HeadProof, HeadProof) {
         (complete, HeadProof::Missing)
     }
 }
+
+pub(super) fn annotation_prefix(text: &str) -> HeadProof {
+    if super::syntax::literals::named(text) {
+        HeadProof::Literal
+    } else {
+        classify(text).1
+    }
+}

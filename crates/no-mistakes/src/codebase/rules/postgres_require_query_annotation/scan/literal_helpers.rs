@@ -9,15 +9,12 @@ pub(super) fn proof(
     opts: &CompiledOptions,
     span: (u32, u32),
 ) -> Option<HeadProof> {
-    if opts.embedded.sql_literal_helpers.is_empty() {
-        return None;
-    }
     facts
         .ts
         .get(path)?
         .query_annotation_heads
         .as_deref()?
-        .helper(span, &opts.embedded.sql_literal_helpers)
+        .annotation_helper(span, &opts.embedded.sql_literal_helpers)
 }
 
 pub(super) fn verdict(
@@ -32,16 +29,34 @@ pub(super) fn verdict(
         HeadProof::Missing => SqlVerdictStatus::Violation,
         HeadProof::Unproven => SqlVerdictStatus::Abstain,
     };
+    let prefix = prefix(facts, path, span);
     Some((
         status,
-        (status != SqlVerdictStatus::Abstain).then_some(SqlEvidenceKind::Exact),
+        (status != SqlVerdictStatus::Abstain).then_some(if prefix.is_some() {
+            SqlEvidenceKind::VerifiedPrefix
+        } else {
+            SqlEvidenceKind::Exact
+        }),
         if status == SqlVerdictStatus::Abstain {
             vec!["nonliteral-sql-helper-argument".to_string()]
         } else {
             Vec::new()
         },
-        None,
+        prefix.map(str::to_owned),
     ))
+}
+
+pub(super) fn prefix<'a>(
+    facts: &'a CheckFactMap,
+    path: &Path,
+    span: (u32, u32),
+) -> Option<&'a str> {
+    facts
+        .ts
+        .get(path)?
+        .query_annotation_heads
+        .as_deref()?
+        .annotation_helper_prefix(span)
 }
 
 pub(super) fn advisory(

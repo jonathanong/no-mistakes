@@ -6,14 +6,14 @@ use crate::codebase::postgres::EmbeddedSqlOptions;
 #[test]
 fn helper_demand_is_opt_in_profile_specific_and_reuses_the_prepared_walk() {
     let path = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
-        .join("sql-literal-helpers/src/query.mts");
+        .join("sql-literal-custom/src/query.mts");
     let source = std::fs::read_to_string(&path).unwrap();
     let base = EmbeddedSqlOptions::configured("pg", &[])
         .with_scoped_executors(&[], &["PoolClient".into()]);
     for enabled in [false, true] {
         let profile = if enabled {
             base.clone()
-                .with_sql_literal_helpers(&["pg-copy-streams#from".into()])
+                .with_sql_literal_helpers(&["custom-copy-streams#from".into()])
         } else {
             base.clone()
         };

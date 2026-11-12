@@ -181,3 +181,44 @@ fn coincident_applications_preserve_identity_and_every_other_report_field() {
     detailed.as_object_mut().unwrap().remove("sqlVerdicts");
     assert_eq!(detailed, plain);
 }
+
+#[test]
+fn workspace_copy_prefix_low_is_proven_clear() {
+    assert_workspace_copy_prefix_clear("low");
+}
+
+#[test]
+fn workspace_copy_prefix_max_is_proven_clear() {
+    assert_workspace_copy_prefix_clear("max");
+}
+
+fn assert_workspace_copy_prefix_clear(effort: &str) {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/rules/postgres-require-query-annotation/fixture/copy-streams-workspace-prefix",
+    );
+    let source = std::fs::read_to_string(root.join("packages/app/src/query.ts")).unwrap();
+    for policy in ["report", "advise", "ignore"] {
+        let report = fixture_report(&root, &format!("{effort}-{policy}.yml"), true, 0);
+        for category in ["rules", "advisories", "warnings"] {
+            assert!(report[category].as_array().unwrap().is_empty(), "{report}");
+        }
+        let rows = report["sqlVerdicts"].as_array().unwrap();
+        assert_eq!(rows.len(), 2, "{effort}/{policy}: {report}");
+        for (line, name) in [(5, "syncDomains"), (14, "copyMembership")] {
+            assert!(
+                rows.iter()
+                    .any(|row| row["file"] == "packages/app/src/query.ts"
+                        && no_mistakes::codebase::ts_source::byte_offset_to_line(
+                            &source,
+                            row["span"][0].as_u64().unwrap() as usize
+                        ) == line
+                        && row["status"] == "proven-clear"
+                        && row["evidence"] == "verified-prefix"
+                        && row["knownPrefix"]
+                            .as_str()
+                            .is_some_and(|prefix| prefix.starts_with(&format!("/* {name} */")))),
+                "{effort}/{policy}, line {line}: {report}"
+            );
+        }
+    }
+}
