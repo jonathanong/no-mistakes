@@ -1,0 +1,207 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "callback-roots": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/after-cleanup.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/after-cleanup.test.mts:19 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/async-unawaited.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/async-unawaited.test.mts:19 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/buffer-root.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/buffer-root.test.mts:10 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/callback-alias.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/callback-alias.test.mts:19 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/callback-call.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/callback-call.test.mts:10 omits the root argument. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/callback-escape.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/callback-escape.test.mts:20 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/conditional-cleanup.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/conditional-cleanup.test.mts:18 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/escape.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/escape.test.mts:20 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/helper-reassignment.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/helper-reassignment.test.mts:16 references `withTempDirectory` other than as a direct call. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/missing-cleanup.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/missing-cleanup.test.mts:18 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/mixed-invocations.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/mixed-invocations.test.mts:19 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/nested-cleanup.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/nested-cleanup.test.mts:18 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/non-owned.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/non-owned.test.mts:10 passes `root`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/nonrecursive-cleanup.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/nonrecursive-cleanup.test.mts:18 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/parameter-reassignment.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/parameter-reassignment.test.mts:19 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/resource-escape.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/resource-escape.test.mts:10 passes `resource.path`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/resource-no-using.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/resource-no-using.test.mts:14 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/returned-promise.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/returned-promise.test.mts:19 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/root-return.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/root-return.test.mts:19 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/unknown-sink.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/unknown-sink.test.mts:19 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/wrong-cleanup.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/wrong-cleanup.test.mts:18 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(root);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

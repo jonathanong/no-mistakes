@@ -3,6 +3,7 @@
 mod alternatives;
 mod argument_object;
 mod bindings;
+mod callbacks;
 mod calls;
 mod composite;
 mod defaults;

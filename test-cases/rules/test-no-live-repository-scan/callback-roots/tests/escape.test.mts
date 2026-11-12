@@ -1,3 +1,4 @@
+import { scanRepository } from "../src/escape.mts";
 import { mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -16,6 +17,6 @@ function withTempDirectory(run: (root: string) => void) {
 
 test("scans the supplied root", () => {
   withTempDirectory((root) => {
-    readdirSync(root);
+    scanRepository(root);
   });
 });

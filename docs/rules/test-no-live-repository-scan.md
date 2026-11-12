@@ -760,7 +760,9 @@ create the temporary directory locally, pass it to every callback invocation,
 and remove it in an enclosing `finally`, or own a disposable temporary directory
 with `using` / `await using`. A missing cleanup, a live root in any invocation,
 or an escaping callback or temporary root retains the finding. Async callbacks
-must finish before cleanup; await their invocation inside the protected scope.
+and callbacks with a returned expression must finish before cleanup; await
+their invocation inside the protected scope. A synchronous callback without
+`await` uses a block containing expression or variable statements.
 
 ```ts
 function withTempDirectory(run: (root: string) => void) {
@@ -772,7 +774,9 @@ function withTempDirectory(run: (root: string) => void) {
   }
 }
 
-withTempDirectory((root) => readdirSync(root));
+withTempDirectory((root) => {
+  scanRepository(root);
+});
 ```
 
 ## Pass-through mocks

@@ -52,6 +52,11 @@ impl<'a> Projector<'a, '_> {
             .iter()
             .position(|item| item.span == parameter_span)?;
         let owner = semantic.nodes().parent_id(list.id());
+        if member.is_none() && list_kind.items[index].initializer.is_none() {
+            if let Some(origin) = self.callback_origin(owner, index) {
+                return Some(origin);
+            }
+        }
         let start = semantic.nodes().kind(owner).span().start;
         let default = self
             .parameter_default(list_kind.items.get(index)?, member.as_deref(), symbol)
