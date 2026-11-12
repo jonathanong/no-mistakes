@@ -32,10 +32,24 @@ fn fixture_failure() -> (
         TestFileFilter::new(&root, &config),
     )
     .unwrap();
-    let (_, mut failures) =
-        graph.playwright_fact_plan_partial(&root, &Default::default(), &visible);
-    assert_eq!(failures.len(), 1);
-    (root, config, visible, failures.pop().unwrap())
+    let (_, failures) = graph.playwright_fact_plan_partial(&root, &Default::default(), &visible);
+    let broken_rule = config
+        .rules
+        .iter()
+        .find(|rule| rule.projects.iter().any(|project| project == "broken"))
+        .unwrap();
+    let failure = failures
+        .into_iter()
+        .find(|failure| {
+            failure.project.as_deref() == Some("broken")
+                && failure.file.as_deref()
+                    == Some(root.join("playwright.projects.config.ts").as_path())
+                && failure
+                    .affects_rule(&root, &config, broken_rule, &visible.paths_for(&root))
+                    .unwrap()
+        })
+        .expect("saved malformed project must produce a failure in the broken app scope");
+    (root, config, visible, failure)
 }
 
 #[test]

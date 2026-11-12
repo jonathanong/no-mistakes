@@ -14,7 +14,11 @@ fn configuration(rule: &str, options: &str) -> NoMistakesConfig {
         rules: vec![RuleDef {
             rule: rule.into(),
             scope: Some(RuleScope::Repository),
-            options: crate::codebase::postgres::tests::fixture_rule_options(options),
+            options: if rule == POSTGRES_KEY_COLUMN_TYPES {
+                serde_yaml::from_str(options).unwrap()
+            } else {
+                crate::codebase::postgres::tests::fixture_rule_options(options)
+            },
             ..Default::default()
         }],
         ..Default::default()
