@@ -7,7 +7,7 @@ pub(super) enum Supplied<'a> {
     /// The key is present. The value may still be an unknown path.
     Present(&'a Expression<'a>),
     /// A resolved value that is already a proven path origin.
-    Proven(PathOrigin),
+    Proven(Box<PathOrigin>),
     /// A literal object omits the key and has no spread.
     Absent,
     /// The object shape or the value cannot be proven.
@@ -16,7 +16,9 @@ pub(super) enum Supplied<'a> {
 
 pub(super) fn proven(origin: &PathOrigin) -> bool {
     origin.atoms().iter().all(|origin| {
-        origin.anchor != PathAnchor::Unknown || origin.param.is_some() || origin.env.is_some()
+        origin.anchor != PathAnchor::Unknown
+            || origin.param.is_some()
+            || origin.environment().is_some()
     })
 }
 

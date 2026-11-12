@@ -54,10 +54,10 @@ impl Owners<'_> {
         }
         let climbs = origin.segments.iter().any(|segment| segment == "..")
             && (origin.param.is_some()
-                || origin.env.is_some()
+                || origin.environment().is_some()
                 || origin.anchor == PathAnchor::Temp);
         if climbs {
-            if origin.param.is_some() && origin.env.is_none() {
+            if origin.param.is_some() && origin.environment().is_none() {
                 return Ownership::Parameter(Cause::new(
                     CauseKind::ClimbsOut,
                     site.file.clone(),
@@ -78,13 +78,13 @@ impl Owners<'_> {
                 Ownership::No
             };
         }
-        match (&origin.env, origin.param) {
-            (Some(name), _) => {
+        match (origin.environment(), origin.param) {
+            (Some((name, capture)), _) => {
                 if origin
                     .root_tails
                     .iter()
                     .all(|tail| self.safe_suffix(tail, site, facts, 0))
-                    && self.env_owned(name, origin.env_capture, site, facts)
+                    && self.env_owned(name, capture, site, facts)
                 {
                     Ownership::Yes
                 } else {

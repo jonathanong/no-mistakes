@@ -94,7 +94,7 @@ pub(super) fn missing_block(present: bool) -> ArgBlock {
 pub(super) fn arg_block(argument: &PathOrigin, fixture_dirs: &[&str]) -> Option<ArgBlock> {
     let climbs = argument.segments.iter().any(|part| part == "..")
         && (argument.param.is_some()
-            || argument.env.is_some()
+            || argument.environment().is_some()
             || argument.anchor == PathAnchor::Temp);
     if climbs {
         return Some(if argument.param.is_some() {
@@ -104,7 +104,7 @@ pub(super) fn arg_block(argument: &PathOrigin, fixture_dirs: &[&str]) -> Option<
         });
     }
     if classify(Some(argument), fixture_dirs) == Verdict::Allowed
-        || argument.env.is_some()
+        || argument.environment().is_some()
         || argument.param.is_some()
     {
         return None;

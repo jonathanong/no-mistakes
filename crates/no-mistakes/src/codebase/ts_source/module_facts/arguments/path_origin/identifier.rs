@@ -23,12 +23,12 @@ impl<'a> Projector<'a, '_> {
                         && origin
                             .atoms()
                             .iter()
-                            .any(|atom| atom.env.is_some() || atom.getter.is_some()))
-                    || (origin.anchor == PathAnchor::SharedTemp && origin.env.is_some())
+                            .any(|atom| atom.environment().is_some() || atom.getter.is_some()))
+                    || (origin.anchor == PathAnchor::SharedTemp && origin.environment().is_some())
                 {
                     return captured_unknown(&origin);
                 }
-                if origin.env.is_some() && origin.env_capture.is_none() {
+                if origin.env.is_some() && origin.captured_env.is_none() {
                     let symbol = self.binding_symbol(id).unwrap();
                     let node = self.semantic.scoping().symbol_declaration(symbol);
                     if self.semantic.nodes().ancestors(node).any(|node| {
@@ -39,7 +39,12 @@ impl<'a> Projector<'a, '_> {
                     }) {
                         return captured_unknown(&origin);
                     }
-                    origin.env_capture = Some(init.span().start);
+                    origin.captured_env = origin.env.take().map(|name| {
+                        Box::new(super::super::CapturedEnv {
+                            name,
+                            offset: init.span().start,
+                        })
+                    });
                     if let Some(hint) = &mut origin.env_diagnostic {
                         hint.captured = true;
                     }
@@ -53,7 +58,7 @@ impl<'a> Projector<'a, '_> {
                     .or_else(|| self.owned_binding(id, depth))
                     .unwrap_or_else(PathOrigin::unknown);
                 if origin.param.is_none()
-                    && origin.env.is_none()
+                    && origin.environment().is_none()
                     && origin.anchor == PathAnchor::Unknown
                 {
                     origin.reassigned_at = self.reassigned_parameter(id);

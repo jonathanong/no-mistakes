@@ -59,9 +59,8 @@ impl Owners<'_> {
         };
         !root.segments.iter().any(|part| part == "..")
             && root
-                .env
-                .as_deref()
-                .is_some_and(|name| self.env_owned(name, root.env_capture, site, facts))
+                .environment()
+                .is_some_and(|(name, capture)| self.env_owned(name, capture, site, facts))
     }
 }
 

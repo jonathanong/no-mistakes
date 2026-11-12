@@ -62,10 +62,7 @@ impl<'a> Projector<'a, '_> {
                     }
                     let mut origin = self.origin(&property.value, depth + 1);
                     if object.span.start < self.call_offset
-                        && origin
-                            .atoms()
-                            .iter()
-                            .any(|atom| atom.env.is_some() && atom.env_capture.is_none())
+                        && origin.atoms().iter().any(|atom| atom.env.is_some())
                     {
                         origin = PathOrigin::unknown();
                     }

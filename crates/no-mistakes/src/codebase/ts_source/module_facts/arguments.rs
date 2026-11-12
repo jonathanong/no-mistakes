@@ -14,6 +14,8 @@ mod transparent_writes;
 pub(crate) use transparent_writes::{
     transparent_receiver_writes, transparent_receiver_writes_from_program,
 };
+mod captured_env;
+pub(crate) use captured_env::CapturedEnv;
 mod env_diagnostic;
 pub(crate) use env_diagnostic::EnvDiagnostic;
 mod types;

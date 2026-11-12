@@ -13,7 +13,7 @@ fn origin(anchor: PathAnchor, segments: &[&str]) -> PathOrigin {
         captured_getter: None,
         getter: None,
         root_tails: Vec::new(),
-        env_capture: None,
+        captured_env: None,
         param: None,
         param_member: None,
         param_owner: None,

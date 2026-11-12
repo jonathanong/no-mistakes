@@ -34,14 +34,21 @@ fn proof_fields_remain_distinct() {
     environment.env = Some("SCAN_ROOT".to_owned());
     assert_ne!(unknown, environment);
     let mut captured = environment.clone();
-    captured.env_capture = Some(42);
+    captured.env = None;
+    captured.captured_env = Some(Box::new(super::super::CapturedEnv {
+        name: "SCAN_ROOT".to_owned(),
+        offset: 42,
+    }));
     assert_ne!(environment, captured);
-    assert_ne!(hash(&environment), hash(&captured));
+    let mut later_capture = captured.clone();
+    later_capture.captured_env.as_mut().unwrap().offset = 43;
+    assert_ne!(captured, later_capture);
+    assert_ne!(hash(&captured), hash(&later_capture));
     assert_eq!(
-        PathOrigin::alternatives(vec![environment, captured])
+        PathOrigin::alternatives(vec![environment, captured, later_capture])
             .atoms()
             .len(),
-        2
+        3
     );
     let mut parameter = unknown.clone();
     parameter.param = Some(0);

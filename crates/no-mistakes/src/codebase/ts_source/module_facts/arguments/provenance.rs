@@ -82,10 +82,9 @@ pub(super) fn collect(
                     call_args::record_arg_text(&source, call, &mut result, texts);
                     let paths = call_args::argument_paths(&mut projector, call, &mut result);
                     if !paths.is_empty() {
-                        if paths
-                            .iter()
-                            .any(|(_, path)| path.atoms().iter().any(|atom| atom.env.is_some()))
-                            && local_env::immediate_read(semantic, node.id())
+                        if paths.iter().any(|(_, path)| {
+                            path.atoms().iter().any(|atom| atom.environment().is_some())
+                        }) && local_env::immediate_read(semantic, node.id())
                         {
                             result.immediate_env_reads.insert(call.span.start);
                         }

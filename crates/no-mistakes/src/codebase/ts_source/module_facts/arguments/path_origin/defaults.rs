@@ -59,7 +59,7 @@ impl<'a> Projector<'a, '_> {
                 if origin
                     .atoms()
                     .iter()
-                    .all(|atom| atom.param.is_none() && atom.env.is_none())
+                    .all(|atom| atom.param.is_none() && atom.environment().is_none())
                 {
                     origin
                 } else {

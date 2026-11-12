@@ -47,7 +47,7 @@ impl<'a> Projector<'a, '_> {
         depth: usize,
     ) -> Option<PathOrigin> {
         match self.supplied(init, key, depth + 1) {
-            Supplied::Proven(origin) => Some(origin),
+            Supplied::Proven(origin) => Some(*origin),
             Supplied::Present(value) => {
                 let origin = self.origin(value, depth + 1);
                 proven(&origin).then_some(origin)
@@ -91,7 +91,7 @@ impl<'a> Projector<'a, '_> {
         };
         match self.supplied(returned, key, depth + 1) {
             Supplied::Present(value) => proven_member(parameterized, self.origin(value, depth + 1)),
-            Supplied::Proven(origin) => proven_member(parameterized, origin),
+            Supplied::Proven(origin) => proven_member(parameterized, *origin),
             other => other,
         }
     }
@@ -99,7 +99,7 @@ impl<'a> Projector<'a, '_> {
 
 fn proven_member<'a>(parameterized: bool, origin: PathOrigin) -> Supplied<'a> {
     match accept_parameterized(parameterized, origin) {
-        Some(origin) if proven(&origin) => Supplied::Proven(origin),
+        Some(origin) if proven(&origin) => Supplied::Proven(Box::new(origin)),
         _ => Supplied::Unknown,
     }
 }
