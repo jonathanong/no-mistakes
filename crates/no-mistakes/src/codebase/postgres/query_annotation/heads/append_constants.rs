@@ -14,6 +14,7 @@ pub(super) struct Safety {
     conditional_limits: FxHashMap<Span, u32>,
     pending_by_declaration: FxHashMap<Span, Vec<Span>>,
     closed_prefix: FxHashSet<Span>,
+    closed_conditional: FxHashMap<Span, Vec<Span>>,
 }
 impl Safety {
     pub fn new(
@@ -22,7 +23,7 @@ impl Safety {
         executors: &FxHashSet<Span>,
         trusted_roots: &FxHashSet<Span>,
         effects: &super::effects::Prepared,
-        closed_prefix: FxHashSet<Span>,
+        closed_prefix: (FxHashSet<Span>, FxHashMap<Span, Vec<Span>>),
     ) -> Self {
         let allowed = uses::collect(syntax, executors, effects);
         let pending = effects
@@ -32,7 +33,8 @@ impl Safety {
             .collect::<FxHashMap<_, _>>();
         let mut result = Self {
             repeated_calls: syntax.repeated_calls.clone(),
-            closed_prefix,
+            closed_prefix: closed_prefix.0,
+            closed_conditional: closed_prefix.1,
             ..Default::default()
         };
         let roots = module
@@ -167,6 +169,9 @@ impl Safety {
             })
     }
     pub fn conditional(&self, declaration: Span, call: Span) -> Option<&[Span]> {
+        if let Some(required) = self.closed_conditional.get(&declaration) {
+            return (declaration.1 < call.0).then_some(required.as_slice());
+        }
         let limit = *self.conditional_limits.get(&declaration)?;
         let repeated = self.repeated_calls.contains(&call);
         if declaration.1 >= call.0 || call.1 > limit || (repeated && limit != u32::MAX) {

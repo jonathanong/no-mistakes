@@ -10,7 +10,7 @@ function wrap(value) { return value }
 async function initialized(flag) {
   let q = sql`/* initialized */ SELECT ${flag}`
   if (flag) { q = sql`/* initialized */ SELECT ${flag}` } else { q = sql`/* initialized */ SELECT ${flag}` }
-  await read(q) // low: false
+  await read(q) // low: true
 }
 async function multiple(flag) {
   let q, unused

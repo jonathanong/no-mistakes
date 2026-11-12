@@ -84,21 +84,8 @@ impl<'a> Visit<'a> for Syntax {
         walk::walk_variable_declaration(self, value);
     }
     fn visit_expression_statement(&mut self, value: &ExpressionStatement<'a>) {
-        if self.collect_helper_heads {
-            let effects = super::super::effects::call(&value.expression);
-            self.effect_calls.extend(effects.into_iter().flatten());
-        }
-        let literal = super::super::append::reference(&value.expression);
-        if let Some(reference) = literal {
-            self.discarded_appends.insert(reference);
-        }
-        if let Some(reference) = literal
-            .is_none()
-            .then(|| super::super::append::prefix_reference(&value.expression))
-            .flatten()
-        {
-            self.prefix_discarded_appends.insert(reference);
-        }
+        self.discarded_expression(&value.expression);
+        self.foreach_expression_body(value);
         let discarded = match unwrap_ts_wrappers(&value.expression) {
             Expression::AssignmentExpression(value) => Some(span(value.span)),
             _ => None,
@@ -108,15 +95,7 @@ impl<'a> Visit<'a> for Syntax {
         self.assignments.discarded_assignment = previous;
     }
     fn visit_return_statement(&mut self, value: &ReturnStatement<'a>) {
-        if self.collect_helper_heads {
-            if let Some(reference) = value
-                .argument
-                .as_ref()
-                .and_then(super::super::append::prefix_reference)
-            {
-                self.returned_effect_appends.insert(reference);
-            }
-        }
+        self.effect_return(value);
         walk::walk_return_statement(self, value);
     }
     fn visit_simple_assignment_target(&mut self, value: &SimpleAssignmentTarget<'a>) {

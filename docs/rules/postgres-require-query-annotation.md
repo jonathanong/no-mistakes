@@ -269,30 +269,93 @@ or use a separate builder for the unsupported operation. Supported appends after
 an executor read remain safe, including directly imported effects whose targets
 are proven append-only. Plain immutable strings retain their existing head proof.
 A discarded call to a same-file or directly imported append-only function can
-preserve that trusted local builder's fixed prefix. Its first parameter may
-only appear as the receiver of discarded static append chains; defaults,
-aliases and used append results abstain. Captured uses qualify only when they
-are discarded static appends on the exact parameter; callbacks may run later
-or repeatedly without changing the head. Captured returns, implicit arrow
-append results, and nested helper calls stay unresolved.
+preserve that trusted local builder's fixed prefix. For example, the helper call
+and later append here preserve the initializer's annotation:
+
+```ts
+import sql, { type SQLStatement } from 'sql-template-strings';
+import { read } from '@example/db';
+
+function addFilters(q: SQLStatement, id: string) {
+  q.append(sql` AND x = ${id}`);
+}
+
+export async function listThings(id: string) {
+  const q = sql`/* listThings */ SELECT id FROM things WHERE true`;
+  addFilters(q, id);
+  q.append(sql` LIMIT 10`);
+  return read(q);
+}
+```
+
+This requires a literal head and the trusted `sql-template-strings` import
+shown above. Dynamic heads, reassignments without a trusted literal annotation,
+and helpers that replace SQL text or call other builder methods remain unresolved.
+
+A proven append-only helper's first parameter may appear as the receiver of
+static append chains, including conditional suffixes, helper-produced suffixes,
+loops, and captured callbacks. A callback may run later or repeatedly because
+an append cannot replace the head. Passing the builder into an opaque suffix
+such as `q.append(opaque(q))` still escapes it and remains unresolved.
+Early bare returns are allowed when the caller discards the helper result.
+
 The helper may compose up to four exact same-file append-only calls on that
-parameter. A chain of more than four local edges is not proven: that helper
-effect stays unresolved, so the builder head is unresolved and reported under
-`unanalyzable`. It may return a static parameter-rooted append chain only when the
-caller discards the result. Nested helper calls, aliases, cycles, and used helper
-results remain unresolved.
-Inert Boolean or string defaults on later helper parameters can preserve the
-same fixed prefix. A defaulted object destructure may use an empty `{}` outer
-default and requires an exact caller object with only static primitive data properties;
-omitting that argument is also safe for the empty default. Getters, spreads,
-computed keys, `__proto__`, calls in defaults, and builder-parameter defaults
-remain unanalyzable. Type annotations do not establish runtime values.
+parameter. Prepared source facts and the configured resolver also prove named
+re-exports through workspace aliases and transitive imported append-only
+helpers. This import projection uses at most sixteen active helper or re-export
+lookup levels. Cycles, ambiguous exports, and unresolved targets remain
+unanalyzable.
+The analyzer does not evaluate complete SQL to establish these prefixes.
+
+A helper result may be consumed by a discarded static append chain, such as
+``addOrder(q).append(sql` LIMIT ${n}`); read(q)``, only when every return is proven
+to return the exact input builder and the helper ends with such a return.
+Returning a fresh builder, an early bare return, or storing the result in an
+alias does not qualify for that proof. Other uses of returned values remain
+unresolved.
+
+Inert Boolean, string, or empty-object defaults on later helper parameters can
+preserve the same fixed prefix. A defaulted object destructure requires an
+exact caller object with only static primitive data properties; omitting that
+argument is also safe with an empty default. Nonempty object defaults, getters,
+spreads, computed keys, `__proto__`, calls in defaults, and builder-parameter
+defaults remain unanalyzable. Type annotations do not establish runtime values.
+
+A function-local `const` initialized by a call to a same-file factory is a
+literal head when the factory is a unique top-level function declaration with
+one return of a trusted-tag template (for example
+``function start() { return sql`/* name */ ...` }``) and the `const` is passed
+to proven append-only effect helpers, local or imported, before the executor
+call. A factory with any non-literal, unannotated, or untrusted-tag return, one
+that returns a parameter or a shared builder, a reassigned or shadowed factory
+name, an imported factory combined with later effect helpers, and a call inside
+a loop remain unresolved. An `assert(user, 401)` statement inside an
+append-only helper body does not disturb its proof.
+
+A builder handed to a callback through a higher-order helper
+(``page(options, query, async statement => read(statement))``) is not
+proven: the executor receives a parameter alias, not the annotated binding, so
+the finding stays. Call the executor on the local builder instead.
+
+A function-local `let` or `const` may also start with finite conditional fresh
+builders. Every arm and every reassignment must have a literal annotation and
+use the trusted tag. Discarded appends and proven local append-only effects
+preserve that head. A missing annotation in any assignment, an alias, a store,
+an opaque call, a write to `strings[0]`, or another unsupported use prevents
+this proof across the binding's lifetime.
 A captured local trusted builder keeps its fixed head when every reference to
 its exact binding is a discarded static append, a configured executor read, or
 a proven local append-only effect. Closure execution order does not change this
 prefix. Exports, aliases, stores, used append results, property writes, other
 members, and semantic gaps stay unresolved. This is a low-effort prefix proof;
 it does not infer complete SQL.
+A concise arrow body passed directly to a statement-position `.forEach(...)`,
+such as `filters.forEach(f => query.append(clause).append(f))`, is a discarded
+append because `forEach` ignores the callback result. The same closure proof
+also accepts a directly imported append-only helper called on the builder, so an
+imported helper and an inline `forEach` may share one builder. `map`, optional
+`forEach`, chained non-append members, and unproven or mutating helpers stay
+unresolved.
 One same-file function declaration or `const` arrow also qualifies when its
 single returned expression has a fixed leading comment and its callable is
 lexically owned and unchanged. A block body needs one final top-level return;

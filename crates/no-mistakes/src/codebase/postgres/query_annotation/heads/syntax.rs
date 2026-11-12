@@ -9,6 +9,7 @@ pub(super) use collect::collect_with_helpers;
 mod const_visits;
 mod context;
 mod destructure;
+mod discard_visits;
 mod field_visits;
 mod finite_names;
 mod finite_visits;
@@ -59,6 +60,7 @@ pub(super) struct Syntax {
     pub effect_functions: FxHashMap<Span, [Option<super::effects::FunctionSyntax>; 2]>,
     pub effect_calls: Vec<super::effects::CallSyntax>,
     pub returned_effect_appends: FxHashSet<Span>,
+    pub effect_returns: FxHashMap<Span, Vec<Option<Span>>>,
     pub dynamic_refs: Vec<Span>,
     pub return_sinks: FxHashSet<Span>,
     pub append_tags: FxHashMap<Span, Span>,
@@ -74,6 +76,7 @@ pub(super) struct Syntax {
     pub record_result_calls: FxHashSet<Span>,
     pub record_options_calls: FxHashSet<Span>,
     pub assignments: super::assignments::Assignments,
+    pub fresh_builders: super::fresh_builders::Candidates,
     pub branch_assignments: Vec<super::branch_assignments::Candidate>,
     pub append_receivers: FxHashSet<Span>,
     pub discarded_appends: FxHashSet<Span>,

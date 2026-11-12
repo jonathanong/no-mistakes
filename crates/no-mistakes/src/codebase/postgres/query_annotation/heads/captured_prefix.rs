@@ -5,7 +5,7 @@ use super::{
     Span,
 };
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
-use crate::fx::FxHashSet;
+use crate::fx::{FxHashMap, FxHashSet};
 mod returned;
 pub(super) use returned::proofs as return_proofs;
 
@@ -14,15 +14,21 @@ pub(super) fn proofs(
     module: &TypeScriptModuleFacts,
     bindings: &Bindings<'_>,
     executors: &FxHashSet<Span>,
-) -> FxHashSet<Span> {
+) -> (FxHashSet<Span>, FxHashMap<Span, Vec<Span>>) {
     // Direct eval and the implicit argument array can expose a captured local
     // without an ordinary reference to its binding. Stay conservative here.
     if !bindings.has_trusted_roots()
         || !syntax.dynamic_refs.is_empty()
         || !module.diagnostics.is_empty()
     {
-        return FxHashSet::default();
+        return Default::default();
     }
+    let pending = bindings
+        .effects()
+        .pending
+        .iter()
+        .map(|call| (call.builder, call.span))
+        .collect::<FxHashMap<_, _>>();
     let mut reads = FxHashSet::default();
     let mut paired = FxHashSet::default();
     for call in syntax
@@ -59,48 +65,56 @@ pub(super) fn proofs(
         .filter(|item| item.specifier.is_none())
         .map(|item| item.local.as_str())
         .collect::<FxHashSet<_>>();
-    module
-        .bindings
-        .iter()
-        .filter_map(|binding| {
-            let declaration = (binding.span.start, binding.span.end);
-            if !binding.runtime
-                || binding.imported
-                || module_scopes.contains(&binding.scope_id)
-                || exported.contains(binding.name.as_str())
-                || !bindings.trusted_root(declaration)
-                || !matches!(
-                    syntax.constants.get(&declaration),
-                    Some(Head::Tag | Head::AppendTag | Head::AppendPrefixTag)
-                )
-                || !bindings.declaration_safe(declaration)
-                || binding.references.iter().any(|usage| !usage.runtime)
+    let mut closed = FxHashSet::default();
+    let mut conditional = FxHashMap::default();
+    for (declaration, required) in module.bindings.iter().filter_map(|binding| {
+        let declaration = (binding.span.start, binding.span.end);
+        if !binding.runtime
+            || binding.imported
+            || module_scopes.contains(&binding.scope_id)
+            || exported.contains(binding.name.as_str())
+            || !bindings.trusted_root(declaration)
+            || !matches!(
+                syntax.constants.get(&declaration),
+                Some(Head::Tag | Head::AppendTag | Head::AppendPrefixTag)
+            )
+            || !bindings.declaration_safe(declaration)
+            || binding.references.iter().any(|usage| !usage.runtime)
+        {
+            return None;
+        }
+        let context = syntax.contexts.get(&declaration)?;
+        let mut captured = false;
+        let mut read = false;
+        let mut required = Vec::new();
+        for usage in &binding.references {
+            let span = (usage.span.start, usage.span.end);
+            if bindings
+                .owner(span)
+                .is_none_or(|owner| owner.id != binding.id)
             {
                 return None;
             }
-            let context = syntax.contexts.get(&declaration)?;
-            let mut captured = false;
-            let mut read = false;
-            for usage in &binding.references {
-                let span = (usage.span.start, usage.span.end);
-                if bindings
-                    .owner(span)
-                    .is_none_or(|owner| owner.id != binding.id)
-                {
-                    return None;
-                }
-                let usage_context = syntax.contexts.get(&span)?;
-                captured |= usage_context != context;
-                read |= reads.contains(&span);
-                if !(syntax.discarded_appends.contains(&span)
-                    || syntax.prefix_discarded_appends.contains(&span)
-                    || reads.contains(&span)
-                    || bindings.allowed_effect(span))
-                {
-                    return None;
-                }
+            let usage_context = syntax.contexts.get(&span)?;
+            captured |= usage_context != context;
+            read |= reads.contains(&span);
+            if syntax.discarded_appends.contains(&span)
+                || syntax.prefix_discarded_appends.contains(&span)
+                || reads.contains(&span)
+                || bindings.allowed_effect(span)
+            {
+                continue;
             }
-            (captured && read).then_some(declaration)
-        })
-        .collect()
+            let call = pending.get(&span)?;
+            required.push(*call);
+        }
+        (captured && read).then_some((declaration, required))
+    }) {
+        if required.is_empty() {
+            closed.insert(declaration);
+        } else {
+            conditional.insert(declaration, required);
+        }
+    }
+    (closed, conditional)
 }
