@@ -6,6 +6,10 @@ type Check = fn(&Path, &NoMistakesConfig, &[PathBuf]) -> Result<Vec<RuleFinding>
 
 const CHECKS: &[(&str, Check)] = &[
     (
+        "postgres-generated-column-predicates",
+        rules::postgres_generated_column_predicates::check_with_files,
+    ),
+    (
         "postgres-lock-ordering",
         rules::postgres_lock_ordering::check_with_files,
     ),

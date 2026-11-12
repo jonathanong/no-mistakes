@@ -1,0 +1,16 @@
+{
+  "options": {
+    "root": "<root>",
+    "tsconfig": "ignored-tsconfig.json",
+    "config": "ignored-config.yml",
+    "filters": ["src/**/*.mts"],
+    "reports": [
+      {"type": "importUsages", "scanRoots": ["src"]},
+      {"type": "importUsages", "scanRoots": ["src"], "filters": []}
+    ]
+  },
+  "expected": [
+    {"scanRoots": ["src"], "root": "<root>", "filters": ["src/**/*.mts"]},
+    {"scanRoots": ["src"], "filters": [], "root": "<root>"}
+  ]
+}

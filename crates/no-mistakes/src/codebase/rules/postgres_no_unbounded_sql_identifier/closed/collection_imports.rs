@@ -179,3 +179,7 @@ fn reaches(graph: &DepGraph, file: &Path, producer: &Path) -> bool {
 #[cfg(test)]
 #[path = "collection_imports_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "collection_imports/real_source_fixture_tests.rs"]
+mod real_source_fixture_tests;
