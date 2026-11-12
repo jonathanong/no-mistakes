@@ -36,7 +36,9 @@ Conditions that call or mutate values, branches that fall through, stage/source
 arguments, and return expressions with calls or mutations prevent this proof. For example,
 `for (const stage of STAGES) await stage.run(query, id, size)` reaches queries
 inside the literal `run` functions, including calls through their executor
-parameters. Stage calls accept identifier or primitive literal arguments;
+parameters. Stage calls accept identifier, primitive literal, member-access
+(`candidate.id`), and template-literal arguments built from them, but not object
+literals or calls;
 passing the stage or its source array elsewhere, mutating or escaping the
 array in its exporter or any analyzed importer, using `this` in any row method,
 or mixing unresolved methods prevents

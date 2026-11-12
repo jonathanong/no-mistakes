@@ -90,19 +90,19 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/caller.mts",
           "import": "stage.deletion",
-          "line": 7,
+          "line": 8,
           "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.deletion` reaches `postgres` via purge → deletion → query (transaction client only; merge statements instead of parallelizing)",
           "rule": "query-reached-per-item",
-          "sourceLine": "const deleted = await stage.deletion(query, id, n);",
+          "sourceLine": "const deleted = await stage.deletion(query, candidate.id, batchSize);",
           "target": "postgres: purge → deletion → query"
         },
         {
           "file": "src/caller.mts",
           "import": "stage.remaining",
-          "line": 12,
+          "line": 13,
           "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.remaining` reaches `postgres` via purge → remaining → query (transaction client only; merge statements instead of parallelizing)",
           "rule": "query-reached-per-item",
-          "sourceLine": "const remains = await stage.remaining(query, id);",
+          "sourceLine": "const remains = await stage.remaining(query, candidate.id);",
           "target": "postgres: purge → remaining → query"
         },
         {
@@ -113,6 +113,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "query-reached-per-item",
           "sourceLine": "await stage.deletion(db, id, n);",
           "target": "postgres: purgeUntyped → deletion → query"
+        },
+        {
+          "file": "src/other.mts",
+          "import": "stage.remaining",
+          "line": 9,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.remaining` reaches `postgres` via purgeTemplated → remaining → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.remaining(db, `${id}`);",
+          "target": "postgres: purgeTemplated → remaining → query"
         }
       ],
       "warnings": []

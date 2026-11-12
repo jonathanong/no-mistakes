@@ -1,5 +1,5 @@
 import type { TransactionQuery } from '@pkg/psql';
-type ChildStage = {
+export type ChildStage = {
   deletion: (query: TransactionQuery, id: string, n: number) => Promise<{ rowCount: number | null }>;
   remaining: (query: TransactionQuery, id: string) => Promise<{ rows: { remaining: boolean }[] }>;
 };

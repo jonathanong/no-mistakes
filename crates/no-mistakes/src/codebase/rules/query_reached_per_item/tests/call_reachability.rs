@@ -287,9 +287,10 @@ fn contextually_typed_stage_arrows_reach_executor_typed_parameters() {
             ))
             .collect::<Vec<_>>(),
         [
-            ("src/caller.mts", 7, Some("stage.deletion")),
-            ("src/caller.mts", 12, Some("stage.remaining")),
-            ("src/other.mts", 4, Some("stage.deletion"))
+            ("src/caller.mts", 8, Some("stage.deletion")),
+            ("src/caller.mts", 13, Some("stage.remaining")),
+            ("src/other.mts", 4, Some("stage.deletion")),
+            ("src/other.mts", 9, Some("stage.remaining"))
         ],
         "{findings:#?}"
     );

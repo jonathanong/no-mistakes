@@ -45,7 +45,7 @@ fn checkpoint(expression: &Expression<'_>, name: &str, source: Option<&str>) -> 
         && super::expressions::safe_arguments(call, name, source)
 }
 
-fn read_only(expression: &Expression<'_>, name: &str, source: Option<&str>) -> bool {
+pub(super) fn read_only(expression: &Expression<'_>, name: &str, source: Option<&str>) -> bool {
     match expression.get_inner_expression() {
         Expression::Identifier(identifier) => {
             identifier.name != name && Some(identifier.name.as_str()) != source
@@ -54,6 +54,10 @@ fn read_only(expression: &Expression<'_>, name: &str, source: Option<&str>) -> b
         | Expression::BooleanLiteral(_)
         | Expression::StringLiteral(_)
         | Expression::NullLiteral(_) => true,
+        Expression::TemplateLiteral(template) => template
+            .expressions
+            .iter()
+            .all(|value| read_only(value, name, source)),
         Expression::StaticMemberExpression(member) => read_only(&member.object, name, source),
         Expression::ComputedMemberExpression(member) => {
             read_only(&member.object, name, source) && read_only(&member.expression, name, source)
