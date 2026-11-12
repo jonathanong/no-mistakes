@@ -16,3 +16,17 @@ pub mod owner {
         std::time::Instant::now()
     }
 }
+
+pub mod unrelated {
+    pub struct Instant;
+
+    impl Instant {
+        pub fn now() -> u8 {
+            0
+        }
+    }
+
+    pub fn clock() -> u8 {
+        Instant::now()
+    }
+}
