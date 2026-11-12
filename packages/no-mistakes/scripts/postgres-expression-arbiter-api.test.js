@@ -178,7 +178,7 @@ test(
 
 // Each scenario independently checks its CJS, ESM, and prepared-report contract.
 for (const [scenario, config, findings, advisories, subdirectory = ""] of [
-  ["postgres-ddl-unanalyzable", "report.yml", 386, 0, "issue-2731"],
+  ["postgres-ddl-unanalyzable", "report.yml", 384, 0, "issue-2731"],
   ["forbidden-calls/consumer-matrix", "configs/unknown-calls-default.yml", 1, 0],
   ["forbidden-calls/consumer-matrix", "configs/unknown-calls-finding.yml", 1, 0],
   ["forbidden-calls/consumer-matrix", "configs/unknown-calls-ignore.yml", 0, 0],
@@ -210,6 +210,27 @@ for (const [scenario, config, findings, advisories, subdirectory = ""] of [
       assert.deepEqual(report.warnings, []);
       assert.equal(report.rules.length, findings, config);
       assert.equal(policyAdvisories(report).length, advisories, config);
+      if (scenario === "postgres-ddl-unanalyzable" && subdirectory === "issue-2731") {
+        const file = "migrations/branch-bodies.sql";
+        const lines = readFileSync(join(options.root, file), "utf8").split(/\r?\n/u);
+        for (const [definition, invalidSql] of [
+          ["CREATE RECURSIVE VIEW do_valid (id) AS SELECT 1;", "FROBULATE 0b101"],
+          ["CREATE RECURSIVE VIEW function_valid (id) AS SELECT 1;", "FROBULATE 0x1F"],
+        ]) {
+          const line = lines.findIndex((source) => source.trim() === definition) + 1;
+          assert.ok(line > 0, definition);
+          const policyFindings = report.rules.filter(
+            (finding) => finding.rule === "postgres-sql-statement-policy" && finding.file === file,
+          );
+          assert.ok(!policyFindings.some((finding) => finding.line === line), definition);
+          assert.ok(
+            policyFindings.some(
+              (finding) => finding.line === line + 1 && finding.target === invalidSql,
+            ),
+            invalidSql,
+          );
+        }
+      }
     },
   );
 }
