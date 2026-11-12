@@ -33,6 +33,7 @@ pub(crate) fn collect_prepared(
     });
     let executor_calls = executor_calls.confirmed;
     if include_all_calls {
+        super::factory_roots::register(&mut syntax, program, ts.module_bindings.as_deref());
         syntax.confirmed_builder_reads = helper_records::confirmed_reads(&syntax, &executor_calls);
     }
     let bindings = bindings::Bindings::new(

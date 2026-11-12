@@ -12,6 +12,7 @@ mod collect;
 mod conditional;
 mod diagnostics;
 mod effects;
+mod factory_roots;
 mod finite_comments;
 mod finite_returns;
 mod fresh_builders;

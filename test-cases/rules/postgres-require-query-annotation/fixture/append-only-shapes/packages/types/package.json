@@ -1,1 +1,1 @@
-{"name":"@pkg/types","type":"module","exports":{"./entities/x":"./src/entities/x.mts"}}
+{"name":"@pkg/types","type":"module","exports":{"./entities/x":"./src/entities/x.mts","./entities/descendants":"./src/entities/descendants.mts"}}

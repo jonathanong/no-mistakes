@@ -321,6 +321,22 @@ argument is also safe with an empty default. Nonempty object defaults, getters,
 spreads, computed keys, `__proto__`, calls in defaults, and builder-parameter
 defaults remain unanalyzable. Type annotations do not establish runtime values.
 
+A function-local `const` initialized by a call to a same-file factory is a
+literal head when the factory is a unique top-level function declaration with
+one return of a trusted-tag template (for example
+``function start() { return sql`/* name */ ...` }``) and the `const` is passed
+to proven append-only effect helpers, local or imported, before the executor
+call. A factory with any non-literal, unannotated, or untrusted-tag return, one
+that returns a parameter or a shared builder, a reassigned or shadowed factory
+name, an imported factory combined with later effect helpers, and a call inside
+a loop remain unresolved. An `assert(user, 401)` statement inside an
+append-only helper body does not disturb its proof.
+
+A builder handed to a callback through a higher-order helper
+(``page(options, query, async statement => read(statement))``) is not
+proven: the executor receives a parameter alias, not the annotated binding, so
+the finding stays. Call the executor on the local builder instead.
+
 A function-local `let` or `const` may also start with finite conditional fresh
 builders. Every arm and every reassignment must have a literal annotation and
 use the trusted tag. Discarded appends and proven local append-only effects
