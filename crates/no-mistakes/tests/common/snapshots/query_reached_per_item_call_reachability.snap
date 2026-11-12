@@ -118,6 +118,118 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "guard_shapes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/shapes.mts",
+          "import": "stage.run",
+          "line": 11,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via shapes → shapes/run → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const result = await stage.run();",
+          "target": "postgres: shapes → shapes/run → query"
+        },
+        {
+          "file": "src/shapes.mts",
+          "import": "stage.run",
+          "line": 16,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via shapes → shapes/run → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const result = await stage.run();",
+          "target": "postgres: shapes → shapes/run → query"
+        },
+        {
+          "file": "src/shapes.mts",
+          "import": "stage.run",
+          "line": 21,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via shapes → shapes/run → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const result = await stage.run();",
+          "target": "postgres: shapes → shapes/run → query"
+        },
+        {
+          "file": "src/shapes.mts",
+          "import": "stage.run",
+          "line": 26,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via shapes → shapes/run → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const result = await stage.run();",
+          "target": "postgres: shapes → shapes/run → query"
+        },
+        {
+          "file": "src/shapes.mts",
+          "import": "stage.run",
+          "line": 31,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via shapes → shapes/run → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const result = await stage.run();",
+          "target": "postgres: shapes → shapes/run → query"
+        },
+        {
+          "file": "src/shapes.mts",
+          "import": "stage.run",
+          "line": 36,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via shapes → shapes/run → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const result = await stage.run();",
+          "target": "postgres: shapes → shapes/run → query"
+        },
+        {
+          "file": "src/shapes.mts",
+          "import": "stage.run",
+          "line": 41,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via shapes → shapes/run → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const result = await stage.run();",
+          "target": "postgres: shapes → shapes/run → query"
+        },
+        {
+          "file": "src/shapes.mts",
+          "import": "stage.run",
+          "line": 46,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via shapes → shapes/run → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const result = await stage.run();",
+          "target": "postgres: shapes → shapes/run → query"
+        },
+        {
+          "file": "src/shapes.mts",
+          "import": "stage.run",
+          "line": 51,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via shapes → shapes/run → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const result = await stage.run();",
+          "target": "postgres: shapes → shapes/run → query"
+        },
+        {
+          "file": "src/shapes.mts",
+          "import": "stage.run",
+          "line": 56,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via shapes → shapes/run → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const result = await stage.run();",
+          "target": "postgres: shapes → shapes/run → query"
+        },
+        {
+          "file": "src/shapes.mts",
+          "import": "stage.run",
+          "line": 61,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via shapes → shapes/run → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const result = await stage.run();",
+          "target": "postgres: shapes → shapes/run → query"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "guarded_workspace": {
     "exitCode": 1,
     "report": {

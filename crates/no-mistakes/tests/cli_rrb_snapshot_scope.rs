@@ -84,6 +84,11 @@ fn query_reached_per_item_call_reachability_json_matches_snapshot() {
                 "typed.yml",
             ),
             rule(
+                "guard_shapes",
+                "query-reached-per-item/guard-shapes-fixture",
+                ".no-mistakes.yml",
+            ),
+            rule(
                 "contextual_stages",
                 "query-reached-per-item/typed-contextual-stages-fixture",
                 ".no-mistakes.yml",
