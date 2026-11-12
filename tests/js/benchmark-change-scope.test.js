@@ -162,3 +162,15 @@ test("CLI reports no benchmarks for a pull request without the opt-in marker", (
   assert.equal(optedIn.status, 0);
   assert.equal(optedIn.stdout, "changed=true\nscope=all\n");
 });
+
+test("CLI drains a large diff before skipping a pull request", () => {
+  const input = "M\0crates/no-mistakes/src/lib.rs\0".repeat(100_000);
+  const pipeline = `set -o pipefail; cat | "${process.execPath}" "${selector}"`;
+  const result = spawnSync("bash", ["-c", pipeline], {
+    input,
+    encoding: "utf8",
+    env: { ...process.env, GITHUB_EVENT_NAME: "pull_request", PR_BODY: "" },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, "changed=false\nscope=none\n");
+});

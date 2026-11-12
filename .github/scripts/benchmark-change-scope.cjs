@@ -112,9 +112,10 @@ function readChangedFiles() {
 
 if (require.main === module) {
   const forceAll = process.argv.includes("--all");
+  const changes = forceAll ? [] : readChangedFiles();
   const result = pullRequestBenchmarksSkipped(process.env.GITHUB_EVENT_NAME, process.env.PR_BODY)
     ? { changed: false, scope: NO_SHARDS }
-    : benchmarkChangeScope(forceAll ? [] : readChangedFiles(), forceAll);
+    : benchmarkChangeScope(changes, forceAll);
   process.stdout.write(`changed=${result.changed}\nscope=${result.scope}\n`);
 }
 
