@@ -1,19 +1,19 @@
 use super::*;
 use crate::codebase::dependencies::extract::{
-    ValueType, ValueBinding, ValueCall, ValueExpression, ValueParameter, ValueProjection,
+    ValueBinding, ValueCall, ValueExpression, ValueParameter, ValueProjection, ValueType,
 };
 #[path = "value_flow/models.rs"]
 mod models;
 pub(super) use models::FlowFileIndex;
 use models::{ParameterInput, ParameterInputs};
 #[cfg(feature = "test-instrumentation")]
+#[path = "value_flow/admission_mode.rs"]
+pub(super) mod admission_mode;
+#[cfg(feature = "test-instrumentation")]
 #[path = "value_flow/admission_probe.rs"]
 mod admission_probe;
 #[path = "value_flow/known_callable_admission.rs"]
 mod known_callable_admission;
-#[cfg(feature = "test-instrumentation")]
-#[path = "value_flow/admission_mode.rs"]
-pub(super) mod admission_mode;
 #[path = "value_flow/types.rs"]
 mod types;
 #[cfg(feature = "test-instrumentation")]
@@ -66,12 +66,16 @@ struct ValueFlowResolution<'a, 'b> {
 mod execution_quality;
 #[path = "value_flow/execution_reads.rs"]
 mod execution_reads;
+#[path = "value_flow/for_of_fields.rs"]
+mod for_of_fields;
+#[path = "value_flow/for_of_sources.rs"]
+mod for_of_sources;
+#[path = "value_flow/for_of_values.rs"]
+mod for_of_values;
 #[path = "value_flow/member_projection.rs"]
 mod member_projection;
 #[path = "value_flow/member_reads.rs"]
 mod member_reads;
-#[path = "value_flow/for_of_values.rs"]
-mod for_of_values;
 #[path = "value_flow/named.rs"]
 mod named;
 #[path = "value_flow/named_imports.rs"]
@@ -83,16 +87,13 @@ mod returned;
 #[path = "value_flow/values.rs"]
 mod values;
 pub(super) use refine::refine_value_calls;
-#[path = "value_flow/factory_bindings.rs"]
-mod factory_bindings;
-
 #[path = "value_flow/exports.rs"]
 mod exports;
+#[path = "value_flow/factory_bindings.rs"]
+mod factory_bindings;
 pub(super) use exports::resolve_value_exports;
-
 #[path = "value_flow/inline_inputs.rs"]
 mod inline_inputs;
-
 #[path = "value_flow/parameters.rs"]
 mod parameters;
 
@@ -163,7 +164,6 @@ mod replacement_values;
 
 #[path = "value_flow/binding_reads.rs"]
 mod binding_reads;
-
 #[path = "value_flow/execution_phases.rs"]
 mod execution_phases;
 #[path = "value_flow/parameter_repeat.rs"]
@@ -193,8 +193,8 @@ pub(super) mod site_storage;
 #[path = "value_flow/opaque_entry_mode.rs"]
 pub(super) mod opaque_entry_mode;
 
-#[path = "value_flow/builtin_callbacks.rs"]
-mod builtin_callbacks;
 #[path = "value_flow/builtin_callback_projection.rs"]
 mod builtin_callback_projection;
+#[path = "value_flow/builtin_callbacks.rs"]
+mod builtin_callbacks;
 pub(super) use builtin_callback_projection::project_builtin_callbacks;

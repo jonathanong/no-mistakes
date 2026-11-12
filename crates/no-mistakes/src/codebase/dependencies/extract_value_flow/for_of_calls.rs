@@ -1,4 +1,6 @@
 use super::*;
+#[path = "for_of_call_expressions.rs"]
+mod expressions;
 
 pub(super) fn collect(body: &Statement<'_>, name: &str, source: Option<&str>) -> Option<Vec<u32>> {
     let mut calls = Vec::new();
@@ -23,40 +25,17 @@ fn statements(
             .iter()
             .all(|statement| statements(statement, name, source, project, budget, calls)),
         Statement::ExpressionStatement(statement) => {
-            let expression = statement.expression.get_inner_expression();
-            let expression = match expression {
-                Expression::AwaitExpression(value) => value.argument.get_inner_expression(),
-                value => value,
-            };
-            let Expression::CallExpression(call) = expression else {
-                return false;
-            };
-            let Expression::StaticMemberExpression(member) = &call.callee else {
-                return false;
-            };
-            let Expression::Identifier(receiver) = &member.object else {
-                return false;
-            };
-            if !project && matches!(member.property.name.as_str(), "exit" | "abort") {
-                return false;
-            }
-            if Some(receiver.name.as_str()) == source {
-                return false;
-            }
-            if receiver.name == name {
-                if !safe_arguments(call, name, source) {
-                    return false;
-                }
-                if project {
-                    calls.push(call.span.start);
-                }
-                true
-            } else {
-                if project {
-                    return false;
-                }
-                safe_arguments(call, name, source)
-            }
+            expressions::expression(&statement.expression, name, source, project, calls)
+        }
+        Statement::VariableDeclaration(declaration) => {
+            declaration.kind == VariableDeclarationKind::Const
+                && declaration.declarations.iter().all(|declarator| {
+                    matches!(&declarator.id, BindingPattern::BindingIdentifier(identifier)
+                    if identifier.name != name && Some(identifier.name.as_str()) != source)
+                        && declarator.init.as_ref().is_some_and(|expression| {
+                            expressions::expression(expression, name, source, project, calls)
+                        })
+                })
         }
         Statement::TryStatement(statement) => {
             statement.finalizer.is_none()
@@ -81,26 +60,6 @@ fn statements(
     }
 }
 
-fn safe_arguments(call: &CallExpression<'_>, name: &str, source: Option<&str>) -> bool {
-    call.arguments.iter().all(|argument| {
-        match argument
-            .as_expression()
-            .map(Expression::get_inner_expression)
-        {
-            Some(Expression::Identifier(value)) => {
-                value.name != name && Some(value.name.as_str()) != source
-            }
-            Some(
-                Expression::StringLiteral(_)
-                | Expression::NumericLiteral(_)
-                | Expression::BooleanLiteral(_)
-                | Expression::NullLiteral(_),
-            ) => true,
-            _ => false,
-        }
-    })
-}
-
 impl ImportCollector {
     pub(in super::super::super) fn record_for_of_reference(
         &mut self,
@@ -120,7 +79,11 @@ impl ImportCollector {
         if !self.collect_value_flow {
             return;
         }
-        if let Some(scope) = self.callee_binding_scope(name) {
+        if let Some(scope) = self.callee_binding_scope(name).or_else(|| {
+            self.predeclared_imported_bindings
+                .contains(name)
+                .then_some(0)
+        }) {
             let owner = self.current_function_id();
             self.receiver_escapes
                 .for_of_escapes
@@ -142,6 +105,11 @@ impl ImportCollector {
             );
         };
         self.callee_binding_scope(identifier.name.as_str())
+            .or_else(|| {
+                self.predeclared_imported_bindings
+                    .contains(identifier.name.as_str())
+                    .then_some(0)
+            })
             .is_none_or(|scope| {
                 !self
                     .receiver_escapes
@@ -171,6 +139,36 @@ impl ImportCollector {
                     .entry(*scope)
                     .or_default()
                     .entry(name.clone())
+                    .or_insert_with(|| contexts.clone());
+            }
+        }
+        for binding in self.value_flow.bindings.iter().filter(|binding| {
+            binding.immutable && matches!(binding.value, ValueExpression::Array(_))
+        }) {
+            if let Some(contexts) = self
+                .receiver_escapes
+                .for_of_escapes
+                .get(&binding.scope)
+                .and_then(|names| names.get(&binding.name))
+            {
+                escaped
+                    .entry(binding.scope)
+                    .or_default()
+                    .entry(binding.name.clone())
+                    .or_insert_with(|| contexts.clone());
+            }
+        }
+        for binding in &self.call_import_bindings {
+            if let Some(contexts) = self
+                .receiver_escapes
+                .for_of_escapes
+                .get(&0)
+                .and_then(|names| names.get(&binding.local))
+            {
+                escaped
+                    .entry(0)
+                    .or_default()
+                    .entry(binding.local.clone())
                     .or_insert_with(|| contexts.clone());
             }
         }

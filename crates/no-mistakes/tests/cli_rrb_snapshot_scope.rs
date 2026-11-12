@@ -47,11 +47,18 @@ fn query_reached_per_item_json_matches_snapshot() {
 fn query_reached_per_item_call_reachability_json_matches_snapshot() {
     assert_saved_fixture(
         "query_reached_per_item_call_reachability",
-        &[rule(
-            "call_reachability",
-            "query-reached-per-item/call-reachability-fixture",
-            ".no-mistakes.yml",
-        )],
+        &[
+            rule(
+                "call_reachability",
+                "query-reached-per-item/call-reachability-fixture",
+                ".no-mistakes.yml",
+            ),
+            rule(
+                "imported_stages",
+                "query-reached-per-item/imported-stages-fixture",
+                ".no-mistakes.yml",
+            ),
+        ],
     );
 }
 

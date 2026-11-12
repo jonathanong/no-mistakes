@@ -139,7 +139,13 @@ impl super::super::super::ImportCollector {
         if !self.collect_value_flow {
             return;
         }
-        self.record_for_of_escape(name);
+        let scope = self.callee_binding_scope(name).unwrap_or(0);
+        self.value_flow
+            .for_of
+            .exported
+            .entry(scope)
+            .or_default()
+            .insert(name.to_string());
         self.record_registry_mutation(name);
     }
 }
