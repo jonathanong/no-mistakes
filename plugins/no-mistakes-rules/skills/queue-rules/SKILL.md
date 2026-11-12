@@ -46,7 +46,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT fan out with unbounded `Promise.all`; bound both the input set and concurrency.
 - MUST NOT scan every entity to find work; read work-item rows through an index-served predicate.
 - MUST NOT restart external listings from page one each run; carry the continuation token and stop on a repeat.
-- MUST NOT let a delayed repair overwrite a newer value; compare a monotonic version.
+- MUST NOT let a delayed repair overwrite a newer value; recompute from current source state or compare an existing timestamp instead of adding a version column for it.
 - MUST NOT resume a time window without overlap.
 - MUST NOT hardcode batch size, page size, or window as literals; bind validated config.
 - MUST NOT clear a "needs work" flag unconditionally when a run ends; compare-and-clear against the version you read, or a change that arrived mid-run is lost.
