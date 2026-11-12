@@ -40,7 +40,10 @@ pub(super) fn resolve_dynamic_identifier(
         .collect()
 }
 
-#[cfg_attr(not(test), allow(dead_code))]
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "Tests extract values without a file path.")
+)]
 pub(super) fn collect_dynamic_identifier_values(
     program: &Program<'_>,
     source: &str,

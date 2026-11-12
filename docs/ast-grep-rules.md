@@ -134,10 +134,10 @@ Four narrow rules protect the shared analysis boundary:
   `analyzeProject`, and impacted-check aggregation paths. It rejects standalone
   discovery, resolver, graph, fact, or extractor calls that bypass prepared
   invocation state.
-- `no-direct-analysis-clock` requires analysis timings to flow through the
-  optional invocation observer. Only that observer, compatibility timing
-  adapters, and the invocation control-clock adapter used to enforce deadlines
-  may construct `Instant`s directly.
+
+
+The analysis clock policy is enforced by Clippy `disallowed_methods` in
+`clippy.toml`; documented expectations identify observer and deadline clock owners.
 
 These rules use exact path allowlists. They are intentionally narrower than a
 blanket ban on reads or parser libraries because non-source documents and

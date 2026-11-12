@@ -68,7 +68,10 @@ impl CoverageHints {
     }
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Candidate grouping shares one graph, test universe, deduplication set, and warning accumulator."
+)]
 pub(super) fn group_candidates(
     group: TestPlanGroupType,
     framework: super::args::TestFramework,
@@ -220,7 +223,10 @@ fn is_direct_owner_edge(kind: EdgeKind) -> bool {
     )
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Graph candidate traversal applies the group policy, test scope, coverage hints, and shared warning state."
+)]
 fn graph_candidates(
     group: TestPlanGroupType,
     framework: super::args::TestFramework,
@@ -469,7 +475,10 @@ fn reason_from_path(
     }
 }
 
-#[allow(clippy::type_complexity)]
+#[expect(
+    clippy::type_complexity,
+    reason = "The traversal returns reachable edge paths and their predecessor map for shortest-path rendering."
+)]
 pub(super) fn bfs_path_find_set(
     graph: &DepGraph,
     start: &NodeId,

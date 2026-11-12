@@ -74,7 +74,10 @@ pub(super) fn collect_playwright_selector_edges_with_graph(
     Ok(edges)
 }
 
-#[cfg_attr(not(test), allow(dead_code))]
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "Tests compare unoptimized selector edges.")
+)]
 fn selector_edges_from_analysis(
     root: &Path,
     all_files: &[PathBuf],

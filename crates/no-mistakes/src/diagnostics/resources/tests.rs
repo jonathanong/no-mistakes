@@ -1,3 +1,10 @@
+#![cfg_attr(
+    unix,
+    expect(
+        clippy::disallowed_methods,
+        reason = "Resource timing tests require a real monotonic clock."
+    )
+)]
 use super::*;
 use std::sync::{mpsc, Arc};
 

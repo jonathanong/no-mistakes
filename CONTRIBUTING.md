@@ -87,6 +87,28 @@ project floor does not establish the Codecov patch floor; inspect the changed
 lines in LCOV and cover error diagnostics with saved invalid fixtures before
 handoff. Wait for the patch check to finish after the workflow coverage job passes.
 
+Rust lint levels live in `[workspace.lints]` in the root `Cargo.toml`; every
+workspace member inherits them with `[lints] workspace = true`. CI still rejects
+warnings through `RUSTFLAGS=-D warnings` and Clippy's `-D warnings` argument.
+Use `#[expect(..., reason = "...")]` for a necessary local exception, and state
+its invariant; fix the warning when practical. Every unsafe block states its
+safety invariant in a `// SAFETY:` comment immediately before the block.
+
+The published crate's minimum Rust version is 1.97, matching the locked OXC
+dependencies. Verify it with `cargo +1.97.0 check --locked --workspace
+--all-features --lib --bins`; lint validation uses the current stable toolchain.
+
+`clippy.toml` bans type-resolved `std::time::Instant::now`, including imported
+aliases. Analysis timings use the optional `InvocationObserver`; its clock
+owners, compatibility adapters, deadline control clock, tests, and benchmarks
+have documented expectations. The OXC parser gateway remains guarded by
+ast-grep because its exact source adapter allowlist is a separate policy.
+The quality job's Rust validation parity tests exercise Clippy alias rejection
+and exemptions with a saved fixture. Run the same smoke check with
+`bash .github/scripts/rust-lint-policy.sh`.
+It uses an isolated temporary target and requires Clippy, without adding that
+requirement to ordinary Rust test or coverage jobs.
+
 Run `pnpm run lint:duplicates` to check for copied blocks of at least 30 lines
 and functions with at least 80% structural similarity. CI runs the same jscpd
 check and fails on any reported clone. See the [duplication guide](docs/development/code-duplication.md)

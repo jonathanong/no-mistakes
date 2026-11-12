@@ -113,6 +113,7 @@ pub(crate) fn register_process_group(process_group: i32) -> Option<GroupRegistra
 }
 
 pub(crate) fn forward_signal(process_group: i32, signal: i32) {
+    // SAFETY: kill takes only integer process-group and signal values and borrows no Rust memory.
     unsafe {
         nix::libc::kill(-process_group, signal);
     }

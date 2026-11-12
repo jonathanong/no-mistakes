@@ -1,0 +1,3 @@
+disallowed-methods = [
+  { path = "std::time::Instant::now", reason = "Analysis clocks must use the optional InvocationObserver so disabled instrumentation reads no clock." },
+]

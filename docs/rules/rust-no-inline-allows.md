@@ -25,6 +25,12 @@ hidden beside the code they silence.
 Rust `#[allow(...)]` attributes in analyzed source are findings, including
 function-, module-, and item-level attributes.
 
+Documented `#[expect(..., reason = "...")]` and file-level
+`#![expect(..., reason = "...")]` attributes are accepted. Rust checks that each
+expectation still suppresses a real lint, so obsolete exceptions fail validation.
+The workspace Cargo lint table holds shared policy; explicit clock-owner
+expectations refer to the InvocationObserver boundary.
+
 ## Options and defaults
 
 `roots` optionally replaces the rule's target roots; relative paths are

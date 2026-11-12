@@ -44,7 +44,7 @@ pub(crate) struct VitestSetupProject {
 include!("builder_request_type.rs");
 
 impl DepGraph {
-    #[cfg_attr(not(test), allow(dead_code))]
+    #[cfg_attr(not(test), expect(dead_code, reason = "Graph test helper entrypoint."))]
     pub(crate) fn build_with_plan_files_prepared_config_and_facts(
         root: &Path,
         tsconfig: &TsConfig,

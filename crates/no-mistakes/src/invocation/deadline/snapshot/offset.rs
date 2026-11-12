@@ -8,7 +8,7 @@ const I64_MAGNITUDE_LIMIT: u64 = (i64::MAX as u64) + 1;
 static EPOCH: OnceLock<Instant> = OnceLock::new();
 
 pub(super) fn epoch() -> Instant {
-    *EPOCH.get_or_init(Instant::now)
+    *EPOCH.get_or_init(crate::invocation::clock::now)
 }
 
 pub(super) fn encode_timeout(timeout: Duration) -> (u64, u32) {

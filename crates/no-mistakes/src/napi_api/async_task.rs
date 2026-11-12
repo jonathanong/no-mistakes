@@ -6,7 +6,10 @@ mod pure;
 #[cfg(not(coverage))]
 pub use pure::PureJsonTask;
 
-#[cfg_attr(not(test), allow(dead_code))]
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "Tests retain the string-task adapter.")
+)]
 pub struct JsonTask {
     options_json: Buffer,
     run: fn(String) -> napi::Result<String>,
@@ -39,14 +42,16 @@ impl Task for JsonValueTask {
     }
 }
 
-#[cfg_attr(not(test), allow(dead_code))]
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "Tests construct the string-task adapter.")
+)]
 impl JsonTask {
     pub(crate) fn new(options_json: Buffer, run: fn(String) -> napi::Result<String>) -> Self {
         Self { options_json, run }
     }
 }
 
-#[cfg_attr(not(test), allow(dead_code))]
 impl Task for JsonTask {
     type Output = Buffer;
     type JsValue = Buffer;

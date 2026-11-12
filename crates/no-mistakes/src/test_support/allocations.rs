@@ -24,24 +24,28 @@ fn allocated(pointer: *mut u8) {
 // SAFETY: every operation forwards the original pointer/layout to System.
 unsafe impl GlobalAlloc for ObservedSystem {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        // SAFETY: the caller supplies a valid nonzero allocation layout, forwarded unchanged to System.
         let pointer = unsafe { System.alloc(layout) };
         allocated(pointer);
         pointer
     }
 
     unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
+        // SAFETY: the caller supplies a valid nonzero allocation layout, forwarded unchanged to System.
         let pointer = unsafe { System.alloc_zeroed(layout) };
         allocated(pointer);
         pointer
     }
 
     unsafe fn realloc(&self, pointer: *mut u8, layout: Layout, size: usize) -> *mut u8 {
+        // SAFETY: the caller supplies a live System allocation, its layout, and a valid new size.
         let pointer = unsafe { System.realloc(pointer, layout, size) };
         allocated(pointer);
         pointer
     }
 
     unsafe fn dealloc(&self, pointer: *mut u8, layout: Layout) {
+        // SAFETY: the caller supplies a live System allocation and the layout used to allocate it.
         unsafe { System.dealloc(pointer, layout) };
     }
 }

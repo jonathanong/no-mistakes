@@ -3,6 +3,7 @@ use super::*;
 #[test]
 #[cfg(unix)]
 fn resource_samples_convert_platform_units_and_reject_failures() {
+    // SAFETY: rusage contains only integer fields and integer-only time values.
     let mut usage: libc::rusage = unsafe { std::mem::zeroed() };
     usage.ru_utime.tv_sec = 2;
     usage.ru_utime.tv_usec = 300;

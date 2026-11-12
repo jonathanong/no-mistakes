@@ -10,6 +10,7 @@ impl std::fmt::Display for FormattingError {
         let marker = b"formatting marker\n";
         // Match detached diagnostic writes without re-entering stderr's formatter.
         assert_eq!(
+            // SAFETY: marker is readable for marker.len() bytes throughout this synchronous stderr write.
             unsafe { nix::libc::write(2, marker.as_ptr().cast(), marker.len()) },
             marker.len() as isize
         );

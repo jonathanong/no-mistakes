@@ -36,7 +36,6 @@ pub fn check_with_files(
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(root, all_files);
     check_with_files_from_snapshot_and_catalog(root, config, all_files, &snapshot, None)
 }
-#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) fn check_with_files_from_snapshot_and_catalog(
     root: &Path,
     config: &NoMistakesConfig,
@@ -49,7 +48,6 @@ pub(crate) fn check_with_files_from_snapshot_and_catalog(
         root, config, all_files, snapshot, catalog, &sources,
     )
 }
-#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) fn check_with_files_from_snapshot_catalog_and_sources(
     root: &Path,
     config: &NoMistakesConfig,

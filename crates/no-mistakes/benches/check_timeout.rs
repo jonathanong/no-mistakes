@@ -1,3 +1,7 @@
+#![expect(
+    clippy::disallowed_methods,
+    reason = "The benchmark measures the real elapsed duration of timeout enforcement."
+)]
 use criterion::{criterion_group, criterion_main, Criterion};
 use std::time::Duration;
 

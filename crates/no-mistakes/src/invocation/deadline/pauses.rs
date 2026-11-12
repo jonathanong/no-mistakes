@@ -43,7 +43,10 @@ pub(super) fn between_words() {
 
 impl super::ActiveDeadline {
     // Tests poison the process-wide lock on purpose. Production never calls this.
-    #[cfg_attr(not(test), allow(dead_code))]
+    #[cfg_attr(
+        not(test),
+        expect(dead_code, reason = "Tests recover intentionally poisoned locks.")
+    )]
     pub(in crate::invocation::deadline) fn clear_poison_for_test(&self) {
         self.lock.clear_poison();
     }

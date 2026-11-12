@@ -21,6 +21,7 @@ fn active_progress_signal_subprocess_helper() {
     .unwrap();
     let stop = || {
         if mode != "kill" {
+            // SAFETY: SIGTERM is valid and this helper child has installed its signal listener.
             unsafe {
                 nix::libc::raise(signal_hook::consts::SIGTERM);
             }
@@ -77,6 +78,7 @@ fn progress_survives_sigkill_and_sigterm_preserves_default_signal_exit_status() 
                 let _ = child.wait();
                 panic!("no bounded heartbeat before SIGKILL");
             }
+            // SAFETY: the Child identifies this test's subprocess; kill borrows no Rust memory.
             unsafe {
                 nix::libc::kill(child.id() as i32, signal_hook::consts::SIGKILL);
             }
@@ -189,6 +191,7 @@ fn unread_full_stderr_never_blocks_progress_cleanup_signal_or_internal_timeout()
             panic!("blocked-stderr helper did not become ready");
         }
         if mode == "term" {
+            // SAFETY: the Child identifies this test's subprocess; kill borrows no Rust memory.
             unsafe {
                 nix::libc::kill(child.id() as i32, signal_hook::consts::SIGTERM);
             }
@@ -278,6 +281,7 @@ fn sigterm_while_waiting_for_lock_flushes_before_first_heartbeat() {
         let _ = child.wait();
         panic!("helper did not wait for held lock");
     }
+    // SAFETY: the Child identifies this test's subprocess; kill borrows no Rust memory.
     unsafe {
         nix::libc::kill(child.id() as i32, signal_hook::consts::SIGTERM);
     }

@@ -17,7 +17,11 @@ const _: fn(&diagnostics::InvocationObserver) =
 // Exercise this copied boundary on Linux too: its crate-root dependencies must
 // be checked locally, not first discovered by the native macOS job.
 #[cfg(unix)]
-#[allow(dead_code, unused_imports)]
+#[expect(
+    dead_code,
+    unused_imports,
+    reason = "The native harness compiles production invocation modules while exercising only platform-specific adapters."
+)]
 #[path = "../src/invocation.rs"]
 mod invocation;
 
@@ -29,7 +33,6 @@ mod invocation;
 #[path = "cli_invocation.rs"]
 mod cli_invocation;
 #[cfg(unix)]
-#[allow(dead_code)]
 #[path = "common/saved_fixture.rs"]
 mod saved_fixture;
 

@@ -1,3 +1,7 @@
+#![expect(
+    clippy::disallowed_methods,
+    reason = "The compatibility timing adapter reads its clock only when InvocationObserver is enabled."
+)]
 use super::ImpactedChecksTiming;
 use anyhow::Result;
 use std::time::{Duration, Instant};

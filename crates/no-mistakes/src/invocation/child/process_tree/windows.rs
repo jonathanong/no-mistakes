@@ -5,12 +5,14 @@ use windows_sys::Win32::System::Diagnostics::ToolHelp::{
 use windows_sys::Win32::System::Threading::{OpenThread, ResumeThread, THREAD_SUSPEND_RESUME};
 
 pub(super) fn resume_initial_thread(process_id: u32) -> std::io::Result<()> {
+    // SAFETY: the thread snapshot flag accepts process ID zero and requires no pointer arguments.
     let snapshot = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0) };
     if snapshot == INVALID_HANDLE_VALUE {
         return Err(std::io::Error::last_os_error());
     }
 
     let result = find_and_resume_thread(snapshot, process_id);
+    // SAFETY: snapshot was checked against INVALID_HANDLE_VALUE and is closed exactly once.
     unsafe { CloseHandle(snapshot) };
     result
 }
@@ -23,6 +25,7 @@ fn find_and_resume_thread(
         dwSize: std::mem::size_of::<THREADENTRY32>() as u32,
         ..THREADENTRY32::default()
     };
+    // SAFETY: snapshot is live; entry is writable and dwSize matches THREADENTRY32.
     if unsafe { Thread32First(snapshot, &mut entry) } == 0 {
         return Err(std::io::Error::last_os_error());
     }
@@ -31,6 +34,7 @@ fn find_and_resume_thread(
         if entry.th32OwnerProcessID == process_id {
             return resume_thread(entry.th32ThreadID);
         }
+        // SAFETY: snapshot is live and entry retains the initialized THREADENTRY32 size.
         if unsafe { Thread32Next(snapshot, &mut entry) } == 0 {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::NotFound,
@@ -41,12 +45,15 @@ fn find_and_resume_thread(
 }
 
 fn resume_thread(thread_id: u32) -> std::io::Result<()> {
+    // SAFETY: thread_id comes from the snapshot and the requested access is THREAD_SUSPEND_RESUME.
     let thread = unsafe { OpenThread(THREAD_SUSPEND_RESUME, 0, thread_id) };
     if thread.is_null() {
         return Err(std::io::Error::last_os_error());
     }
+    // SAFETY: thread is a live handle opened with THREAD_SUSPEND_RESUME access.
     let resume_result = unsafe { ResumeThread(thread) };
     let resume_error = (resume_result == u32::MAX).then(std::io::Error::last_os_error);
+    // SAFETY: thread was checked for null and this is its only close.
     unsafe { CloseHandle(thread) };
     if let Some(error) = resume_error {
         return Err(error);

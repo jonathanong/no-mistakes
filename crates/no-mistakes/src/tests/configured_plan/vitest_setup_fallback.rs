@@ -43,7 +43,10 @@ pub(super) fn framework_warnings(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Setup fallback merges project-scoped candidates into the existing bounded selection and group state."
+)]
 pub(super) fn apply_selection(
     framework: TestFramework,
     root: &Path,

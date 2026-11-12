@@ -4,7 +4,10 @@ use super::{attach_targets, TestPlan, Warning};
 use no_mistakes::codebase::test_discovery::DiscoveredTests;
 use std::path::{Path, PathBuf};
 
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Native fallback preserves discovered target metadata, existing warnings, and explicit suite limits."
+)]
 pub(super) fn native_semantic_fallback_plan(
     root: &Path,
     all_tests: &[PathBuf],

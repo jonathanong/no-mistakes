@@ -53,7 +53,10 @@ use native_semantic_seeds::native_semantic_seed_candidates;
 use targeted_triggers::{insert_synthesized_dependency_group, targeted_dependency_candidates};
 use vitest_setup_groups::{VitestSetupFallback, VitestSetupFallbackInputs, VitestSetupSelection};
 
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "The plan entrypoint borrows prepared analysis alongside diff, workspace, discovery, and timing inputs."
+)]
 pub(crate) fn generate_configured_plan_with_prepared(
     args: &PlanArgs,
     framework: TestFramework,

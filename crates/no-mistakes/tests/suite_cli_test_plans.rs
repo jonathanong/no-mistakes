@@ -4,7 +4,10 @@
 #[path = "common/mod.rs"]
 mod common;
 // This suite uses materialize_saved; materialize is used by the other suites.
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "This harness uses materialize_saved; the shared materialize wrapper serves the other CLI suites."
+)]
 #[path = "common/gitignore_fixture.rs"]
 mod gitignore_fixture;
 #[path = "common/saved_fixture.rs"]

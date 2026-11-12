@@ -1,3 +1,7 @@
+#![expect(
+    clippy::disallowed_methods,
+    reason = "Deadline and instrumentation tests require a real monotonic clock."
+)]
 use super::*;
 use std::fs;
 use std::io::{BufRead, BufReader};
@@ -32,6 +36,7 @@ pub(super) fn run() {
         Some(status) => status,
         None => {
             // Let the isolated helper reap its descendants before stopping it.
+            // SAFETY: helper identifies this test's child; kill uses only integer arguments.
             unsafe {
                 libc::kill(helper.0.id() as i32, libc::SIGTERM);
             }
@@ -63,6 +68,7 @@ fn hung_fsmonitor_subprocess() {
         return;
     };
     #[cfg(target_os = "linux")]
+    // SAFETY: PR_SET_CHILD_SUBREAPER takes the integer flag 1 and affects only this helper child.
     assert_eq!(unsafe { libc::prctl(libc::PR_SET_CHILD_SUBREAPER, 1) }, 0);
 
     let root = fixture.join("repo");
@@ -196,6 +202,7 @@ fn assert_hook_reaped(pid: i32) {
         #[cfg(target_os = "linux")]
         {
             let mut status = 0;
+            // SAFETY: status is writable; WNOHANG observes the tracked child without blocking.
             let waited = unsafe { libc::waitpid(pid, &mut status, libc::WNOHANG) };
             if waited == pid {
                 assert!(libc::WIFSIGNALED(status));
@@ -209,6 +216,7 @@ fn assert_hook_reaped(pid: i32) {
                 );
                 // Git may have reaped it before exiting; otherwise adoption
                 // can lag the holder's exit, so keep observing until bounded.
+                // SAFETY: signal zero only queries the tracked PID and borrows no Rust memory.
                 if unsafe { libc::kill(pid, 0) } == -1 {
                     assert_eq!(
                         std::io::Error::last_os_error().raw_os_error(),
@@ -219,6 +227,7 @@ fn assert_hook_reaped(pid: i32) {
             }
         }
         #[cfg(not(target_os = "linux"))]
+        // SAFETY: signal zero only queries the tracked PID and borrows no Rust memory.
         if unsafe { libc::kill(pid, 0) } == -1 {
             assert_eq!(
                 std::io::Error::last_os_error().raw_os_error(),
@@ -253,6 +262,7 @@ impl Drop for ManagedChild {
 fn reap_adopted(pid: i32) {
     let started = Instant::now();
     loop {
+        // SAFETY: waitpid accepts null status storage; WNOHANG only polls this tracked child.
         let waited = unsafe { libc::waitpid(pid, std::ptr::null_mut(), libc::WNOHANG) };
         if waited == pid
             || (waited == -1
@@ -279,12 +289,14 @@ fn install_failure_cleanup(identity: PathBuf) -> (Arc<[AtomicI32; 2]>, AbortClea
             for child in tracked.iter() {
                 let pid = child.load(Ordering::SeqCst);
                 if pid > 0 {
+                    // SAFETY: pid is a positive tracked child PID; kill uses only integer arguments.
                     unsafe {
                         libc::kill(pid, libc::SIGKILL);
                     }
                 }
             }
             if let Some((pid, parent)) = hook_identity(&identity) {
+                // SAFETY: the saved identity names this helper's Git group and hook PID.
                 unsafe {
                     libc::kill(-parent, libc::SIGKILL);
                     libc::kill(pid, libc::SIGKILL);
@@ -294,6 +306,7 @@ fn install_failure_cleanup(identity: PathBuf) -> (Arc<[AtomicI32; 2]>, AbortClea
             // adoption must finish here, before its subreaper exits on failure.
             let started = Instant::now();
             loop {
+                // SAFETY: null status is permitted; this isolated helper owns all children it polls.
                 let waited = unsafe { libc::waitpid(-1, std::ptr::null_mut(), libc::WNOHANG) };
                 if waited == -1
                     && std::io::Error::last_os_error().raw_os_error() == Some(libc::ECHILD)
@@ -332,6 +345,7 @@ impl Drop for HookCleanup {
         if let Some((pid, parent)) = self.0.as_deref().and_then(hook_identity) {
             // Independent failure cleanup must never turn a leaked child into
             // a passing assertion. Git and its hook share this process group.
+            // SAFETY: the saved identity names this helper's Git group and hook PID.
             unsafe {
                 libc::kill(-parent, libc::SIGKILL);
                 libc::kill(pid, libc::SIGKILL);
