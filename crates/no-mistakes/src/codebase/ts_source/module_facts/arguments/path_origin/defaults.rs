@@ -5,7 +5,10 @@ use oxc_span::GetSpan;
 
 impl<'a> Projector<'a, '_> {
     /// A never-reassigned parameter, including one direct object-pattern property.
-    pub(super) fn param_origin(&mut self, id: &IdentifierReference<'a>) -> Option<PathOrigin> {
+    pub(in super::super) fn param_origin(
+        &mut self,
+        id: &IdentifierReference<'a>,
+    ) -> Option<PathOrigin> {
         let semantic = self.semantic;
         let symbol = self.binding_symbol(id)?;
         if semantic
@@ -56,7 +59,7 @@ impl<'a> Projector<'a, '_> {
                 if origin
                     .atoms()
                     .iter()
-                    .all(|atom| atom.param.is_none() && atom.env.is_none())
+                    .all(|atom| atom.param.is_none() && atom.environment().is_none())
                 {
                     origin
                 } else {

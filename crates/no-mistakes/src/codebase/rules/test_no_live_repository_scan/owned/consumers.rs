@@ -11,10 +11,14 @@ use crate::fx::{FxHashSet, PathSet};
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 
+#[path = "consumers_paths.rs"]
+mod paths;
 #[path = "consumers_resolve.rs"]
 mod resolve;
 #[path = "consumers_scan.rs"]
 mod scan;
+#[path = "consumers_scope.rs"]
+mod scope;
 
 pub(crate) struct Resolution<'a> {
     pub(crate) catalog: Option<&'a TsConfigCatalog>,
@@ -39,9 +43,10 @@ impl<'a> Resolution<'a> {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(super) struct Consumed {
     files: FxHashSet<PathBuf>,
+    direct: Vec<(PathBuf, PathBuf)>,
     /// Files whose specifier might name a module but resolves to none.
     unknown_files: FxHashSet<PathBuf>,
     hits: Vec<super::route_index::RouteHit>,
@@ -124,13 +129,6 @@ impl Consumed {
         consumed
     }
 
-    fn insert(&mut self, target: &Path) {
-        self.files.insert(normalize_path(target));
-        if let Ok(real) = target.canonicalize() {
-            self.files.insert(normalize_path(&real));
-        }
-    }
-
     pub(super) fn unknown(&self) -> bool {
         !self.unknown_files.is_empty()
     }
@@ -168,8 +166,8 @@ fn link_barrels(consumed: &mut Consumed, graph: &DepGraph, facts: &dyn TsFactLoo
                 continue;
             }
             if let NodeId::File(target) = target {
+                super::route_index::link(&mut consumed.via, target, &file);
                 if !consumed.contains(target) {
-                    super::route_index::link(&mut consumed.via, target, &file);
                     consumed.insert(target);
                     pending.push(target.to_path_buf());
                 }

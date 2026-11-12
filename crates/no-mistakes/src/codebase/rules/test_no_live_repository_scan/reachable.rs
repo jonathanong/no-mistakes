@@ -71,6 +71,8 @@ pub(super) fn sources(
             .filter_map(NodeId::as_file)
             .map(std::path::Path::to_path_buf),
     );
+    let mut proof_files = files.clone();
+    proof_files.extend(test_closure.iter().cloned());
     let config_files = config_roots
         .as_ref()
         .map(|configs| module_files(graph, configs));
@@ -82,6 +84,7 @@ pub(super) fn sources(
     Ok(Scope {
         sources,
         files,
+        proof_files,
         config_files,
         test_closure,
         gate_roots,
@@ -91,6 +94,8 @@ pub(super) fn sources(
 pub(super) struct Scope {
     pub(super) sources: FxHashSet<NodeId>,
     pub(super) files: FxHashSet<PathBuf>,
+    /// Test execution sources before config evidence widens the env-write scope.
+    pub(super) proof_files: FxHashSet<PathBuf>,
     pub(super) config_files: Option<FxHashSet<PathBuf>>,
     /// Test files, `setupFiles`, `globalSetup`, and their import closure.
     pub(super) test_closure: FxHashSet<PathBuf>,

@@ -1,0 +1,77 @@
+import { validateArtifact } from "./artifact.mts";
+export async function main(argv: string[]) {
+  const [command, ...args] = argv;
+  function inner(unrelated: string[]) {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+    {
+  if (command === "validate" && args.length === 1) validateArtifact(args[0]!);
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+  }
+  inner(['cleanup']);
+  if (command === "cleanup") { return; }
+}

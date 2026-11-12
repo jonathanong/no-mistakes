@@ -1,5 +1,9 @@
+mod array_guard;
+mod path_default;
 pub(crate) use super::path_value::{MemberEffect, PathValueKind};
 use crate::fx::FxHashMap;
+pub(crate) use array_guard::ArrayGuard;
+pub(crate) use path_default::PathDefault;
 use serde_json::Value;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -56,6 +60,7 @@ pub(crate) struct PathOrigin {
     /// Offset of a named imported zero-argument getter call.
     pub(crate) getter: Option<u32>,
     pub(crate) root_tails: Vec<PathOrigin>,
+    pub(crate) captured_env: Option<Box<super::CapturedEnv>>,
     /// Index of the enclosing function's parameter the leading component reads.
     pub(crate) param: Option<usize>,
     pub(crate) param_member: Option<String>,
@@ -67,12 +72,6 @@ pub(crate) struct PathOrigin {
     pub(crate) reassigned_at: Option<u32>,
     pub(crate) alternatives: Vec<PathOrigin>,
     pub(crate) param_default: Option<PathDefault>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub(crate) struct PathDefault {
-    pub(crate) value: Box<PathOrigin>,
-    pub(crate) nullish: bool,
 }
 
 /// Where a `process.env` write sits relative to the code it must dominate.
@@ -117,6 +116,7 @@ pub(crate) struct PathProvenance {
     pub(crate) arg_member_effects: FxHashMap<u32, Vec<(usize, MemberEffect)>>,
     pub(crate) arg_closed_objects: FxHashMap<u32, Vec<usize>>,
     pub(crate) arg_closed_members: FxHashMap<u32, Vec<(usize, String)>>,
+    pub(crate) call_guards: FxHashMap<u32, Vec<ArrayGuard>>,
     pub(crate) arg_member_paths: FxHashMap<u32, Vec<(usize, String, PathOrigin)>>,
     pub(crate) arg_paths: FxHashMap<u32, Vec<(usize, PathOrigin)>>,
     /// Calls that forward their enclosing mock implementation's rest arguments unchanged.

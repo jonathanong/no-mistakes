@@ -1,0 +1,12 @@
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { main } from "./pages.mts";
+import { validateArtifact } from "./artifact.mts";
+const root = mkdtempSync(join(tmpdir(), "pages-"));
+const argv = ['cleanup'];
+argv[0] = 'validate';
+argv.push(process.cwd());
+await main(argv);
+validateArtifact(root);
+validateArtifact(root, { maxFiles: 1 });

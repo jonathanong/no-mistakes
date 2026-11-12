@@ -4,6 +4,7 @@
 //! rule that reads these facts then keeps its finding.
 mod argument_source;
 mod call_args;
+mod call_guards;
 mod concurrent;
 mod config_keys;
 mod consumers;
@@ -62,6 +63,10 @@ pub(super) fn collect(
                         .extend(concurrent::callbacks(semantic, call));
                 }
                 projector.call_offset = call.span.start;
+                let guards = call_guards::collect(&mut projector, node.id());
+                if !guards.is_empty() {
+                    result.call_guards.insert(call.span.start, guards);
+                }
                 if let Some(spied) =
                     pass_through::forwards_mock_arguments(semantic, node.id(), call)
                 {
@@ -77,10 +82,9 @@ pub(super) fn collect(
                     call_args::record_arg_text(&source, call, &mut result, texts);
                     let paths = call_args::argument_paths(&mut projector, call, &mut result);
                     if !paths.is_empty() {
-                        if paths
-                            .iter()
-                            .any(|(_, path)| path.atoms().iter().any(|atom| atom.env.is_some()))
-                            && local_env::immediate_read(semantic, node.id())
+                        if paths.iter().any(|(_, path)| {
+                            path.atoms().iter().any(|atom| atom.environment().is_some())
+                        }) && local_env::immediate_read(semantic, node.id())
                         {
                             result.immediate_env_reads.insert(call.span.start);
                         }

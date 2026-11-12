@@ -375,16 +375,49 @@ object-pattern parameter, such as `function scan({ opts }) { readdirSync(opts.ro
 stays unresolved too. The pattern key is not replaced by the accessed property, so
 an owned sibling `root` cannot clear a live `opts.root`. A property beside a
 rest binding can still be proven. Production modules that
-no selected test imports do not add callers. An unreadable module that no
-test, `setupFiles`, or `globalSetup` reaches does not erase a caller proof,
+no selected test imports do not add callers. This includes a separate CLI entry
+that passes `process.argv` to the exported helper: colocated `*.test.mts` files
+can call that helper with a top-level `const` temporary root or a root assigned
+in `beforeEach`. Several test calls still require every test-origin argument to
+be bounded. Importing the CLI from a selected test makes its calls count again.
+
+A guarded helper call is excluded from the caller proof when every visible
+selected-test caller supplies a literal argument array that contradicts a required
+strict equality. For example, `main(['cleanup'])` cannot reach
+`if (command === 'validate' && args.length === 1) validateArtifact(args[0]!)`
+after `const [command, ...args] = argv`. The destructure must be the first
+statement of the function body, with only simple element bindings and no defaults.
+The function must have exactly one plain parameter, used only in that destructure.
+The command binding must be immutable; rest-length proof also requires only
+length comparisons and direct element reads. Mutating or escaping the rest
+array prevents the length proof. Unknown argument arrays, matching command/length
+pairs, and unknowable callers keep the call in the proof. This bounded guard
+check uses the shared parsed facts and does not evaluate the function. Guard
+pruning applies only in helper files outside configured root files and setup
+entry files, whose entry invocations can supply unknown arguments.
+
+An unreadable module that no test, `setupFiles`, or `globalSetup` reaches does not erase a caller proof,
 including a lint config such as `.dependency-cruiser.cjs` loaded only from the
 runner config. The same unreadable module imported by a test that reaches the
 function keeps the finding.
 
 An object argument must expose the requested property in a literal object, without
-mutation or escape. Method and
-constructor calls on that object prevent this proof because they may mutate its
-properties. A member written through an object or array assignment target,
+mutation or escape. A local `const` options object can carry that property into
+its single direct call. Keep the object inside the test callback that allocates
+it; mutation, another consumer, or sharing a carrier across test executions
+keeps the root unresolved. A direct env value captured inside the options object
+also stays unresolved; pass the proven root binding instead. For example:
+
+```ts
+it("checks a bounded directory", () => {
+  const root = mkdtempSync(join(tmpdir(), "scan-"));
+  const options = { root, paths: ["rules"] };
+  validate(options);
+});
+```
+
+Method and constructor calls on that object prevent this proof because they may
+mutate its properties. A member written through an object or array assignment target,
 including nested patterns, rest elements, defaults, and loop targets, also
 invalidates ownership. For example, `({ root: options.root } = { root: process.cwd() })`
 before `readdirSync(options.root)` remains reported even when the caller supplied
@@ -560,9 +593,20 @@ A named helper can receive `process.env.X` as an argument when the value is
 proven owned at that argument read. The same dominance and poison checks apply
 to direct calls and named forwarding helpers.
 
-The env read must happen at the call: a value captured into a module- or
-function-level `const` (`const dir = process.env.X ?? "."`) keeps the finding, as
-does a `beforeAll`/`beforeEach` registered inside a branch.
+A module-level `const` can capture an owned env root from an unconditional earlier
+write in that module or one of its static imports. A selected Vitest `setupFiles`
+module can also establish ownership when every matching project writes the root
+before importing the capturing module. Import cycles keep the finding.
+The proof applies at the capture, so a test body or `beforeAll`/`beforeEach`
+write after a static import does not establish ownership. A setup module that
+imports the capturing module before its write also retains the finding.
+Function-local captures, captured env aliases passed as helper arguments, direct
+env values stored inside const object properties, and hooks registered inside
+branches remain unresolved. If any configured setup or selected runner configuration
+loads the capturing module, the setup proof stays unresolved even when another
+setup writes an owned root. Keep root setup independent of the module under test.
+Naming an environment variable or fallback in a diagnostic does not establish
+ownership; the captured value still needs an owned write before its initialization.
 
 A hook setup-and-restore pair remains unresolved: assigning an owned root in
 `beforeAll` and restoring the prior value (or deleting the variable) in
@@ -680,6 +724,27 @@ on caller ownership.
 
 Long call chains use a cycle-safe traversal of the canonical graph without a
 fixed caller-state cutoff. Cycles need an independently owned entry argument.
+
+## Test-originating callers
+
+Parameter ownership is decided by call paths starting in the selected tests and
+setup files. Every such path must supply an owned fixture or `mkdtemp` root.
+A production or CLI caller outside those paths does not invalidate that proof,
+including a caller that supplies a repository path, forwards through a helper,
+or reads its root from CLI arguments. The same rule applies to a destructured
+root such as `check({ root, paths })`. Explicit `file` or `glob` roots use the
+same execution scope: the conservative environment-write fallback used when no
+runner config is selected does not add unrelated production callers.
+
+Calling production code from a test makes that path relevant. A test that calls
+`production()` when `production(root = process.cwd())` forwards to the scanner
+retains the finding. So does a test that forwards unknown CLI arguments or passes
+an unknown or live root alongside otherwise owned callers. Importing a module
+also executes its top level; a production call at that top level is relevant
+when a test imports it.
+An indirect test reference through a barrel remains unproven even when unrelated
+production code also consumes the scanner. Call the scanner directly with an
+owned root so every test-originating route can be checked.
 
 ## Pass-through mocks
 

@@ -112,6 +112,7 @@ pub(super) fn assemble(fixture: Fixture<'_>) -> Owners<'_> {
         fixture_dirs: Vec::new(),
         nodes: fixture.nodes,
         escaped: fixture.escaped,
+        environment_consumed: fixture.consumed.clone(),
         consumed: fixture.consumed,
         graph: fixture.graph,
         test_closure: FxHashSet::default(),

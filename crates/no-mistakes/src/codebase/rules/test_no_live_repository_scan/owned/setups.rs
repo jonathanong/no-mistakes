@@ -10,6 +10,11 @@ use std::path::{Path, PathBuf};
 
 pub(super) use setups_gap::SetupGap;
 
+pub(super) enum ReadSite<'a> {
+    Call(&'a Path),
+    Capture { test: &'a Path, module: &'a Path },
+}
+
 #[derive(Clone)]
 struct Project {
     filter: ProjectTestFilter,
@@ -131,13 +136,48 @@ impl ConfiguredSetups {
         consumed: &Consumed,
         fixture_dirs: &[String],
     ) -> bool {
-        let relative = crate::codebase::ts_source::relative_slash_path(&self.root, file);
+        self.owns_at(
+            ReadSite::Call(file),
+            name,
+            facts,
+            imports,
+            consumed,
+            fixture_dirs,
+        )
+    }
+
+    pub(super) fn owns_at(
+        &self,
+        site: ReadSite<'_>,
+        name: &str,
+        facts: &dyn TsFactLookup,
+        imports: &ImportedWrites<'_>,
+        consumed: &Consumed,
+        fixture_dirs: &[String],
+    ) -> bool {
+        let (test, capture, captured) = match site {
+            ReadSite::Call(file) => (file, file, false),
+            ReadSite::Capture { test, module } => (test, module, true),
+        };
+        let relative = crate::codebase::ts_source::relative_slash_path(&self.root, test);
         let mut matched = false;
         for project in &self.projects {
             if project.filter.is_match(&relative) {
                 matched = true;
+                if captured
+                    && (project
+                        .config
+                        .as_ref()
+                        .is_some_and(|config| imports.loads_module(config, capture))
+                        || project
+                            .setups
+                            .iter()
+                            .any(|setup| imports.loads_module(setup, capture)))
+                {
+                    return false;
+                }
                 if !project.setups.iter().any(|setup| {
-                    imports.module_owns_before(setup, file, name, facts, consumed, fixture_dirs)
+                    imports.module_owns_before(setup, capture, name, facts, consumed, fixture_dirs)
                 }) {
                     return false;
                 }

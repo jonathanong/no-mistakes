@@ -37,9 +37,13 @@ impl Owners<'_> {
     pub(super) fn env_owned(
         &self,
         name: &str,
+        capture: Option<u32>,
         site: &ResolvedCallSite,
         facts: &dyn TsFactLookup,
     ) -> bool {
+        if let Some(offset) = capture {
+            return self.captured_env_owned(name, offset, site, facts);
+        }
         if !self.env.all_owned(name) {
             return self.local_env_owned(name, site, facts);
         }
@@ -63,7 +67,7 @@ impl Owners<'_> {
                                 &entry.file,
                                 name,
                                 facts,
-                                &self.consumed,
+                                &self.environment_consumed,
                                 &self.fixture_dirs,
                             )
                             || self.setups.owns(
@@ -71,10 +75,55 @@ impl Owners<'_> {
                                 name,
                                 facts,
                                 &self.imported,
-                                &self.consumed,
+                                &self.environment_consumed,
                                 &self.fixture_dirs,
                             )
                     })
+            })
+    }
+}
+
+impl Owners<'_> {
+    pub(super) fn captured_env_owned(
+        &self,
+        name: &str,
+        offset: u32,
+        site: &ResolvedCallSite,
+        facts: &dyn TsFactLookup,
+    ) -> bool {
+        if !self.env.all_owned(name) || self.closure_unknown(&site.file) {
+            return false;
+        }
+        let Some(paths) = facts.get_ts_facts(&site.file).and_then(path_provenance) else {
+            return false;
+        };
+        if env::dominated(paths, name, offset, &self.fixture_dirs)
+            || self.imported.owns(
+                &site.file,
+                name,
+                facts,
+                &self.environment_consumed,
+                &self.fixture_dirs,
+            )
+        {
+            return true;
+        }
+        let Some(entries) = self.entries(site_source_node(site)) else {
+            return false;
+        };
+        !entries.is_empty()
+            && entries.iter().all(|entry| {
+                self.setups.owns_at(
+                    super::setups::ReadSite::Capture {
+                        test: &entry.file,
+                        module: &site.file,
+                    },
+                    name,
+                    facts,
+                    &self.imported,
+                    &self.environment_consumed,
+                    &self.fixture_dirs,
+                )
             })
     }
 }

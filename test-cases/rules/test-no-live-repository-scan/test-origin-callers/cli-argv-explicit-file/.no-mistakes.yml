@@ -1,0 +1,7 @@
+rules:
+  - rule: test-no-live-repository-scan
+    scope: repository
+    options:
+      roots:
+        - file: pages.mts
+        - file: pages.test.mts

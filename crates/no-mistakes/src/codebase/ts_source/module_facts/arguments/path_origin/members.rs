@@ -35,6 +35,9 @@ impl<'a> Projector<'a, '_> {
                 }
                 let init = self.const_init(id)?;
                 let origin = self.member_origin(init, key, depth + 1)?;
+                if origin.atoms().iter().any(|atom| atom.env.is_some()) {
+                    return None;
+                }
                 self.member_value(origin, object, key)
             }
             Expression::ObjectExpression(object) => {

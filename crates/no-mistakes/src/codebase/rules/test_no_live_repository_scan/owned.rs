@@ -3,6 +3,7 @@
 //! Recall first: an unreadable module that a test root can use to reach the
 //! function keeps the finding. A module outside that closure does not.
 mod argument_step;
+mod call_guards;
 mod caller_escape;
 mod cause;
 mod closure;
@@ -71,6 +72,7 @@ pub(super) struct Owners<'g> {
     escaped: escapes::Escapes,
     /// Files consumed other than by named static imports used only as calls.
     consumed: consumers::Consumed,
+    environment_consumed: consumers::Consumed,
     graph: &'g DepGraph,
     /// Test files, setupFiles, globalSetup, and their import closure.
     test_closure: FxHashSet<PathBuf>,
@@ -121,19 +123,15 @@ impl<'g> Owners<'g> {
             }
         }
         let relevant_files = &scope.files;
-        let mut caller_files = scope.test_closure.clone();
-        caller_files.extend(
-            scope
-                .sources
-                .iter()
-                .filter_map(NodeId::as_file)
-                .map(std::path::Path::to_path_buf),
-        );
+        let mut caller_files = scope.proof_files.clone();
         caller_files.extend(scope.config_files.iter().flatten().cloned());
         let escaped = escapes::Escapes::new(facts, graph_files, &caller_files);
-        let consumed =
-            consumers::Consumed::new(graph, facts, graph_files, &caller_files, resolution);
-        Self {
+        let mut consumer_files = relevant_files.clone();
+        consumer_files.extend(caller_files.iter().cloned());
+        let environment_consumed =
+            consumers::Consumed::new(graph, facts, graph_files, &consumer_files, resolution);
+        let consumed = environment_consumed.narrowed(&caller_files);
+        let mut owners = Self {
             callers,
             nodes,
             graph,
@@ -156,7 +154,20 @@ impl<'g> Owners<'g> {
             fixture_dirs: environment.fixture_dirs,
             escaped,
             consumed,
-        }
+            environment_consumed,
+        };
+        owners.prune_infeasible_callers(facts);
+        owners
+    }
+
+    /// A named function, referenced only as a direct callee, in a module
+    /// every consumer imports by name and only calls.
+    fn proven_target(&self, source: &NodeId) -> bool {
+        let NodeId::Symbol { file, symbol, .. } = source else {
+            return false;
+        };
+        !self.escaped.contains(file, symbol)
+            && !symbol_block::blocks(&self.environment_consumed, file, symbol)
     }
 
     pub(super) fn report_scan_stats(&self) {

@@ -14,6 +14,7 @@ impl PathOrigin {
             env: None,
             env_diagnostic: None,
             captured_getter: None,
+            captured_env: None,
             getter: None,
             root_tails: Vec::new(),
             param: None,
@@ -38,6 +39,7 @@ impl PathOrigin {
             env: None,
             env_diagnostic: None,
             captured_getter: None,
+            captured_env: None,
             getter: None,
             root_tails: Vec::new(),
             param: None,
@@ -67,6 +69,7 @@ impl PathOrigin {
             env: None,
             env_diagnostic: None,
             captured_getter: None,
+            captured_env: None,
             getter: None,
             root_tails: Vec::new(),
             param: None,
@@ -104,7 +107,10 @@ impl PathOrigin {
         }
         if self.segments.last().is_some_and(|last| last != "..") {
             self.segments.pop();
-        } else if self.anchor == PathAnchor::Temp || self.param.is_some() || self.env.is_some() {
+        } else if self.anchor == PathAnchor::Temp
+            || self.param.is_some()
+            || self.environment().is_some()
+        {
             self.segments.push("..".to_owned());
         }
         self
@@ -143,7 +149,9 @@ impl PathOrigin {
     }
 
     fn append_single(mut self, tail: Self) -> Self {
-        if (self.getter.is_some() || self.env.is_some() || self.anchor == PathAnchor::Temp)
+        if (self.getter.is_some()
+            || self.environment().is_some()
+            || self.anchor == PathAnchor::Temp)
             && (tail.dynamic || tail.anchor != PathAnchor::Relative)
         {
             self.root_tails.push(tail.clone());

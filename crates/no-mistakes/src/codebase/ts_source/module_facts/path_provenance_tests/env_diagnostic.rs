@@ -6,6 +6,12 @@ fn captured_environment_details_do_not_restore_proof_provenance() {
     let captured = facts.origin("readdirSync(captured)");
     assert_eq!(captured.anchor, PathAnchor::Unknown);
     assert_eq!(captured.env, None);
+    let capture = captured.captured_env.as_deref().unwrap();
+    assert_eq!(capture.name, "ROOT");
+    assert_eq!(
+        capture.offset,
+        facts.source.find("process.env.ROOT ??").unwrap() as u32
+    );
     let hint = captured.env_diagnostic.unwrap();
     assert_eq!(hint.name, "ROOT");
     assert_eq!(hint.fallback.as_deref(), Some("./tmp/example"));
@@ -53,6 +59,7 @@ fn captured_alternatives_do_not_claim_a_unique_environment_root() {
         let origin = facts.origin(call);
         assert_eq!(origin.anchor, PathAnchor::Unknown);
         assert_eq!(origin.env, None);
+        assert!(origin.captured_env.is_none(), "{call}");
         assert!(origin.env_diagnostic.is_none(), "{call}");
         assert!(origin.captured_getter.is_none(), "{call}");
     }

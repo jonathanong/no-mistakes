@@ -38,7 +38,7 @@ impl Owners<'_> {
             .entries(source)
             .unwrap_or_default()
             .into_iter()
-            .filter(|entry| !self.env_argument_owned(&hint.name, entry, facts))
+            .filter(|entry| !self.env_argument_owned(&hint.name, None, entry, facts))
             .map(|entry| Entry {
                 file: entry.file.clone(),
                 offset: Some(entry.offset),
@@ -57,7 +57,7 @@ impl Owners<'_> {
                 concrete: false,
             });
         }
-        let reason = if self.env_owned(&hint.name, site, facts) {
+        let reason = if self.env_owned(&hint.name, None, site, facts) {
             if hint.captured {
                 "does not prove the captured environment read was initialized with an owned root"
             } else {

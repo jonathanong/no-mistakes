@@ -60,7 +60,12 @@ impl<'a> Projector<'a, '_> {
                     if key == "__proto__" || key.contains('.') {
                         return (FxHashMap::default(), true);
                     }
-                    let origin = self.origin(&property.value, depth + 1);
+                    let mut origin = self.origin(&property.value, depth + 1);
+                    if object.span.start < self.call_offset
+                        && origin.atoms().iter().any(|atom| atom.env.is_some())
+                    {
+                        origin = PathOrigin::unknown();
+                    }
                     paths.insert(key.into_owned(), origin);
                 }
             }

@@ -22,7 +22,7 @@ impl Owners<'_> {
         {
             return Step::Block(caller_cause(caller, ArgBlock::Variable, text));
         }
-        if argument.relative && argument.env.is_some() {
+        if argument.relative && argument.environment().is_some() {
             return Step::Block(caller_cause(caller, ArgBlock::Variable, text));
         }
         if let Some(block) = arg_block(argument, fixture_dirs) {
@@ -31,12 +31,12 @@ impl Owners<'_> {
         if classify(Some(argument), fixture_dirs) == Verdict::Allowed {
             return Step::Seed;
         }
-        if let Some(name) = argument.env.as_deref() {
+        if let Some((name, capture)) = argument.environment() {
             if !argument
                 .root_tails
                 .iter()
                 .all(|tail| self.safe_suffix(tail, caller, facts, 0))
-                || !self.env_argument_owned(name, caller, facts)
+                || !self.env_argument_owned(name, capture, caller, facts)
             {
                 let block = live_or_variable(argument, fixture_dirs);
                 return Step::Block(caller_cause(caller, block, text));

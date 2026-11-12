@@ -1,0 +1,11 @@
+import { beforeEach, it } from "vitest";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { validate } from "./scan.mts";
+let root: string;
+beforeEach(() => { root = mkdtempSync(join(tmpdir(), "owned-")); });
+it("first", () => validate(root));
+it("second", () => validate(root));
+it("third", () => validate(root));
+it("fourth", () => validate(root));

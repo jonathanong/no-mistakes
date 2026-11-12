@@ -60,7 +60,7 @@ pub(super) fn apply(
                     &target,
                     &selected,
                 ) {
-                    consumed.insert(&target);
+                    consumed.insert_from(file, &target);
                 }
             }
             Choice::Ignore => {}
@@ -76,7 +76,7 @@ pub(super) fn apply(
 
 /// Path facts were dropped. The file stays unproven without a line-1 unread module.
 pub(super) fn note_dropped(consumed: &mut Consumed, file: &Path, facts: &TsFileFacts) {
-    consumed.insert(file);
+    consumed.insert_from(file, file);
     if debug_enabled() {
         trace(
             "(path facts dropped)",
