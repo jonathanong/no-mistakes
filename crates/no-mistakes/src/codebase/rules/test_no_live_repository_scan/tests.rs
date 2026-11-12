@@ -26,7 +26,12 @@ fn origin(anchor: PathAnchor, segments: &[&str]) -> PathOrigin {
 #[test]
 fn classify_separates_bounded_live_and_unresolved_roots() {
     let dirs = DEFAULT_FIXTURE_DIRS;
-    assert!(matches!(classify(None, dirs), Verdict::Unresolved(_)));
+    assert_eq!(
+        classify(None, dirs),
+        Verdict::Unresolved(
+            "the path argument was not recorded (spread argument or unparsed module)"
+        )
+    );
     let temp = origin(PathAnchor::Temp, &["x"]);
     assert_eq!(classify(Some(&temp), dirs), Verdict::Allowed);
     assert!(matches!(
