@@ -1,0 +1,315 @@
+{
+  "source": "GitHub Actions historical jobs and uploaded native-build-diagnostics-macOS/native-api-tests-macOS artifacts",
+  "runner": {
+    "image": "20261104.0514.1",
+    "cpuModel": "Apple M1 (Virtual)",
+    "cpus": 3,
+    "totalMemoryBytes": 7516192768,
+    "rustc": "1.99.1 (58cf8f9c3 2026-10-13)",
+    "cacheHit": true,
+    "cargoBuildJobs": null,
+    "swapObserved": false
+  },
+  "observations": [
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43115102036",
+      "headSha": "02b7670af8d024b87fa38ff509fac0f9db5b7549",
+      "conclusion": "failure",
+      "apiTests": {
+        "passed": 631,
+        "failed": 0,
+        "skipped": 2,
+        "slowestPassedMs": 6368.8
+      },
+      "apiFailure": "All 631 executed tests passed (2 skipped); timing report gate failed because one passing bundled test took 6368.8 ms, over 5000 ms.",
+      "resource": {
+        "minimumFreeMemoryBytes": 40747008,
+        "maximumLoadAverage1m": 51.16845703125,
+        "maximumCargoElapsedPeakRssBytes": 3221585920
+      },
+      "steps": {
+        "build": {
+          "startedAt": "2026-11-11T23:03:03Z",
+          "completedAt": "2026-11-11T23:12:33Z",
+          "stepConclusion": "success",
+          "stepElapsedSeconds": 570,
+          "censored": false
+        },
+        "rust": {
+          "startedAt": "2026-11-11T23:12:35Z",
+          "completedAt": "2026-11-11T23:25:32Z",
+          "stepConclusion": "success",
+          "stepElapsedSeconds": 777,
+          "censored": false
+        },
+        "api": {
+          "startedAt": "2026-11-11T23:25:33Z",
+          "completedAt": "2026-11-11T23:29:53Z",
+          "stepConclusion": "success",
+          "stepElapsedSeconds": 260,
+          "censored": false
+        }
+      },
+      "apiTimingGateSeconds": 5000,
+      "buildSeconds": 570,
+      "platformRustSeconds": 777,
+      "apiSeconds": 260
+    },
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43119297972",
+      "headSha": "6f49bfa11404882350ce7e5c0a5aae079d002ec3",
+      "conclusion": "failure",
+      "platformTimeoutSeconds": 1080,
+      "progress": [
+        "149 tests passed in 10.62s",
+        "2 filtered tests passed in 2.38s",
+        "Snapshot test cases continued passing until timeout."
+      ],
+      "resource": {
+        "minimumFreeMemoryBytes": 41615360,
+        "maximumLoadAverage1m": 37.44482421875,
+        "maximumCargoElapsedPeakRssBytes": 3130966016
+      },
+      "steps": {
+        "build": {
+          "startedAt": "2026-11-11T23:24:34Z",
+          "completedAt": "2026-11-11T23:34:20Z",
+          "stepConclusion": "success",
+          "stepElapsedSeconds": 586,
+          "censored": false
+        },
+        "rust": {
+          "startedAt": "2026-11-11T23:34:23Z",
+          "completedAt": "2026-11-11T23:52:36Z",
+          "stepConclusion": "failure",
+          "stepElapsedSeconds": 1093,
+          "censored": true
+        },
+        "api": {
+          "startedAt": "2026-11-11T23:52:36Z",
+          "completedAt": "2026-11-11T23:52:36Z",
+          "stepConclusion": "skipped",
+          "stepElapsedSeconds": 0,
+          "censored": false
+        }
+      },
+      "buildSeconds": 586,
+      "platformRustSeconds": 1093,
+      "apiSeconds": 0
+    },
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43119502783",
+      "headSha": "eb62f8de87e25828bde59aff510072ee8767f27b",
+      "conclusion": "success",
+      "apiTests": {
+        "passed": 631,
+        "failed": 0,
+        "skipped": 2
+      },
+      "resource": {
+        "minimumFreeMemoryBytes": 47218688,
+        "maximumLoadAverage1m": 37.51611328125,
+        "maximumCargoElapsedPeakRssBytes": 3235725312
+      },
+      "steps": {
+        "build": {
+          "startedAt": "2026-11-11T23:25:16Z",
+          "completedAt": "2026-11-11T23:32:33Z",
+          "stepConclusion": "success",
+          "stepElapsedSeconds": 437,
+          "censored": false
+        },
+        "rust": {
+          "startedAt": "2026-11-11T23:32:35Z",
+          "completedAt": "2026-11-11T23:45:47Z",
+          "stepConclusion": "success",
+          "stepElapsedSeconds": 792,
+          "censored": false
+        },
+        "api": {
+          "startedAt": "2026-11-11T23:45:48Z",
+          "completedAt": "2026-11-11T23:48:39Z",
+          "stepConclusion": "success",
+          "stepElapsedSeconds": 171,
+          "censored": false
+        }
+      },
+      "buildSeconds": 437,
+      "platformRustSeconds": 792,
+      "apiSeconds": 171
+    },
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43121821452",
+      "headSha": "fd2a685fabaa3cae5fb7a1baaebcbe8e02ba0454",
+      "conclusion": "failure",
+      "apiFailure": "Run real N-API API test hit its 420-second step timeout; duration report then failed because target/native-api-tests.json was absent.",
+      "resource": {
+        "minimumFreeMemoryBytes": 53379072,
+        "maximumLoadAverage1m": 32.0029296875,
+        "maximumCargoElapsedPeakRssBytes": 3280814080
+      },
+      "steps": {
+        "build": {
+          "startedAt": "2026-11-11T23:43:29Z",
+          "completedAt": "2026-11-11T23:49:06Z",
+          "stepConclusion": "success",
+          "stepElapsedSeconds": 337,
+          "censored": false
+        },
+        "rust": {
+          "startedAt": "2026-11-11T23:49:07Z",
+          "completedAt": "2026-11-11T23:58:21Z",
+          "stepConclusion": "success",
+          "stepElapsedSeconds": 554,
+          "censored": false
+        },
+        "api": {
+          "startedAt": "2026-11-11T23:58:21Z",
+          "completedAt": "2026-11-12T00:05:34Z",
+          "stepConclusion": "failure",
+          "stepElapsedSeconds": 433,
+          "censored": true
+        }
+      },
+      "apiTimeoutSeconds": 420,
+      "buildSeconds": 337,
+      "platformRustSeconds": 554,
+      "apiSeconds": 433
+    },
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43122601344",
+      "headSha": "24931edc0e7ad432769803bf9d0652991fe91d37",
+      "conclusion": "failure",
+      "platformTimeoutSeconds": 1080,
+      "progress": [
+        "149 tests passed in 13.12s",
+        "2 filtered tests passed in 2.28s",
+        "Snapshot test cases continued passing until timeout."
+      ],
+      "resource": {
+        "minimumFreeMemoryBytes": 69779456,
+        "maximumLoadAverage1m": 35.25048828125,
+        "maximumCargoElapsedPeakRssBytes": 3361603584
+      },
+      "steps": {
+        "build": {
+          "startedAt": "2026-11-11T23:53:34Z",
+          "completedAt": "2026-11-12T00:00:30Z",
+          "stepConclusion": "success",
+          "stepElapsedSeconds": 416,
+          "censored": false
+        },
+        "rust": {
+          "startedAt": "2026-11-12T00:00:32Z",
+          "completedAt": "2026-11-12T00:18:45Z",
+          "stepConclusion": "failure",
+          "stepElapsedSeconds": 1093,
+          "censored": true
+        },
+        "api": {
+          "startedAt": "2026-11-12T00:18:45Z",
+          "completedAt": "2026-11-12T00:18:45Z",
+          "stepConclusion": "skipped",
+          "stepElapsedSeconds": 0,
+          "censored": false
+        }
+      },
+      "buildSeconds": 416,
+      "platformRustSeconds": 1093,
+      "apiSeconds": 0
+    },
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43122608216",
+      "headSha": "1f2098dbb9a49cc460da90bbeb19e4340219b8de",
+      "conclusion": "success",
+      "apiTests": {
+        "passed": 631,
+        "failed": 0,
+        "skipped": 2
+      },
+      "resource": {
+        "minimumFreeMemoryBytes": 50708480,
+        "maximumLoadAverage1m": 25.4521484375,
+        "maximumCargoElapsedPeakRssBytes": 3236610048
+      },
+      "steps": {
+        "build": {
+          "startedAt": "2026-11-11T23:54:06Z",
+          "completedAt": "2026-11-12T00:03:05Z",
+          "stepConclusion": "success",
+          "stepElapsedSeconds": 539,
+          "censored": false
+        },
+        "rust": {
+          "startedAt": "2026-11-12T00:03:07Z",
+          "completedAt": "2026-11-12T00:14:59Z",
+          "stepConclusion": "success",
+          "stepElapsedSeconds": 712,
+          "censored": false
+        },
+        "api": {
+          "startedAt": "2026-11-12T00:14:59Z",
+          "completedAt": "2026-11-12T00:17:48Z",
+          "stepConclusion": "success",
+          "stepElapsedSeconds": 169,
+          "censored": false
+        }
+      },
+      "buildSeconds": 539,
+      "platformRustSeconds": 712,
+      "apiSeconds": 169
+    },
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43123720380",
+      "headSha": "c72391e2a44b4fc973d3c88caf69a6d136110723",
+      "conclusion": "failure",
+      "buildTimeoutSeconds": 900,
+      "buildStartedAt": "2026-11-12T00:09:35Z",
+      "buildCompletedAt": "2026-11-12T00:24:48Z",
+      "progress": [
+        "Cargo log ended during no-mistakes library rustc/link invocation; no Finished line",
+        "No Rust tests started"
+      ],
+      "resource": {
+        "minimumFreeMemoryBytes": 56295424,
+        "maximumLoadAverage1m": 22.23828125
+      },
+      "steps": {
+        "build": {
+          "startedAt": "2026-11-12T00:09:35Z",
+          "completedAt": "2026-11-12T00:24:48Z",
+          "stepConclusion": "failure",
+          "stepElapsedSeconds": 913,
+          "censored": true
+        },
+        "rust": {
+          "startedAt": "2026-11-12T00:24:50Z",
+          "completedAt": "2026-11-12T00:24:50Z",
+          "stepConclusion": "skipped",
+          "stepElapsedSeconds": 0,
+          "censored": false
+        },
+        "api": {
+          "startedAt": "2026-11-12T00:24:50Z",
+          "completedAt": "2026-11-12T00:24:50Z",
+          "stepConclusion": "skipped",
+          "stepElapsedSeconds": 0,
+          "censored": false
+        }
+      },
+      "buildSeconds": 913,
+      "platformRustSeconds": 0,
+      "apiSeconds": 0
+    }
+  ],
+  "interpretation": "Deadlines censor completion and do not establish duration tails. Successful run-to-run variation is large. Rust test timeouts show completed test progress continuing through the deadline, not an identified single hanging test. Memory samples show low free memory and no swap, but do not prove that memory pressure caused the failures.",
+  "productionExportScenarios": [
+    "platform-consumed",
+    "namespace-keyof-helper",
+    "selector-advisory-grouping",
+    "selector-advisory-cross-origin",
+    "selector-advisory-suppression",
+    "selector-advisory-default",
+    "external-star-exports"
+  ]
+}

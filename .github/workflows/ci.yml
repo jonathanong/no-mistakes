@@ -553,7 +553,7 @@ jobs:
     if: ${{ needs.changes.outputs.docs-only != 'true' }}
     runs-on: ${{ matrix.os }}
     # Native builds, snapshot replay, API tests and cleanup share this budget.
-    timeout-minutes: 35
+    timeout-minutes: 60
     permissions:
       contents: read
       actions: read
@@ -636,9 +636,9 @@ jobs:
       # Rewrite crate-type in this job only so one rustc emits the CLI rlib
       # and Node cdylib. Do not commit that crate-type: Linux coverage should
       # not also link a cdylib.
-      # The same macOS head passed in 7m42s, then exceeded the former 12-minute cap.
+      # Hosted macOS runs exceeded the former build and Rust step deadlines.
       - name: Build native CLI and N-API addon
-        timeout-minutes: 15
+        timeout-minutes: 20
         shell: bash
         env:
           NATIVE_RUST_CACHE_HIT: ${{ steps.native-rust-cache.outputs.cache-hit }}
@@ -669,7 +669,7 @@ jobs:
           path: target/native-build-diagnostics
 
       - name: Run platform-specific Rust tests
-        timeout-minutes: 18
+        timeout-minutes: 25
         shell: bash
         env:
           # Match the preceding build's N-API setting; Cargo may still
@@ -700,7 +700,7 @@ jobs:
         run: '"${{ matrix.binary }}" --version'
 
       - name: Run real N-API API test
-        timeout-minutes: 7
+        timeout-minutes: 10
         id: real-napi
         shell: bash
         run: |

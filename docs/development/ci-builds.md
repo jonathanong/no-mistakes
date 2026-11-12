@@ -114,14 +114,12 @@ the `cli_rrb_snapshot_` subset in the package-config suite, so
 those jobs do not also compile `suite_cli_rules` inside the bounded native step.
 Linux runs the same cases in the full Rust coverage suite.
 
-Native macOS and Windows jobs have a 35-minute aggregate deadline, a
-15-minute build step, and an 18-minute platform Rust step. The shared 15-minute
-build cap keeps the bound literal and certifiable on both Windows and macOS; the
-new variance evidence is macOS-specific. The real-addon API step has a shared
-seven-minute literal deadline on Windows and macOS, so
-the repository checks can prove its bound. The Linux
-JavaScript job has 16 minutes overall and four minutes for its real-addon step.
-These deadlines retain every validation command.
+Native macOS and Windows jobs have a 60-minute aggregate deadline, a
+20-minute build step, a 25-minute platform Rust step, and a ten-minute real-addon
+API step. The three workload caps total 55 minutes; five more minutes reserve
+setup, artifact reporting, and cleanup. These literal shared bounds retain every
+validation command and the repository can certify them. Linux JavaScript keeps
+its 16-minute job and four-minute real-addon step.
 
 Saved observations in `test-cases/rust-validation/fixture` record job metadata
 and log excerpts from the supplied hosted runs. Five green macOS builds took
@@ -133,10 +131,10 @@ image. This does not identify the source of the variance: CPU and RSS samples
 and linker phase timings are unavailable, and only the successful attempt
 reported a linker warning. The failed attempt is censored, not a completed
 runtime measurement. One completed and one censored sample do not establish a
-tail bound. Completed platform Rust steps reached 853 seconds. The 15-minute
-build cap adds headroom while keeping the build bounded and preserving native
-coverage; it is not a runtime guarantee or a diagnosis of the variance. The
-Rust step reserves 120 seconds beyond its completed observations.
+tail bound. Completed platform Rust steps reached 853 seconds. The former 15-minute
+build cap added headroom while keeping the build bounded and preserving native
+coverage; it is not a runtime guarantee or a diagnosis of the variance. The former
+Rust step reserved 120 seconds beyond those completed observations.
 
 The native build wrapper retains Cargo's verbose output and `--timings` report,
 the Rust cache-hit result, compiler/linker versions, runner image and CPU/memory
@@ -168,12 +166,11 @@ Normal completion retains all output and lets the log flush; compiler stderr is
 never redirected into stdout. Saved prolific-writer and slow-destination fixtures
 exercise these cases in `node --test .github/scripts/build-native.test.cjs`.
 
-A green macOS job spent 1,502 seconds before starting its API step; adding its
-420-second API budget and 120 seconds for reporting and cleanup requires
-2,042 seconds. This justifies the native job's narrow 35-minute exception to
-the repository's 30-minute CI job cap; the pre-existing benchmark build
-retains its separate 60-minute cap. Each job remains below its step sum,
-and every step remains within its job deadline.
+Earlier observations justified the former 35-minute native job exception. The
+current 60-minute exception covers the complete bounded workload and setup
+reserve above. It remains below the sum of every step deadline; each individual
+step remains within the aggregate. These budgets are safety bounds, not runtime
+guarantees or sums of independently observed maxima.
 
 Windows run `42660408988` passed 629 tests in 357.59 seconds but reached the
 six-minute API-step deadline. Its separate fixture requires 30 seconds for
@@ -364,3 +361,41 @@ CLI size fell from 1,219,707,480 to 308,865,720 bytes; addon size from
 outputs and async addon responses matched. Clean CLI builds were 34–39 seconds
 faster; the dependency-warm addon rebuild was 32–33 seconds faster. These are
 again two paired observations with the scope and limitations stated above.
+
+## Native macOS timeout progress
+
+[Saved hosted observations](../../test-cases/rust-validation/fixture/macos-native-20261112-timeouts.json)
+record seven runs. Recent macOS runs exceeded both the former 15-minute build cap and
+18-minute Rust cap. The Rust failure compiled its first test binary in 12 minutes
+58 seconds, then continued passing snapshot tests until cancellation. It did not
+stall between test binaries. The build failure remained in the native library
+compile/link command when it was cancelled. Existing symbol-free development and
+test profiles remain unchanged. The evidence does not establish a memory or
+linker root cause, and no automatic retries are added.
+
+| Run | Build step | Platform Rust step | API step | Outcome |
+| --- | ---: | ---: | ---: | --- |
+| `43119502783` | 437 s | 792 s | 171 s | Green main |
+| `43122608216` | 539 s | 712 s | 169 s | Green main |
+| `43115102036` | 570 s | 777 s | 260 s | Passed tests; timing gate failed |
+| `43119297972` | 586 s | 1,093 s | Skipped | Rust timeout |
+| `43122601344` | 416 s | 1,093 s | Skipped | Rust timeout |
+| `43121821452` | 337 s | 554 s | 433 s | API timeout |
+| `43123720380` | 913 s | Skipped | Skipped | Build timeout |
+
+These are step wall times, including cancellation grace for timed-out steps.
+The first Rust test compilation took 465 and 527 seconds in the two green runs,
+versus 778 seconds in `43122601344`. The green PostgreSQL snapshot groups took
+166.57 and 183.33 seconds; the failed run spent over 229 seconds replaying
+snapshots before cancellation, with more work still to run. Thus the Rust growth
+includes both compilation and snapshot execution. Both green API runs and the
+completed timing-gate failure ran 631 passing tests and two skipped tests; the
+comparison does not show a test-count increase explaining the variation.
+
+One API attempt reached 433 seconds without writing its JSON report; its
+missing-report check failed. A different completed report identified a 6,368.8 ms passing test that
+bundled seven production-export fixture scenarios. Those scenarios now register
+individually, retaining each async CJS, ESM, batch, and CLI assertion. The
+5,000 ms gate still fails Linux and macOS, Windows still reports threshold
+warnings, and missing or malformed reports still fail everywhere. The larger
+API step budget does not change any test deadline or the timing gate.

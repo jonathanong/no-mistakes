@@ -305,8 +305,8 @@ test("native API timeout leaves startup and teardown room after the observed Win
   const native = workflow.split("\n  native-tests:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
   const seconds = stepBudgetSeconds(native, "Run real N-API API test", "Windows");
   assert.ok(seconds >= required, "native API step must include launcher/teardown reserve");
-  assert.ok(seconds <= 420, "keep the correction bounded rather than removing its deadline");
-  assert.match(native, /\n    timeout-minutes: 35\n/);
+  assert.ok(seconds <= 600, "keep the correction bounded rather than removing its deadline");
+  assert.match(native, /\n    timeout-minutes: 60\n/);
   const linux = workflow.split("\n  native-tests:\n")[0];
   assert.match(linux, /name: Run real N-API API test\n\s+timeout-minutes: 4\n/);
 });
@@ -400,110 +400,6 @@ test("coverage test step reserves time beyond a passing suite cancelled at its d
   assert.ok(jobBudgetSeconds(job) >= setup + step, "job must cover setup and the full step");
 });
 
-test("native Rust and historical aggregate deadlines retain censored Windows progress", () => {
-  const observed = JSON.parse(
-    readFileSync(
-      path.join(root, "test-cases/rust-validation/fixture/windows-native-platform-timing.json"),
-      "utf8",
-    ),
-  );
-  const job = workflowJob("native-tests");
-  const elapsedBeforeRust =
-    (Date.parse(observed.platformTestsStartedAt) - Date.parse(observed.firstRunnerLogAt)) / 1000;
-  const elapsedRust =
-    (Date.parse(observed.platformTestsTimedOutAt) - Date.parse(observed.platformTestsStartedAt)) /
-    1000;
-  const rust = stepBudgetSeconds(job, "Run platform-specific Rust tests");
-  const historicalApi = 300;
-  assert.equal(observed.platformStepConclusion, "failure");
-  assert.ok(
-    observed.completedSnapshotTests.packageConfig.passed <
-      observed.completedSnapshotTests.packageConfig.selected,
-  );
-  assert.ok(
-    rust >= elapsedRust + observed.remainingSnapshotReserveSeconds,
-    "platform step must leave room for remaining snapshots after the censored passing progress",
-  );
-  assert.ok(rust <= 1080, "keep the native Rust step bounded to eighteen minutes");
-  const required =
-    elapsedBeforeRust +
-    elapsedRust +
-    observed.remainingSnapshotReserveSeconds +
-    historicalApi +
-    observed.postJobReserveSeconds;
-  assert.ok(
-    jobBudgetSeconds(job) >= required,
-    "native aggregate deadline must include setup, Rust progress, remaining snapshots, API and cleanup",
-  );
-  assert.ok(jobBudgetSeconds(job) <= 2100, "retain the native job cap of thirty-five minutes");
-  for (const command of [
-    "--test windows_job_object -- --exact --test-threads=1",
-    "--test macos_invocation",
-    "--test suite_cli_postgres cli_postgres_snapshot_",
-    "--test suite_cli_postgres cli_mrf_snapshot_",
-    "--test suite_cli_package_config cli_pkgcfg_snapshot_",
-    "--test suite_cli_package_config cli_rrb_snapshot_",
-  ]) {
-    assert.ok(job.includes(command), `retain native validation ${command}`);
-  }
-});
-
-test("current native API budgets fit completed Windows setup and Rust work", () => {
-  const observed = JSON.parse(
-    readFileSync(
-      path.join(
-        root,
-        "test-cases/rust-validation/fixture/windows-native-api-completed-timing.json",
-      ),
-      "utf8",
-    ),
-  );
-  const job = workflowJob("native-tests");
-  const api = stepBudgetSeconds(job, "Run real N-API API test", "Windows");
-  const beforeApi = (Date.parse(observed.apiStartedAt) - Date.parse(observed.jobStartedAt)) / 1000;
-  assert.equal(observed.platformStepConclusion, "success");
-  assert.equal(observed.apiStepConclusion, "failure");
-  assert.equal(observed.apiStepTimeoutSeconds, 300);
-  assert.equal(observed.testFiles.passed, observed.testFiles.total);
-  assert.equal(observed.tests.failed, 0);
-  assert.equal(observed.tests.passed + observed.tests.skipped, observed.tests.total);
-  assert.ok(observed.reportedTestDurationSeconds > observed.apiStepTimeoutSeconds);
-  assert.ok(api >= observed.reportedTestDurationSeconds + observed.startupTeardownReserveSeconds);
-  assert.ok(api <= 420, "keep the Windows API phase bounded to seven minutes");
-  assert.equal(stepBudgetSeconds(job, "Run real N-API API test", "macOS"), 420);
-  assert.ok(jobBudgetSeconds(job) >= beforeApi + api + observed.postJobReserveSeconds);
-  assert.ok(jobBudgetSeconds(job) <= 2100);
-  assert.match(job, /node \.github\/scripts\/report-native-api-tests\.cjs/);
-  assert.match(job, /Upload real N-API test durations/);
-});
-
-test("Windows API deadline includes startup and teardown for the expanded suite", () => {
-  const observed = JSON.parse(
-    readFileSync(
-      path.join(
-        root,
-        "test-cases/rust-validation/fixture/windows-native-api-grown-suite-timing.json",
-      ),
-      "utf8",
-    ),
-  );
-  const job = workflowJob("native-tests");
-  const api = stepBudgetSeconds(job, "Run real N-API API test", "Windows");
-  const beforeApi = (Date.parse(observed.apiStartedAt) - Date.parse(observed.jobStartedAt)) / 1000;
-  assert.equal(observed.apiStepConclusion, "failure");
-  assert.equal(observed.apiStepTimeoutSeconds, 360);
-  assert.equal(observed.testFiles.passed, observed.testFiles.total);
-  assert.equal(observed.tests.failed, 0);
-  assert.equal(observed.tests.passed + observed.tests.skipped, observed.tests.total);
-  assert.ok(observed.reportedTestDurationSeconds >= observed.apiStepTimeoutSeconds - 2);
-  assert.ok(api >= observed.reportedTestDurationSeconds + observed.startupTeardownReserveSeconds);
-  assert.ok(api <= 420, "retain a bounded seven-minute API phase");
-  assert.equal(stepBudgetSeconds(job, "Run real N-API API test", "macOS"), 420);
-  assert.ok(jobBudgetSeconds(job) >= beforeApi + api + observed.postJobReserveSeconds);
-  assert.ok(jobBudgetSeconds(job) <= 2100);
-  assert.match(job, /report-native-api-tests\.cjs target\/native-api-tests\.json target/);
-});
-
 test("standalone library deadline reserves cold-cache time beyond the censored passing suite", () => {
   const data = JSON.parse(
     readFileSync(
@@ -591,3 +487,4 @@ test("standalone library deadline reserves cold-cache time beyond the censored p
 });
 
 require("./ci-budget-calibration.test.cjs");
+require("./native-platform-budget.test.cjs");

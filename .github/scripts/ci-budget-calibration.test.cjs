@@ -56,19 +56,19 @@ test("macOS build and Rust deadlines reserve time beyond completed observations"
   assert.ok(rustRequired > 900);
   const native = job("native-tests");
   assert.ok(stepBudget(native, buildName) >= buildRequired);
-  assert.ok(stepBudget(native, buildName) <= 900);
+  assert.ok(stepBudget(native, buildName) <= 1200);
   assert.ok(stepBudget(native, rustName) >= rustRequired);
-  assert.ok(stepBudget(native, rustName) <= 1080);
+  assert.ok(stepBudget(native, rustName) <= 1500);
   const required = completed.map(
     (entry) =>
       elapsed(entry.startedAt, step(entry, apiName).startedAt) +
       stepBudget(native, apiName, "macOS") +
       data.postJobReserveSeconds,
   );
-  assert.equal(Math.max(...required), 2042);
+  assert.equal(Math.max(...required), 2222);
   assert.ok(Math.max(...required) > 1800);
   for (const budget of required) assert.ok(jobBudget(native) >= budget);
-  assert.ok(jobBudget(native) <= 2100);
+  assert.ok(jobBudget(native) <= 3600);
 });
 
 test("same-head macOS timeout keeps censored evidence and bounded build headroom", () => {
@@ -89,10 +89,10 @@ test("same-head macOS timeout keeps censored evidence and bounded build headroom
   assert.equal(data.rustCache.result, "exact hit on both attempts");
   assert.ok(data.unavailable.includes("CPU utilization samples"));
   const native = job("native-tests");
-  assert.equal(stepBudget(native, buildName), censored.stepLimitSeconds + 180);
-  assert.equal(jobBudget(native), 2100);
-  assert.equal(stepBudget(native, rustName), 1080);
-  assert.equal(stepBudget(native, apiName), 420);
+  assert.equal(stepBudget(native, buildName), censored.stepLimitSeconds + 480);
+  assert.equal(jobBudget(native), 3600);
+  assert.equal(stepBudget(native, rustName), 1500);
+  assert.equal(stepBudget(native, apiName), 600);
 });
 
 test("six-minute Windows timeout after 629 passing tests reserves launcher and teardown time", () => {
@@ -108,7 +108,7 @@ test("six-minute Windows timeout after 629 passing tests reserves launcher and t
   const native = job("native-tests");
   const api = stepBudget(native, apiName, "Windows");
   assert.ok(api >= required);
-  assert.ok(api <= 420);
+  assert.ok(api <= 600);
   assert.ok(
     jobBudget(native) >=
       elapsed(data.startedAt, step(data, apiName).startedAt) + api + data.postJobReserveSeconds,
@@ -158,4 +158,57 @@ test("the observed bundled annotation case still breaches the unchanged five-sec
   assert.equal(summary.slowPassed[0].durationMs, data.durationMs);
   assert.match(markdown(summary), /Passed tests at or above 5000 ms: 1/);
   assert.equal(data.policies.length * data.analysesPerPolicy, 12);
+});
+
+test("native deadlines reserve bounded progress beyond the latest censored macOS steps", () => {
+  const data = observed("macos-native-20261112-timeouts");
+  const native = job("native-tests");
+  const build = data.observations.find((entry) => entry.buildTimeoutSeconds);
+  const rust = data.observations.filter((entry) => entry.platformTimeoutSeconds);
+  const api = data.observations.find((entry) => entry.apiSeconds > 420);
+  assert.equal(build.conclusion, "failure");
+  assert.equal(build.buildTimeoutSeconds, 900);
+  assert.equal(rust.length, 2);
+  assert.ok(rust.every((entry) => entry.platformRustSeconds >= entry.platformTimeoutSeconds));
+  assert.ok(
+    rust.every((entry) => entry.progress.some((line) => /passing until timeout/.test(line))),
+  );
+  assert.match(api.apiFailure, /report.*absent/);
+  assert.equal(stepBudget(native, buildName), build.buildTimeoutSeconds + 300);
+  assert.equal(stepBudget(native, rustName), rust[0].platformTimeoutSeconds + 420);
+  assert.equal(stepBudget(native, apiName), 600);
+  assert.ok(stepBudget(native, apiName) >= api.apiSeconds + 120);
+  assert.equal(
+    jobBudget(native),
+    stepBudget(native, buildName) +
+      stepBudget(native, rustName) +
+      stepBudget(native, apiName) +
+      300,
+  );
+  const config = readFileSync(path.join(root, ".no-mistakes.yml"), "utf8");
+  assert.match(config, /job: \.github\/workflows\/ci\.yml#native-tests\n\s+maxMinutes: 60/);
+  assert.match(config, /rule: github-actions-step-timeouts[\s\S]*?maxMinutes: 30/);
+  assert.match(native, /runner.os == 'Windows' && '--report-only' \|\| ''/);
+});
+
+test("the slow bundled native parity case registers every saved scenario independently", () => {
+  const { runInNewContext } = require("node:vm");
+  const data = observed("macos-native-20261112-timeouts");
+  assert.equal(data.observations[0].apiTests.slowestPassedMs, 6368.8);
+  const filename = path.join(
+    root,
+    "packages/no-mistakes/scripts/production-exports-test-only-api.test.js",
+  );
+  const names = [];
+  runInNewContext(readFileSync(filename, "utf8"), {
+    require,
+    __dirname: path.dirname(filename),
+    process: { env: {} },
+    globalThis: { test: (name) => names.push(name) },
+  });
+  const prefix = "platform consumers, namespace sites and external maps preserve async CLI parity";
+  assert.deepEqual(
+    names.filter((name) => name.startsWith(prefix)),
+    data.productionExportScenarios.map((scenario) => `${prefix}: ${scenario}`),
+  );
 });
