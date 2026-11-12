@@ -654,7 +654,7 @@ jobs:
       # not also link a cdylib.
       # Hosted macOS runs exceeded the former build and Rust step deadlines.
       - name: Build native CLI and N-API addon
-        timeout-minutes: 25
+        timeout-minutes: 20
         shell: bash
         env:
           NATIVE_RUST_CACHE_HIT: ${{ steps.native-rust-cache.outputs.cache-hit }}
@@ -673,8 +673,18 @@ jobs:
           path.write_text(text.replace(old, new, 1))
           PY
           node .github/scripts/build-native.cjs
-          node .github/scripts/native-rust-tests.cjs build
           cp "${{ matrix.addon }}" target/debug/no-mistakes.node
+
+      - name: Precompile native Rust test targets
+        timeout-minutes: 20
+        shell: bash
+        env:
+          NATIVE_RUST_CACHE_HIT: ${{ steps.native-rust-cache.outputs.cache-hit }}
+          NATIVE_TEST_CACHE_HIT: ${{ steps.native-test-cache.outputs.cache-hit }}
+          NO_MISTAKES_BUILD_NAPI: "1"
+        run: |
+          set -euo pipefail
+          node .github/scripts/native-rust-tests.cjs build
 
       - name: Cache native test artifacts
         if: ${{ steps.native-test-cache.outputs.cache-hit != 'true' }}

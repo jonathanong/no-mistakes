@@ -1,0 +1,91 @@
+{
+  "source": "Completed GitHub Actions jobs and uploaded native-build-diagnostics-macOS artifacts",
+  "failedRun": {
+    "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43317105491",
+    "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43317105491/job/131528029558",
+    "headSha": "b0c7a1843afcedafd22dcbbfb006835f7f185e19",
+    "conclusion": "failure",
+    "runner": {
+      "cpuModel": "Apple M1 (Virtual)",
+      "cpus": 3,
+      "totalMemoryBytes": 7516192768,
+      "rustc": "1.100.0 (0ef1bc386 2026-11-09)",
+      "nativeRustCacheHit": true,
+      "nativeTestCacheHit": false
+    },
+    "combinedStep": {
+      "name": "Build native CLI and N-API addon",
+      "startedAt": "2026-11-12T22:10:51Z",
+      "completedAt": "2026-11-12T22:36:05Z",
+      "timeoutSeconds": 1500,
+      "elapsedSeconds": 1514,
+      "censored": true
+    },
+    "nativeBuild": {
+      "command": "cargo build --locked -p no-mistakes --timings --verbose",
+      "completedAt": "2026-11-12T22:26:31.263Z",
+      "elapsedSeconds": 938.762,
+      "reportedCargoDuration": "15m 37s",
+      "maximumResidentSetBytes": 3251879936,
+      "swaps": 0,
+      "exitCode": 0
+    },
+    "testPrecompile": {
+      "command": "cargo test --locked -p no-mistakes --no-run --timings --verbose --test macos_invocation",
+      "startedAt": "2026-11-12T22:26:32Z",
+      "censoredAt": "2026-11-12T22:36:05Z",
+      "observedElapsedSeconds": 573,
+      "firstTargetFinished": false,
+      "rustcStillRunningAtLastSample": true,
+      "maximumSampledRustcRssKilobytes": 3385248
+    },
+    "hostSamples": {
+      "duringNativeBuild": {
+        "maximumOneMinuteLoadAverage": 56.20263671875,
+        "minimumFreeMemoryBytes": 53755904
+      },
+      "duringTestPrecompile": {
+        "maximumOneMinuteLoadAverage": 23.88720703125,
+        "minimumFreeMemoryBytes": 67420160,
+        "maximumSampledRustcRssKilobytes": 3385248
+      },
+      "interpretation": "The native-build phase had high load; the test-precompile phase had a lower sampled load and low free memory. Samples do not establish that contention or memory pressure caused either duration."
+    }
+  },
+  "priorSuccessfulRun": {
+    "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43311064853",
+    "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43311064853/job/131507309652",
+    "headSha": "2b60f86c9cb3de278eb4e593e8ee1a49e4b29bcf",
+    "rustc": "1.100.0 (0ef1bc386 2026-11-09)",
+    "combinedBuildAndPrecompileStepSeconds": 1182,
+    "devProfileBuildSeconds": 629,
+    "firstTestHarnessCompileSeconds": 503,
+    "remainingTestTargetCompileSeconds": [
+      18,
+      16,
+      10
+    ],
+    "platformRustExecutionSeconds": 224,
+    "jobId": 131507309652,
+    "workflowSha": "6025c476242bd335a6ccabf2b2d3b13bdb8c506f"
+  },
+  "proposedBoundsSeconds": {
+    "nativeBuildStep": 1200,
+    "testPrecompileStep": 1200,
+    "platformRustStep": 540,
+    "apiStep": 600,
+    "job": 3000,
+    "nativeBuildReserveBeyondLatestCompletedBuild": 120,
+    "postJobReserve": 120
+  },
+  "aggregateObservedEvidenceSeconds": {
+    "censoredCombinedBuildStep": 1514,
+    "maximumCompletedPlatformRustStep": 420,
+    "maximumCompletedApiStep": 338,
+    "maximumMeasuredNonWorkOverhead": 148,
+    "postJobReserve": 120,
+    "required": 2540,
+    "jobHeadroom": 460,
+    "caveat": "The 1,514-second build-step duration is a censored minimum; the test precompile had not finished, so the remaining compile time is unmeasured."
+  }
+}

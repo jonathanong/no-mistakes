@@ -46,6 +46,7 @@ function interestingStep(name) {
   return (
     name === "Run platform-specific Rust tests" ||
     name === "Build native CLI and N-API addon" ||
+    name === "Precompile native Rust test targets" ||
     name.startsWith("Exclude workspace") ||
     name.startsWith("Disable Microsoft Defender")
   );
@@ -54,6 +55,7 @@ function interestingStep(name) {
 const REQUIRED_WORKLOAD_STEP_NAMES = [
   "Run platform-specific Rust tests",
   "Build native CLI and N-API addon",
+  "Precompile native Rust test targets",
   "Run native CLI smoke test",
   "Run real N-API API test",
 ];
