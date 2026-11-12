@@ -1,8 +1,8 @@
 use super::super::file_playwright::collect_playwright_facts;
 use super::super::{CheckFactPlan, CheckFileFacts};
-use super::CheckFactVariant;
 use super::plan::ts_extract_plan;
 use super::should_store_source;
+use super::CheckFactVariant;
 use std::path::Path;
 use std::sync::Arc;
 

@@ -74,12 +74,10 @@ fn configured_literal_helpers_have_matching_low_and_max_policy_outcomes() {
                     "{effort}/{policy}: {line}"
                 );
                 if marker == "missing" {
-                    assert!(
-                        findings[0]["message"]
-                            .as_str()
-                            .unwrap()
-                            .contains("must start with a /* name */ annotation")
-                    );
+                    assert!(findings[0]["message"]
+                        .as_str()
+                        .unwrap()
+                        .contains("must start with a /* name */ annotation"));
                 }
                 statuses.push(verdict["status"].clone());
             }

@@ -27,7 +27,7 @@ mod loop_word;
 mod namespace_heads;
 mod primitive_results;
 mod returned_params;
-pub(crate) use loop_word::{PreparedLoopHeads, prepare_loop_heads};
+pub(crate) use loop_word::{prepare_loop_heads, PreparedLoopHeads};
 mod string_prefix;
 mod syntax;
 mod tag_constants;

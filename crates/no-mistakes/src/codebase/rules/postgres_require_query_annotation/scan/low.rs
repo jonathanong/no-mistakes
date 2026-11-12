@@ -1,10 +1,10 @@
-use super::{CompiledOptions, RULE_ID, RuleFinding};
+use super::{CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
     EmbeddedSqlKind, SqlEvidenceKind, SqlObligationVerdict, SqlVerdictStatus,
 };
 use crate::codebase::rules::{
-    PostgresFindings, postgres_require_query_annotation::UnanalyzableSql,
+    postgres_require_query_annotation::UnanalyzableSql, PostgresFindings,
 };
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{Context, Result};

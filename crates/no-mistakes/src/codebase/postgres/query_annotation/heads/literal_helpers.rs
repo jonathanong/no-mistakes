@@ -1,5 +1,5 @@
 //! Direct imported wrappers use their sole literal argument, never its aliases.
-use super::{HeadProof, Span, bindings::Bindings, syntax::Syntax};
+use super::{bindings::Bindings, syntax::Syntax, HeadProof, Span};
 use crate::codebase::ts_source::{facts::TsFileFacts, unwrap_ts_wrappers};
 use crate::fx::FxHashMap;
 use oxc_ast::ast::{CallExpression, ChainElement, Expression};

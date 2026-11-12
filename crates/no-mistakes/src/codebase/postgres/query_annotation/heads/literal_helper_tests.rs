@@ -1,5 +1,5 @@
 use crate::codebase::check_facts::{
-    CheckFactPlan, tests::compatibility::collect_file_facts_from_program,
+    tests::compatibility::collect_file_facts_from_program, CheckFactPlan,
 };
 use crate::codebase::postgres::EmbeddedSqlOptions;
 
