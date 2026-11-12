@@ -81,7 +81,7 @@ pub(super) fn collect(
     }
     result
 }
-fn trusted(root: &Root, bindings: &Bindings<'_>) -> bool {
+pub(super) fn trusted(root: &Root, bindings: &Bindings<'_>) -> bool {
     root.tags.iter().all(|&tag| {
         bindings
             .owner(tag)

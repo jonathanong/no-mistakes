@@ -15,7 +15,7 @@ pub(crate) use prepare::Pending;
 pub(super) use prepare::{prepare, Prepared};
 pub(super) use resolve::Resolver;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct Import {
     pub specifier: String,
     pub imported: String,
@@ -70,7 +70,7 @@ impl Signature {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct CallShape {
     arg_count: usize,
     closed_objects: u16,

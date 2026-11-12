@@ -1,5 +1,5 @@
 use super::{Candidates, Context, Initial, Root, Span};
-use crate::codebase::postgres::query_annotation::heads::{append, syntax, HeadProof};
+use crate::codebase::postgres::query_annotation::heads::{append, syntax};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::*;
 
@@ -65,7 +65,7 @@ fn root(expression: &Expression<'_>) -> Option<Root> {
                 pending.push(&branch.consequent);
             }
             Expression::TaggedTemplateExpression(tagged) => {
-                if syntax::head(expression).proof(false) != HeadProof::Literal {
+                if !matches!(syntax::head(expression), syntax::Head::Tag) {
                     return None;
                 }
                 let Expression::Identifier(tag) = unwrap_ts_wrappers(&tagged.tag) else {

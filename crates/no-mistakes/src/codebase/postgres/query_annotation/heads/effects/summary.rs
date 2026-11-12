@@ -1,6 +1,6 @@
 use super::{
     candidates::{self, EffectId, Requirement},
-    Span, Summary,
+    Import, Span, Summary,
 };
 use crate::codebase::postgres::query_annotation::heads::{bindings::Bindings, syntax::Syntax};
 use crate::codebase::ts_source::module_facts::ModuleBinding;
@@ -24,12 +24,14 @@ pub(super) fn proven(
                 let (signature, deps) = candidate.as_ref()?;
                 let required = deps.iter().try_fold(Vec::new(), |mut required, dep| {
                     match dep {
-                        Requirement::Import(import) => required.push(import.clone()),
+                        Requirement::Import(import) => push_unique(&mut required, import),
                         Requirement::Local(id, shape) => {
                             let known = proven.get(id).filter(|known| {
                                 known.signature.plain() && known.signature.accepts(*shape)
                             })?;
-                            required.extend(known.required.iter().cloned());
+                            for import in &known.required {
+                                push_unique(&mut required, import);
+                            }
                         }
                     }
                     Some(required)
@@ -49,4 +51,10 @@ pub(super) fn proven(
         proven.extend(next);
     }
     proven
+}
+
+fn push_unique(required: &mut Vec<Import>, import: &Import) {
+    if !required.contains(import) {
+        required.push(import.clone());
+    }
 }
