@@ -1,0 +1,11 @@
+{
+  "exactChallengeUrl": "https://app.codspeed.io/jonathanong/no-mistakes?utm_source=badge",
+  "mustRemainChecked": [
+    "https://app.codspeed.io/another-owner/no-mistakes?utm_source=badge",
+    "https://app.codspeed.io/jonathanong/no-mistakes",
+    "https://app.codspeed.io/jonathanong/no-mistakes/benchmarks?utm_source=badge",
+    "https://codspeed.io/jonathanong/no-mistakes?utm_source=badge",
+    "https://codspeed.io/",
+    "https://img.shields.io/endpoint?url=https://codspeed.io/badge.json"
+  ]
+}

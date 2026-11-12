@@ -4,12 +4,14 @@ use super::*;
 fn unknown_global_guards_do_not_publish_parameter_array_proofs() {
     let path = crate::test_support::rule_fixture_root("test-no-live-repository-scan/facts")
         .join("3304-unknown-guards.mjs");
-    let source = std::fs::read_to_string(&path).unwrap();
-    let facts = read_fixture(
-        "test-no-live-repository-scan/facts",
-        "3304-unknown-guards.mjs",
-        true,
-    );
+    let inventory =
+        crate::codebase::ts_source::FileInventory::from_paths(std::slice::from_ref(&path));
+    let sources = crate::codebase::ts_source::SourceStore::new(std::sync::Arc::new(inventory));
+    let source = sources.read_path(&path).unwrap();
+    let facts = crate::ast::with_program(&path, &source, |program, _| {
+        extract_with_arguments(program, true)
+    })
+    .unwrap();
     assert!(facts.diagnostics.is_empty(), "{:?}", facts.diagnostics);
     let provenance = facts.path_provenance.as_ref().unwrap();
     let offset = |case: &str| {

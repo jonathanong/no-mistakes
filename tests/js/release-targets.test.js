@@ -323,7 +323,8 @@ test("native CI omits debug metadata without weakening runtime checks", () => {
     assert.doesNotMatch(stepEnv, /CARGO_PROFILE_(?:DEV|TEST)_DEBUG:/);
   }
   for (const [name, minutes] of [
-    ["Build native CLI and N-API addon", 25],
+    ["Build native CLI and N-API addon", 20],
+    ["Precompile native Rust test targets", 20],
     ["Run platform-specific Rust tests", 9],
     ["Run real N-API API test", 10],
   ]) {

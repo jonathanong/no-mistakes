@@ -5,6 +5,9 @@ use no_mistakes::server_routes::{
 };
 use std::path::PathBuf;
 
+#[path = "tests/dispatch_boundaries.rs"]
+mod dispatch_boundaries;
+
 fn sample_route() -> ServerRoute {
     ServerRoute {
         file: "src/users.ts".into(),
@@ -98,13 +101,13 @@ fn run_contracts_prints_json_for_a_fixture_root() {
 }
 
 #[test]
-fn run_surfaces_invalid_root_config_before_server_analysis() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/config-v2/invalid-rule-path-filter/fixture");
+fn run_rejects_explicit_invalid_tsconfig_before_server_analysis() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/tsconfig/invalid-json");
     let error = run(ServerArgs {
         common: GraphCommandArgs {
             root,
-            tsconfig: None,
+            tsconfig: Some(PathBuf::from("tsconfig.json")),
             filters: Vec::new(),
             depth: None,
             format: Format::Json,
@@ -114,8 +117,8 @@ fn run_surfaces_invalid_root_config_before_server_analysis() {
         command: ServerCommand::Routes { files: Vec::new() },
     })
     .unwrap_err();
-    assert!(
-        error.to_string().contains("contains invalid glob"),
-        "{error}"
-    );
+    let detail = format!("{error:#}");
+    assert!(detail.contains("loading tsconfig"), "{detail}");
+    assert!(detail.contains("tsconfig.json"), "{detail}");
+    assert!(detail.contains("pars"), "{detail}");
 }

@@ -29,6 +29,15 @@ requires both jobs to succeed, including rejecting cancelled or skipped package
 validation. This keeps packaging independent of the several Rust validation
 profiles that previously consumed the same lint-job budget.
 
+Lychee checks the README CodSpeed badge image and the rest of the repository's
+links. The exact project-dashboard target
+`https://app.codspeed.io/jonathanong/no-mistakes?utm_source=badge` is ignored
+because Vercel returned HTTP 429 with `x-vercel-mitigated: challenge` for both
+HEAD and GET requests on 2026-11-12. The badge destination remains unchanged;
+other CodSpeed profiles, paths, query variants, and the badge endpoint remain
+checked. The narrow exception is locked by
+[`lychee-codspeed-challenge.json`](../../test-cases/rust-validation/fixture/lychee-codspeed-challenge.json).
+
 <!-- cspell:ignore citext -->
 
 Linux catalog tests and release validation share the PostgreSQL setup action.
