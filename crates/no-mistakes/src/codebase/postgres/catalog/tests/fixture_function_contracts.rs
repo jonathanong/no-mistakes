@@ -61,3 +61,32 @@ fn quoted_function_keys_and_planner_settings_preserve_distinct_contracts() {
     assert_eq!(planned.volatility, "volatile");
     assert_eq!(planned.return_contract, "setof integer");
 }
+
+#[test]
+fn malformed_unicode_escape_clauses_and_dollar_tags_do_not_invent_a_body() {
+    for name in [
+        "unicode_empty_escape",
+        "unicode_missing_escape",
+        "unicode_unquoted_escape",
+        "unicode_unclosed_literal",
+        "invalid_dollar_tag",
+    ] {
+        let function = function_from_definition("f()", &source(name));
+        assert_eq!(function.body, None, "{name}");
+        assert_eq!(function.language.as_deref(), Some("sql"), "{name}");
+    }
+}
+
+#[test]
+fn settings_and_output_types_do_not_capture_unrelated_planner_words() {
+    let settings = function_from_definition("f()", &source("set_equals"));
+    assert_eq!(settings.planner, "cost 2 support schema.estimate");
+    assert_eq!(settings.return_contract, "int");
+    let malformed = function_from_definition("f()", &source("malformed_planner"));
+    assert!(malformed.planner.is_empty());
+    assert_eq!(malformed.body.as_deref(), Some("SELECT 1"));
+    let outputs = function_from_definition("f(numeric)", &source("output_types"));
+    assert!(outputs.return_contract.contains("out total numeric"));
+    assert!(outputs.return_contract.contains("inout tags text"));
+    assert_eq!(outputs.body.as_deref(), Some("SELECT 1"));
+}

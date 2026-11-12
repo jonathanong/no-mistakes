@@ -3,6 +3,8 @@ use serde_json::json;
 
 #[path = "scope_import_bounds_tests.rs"]
 mod scope_import_bounds_tests;
+#[path = "scope_input_error_tests.rs"]
+mod scope_input_error_tests;
 
 fn options(reports: Value) -> AnalyzeProjectOptions {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

@@ -69,3 +69,7 @@ mod tests;
 #[cfg(test)]
 #[path = "graph/value_import_demand_tests.rs"]
 mod value_import_demand_tests;
+
+#[cfg(test)]
+#[path = "graph/routes_fixture_tests.rs"]
+mod routes_fixture_tests;

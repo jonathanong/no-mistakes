@@ -15,6 +15,10 @@ use crate::codebase::{
 use std::{path::PathBuf, sync::Arc};
 
 fn assert_recovery(name: &str, expected: &[(&str, Option<&str>)]) {
+    assert_recovery_mode(name, expected, false);
+}
+
+fn assert_recovery_mode(name: &str, expected: &[(&str, Option<&str>)], partial: bool) {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/postgres-facts/embedded")
         .join(name);
@@ -84,7 +88,7 @@ fn assert_recovery(name: &str, expected: &[(&str, Option<&str>)]) {
                     })
                     .collect::<Vec<_>>();
                 assert_eq!(sql, [*expected], "{text}");
-                assert!(!engine.residual(), "{text}");
+                assert_eq!(engine.residual(), partial, "{text}");
             }
             None => {
                 assert!(values.is_none(), "{text} must remain unknown");
@@ -169,5 +173,36 @@ fn closed_values_preserve_own_properties_bind_renumbering_and_nullish_semantics(
             ("retainedNullish", Some("SELECT 1")),
             ("booleanFallback", Some("SELECT 1")),
         ],
+    );
+}
+
+#[test]
+fn failed_selected_operands_keep_helper_recovery_uncertain_without_running_other_arms() {
+    assert_recovery(
+        "3304-helper-failure-branches.mts",
+        &[
+            ("trueControl", Some("SELECT 1")),
+            ("falseControl", Some("SELECT 2")),
+            ("trueFailure", None),
+            ("falseFailure", None),
+            ("conditionFailure", None),
+            ("memberFailure", None),
+            ("computedObjectFailure", None),
+            ("computedKeyFailure", None),
+            ("appendObjectFailure", None),
+            ("appendSuffixFailure", None),
+        ],
+    );
+}
+
+#[test]
+fn one_failed_conditional_arm_keeps_other_sql_evidence_with_residual_uncertainty() {
+    assert_recovery_mode(
+        "3304-helper-partial-branches.mts",
+        &[
+            ("uncertainYes", Some("SELECT 1")),
+            ("uncertainNo", Some("SELECT 1")),
+        ],
+        true,
     );
 }

@@ -189,3 +189,23 @@ fn located_delete_column_rewrite_keeps_source_spans_and_referential_actions() {
         ]
     );
 }
+
+#[test]
+fn incomplete_saved_heads_preserve_tokens_during_compatibility_rewrites() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/ddl-compat/incomplete-rewrite-heads.sql"
+    ));
+    for sql in sql.lines() {
+        let original = tokens(sql);
+        let mut rewritten = original.clone();
+        rewrite_chr_calls(&mut rewritten);
+        rewrite_drop_index_concurrently(&mut rewritten);
+        rewrite_referential_set_column_lists(&mut rewritten);
+        assert_eq!(rewritten, original, "{sql}");
+        assert!(
+            crate::codebase::postgres::parse::parse_postgres_sql(sql).is_err(),
+            "incomplete input must retain its parse failure: {sql}"
+        );
+    }
+}

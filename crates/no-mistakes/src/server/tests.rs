@@ -96,3 +96,26 @@ fn run_contracts_prints_json_for_a_fixture_root() {
     .expect("contracts command runs");
     assert_eq!(code, ExitCode::SUCCESS);
 }
+
+#[test]
+fn run_surfaces_invalid_root_config_before_server_analysis() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/config-v2/invalid-rule-path-filter/fixture");
+    let error = run(ServerArgs {
+        common: GraphCommandArgs {
+            root,
+            tsconfig: None,
+            filters: Vec::new(),
+            depth: None,
+            format: Format::Json,
+            json: true,
+            timings: false,
+        },
+        command: ServerCommand::Routes { files: Vec::new() },
+    })
+    .unwrap_err();
+    assert!(
+        error.to_string().contains("contains invalid glob"),
+        "{error}"
+    );
+}

@@ -136,3 +136,7 @@ mod assignment_scalar_tests;
 #[cfg(test)]
 #[path = "bindings/assignment_initializers_tests.rs"]
 mod assignment_initializers_tests;
+
+#[cfg(test)]
+#[path = "bindings/assignment_boundary_fixture_tests.rs"]
+mod assignment_boundary_fixture_tests;

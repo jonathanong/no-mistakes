@@ -19,6 +19,60 @@ fn prepare_fixture(fixture: &str, config: &str) -> prepared::PreparedCheckInputs
 }
 
 #[test]
+fn unresolved_frontend_root_keeps_partial_import_graph_and_strict_error() {
+    use no_mistakes::codebase::check_facts::CheckFactPlan;
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/graph-root-failure");
+    let config =
+        no_mistakes::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml")))
+            .unwrap();
+    let visible = no_mistakes::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let codebase = Default::default();
+    let tsconfig = Default::default();
+    let requested = no_mistakes::codebase::rules::try_canonical_graph_plan(&config).unwrap();
+    assert!(requested.is_some_and(|plan| plan.playwright_routes || plan.playwright_selectors));
+    for partial in [false, true] {
+        let session = AnalysisSession::new(None);
+        if partial {
+            session.enable_partial_checks();
+        }
+        let mut facts = CheckFactPlan::default();
+        let mut playwright = None;
+        let result = graph_plan::prepare(
+            &root,
+            &config,
+            graph_plan::PreparedInputs {
+                session: &session,
+                codebase_config: &codebase,
+                tsconfig: &tsconfig,
+                visible_paths: &visible,
+                workflow_documents: None,
+            },
+            requested,
+            &mut playwright,
+            &mut facts,
+        );
+        if partial {
+            assert!(result.unwrap().is_some());
+            assert!(facts.graph.imports);
+            assert!(playwright.is_none());
+            let failures = session.check_failures();
+            assert_eq!(failures.len(), 1, "{failures:?}");
+            assert_eq!(failures[0].consumer, "forbidden-dependencies");
+            assert!(failures[0]
+                .message
+                .contains("cannot infer the Next.js app root"));
+        } else {
+            let error = result
+                .err()
+                .expect("strict preparation must reject an ambiguous root");
+            assert!(format!("{error:#}").contains("cannot infer the Next.js app root"));
+            assert!(session.check_failures().is_empty());
+        }
+    }
+}
+
+#[test]
 fn failed_playwright_preparation_marks_only_requested_consumers() {
     let mut inputs = prepare_fixture("check/partial-playwright", "valid.yml");
     let rule = inputs.config.rule_applications("playwright-coverage")[0].clone();

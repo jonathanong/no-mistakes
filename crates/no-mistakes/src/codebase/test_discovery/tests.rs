@@ -468,3 +468,6 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
     assert_eq!(counts.get(&root.join("vitest.config.ts")), Some(&1));
     assert_eq!(counts.get(&root.join("project-list.ts")), Some(&1));
 }
+
+#[path = "api_coverage_tests.rs"]
+mod api_coverage_tests;

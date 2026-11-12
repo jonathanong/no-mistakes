@@ -9,6 +9,8 @@ use std::path::{Path, PathBuf};
 #[cfg(test)]
 mod entrypoint_parity_tests;
 #[cfg(test)]
+mod source_error_boundary_tests;
+#[cfg(test)]
 mod sql_entrypoint_parity_tests;
 
 mod scope;

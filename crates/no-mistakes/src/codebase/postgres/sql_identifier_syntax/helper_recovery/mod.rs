@@ -164,3 +164,6 @@ mod switch_tests;
 
 #[cfg(test)]
 mod lowering_fixture_tests;
+
+#[cfg(test)]
+mod real_catalog_fixture_tests;

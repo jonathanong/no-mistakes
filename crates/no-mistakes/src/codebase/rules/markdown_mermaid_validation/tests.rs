@@ -114,3 +114,18 @@ fn standalone_mermaid_validation_matches_prepared_facts_for_saved_documents() {
     );
     assert_eq!(sources.physical_read_count(), 3);
 }
+
+#[test]
+fn standalone_mermaid_validation_surfaces_missing_source_instead_of_partial_results() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/markdown-mermaid-validation"),
+    );
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    let missing = root.join("not-present.md");
+    assert!(!missing.exists());
+    let error =
+        check_with_files(&root, &config, &[root.join("invalid-state.md"), missing]).unwrap_err();
+    assert!(format!("{error:#}").contains("not-present.md"), "{error:#}");
+}

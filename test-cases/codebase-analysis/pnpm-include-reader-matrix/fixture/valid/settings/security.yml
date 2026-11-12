@@ -1,0 +1,5 @@
+overrides:
+  example: 1.0.0
+minimumReleaseAgeExclude: [example]
+catalog:
+  example: 1.0.0

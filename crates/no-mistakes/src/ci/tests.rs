@@ -282,3 +282,6 @@ fn render_topology_and_diagnostic_formatting_cover_optional_job_id() {
         "[malformed-workflow] ci.yml: bad yaml"
     );
 }
+
+#[path = "tests/report_error_boundaries.rs"]
+mod report_error_boundaries;

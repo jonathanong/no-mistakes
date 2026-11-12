@@ -1,0 +1,15 @@
+catalog:
+  root: 1.0.0
+  duplicate: 1.0.0
+  invalid: 17
+  42: ignored
+catalogs:
+  default:
+    duplicate: 2.0.0
+    other: 3.0.0
+  named:
+    valid: 4.0.0
+    invalid: false
+  nonmapping: false
+  12:
+    ignored: 5.0.0
