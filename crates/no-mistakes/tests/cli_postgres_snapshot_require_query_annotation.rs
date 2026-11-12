@@ -3,6 +3,26 @@ use super::check_json_snapshot::{assert_saved_fixture, rules_path};
 const RULE: &str = "postgres-require-query-annotation";
 
 #[test]
+fn postgres_copy_streams_check_json_snapshot() {
+    let cases = [
+        "copy-streams-low-report",
+        "copy-streams-low-advise",
+        "copy-streams-low-ignore",
+        "copy-streams-max-report",
+        "copy-streams-max-advise",
+        "copy-streams-max-ignore",
+    ]
+    .map(|name| {
+        (
+            name,
+            rules_path(RULE, "fixture", "copy-streams"),
+            rules_path(RULE, "configs", &format!("{name}.yml")),
+        )
+    });
+    assert_saved_fixture("postgres_copy_streams", &cases);
+}
+
+#[test]
 #[rustfmt::skip]
 fn postgres_require_query_annotation_check_json_snapshot() {
     // Output cases formerly asserted via check_with_files in the rule unit module.

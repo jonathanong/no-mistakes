@@ -98,7 +98,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             .with_exclude_executor_names(&opts.exclude_executor_names)
             .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
             .with_trusted_sql_tags(&opts.trusted_sql_tags)
-            .with_sql_literal_helpers(&opts.sql_literal_helpers),
+            .with_query_annotation_helpers(&opts.sql_literal_helpers),
     })
 }
 

@@ -474,14 +474,15 @@ to compare roots before/after scoping and actual module-cache work.
 [`postgres-no-offset`](postgres-no-offset.md) discourages unstable pagination;
 [`postgres-lock-ordering`](postgres-lock-ordering.md) protects concurrent row locks.
 
-### Configured single-literal SQL helpers
+### COPY stream wrappers and configured single-literal SQL helpers
 
-Set `sqlLiteralHelpers: ['pg-copy-streams#from']` to recognize a direct runtime
-import of that exact module and export at both `effort: low` and `effort: max`:
+Direct runtime imports of `from` and `to` from `pg-copy-streams` are recognized
+at both `effort: low` and `effort: max`, without additional helper configuration:
 
 ```ts
-import { from as copyFrom } from "pg-copy-streams";
+import { from as copyFrom, to as copyTo } from "pg-copy-streams";
 client.query(copyFrom("/* import users */ COPY users FROM STDIN"));
+client.query(copyTo("/* export users */ COPY users TO STDOUT"));
 ```
 
 Named imports, renamed imports, and direct namespace calls such as
@@ -496,8 +497,10 @@ annotation. Fix it by moving the named comment inside the string. Definite
 missing annotations remain findings under every unanalyzable policy; existing
 transaction exemptions still apply.
 
-The option defaults to `[]` and selects no helpers. Identities use nonempty,
-exact `module#export` strings; package subpaths must be listed separately.
+Use `sqlLiteralHelpers` to add other single-literal wrappers, for example
+`sqlLiteralHelpers: ['@example/copy#from']`. The option defaults to `[]`;
+the two built-in `pg-copy-streams` exports remain recognized. Identities use
+nonempty, exact `module#export` strings; package subpaths must be listed separately.
 Shadowed or type-only imports, optional calls, dynamic namespace keys,
 spread arguments, other argument counts,
 interpolated templates, dynamic arguments, stored helper results, and helper

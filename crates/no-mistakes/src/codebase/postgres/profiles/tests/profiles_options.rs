@@ -69,7 +69,8 @@ fn configured_annotation_demand_merges_an_existing_explicit_profile() {
         ..RuleDef::default()
     });
     let read = EmbeddedSqlOptions::configured("@example/db", &["read".into()]);
-    let write = EmbeddedSqlOptions::configured("@example/db", &["write".into()]);
+    let write = EmbeddedSqlOptions::configured("@example/db", &["write".into()])
+        .with_query_annotation_helpers(&[]);
     let mut plan = crate::codebase::check_facts::CheckFactPlan {
         query_annotation: true,
         query_annotation_options: Some(vec![read.clone()]),
@@ -78,6 +79,44 @@ fn configured_annotation_demand_merges_an_existing_explicit_profile() {
     configure_prepared_postgres_plan(std::path::Path::new("/repo"), &config, &mut plan).unwrap();
     assert!(plan.query_annotation);
     assert_eq!(plan.query_annotation_options, Some(vec![read, write]));
+}
+
+#[test]
+fn copy_stream_helpers_only_widen_annotation_profiles() {
+    let mut config = NoMistakesConfig::default();
+    for rule in [
+        "postgres-require-query-annotation",
+        "postgres-lock-ordering",
+    ] {
+        config.rules.push(RuleDef {
+            rule: rule.into(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(
+                "importSpecifier: pg\nexecutorTypeNames: [PoolClient]\nsqlLiteralHelpers: ['custom#copy', 'pg-copy-streams#from']",
+            )
+            .unwrap(),
+            ..RuleDef::default()
+        });
+    }
+    let (profiles, annotation, _) = configured_embedded_sql_options_with_annotation(
+        &config,
+        &[
+            "postgres-require-query-annotation",
+            "postgres-lock-ordering",
+        ],
+    )
+    .unwrap();
+    assert_eq!(profiles.len(), 2);
+    assert_eq!(annotation.len(), 1);
+    assert_eq!(
+        annotation[0].sql_literal_helpers,
+        ["custom#copy", "pg-copy-streams#from", "pg-copy-streams#to"]
+    );
+    assert!(
+        profiles
+            .iter()
+            .any(|profile| profile.sql_literal_helpers.is_empty())
+    );
 }
 
 #[test]
