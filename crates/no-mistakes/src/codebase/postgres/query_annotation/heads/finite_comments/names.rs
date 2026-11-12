@@ -53,8 +53,16 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn inline_name(
     expression: &Expression<'_>,
 ) -> Option<InlineName> {
     let (first, before, after) = comment_bounds(expression)?;
+    let literal_name = || match unwrap_ts_wrappers(expression) {
+        Expression::TemplateLiteral(template) if template.expressions.len() == 1 => {
+            let name = string_literal(first)?;
+            (!super::super::syntax::literals::named(&format!("{before}{name}{after}")))
+                .then_some(vec![name])
+        }
+        _ => None,
+    };
     Some(InlineName {
-        values: plain_ternary(first).or_else(|| string_literal(first).map(|name| vec![name]))?,
+        values: plain_ternary(first).or_else(literal_name)?,
         before,
         after,
     })

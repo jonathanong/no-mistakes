@@ -21,6 +21,8 @@ await read(`${head} SELECT 1`); // reported: whole head interpolated
 await read(`SELECT 1 /* ${name} */`); // reported: comment is not first
 await read(`/* ${name} ${close} SELECT 1`); // reported: closing delimiter interpolated
 await read(`/* ${name} */ ${suffix} SELECT 1`); // reported: interpolation outside comment
+await read(`/*${'name'}*/SELECT ${source}`); // reported: known name followed by SQL interpolation
+await read(`/* ${'name*/'} */ SELECT 1`); // reported: known name closes before literal delimiter
 await read(`/* ${''}${''} */ SELECT 1`); // reported: multiple empty pieces
 await read(`/* ${'' as const}${''} */ SELECT 1`); // reported: wrapped empty piece
 await read(`/* ${'*/'}${name} */ SELECT 1`); // reported: known early close before unknown
@@ -39,6 +41,10 @@ const earlyCloseQuery = `/* ${'*/'} */ SELECT 1`;
 await read(earlyCloseQuery); // reported: const-bound early close
 const emptyPiecesQuery = `/* ${''}${''} */ SELECT 1`;
 await read(emptyPiecesQuery); // reported: const-bound empty pieces
+const knownNameSqlHole = `/*${'name'}*/SELECT ${source}`;
+await read(knownNameSqlHole); // reported: const-bound known name with SQL interpolation
+const earlyNamedCloseQuery = `/* ${'name*/'} */ SELECT 1`;
+await read(earlyNamedCloseQuery); // reported: const-bound known name closes early
 const goodName = 'named';
 const goodQuery = `/* ${goodName} */ SELECT 1`;
 await read(goodQuery); // accepted: const-bound known valid name
