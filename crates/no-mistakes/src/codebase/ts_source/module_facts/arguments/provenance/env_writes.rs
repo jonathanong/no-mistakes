@@ -2,6 +2,7 @@
 use super::super::path_origin::{env_name, is_process_env, process_global};
 use super::super::{EnvWrite, PathOrigin, PathProvenance, Projector};
 use oxc_ast::ast::*;
+use oxc_span::GetSpan;
 use oxc_syntax::node::NodeId;
 
 pub(super) fn from_assignment<'a>(
@@ -164,6 +165,11 @@ fn record(
         scope
     };
     out.env_writes.push(EnvWrite {
+        line: super::super::line_in(
+            projector.semantic.source_text(),
+            projector.semantic.nodes().kind(node).span().start,
+        ),
+        cleared: super::env_diagnostic::cleared(projector, node),
         name,
         end,
         origin,

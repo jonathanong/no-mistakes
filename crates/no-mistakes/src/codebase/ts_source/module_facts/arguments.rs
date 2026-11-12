@@ -6,6 +6,7 @@ use serde_json::Value;
 mod aliases;
 use aliases::AliasSafety;
 mod path_origin;
+mod path_origin_equality;
 mod path_value;
 mod provenance;
 #[path = "arguments/provenance/pass_through_writes.rs"]
@@ -13,6 +14,8 @@ mod transparent_writes;
 pub(crate) use transparent_writes::{
     transparent_receiver_writes, transparent_receiver_writes_from_program,
 };
+mod env_diagnostic;
+pub(crate) use env_diagnostic::EnvDiagnostic;
 mod types;
 mod value;
 pub(crate) use types::{

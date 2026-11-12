@@ -7,6 +7,7 @@ mod call_args;
 mod concurrent;
 mod config_keys;
 mod consumers;
+mod env_diagnostic;
 mod env_writes;
 mod getters;
 mod local_env;

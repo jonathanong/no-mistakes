@@ -369,7 +369,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but root.mts:3 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:3, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -403,7 +403,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but root.mts:3 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:3, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -425,7 +425,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but root.mts:2 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:2, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -447,7 +447,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but root.mts:3 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:3, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -481,7 +481,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but root.mts:3 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:3, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -515,7 +515,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but root.mts:3 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:3, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -537,7 +537,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but root.mts:2 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:2, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -571,7 +571,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdir",
           "line": 5,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.DATA_DIR`, with literal fallback \"./tmp/data\", but root.mts:7 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:7, use vi.stubEnv(\"DATA_DIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdir(path.join(getDataDir(), \"table\"));",
           "target": "unresolved root"
@@ -593,7 +593,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdir",
           "line": 5,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.DATA_DIR`, with literal fallback \"./tmp/data\", but root.mts:7 assigns an environment value that is not a proven fixture or owned mkdtemp root. Fix: at root.mts:7, use vi.stubEnv(\"DATA_DIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdir(path.join(getDataDir(), \"table\"));",
           "target": "unresolved root"
@@ -615,7 +615,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdir",
           "line": 5,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.DATA_DIR`, with literal fallback \"./tmp/data\", but root.mts:8 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:8, use vi.stubEnv(\"DATA_DIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdir(path.join(getDataDir(), \"table\"));",
           "target": "unresolved root"
@@ -637,7 +637,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdir",
           "line": 5,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.DATA_DIR`, with literal fallback \"./tmp/data\", but root.mts:10 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:10, use vi.stubEnv(\"DATA_DIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdir(path.join(getDataDir(), \"table\"));",
           "target": "unresolved root"
@@ -671,7 +671,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but root.mts:6 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:6, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -737,7 +737,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but root.mts:5 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:5, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -783,7 +783,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdir",
           "line": 2,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.TMPDIR`, but root.mts:7 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:7, use vi.stubEnv(\"TMPDIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function scan() { return readdir(process.env.TMPDIR); }",
           "target": "unresolved root"
@@ -805,7 +805,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdir",
           "line": 2,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.TMPDIR`, but root.mts:7 assigns an environment value that is not a proven fixture or owned mkdtemp root. Fix: at root.mts:7, use vi.stubEnv(\"TMPDIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function scan() { return readdir(process.env.TMPDIR); }",
           "target": "unresolved root"
@@ -827,7 +827,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdir",
           "line": 2,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.TMPDIR`, but root.mts:8 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:8, use vi.stubEnv(\"TMPDIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function scan() { return readdir(process.env.TMPDIR); }",
           "target": "unresolved root"
@@ -849,7 +849,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdir",
           "line": 2,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.TMPDIR`, but root.mts:10 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:10, use vi.stubEnv(\"TMPDIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function scan() { return readdir(process.env.TMPDIR); }",
           "target": "unresolved root"
@@ -871,7 +871,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.TMPDIR`, but root.mts:5 reaches a derived path that is not proven to stay inside the owned environment root. Fix: at root.mts:5, use vi.stubEnv(\"TMPDIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export async function scan() { return readdir(dirname(process.env.TMPDIR)); }",
           "target": "unresolved root"
@@ -893,7 +893,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdir",
           "line": 2,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.TMPDIR`, but root.mts:7 assigns an environment value that is not a proven fixture or owned mkdtemp root. Fix: at root.mts:7, use vi.stubEnv(\"TMPDIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function scan() { return readdir(process.env.TMPDIR); }",
           "target": "unresolved root"
@@ -1407,7 +1407,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but root.mts:6 assigns an environment value that is not a proven fixture or owned mkdtemp root. Fix: at root.mts:6, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -1441,7 +1441,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/scans.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but tests/owned-roots.test.mts:10 does not prove the captured or derived environment read used that owned root. Fix: at tests/owned-roots.test.mts:10, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -1475,7 +1475,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/scans.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but tests/owned-roots.test.mts:11 does not prove the captured or derived environment read used that owned root. Fix: at tests/owned-roots.test.mts:11, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -1497,7 +1497,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/scans.mts",
           "import": "readdirSync",
           "line": 8,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but tests/owned-roots.test.mts:25 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at tests/owned-roots.test.mts:25, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -1531,7 +1531,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/scans.mts",
           "import": "readdirSync",
           "line": 4,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but tests/owned-roots.test.mts:10 does not prove the captured or derived environment read used that owned root. Fix: at tests/owned-roots.test.mts:10, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -1553,7 +1553,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/scans.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but tests/owned-roots.test.mts:12 does not prove the captured or derived environment read used that owned root. Fix: at tests/owned-roots.test.mts:12, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -1575,7 +1575,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/scans.mts",
           "import": "readdirSync",
           "line": 4,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but tests/owned-roots.test.mts:10 does not prove the captured or derived environment read used that owned root. Fix: at tests/owned-roots.test.mts:10, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(getRoot());",
           "target": "unresolved root"
@@ -1597,7 +1597,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/scans.mts",
           "import": "readdirSync",
           "line": 5,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but tests/owned-roots.test.mts:10 does not prove the captured or derived environment read used that owned root. Fix: at tests/owned-roots.test.mts:10, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -1631,7 +1631,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/scans.mts",
           "import": "readdirSync",
           "line": 8,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but tests/owned-roots.test.mts:24 assigns an environment value that is not a proven fixture or owned mkdtemp root. Fix: at tests/owned-roots.test.mts:24, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -1653,7 +1653,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/scans.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but tests/owned-roots.test.mts:11 does not prove the captured or derived environment read used that owned root. Fix: at tests/owned-roots.test.mts:11, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -1687,7 +1687,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/scans.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but tests/owned-roots.test.mts:11 does not prove the captured or derived environment read used that owned root. Fix: at tests/owned-roots.test.mts:11, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -1709,7 +1709,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/scans.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but tests/owned-roots.test.mts:10 does not prove the captured or derived environment read used that owned root. Fix: at tests/owned-roots.test.mts:10, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -1743,7 +1743,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but setup.mts:2 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at setup.mts:2, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -1813,7 +1813,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:10 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:10, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -1835,7 +1835,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:8 does not prove the captured or derived environment read used the configured owned root. Fix: at root.mts:8, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -1857,7 +1857,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.TMPDIR`, but root.mts:8 does not prove the captured or derived environment read used the configured owned root. Fix: at root.mts:8, use vi.stubEnv(\"TMPDIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdirSync(process.env.TMPDIR); }",
           "target": "unresolved root"
@@ -1879,7 +1879,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:8 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:8, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -1997,7 +1997,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.TMPDIR`, but root.mts:7 does not prove the captured or derived environment read used the configured owned root. Fix: at root.mts:7, use vi.stubEnv(\"TMPDIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdirSync(process.env.TMPDIR); }",
           "target": "unresolved root"
@@ -2019,7 +2019,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:7 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:7, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2041,7 +2041,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:7 does not prove the captured or derived environment read used the configured owned root. Fix: at root.mts:7, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2063,7 +2063,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:8 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:8, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2181,7 +2181,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:10 does not prove the captured or derived environment read used the configured owned root. Fix: at root.mts:10, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2203,7 +2203,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:4 does not prove the captured or derived environment read used the configured owned root. Fix: at root.mts:4, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2225,7 +2225,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:10 does not prove the captured or derived environment read used the configured owned root. Fix: at root.mts:10, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2247,7 +2247,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:4 does not prove the captured or derived environment read used the configured owned root. Fix: at root.mts:4, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2269,7 +2269,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:4 does not prove the captured or derived environment read used the configured owned root. Fix: at root.mts:4, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2291,7 +2291,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:15 does not prove the captured or derived environment read used the configured owned root. Fix: at root.mts:15, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2313,7 +2313,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:11 does not prove the captured or derived environment read used the configured owned root. Fix: at root.mts:11, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2335,7 +2335,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:5 does not prove the captured or derived environment read used the configured owned root. Fix: at root.mts:5, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2357,7 +2357,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:9 does not prove the captured or derived environment read used the configured owned root. Fix: at root.mts:9, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2391,7 +2391,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:9 does not prove the captured or derived environment read used the configured owned root. Fix: at root.mts:9, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2413,7 +2413,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "parallel-query.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but parallel.mts:9 does not prove the captured or derived environment read used the configured owned root. Fix: at parallel.mts:9, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2435,7 +2435,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "parallel-query.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but parallel.mts:9 does not prove the captured or derived environment read used the configured owned root. Fix: at parallel.mts:9, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2469,7 +2469,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:9 does not prove the captured or derived environment read used the configured owned root. Fix: at root.mts:9, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2491,7 +2491,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:3 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:3, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2535,7 +2535,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.TMPDIR`, but root.mts:8 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:8, use vi.stubEnv(\"TMPDIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdirSync(process.env.TMPDIR); }",
           "target": "unresolved root"
@@ -2557,7 +2557,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.TMPDIR`, but root.mts:9 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:9, use vi.stubEnv(\"TMPDIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdirSync(process.env.TMPDIR); }",
           "target": "unresolved root"
@@ -2579,7 +2579,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:5 reaches a derived path that is not proven to stay inside the owned environment root. Fix: at root.mts:5, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(options) { return readdir(path.join(getLocalDir(), options.table)); }",
           "target": "unresolved root"
@@ -2601,7 +2601,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:5 reaches a derived path that is not proven to stay inside the owned environment root. Fix: at root.mts:5, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2681,7 +2681,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.TMPDIR`, but root.mts:8 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:8, use vi.stubEnv(\"TMPDIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdirSync(process.env.TMPDIR); }",
           "target": "unresolved root"
@@ -2703,7 +2703,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:11 does not prove the captured or derived environment read used the configured owned root. Fix: at root.mts:11, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2747,7 +2747,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:5 reaches a derived path that is not proven to stay inside the owned environment root. Fix: at root.mts:5, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2837,7 +2837,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:6 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:6, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2859,7 +2859,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:7 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:7, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2881,7 +2881,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:5 reaches a derived path that is not proven to stay inside the owned environment root. Fix: at root.mts:5, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2903,7 +2903,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:6 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:6, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2925,7 +2925,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:7 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:7, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2969,7 +2969,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:5 reaches a derived path that is not proven to stay inside the owned environment root. Fix: at root.mts:5, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -2991,7 +2991,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query-files.mts",
           "import": "readdir",
           "line": 4,
-          "message": "unresolved root: `readdir` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdir` enumerates a root derived from `process.env.X`, with literal fallback \"./tmp/data\", but root.mts:5 reaches a derived path that is not proven to stay inside the owned environment root. Fix: at root.mts:5, use vi.stubEnv(\"X\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "export function query(table) { return readdir(path.join(getLocalDir(), table)); }",
           "target": "unresolved root"
@@ -3037,7 +3037,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but root.mts:3 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:3, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -3059,7 +3059,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but root.mts:5 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:5, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -3081,7 +3081,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but root.mts:3 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:3, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -3103,7 +3103,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but root.mts:2 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:2, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"
@@ -3125,7 +3125,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scan.mts",
           "import": "readdirSync",
           "line": 3,
-          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.OWNED_SCAN_ROOT`, with literal fallback \"\", but root.mts:2 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:2, use vi.stubEnv(\"OWNED_SCAN_ROOT\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(process.env.OWNED_SCAN_ROOT ?? \"\");",
           "target": "unresolved root"

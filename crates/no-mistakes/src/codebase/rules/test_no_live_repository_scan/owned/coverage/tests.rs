@@ -104,6 +104,7 @@ fn restore_debug(previous: Option<std::ffi::OsString>) {
 
 pub(super) fn assemble(fixture: Fixture<'_>) -> Owners<'_> {
     Owners {
+        env_entries: std::cell::RefCell::new(crate::fx::FxHashMap::default()),
         callers: fixture.callers,
         env: EnvWrites::default(),
         imported: ImportedWrites::new(fixture.graph),

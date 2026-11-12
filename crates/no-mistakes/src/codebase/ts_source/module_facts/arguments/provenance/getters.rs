@@ -1,6 +1,7 @@
 use super::super::path_origin::env_name;
 use super::super::{PathOrigin, PathProvenance, Projector};
 use oxc_ast::ast::*;
+use oxc_span::GetSpan;
 
 pub(super) fn record<'a>(
     projector: &mut Projector<'a, '_>,
@@ -42,6 +43,25 @@ pub(super) fn record<'a>(
     out.env_getters.insert(
         function.span.start,
         PathOrigin {
+            env_diagnostic: Some(Box::new(super::super::EnvDiagnostic {
+                name: name.clone(),
+                fallback: match expression.get_inner_expression() {
+                    Expression::LogicalExpression(logical) => {
+                        match logical.right.get_inner_expression() {
+                            Expression::StringLiteral(value) => {
+                                Some(crate::ast::js_literal(value).into_owned())
+                            }
+                            _ => None,
+                        }
+                    }
+                    _ => None,
+                },
+                captured: false,
+                line: super::super::line_in(
+                    projector.semantic.source_text(),
+                    expression.span().start,
+                ),
+            })),
             env: Some(name),
             ..PathOrigin::unknown()
         },

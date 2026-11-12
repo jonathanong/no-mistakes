@@ -46,6 +46,21 @@ pub(super) fn parameter(
     )
 }
 
+pub(super) fn environment(
+    root: &Path,
+    application: &RuleDef,
+    site: &ResolvedCallSite,
+    cause: &super::owned::EnvCause,
+) -> RuleFinding {
+    build(
+        root,
+        application,
+        site,
+        cause.message(root, &site.source_callee),
+        "unresolved root",
+    )
+}
+
 pub(super) fn unresolved(
     root: &Path,
     application: &RuleDef,

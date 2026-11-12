@@ -235,6 +235,13 @@ fn env_provenance_preserves_unknown_roots_and_actionable_hints() {
                 assert!(message.contains("pass a const fixture path or an owned mkdtemp root"));
                 continue;
             }
+            if message.contains("enumerates a root derived from `process.env.") {
+                let fix = message.split_once("Fix:").unwrap().1;
+                let stub = fix.find("vi.stubEnv").unwrap();
+                let suppression = fix.find("no-mistakes-disable-next-line").unwrap();
+                assert!(stub < suppression, "{name}: {message}");
+                continue;
+            }
             let local = message.find("inside the enumerating function").unwrap();
             let callers = message
                 .find("every statically resolved test caller")

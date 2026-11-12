@@ -1,0 +1,249 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "captured-program-clear-reset": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "scan.mts",
+          "import": "readdirSync",
+          "line": 5,
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.EXAMPLE_LOCAL_DIR`, with literal fallback \"./tmp/example\", but root.mts:9 does not prove the captured or derived environment read used the configured owned root. Fix: at root.mts:9, use vi.stubEnv(\"EXAMPLE_LOCAL_DIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(captured);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "function-cleanup-safe": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "function-computed-fallback": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "scan.mts",
+          "import": "readdirSync",
+          "line": 6,
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.EXAMPLE_LOCAL_DIR`, but root.mts:4 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:4, use vi.stubEnv(\"EXAMPLE_LOCAL_DIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(dir);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "function-deleted": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "scan.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.EXAMPLE_LOCAL_DIR`, with literal fallback \"\", but root.mts:12 clears that environment variable before reaching this scan. Fix: at root.mts:12, use vi.stubEnv(\"EXAMPLE_LOCAL_DIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(process.env.EXAMPLE_LOCAL_DIR ?? \"\");",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "function-first-statement": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "scan.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.EXAMPLE_LOCAL_DIR`, with literal fallback \"./tmp/example\", but root.mts:1 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:1, use vi.stubEnv(\"EXAMPLE_LOCAL_DIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(process.env.EXAMPLE_LOCAL_DIR ?? \"./tmp/example\");",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "function-live-write": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "scan.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.EXAMPLE_LOCAL_DIR`, with literal fallback \"\", but root.mts:5 assigns an environment value that is not a proven fixture or owned mkdtemp root. Fix: at root.mts:5, use vi.stubEnv(\"EXAMPLE_LOCAL_DIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(process.env.EXAMPLE_LOCAL_DIR ?? \"\");",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "function-missing": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "scan.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.EXAMPLE_LOCAL_DIR`, with literal fallback \"\", but root.mts:4 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:4, use vi.stubEnv(\"EXAMPLE_LOCAL_DIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(process.env.EXAMPLE_LOCAL_DIR ?? \"\");",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "function-missing-or": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "scan.mts",
+          "import": "readdirSync",
+          "line": 5,
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.EXAMPLE_LOCAL_DIR`, with literal fallback \"./tmp/example\", but root.mts:4 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:4, use vi.stubEnv(\"EXAMPLE_LOCAL_DIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(dir);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "function-mixed-test-callers": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "scan.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.EXAMPLE_LOCAL_DIR`, with literal fallback \"./tmp/example\", but root.mts:10 clears that environment variable before reaching this scan. Fix: at root.mts:10, use vi.stubEnv(\"EXAMPLE_LOCAL_DIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(process.env.EXAMPLE_LOCAL_DIR ?? \"./tmp/example\");",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "function-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "module-deleted": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "scan.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.EXAMPLE_LOCAL_DIR`, with literal fallback \"./tmp/example\", but root.mts:4 clears that environment variable before reaching this scan. Fix: at root.mts:4, use vi.stubEnv(\"EXAMPLE_LOCAL_DIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export const files = readdirSync(dir);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "module-missing": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "scan.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.EXAMPLE_LOCAL_DIR`, with literal fallback \"./tmp/example\", but root.mts:4 has no proven assignment of a fixture or owned mkdtemp root before reaching this scan. Fix: at root.mts:4, use vi.stubEnv(\"EXAMPLE_LOCAL_DIR\", fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export const files = readdirSync(dir);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

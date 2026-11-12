@@ -9,6 +9,8 @@ fn origin(anchor: PathAnchor, segments: &[&str]) -> PathOrigin {
         segments: segments.iter().map(|s| s.to_string()).collect(),
         dynamic: false,
         env: None,
+        env_diagnostic: None,
+        captured_getter: None,
         getter: None,
         root_tails: Vec::new(),
         param: None,
@@ -163,6 +165,8 @@ fn only_unconditional_owned_writes_that_precede_the_call_dominate_it() {
         EnvWrite, PathProvenance, WriteScope,
     };
     let write = |name: &str, anchor, scope, end| EnvWrite {
+        line: 1,
+        cleared: false,
         name: name.into(),
         end,
         origin: origin(anchor, &[]),
@@ -198,6 +202,8 @@ fn only_unconditional_owned_writes_that_precede_the_call_dominate_it() {
     climbed.env_writes.push(climb);
     assert!(!dominated(&climbed, "CLIMB", 90, &fixture_dirs));
     let fixture = EnvWrite {
+        line: 1,
+        cleared: false,
         name: "GOLDEN".into(),
         end: 10,
         origin: origin(PathAnchor::Module, &["golden", "data"]),

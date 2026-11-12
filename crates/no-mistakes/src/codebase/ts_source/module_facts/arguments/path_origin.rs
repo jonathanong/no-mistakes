@@ -8,6 +8,7 @@ mod defaults;
 mod destructure;
 mod forwarded;
 mod getters;
+mod identifier;
 mod member_effects;
 mod member_mutations;
 mod members;
@@ -66,8 +67,14 @@ impl<'a> Projector<'a, '_> {
                 if self.definitely_nullish(&logical.left, depth + 1) {
                     return self.origin(&logical.right, depth + 1);
                 }
-                let left = self.origin(&logical.left, depth + 1);
+                let mut left = self.origin(&logical.left, depth + 1);
                 if left.env.is_some() {
+                    if let (Some(hint), Expression::StringLiteral(value)) = (
+                        &mut left.env_diagnostic,
+                        logical.right.get_inner_expression(),
+                    ) {
+                        hint.fallback = Some(crate::ast::js_literal(value).into_owned());
+                    }
                     left
                 } else {
                     let right = self.origin(&logical.right, depth + 1);
@@ -82,50 +89,6 @@ impl<'a> Projector<'a, '_> {
             Expression::NewExpression(url) => self.url(url, depth),
             Expression::CallExpression(call) => self.call(call, depth),
             _ => PathOrigin::unknown(),
-        }
-    }
-
-    fn identifier(&mut self, id: &IdentifierReference<'a>, depth: usize) -> PathOrigin {
-        if id.name == "undefined" && self.binding_symbol(id).is_none() {
-            return PathOrigin {
-                nullish: true,
-                value_kind: PathValueKind::Scalar,
-                ..PathOrigin::unknown()
-            };
-        }
-        let global = matches!(id.name.as_str(), "__dirname" | "__filename");
-        if global && self.binding_symbol(id).is_none() {
-            return PathOrigin::anchored(PathAnchor::Module);
-        }
-        match self.const_init(id) {
-            Some(init) => {
-                let origin = self.origin(init, depth + 1);
-                // A captured env read ran when the alias was initialised, not at the
-                // call, so a later owned write does not cover it.
-                if origin
-                    .atoms()
-                    .iter()
-                    .any(|atom| atom.env.is_some() || atom.getter.is_some())
-                {
-                    PathOrigin::unknown()
-                } else {
-                    self.value_requirement(id, origin)
-                }
-            }
-            None => {
-                let mut origin = self
-                    .destructured_origin(id, depth)
-                    .or_else(|| self.param_origin(id))
-                    .or_else(|| self.owned_binding(id, depth))
-                    .unwrap_or_else(PathOrigin::unknown);
-                if origin.param.is_none()
-                    && origin.env.is_none()
-                    && origin.anchor == PathAnchor::Unknown
-                {
-                    origin.reassigned_at = self.reassigned_parameter(id);
-                }
-                self.value_requirement(id, origin)
-            }
         }
     }
 

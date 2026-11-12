@@ -169,3 +169,5 @@ mod lifecycle_boundaries;
 mod captured_wrapper_edges;
 
 mod getter_import_kinds;
+
+mod env_diagnostic;
