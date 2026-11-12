@@ -108,3 +108,66 @@ fn filesystem_entrypoints_match_prepared_inventory_on_saved_positive_and_negativ
         );
     }
 }
+
+#[test]
+fn configured_entrypoints_keep_primary_findings_and_suppressions_identical() {
+    let checks: &[(&str, Standalone, Prepared)] = &[
+        (
+            "strict-package-layout",
+            rules::strict_package_layout::check,
+            rules::strict_package_layout::check_with_files,
+        ),
+        (
+            "required-local-docs",
+            rules::required_local_docs::check,
+            rules::required_local_docs::check_with_files,
+        ),
+        (
+            "test-no-dependency-pins",
+            rules::test_no_dependency_pins::check,
+            rules::test_no_dependency_pins::check_with_files,
+        ),
+        (
+            "lockfile-allowlist",
+            rules::lockfile_allowlist::check,
+            rules::lockfile_allowlist::check_with_files,
+        ),
+    ];
+    for &(rule, standalone, prepared) in checks {
+        for fails in [false, true] {
+            let root = crate::codebase::ts_resolver::normalize_path(
+                &crate::test_support::rule_fixture_root(rule).join(if fails {
+                    "fail"
+                } else {
+                    "pass"
+                }),
+            );
+            let config =
+                crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml")))
+                    .unwrap();
+            let files = discover_files(&root, &config.filesystem.skip_directories);
+            assert!(!files.is_empty(), "{root:?}");
+            let mut actual = standalone(&root, &config).unwrap();
+            let sources = rules::source_store_for_files(&files);
+            rules::suppression::suppress_rule_findings_with_sources(&root, &mut actual, &sources);
+            assert_eq!(
+                actual.iter().any(|finding| finding.rule == rule),
+                fails,
+                "{rule}: {actual:?}"
+            );
+            let mut expected = prepared(&root, &config, &files).unwrap();
+            rules::suppression::suppress_rule_findings_with_sources(&root, &mut expected, &sources);
+            assert!(actual
+                .iter()
+                .chain(&expected)
+                .all(|finding| { finding.rule == rule || finding.rule == "unused-allow-entry" }));
+            actual.retain(|finding| finding.rule == rule);
+            expected.retain(|finding| finding.rule == rule);
+            assert_eq!(
+                serde_json::to_value(&actual).unwrap(),
+                serde_json::to_value(expected).unwrap(),
+                "{rule}"
+            );
+        }
+    }
+}

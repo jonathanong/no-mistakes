@@ -75,3 +75,42 @@ fn missing_facts_report_a_planning_error_and_partial_locations_render_defensivel
     let no_location = finding(diagnostic(None, Some(7)));
     assert_eq!(no_location.message, "invalid Mermaid diagram: syntax error");
 }
+
+#[test]
+fn standalone_mermaid_validation_matches_prepared_facts_for_saved_documents() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/markdown-mermaid-validation"),
+    );
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    let files = [
+        "invalid-state.md",
+        "invalid-uppercase.MD",
+        "valid.md",
+        "excluded.md",
+    ]
+    .map(|name| root.join(name));
+    let standalone = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(standalone.len(), 2);
+    assert_eq!(
+        standalone
+            .iter()
+            .map(|finding| finding.file.as_str())
+            .collect::<Vec<_>>(),
+        ["invalid-state.md", "invalid-uppercase.MD"]
+    );
+    assert!(standalone
+        .iter()
+        .all(|finding| finding.message.contains("invalid Mermaid diagram")));
+    let sources = super::super::source_store_for_files(&files);
+    let mut plan = super::super::markdown_facts::MarkdownFactPlan::default();
+    plan.request_pulldown(fact_candidate_files(&root, &config, &files).unwrap());
+    let facts = super::super::markdown_facts::MarkdownFactMap::prepare(&plan, &sources);
+    let prepared = check_with_files_and_facts(&root, &config, &files, &facts).unwrap();
+    assert_eq!(
+        serde_json::to_value(standalone).unwrap(),
+        serde_json::to_value(prepared).unwrap()
+    );
+    assert_eq!(sources.physical_read_count(), 3);
+}

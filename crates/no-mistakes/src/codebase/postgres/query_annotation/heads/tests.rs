@@ -146,3 +146,6 @@ mod source_prerequisite_tests;
 
 #[path = "literal_tables_tests.rs"]
 mod literal_tables_tests;
+
+#[path = "coverage_domain_behavior_tests.rs"]
+mod coverage_domain_behavior_tests;
