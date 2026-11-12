@@ -36,10 +36,6 @@ impl<Node, Kind> CanonicalEdge<Node, Kind> {
 
 /// Direction used when projecting relationships from an [`EdgeIndex`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "Tests exercise every traversal direction.")
-)]
 pub(crate) enum EdgeDirection {
     Dependencies,
     Dependents,
