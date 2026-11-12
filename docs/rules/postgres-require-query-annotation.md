@@ -274,6 +274,7 @@ and later append here preserve the initializer's annotation:
 
 ```ts
 import sql, { type SQLStatement } from 'sql-template-strings';
+import { read } from '@example/db';
 
 function addFilters(q: SQLStatement, id: string) {
   q.append(sql` AND x = ${id}`);
