@@ -14,6 +14,26 @@ fn github_actions_test_timeout_literals_json_matches_snapshot() {
                 rules_path(RULE, "fixture", "fail"),
                 default.clone(),
             ),
+            (
+                "dispatch-fixture",
+                rules_path(RULE, "fixture", "3304-dispatch"),
+                default.clone(),
+            ),
+            (
+                "dispatch-custom",
+                rules_path(RULE, "fixture", "3304-dispatch"),
+                rules_path(RULE, "configs", "3304-custom.yml"),
+            ),
+            (
+                "dispatch-allowed",
+                rules_path(RULE, "fixture", "3304-dispatch"),
+                rules_path(RULE, "configs", "3304-allow.yml"),
+            ),
+            (
+                "dispatch-stale",
+                rules_path(RULE, "fixture", "3304-dispatch"),
+                rules_path(RULE, "configs", "3304-stale.yml"),
+            ),
             // `src/other.test.mts` has a literal and is outside the default include.
             ("pass", rules_path(RULE, "fixture", "pass"), default),
             (

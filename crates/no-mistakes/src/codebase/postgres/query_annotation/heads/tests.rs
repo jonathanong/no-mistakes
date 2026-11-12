@@ -149,3 +149,6 @@ mod literal_tables_tests;
 
 #[path = "coverage_domain_behavior_tests.rs"]
 mod coverage_domain_behavior_tests;
+
+#[path = "coverage_projection_behavior_tests.rs"]
+mod coverage_projection_behavior_tests;

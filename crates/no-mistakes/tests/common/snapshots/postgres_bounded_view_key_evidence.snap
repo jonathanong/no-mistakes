@@ -1,0 +1,122 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "keys-and-pin-sources": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "array_read.sql",
+          "line": 1,
+          "message": "array_read.sql:1: Select can read unbounded rows from view aliased; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM aliased WHERE visible_id = ANY(ARRAY(SELECT id FROM base WHERE base.id = aliased.visible_id LIMIT 1));",
+          "target": "view:aliased"
+        },
+        {
+          "file": "expression.sql",
+          "line": 1,
+          "message": "expression.sql:1: Select can read unbounded rows from view aliased; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM aliased WHERE visible_id + 1 = $1;",
+          "target": "view:aliased"
+        },
+        {
+          "file": "null_incomplete_or.sql",
+          "line": 1,
+          "message": "null_incomplete_or.sql:1: SELECT can return every row of base; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM (SELECT NULL::integer AS id, tenant FROM base) d WHERE d.id = $1 OR d.tenant = $2;",
+          "target": "table:base"
+        },
+        {
+          "file": "null_nested.sql",
+          "line": 1,
+          "message": "null_nested.sql:1: SELECT can return every row of base; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM (SELECT n.id FROM (SELECT NULL::integer AS id FROM base) n) d WHERE d.id = $1;",
+          "target": "table:base"
+        },
+        {
+          "file": "null_nonnull_arm.sql",
+          "line": 1,
+          "message": "null_nonnull_arm.sql:1: SELECT can return every row of base; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM (SELECT NULL::integer AS id FROM base UNION ALL SELECT tenant FROM base) d WHERE d.id = $1;",
+          "target": "table:base"
+        },
+        {
+          "file": "null_unpinned.sql",
+          "line": 1,
+          "message": "null_unpinned.sql:1: SELECT can return every row of base; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM (SELECT NULL::integer AS id FROM base) d;",
+          "target": "table:base"
+        },
+        {
+          "file": "open.sql",
+          "line": 1,
+          "message": "open.sql:1: Select can read unbounded rows from view aliased; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM aliased;",
+          "target": "view:aliased"
+        },
+        {
+          "file": "open_array_query.sql",
+          "line": 1,
+          "message": "open_array_query.sql:1: SELECT can return every row of base; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; Select can read unbounded rows from view aliased; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM aliased WHERE visible_id = ANY(ARRAY(SELECT id FROM base));",
+          "target": "table:base, view:aliased"
+        },
+        {
+          "file": "open_item_join.sql",
+          "line": 1,
+          "message": "open_item_join.sql:1: SELECT can return every row of base; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; Select can read unbounded rows from view aliased; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT v.* FROM base b JOIN aliased v ON v.visible_id = b.id;",
+          "target": "table:base, view:aliased"
+        },
+        {
+          "file": "open_subquery.sql",
+          "line": 1,
+          "message": "open_subquery.sql:1: SELECT can return every row of base; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM aliased WHERE visible_id = (SELECT id FROM base);",
+          "target": "table:base"
+        },
+        {
+          "file": "or_incomplete.sql",
+          "line": 1,
+          "message": "or_incomplete.sql:1: Select can read unbounded rows from view composite; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM composite WHERE (account = $1 AND item = $2) OR account = $3;",
+          "target": "view:composite"
+        },
+        {
+          "file": "outer_read.sql",
+          "line": 1,
+          "message": "outer_read.sql:1: Select can read unbounded rows from view aliased; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM aliased WHERE visible_id = (SELECT id FROM base WHERE base.id = aliased.visible_id LIMIT 1);",
+          "target": "view:aliased"
+        },
+        {
+          "file": "renamed_columns.sql",
+          "line": 1,
+          "message": "renamed_columns.sql:1: Select can read unbounded rows from view aliased; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT * FROM aliased AS v(renamed) WHERE renamed = $1;",
+          "target": "view:aliased"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

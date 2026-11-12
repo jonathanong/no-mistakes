@@ -97,5 +97,9 @@ mod permission_bounds_tests;
 mod ref_safety_tests;
 
 #[cfg(test)]
+#[path = "github_actions_checkout_credentials/uses_fixture_tests.rs"]
+mod uses_fixture_tests;
+
+#[cfg(test)]
 #[path = "github_actions_checkout_credentials/tests/analysis.rs"]
 mod analysis_tests;

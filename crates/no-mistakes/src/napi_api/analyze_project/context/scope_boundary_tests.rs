@@ -1,6 +1,9 @@
 use super::*;
 use serde_json::json;
 
+#[path = "scope_import_bounds_tests.rs"]
+mod scope_import_bounds_tests;
+
 fn options(reports: Value) -> AnalyzeProjectOptions {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/simple/fixture");

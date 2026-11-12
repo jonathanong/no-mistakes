@@ -48,6 +48,89 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "dispatch-allowed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dispatch-custom": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scripts/timeout.mts",
+          "line": 1,
+          "message": "scripts/timeout.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
+          "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "timeout-minutes: '45'",
+          "target": "timeout-minutes: '45'"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dispatch-fixture": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 1,
+          "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
+          "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "timeout-minutes: 30",
+          "target": "timeout-minutes: 30"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dispatch-stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 1,
+          "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
+          "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "timeout-minutes: 30",
+          "target": "timeout-minutes: 30"
+        },
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 1,
+          "message": "stale github-actions-test-timeout-literals allow entry `.github/workflows/ci.test.mts#timeout-minutes: 99`",
+          "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "timeout-minutes: 30",
+          "target": ".github/workflows/ci.test.mts#timeout-minutes: 99"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "include_without_matches": {
     "exitCode": 0,
     "report": {
