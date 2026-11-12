@@ -20,7 +20,11 @@ impl ValueFlowResolution<'_, '_> {
         let iteration = file.values.for_of_calls.get(offset).filter(|binding| {
             binding.scope == *scope && binding.name == *name && binding.owner == *context
         })?;
-        Some(self.for_of_value(path, iteration, &file, *offset, *context, member))
+        let value = self.for_of_value(path, iteration, &file, *offset, *context, member);
+        if !self.cache.ownership_callbacks && matches!(value, FlowValue::Unknown) {
+            return None;
+        }
+        Some(value)
     }
 
     fn for_of_value(
@@ -71,6 +75,10 @@ impl ValueFlowResolution<'_, '_> {
         }
         let mut slots: Vec<_> = fields.keys().collect();
         slots.sort();
+        let receiver_callables = self
+            .facts
+            .get_ts_facts(path)
+            .map(|facts| &facts.value_flow.for_of.receiver_callables);
         let origins = self.default_origins.clone();
         let mut combined = None;
         let mut values = Vec::new();
@@ -89,8 +97,11 @@ impl ValueFlowResolution<'_, '_> {
             }) {
                 return FlowValue::Unknown;
             }
-            if !matches!(row.get(member), Some(ValueExpression::Named { name, scope: None | Some(0), .. }) if file.imported.contains_key(name))
-            {
+            let callable = matches!(row.get(member), Some(ValueExpression::Callable(id))
+                if receiver_callables.is_none_or(|owners| !owners.contains(id)));
+            let imported = self.cache.ownership_callbacks
+                && matches!(row.get(member), Some(ValueExpression::Named { name, scope: None | Some(0), .. }) if file.imported.contains_key(name));
+            if !callable && !imported {
                 return FlowValue::Unknown;
             }
             self.default_origins = origins.clone();
