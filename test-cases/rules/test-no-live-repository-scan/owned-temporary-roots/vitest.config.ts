@@ -1,1 +1,1 @@
-export default { test: { include: ["tests/**/*.test.mts"] } };
+export default { test: { include: ["tests/**/*.test.{mts,mjs}"] } };

@@ -52,37 +52,24 @@ impl<'a> Projector<'a, '_> {
                 member == Some(expected) && self.disposable_namespace_stable(symbol, expected)
             }
             AstKind::ImportDefaultSpecifier(_) => {
-                member == Some(expected) && self.disposable_defaults_stable(symbol, expected)
+                let module = if asynchronous { "fs/promises" } else { "fs" };
+                member == Some(expected) && self.disposable_defaults_stable(module, expected)
             }
             _ => false,
         };
         if !matches {
             return false;
         }
-        let AstKind::ImportDeclaration(import) = self.semantic.nodes().parent_kind(declaration)
-        else {
-            return false;
-        };
-        let module = crate::ast::js_literal(&import.source);
-        !import.import_kind.is_type()
+        matches!(self.semantic.nodes().parent_kind(declaration),
+        AstKind::ImportDeclaration(import) if !import.import_kind.is_type()
             && if asynchronous {
-                matches!(module.as_ref(), "node:fs/promises" | "fs/promises")
+                matches!(crate::ast::js_literal(&import.source).as_ref(), "node:fs/promises" | "fs/promises")
             } else {
-                matches!(module.as_ref(), "node:fs" | "fs")
-            }
+                matches!(crate::ast::js_literal(&import.source).as_ref(), "node:fs" | "fs")
+            })
     }
-    fn disposable_defaults_stable(
-        &mut self,
-        symbol: oxc_semantic::SymbolId,
-        expected: &str,
-    ) -> bool {
+    fn disposable_defaults_stable(&mut self, module: &str, expected: &str) -> bool {
         let semantic = self.semantic;
-        let declaration = semantic.scoping().symbol_declaration(symbol);
-        let AstKind::ImportDeclaration(import) = semantic.nodes().parent_kind(declaration) else {
-            return false;
-        };
-        let module = crate::ast::js_literal(&import.source);
-        let module = module.strip_prefix("node:").unwrap_or(&module);
         for alias in semantic.scoping().symbol_ids() {
             if !self.take() {
                 return false;
@@ -94,12 +81,12 @@ impl<'a> Projector<'a, '_> {
             ) {
                 continue;
             }
-            let AstKind::ImportDeclaration(import) = semantic.nodes().parent_kind(declaration)
-            else {
-                continue;
-            };
-            let source = crate::ast::js_literal(&import.source);
-            if source.strip_prefix("node:").unwrap_or(&source) == module
+            if matches!(semantic.nodes().parent_kind(declaration),
+            AstKind::ImportDeclaration(import)
+                if {
+                    let source = crate::ast::js_literal(&import.source);
+                    source.strip_prefix("node:").unwrap_or(&source) == module
+                })
                 && !self.disposable_namespace_stable(alias, expected)
             {
                 return false;
