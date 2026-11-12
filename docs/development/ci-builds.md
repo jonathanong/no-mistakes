@@ -37,7 +37,7 @@ files; an older server cannot substitute for the committed catalog fixtures.
 Setup reuses a complete installation and otherwise limits package preparation
 to 220 seconds inside the existing five-minute step deadline. APT index errors
 remain failures. One recovery attempt may replace the Azure Ubuntu mirror with
-the [Linux Kernel Archives Ubuntu mirror](https://mirrors.kernel.org/) over HTTPS
+the Linux Kernel Archives Ubuntu mirror (`https://mirrors.edge.kernel.org`) over HTTPS
 after a matching DNS failure. Recovery replaces active Azure and canonical Ubuntu
 archive entries, preserving APT signature verification and unrelated repositories.
 A five-second resolver probe checks that configured mirror before APT can stall
