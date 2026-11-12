@@ -7,6 +7,12 @@ pub(in super::super) struct AliasSafety {
     pub(super) scanned_references: usize,
 }
 
+impl AliasSafety {
+    pub(in super::super) fn cached_bindings(&self) -> usize {
+        self.entries.len()
+    }
+}
+
 macro_rules! record_reference_scan {
     ($cache:expr) => {
         $cache.scanned_references += 1;
