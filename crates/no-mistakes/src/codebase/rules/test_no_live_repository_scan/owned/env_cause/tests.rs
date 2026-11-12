@@ -69,20 +69,26 @@ fn ambiguous_getter_diagnostics_do_not_choose_one_environment_variable() {
 
 #[test]
 fn an_unknown_entry_does_not_name_a_production_location_as_the_test_culprit() {
-    let cause = EnvCause {
-        hint: hint("ROOT"),
-        file: "/repo/production.mts".into(),
-        line: 7,
-        reason: "clears that environment variable before reaching this scan",
-        concrete: false,
-    };
-    let message = cause.message(Path::new("/repo"), "readdirSync");
-    assert!(message.contains("process.env.ROOT"));
-    assert!(message.contains("literal fallback \"./tmp/example\""));
-    assert!(message.contains("a concrete test or setup entry cannot be identified"));
-    assert!(message.contains("make the test-to-scan call or import route explicit"));
-    assert!(!message.contains("production.mts:7"));
-    assert!(!message.contains("clears that environment variable"));
+    let graph = empty_graph();
+    let owners = assemble(blank(&graph));
+    let facts = Facts(FxHashMap::default());
+    let mut site = call_site(Path::new("/repo/production.mts"), "scan", 1);
+    site.line = 7;
+    let mut origin = PathOrigin::unknown();
+    origin.env_diagnostic = Some(Box::new(hint("ROOT")));
+    for _ in 0..2 {
+        let cause = owners.env_cause(&origin, &site, &facts).unwrap();
+        assert!(!cause.concrete);
+        assert_eq!(cause.file, site.file);
+        assert_eq!(cause.line, site.line);
+        let message = cause.message(Path::new("/repo"), "readdirSync");
+        assert!(message.contains("process.env.ROOT"));
+        assert!(message.contains("literal fallback \"./tmp/example\""));
+        assert!(message.contains("a concrete test or setup entry cannot be identified"));
+        assert!(message.contains("make the test-to-scan call or import route explicit"));
+        assert!(!message.contains("production.mts:7"));
+        assert!(!message.contains("clears that environment variable"));
+    }
 }
 
 #[test]
@@ -97,4 +103,65 @@ fn a_known_static_import_remains_a_concrete_location_without_a_call_offset() {
     let message = cause.message(Path::new("/repo"), "readdirSync");
     assert!(message.contains("test.mts:4 has no proven assignment before module initialization"));
     assert!(message.contains("Fix: at test.mts:4"));
+}
+
+#[test]
+fn a_module_target_cannot_identify_an_environment_getter() {
+    let mut site = call_site(Path::new("/repo/query.mts"), "query", 1);
+    site.target_node = Some(NodeId::file("/repo/getter.mts"));
+    let facts = Facts(FxHashMap::default());
+    assert!(getter_environment_hint(&site, &facts).is_none());
+}
+
+#[test]
+fn unreadable_or_unparsed_facts_cannot_supply_environment_diagnostics() {
+    let bindings = Arc::new(TypeScriptModuleFacts {
+        path_provenance: Some(Arc::new(PathProvenance::default())),
+        ..TypeScriptModuleFacts::default()
+    });
+    let valid = TsFileFacts {
+        module_bindings: Some(bindings.clone()),
+        ..TsFileFacts::default()
+    };
+    assert!(diagnostic_paths(&valid).is_some());
+    for (operational_error, parse_error, fatal_parse_error) in [
+        (Some("read failed".to_owned()), None, false),
+        (None, Some("parse failed".to_owned()), false),
+        (None, None, true),
+    ] {
+        let failed = TsFileFacts {
+            module_bindings: Some(bindings.clone()),
+            operational_error,
+            parse_error,
+            fatal_parse_error,
+            ..TsFileFacts::default()
+        };
+        assert!(diagnostic_paths(&failed).is_none());
+    }
+}
+
+#[test]
+fn missing_entry_facts_keep_the_known_test_location_without_inventing_a_write() {
+    let graph = empty_graph();
+    let owners = assemble(blank(&graph));
+    let facts = Facts(FxHashMap::default());
+    let entry = Entry {
+        file: "/repo/test.mts".into(),
+        offset: Some(42),
+        line: 7,
+        concrete: true,
+    };
+    let (rank, cause, offset) = owners.rank_environment_entry(
+        entry,
+        hint("ROOT"),
+        "has no proven assignment before reaching this scan",
+        &facts,
+    );
+    assert_eq!(rank, 4);
+    assert_eq!(offset, Some(42));
+    assert!(cause.concrete);
+    assert_eq!(cause.line, 7);
+    let message = cause.message(Path::new("/repo"), "readdirSync");
+    assert!(message.contains("test.mts:7 has no proven assignment"));
+    assert!(!message.contains("clears that environment variable"));
 }
