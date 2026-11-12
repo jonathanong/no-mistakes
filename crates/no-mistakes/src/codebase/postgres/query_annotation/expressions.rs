@@ -119,3 +119,6 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
         _ => Expr::Opaque(children::collect(expr, source)),
     }
 }
+
+#[cfg(test)]
+mod tests;

@@ -95,6 +95,8 @@ test("coverage floors use one summary export and retain every configured gate", 
   const step = workflow
     .split("- name: Enforce Rust coverage floors\n")[1]
     .split("\n      - name:")[0];
+  assert.match(step, /if: \$\{\{ !cancelled\(\) && steps\.rust-coverage\.outcome == 'success' \}\}/);
+  assert.doesNotMatch(step, /continue-on-error|success\(\)/);
   assert.equal((step.match(/cargo llvm-cov report/g) || []).length, 1);
   assert.match(step, /cargo llvm-cov report --json --summary-only/);
   assert.match(step, /--output-path target\/llvm-cov\/summary\.json/);
@@ -107,4 +109,23 @@ test("coverage floors use one summary export and retain every configured gate", 
     assert.ok(step.includes(`"\${RUST_COVERAGE_FAIL_UNDER_${kind}}"`));
     assert.match(workflow, new RegExp(`RUST_COVERAGE_FAIL_UNDER_${kind}: "98"`));
   }
+});
+
+test("coverage summary remains available after a floor failure", () => {
+  const workflow = readFileSync(join(__dirname, "../workflows/ci.yml"), "utf8");
+  const floor = workflow.indexOf("- name: Enforce Rust coverage floors\n");
+  const upload = workflow.indexOf("- name: Upload Rust coverage summary\n");
+  assert.ok(floor >= 0 && upload > floor);
+  const step = workflow.slice(upload).split("\n      - name:")[0];
+  assert.match(
+    step,
+    /if: \$\{\{ !cancelled\(\) && hashFiles\('target\/llvm-cov\/summary\.json'\) != '' \}\}/,
+  );
+  assert.match(step, /timeout-minutes: 2/);
+  assert.match(step, /uses: actions\/upload-artifact@[a-f0-9]{40} # v\d/);
+  assert.match(step, /name: rust-coverage-summary/);
+  assert.match(step, /path: target\/llvm-cov\/summary\.json/);
+  assert.match(step, /if-no-files-found: error/);
+  assert.match(step, /retention-days: 7/);
+  assert.doesNotMatch(step, /continue-on-error|success\(\)/);
 });

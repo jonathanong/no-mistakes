@@ -311,6 +311,13 @@ Missing or malformed totals fail the check. This avoids the extra table and
 full JSON passes performed by native `--fail-under-*` flags; LCOV generation
 for CRAP and Codecov retains its existing settings.
 
+The `rust-coverage-summary` artifact retains `target/llvm-cov/summary.json` for
+seven days whenever the export exists and the job was not cancelled. Once LCOV
+generation succeeds, the summary export and floor checks run even after another
+quality gate fails, including CRAP. Both that failure and a coverage-floor failure
+remain job failures. Its per-file counts support diagnosis of uncovered
+regions without repeating the instrumented test run.
+
 The lint/source job retains its 30-minute aggregate deadline and existing step
 deadlines. Before package verification moved to its own job, an observed combined
 run spent about twelve minutes on setup and checks before reaching the ten-minute

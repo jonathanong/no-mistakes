@@ -941,6 +941,7 @@ jobs:
             "$RUNNER_TEMP/no-mistakes-profraw-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
 
       - name: Enforce Rust coverage floors
+        if: ${{ !cancelled() && steps.rust-coverage.outcome == 'success' }}
         timeout-minutes: 5
         run: |
           # shellcheck disable=SC1090
@@ -953,6 +954,16 @@ jobs:
             "${RUST_COVERAGE_FAIL_UNDER_LINES}" \
             "${RUST_COVERAGE_FAIL_UNDER_FUNCTIONS}" \
             "${RUST_COVERAGE_FAIL_UNDER_REGIONS}"
+
+      - name: Upload Rust coverage summary
+        if: ${{ !cancelled() && hashFiles('target/llvm-cov/summary.json') != '' }}
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: rust-coverage-summary
+          path: target/llvm-cov/summary.json
+          if-no-files-found: error
+          retention-days: 7
 
       # Codecov is reporting only; the floors above gate coverage, so an outage must not block merges.
       - name: Upload Rust coverage to Codecov
