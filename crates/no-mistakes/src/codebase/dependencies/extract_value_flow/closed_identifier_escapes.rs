@@ -70,12 +70,10 @@ impl super::super::super::ImportCollector {
 
     pub(in super::super::super) fn mark_for_of_registry(&mut self, right: &Expression<'_>) {
         if self.collect_value_flow {
-            if self.collect_call_eligibility {
-                if let Expression::Identifier(identifier) = right.get_inner_expression() {
-                    self.receiver_escapes
-                        .for_of_reads
-                        .insert(identifier.span.start);
-                }
+            if let Expression::Identifier(identifier) = right.get_inner_expression() {
+                self.receiver_escapes
+                    .for_of_reads
+                    .insert(identifier.span.start);
             }
             mark_read(self, right);
         }

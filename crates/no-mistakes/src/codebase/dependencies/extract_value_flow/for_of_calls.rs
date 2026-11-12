@@ -117,7 +117,7 @@ impl ImportCollector {
         self.record_for_of_escape(identifier.name.as_str());
     }
     pub(in super::super::super) fn record_for_of_escape(&mut self, name: &str) {
-        if !self.collect_call_eligibility || !self.collect_value_flow {
+        if !self.collect_value_flow {
             return;
         }
         if let Some(scope) = self.callee_binding_scope(name) {
@@ -132,7 +132,7 @@ impl ImportCollector {
         }
     }
     pub(in super::super::super) fn for_of_source_closed(&self, source: &Expression<'_>) -> bool {
-        if !self.collect_call_eligibility {
+        if !self.collect_value_flow {
             return false;
         }
         let Expression::Identifier(identifier) = source.get_inner_expression() else {

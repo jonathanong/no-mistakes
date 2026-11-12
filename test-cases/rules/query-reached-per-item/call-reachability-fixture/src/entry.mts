@@ -71,3 +71,21 @@ MUTATED_STAGES[0].run = async () => {};
 for (const stage of MUTATED_STAGES) {
   await stage.run();
 }
+const LITERAL_STAGES = [{ run: (...args: unknown[]) => query('literal', args) }];
+for (const stage of LITERAL_STAGES) {
+  await stage.run('text', 7, true, null);
+}
+const SOURCE_ARGUMENT_STAGES = [{ run: (value: unknown) => query('source argument') }];
+for (const stage of SOURCE_ARGUMENT_STAGES) {
+  await stage.run(SOURCE_ARGUMENT_STAGES);
+}
+const COMPLEX_ARGUMENT_STAGES = [{ run: (value: unknown) => query('complex argument') }];
+for (const stage of COMPLEX_ARGUMENT_STAGES) {
+  await stage.run({ id: parentId });
+}
+async function localStages() {
+  const stages = [{ run: () => query('local') }];
+  for (const stage of stages) {
+    await stage.run();
+  }
+}

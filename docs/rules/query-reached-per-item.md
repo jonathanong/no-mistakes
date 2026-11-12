@@ -32,8 +32,8 @@ inside the literal `run` functions, including calls through their executor
 parameters. Stage calls accept identifier or primitive literal arguments;
 passing the stage or its source array elsewhere, mutating or escaping the
 array, using `this` in a stage function, or mixing unresolved methods prevents
-this proof. Rewrite dynamic
-registries as closed literal stages with explicit executor arguments.
+this proof. Rewrite dynamic registries as closed literal stages with explicit
+executor arguments.
 
 Arrow and function arguments also retain reachability when the resolved helper
 invokes the corresponding parameter, such as
@@ -41,6 +41,31 @@ invokes the corresponding parameter, such as
 `b()`. Merely passing, retaining, or storing a callback does not execute it.
 Unknown or conflicting callback arguments remain unresolved. Keep callback
 invocation statically visible, or call the query helper directly in the loop.
+
+With a configured `query` sink, both loop calls below report:
+
+```ts
+const stages = [{ run: () => query('SELECT a') }];
+for (const stage of stages) await stage.run();
+
+async function both(a: () => Promise<unknown>, b: () => Promise<unknown>) {
+  await a();
+  await b();
+}
+for (const id of ids) await both(() => query('SELECT a'), () => query('SELECT b'));
+```
+
+This callback is only stored, so the loop call does not report:
+
+```ts
+const callbacks: (() => Promise<unknown>)[] = [];
+function store(callback: () => Promise<unknown>) { callbacks.push(callback); }
+for (const id of ids) store(() => query('SELECT a'));
+```
+
+Batch the queries behind the invoked stage or helper before applying it to the
+complete input, or use the rule's justified suppression for intentional calls.
+
 Imported receiver mutations remain visible through later object literals,
 identifier parameters, and destructured helper arguments or defaults. Replacing
 an imported method makes that method unresolved through those receivers; a
