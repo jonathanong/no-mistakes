@@ -768,6 +768,10 @@ root inside nested closures, including callbacks passed to `expect` inside a
 loop. A shadowing binding has its own provenance; reassigning the captured root
 retains the finding.
 
+A spread before the callback's root argument leaves its parameter position
+unproven. Pass that argument explicitly; spreads after the root do not shift its
+position.
+
 ```ts
 function withTempDirectory(run: (root: string) => void) {
   const root = mkdtempSync(join(tmpdir(), "scan-"));

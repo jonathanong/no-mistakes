@@ -108,7 +108,7 @@ impl<'a> Projector<'a, '_> {
             {
                 return None;
             }
-            let argument = call.arguments.get(index)?.as_expression()?;
+            let argument = callback_argument(call, index)?;
             if !self.callback_root(argument, call_node, symbol, helper.start)? {
                 return None;
             }
@@ -116,6 +116,21 @@ impl<'a> Projector<'a, '_> {
         }
         invoked.then(|| PathOrigin::anchored(PathAnchor::Temp))
     }
+}
+
+fn callback_argument<'a, 'b>(
+    call: &'b CallExpression<'a>,
+    index: usize,
+) -> Option<&'b Expression<'a>> {
+    if call
+        .arguments
+        .iter()
+        .take(index)
+        .any(|argument| argument.as_expression().is_none())
+    {
+        return None;
+    }
+    call.arguments.get(index)?.as_expression()
 }
 
 fn synchronous_body(body: &FunctionBody<'_>) -> bool {
