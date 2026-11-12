@@ -45,7 +45,14 @@ fn prepared() -> (FileIdMap<CheckFileFacts>, std::path::PathBuf) {
 #[test]
 fn cov_p2_closed_names_require_resolvable_static_imports_only() {
     let (mut files, root) = prepared();
-    let before = files.clone();
+    let before: FileIdMap<_> = files
+        .iter()
+        .filter_map(|(path, file)| {
+            file.query_annotation_heads
+                .clone()
+                .map(|heads| (path.clone(), heads))
+        })
+        .collect();
     super::retain(&mut files, &|specifier, _| match specifier {
         "@bench/db" | "./flags.mjs" => Some(root.join("flags.mts")),
         _ => None,
@@ -56,7 +63,7 @@ fn cov_p2_closed_names_require_resolvable_static_imports_only() {
         ("computed", false),
     ] {
         let path = root.join(format!("{name}.mts"));
-        let original = before[&path].query_annotation_heads.as_ref().unwrap();
+        let original = &before[&path];
         assert_eq!(original.import_gated_finite.len(), 1, "{name}");
         let span = original.import_gated_finite[0];
         assert_eq!(original.calls[&span], HeadProof::Literal);
@@ -69,7 +76,7 @@ fn cov_p2_closed_names_require_resolvable_static_imports_only() {
         }
     }
     let path = root.join("ungated.mts");
-    let original = before[&path].query_annotation_heads.as_ref().unwrap();
+    let original = &before[&path];
     assert!(original.import_gated_finite.is_empty());
     assert_eq!(
         files[&path].query_annotation_heads.as_ref().unwrap().calls,
