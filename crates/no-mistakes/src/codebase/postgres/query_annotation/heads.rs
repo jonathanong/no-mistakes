@@ -79,3 +79,6 @@ pub(crate) use import_projection::project;
 
 #[cfg(test)]
 mod literal_helper_tests;
+
+#[cfg(test)]
+mod builtin_literal_helper_tests;
