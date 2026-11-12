@@ -359,3 +359,22 @@ fn postgres_copy_streams_prefix_boundaries_check_json_snapshot() {
     });
     assert_saved_fixture("postgres_copy_streams_prefix_boundaries", &cases);
 }
+
+#[test]
+fn postgres_literal_builder_head_check_json_snapshot() {
+    assert_saved_fixture(
+        "postgres_literal_builder_head",
+        &[
+            case(
+                "low_report",
+                "literal-builder-head",
+                "literal-builder-head.yml",
+            ),
+            case(
+                "max_report",
+                "literal-builder-head",
+                "literal-builder-head-max.yml",
+            ),
+        ],
+    );
+}

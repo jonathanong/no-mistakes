@@ -269,7 +269,29 @@ or use a separate builder for the unsupported operation. Supported appends after
 an executor read remain safe, including directly imported effects whose targets
 are proven append-only. Plain immutable strings retain their existing head proof.
 A discarded call to a same-file or directly imported append-only function can
-preserve that trusted local builder's fixed prefix. Its first parameter may
+preserve that trusted local builder's fixed prefix. For example, the helper call
+and later append here preserve the initializer's annotation:
+
+```ts
+import sql, { type SQLStatement } from 'sql-template-strings';
+
+function addFilters(q: SQLStatement, id: string) {
+  q.append(sql` AND x = ${id}`);
+}
+
+export async function listThings(id: string) {
+  const q = sql`/* listThings */ SELECT id FROM things WHERE true`;
+  addFilters(q, id);
+  q.append(sql` LIMIT 10`);
+  return read(q);
+}
+```
+
+This requires a literal head and the trusted `sql-template-strings` import
+shown above. Reassigned bindings, dynamic heads, and helpers that replace SQL
+text or call other builder methods remain unresolved.
+
+A proven append-only helper's first parameter may
 only appear as the receiver of discarded static append chains; defaults,
 aliases and used append results abstain. Captured uses qualify only when they
 are discarded static appends on the exact parameter; callbacks may run later
