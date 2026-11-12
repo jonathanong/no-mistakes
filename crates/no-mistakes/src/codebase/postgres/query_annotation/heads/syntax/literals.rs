@@ -1,3 +1,4 @@
+use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Expression, TemplateLiteral};
 pub(in crate::codebase::postgres::query_annotation::heads) fn named(text: &str) -> bool {
     // Inspect only the FIRST block comment; a later named comment cannot repair
@@ -27,11 +28,42 @@ fn interpolated_name(template: &TemplateLiteral<'_>, first: &str) -> bool {
     if open.contains("*/") {
         return false;
     }
-    for (index, part) in template.quasis.iter().enumerate().skip(1) {
-        let text = crate::ast::template_quasi_text(part);
-        if text.contains("*/") {
-            return index == template.expressions.len();
+    let mut previous_star = open.ends_with('*');
+    let mut has_name = !open.trim().is_empty();
+    for (index, (expression, part)) in template
+        .expressions
+        .iter()
+        .zip(template.quasis.iter().skip(1))
+        .enumerate()
+    {
+        if let Expression::StringLiteral(value) = unwrap_ts_wrappers(expression) {
+            let text = crate::ast::js_literal(value);
+            if closes_comment(&text, &mut previous_star) {
+                return false;
+            }
+            has_name |= !text.trim().is_empty();
+        } else {
+            previous_star = false;
+            has_name = true;
         }
+        let text = crate::ast::template_quasi_text(part);
+        if let Some(end) = text.find("*/") {
+            return !closes_comment(&text[..end], &mut previous_star)
+                && index + 1 == template.expressions.len()
+                && (has_name || !text[..end].trim().is_empty());
+        }
+        if closes_comment(&text, &mut previous_star) {
+            return false;
+        }
+        has_name |= !text.trim().is_empty();
     }
     false
+}
+
+fn closes_comment(text: &str, previous_star: &mut bool) -> bool {
+    let closes = (*previous_star && text.starts_with('/')) || text.contains("*/");
+    if !text.is_empty() {
+        *previous_star = text.ends_with('*');
+    }
+    closes
 }

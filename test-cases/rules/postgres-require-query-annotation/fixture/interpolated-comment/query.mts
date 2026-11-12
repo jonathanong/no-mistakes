@@ -10,6 +10,8 @@ declare const flag: boolean;
 await read(`/* ${name} */ SELECT 1`); // accepted: interpolated name
 await query(`/* listPage:${source} */ SELECT id FROM t`); // accepted: literal prefix
 await read(`/* ${name}:${source} */ SELECT 1`); // accepted: multiple name expressions
+await read(`/* ${'list'}${'Page'} */ SELECT 1`); // accepted: known nonempty pieces
+await read(`/* literal${''} */ SELECT 1`); // accepted: literal name and empty piece
 await read(`\x2f* ${name} *\x2f SELECT 1`); // accepted: cooked delimiters
 await read(`/* literal */ SELECT ${v}`); // accepted: existing SQL interpolation
 const q = `/* ${name} */ SELECT id FROM t WHERE id = $1`;
@@ -19,6 +21,11 @@ await read(`${head} SELECT 1`); // reported: whole head interpolated
 await read(`SELECT 1 /* ${name} */`); // reported: comment is not first
 await read(`/* ${name} ${close} SELECT 1`); // reported: closing delimiter interpolated
 await read(`/* ${name} */ ${suffix} SELECT 1`); // reported: interpolation outside comment
+await read(`/* ${''}${''} */ SELECT 1`); // reported: multiple empty pieces
+await read(`/* ${'' as const}${''} */ SELECT 1`); // reported: wrapped empty piece
+await read(`/* ${'*/'}${name} */ SELECT 1`); // reported: known early close before unknown
+await read(`/* ${'*'}${'/'}${name} */ SELECT 1`); // reported: split known early close
+await read(`/* ${'*'}/${name} */ SELECT 1`); // reported: known close across expression and literal
 await read(`/* ${''} */ SELECT 1`); // reported: known empty name
 await read(`/* ${'*/'} */ SELECT 1`); // reported: known early close
 await read(`/* ${flag ? '' : 'named'} */ SELECT 1`); // reported: possibly empty name
@@ -30,6 +37,8 @@ const emptyQuery = `/* ${emptyName} */ SELECT 1`;
 await read(emptyQuery); // reported: const-bound empty name
 const earlyCloseQuery = `/* ${'*/'} */ SELECT 1`;
 await read(earlyCloseQuery); // reported: const-bound early close
+const emptyPiecesQuery = `/* ${''}${''} */ SELECT 1`;
+await read(emptyPiecesQuery); // reported: const-bound empty pieces
 const goodName = 'named';
 const goodQuery = `/* ${goodName} */ SELECT 1`;
 await read(goodQuery); // accepted: const-bound known valid name
