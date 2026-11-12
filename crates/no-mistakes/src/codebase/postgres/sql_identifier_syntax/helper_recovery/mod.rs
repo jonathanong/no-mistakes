@@ -161,3 +161,6 @@ mod patch_support_tests;
 mod predicate_tests;
 #[cfg(test)]
 mod switch_tests;
+
+#[cfg(test)]
+mod lowering_fixture_tests;

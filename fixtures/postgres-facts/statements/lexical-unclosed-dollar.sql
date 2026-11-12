@@ -1,0 +1,2 @@
+SELECT $body$ SELECT
+INSERT INTO ignored

@@ -190,3 +190,6 @@ fn plain_star(options: &WildcardAdditionalOptions) -> bool {
         && options.opt_rename.is_none()
         && options.opt_alias.is_none()
 }
+
+#[cfg(test)]
+mod tests;
