@@ -8,6 +8,9 @@ include!("parameter_cache_state.rs");
 #[derive(Default)]
 pub(in super::super) struct ParameterCache {
     pub(super) ownership_callbacks: bool,
+    pub(super) stage_indexes: OnceLock<CallableResolutionIndexes>,
+    pub(super) stage_exports:
+        DashMap<(std::path::PathBuf, String), Arc<OnceLock<bool>>, FxBuildHasher>,
     #[cfg(all(test, feature = "test-instrumentation"))]
     pub(super) opaque_entry_mode: opaque_entry_mode::Mode,
     #[cfg(all(test, feature = "test-instrumentation"))]

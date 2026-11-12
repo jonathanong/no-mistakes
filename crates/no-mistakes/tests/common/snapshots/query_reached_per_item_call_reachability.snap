@@ -77,5 +77,36 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       ],
       "warnings": []
     }
+  },
+  "imported_stages": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 6,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const c = await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const r = await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        }
+      ],
+      "warnings": []
+    }
   }
 }
