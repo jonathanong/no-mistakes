@@ -1,4 +1,4 @@
-use super::check_json_snapshot::{assert_saved_fixture, rules_path};
+use super::check_json_snapshot::{assert_saved_fixture, assert_saved_fixture_report, rules_path};
 
 #[test]
 fn postgres_sql_statement_policy_check_json_snapshot() {
@@ -193,4 +193,84 @@ fn postgres_sql_statement_policy_check_json_snapshot() {
         )
     });
     assert_saved_fixture("postgres_sql_statement_policy", &cases);
+}
+
+#[test]
+fn postgres_sql_statement_policy_option_placement_check_json_snapshot() {
+    let rule = "postgres-sql-statement-policy";
+    let cases = [
+        (
+            "exact_no_sql_repro",
+            "nested-scope-repro",
+            "nested-scope-both",
+            1,
+        ),
+        ("nested_both", "option-placement", "nested-scope-both", 4),
+        (
+            "nested_include",
+            "option-placement",
+            "nested-scope-include",
+            6,
+        ),
+        (
+            "nested_exclude",
+            "option-placement",
+            "nested-scope-exclude",
+            6,
+        ),
+        (
+            "nested_sql_only",
+            "option-placement",
+            "nested-scope-no-executors",
+            2,
+        ),
+        (
+            "nested_empty",
+            "option-placement",
+            "nested-scope-empty-include",
+            8,
+        ),
+        ("rule_level", "option-placement", "rule-level-scope", 4),
+        (
+            "rule_level_sql_only",
+            "option-placement",
+            "rule-level-scope-sql-only",
+            2,
+        ),
+        (
+            "rule_narrower",
+            "option-placement",
+            "scope-intersection-rule-narrower",
+            2,
+        ),
+        (
+            "options_narrower",
+            "option-placement",
+            "scope-intersection-options-narrower",
+            2,
+        ),
+    ];
+    let inputs = cases.map(|(label, fixture, config, _)| {
+        (
+            label,
+            rules_path(rule, "fixture", fixture),
+            rules_path(rule, "configs", &format!("{config}.yml")),
+        )
+    });
+    let report = assert_saved_fixture_report(
+        "postgres_sql_statement_policy_option_placement",
+        &inputs,
+        &[],
+        &[],
+    );
+    for (label, _, _, expected) in cases {
+        let result = &report[label]["report"];
+        assert_eq!(
+            result["rules"].as_array().unwrap().len(),
+            expected,
+            "{label}: {result}"
+        );
+        assert!(result.get("incomplete").is_none(), "{label}: {result}");
+        assert_eq!(report[label]["exitCode"], 1, "{label}: {result}");
+    }
 }

@@ -1,0 +1,431 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "exact_no_sql_repro": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/query.ts",
+          "line": 2,
+          "message": "backend/query.ts:2: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(\"SET statement_timeout = '1s'\");",
+          "target": "setting:statement_timeout"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nested_both": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/policy.sql",
+          "line": 1,
+          "message": "backend/policy.sql:1: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET statement_timeout = '3s';",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "backend/policy.sql",
+          "line": 2,
+          "message": "backend/policy.sql:2: SQL files matching this rule must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "TRUNCATE TABLE raw_things;",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "backend/query.ts",
+          "line": 2,
+          "message": "backend/query.ts:2: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(\"SET statement_timeout = '1s'\");",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "backend/query.ts",
+          "line": 3,
+          "message": "backend/query.ts:3: executed SQL must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('TRUNCATE TABLE things');",
+          "target": "TRUNCATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nested_empty": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/__tests__/excluded.test.ts",
+          "line": 2,
+          "message": "backend/__tests__/excluded.test.ts:2: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(\"SET statement_timeout = '2s'\");",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "backend/__tests__/excluded.test.ts",
+          "line": 3,
+          "message": "backend/__tests__/excluded.test.ts:3: executed SQL must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('TRUNCATE TABLE excluded_things');",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "backend/policy.sql",
+          "line": 1,
+          "message": "backend/policy.sql:1: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET statement_timeout = '3s';",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "backend/policy.sql",
+          "line": 2,
+          "message": "backend/policy.sql:2: SQL files matching this rule must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "TRUNCATE TABLE raw_things;",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "backend/query.ts",
+          "line": 2,
+          "message": "backend/query.ts:2: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(\"SET statement_timeout = '1s'\");",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "backend/query.ts",
+          "line": 3,
+          "message": "backend/query.ts:3: executed SQL must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('TRUNCATE TABLE things');",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "outside/ignored.sql",
+          "line": 1,
+          "message": "outside/ignored.sql:1: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET statement_timeout = '4s';",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "outside/ignored.sql",
+          "line": 2,
+          "message": "outside/ignored.sql:2: SQL files matching this rule must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "TRUNCATE TABLE outside_things;",
+          "target": "TRUNCATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nested_exclude": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/policy.sql",
+          "line": 1,
+          "message": "backend/policy.sql:1: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET statement_timeout = '3s';",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "backend/policy.sql",
+          "line": 2,
+          "message": "backend/policy.sql:2: SQL files matching this rule must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "TRUNCATE TABLE raw_things;",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "backend/query.ts",
+          "line": 2,
+          "message": "backend/query.ts:2: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(\"SET statement_timeout = '1s'\");",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "backend/query.ts",
+          "line": 3,
+          "message": "backend/query.ts:3: executed SQL must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('TRUNCATE TABLE things');",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "outside/ignored.sql",
+          "line": 1,
+          "message": "outside/ignored.sql:1: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET statement_timeout = '4s';",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "outside/ignored.sql",
+          "line": 2,
+          "message": "outside/ignored.sql:2: SQL files matching this rule must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "TRUNCATE TABLE outside_things;",
+          "target": "TRUNCATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nested_include": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/__tests__/excluded.test.ts",
+          "line": 2,
+          "message": "backend/__tests__/excluded.test.ts:2: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(\"SET statement_timeout = '2s'\");",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "backend/__tests__/excluded.test.ts",
+          "line": 3,
+          "message": "backend/__tests__/excluded.test.ts:3: executed SQL must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('TRUNCATE TABLE excluded_things');",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "backend/policy.sql",
+          "line": 1,
+          "message": "backend/policy.sql:1: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET statement_timeout = '3s';",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "backend/policy.sql",
+          "line": 2,
+          "message": "backend/policy.sql:2: SQL files matching this rule must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "TRUNCATE TABLE raw_things;",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "backend/query.ts",
+          "line": 2,
+          "message": "backend/query.ts:2: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(\"SET statement_timeout = '1s'\");",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "backend/query.ts",
+          "line": 3,
+          "message": "backend/query.ts:3: executed SQL must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('TRUNCATE TABLE things');",
+          "target": "TRUNCATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nested_sql_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/policy.sql",
+          "line": 1,
+          "message": "backend/policy.sql:1: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET statement_timeout = '3s';",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "backend/policy.sql",
+          "line": 2,
+          "message": "backend/policy.sql:2: SQL files matching this rule must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "TRUNCATE TABLE raw_things;",
+          "target": "TRUNCATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "options_narrower": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/query.ts",
+          "line": 2,
+          "message": "backend/query.ts:2: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(\"SET statement_timeout = '1s'\");",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "backend/query.ts",
+          "line": 3,
+          "message": "backend/query.ts:3: executed SQL must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('TRUNCATE TABLE things');",
+          "target": "TRUNCATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "rule_level": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/policy.sql",
+          "line": 1,
+          "message": "backend/policy.sql:1: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET statement_timeout = '3s';",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "backend/policy.sql",
+          "line": 2,
+          "message": "backend/policy.sql:2: SQL files matching this rule must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "TRUNCATE TABLE raw_things;",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "backend/query.ts",
+          "line": 2,
+          "message": "backend/query.ts:2: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(\"SET statement_timeout = '1s'\");",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "backend/query.ts",
+          "line": 3,
+          "message": "backend/query.ts:3: executed SQL must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('TRUNCATE TABLE things');",
+          "target": "TRUNCATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "rule_level_sql_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/policy.sql",
+          "line": 1,
+          "message": "backend/policy.sql:1: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET statement_timeout = '3s';",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "backend/policy.sql",
+          "line": 2,
+          "message": "backend/policy.sql:2: SQL files matching this rule must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "TRUNCATE TABLE raw_things;",
+          "target": "TRUNCATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "rule_narrower": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/query.ts",
+          "line": 2,
+          "message": "backend/query.ts:2: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(\"SET statement_timeout = '1s'\");",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "backend/query.ts",
+          "line": 3,
+          "message": "backend/query.ts:3: executed SQL must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('TRUNCATE TABLE things');",
+          "target": "TRUNCATE"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

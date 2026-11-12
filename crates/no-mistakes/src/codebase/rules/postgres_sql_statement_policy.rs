@@ -25,6 +25,8 @@ const DEFAULT_BANNED: &[&str] = &[
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
 pub(crate) struct Options {
+    pub(crate) include: Vec<String>,
+    pub(crate) exclude: Vec<String>,
     pub(crate) sql_include: Vec<String>,
     #[serde(default)]
     pub(crate) sql_include_locked: bool,
@@ -41,6 +43,7 @@ pub(crate) struct Options {
 }
 
 struct CompiledOptions {
+    paths: super::RuleGlobFilter,
     schema: PostgresSchemaOptions,
     banned: HashSet<String>,
     settings: HashSet<String>,
@@ -101,7 +104,8 @@ pub(crate) fn check_with_files_sources_and_facts(
             .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots))
             .cloned()
             .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        let mut files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        files.retain(|path| compiled.paths.includes(&sql_rel(root, path)));
         let view = facts.for_sql_application(index, rule.name.as_deref());
         findings.extend(scan::scan(
             root,
@@ -141,6 +145,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         }
     }
     Ok(CompiledOptions {
+        paths: super::RuleGlobFilter::new(RULE_ID, &opts.include, &opts.exclude)?,
         schema: PostgresSchemaOptions {
             sql_include: crate::codebase::postgres::effective_sql_include(
                 &opts.sql_include,
