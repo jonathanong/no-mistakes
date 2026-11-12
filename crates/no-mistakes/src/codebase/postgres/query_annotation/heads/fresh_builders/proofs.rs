@@ -1,4 +1,5 @@
 use super::{Bindings, HeadProof, Root, Span, Syntax};
+use crate::codebase::postgres::query_annotation::heads::effects;
 use crate::codebase::postgres::query_annotation::heads::syntax::Head;
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 use crate::fx::{FxHashMap, FxHashSet};
@@ -8,6 +9,7 @@ pub(super) fn collect(
     bindings: &Bindings<'_>,
     module: &TypeScriptModuleFacts,
     executors: &FxHashSet<Span>,
+    deferred: &mut Vec<effects::Conditional>,
 ) -> Vec<(Span, HeadProof)> {
     let candidates = &syntax.fresh_builders;
     if candidates.declarations.is_empty() {
@@ -20,6 +22,12 @@ pub(super) fn collect(
             Head::Reference(reference) if executors.contains(&call.span) => Some((reference, call)),
             _ => None,
         })
+        .collect::<FxHashMap<_, _>>();
+    let pending = bindings
+        .effects()
+        .pending
+        .iter()
+        .map(|effect| (effect.builder, effect.span))
         .collect::<FxHashMap<_, _>>();
     let mut result = Vec::new();
     for binding in &module.bindings {
@@ -38,6 +46,7 @@ pub(super) fn collect(
             continue;
         }
         let mut calls = Vec::new();
+        let mut required = Vec::new();
         let valid = binding
             .references
             .iter()
@@ -71,12 +80,23 @@ pub(super) fn collect(
                     calls.push(call.span);
                     return true;
                 }
+                if let Some(&span) = pending.get(&reference) {
+                    required.push(span);
+                    return true;
+                }
                 syntax.discarded_appends.contains(&reference)
                     || syntax.prefix_discarded_appends.contains(&reference)
                     || bindings.allowed_effect(reference)
             });
         if valid {
-            result.extend(calls.into_iter().map(|call| (call, HeadProof::Literal)));
+            if required.is_empty() {
+                result.extend(calls.into_iter().map(|call| (call, HeadProof::Literal)));
+            } else if !calls.is_empty() {
+                deferred.push(effects::Conditional {
+                    spans: calls,
+                    required,
+                });
+            }
         }
     }
     result

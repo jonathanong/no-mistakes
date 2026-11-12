@@ -101,13 +101,35 @@ impl<'a, F: Fn(&str, &Path) -> Option<PathBuf>> Resolver<'a, F> {
         if exports.next().is_some() {
             return Proof::default();
         }
-        let Some(specifier) = &export.specifier else {
-            return Proof::default();
+        let (specifier, imported) = if let Some(specifier) = &export.specifier {
+            (specifier.as_str(), export.local.as_str())
+        } else {
+            let mut matches = module
+                .imports
+                .iter()
+                .filter(|import| !import.type_only)
+                .flat_map(|import| {
+                    import
+                        .bindings
+                        .iter()
+                        .filter(move |binding| {
+                            !binding.type_only
+                                && binding.kind == "named"
+                                && binding.local == export.local
+                        })
+                        .map(move |binding| (import.specifier.as_str(), binding.imported.as_str()))
+                });
+            let Some(binding) = matches.next() else {
+                return Proof::default();
+            };
+            if matches.next().is_some() {
+                return Proof::default();
+            }
+            binding
         };
         let Some(target) = (self.resolve)(specifier, path) else {
             return Proof::default();
         };
-        let imported = export.local.clone();
-        self.lookup(&target, &imported)
+        self.lookup(&target, imported)
     }
 }

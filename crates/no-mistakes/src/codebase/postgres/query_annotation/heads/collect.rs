@@ -62,8 +62,16 @@ pub(crate) fn collect_prepared(
     let (trusted_append_calls, trusted_prefix_calls) =
         trusted_append::proofs(&syntax, &bindings, &calls, candidates, low_candidates);
     let mut import_gated_finite = Vec::new();
+    let mut deferred_fresh_builders = Vec::new();
     if include_all_calls {
-        super::low_proofs::apply(&syntax, &bindings, ts, &executor_calls, &mut calls);
+        super::low_proofs::apply(
+            &syntax,
+            &bindings,
+            ts,
+            &executor_calls,
+            &mut calls,
+            &mut deferred_fresh_builders,
+        );
         for (span, proof) in trusted_prefix_calls {
             calls.insert(span, proof);
         }
@@ -100,11 +108,12 @@ pub(crate) fn collect_prepared(
             }
         }
     }
-    let conditional_effects = if include_all_calls {
+    let mut conditional_effects = if include_all_calls {
         effects::collect_conditionals(&syntax, &bindings, &executor_calls, &calls)
     } else {
         Vec::new()
     };
+    conditional_effects.extend(deferred_fresh_builders);
     let helper_calls = literal_helpers::proofs(&syntax, &bindings, ts);
     let (exported_callbacks, pending_callbacks) = callback_heads::collect(
         include_all_calls,

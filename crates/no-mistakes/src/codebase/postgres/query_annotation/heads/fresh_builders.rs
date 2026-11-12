@@ -37,8 +37,9 @@ pub(super) fn proofs(
     bindings: &Bindings<'_>,
     module: Option<&TypeScriptModuleFacts>,
     executors: &FxHashSet<Span>,
+    deferred: &mut Vec<super::effects::Conditional>,
 ) -> Vec<(Span, HeadProof)> {
     module.map_or_else(Vec::new, |module| {
-        proofs::collect(syntax, bindings, module, executors)
+        proofs::collect(syntax, bindings, module, executors, deferred)
     })
 }
