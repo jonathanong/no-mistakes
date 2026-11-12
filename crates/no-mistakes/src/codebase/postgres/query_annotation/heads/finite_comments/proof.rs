@@ -26,30 +26,7 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn proofs(
     {
         return (BTreeMap::new(), FxHashSet::default());
     }
-    let const_candidates: FxHashSet<_> = syntax
-        .finite_templates
-        .iter()
-        .map(|candidate| candidate.call)
-        .filter(|span| syntax.constants.contains_key(span))
-        .collect();
-    let mut const_uses = FxHashMap::<Span, Vec<Span>>::default();
-    if !const_candidates.is_empty() {
-        for call in syntax
-            .calls
-            .iter()
-            .filter(|call| executors.contains(&call.span))
-        {
-            let Head::Reference(reference) = call.head else {
-                continue;
-            };
-            if let Some(owner) = bindings.owner(reference).filter(|owner| !owner.imported) {
-                let declaration = (owner.span.start, owner.span.end);
-                if const_candidates.contains(&declaration) {
-                    const_uses.entry(declaration).or_default().push(call.span);
-                }
-            }
-        }
-    }
+    let const_uses = build_const_uses(syntax, bindings, executors);
     if syntax.finite_roots.is_empty()
         && !syntax.finite_templates.iter().any(|candidate| {
             executors.contains(&candidate.call) || const_uses.contains_key(&candidate.call)
@@ -118,6 +95,38 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn proofs(
     }
     index.report();
     (found, gated)
+}
+
+fn build_const_uses(
+    syntax: &Syntax,
+    bindings: &Bindings<'_>,
+    executors: &FxHashSet<Span>,
+) -> FxHashMap<Span, Vec<Span>> {
+    let const_candidates: FxHashSet<_> = syntax
+        .finite_templates
+        .iter()
+        .map(|candidate| candidate.call)
+        .filter(|span| syntax.constants.contains_key(span))
+        .collect();
+    let mut const_uses = FxHashMap::<Span, Vec<Span>>::default();
+    if !const_candidates.is_empty() {
+        for call in syntax
+            .calls
+            .iter()
+            .filter(|call| executors.contains(&call.span))
+        {
+            let Head::Reference(reference) = call.head else {
+                continue;
+            };
+            if let Some(owner) = bindings.owner(reference).filter(|owner| !owner.imported) {
+                let declaration = (owner.span.start, owner.span.end);
+                if const_candidates.contains(&declaration) {
+                    const_uses.entry(declaration).or_default().push(call.span);
+                }
+            }
+        }
+    }
+    const_uses
 }
 
 fn direct(
