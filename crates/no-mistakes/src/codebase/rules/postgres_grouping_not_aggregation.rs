@@ -93,3 +93,6 @@ mod review_tests;
 
 #[cfg(test)]
 mod recovery_tests;
+
+#[cfg(test)]
+mod existence_fixture_tests;

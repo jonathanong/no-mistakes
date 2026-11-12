@@ -1,0 +1,19 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "events": {
+      "columns": {
+        "tenant": {
+          "dataType": "integer",
+          "nullable": false
+        },
+        "score": {
+          "dataType": "integer",
+          "nullable": false
+        }
+      }
+    }
+  }
+}

@@ -332,3 +332,6 @@ fn scalar_and_object_reference_containers_survive_callback_frames_and_slot_joins
 
 #[path = "tests/evaluator_behavior.rs"]
 mod evaluator_behavior;
+
+#[path = "tests/legacy_tag_behavior.rs"]
+mod legacy_tag_behavior;

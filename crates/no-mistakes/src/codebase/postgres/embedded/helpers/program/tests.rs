@@ -454,3 +454,6 @@ fn unsupported_statements_fail_only_when_reached() {
         "void+0: AND a = 1"
     );
 }
+
+#[path = "switch_boundary_fixture_tests.rs"]
+mod switch_boundary_fixture_tests;

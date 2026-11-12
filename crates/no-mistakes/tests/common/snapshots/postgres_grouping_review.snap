@@ -2,6 +2,43 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "existence_boundaries": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "base.sql",
+          "line": 1,
+          "message": "base.sql:1: [aggregate-existence-test] MAX is a boolean absence test; preserve the original NOT EXISTS disjunct and replace MAX < threshold with threshold IS NOT NULL AND NOT EXISTS for rows at or above the threshold (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT e.tenant FROM events e GROUP BY e.tenant HAVING NOT EXISTS (SELECT 1 FROM events i WHERE i.tenant = e.tenant) OR MAX(e.score) < 10;",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "reversed-correlation.sql",
+          "line": 1,
+          "message": "reversed-correlation.sql:1: [aggregate-existence-test] MAX is a boolean absence test; preserve the original NOT EXISTS disjunct and replace MAX < threshold with threshold IS NOT NULL AND NOT EXISTS for rows at or above the threshold (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT e.tenant FROM events e GROUP BY e.tenant HAVING NOT EXISTS (SELECT 1 FROM events i WHERE e.tenant = i.tenant) OR MAX(e.score) < 10;",
+          "target": "aggregate-existence-test"
+        },
+        {
+          "file": "reversed-disjuncts.sql",
+          "line": 1,
+          "message": "reversed-disjuncts.sql:1: [aggregate-existence-test] MAX is a boolean absence test; preserve the original NOT EXISTS disjunct and replace MAX < threshold with threshold IS NOT NULL AND NOT EXISTS for rows at or above the threshold (SQL column 1)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "SELECT e.tenant FROM events e GROUP BY e.tenant HAVING MAX(e.score) < 10 OR NOT EXISTS (SELECT 1 FROM events i WHERE i.tenant = e.tenant);",
+          "target": "aggregate-existence-test"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "guarded_absence_and_soundness_controls": {
     "exitCode": 0,
     "report": {

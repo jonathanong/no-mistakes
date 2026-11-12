@@ -524,6 +524,7 @@ include!("tests_queries.rs");
 include!("tests_playwright.rs");
 
 mod analysis_session_tests;
+mod api_failure_contracts;
 mod async_task_tests;
 mod check;
 mod ci;
