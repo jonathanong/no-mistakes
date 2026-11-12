@@ -1,0 +1,81 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "call_reachability": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry.mts",
+          "import": "both",
+          "line": 15,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `both` reaches `postgres` via both → <anonymous:1> → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await both(() => query('SELECT a', [id]), function() { return query('SELECT b', [id]); });",
+          "target": "postgres: both → <anonymous:1> → query"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "objectStage.run",
+          "line": 28,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `objectStage.run` reaches `postgres` via objectStage/run → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await objectStage.run();",
+          "target": "postgres: objectStage/run → query"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "stage.run",
+          "line": 11,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via run → q",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, parentId, batchSize);",
+          "target": "postgres: run → q"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "stage.run",
+          "line": 59,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via run → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run();",
+          "target": "postgres: run → query"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "stage.run",
+          "line": 67,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via run → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run();",
+          "target": "postgres: run → query"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "stage.run",
+          "line": 76,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via run → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run('text', 7, true, null);",
+          "target": "postgres: run → query"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "stage.run",
+          "line": 89,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via localStages → localStages/run → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run();",
+          "target": "postgres: localStages → localStages/run → query"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
