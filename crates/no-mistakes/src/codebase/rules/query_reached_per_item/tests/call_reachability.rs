@@ -18,7 +18,9 @@ fn closed_stage_methods_and_invoked_thunks_reach_only_their_proven_queries() {
             (15, "both"),
             (28, "objectStage.run"),
             (59, "stage.run"),
-            (67, "stage.run")
+            (67, "stage.run"),
+            (76, "stage.run"),
+            (89, "stage.run")
         ],
         "{findings:#?}"
     );
@@ -57,7 +59,7 @@ fn stage_methods_are_shared_canonical_call_targets() {
         .unwrap();
     assert!(!stage.has_unknown_target(), "{stage:?}");
     assert_eq!(stage.target_nodes().count(), 2, "{stage:?}");
-    for line in [33, 37, 41, 47, 55, 63, 64, 72] {
+    for line in [33, 37, 41, 47, 55, 63, 64, 72, 80, 84] {
         let site = graph
             .resolved_call_sites()
             .iter()
