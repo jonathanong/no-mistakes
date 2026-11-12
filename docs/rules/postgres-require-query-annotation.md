@@ -349,6 +349,13 @@ a proven local append-only effect. Closure execution order does not change this
 prefix. Exports, aliases, stores, used append results, property writes, other
 members, and semantic gaps stay unresolved. This is a low-effort prefix proof;
 it does not infer complete SQL.
+A concise arrow body passed directly to a statement-position `.forEach(...)`,
+such as `filters.forEach(f => query.append(clause).append(f))`, is a discarded
+append because `forEach` ignores the callback result. The same closure proof
+also accepts a directly imported append-only helper called on the builder, so an
+imported helper and an inline `forEach` may share one builder. `map`, optional
+`forEach`, chained non-append members, and unproven or mutating helpers stay
+unresolved.
 One same-file function declaration or `const` arrow also qualifies when its
 single returned expression has a fixed leading comment and its callable is
 lexically owned and unchanged. A block body needs one final top-level return;

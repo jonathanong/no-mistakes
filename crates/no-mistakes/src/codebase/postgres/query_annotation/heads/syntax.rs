@@ -9,6 +9,7 @@ pub(super) use collect::collect_with_helpers;
 mod const_visits;
 mod context;
 mod destructure;
+mod discard_visits;
 mod field_visits;
 mod finite_names;
 mod finite_visits;
