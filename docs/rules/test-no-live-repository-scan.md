@@ -101,9 +101,17 @@ An enumeration passes when its root is provably bounded:
   Same-file zero-argument helpers with no reassignment may create local bindings before their final
   return, including an awaited `mkdtemp` in a nested async helper. Owned paths
   returned as object properties can be read through `const` destructuring.
-  `mkdtempDisposableSync` results provide an owned root through their `.path`
-  property, including a `using` binding. Destructuring needs direct literal fields without
-  defaults, rest properties, computed keys, or spreads.
+  Node `mkdtempDisposableSync` results and awaited `mkdtempDisposable` results
+  provide an owned root through their `.path` property, including `using` and
+  `await using` bindings. Renamed imports and static namespace/default imports
+  are supported when every use of the module object directly invokes the selected
+  factory. Writes, escapes, other methods, and nested accesses remain unproven.
+  Default imports of the same built-in module share this stability requirement,
+  including aliases with and without the `node:` prefix.
+  The resource object, other members, and a promise that has not
+  been awaited do not prove a directory. Absolute child segments and `..` that escape the
+  temporary directory remain unproven. Destructuring needs direct literal fields
+  without defaults, rest properties, computed keys, or spreads.
   The classic factories must resolve to Node `fs` or `fs/promises` imports
   (`fs` and `node:fs` specifiers are equivalent). Named imports, renamed
   imports, direct `require` bindings, and stable module receivers are recognized.
@@ -312,7 +320,12 @@ A same-file helper may return that owned root, including a helper whose paramete
 is only the `mkdtemp` prefix. The returned origin must stay a non-dynamic temporary
 directory and must not climb out of it with `..`. A dynamic return that drops a
 parameter, including `join(mkdtempSync(...), suffix)`, stays unresolved. The test
-may destructure the returned object (`const { source } = mkFixture()`). An
+may destructure the returned object (`const { source } = mkFixture()`).
+For a string result, a named same-file helper or `const` function can also create
+files in setup `for...of` loops and return from blocks or `if`/`else` branches.
+Every return must be an owned temporary path, and no normal path may fall
+through without returning. Mixed live returns, recursive calls, reassignment,
+and unsupported control flow such as `try`/`finally` remain unproven. An
 object-pattern parameter (`function ensure({ source } = {})`) uses the same
 literal-object caller proof as `options.source`. A destructured default is ignored
 while the property's own origin is proven. When a literal object omits the key and

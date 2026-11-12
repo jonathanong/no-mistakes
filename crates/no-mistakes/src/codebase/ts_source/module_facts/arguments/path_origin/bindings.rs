@@ -1,6 +1,8 @@
 //! Bindings and same-file getters that resolve to an owned or env-derived root.
 use super::{PathAnchor, PathOrigin, Projector};
 use oxc_ast::{ast::*, AstKind};
+#[path = "owned_helpers.rs"]
+mod owned_helpers;
 
 fn parameterized(params: &FormalParameters<'_>) -> bool {
     !params.items.is_empty()
@@ -88,8 +90,13 @@ impl<'a> Projector<'a, '_> {
         call: &CallExpression<'a>,
         depth: usize,
     ) -> Option<PathOrigin> {
-        let (expression, has_parameters) = self.getter_expression(call)?;
-        super::patterns::accept_parameterized(has_parameters, self.origin(expression, depth + 1))
+        if let Some((expression, has_parameters)) = self.getter_expression(call) {
+            return super::patterns::accept_parameterized(
+                has_parameters,
+                self.origin(expression, depth + 1),
+            );
+        }
+        self.owned_helper_origin(call, depth)
     }
 
     /// The returned expression and whether the callee declares parameters.
@@ -97,20 +104,8 @@ impl<'a> Projector<'a, '_> {
         &mut self,
         call: &CallExpression<'a>,
     ) -> Option<(&'a Expression<'a>, bool)> {
-        let semantic = self.semantic;
-        let Expression::Identifier(callee) = call.callee.get_inner_expression() else {
-            return None;
-        };
-        let symbol = self.binding_symbol(callee)?;
-        for reference in semantic.scoping().get_resolved_references(symbol) {
-            if !self.take() || reference.flags().is_write() {
-                return None;
-            }
-        }
-        match semantic
-            .nodes()
-            .kind(semantic.scoping().symbol_declaration(symbol))
-        {
+        let (kind, symbol) = self.getter_kind(call)?;
+        match kind {
             AstKind::Function(function) if !function.generator => {
                 let body = function.body.as_ref()?;
                 Some((
@@ -123,6 +118,27 @@ impl<'a> Projector<'a, '_> {
             }
             _ => None,
         }
+    }
+    pub(super) fn getter_kind(
+        &mut self,
+        call: &CallExpression<'a>,
+    ) -> Option<(AstKind<'a>, oxc_semantic::SymbolId)> {
+        let semantic = self.semantic;
+        let Expression::Identifier(callee) = call.callee.get_inner_expression() else {
+            return None;
+        };
+        let symbol = self.binding_symbol(callee)?;
+        for reference in semantic.scoping().get_resolved_references(symbol) {
+            if !self.take() || reference.flags().is_write() {
+                return None;
+            }
+        }
+        Some((
+            semantic
+                .nodes()
+                .kind(semantic.scoping().symbol_declaration(symbol)),
+            symbol,
+        ))
     }
 }
 

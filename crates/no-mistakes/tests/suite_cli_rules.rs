@@ -141,6 +141,8 @@ mod cli_check_rules_test_no_live_repository_scan_parameter_roots;
 mod cli_check_rules_test_no_live_repository_scan_provenance;
 #[path = "cli_check_rules_test_no_live_repository_scan_shapes.rs"]
 mod cli_check_rules_test_no_live_repository_scan_shapes;
+#[path = "cli_check_rules_test_no_live_repository_scan_temporary.rs"]
+mod cli_check_rules_test_no_live_repository_scan_temporary;
 #[path = "cli_check_rules_tsconfig.rs"]
 mod cli_check_rules_tsconfig;
 #[path = "cli_check_rules_unconstructed_error_class.rs"]
