@@ -8,6 +8,7 @@ fn postgres_require_query_annotation_check_json_snapshot() {
     // Output cases formerly asserted via check_with_files in the rule unit module.
     let cases = vec![
         case("interpolated_comment_low_report", "interpolated-comment", "interpolated-comment-low-report.yml"),
+        case("interpolated_comment_body_low_report", "interpolated-comment-body", "interpolated-comment-body-low-report.yml"),
         case("missing_annotation", "fail", "example-db-query-ts.yml"),
         case("annotated_query", "pass-annotated", "example-db-query-ts.yml"),
         case("transaction_commands", "pass-transaction", "example-db-query-ts.yml"),

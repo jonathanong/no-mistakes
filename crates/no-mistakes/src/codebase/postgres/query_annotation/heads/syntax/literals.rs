@@ -30,11 +30,10 @@ fn interpolated_name(template: &TemplateLiteral<'_>, first: &str) -> bool {
     }
     let mut previous_star = open.ends_with('*');
     let mut has_name = !open.trim().is_empty();
-    for (index, (expression, part)) in template
+    for (expression, part) in template
         .expressions
         .iter()
         .zip(template.quasis.iter().skip(1))
-        .enumerate()
     {
         if let Some(choices) = known_choices(expression) {
             let mut possible_star = false;
@@ -54,7 +53,6 @@ fn interpolated_name(template: &TemplateLiteral<'_>, first: &str) -> bool {
         let text = crate::ast::template_quasi_text(part);
         if let Some(end) = text.find("*/") {
             return !closes_comment(&text[..end], &mut previous_star)
-                && index + 1 == template.expressions.len()
                 && (has_name || !text[..end].trim().is_empty());
         }
         if closes_comment(&text, &mut previous_star) {
