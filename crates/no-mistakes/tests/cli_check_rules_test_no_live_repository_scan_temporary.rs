@@ -27,6 +27,10 @@ fn owned_temporary_roots_check_json_snapshot() {
         files,
         [
             "tests/async-unawaited.test.mts",
+            "tests/default-async-alias-escape.test.mts",
+            "tests/default-async-alias-mutation.test.mts",
+            "tests/default-sync-alias-escape.test.mts",
+            "tests/default-sync-alias-mutation.test.mts",
             "tests/escape-absolute.test.mts",
             "tests/escape-parent.test.mts",
             "tests/helper-absolute-return.test.mts",

@@ -106,6 +106,8 @@ An enumeration passes when its root is provably bounded:
   `await using` bindings. Renamed imports and static namespace/default imports
   are supported when every use of the module object directly invokes the selected
   factory. Writes, escapes, other methods, and nested accesses remain unproven.
+  Default imports of the same built-in module share this stability requirement,
+  including aliases with and without the `node:` prefix.
   The resource object, other members, and a promise that has not
   been awaited do not prove a directory. Absolute child segments and `..` that escape the
   temporary directory remain unproven. Destructuring needs direct literal fields

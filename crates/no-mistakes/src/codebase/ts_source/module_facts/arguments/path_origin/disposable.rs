@@ -48,8 +48,11 @@ impl<'a> Projector<'a, '_> {
                     && crate::codebase::ts_source::module_facts::modules::name(&binding.imported)
                         == expected
             }
-            AstKind::ImportNamespaceSpecifier(_) | AstKind::ImportDefaultSpecifier(_) => {
+            AstKind::ImportNamespaceSpecifier(_) => {
                 member == Some(expected) && self.disposable_namespace_stable(symbol, expected)
+            }
+            AstKind::ImportDefaultSpecifier(_) => {
+                member == Some(expected) && self.disposable_defaults_stable(symbol, expected)
             }
             _ => false,
         };
@@ -67,6 +70,42 @@ impl<'a> Projector<'a, '_> {
             } else {
                 matches!(module.as_ref(), "node:fs" | "fs")
             }
+    }
+    fn disposable_defaults_stable(
+        &mut self,
+        symbol: oxc_semantic::SymbolId,
+        expected: &str,
+    ) -> bool {
+        let semantic = self.semantic;
+        let declaration = semantic.scoping().symbol_declaration(symbol);
+        let AstKind::ImportDeclaration(import) = semantic.nodes().parent_kind(declaration) else {
+            return false;
+        };
+        let module = crate::ast::js_literal(&import.source);
+        let module = module.strip_prefix("node:").unwrap_or(&module);
+        for alias in semantic.scoping().symbol_ids() {
+            if !self.take() {
+                return false;
+            }
+            let declaration = semantic.scoping().symbol_declaration(alias);
+            if !matches!(
+                semantic.nodes().kind(declaration),
+                AstKind::ImportDefaultSpecifier(_)
+            ) {
+                continue;
+            }
+            let AstKind::ImportDeclaration(import) = semantic.nodes().parent_kind(declaration)
+            else {
+                continue;
+            };
+            let source = crate::ast::js_literal(&import.source);
+            if source.strip_prefix("node:").unwrap_or(&source) == module
+                && !self.disposable_namespace_stable(alias, expected)
+            {
+                return false;
+            }
+        }
+        true
     }
     fn disposable_namespace_stable(
         &mut self,
