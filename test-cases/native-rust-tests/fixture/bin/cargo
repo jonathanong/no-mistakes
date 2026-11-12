@@ -1,0 +1,12 @@
+#!/usr/bin/env node
+const fs = require("node:fs");
+const path = require("node:path");
+if (process.argv.includes("--version")) {
+  console.log("cargo fixture-version");
+  process.exit(0);
+}
+fs.appendFileSync("commands.jsonl", `${JSON.stringify({ args: process.argv.slice(2), napi: process.env.NO_MISTAKES_BUILD_NAPI, rustflags: process.env.RUSTFLAGS, target: process.env.CARGO_TARGET_DIR })}\n`);
+const timings = path.join(process.env.CARGO_TARGET_DIR, "cargo-timings");
+fs.mkdirSync(timings, { recursive: true });
+fs.copyFileSync("timing.html", path.join(timings, "cargo-timing.html"));
+process.exit(Number(process.env.NATIVE_TEST_FIXTURE_EXIT || 0));

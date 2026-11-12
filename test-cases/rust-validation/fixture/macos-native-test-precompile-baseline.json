@@ -1,0 +1,108 @@
+{
+  "source": "Completed hosted CI job and historical native Rust test logs",
+  "purpose": "Baseline for evaluating an intra-job, target-specific cargo test --no-run precompile. Projections are hypotheses, not measured post-change runtimes.",
+  "fixedPrRun": {
+    "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43130895963",
+    "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43130895963/job/130894820844",
+    "jobHeadSha": "20764cb091f028fa6e2c5f248743a82ed11ea227",
+    "artifactMergeSha": "40de81fb62f3bf738b46f6506f9662c7bf30fabb",
+    "artifactMergeParents": [
+      "9c5beb48f5247f26f0f36fa9c9d4bc45bc52ca2c",
+      "20764cb091f028fa6e2c5f248743a82ed11ea227"
+    ],
+    "runner": {
+      "image": "20261104.0514.1",
+      "cpuModel": "Apple M1 (Virtual)",
+      "cpus": 3,
+      "totalMemoryBytes": 7516192768,
+      "cacheHit": true,
+      "cargoIncremental": "0",
+      "rustflags": "-D warnings",
+      "targetDirectory": "target"
+    },
+    "steps": {
+      "build": {"startedAt": "2026-11-12T00:57:56Z", "completedAt": "2026-11-12T01:04:42Z", "elapsedSeconds": 406},
+      "platformRust": {"startedAt": "2026-11-12T01:04:43Z", "completedAt": "2026-11-12T01:15:18Z", "elapsedSeconds": 635},
+      "api": {"startedAt": "2026-11-12T01:15:18Z", "completedAt": "2026-11-12T01:18:29Z", "elapsedSeconds": 191}
+    },
+    "devProfileBuild": {
+      "cargoElapsedSeconds": 404.678,
+      "wallRealSeconds": 404.48,
+      "userSeconds": 369.48,
+      "systemSeconds": 115.19,
+      "maximumResidentSetBytes": 3363061760
+    },
+    "testProfileCompiles": [
+      {"target": "test macos_invocation", "startedAt": "2026-11-12T01:04:45.367Z", "finishedAt": "2026-11-12T01:11:00.929Z", "cargoReportedSeconds": 376},
+      {"target": "test bin no-mistakes", "startedAt": "2026-11-12T01:11:12.713Z", "finishedAt": "2026-11-12T01:11:29.935Z", "cargoReportedSeconds": 18.22},
+      {"target": "test suite_cli_postgres", "startedAt": "2026-11-12T01:11:32.559Z", "finishedAt": "2026-11-12T01:11:44.998Z", "cargoReportedSeconds": 12.68},
+      {"target": "test suite_cli_package_config", "startedAt": "2026-11-12T01:14:48.045Z", "finishedAt": "2026-11-12T01:14:55.939Z", "cargoReportedSeconds": 8.02}
+    ],
+    "testProfileCompileTotalSeconds": 414.92,
+    "estimatedRustExecutionRemainderSeconds": 220.08,
+    "apiReport": {"passed": 637, "failed": 0, "skipped": 2, "slowestPassedMs": 2283.2, "passedAtOrAbove5000Ms": 0}
+  },
+  "historicalFirstHarnessCompiles": [
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43122608216",
+      "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43122608216/job/130866681150",
+      "buildStepSeconds": 539,
+      "firstTestHarnessCargoReportedSeconds": 465,
+      "otherObservedHarnessCompilesSeconds": [17.07, 14.8, 10.76]
+    },
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43119502783",
+      "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43119502783/job/130856146977",
+      "buildStepSeconds": 437,
+      "firstTestHarnessCargoReportedSeconds": 527,
+      "otherObservedHarnessCompilesSeconds": [20.42, 18.27, 9.08]
+    },
+    {
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43122601344",
+      "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43122601344/job/130866670979",
+      "buildStepSeconds": 416,
+      "firstTestHarnessCargoReportedSeconds": 778,
+      "otherObservedHarnessCompilesSeconds": [29.31, 39.64],
+      "platformStepElapsedSeconds": 1093,
+      "platformStepTimeoutSeconds": 1080,
+      "unobserved": ["suite_cli_package_config harness compile did not appear before the timeout"]
+    }
+  ],
+  "candidatePrecompileTargets": [
+    "cargo test --locked -p no-mistakes --no-run --test macos_invocation",
+    "cargo test --locked -p no-mistakes --bin no-mistakes --no-run invocation::tests::blocked_check::",
+    "cargo test --locked -p no-mistakes --no-run --test suite_cli_postgres",
+    "cargo test --locked -p no-mistakes --no-run --test suite_cli_package_config"
+  ],
+  "requiredEnvironmentAndProfile": {
+    "NO_MISTAKES_BUILD_NAPI": "1 for every precompile command and the later test step",
+    "features": "default feature set (mermaid-validation); do not introduce all-features or no-default-features",
+    "manifest": "retain the existing temporary lib crate-type rewrite to [rlib, cdylib] before precompiling",
+    "other": "same locked Cargo workspace, Rust toolchain, RUSTFLAGS, CARGO_INCREMENTAL, target directory, and test profile as execution"
+  },
+  "cacheAction": {
+    "repository": "Swatinem/rust-cache",
+    "pinnedCommit": "c8037a86dde8214a8310e9f54a8fc61ab362aa31",
+    "workflowKey": "native-${{ matrix.target }}",
+    "defaultCacheTargets": true,
+    "defaultCacheWorkspaceCrates": false,
+    "defaultSavedPaths": ["~/.cargo", "target"],
+    "preSaveCleanup": ["non-dependency target artifacts", "incremental artifacts", "artifacts older than one week"],
+    "targetKindsIncludedAsWorkspacePackages": ["lib", "cdylib", "dylib", "rlib", "staticlib", "proc-macro"],
+    "testExecutablesPersistInDefaultRustCache": false,
+    "sameJobTargetArtifactsRemainAvailableToLaterSteps": true,
+    "officialSources": [
+      "https://github.com/Swatinem/rust-cache/blob/c8037a86dde8214a8310e9f54a8fc61ab362aa31/action.yml",
+      "https://github.com/Swatinem/rust-cache/blob/c8037a86dde8214a8310e9f54a8fc61ab362aa31/README.md#cache-details",
+      "https://github.com/Swatinem/rust-cache/blob/c8037a86dde8214a8310e9f54a8fc61ab362aa31/src/workspace.ts",
+      "https://github.com/Swatinem/rust-cache/blob/c8037a86dde8214a8310e9f54a8fc61ab362aa31/src/cleanup.ts"
+    ]
+  },
+  "provisionalBudgetHypothesisSeconds": {
+    "buildStep": 1800,
+    "platformRustStep": 480,
+    "apiStep": 600,
+    "job": 3600,
+    "rationale": "Measured fixed-run build plus observed test-profile compilation is about 821 seconds. The slow historical test harness compile plus current dev build and additional observed harnesses projects to about 1263 seconds before the fourth harness, so 1800 seconds is provisional headroom. Fixed-run Rust elapsed minus observed harness compilation is about 220 seconds; 480 seconds is provisional execution headroom. Validate once on CI and tighten from measured post-change data. Compilation moves between steps; total workload is not claimed to improve."
+  }
+}

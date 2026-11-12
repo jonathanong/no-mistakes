@@ -42,10 +42,11 @@ test("native Rust and historical aggregate deadlines retain censored Windows pro
       observed.completedSnapshotTests.packageConfig.selected,
   );
   assert.ok(
-    rust >= elapsedRust + observed.remainingSnapshotReserveSeconds,
-    "platform step must leave room for remaining snapshots after the censored passing progress",
+    stepBudgetSeconds(job, "Build native CLI and N-API addon") + rust >=
+      elapsedRust + observed.remainingSnapshotReserveSeconds,
+    "combined build and execution bounds retain historical compile-and-test progress",
   );
-  assert.ok(rust <= 1500, "keep the native Rust step bounded to twenty-five minutes");
+  assert.ok(rust <= 480, "keep the native Rust execution step bounded to eight minutes");
   const required =
     elapsedBeforeRust +
     elapsedRust +
@@ -65,7 +66,13 @@ test("native Rust and historical aggregate deadlines retain censored Windows pro
     "--test suite_cli_package_config cli_pkgcfg_snapshot_",
     "--test suite_cli_package_config cli_rrb_snapshot_",
   ]) {
-    assert.ok(job.includes(command), `retain native validation ${command}`);
+    assert.ok(
+      require("./native-rust-tests.cjs")
+        .commands("run", "Windows")
+        .concat(require("./native-rust-tests.cjs").commands("run", "macOS"))
+        .some((args) => args.join(" ").includes(command)),
+      `retain native validation ${command}`,
+    );
   }
 });
 

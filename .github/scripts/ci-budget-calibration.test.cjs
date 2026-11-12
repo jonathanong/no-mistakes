@@ -56,9 +56,9 @@ test("macOS build and Rust deadlines reserve time beyond completed observations"
   assert.ok(rustRequired > 900);
   const native = job("native-tests");
   assert.ok(stepBudget(native, buildName) >= buildRequired);
-  assert.ok(stepBudget(native, buildName) <= 1200);
-  assert.ok(stepBudget(native, rustName) >= rustRequired);
-  assert.ok(stepBudget(native, rustName) <= 1500);
+  assert.ok(stepBudget(native, buildName) <= 1800);
+  assert.ok(stepBudget(native, buildName) + stepBudget(native, rustName) >= rustRequired);
+  assert.ok(stepBudget(native, rustName) <= 480);
   const required = completed.map(
     (entry) =>
       elapsed(entry.startedAt, step(entry, apiName).startedAt) +
@@ -89,9 +89,9 @@ test("same-head macOS timeout keeps censored evidence and bounded build headroom
   assert.equal(data.rustCache.result, "exact hit on both attempts");
   assert.ok(data.unavailable.includes("CPU utilization samples"));
   const native = job("native-tests");
-  assert.equal(stepBudget(native, buildName), censored.stepLimitSeconds + 480);
+  assert.equal(stepBudget(native, buildName), 1800);
   assert.equal(jobBudget(native), 3600);
-  assert.equal(stepBudget(native, rustName), 1500);
+  assert.equal(stepBudget(native, rustName), 480);
   assert.equal(stepBudget(native, apiName), 600);
 });
 
@@ -174,16 +174,16 @@ test("native deadlines reserve bounded progress beyond the latest censored macOS
     rust.every((entry) => entry.progress.some((line) => /passing until timeout/.test(line))),
   );
   assert.match(api.apiFailure, /report.*absent/);
-  assert.equal(stepBudget(native, buildName), build.buildTimeoutSeconds + 300);
-  assert.equal(stepBudget(native, rustName), rust[0].platformTimeoutSeconds + 420);
+  assert.equal(stepBudget(native, buildName), 1800);
+  assert.equal(stepBudget(native, rustName), 480);
   assert.equal(stepBudget(native, apiName), 600);
   assert.ok(stepBudget(native, apiName) >= api.apiSeconds + 120);
-  assert.equal(
-    jobBudget(native),
-    stepBudget(native, buildName) +
-      stepBudget(native, rustName) +
-      stepBudget(native, apiName) +
-      300,
+  assert.ok(
+    jobBudget(native) >=
+      stepBudget(native, buildName) +
+        stepBudget(native, rustName) +
+        stepBudget(native, apiName) +
+        300,
   );
   const config = readFileSync(path.join(root, ".no-mistakes.yml"), "utf8");
   assert.match(config, /job: \.github\/workflows\/ci\.yml#native-tests\n\s+maxMinutes: 60/);
@@ -211,4 +211,26 @@ test("the slow bundled native parity case registers every saved scenario indepen
     names.filter((name) => name.startsWith(prefix)),
     data.productionExportScenarios.map((scenario) => `${prefix}: ${scenario}`),
   );
+});
+
+test("precompile phase budgets retain the saved baseline without claiming an execution measurement", () => {
+  const baseline = observed("macos-native-test-precompile-baseline");
+  const before = baseline.fixedPrRun;
+  assert.equal(
+    before.testProfileCompiles.reduce((sum, entry) => sum + entry.cargoReportedSeconds, 0),
+    before.testProfileCompileTotalSeconds,
+  );
+  assert.ok(
+    Math.abs(
+      before.steps.platformRust.elapsedSeconds -
+        before.testProfileCompileTotalSeconds -
+        before.estimatedRustExecutionRemainderSeconds,
+    ) < 0.001,
+  );
+  const hypothesis = baseline.provisionalBudgetHypothesisSeconds;
+  const native = job("native-tests");
+  assert.equal(stepBudget(native, buildName), hypothesis.buildStep);
+  assert.equal(stepBudget(native, rustName), hypothesis.platformRustStep);
+  assert.equal(stepBudget(native, apiName), hypothesis.apiStep);
+  assert.equal(jobBudget(native), hypothesis.job);
 });

@@ -114,12 +114,36 @@ the `cli_rrb_snapshot_` subset in the package-config suite, so
 those jobs do not also compile `suite_cli_rules` inside the bounded native step.
 Linux runs the same cases in the full Rust coverage suite.
 
-Native macOS and Windows jobs have a 60-minute aggregate deadline, a
-20-minute build step, a 25-minute platform Rust step, and a ten-minute real-addon
-API step. The three workload caps total 55 minutes; five more minutes reserve
-setup, artifact reporting, and cleanup. These literal shared bounds retain every
-validation command and the repository can certify them. Linux JavaScript keeps
-its 16-minute job and four-minute real-addon step.
+Native macOS and Windows jobs currently retain a provisional 60-minute aggregate
+bound while compilation moves into the build phase. The build step has 30 minutes,
+platform Rust execution eight minutes, and the real-addon API step ten minutes.
+[The saved baseline](../../test-cases/rust-validation/fixture/macos-native-test-precompile-baseline.json)
+records 414.92 seconds of test-profile compilation within a 635-second Rust step.
+Fresh hosted observations must calibrate these phase budgets; historical Rust
+step durations include compilation and cannot directly calibrate execution alone.
+Linux JavaScript keeps its 16-minute job and four-minute real-addon step.
+
+The native build step first builds the CLI and addon, then precompiles precisely
+its platform test targets with `cargo test --no-run`, one target at a time.
+[The shared target list](../../.github/scripts/native-rust-tests.cjs) supplies both
+compilation selectors and every existing execution filter. All phases keep the
+same default features, manifest rewrite, flags, target directory, and
+`NO_MISTAKES_BUILD_NAPI=1`. Test execution remains in the following step. Separate
+per-target diagnostics retain each Cargo command, `Finished` timing, verbose
+output, process samples, and Cargo timing report, including partial failed builds.
+
+A compiled-artifact overlay caches `target/debug` and `target/.rustc_info.json`,
+then restores after the dependency cache and saves
+immediately after successful compilation, before the dependency action's post-job
+cleanup prunes workspace test artifacts. Its immutable source-SHA key also
+includes the platform, compiler cache key, Cargo manifests and lockfile, workflow,
+and build helpers. A matching configuration prefix may restore an older source
+entry; Cargo still validates source fingerprints and rebuilds stale inputs.
+Precompilation moves that work earlier within the job and does not promise that
+workspace artifacts survive changed source without recompilation. The dependency
+cache still warms a first overlay miss. The overlay excludes previous API reports, diagnostics, and Cargo timing reports.
+It retains test binaries,
+`deps`, and `.fingerprint` entries that the dependency cache otherwise prunes.
 
 Saved observations in `test-cases/rust-validation/fixture` record job metadata
 and log excerpts from the supplied hosted runs. Five green macOS builds took
@@ -167,8 +191,8 @@ never redirected into stdout. Saved prolific-writer and slow-destination fixture
 exercise these cases in `node --test .github/scripts/build-native.test.cjs`.
 
 Earlier observations justified the former 35-minute native job exception. The
-current 60-minute exception covers the complete bounded workload and setup
-reserve above. It remains below the sum of every step deadline; each individual
+current 60-minute exception retains bounded room while fresh hosted results
+calibrate the separated compilation and execution phases. It remains below the sum of every step deadline; each individual
 step remains within the aggregate. These budgets are safety bounds, not runtime
 guarantees or sums of independently observed maxima.
 
