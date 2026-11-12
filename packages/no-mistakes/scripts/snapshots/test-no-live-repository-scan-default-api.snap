@@ -529,7 +529,7 @@
         "file": "tests/path-forms.test.ts",
         "import": "readdirSync",
         "line": 26,
-        "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+        "message": "unresolved root: `readdirSync` enumerates a root derived from `process.env.ROOT`, but a concrete test or setup entry cannot be identified, so environment ownership cannot be established. Fix: make the test-to-scan call or import route explicit, then use vi.stubEnv(\"ROOT\", fixturePath) with a fixture or owned mkdtemp root in that test or setup before the scan. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
         "rule": "test-no-live-repository-scan",
         "target": "unresolved root",
         "sourceLine": "readdirSync(process.env.ROOT as string); // UNRESOLVED environment"
@@ -547,7 +547,7 @@
         "file": "tests/remaining-shapes.test.ts",
         "import": "import.meta.glob",
         "line": 17,
-        "message": "unresolved root: `import.meta.glob` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+        "message": "unresolved root: `import.meta.glob` enumerates a root derived from `process.env.INPUT`, but a concrete test or setup entry cannot be identified, so environment ownership cannot be established. Fix: make the test-to-scan call or import route explicit, then use vi.stubEnv(\"INPUT\", fixturePath) with a fixture or owned mkdtemp root in that test or setup before the scan. For a captured alias, read the environment at the scan or pass the owned root directly; keep derived paths inside that owned root. As a last option, at the enumeration add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
         "rule": "test-no-live-repository-scan",
         "target": "unresolved root",
         "sourceLine": "import.meta.glob(process.env.INPUT); // meta-unresolved"
