@@ -57,3 +57,9 @@ fn prepared_symbols_signature_impact_uses_the_traversal_helper() {
         .unwrap()
         .is_object());
 }
+
+include!("scope_report_state_tests.rs");
+include!("scope_report_semantic_tests.rs");
+include!("scope_domain_cache_tests.rs");
+include!("scope_wrapper_error_tests.rs");
+include!("scope_report_query_errors_tests.rs");

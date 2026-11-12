@@ -5,6 +5,10 @@ use serde_json::json;
 mod scope_import_bounds_tests;
 #[path = "scope_input_error_tests.rs"]
 mod scope_input_error_tests;
+#[path = "seed_boundary_tests.rs"]
+mod seed_boundary_tests;
+#[path = "target_boundary_tests.rs"]
+mod target_boundary_tests;
 
 fn options(reports: Value) -> AnalyzeProjectOptions {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
