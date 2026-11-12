@@ -4,7 +4,7 @@ const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 
 const selector = join(__dirname, "..", "..", ".github", "scripts", "benchmark-change-scope.cjs");
-const { benchmarkChangeScope } = require(selector);
+const { benchmarkChangeScope, pullRequestBenchmarksSkipped } = require(selector);
 const modified = (paths) => paths.map((path) => ({ status: "M", path }));
 
 test("routes native fixture-only changes to native frontends", () => {
@@ -120,7 +120,12 @@ test("only a modified regular release validation guard is unrelated to benchmark
 
 test("CLI reads NUL-delimited statuses and fails closed on malformed input", () => {
   const guard = "crates/no-mistakes/tests/release_validate_cache.rs";
-  const run = (input) => spawnSync(process.execPath, [selector], { input, encoding: "utf8" });
+  const run = (input) =>
+    spawnSync(process.execPath, [selector], {
+      input,
+      encoding: "utf8",
+      env: { ...process.env, GITHUB_EVENT_NAME: "push", PR_BODY: "" },
+    });
   const modifiedGuard = run(`M\0${guard}\0`);
   assert.equal(modifiedGuard.status, 0);
   assert.equal(modifiedGuard.stdout, "changed=false\nscope=none\n");
@@ -130,4 +135,42 @@ test("CLI reads NUL-delimited statuses and fails closed on malformed input", () 
   for (const malformed of [`M\0${guard}`, `Z\0${guard}\0`, `M\0${guard}\0D\0`]) {
     assert.notEqual(run(malformed).status, 0);
   }
+});
+
+test("pull requests skip benchmarks unless the body opts in", () => {
+  assert.equal(pullRequestBenchmarksSkipped("pull_request", "Fixes #1"), true);
+  assert.equal(pullRequestBenchmarksSkipped("pull_request", null), true);
+  assert.equal(pullRequestBenchmarksSkipped("pull_request", "x <!-- benchmarks: v1 --> y"), false);
+  assert.equal(
+    pullRequestBenchmarksSkipped("pull_request", "<!-- frontend-lifecycle-smoke: v1 -->"),
+    false,
+  );
+  assert.equal(pullRequestBenchmarksSkipped("push", ""), false);
+  assert.equal(pullRequestBenchmarksSkipped(undefined, undefined), false);
+});
+
+test("CLI reports no benchmarks for a pull request without the opt-in marker", () => {
+  const run = (body) =>
+    spawnSync(process.execPath, [selector, "--all"], {
+      encoding: "utf8",
+      env: { ...process.env, GITHUB_EVENT_NAME: "pull_request", PR_BODY: body },
+    });
+  const skipped = run("Fixes #1");
+  assert.equal(skipped.status, 0);
+  assert.equal(skipped.stdout, "changed=false\nscope=none\n");
+  const optedIn = run("<!-- benchmarks: v1 -->");
+  assert.equal(optedIn.status, 0);
+  assert.equal(optedIn.stdout, "changed=true\nscope=all\n");
+});
+
+test("CLI drains a large diff before skipping a pull request", () => {
+  const input = "M\0crates/no-mistakes/src/lib.rs\0".repeat(100_000);
+  const pipeline = `set -o pipefail; cat | "${process.execPath}" "${selector}"`;
+  const result = spawnSync("bash", ["-c", pipeline], {
+    input,
+    encoding: "utf8",
+    env: { ...process.env, GITHUB_EVENT_NAME: "pull_request", PR_BODY: "" },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, "changed=false\nscope=none\n");
 });

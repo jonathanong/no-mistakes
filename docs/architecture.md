@@ -378,6 +378,13 @@ Workloads validate stable, fixture-specific output invariants. The original
 benchmarks run their preflight before measurement; the opt-in first-analysis
 control validates its returned counts and edge/glob preflight after its marker.
 
+Benchmarks run on every push to `main`, where CodSpeed keeps its history.
+Pull requests skip them unless the body contains `<!-- benchmarks: v1 -->`
+(or the frontend lifecycle smoke marker below); add the marker to a
+performance-sensitive PR to get a CodSpeed comparison before merging. The
+`Benchmarks` check is not required for merging. Release timing is validated
+against the last release separately.
+
 CI builds the harness once, then runs each semantic shard in both CodSpeed CPU
 simulation and memory modes: `check`, `observer`, `tests-plan`, `graph-core`,
 `graph-gates`, `language-frontends`, `native-frontends`, `graph-finalization`,
