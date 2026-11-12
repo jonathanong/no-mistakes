@@ -114,14 +114,39 @@ the `cli_rrb_snapshot_` subset in the package-config suite, so
 those jobs do not also compile `suite_cli_rules` inside the bounded native step.
 Linux runs the same cases in the full Rust coverage suite.
 
-Native macOS and Windows jobs currently retain a provisional 60-minute aggregate
-bound while compilation moves into the build phase. The build step has 30 minutes,
-platform Rust execution eight minutes, and the real-addon API step ten minutes.
-[The saved baseline](../../test-cases/rust-validation/fixture/macos-native-test-precompile-baseline.json)
-records 414.92 seconds of test-profile compilation within a 635-second Rust step.
-Fresh hosted observations must calibrate these phase budgets; historical Rust
-step durations include compilation and cannot directly calibrate execution alone.
-Linux JavaScript keeps its 16-minute job and four-minute real-addon step.
+Native macOS and Windows jobs have a 50-minute aggregate deadline, a 25-minute
+build and precompile step, nine minutes for platform Rust execution, and ten
+minutes for the real-addon API step. Linux JavaScript keeps its 16-minute job and
+four-minute real-addon step.
+
+[Saved before and after observations](../../test-cases/rust-validation/fixture/macos-native-test-precompile-baseline.json)
+record about 415 seconds of test-profile compilation within the earlier
+635-second macOS Rust step. The first completed precompile run separated that
+work from execution on both platforms:
+
+| macOS phase | Before (`43130895963`) | After (`43136071692`) |
+| --- | ---: | ---: |
+| CLI/addon build, then precompile after the change | 406 s | 1,034 s |
+| Platform Rust step | 635 s, including compilation | 194 s, execution |
+| Real-addon API step | 191 s | 174 s |
+
+Compilation moved into the build step; these two hosted observations do
+not establish a total-work speedup. The first Windows run spent 548 seconds in
+build/precompile, 420 seconds executing Rust tests, and 338 seconds in the API
+step. Both execution logs had no `Compiling` lines; their Cargo `Finished`
+durations remained at or below 0.61 seconds on macOS and 0.47 seconds on Windows.
+The build cap leaves 466 seconds beyond the completed 1,034-second observation.
+A historical same-run build plus partial test-compilation projection reached
+about 1,263 seconds before the last harness was observed; the cap leaves another
+237 seconds beyond that partial workload, without treating it as a completed runtime.
+The execution cap reserves 120 seconds beyond Windows' 420-second observation.
+The full phase budgets total 2,640 seconds. Adding the largest measured
+non-workload overhead, 148 seconds, and another 120 seconds requires 2,908 seconds,
+within the 3,000-second job bound. This adds bounds and reserves, rather than
+summing unrelated observed phase maxima as a runtime prediction. One completed
+sample per platform does not establish a duration tail guarantee. The initial
+30/8/10-minute phase and 60-minute aggregate collection caps remain in the saved
+evidence as historical settings.
 
 The native build step first builds the CLI and addon, then precompiles precisely
 its platform test targets with `cargo test --no-run`, one target at a time.
@@ -191,8 +216,8 @@ never redirected into stdout. Saved prolific-writer and slow-destination fixture
 exercise these cases in `node --test .github/scripts/build-native.test.cjs`.
 
 Earlier observations justified the former 35-minute native job exception. The
-current 60-minute exception retains bounded room while fresh hosted results
-calibrate the separated compilation and execution phases. It remains below the sum of every step deadline; each individual
+current 50-minute exception covers the measured phase bounds and aggregate
+reserves above. It remains below the sum of every step deadline; each individual
 step remains within the aggregate. These budgets are safety bounds, not runtime
 guarantees or sums of independently observed maxima.
 
@@ -411,8 +436,10 @@ These are step wall times, including cancellation grace for timed-out steps.
 The first Rust test compilation took 465 and 527 seconds in the two green runs,
 versus 778 seconds in `43122601344`. The green PostgreSQL snapshot groups took
 166.57 and 183.33 seconds; the failed run spent over 229 seconds replaying
-snapshots before cancellation, with more work still to run. Thus the Rust growth
-includes both compilation and snapshot execution. Both green API runs and the
+snapshots before cancellation, with more work still to run. The first test
+harness compilation dominated the Rust step and grew by several minutes.
+Precompilation separates that work while preserving serial snapshot execution.
+Both green API runs and the
 completed timing-gate failure ran 631 passing tests and two skipped tests; the
 comparison does not show a test-count increase explaining the variation.
 

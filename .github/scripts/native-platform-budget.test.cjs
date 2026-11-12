@@ -46,7 +46,7 @@ test("native Rust and historical aggregate deadlines retain censored Windows pro
       elapsedRust + observed.remainingSnapshotReserveSeconds,
     "combined build and execution bounds retain historical compile-and-test progress",
   );
-  assert.ok(rust <= 480, "keep the native Rust execution step bounded to eight minutes");
+  assert.ok(rust <= 540, "keep the native Rust execution step bounded to nine minutes");
   const required =
     elapsedBeforeRust +
     elapsedRust +
@@ -57,7 +57,7 @@ test("native Rust and historical aggregate deadlines retain censored Windows pro
     jobBudgetSeconds(job) >= required,
     "native aggregate deadline must include setup, Rust progress, remaining snapshots, API and cleanup",
   );
-  assert.ok(jobBudgetSeconds(job) <= 3600, "retain the native job cap of sixty minutes");
+  assert.ok(jobBudgetSeconds(job) <= 3000, "retain the native job cap of fifty minutes");
   for (const command of [
     "--test windows_job_object -- --exact --test-threads=1",
     "--test macos_invocation",
@@ -100,7 +100,7 @@ test("current native API budgets fit completed Windows setup and Rust work", () 
   assert.ok(api <= 600, "keep the Windows API phase bounded to ten minutes");
   assert.equal(stepBudgetSeconds(job, "Run real N-API API test", "macOS"), 600);
   assert.ok(jobBudgetSeconds(job) >= beforeApi + api + observed.postJobReserveSeconds);
-  assert.ok(jobBudgetSeconds(job) <= 3600);
+  assert.ok(jobBudgetSeconds(job) <= 3000);
   assert.match(job, /node \.github\/scripts\/report-native-api-tests\.cjs/);
   assert.match(job, /Upload real N-API test durations/);
 });
@@ -128,6 +128,6 @@ test("Windows API deadline includes startup and teardown for the expanded suite"
   assert.ok(api <= 600, "retain a bounded ten-minute API phase");
   assert.equal(stepBudgetSeconds(job, "Run real N-API API test", "macOS"), 600);
   assert.ok(jobBudgetSeconds(job) >= beforeApi + api + observed.postJobReserveSeconds);
-  assert.ok(jobBudgetSeconds(job) <= 3600);
+  assert.ok(jobBudgetSeconds(job) <= 3000);
   assert.match(job, /report-native-api-tests\.cjs target\/native-api-tests\.json target/);
 });

@@ -553,7 +553,7 @@ jobs:
     if: ${{ needs.changes.outputs.docs-only != 'true' }}
     runs-on: ${{ matrix.os }}
     # Native builds, snapshot replay, API tests and cleanup share this budget.
-    timeout-minutes: 60
+    timeout-minutes: 50
     env:
       NO_MISTAKES_BUILD_NAPI: "1"
     permissions:
@@ -653,7 +653,7 @@ jobs:
       # not also link a cdylib.
       # Hosted macOS runs exceeded the former build and Rust step deadlines.
       - name: Build native CLI and N-API addon
-        timeout-minutes: 30
+        timeout-minutes: 25
         shell: bash
         env:
           NATIVE_RUST_CACHE_HIT: ${{ steps.native-rust-cache.outputs.cache-hit }}
@@ -698,7 +698,7 @@ jobs:
             target/native-test-build-diagnostics
 
       - name: Run platform-specific Rust tests
-        timeout-minutes: 8
+        timeout-minutes: 9
         shell: bash
         run: node .github/scripts/native-rust-tests.cjs run
 

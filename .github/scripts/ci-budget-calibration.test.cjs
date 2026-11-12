@@ -56,9 +56,9 @@ test("macOS build and Rust deadlines reserve time beyond completed observations"
   assert.ok(rustRequired > 900);
   const native = job("native-tests");
   assert.ok(stepBudget(native, buildName) >= buildRequired);
-  assert.ok(stepBudget(native, buildName) <= 1800);
+  assert.ok(stepBudget(native, buildName) <= 1500);
   assert.ok(stepBudget(native, buildName) + stepBudget(native, rustName) >= rustRequired);
-  assert.ok(stepBudget(native, rustName) <= 480);
+  assert.ok(stepBudget(native, rustName) <= 540);
   const required = completed.map(
     (entry) =>
       elapsed(entry.startedAt, step(entry, apiName).startedAt) +
@@ -68,7 +68,7 @@ test("macOS build and Rust deadlines reserve time beyond completed observations"
   assert.equal(Math.max(...required), 2222);
   assert.ok(Math.max(...required) > 1800);
   for (const budget of required) assert.ok(jobBudget(native) >= budget);
-  assert.ok(jobBudget(native) <= 3600);
+  assert.ok(jobBudget(native) <= 3000);
 });
 
 test("same-head macOS timeout keeps censored evidence and bounded build headroom", () => {
@@ -89,9 +89,9 @@ test("same-head macOS timeout keeps censored evidence and bounded build headroom
   assert.equal(data.rustCache.result, "exact hit on both attempts");
   assert.ok(data.unavailable.includes("CPU utilization samples"));
   const native = job("native-tests");
-  assert.equal(stepBudget(native, buildName), 1800);
-  assert.equal(jobBudget(native), 3600);
-  assert.equal(stepBudget(native, rustName), 480);
+  assert.equal(stepBudget(native, buildName), 1500);
+  assert.equal(jobBudget(native), 3000);
+  assert.equal(stepBudget(native, rustName), 540);
   assert.equal(stepBudget(native, apiName), 600);
 });
 
@@ -174,8 +174,8 @@ test("native deadlines reserve bounded progress beyond the latest censored macOS
     rust.every((entry) => entry.progress.some((line) => /passing until timeout/.test(line))),
   );
   assert.match(api.apiFailure, /report.*absent/);
-  assert.equal(stepBudget(native, buildName), 1800);
-  assert.equal(stepBudget(native, rustName), 480);
+  assert.equal(stepBudget(native, buildName), 1500);
+  assert.equal(stepBudget(native, rustName), 540);
   assert.equal(stepBudget(native, apiName), 600);
   assert.ok(stepBudget(native, apiName) >= api.apiSeconds + 120);
   assert.ok(
@@ -186,7 +186,7 @@ test("native deadlines reserve bounded progress beyond the latest censored macOS
         300,
   );
   const config = readFileSync(path.join(root, ".no-mistakes.yml"), "utf8");
-  assert.match(config, /job: \.github\/workflows\/ci\.yml#native-tests\n\s+maxMinutes: 60/);
+  assert.match(config, /job: \.github\/workflows\/ci\.yml#native-tests\n\s+maxMinutes: 50/);
   assert.match(config, /rule: github-actions-step-timeouts[\s\S]*?maxMinutes: 30/);
   assert.match(native, /runner.os == 'Windows' && '--report-only' \|\| ''/);
 });
@@ -213,24 +213,76 @@ test("the slow bundled native parity case registers every saved scenario indepen
   );
 });
 
-test("precompile phase budgets retain the saved baseline without claiming an execution measurement", () => {
+test("measured native precompilation calibrates separate phase bounds and aggregate reserves", () => {
   const baseline = observed("macos-native-test-precompile-baseline");
   const before = baseline.fixedPrRun;
   assert.equal(
-    before.testProfileCompiles.reduce((sum, entry) => sum + entry.cargoReportedSeconds, 0),
+    Math.round(
+      before.testProfileCompiles.reduce((sum, entry) => sum + entry.cargoReportedSeconds, 0),
+    ),
     before.testProfileCompileTotalSeconds,
   );
-  assert.ok(
-    Math.abs(
-      before.steps.platformRust.elapsedSeconds -
-        before.testProfileCompileTotalSeconds -
-        before.estimatedRustExecutionRemainderSeconds,
-    ) < 0.001,
+  assert.equal(
+    before.steps.platformRust.elapsedSeconds - before.testProfileCompileTotalSeconds,
+    before.estimatedRustExecutionRemainderSeconds,
   );
-  const hypothesis = baseline.provisionalBudgetHypothesisSeconds;
+  const runs = baseline.measuredPrecompileRuns;
+  assert.equal(runs.length, 2);
+  assert.ok(
+    runs.every((run) => run.conclusion === "success" && run.runtimeCompilationObserved === false),
+  );
+  assert.ok(runs.every((run) => Math.max(...run.runtimeCargoFinishedProfileSeconds) < 1));
+  assert.ok(
+    runs.every((run) => run.overlayCache.restore === "miss" && run.overlayCache.save === "success"),
+  );
   const native = job("native-tests");
-  assert.equal(stepBudget(native, buildName), hypothesis.buildStep);
-  assert.equal(stepBudget(native, rustName), hypothesis.platformRustStep);
-  assert.equal(stepBudget(native, apiName), hypothesis.apiStep);
-  assert.equal(jobBudget(native), hypothesis.job);
+  const build = stepBudget(native, buildName);
+  const execution = stepBudget(native, rustName);
+  const api = stepBudget(native, apiName);
+  const maxBuild = Math.max(...runs.map((run) => run.steps.buildAndPrecompile.elapsedSeconds));
+  const maxExecution = Math.max(...runs.map((run) => run.steps.rustExecution.elapsedSeconds));
+  const maxApi = Math.max(...runs.map((run) => run.steps.api.elapsedSeconds));
+  const calibration = baseline.finalCalibrationSeconds;
+  const { caps, reserves, measuredMaxima } = calibration;
+  assert.equal(build, caps.buildAndPrecompileStep);
+  assert.equal(execution, caps.rustExecutionStep);
+  assert.equal(api, caps.apiStep);
+  assert.equal(maxBuild, measuredMaxima.buildAndPrecompileStep);
+  assert.equal(maxExecution, measuredMaxima.rustExecutionStep);
+  assert.equal(maxApi, measuredMaxima.apiStep);
+  const partial = baseline.historicalFirstHarnessCompiles.find(
+    (run) => run.platformStepTimeoutSeconds,
+  );
+  const projection = Math.round(
+    partial.buildStepSeconds +
+      partial.firstTestHarnessCargoReportedSeconds +
+      partial.otherObservedHarnessCompilesSeconds.reduce((sum, value) => sum + value, 0),
+  );
+  assert.equal(projection, calibration.buildHistoricalPartialSlowProjectionSeconds);
+  assert.ok(build >= projection + reserves.buildBeyondHistoricalPartialSlowProjection);
+  assert.equal(execution, maxExecution + reserves.rustExecution);
+  assert.ok(api >= maxApi + reserves.api);
+  const overhead = Math.max(
+    ...runs.map(
+      (run) =>
+        run.jobElapsedSeconds -
+        run.steps.buildAndPrecompile.elapsedSeconds -
+        run.steps.rustExecution.elapsedSeconds -
+        run.steps.api.elapsedSeconds,
+    ),
+  );
+  assert.equal(build + execution + api, 2640);
+  assert.equal(overhead, measuredMaxima.nonWorkOverhead);
+  const required = build + execution + api + overhead + reserves.postJob;
+  assert.equal(required, calibration.aggregateRequiredWithObservedOverheadAndPostReserve);
+  assert.ok(jobBudget(native) >= required);
+  assert.equal(jobBudget(native), caps.job);
+  assert.equal(jobBudget(native) - required, calibration.jobCapRemainingSeconds);
+  assert.deepEqual(baseline.collectionCapsSeconds, {
+    buildStep: 1800,
+    platformRustStep: 480,
+    apiStep: 600,
+    job: 3600,
+    status: "Initial provisional caps used for the first Windows and macOS precompile runs",
+  });
 });

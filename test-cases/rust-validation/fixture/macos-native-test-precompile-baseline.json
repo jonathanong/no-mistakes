@@ -21,9 +21,21 @@
       "targetDirectory": "target"
     },
     "steps": {
-      "build": {"startedAt": "2026-11-12T00:57:56Z", "completedAt": "2026-11-12T01:04:42Z", "elapsedSeconds": 406},
-      "platformRust": {"startedAt": "2026-11-12T01:04:43Z", "completedAt": "2026-11-12T01:15:18Z", "elapsedSeconds": 635},
-      "api": {"startedAt": "2026-11-12T01:15:18Z", "completedAt": "2026-11-12T01:18:29Z", "elapsedSeconds": 191}
+      "build": {
+        "startedAt": "2026-11-12T00:57:56Z",
+        "completedAt": "2026-11-12T01:04:42Z",
+        "elapsedSeconds": 406
+      },
+      "platformRust": {
+        "startedAt": "2026-11-12T01:04:43Z",
+        "completedAt": "2026-11-12T01:15:18Z",
+        "elapsedSeconds": 635
+      },
+      "api": {
+        "startedAt": "2026-11-12T01:15:18Z",
+        "completedAt": "2026-11-12T01:18:29Z",
+        "elapsedSeconds": 191
+      }
     },
     "devProfileBuild": {
       "cargoElapsedSeconds": 404.678,
@@ -33,14 +45,41 @@
       "maximumResidentSetBytes": 3363061760
     },
     "testProfileCompiles": [
-      {"target": "test macos_invocation", "startedAt": "2026-11-12T01:04:45.367Z", "finishedAt": "2026-11-12T01:11:00.929Z", "cargoReportedSeconds": 376},
-      {"target": "test bin no-mistakes", "startedAt": "2026-11-12T01:11:12.713Z", "finishedAt": "2026-11-12T01:11:29.935Z", "cargoReportedSeconds": 18.22},
-      {"target": "test suite_cli_postgres", "startedAt": "2026-11-12T01:11:32.559Z", "finishedAt": "2026-11-12T01:11:44.998Z", "cargoReportedSeconds": 12.68},
-      {"target": "test suite_cli_package_config", "startedAt": "2026-11-12T01:14:48.045Z", "finishedAt": "2026-11-12T01:14:55.939Z", "cargoReportedSeconds": 8.02}
+      {
+        "target": "test macos_invocation",
+        "startedAt": "2026-11-12T01:04:45.367Z",
+        "finishedAt": "2026-11-12T01:11:00.929Z",
+        "cargoReportedSeconds": 376
+      },
+      {
+        "target": "test bin no-mistakes",
+        "startedAt": "2026-11-12T01:11:12.713Z",
+        "finishedAt": "2026-11-12T01:11:29.935Z",
+        "cargoReportedSeconds": 18.22
+      },
+      {
+        "target": "test suite_cli_postgres",
+        "startedAt": "2026-11-12T01:11:32.559Z",
+        "finishedAt": "2026-11-12T01:11:44.998Z",
+        "cargoReportedSeconds": 12.68
+      },
+      {
+        "target": "test suite_cli_package_config",
+        "startedAt": "2026-11-12T01:14:48.045Z",
+        "finishedAt": "2026-11-12T01:14:55.939Z",
+        "cargoReportedSeconds": 8.02
+      }
     ],
-    "testProfileCompileTotalSeconds": 414.92,
-    "estimatedRustExecutionRemainderSeconds": 220.08,
-    "apiReport": {"passed": 637, "failed": 0, "skipped": 2, "slowestPassedMs": 2283.2, "passedAtOrAbove5000Ms": 0}
+    "testProfileCompileTotalSeconds": 415,
+    "estimatedRustExecutionRemainderSeconds": 220,
+    "compileTimingPrecisionNote": "Rounded to whole seconds because the first Cargo Finished duration is printed with whole-second precision.",
+    "apiReport": {
+      "passed": 637,
+      "failed": 0,
+      "skipped": 2,
+      "slowestPassedMs": 2283.2,
+      "passedAtOrAbove5000Ms": 0
+    }
   },
   "historicalFirstHarnessCompiles": [
     {
@@ -48,24 +87,37 @@
       "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43122608216/job/130866681150",
       "buildStepSeconds": 539,
       "firstTestHarnessCargoReportedSeconds": 465,
-      "otherObservedHarnessCompilesSeconds": [17.07, 14.8, 10.76]
+      "otherObservedHarnessCompilesSeconds": [
+        17.07,
+        14.8,
+        10.76
+      ]
     },
     {
       "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43119502783",
       "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43119502783/job/130856146977",
       "buildStepSeconds": 437,
       "firstTestHarnessCargoReportedSeconds": 527,
-      "otherObservedHarnessCompilesSeconds": [20.42, 18.27, 9.08]
+      "otherObservedHarnessCompilesSeconds": [
+        20.42,
+        18.27,
+        9.08
+      ]
     },
     {
       "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43122601344",
       "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43122601344/job/130866670979",
       "buildStepSeconds": 416,
       "firstTestHarnessCargoReportedSeconds": 778,
-      "otherObservedHarnessCompilesSeconds": [29.31, 39.64],
+      "otherObservedHarnessCompilesSeconds": [
+        29.31,
+        39.64
+      ],
       "platformStepElapsedSeconds": 1093,
       "platformStepTimeoutSeconds": 1080,
-      "unobserved": ["suite_cli_package_config harness compile did not appear before the timeout"]
+      "unobserved": [
+        "suite_cli_package_config harness compile did not appear before the timeout"
+      ]
     }
   ],
   "candidatePrecompileTargets": [
@@ -86,9 +138,23 @@
     "workflowKey": "native-${{ matrix.target }}",
     "defaultCacheTargets": true,
     "defaultCacheWorkspaceCrates": false,
-    "defaultSavedPaths": ["~/.cargo", "target"],
-    "preSaveCleanup": ["non-dependency target artifacts", "incremental artifacts", "artifacts older than one week"],
-    "targetKindsIncludedAsWorkspacePackages": ["lib", "cdylib", "dylib", "rlib", "staticlib", "proc-macro"],
+    "defaultSavedPaths": [
+      "~/.cargo",
+      "target"
+    ],
+    "preSaveCleanup": [
+      "non-dependency target artifacts",
+      "incremental artifacts",
+      "artifacts older than one week"
+    ],
+    "targetKindsIncludedAsWorkspacePackages": [
+      "lib",
+      "cdylib",
+      "dylib",
+      "rlib",
+      "staticlib",
+      "proc-macro"
+    ],
     "testExecutablesPersistInDefaultRustCache": false,
     "sameJobTargetArtifactsRemainAvailableToLaterSteps": true,
     "officialSources": [
@@ -103,6 +169,210 @@
     "platformRustStep": 480,
     "apiStep": 600,
     "job": 3600,
-    "rationale": "Measured fixed-run build plus observed test-profile compilation is about 821 seconds. The slow historical test harness compile plus current dev build and additional observed harnesses projects to about 1263 seconds before the fourth harness, so 1800 seconds is provisional headroom. Fixed-run Rust elapsed minus observed harness compilation is about 220 seconds; 480 seconds is provisional execution headroom. Validate once on CI and tighten from measured post-change data. Compilation moves between steps; total workload is not claimed to improve."
-  }
+    "rationale": "Initial collection caps were build 1800, platform Rust execution 480, API 600, aggregate 3600 seconds. Completed Windows and macOS observations are appended below. These first post-split runs are measurements, not duration guarantees; tighten phase caps only after reviewing their measured maxima and required headroom."
+  },
+  "collectionCapsSeconds": {
+    "buildStep": 1800,
+    "platformRustStep": 480,
+    "apiStep": 600,
+    "job": 3600,
+    "status": "Initial provisional caps used for the first Windows and macOS precompile runs"
+  },
+  "finalCalibrationSeconds": {
+    "status": "Proposed limits derived from the first successful Windows and macOS precompile runs; validate and tighten with subsequent completed hosted runs",
+    "caps": {
+      "buildAndPrecompileStep": 1500,
+      "rustExecutionStep": 540,
+      "apiStep": 600,
+      "job": 3000
+    },
+    "reserves": {
+      "buildBeyondHistoricalPartialSlowProjection": 237,
+      "rustExecution": 120,
+      "api": 120,
+      "postJob": 120
+    },
+    "measuredMaxima": {
+      "buildAndPrecompileStep": 1034,
+      "rustExecutionStep": 420,
+      "apiStep": 338,
+      "jobObserved": 1514,
+      "nonWorkOverhead": 148
+    },
+    "windowsObservedJobArithmetic": {
+      "startedAt": "2026-11-12T01:40:25Z",
+      "completedAt": "2026-11-12T02:04:39Z",
+      "elapsedSeconds": 1454,
+      "buildAndPrecompileStepSeconds": 548,
+      "rustExecutionStepSeconds": 420,
+      "apiStepSeconds": 338,
+      "nonWorkOverheadSeconds": 148,
+      "derivation": "1454 - 548 - 420 - 338"
+    },
+    "aggregateRequiredWithObservedOverheadAndPostReserve": 2908,
+    "jobCapRemainingSeconds": 92,
+    "buildHistoricalPartialSlowProjectionSeconds": 1263,
+    "buildProjectionCaveat": "Uses the existing dev build plus observed slow test harness compiles before the historical timeout; the fourth harness had not yet compiled, so this is a partial projection rather than a completed maximum."
+  },
+  "measuredPrecompileRuns": [
+    {
+      "platform": "Windows x64",
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43136071692",
+      "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43136071692/job/130911718137",
+      "headSha": "fc3ef798f57b2d8fef7a47a5a3d9bb7ebaa05ea3",
+      "conclusion": "success",
+      "jobElapsedSeconds": 1454,
+      "steps": {
+        "buildAndPrecompile": {
+          "startedAt": "2026-11-12T01:42:08Z",
+          "completedAt": "2026-11-12T01:51:16Z",
+          "elapsedSeconds": 548
+        },
+        "rustExecution": {
+          "startedAt": "2026-11-12T01:51:47Z",
+          "completedAt": "2026-11-12T01:58:47Z",
+          "elapsedSeconds": 420
+        },
+        "api": {
+          "startedAt": "2026-11-12T01:58:47Z",
+          "completedAt": "2026-11-12T02:04:25Z",
+          "elapsedSeconds": 338
+        },
+        "overlayCacheSave": {
+          "startedAt": "2026-11-12T01:51:16Z",
+          "completedAt": "2026-11-12T01:51:46Z",
+          "elapsedSeconds": 30,
+          "conclusion": "success"
+        }
+      },
+      "cargoProfileCompileSeconds": {
+        "dev": 262,
+        "testNoRun": [
+          256,
+          15.06,
+          9.17
+        ],
+        "testNoRunTotal": 280.23
+      },
+      "runtimeCargoFinishedProfileSeconds": [
+        0.45,
+        0.42,
+        0.47,
+        0.41,
+        0.4
+      ],
+      "runtimeCompilationObserved": false,
+      "runtimeTestCounts": {
+        "windowsJobObject": 7,
+        "postgresSnapshots": 163,
+        "mrfSnapshots": 10,
+        "packageConfigSnapshots": 26,
+        "rrbSnapshots": 9
+      },
+      "apiReport": {
+        "passed": 637,
+        "failed": 0,
+        "skipped": 2,
+        "passedAtOrAbove5000ms": 0,
+        "vitestSeconds": 335.71
+      },
+      "overlayCache": {
+        "restore": "miss",
+        "save": "success",
+        "archiveBytes": 963204958,
+        "paths": [
+          "target/debug",
+          "target/.rustc_info.json"
+        ]
+      }
+    },
+    {
+      "platform": "macOS ARM64",
+      "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43136071692",
+      "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43136071692/job/130911718154",
+      "headSha": "fc3ef798f57b2d8fef7a47a5a3d9bb7ebaa05ea3",
+      "conclusion": "success",
+      "jobElapsedSeconds": 1514,
+      "runner": {
+        "cpuModel": "Apple M1 (Virtual)",
+        "cpus": 3,
+        "totalMemoryBytes": 7516192768,
+        "cacheHit": true
+      },
+      "steps": {
+        "buildAndPrecompile": {
+          "startedAt": "2026-11-12T01:41:37Z",
+          "completedAt": "2026-11-12T01:58:51Z",
+          "elapsedSeconds": 1034
+        },
+        "rustExecution": {
+          "startedAt": "2026-11-12T01:59:19Z",
+          "completedAt": "2026-11-12T02:02:33Z",
+          "elapsedSeconds": 194
+        },
+        "api": {
+          "startedAt": "2026-11-12T02:02:33Z",
+          "completedAt": "2026-11-12T02:05:27Z",
+          "elapsedSeconds": 174
+        },
+        "overlayCacheSave": {
+          "startedAt": "2026-11-12T01:58:51Z",
+          "completedAt": "2026-11-12T01:59:18Z",
+          "elapsedSeconds": 27,
+          "conclusion": "success"
+        }
+      },
+      "devProfileBuild": {
+        "cargoElapsedSeconds": 558.379,
+        "wallRealSeconds": 558.26,
+        "userSeconds": 495.2,
+        "systemSeconds": 161.32,
+        "maximumResidentSetBytes": 3325083648
+      },
+      "cargoProfileCompileSeconds": {
+        "dev": 558.379,
+        "testNoRun": [
+          429.711,
+          16.605,
+          14.175,
+          11.197
+        ],
+        "testNoRunTotal": 471.688
+      },
+      "runtimeCargoFinishedProfileSeconds": [
+        0.61,
+        0.17,
+        0.15,
+        0.25,
+        0.13,
+        0.15
+      ],
+      "runtimeCompilationObserved": false,
+      "runtimeTestCounts": {
+        "macosInvocation": 149,
+        "blockedCheckBin": 2,
+        "postgresSnapshots": 163,
+        "mrfSnapshots": 10,
+        "packageConfigSnapshots": 26,
+        "rrbSnapshots": 9
+      },
+      "apiReport": {
+        "passed": 637,
+        "failed": 0,
+        "skipped": 2,
+        "passedAtOrAbove5000ms": 0,
+        "slowestPassedMs": 2386.3,
+        "vitestSeconds": 172.33
+      },
+      "overlayCache": {
+        "restore": "miss",
+        "save": "success",
+        "archiveBytes": 1136629626,
+        "paths": [
+          "target/debug",
+          "target/.rustc_info.json"
+        ]
+      }
+    }
+  ]
 }

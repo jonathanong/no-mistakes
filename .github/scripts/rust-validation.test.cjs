@@ -306,7 +306,7 @@ test("native API timeout leaves startup and teardown room after the observed Win
   const seconds = stepBudgetSeconds(native, "Run real N-API API test", "Windows");
   assert.ok(seconds >= required, "native API step must include launcher/teardown reserve");
   assert.ok(seconds <= 600, "keep the correction bounded rather than removing its deadline");
-  assert.match(native, /\n    timeout-minutes: 60\n/);
+  assert.match(native, /\n    timeout-minutes: 50\n/);
   const linux = workflow.split("\n  native-tests:\n")[0];
   assert.match(linux, /name: Run real N-API API test\n\s+timeout-minutes: 4\n/);
 });
