@@ -163,7 +163,7 @@ fn absolute_changed_file_is_relativized() {
 
 #[test]
 fn run_dispatches_both_subcommands() {
-    run(CiArgs {
+    let code = run(CiArgs {
         command: CiCommand::Impact(CiImpactArgs {
             files: vec![PathBuf::from("src/app.ts")],
             root: fixture("triggers"),
@@ -173,7 +173,8 @@ fn run_dispatches_both_subcommands() {
         }),
     })
     .unwrap();
-    run(CiArgs {
+    assert_eq!(code, ExitCode::SUCCESS);
+    let code = run(CiArgs {
         command: CiCommand::Env(CiEnvArgs {
             var: "CIGRAPH_WORKFLOW_VAR".to_string(),
             root: fixture("env"),
@@ -183,6 +184,7 @@ fn run_dispatches_both_subcommands() {
         }),
     })
     .unwrap();
+    assert_eq!(code, ExitCode::SUCCESS);
 }
 
 fn topology_fixture(name: &str) -> PathBuf {

@@ -116,8 +116,8 @@ fn plan(
     if !set_operation(query) || query.outputs.len() <= output {
         return;
     }
-    for index in 0..query.items.len() {
-        if let SqlBoundItemKind::Query(inner) = &query.items[index].kind {
+    for (index, item) in query.items.iter().enumerate() {
+        if let SqlBoundItemKind::Query(inner) = &item.kind {
             path.push(index);
             plan(inner, output, pin, path, planned, rejections);
             path.pop();

@@ -60,6 +60,12 @@ that channel and installs Clippy and rustfmt. Workflows select `toolchain: stabl
 while pinning the setup action code separately. Benchmark comparisons must use
 the same resolved compiler version for both runs and record that version.
 
+After a stable toolchain update, validate library and test targets with
+`cargo clippy -p no-mistakes --all-targets -- -D warnings`, using the shared-machine
+limits below. Command tests should assert their expected `ExitCode`. Preserve
+short-circuit evaluation and token positions when simplifying predicates or
+replacing indexed loops, then replay the affected saved fixtures and snapshots.
+
 CI enforces per-function CRAP and cyclomatic complexity limits of 30. The
 complexity gate runs `cargo crap --workspace --missing optimistic --fail-above
 --threshold 30 --summary` without LCOV: assuming full coverage makes CRAP equal
