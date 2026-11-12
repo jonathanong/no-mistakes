@@ -74,12 +74,17 @@ fn classify_call(
         && matches!(syntax.constants.get(&declaration), Some(Head::Text(value))
             if value.tagged && value.current == HeadProof::Missing
                 && value.continued == HeadProof::Missing);
-    if !bindings.trusted_root(declaration)
-        || !(stable_missing
-            || matches!(
-                syntax.constants.get(&declaration),
-                Some(Head::Tag | Head::AppendTag | Head::AppendPrefixTag)
-            ))
+    let fresh_initializer = low
+        && syntax
+            .fresh_builders
+            .trusted_initializer(declaration, bindings);
+    if !fresh_initializer
+        && (!bindings.trusted_root(declaration)
+            || !(stable_missing
+                || matches!(
+                    syntax.constants.get(&declaration),
+                    Some(Head::Tag | Head::AppendTag | Head::AppendPrefixTag)
+                )))
     {
         return;
     }

@@ -19,6 +19,11 @@ pub(super) struct Candidates {
     writes: FxHashMap<Span, Root>,
 }
 impl Candidates {
+    pub fn trusted_initializer(&self, declaration: Span, bindings: &Bindings<'_>) -> bool {
+        self.declarations.get(&declaration).is_some_and(|initial| {
+            bindings.declaration_safe(initial.span) && proofs::trusted(&initial.root, bindings)
+        })
+    }
     pub fn references(&self) -> impl Iterator<Item = Span> + '_ {
         self.declarations
             .values()
