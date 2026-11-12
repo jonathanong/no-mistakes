@@ -33,6 +33,16 @@ fn proof_fields_remain_distinct() {
     let mut environment = unknown.clone();
     environment.env = Some("SCAN_ROOT".to_owned());
     assert_ne!(unknown, environment);
+    let mut captured = environment.clone();
+    captured.env_capture = Some(42);
+    assert_ne!(environment, captured);
+    assert_ne!(hash(&environment), hash(&captured));
+    assert_eq!(
+        PathOrigin::alternatives(vec![environment, captured])
+            .atoms()
+            .len(),
+        2
+    );
     let mut parameter = unknown.clone();
     parameter.param = Some(0);
     assert_ne!(unknown, parameter);

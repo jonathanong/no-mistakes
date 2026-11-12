@@ -1,7 +1,9 @@
 mod array_guard;
+mod path_default;
 pub(crate) use super::path_value::{MemberEffect, PathValueKind};
 use crate::fx::FxHashMap;
 pub(crate) use array_guard::ArrayGuard;
+pub(crate) use path_default::PathDefault;
 use serde_json::Value;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -70,12 +72,6 @@ pub(crate) struct PathOrigin {
     pub(crate) reassigned_at: Option<u32>,
     pub(crate) alternatives: Vec<PathOrigin>,
     pub(crate) param_default: Option<PathDefault>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub(crate) struct PathDefault {
-    pub(crate) value: Box<PathOrigin>,
-    pub(crate) nullish: bool,
 }
 
 /// Where a `process.env` write sits relative to the code it must dominate.
