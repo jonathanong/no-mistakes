@@ -211,12 +211,14 @@ fn env_cause_ambiguous_capture_keeps_generic_diagnostic_check_json_snapshot() {
     let (exit, report) = report("captured-ambiguous", ".no-mistakes.yml");
     assert_eq!(exit, 0, "{report}");
     let findings = report["advisories"].as_array().unwrap();
-    assert_eq!(findings.len(), 1, "{report}");
-    let message = findings[0]["message"].as_str().unwrap();
-    assert!(
-        message.contains("expression this analysis cannot follow"),
-        "{message}"
-    );
-    assert!(!message.contains("process.env.FIRST"), "{message}");
-    assert!(!message.contains("process.env.SECOND"), "{message}");
+    assert_eq!(findings.len(), 4, "{report}");
+    for finding in findings {
+        let message = finding["message"].as_str().unwrap();
+        assert!(
+            message.contains("expression this analysis cannot follow"),
+            "{message}"
+        );
+        assert!(!message.contains("process.env.FIRST"), "{message}");
+        assert!(!message.contains("process.env.SECOND"), "{message}");
+    }
 }

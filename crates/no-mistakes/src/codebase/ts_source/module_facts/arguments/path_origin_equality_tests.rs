@@ -40,3 +40,23 @@ fn proof_fields_remain_distinct() {
     scalar.require_scalar = true;
     assert_ne!(unknown, scalar);
 }
+
+#[test]
+fn duplicate_proofs_discard_conflicting_capture_metadata() {
+    let mut first = PathOrigin::unknown();
+    first.env_diagnostic = Some(Box::new(EnvDiagnostic {
+        name: "FIRST".to_owned(),
+        fallback: None,
+        captured: true,
+        line: 1,
+    }));
+    first.captured_getter = Some(1);
+    let mut second = first.clone();
+    second.env_diagnostic.as_mut().unwrap().name = "SECOND".to_owned();
+    second.captured_getter = Some(2);
+    let merged = PathOrigin::alternatives(vec![first.clone(), second, first]);
+    assert_eq!(merged, PathOrigin::unknown());
+    assert!(merged.env_diagnostic.is_none());
+    assert!(merged.captured_getter.is_none());
+    assert!(merged.alternatives.is_empty());
+}

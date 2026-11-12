@@ -293,10 +293,10 @@ ownership. `vi.stubEnv("TMPDIR", fixture)` supplies the same proof when `fixture
 is an owned `mkdtemp` result. A nested `mkdtemp(join(parent, "impact."))` creates
 a fresh owned directory even when `parent` comes from that environment.
 
-When an environment root is unresolved, the finding should name the environment
-variable and retain the path expression that reaches the enumerator, including
-its fallback. If a test clears that variable before importing a module-level
-scanner or calling a helper, identify the selected test file and clearing line:
+When an environment root is unresolved and uniquely identified, the finding
+names the environment variable and its literal string fallback when known.
+If a test clears that variable before importing a module-level scanner or
+calling a helper, the message identifies the selected test file and clearing line:
 
 ```typescript
 // scanner.mts
@@ -310,21 +310,20 @@ it("uses the fallback", async () => {
 });
 ```
 
-The finding should point to the enumeration and explain that clearing
-`EXAMPLE_LOCAL_DIR` selects `"./tmp/example"`; it should also point to the
-`delete` in `tests/scan.test.mts`. When no owned write is visible from a selected
-test call, name that variable and call site and say that ownership is not proven
-there. Do not claim the variable is never assigned when an unresolved or
-unselected setup could still write it. A computed fallback such as
-`join(process.cwd(), "tmp", "example")` remains unowned too, and should be
-shown as the fallback expression. An unconditional owned `beforeEach` write
-followed by `afterEach` cleanup remains a valid control: the cleanup happens
-after the scan and does not make the earlier root unsafe.
+The finding points to the enumeration, names `EXAMPLE_LOCAL_DIR` and the
+fallback `"./tmp/example"`, and identifies the `delete` in `tests/scan.test.mts`.
+When no owned write is proven before a selected test call, the message names
+that variable and call site. It reports uncertainty when no concrete test or
+setup entry can be identified. Multiple possible environment roots retain the
+generic unresolved-root explanation. A computed fallback such as
+`join(process.cwd(), "tmp", "example")` remains unowned, but is not presented
+as a literal fallback. An unconditional owned `beforeEach` write followed by
+`afterEach` cleanup remains valid: cleanup happens after the scan.
 
 When selected tests have mixed environment histories, report the history that
 reaches the unsafe scan. If one test scans with the owned `beforeEach` value and
 a later test deletes the variable before scanning, identify the later test's
-delete and call lines instead of describing the whole suite as missing an
+delete instead of describing the whole suite as missing an
 assignment. Likewise, a module-level delete superseded by an owned setup before
 every scan is not the blocker; explain the remaining unresolved path expression
 or fallback rather than attributing it to that earlier delete.

@@ -43,7 +43,13 @@ fn clearing_locations_are_retained_as_diagnostics_only() {
 #[test]
 fn captured_alternatives_do_not_claim_a_unique_environment_root() {
     let facts = read("env-diagnostic-ambiguous.mjs");
-    for call in ["readdirSync(multiple)", "readdirSync(mixed)"] {
+    for call in [
+        "readdirSync(multiple)",
+        "readdirSync(mixed)",
+        "readdirSync(aliasOr)",
+        "readdirSync(aliasCoalesce)",
+        "readdirSync(aliasUnknown)",
+    ] {
         let origin = facts.origin(call);
         assert_eq!(origin.anchor, PathAnchor::Unknown);
         assert_eq!(origin.env, None);

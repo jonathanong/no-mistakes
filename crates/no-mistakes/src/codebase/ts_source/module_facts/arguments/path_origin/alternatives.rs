@@ -12,10 +12,18 @@ impl PathOrigin {
     }
 
     pub(crate) fn alternatives(origins: Vec<Self>) -> Self {
-        let mut alternatives = Vec::new();
+        let mut alternatives: Vec<Self> = Vec::new();
         for origin in origins {
             for atom in origin.atoms() {
-                if !alternatives.contains(atom) {
+                if let Some(existing) = alternatives.iter_mut().find(|existing| &**existing == atom)
+                {
+                    if existing.env_diagnostic != atom.env_diagnostic
+                        || existing.captured_getter != atom.captured_getter
+                    {
+                        existing.env_diagnostic = None;
+                        existing.captured_getter = None;
+                    }
+                } else {
                     alternatives.push(atom.clone());
                 }
                 if alternatives.len() > 16 {
