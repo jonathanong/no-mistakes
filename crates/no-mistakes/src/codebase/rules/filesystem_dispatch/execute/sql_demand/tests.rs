@@ -114,3 +114,57 @@ fn repeated_unknown_helper_lookup_preserves_failed_source() {
     assert_eq!(failures.len(), 1);
     assert_eq!(failures[0].file.as_ref(), Some(&root.join("helper.ts")));
 }
+
+#[test]
+fn demand_profiles_respect_test_helper_scopes_and_skip_non_sources() {
+    let root = repository().join("fixtures/check/sql-helper-prerequisite");
+    let candidates = ["caller.ts", "helper.ts", "empty.txt"].map(|name| root.join(name));
+    for (consumer, effort, options, expected) in [
+        (
+            "postgres-no-test-state-mutation",
+            "low",
+            "testGlobs: [caller.ts]\nhelperRoots: [helper.ts]",
+            vec!["caller.ts", "helper.ts"],
+        ),
+        (
+            "postgres-no-offset",
+            "low",
+            "include: [caller.ts]",
+            vec!["caller.ts"],
+        ),
+        (
+            "postgres-require-query-annotation",
+            "low",
+            "include: [caller.ts]\nsqlLiteralHelpers: ['./helper#head']",
+            vec!["caller.ts"],
+        ),
+        (
+            "postgres-require-query-annotation",
+            "max",
+            "include: [helper.ts]",
+            vec!["helper.ts"],
+        ),
+    ] {
+        let mut config: NoMistakesConfig = serde_yaml::from_str(&format!(
+            "effort: {effort}\nrules:\n  - rule: {consumer}\n    scope: repository\n"
+        ))
+        .unwrap();
+        config.rules[0].options = serde_yaml::from_str(&format!(
+            "importSpecifier: '@example/db'\nexecutorNames: [query]\n{options}"
+        ))
+        .unwrap();
+        config.rules[0].resolved_application_index = Some(2);
+        config.rules[0].resolved_analysis = Some(crate::config::v2::EffectiveRuleAnalysis {
+            effort: config.effort.unwrap(),
+            ..Default::default()
+        });
+        assert_eq!(
+            super::files(&root, &config, consumer, &candidates, None).unwrap(),
+            expected
+                .iter()
+                .map(|name| root.join(name))
+                .collect::<Vec<_>>(),
+            "{consumer}/{effort}"
+        );
+    }
+}
