@@ -1,6 +1,6 @@
 /* oxlint-disable no-await-in-loop */
-import { CHILD_STAGES } from './stages.mts';
 import type { TransactionQuery } from '@pkg/psql';
+import { CHILD_STAGES } from './stages.mts';
 async function checkpoint(query: TransactionQuery, id: string) {}
 export async function purge(query: TransactionQuery, id: string, n: number) {
   for (const stage of CHILD_STAGES) {
