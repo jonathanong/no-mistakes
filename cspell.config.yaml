@@ -13,6 +13,8 @@ ignorePaths:
   - "test-cases/**"
   - "crates/**/target/**"
 words:
+  - clippy
+  - RUSTFLAGS
   - jonathanong
   - zizmor
   - unstub

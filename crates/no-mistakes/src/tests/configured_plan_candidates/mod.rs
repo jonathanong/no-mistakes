@@ -13,15 +13,12 @@ mod hint_emit;
 use hint_emit::{
     append_queue_hint_candidates, append_removed_id_candidates, append_route_hint_candidates,
 };
-
 #[cfg(test)]
 mod tests;
-
 /// `(binding, kind, name)` triple shared with the hint pipeline. Re-exported
 /// here so the public field types stay readable instead of expanding to the
 /// full 3-tuple.
 pub(super) type QueueIdent = (Option<String>, String, String);
-
 /// Extra coverage signals derived from a unified diff that the BFS over the
 /// dep graph cannot recover on its own. Carries identifiers that the diff
 /// removed across every identifier-keyed edge kind, paired with a reverse
@@ -58,7 +55,6 @@ pub(super) struct CoverageHints {
     /// Reverse index: HTTP call path → files that still call it.
     pub http_path_dependents: HashMap<String, Vec<PathBuf>>,
 }
-
 impl CoverageHints {
     fn is_empty(&self) -> bool {
         self.removed_selectors.is_empty()
@@ -67,10 +63,9 @@ impl CoverageHints {
             && self.removed_http_paths.is_empty()
     }
 }
-
 #[expect(
     clippy::too_many_arguments,
-    reason = "Candidate grouping shares one graph, test universe, deduplication set, and warning accumulator."
+    reason = "Shares graph, test scope, and warning state."
 )]
 pub(super) fn group_candidates(
     group: TestPlanGroupType,
@@ -112,7 +107,6 @@ pub(super) fn group_candidates(
         TestPlanGroupType::Sample => sample_candidates(root, all_tests, used),
     }
 }
-
 fn direct_candidates(
     root: &Path,
     changed_files: &[PathBuf],
@@ -146,7 +140,6 @@ fn direct_candidates(
                 }
             }
         }
-
         let start = NodeId::file(changed);
         let Some(dependents) = graph.dependents_of_node(&start) else {
             continue;
@@ -204,7 +197,6 @@ fn direct_candidates(
     selected.extend(hop_selected.into_values());
     selected
 }
-
 /// One reverse hop that should win over multi-hop `dependencies` under a limit.
 /// Import-family and same-directory `TestOf` edges are the direct owners;
 /// markdown/resource/route hops and native module/namespace fan-out stay in
@@ -222,10 +214,9 @@ fn is_direct_owner_edge(kind: EdgeKind) -> bool {
             | EdgeKind::TestOf
     )
 }
-
 #[expect(
     clippy::too_many_arguments,
-    reason = "Graph candidate traversal applies the group policy, test scope, coverage hints, and shared warning state."
+    reason = "Shares scope, hints, and warning state."
 )]
 fn graph_candidates(
     group: TestPlanGroupType,
@@ -331,7 +322,6 @@ fn graph_candidates(
     }
     selected.into_values().collect()
 }
-
 fn sample_candidates(
     root: &Path,
     all_tests: &[PathBuf],
@@ -355,19 +345,16 @@ fn sample_candidates(
         })
         .collect()
 }
-
 pub(super) fn stable_take(mut candidates: Vec<SelectedTest>, limit: usize) -> Vec<SelectedTest> {
     candidates.sort_by(|a, b| stable_test_key(&a.test_file).cmp(&stable_test_key(&b.test_file)));
     candidates.truncate(limit);
     candidates.sort_by(|a, b| a.test_file.cmp(&b.test_file));
     candidates
 }
-
 pub(super) fn first_take(mut candidates: Vec<SelectedTest>, limit: usize) -> Vec<SelectedTest> {
     candidates.truncate(limit);
     candidates
 }
-
 fn stable_test_key(path: &str) -> (u64, &str) {
     let mut hash = 14_695_981_039_346_656_037_u64;
     for byte in path.bytes() {
@@ -376,7 +363,6 @@ fn stable_test_key(path: &str) -> (u64, &str) {
     }
     (hash, path)
 }
-
 pub(super) fn selected_from_paths(
     root: &Path,
     tests: &[PathBuf],
@@ -404,7 +390,6 @@ pub(super) fn selected_from_paths(
         })
         .collect()
 }
-
 pub(super) fn merge_selected(existing: &mut SelectedTest, next: &SelectedTest) {
     if next.confidence > existing.confidence {
         existing.confidence = next.confidence;
@@ -421,14 +406,12 @@ pub(super) fn merge_selected(existing: &mut SelectedTest, next: &SelectedTest) {
     }
     existing.targets.sort();
 }
-
 struct ReasonContext<'a> {
     root: &'a Path,
     graph: &'a DepGraph,
     warnings: &'a mut Vec<Warning>,
     warnings_seen: &'a mut HashSet<WarningKey>,
 }
-
 fn reason_from_path(
     rel_changed: &str,
     test_node: &NodeId,
@@ -446,7 +429,6 @@ fn reason_from_path(
     let mut reverse_details = Vec::new();
     let mut curr = test_node.clone();
     node_chain.push(slash_node_name(&curr, root));
-
     while let Some((parent, kind)) = path_parents.get(&curr) {
         if let Some(file) = curr.as_file() {
             push_resource_diagnostics(graph, root, file, warnings, warnings_seen);
@@ -463,7 +445,6 @@ fn reason_from_path(
     }
     node_chain.reverse();
     reverse_details.reverse();
-
     ImpactReason {
         changed_file: rel_changed.to_string(),
         path: node_chain,
@@ -474,10 +455,9 @@ fn reason_from_path(
         via_details: reverse_details,
     }
 }
-
 #[expect(
     clippy::type_complexity,
-    reason = "The traversal returns reachable edge paths and their predecessor map for shortest-path rendering."
+    reason = "Paths and predecessors share one traversal."
 )]
 pub(super) fn bfs_path_find_set(
     graph: &DepGraph,
@@ -491,10 +471,8 @@ pub(super) fn bfs_path_find_set(
     let mut parents: HashMap<NodeId, (NodeId, EdgeKind)> = HashMap::new();
     let mut visited = HashSet::new();
     let mut reachable = Vec::new();
-
     queue.push_back(start.clone());
     visited.insert(start.clone());
-
     while let Some(current) = queue.pop_front() {
         if let NodeId::File(path) = &current {
             if current != *start && test_files.contains(path.as_ref()) {
@@ -508,7 +486,6 @@ pub(super) fn bfs_path_find_set(
                 reachable.push((current.clone(), edge_path));
             }
         }
-
         if let Some(neighbors) = graph.dependents_of_node(&current) {
             for (neighbor, kind) in neighbors {
                 if !visited.contains(neighbor) {
@@ -519,6 +496,5 @@ pub(super) fn bfs_path_find_set(
             }
         }
     }
-
     (reachable, parents)
 }
