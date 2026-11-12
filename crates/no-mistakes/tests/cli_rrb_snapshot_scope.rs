@@ -58,6 +58,21 @@ fn query_reached_per_item_call_reachability_json_matches_snapshot() {
                 "query-reached-per-item/imported-stages-fixture",
                 ".no-mistakes.yml",
             ),
+            rule(
+                "namespace_member",
+                "query-reached-per-item/namespace-member-stages-fixture",
+                ".no-mistakes.yml",
+            ),
+            rule(
+                "namespace_cycle",
+                "query-reached-per-item/namespace-cycle-stages-fixture",
+                ".no-mistakes.yml",
+            ),
+            rule(
+                "namespace_unknown",
+                "query-reached-per-item/namespace-unknown-stages-fixture",
+                ".no-mistakes.yml",
+            ),
         ],
     );
 }

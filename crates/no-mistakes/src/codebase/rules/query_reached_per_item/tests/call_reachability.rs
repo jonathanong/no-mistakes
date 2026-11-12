@@ -163,3 +163,39 @@ fn exported_stage_arrays_retain_real_escapes_separately_from_export_declarations
         }
     }
 }
+
+#[test]
+fn namespace_members_stars_cycles_and_unresolved_stars_prevent_imported_stage_proofs() {
+    use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
+    for name in [
+        "namespace-member-stages-fixture",
+        "namespace-cycle-stages-fixture",
+        "namespace-unknown-stages-fixture",
+    ] {
+        let root = crate::codebase::ts_resolver::normalize_path(&root().with_file_name(name));
+        let findings = crate::codebase::rules::run_check(&root, None, None).unwrap();
+        assert!(findings.is_empty(), "{name}: {findings:?}");
+        let config = crate::codebase::ts_resolver::TsConfig {
+            dir: root.clone(),
+            paths_dir: root.clone(),
+            ..Default::default()
+        };
+        let graph = DepGraph::build_with_plan(
+            &root,
+            &config,
+            GraphBuildPlan {
+                calls: true,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        let site = graph
+            .resolved_call_sites()
+            .iter()
+            .find(|site| {
+                site.file == root.join("src/caller.mts") && site.source_callee == "stage.run"
+            })
+            .unwrap();
+        assert!(site.target_nodes().next().is_none(), "{name}: {site:?}");
+    }
+}
