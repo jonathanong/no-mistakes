@@ -52,9 +52,6 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn loop_domain(
             return None;
         }
         let name = crate::ast::js_literal(value).into_owned();
-        if name.trim().is_empty() {
-            return None;
-        }
         if !values.contains(&name) {
             values.push(name);
         }

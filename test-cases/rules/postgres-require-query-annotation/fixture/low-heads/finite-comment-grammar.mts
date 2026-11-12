@@ -23,5 +23,5 @@ for (const [name, body] of [['', 'SELECT 1']]) {
 }
 for (const [name, body] of [['known', 'SELECT 1']]) {
   read(`/* ${name.trim()} */ ${body}`) // low: false
-  read(`/* ${name} ${body} */ SELECT 1`) // low: false
+  read(`/* ${name} ${body} */ SELECT 1`) // low: true
 }

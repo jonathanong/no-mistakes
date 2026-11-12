@@ -86,9 +86,12 @@ pub(crate) fn collect_prepared(
             &executor_calls,
         );
         for (span, proof) in finite_proofs {
-            if matches!(calls.get(&span), Some(HeadProof::Unproven)) {
+            if matches!(calls.get(&span), Some(HeadProof::Unproven))
+                || (proof == HeadProof::Unproven
+                    && matches!(calls.get(&span), Some(HeadProof::Literal)))
+            {
                 calls.insert(span, proof);
-                if finite_gated.contains(&span) {
+                if proof == HeadProof::Literal && finite_gated.contains(&span) {
                     import_gated_finite.push(span);
                 }
             }

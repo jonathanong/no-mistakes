@@ -42,9 +42,6 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn plain_ternary(
     let mut values = Vec::new();
     for arm in [&value.consequent, &value.alternate] {
         let name = string_literal(arm)?;
-        if name.trim().is_empty() {
-            return None;
-        }
         if !values.contains(&name) {
             values.push(name);
         }
@@ -57,7 +54,7 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn inline_name(
 ) -> Option<InlineName> {
     let (first, before, after) = comment_bounds(expression)?;
     Some(InlineName {
-        values: plain_ternary(first)?,
+        values: plain_ternary(first).or_else(|| string_literal(first).map(|name| vec![name]))?,
         before,
         after,
     })
@@ -99,9 +96,6 @@ fn string_values(expression: &Expression<'_>) -> Option<Vec<String>> {
     let mut values = Vec::new();
     for row in &rows.elements {
         let name = string_literal(row.as_expression()?)?;
-        if name.trim().is_empty() {
-            return None;
-        }
         if !values.contains(&name) {
             values.push(name);
         }

@@ -35,18 +35,23 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn proofs(
         if !executors.contains(&candidate.call) {
             continue;
         }
-        let proven = if candidate.inline {
-            all_named(
+        let named = if candidate.inline {
+            Some(all_named(
                 &candidate.before,
                 &candidate.after,
                 &candidate.domain.values,
-            )
+            ))
         } else {
             direct(syntax, bindings, &mut index, candidate)
         };
-        if proven {
-            found.insert(candidate.call, HeadProof::Literal);
-            if candidate.inline || candidate.domain.import_gated {
+        if let Some(named) = named {
+            let proof = if named {
+                HeadProof::Literal
+            } else {
+                HeadProof::Unproven
+            };
+            found.insert(candidate.call, proof);
+            if named && (candidate.inline || candidate.domain.import_gated) {
                 gated.insert(candidate.call);
             }
         }
@@ -82,20 +87,20 @@ fn direct(
     bindings: &Bindings<'_>,
     index: &mut super::index::Index<'_>,
     candidate: &TemplateUse,
-) -> bool {
-    let Some(owner) = bindings.owner(candidate.reference) else {
-        return false;
-    };
+) -> Option<bool> {
+    let owner = bindings.owner(candidate.reference)?;
     let declaration = (owner.span.start, owner.span.end);
-    declaration == candidate.domain.declaration
+    (declaration == candidate.domain.declaration
         && !owner.imported
         && owner.runtime
-        && index.stable(syntax, bindings, owner)
-        && all_named(
+        && index.stable(syntax, bindings, owner))
+    .then(|| {
+        all_named(
             &candidate.before,
             &candidate.after,
             &candidate.domain.values,
         )
+    })
 }
 
 fn all_named(before: &str, after: &str, values: &[String]) -> bool {

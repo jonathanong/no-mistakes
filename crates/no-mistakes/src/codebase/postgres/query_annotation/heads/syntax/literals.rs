@@ -1,4 +1,4 @@
-use oxc_ast::ast::Expression;
+use oxc_ast::ast::{Expression, TemplateLiteral};
 pub(in crate::codebase::postgres::query_annotation::heads) fn named(text: &str) -> bool {
     // Inspect only the FIRST block comment; a later named comment cannot repair
     // an empty first one. Decoded/cooked text determines runtime string bytes.
@@ -15,7 +15,23 @@ pub(super) fn literal(expression: &Expression<'_>) -> bool {
             .first()
             .filter(|part| part.value.cooked.is_some())
             .map(crate::ast::template_quasi_text)
-            .is_some_and(|text| named(&text)),
+            .is_some_and(|text| named(&text) || interpolated_name(value, &text)),
         _ => false,
     }
+}
+
+fn interpolated_name(template: &TemplateLiteral<'_>, first: &str) -> bool {
+    let Some(open) = first.trim_start().strip_prefix("/*") else {
+        return false;
+    };
+    if open.contains("*/") {
+        return false;
+    }
+    for (index, part) in template.quasis.iter().enumerate().skip(1) {
+        let text = crate::ast::template_quasi_text(part);
+        if text.contains("*/") {
+            return index == template.expressions.len();
+        }
+    }
+    false
 }
