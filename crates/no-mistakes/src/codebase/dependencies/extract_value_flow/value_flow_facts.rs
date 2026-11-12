@@ -10,9 +10,7 @@ pub struct ValueFlowFacts {
     pub incomplete_reason: Option<String>,
     #[cfg(feature = "test-instrumentation")]
     pub module_provider_work: [usize; 3],
-    /// Prepared nullish expressions can add known plain-name fallback effects.
     pub has_nullish_alternatives: bool,
-    /// Callable value escapes; direct calls use canonical invocation facts.
     pub callable_value_uses: Option<std::sync::Arc<FxHashMap<usize, FxHashSet<String>>>>,
     #[cfg(feature = "test-instrumentation")]
     pub replacement_statement_checks: usize,
@@ -188,6 +186,7 @@ pub struct ValueFlowFacts {
     pub calls: Vec<ValueCall>,
     pub type_exports: Vec<ExportedBinding>,
     pub type_shapes: FxHashMap<String, ValueType>,
+    pub(crate) contextual_callbacks: FxHashMap<u32, ValueType>,
     pub async_callables: FxHashSet<CallableId>,
     pub generator_callables: FxHashSet<CallableId>,
     pub(crate) closed_string_registries: Vec<closed_identifiers::ClosedStringRegistry>,

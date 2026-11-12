@@ -31,7 +31,13 @@ impl ValueFlowResolution<'_, '_> {
         visited: &mut FxHashSet<(std::path::PathBuf, String)>,
     ) -> FlowValue {
         match shape {
-            ValueType::Unknown | ValueType::Number | ValueType::Element(_) => FlowValue::Unknown,
+            ValueType::Unknown
+            | ValueType::Number
+            | ValueType::Element(_)
+            | ValueType::Signature(_) => FlowValue::Unknown,
+            ValueType::Param(callback, index) => {
+                self.contextual_parameter(path, callback, *index, visited)
+            }
             ValueType::Object(properties) => FlowValue::TypedObject {
                 executor: Box::new(FlowValue::Unknown),
                 properties: properties

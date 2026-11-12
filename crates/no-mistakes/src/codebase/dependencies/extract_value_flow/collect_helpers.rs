@@ -87,6 +87,19 @@ impl ImportCollector {
                 }
                 ValueType::Object(properties)
             }
+            TSType::TSFunctionType(function) if function.type_parameters.is_none() => {
+                ValueType::Signature(
+                    function
+                        .params
+                        .items
+                        .iter()
+                        .map(|param| {
+                            self.parameter_type_reference(param)
+                                .unwrap_or(ValueType::Unknown)
+                        })
+                        .collect(),
+                )
+            }
             TSType::TSNumberKeyword(_) | TSType::TSBigIntKeyword(_) => ValueType::Number,
             _ => ValueType::Unknown,
         }

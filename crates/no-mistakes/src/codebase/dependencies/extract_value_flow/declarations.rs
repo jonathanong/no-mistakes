@@ -17,6 +17,10 @@ pub enum ValueType {
     Number,
     /// `(typeof NAME)[number]`: an element of a value's array type.
     Element(String),
+    /// Positional parameter shapes of a function type.
+    Signature(Vec<ValueType>),
+    /// The nth parameter of the function type that the inner shape denotes.
+    Param(Box<ValueType>, usize),
     Unknown,
 }
 

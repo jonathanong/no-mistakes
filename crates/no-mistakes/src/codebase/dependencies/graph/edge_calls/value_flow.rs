@@ -182,6 +182,9 @@ mod parameter_values;
 #[path = "value_flow/annotation_values.rs"]
 mod annotation_values;
 
+#[path = "value_flow/contextual_values.rs"]
+mod contextual_values;
+
 #[path = "value_flow/choice_targets.rs"]
 mod choice_targets;
 

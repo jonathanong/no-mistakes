@@ -270,3 +270,27 @@ fn only_read_only_returning_guards_preserve_stage_reachability() {
         "{findings:#?}"
     );
 }
+
+#[test]
+fn contextually_typed_stage_arrows_reach_executor_typed_parameters() {
+    let root = root().with_file_name("typed-contextual-stages-fixture");
+    let findings =
+        crate::codebase::rules::run_check(&root, Some(&root.join(".no-mistakes.yml")), None)
+            .unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (
+                finding.file.as_str(),
+                finding.line,
+                finding.import.as_deref()
+            ))
+            .collect::<Vec<_>>(),
+        [
+            ("src/caller.mts", 7, Some("stage.deletion")),
+            ("src/caller.mts", 12, Some("stage.remaining")),
+            ("src/other.mts", 4, Some("stage.deletion"))
+        ],
+        "{findings:#?}"
+    );
+}

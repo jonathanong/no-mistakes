@@ -138,6 +138,14 @@ barrels preserve namespace members such as `Namespace.Query`, including renamed
 imports; unrelated local types and different module names remain unselected.
 Workspace package type barrels retain both their public module/export selector
 and the underlying type origin, so configured package aliases remain selectable.
+An unannotated parameter of a function written directly as a property of an
+annotated `const` array or object literal inherits the parameter type from the
+same-file alias's function-typed property (`const STAGES: readonly Stage[] = [{
+run: (query) => query(sql) }]` with `type Stage = { run: (query: Query) => ... }`),
+by position, so its `query(...)` call is selected even when other callers pass an
+untyped value. Aliases with type parameters, imported or non-literal property
+types, computed keys, defaulted parameters, and functions that are not literal
+properties do not contribute a type.
 Static indexed property types, including `NonNullable<Options['query']>`, preserve
 the selected callable origin. Statically invoked async callbacks preserve returned
 executor metadata. A nullish choice between a typed executor and a configured

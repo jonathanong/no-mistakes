@@ -83,6 +83,11 @@ fn query_reached_per_item_call_reachability_json_matches_snapshot() {
                 "query-reached-per-item/guarded-workspace-stages-fixture",
                 "typed.yml",
             ),
+            rule(
+                "contextual_stages",
+                "query-reached-per-item/typed-contextual-stages-fixture",
+                ".no-mistakes.yml",
+            ),
         ],
     );
 }

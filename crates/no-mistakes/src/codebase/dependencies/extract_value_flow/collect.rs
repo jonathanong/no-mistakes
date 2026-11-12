@@ -13,6 +13,8 @@ pub(super) fn expression_is_literal(expression: Option<&Expression<'_>>) -> bool
 }
 #[path = "binding_patterns.rs"]
 mod binding_patterns;
+#[path = "contextual_callbacks.rs"]
+mod contextual_callbacks;
 #[path = "for_of_value_binding.rs"]
 mod for_of_value_binding;
 #[path = "literal_arguments.rs"]
@@ -23,6 +25,7 @@ impl ImportCollector {
         if !self.collect_value_flow {
             return;
         }
+        self.note_contextual_callbacks(declarator);
         if immutable {
             self.note_stable_array_binding(&declarator.id);
         }
@@ -96,7 +99,10 @@ impl ImportCollector {
             );
             self.note_text_parameter_default(first, param, &default);
             if matches!(pattern, BindingPattern::BindingIdentifier(_)) {
-                let reference = self.parameter_type_reference(param);
+                let reference = self.parameter_type_reference(param).or_else(|| {
+                    self.contextual_parameter_type(params, index)
+                        .filter(|_| param.initializer.is_none())
+                });
                 for parameter in &mut self.value_flow.parameters[first..] {
                     parameter.type_reference.clone_from(&reference);
                 }
