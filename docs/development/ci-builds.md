@@ -166,6 +166,15 @@ observations do not show that the latest test compile finished within 20 minutes
 Test targets and execution filters remain the same. The compiled-artifact cache
 is saved only after both steps succeed; diagnostics upload after failures.
 
+The first completed run with separate compile phases is recorded in the
+[saved split-step evidence](../../test-cases/rust-validation/fixture/macos-native-build-timeout-split.json). On macOS ARM64 run `43325677764`, the native build took 346 seconds,
+test-target precompilation took 398 seconds, platform Rust execution took 204
+seconds, and the API step took 178 seconds (637 passed, two skipped). The full
+job took 1,256 seconds. This confirms the split completed within the configured
+20-minute per-compile-step, nine-minute Rust, ten-minute API, and 50-minute job
+limits on that runner; one successful sample does not establish a tail-time
+guarantee.
+
 The 50-minute job still bounds the full workload. The latest censored combined
 step had already consumed 1,514 seconds. Adding the largest completed Rust and
 API steps (420 and 338 seconds), 148 seconds of measured non-work overhead, and

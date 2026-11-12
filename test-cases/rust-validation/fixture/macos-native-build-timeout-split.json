@@ -69,6 +69,84 @@
     "jobId": 131507309652,
     "workflowSha": "6025c476242bd335a6ccabf2b2d3b13bdb8c506f"
   },
+  "completedSplitRun": {
+    "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43325677764",
+    "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43325677764/job/131557944367",
+    "headSha": "4b04741cb5d3289b98ff8878b5f1e0b65fd40ae2",
+    "workflowSha": "6b30154a931f73c9919e17db571fca834844e39a",
+    "conclusion": "success",
+    "runner": {
+      "cpuModel": "Apple M1 (Virtual)",
+      "cpus": 3,
+      "totalMemoryBytes": 7516192768,
+      "rustc": "1.100.0 (0ef1bc386 2026-11-09)",
+      "nativeRustCacheHit": true,
+      "nativeTestCacheHit": false
+    },
+    "nativeBuildStep": {
+      "startedAt": "2026-11-12T23:06:57Z",
+      "completedAt": "2026-11-12T23:12:43Z",
+      "timeoutSeconds": 1200,
+      "elapsedSeconds": 346,
+      "cargoElapsedSeconds": 344.421,
+      "maximumResidentSetBytes": 3489841152,
+      "exitCode": 0
+    },
+    "testPrecompileStep": {
+      "startedAt": "2026-11-12T23:12:43Z",
+      "completedAt": "2026-11-12T23:19:21Z",
+      "timeoutSeconds": 1200,
+      "elapsedSeconds": 398,
+      "cargoCommands": [
+        {
+          "target": "macos_invocation",
+          "elapsedSeconds": 351.195,
+          "exitCode": 0
+        },
+        {
+          "target": "no-mistakes binary",
+          "elapsedSeconds": 18.422,
+          "exitCode": 0
+        },
+        {
+          "target": "suite_cli_postgres",
+          "elapsedSeconds": 15.111,
+          "exitCode": 0
+        },
+        {
+          "target": "suite_cli_package_config",
+          "elapsedSeconds": 10.93,
+          "exitCode": 0
+        }
+      ],
+      "maximumResidentSetBytes": 3698753536
+    },
+    "platformRustStep": {
+      "startedAt": "2026-11-12T23:20:03Z",
+      "completedAt": "2026-11-12T23:23:27Z",
+      "timeoutSeconds": 540,
+      "elapsedSeconds": 204,
+      "conclusion": "success"
+    },
+    "apiStep": {
+      "startedAt": "2026-11-12T23:23:27Z",
+      "completedAt": "2026-11-12T23:26:25Z",
+      "timeoutSeconds": 600,
+      "elapsedSeconds": 178,
+      "testFilesPassed": 7,
+      "testsPassed": 637,
+      "testsSkipped": 2,
+      "longestTestMilliseconds": 2599.7,
+      "conclusion": "success"
+    },
+    "job": {
+      "startedAt": "2026-11-12T23:05:42Z",
+      "completedAt": "2026-11-12T23:26:38Z",
+      "timeoutSeconds": 3000,
+      "elapsedSeconds": 1256
+    },
+    "interpretation": "This completed run demonstrates the split phases finish below their configured limits on this 3-CPU, 7.0-GiB runner. It is one successful sample, not a tail-time guarantee."
+  },
   "proposedBoundsSeconds": {
     "nativeBuildStep": 1200,
     "testPrecompileStep": 1200,
@@ -86,6 +164,6 @@
     "postJobReserve": 120,
     "required": 2540,
     "jobHeadroom": 460,
-    "caveat": "The 1,514-second build-step duration is a censored minimum; the test precompile had not finished, so the remaining compile time is unmeasured."
+    "caveat": "The 1,514-second combined build-step duration is a censored minimum from the failed run; its remaining compile time is unmeasured. The later completed split sample separately measured the native build at 346 seconds and test precompile at 398 seconds. One completed run does not establish a tail-time guarantee."
   }
 }
