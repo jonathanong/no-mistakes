@@ -378,3 +378,15 @@ fn postgres_literal_builder_head_check_json_snapshot() {
         ],
     );
 }
+
+#[test]
+fn postgres_append_only_shapes_check_json_snapshot() {
+    assert_saved_fixture(
+        "postgres_append_only_shapes",
+        &[case(
+            "low_report",
+            "append-only-shapes",
+            "append-only-shapes.yml",
+        )],
+    );
+}

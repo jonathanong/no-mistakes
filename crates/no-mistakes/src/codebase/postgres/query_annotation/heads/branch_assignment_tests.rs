@@ -60,9 +60,10 @@ fn a_missing_head_in_every_arm_is_distinct_from_mixed_or_incomplete_arms() {
 }
 
 #[test]
-fn branch_assignment_shape_and_lifetime_controls_remain_unproven() {
+fn initialized_named_assignments_clear_while_other_lifetime_controls_remain_unproven() {
     let (source, _, heads) = fixture("two-arm-rejections.mts");
     assert_eq!(assert_markers(&source, &heads), 16);
+    assert_eq!(proof_at(&source, &heads, "read(q)", 0), HeadProof::Literal);
     assert_eq!(
         proof_at(&source, &heads, "read(argumentQuery)", 0),
         HeadProof::Unproven,

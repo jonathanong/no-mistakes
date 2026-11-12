@@ -1,4 +1,4 @@
-use super::{CallShape, CallSyntax, Signature, Span};
+use super::{CallSyntax, Import, Signature, Span, Summary};
 use crate::codebase::postgres::query_annotation::heads::{
     bindings::Bindings,
     syntax::{Head, Syntax},
@@ -12,9 +12,7 @@ use std::collections::BTreeMap;
 pub(crate) struct Pending {
     pub span: Span,
     pub builder: Span,
-    pub specifier: String,
-    pub imported: String,
-    pub shape: CallShape,
+    pub required: Vec<Import>,
 }
 
 #[derive(Default)]
@@ -22,6 +20,7 @@ pub(in crate::codebase::postgres::query_annotation::heads) struct Prepared {
     pub(crate) allowed: FxHashSet<Span>,
     pub(crate) pending: Vec<Pending>,
     pub(crate) exported: BTreeMap<String, Signature>,
+    pub(crate) summaries: BTreeMap<String, Summary>,
 }
 
 pub(in crate::codebase::postgres::query_annotation::heads) fn prepare(
@@ -37,13 +36,23 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn prepare(
             .and_modify(|owner| *owner = None)
             .or_insert(Some(binding));
     }
-    let proven = super::summary::proven(syntax, bindings, &declarations);
     let imports = imports(module);
+    let valid_imports = imports
+        .iter()
+        .filter_map(|(id, value)| value.map(|value| (*id, value)))
+        .collect();
+    let proven = super::summary::proven(syntax, bindings, &declarations, &valid_imports);
     let mut result = Prepared::default();
     for call in &syntax.effect_calls {
         classify_call(call, syntax, bindings, low, &proven, &imports, &mut result);
     }
-    result.exported = exported(module, &proven);
+    for (name, summary) in exported(module, &proven) {
+        if summary.required.is_empty() {
+            result.exported.insert(name, summary.signature);
+        } else {
+            result.summaries.insert(name, summary);
+        }
+    }
     result.pending.sort_unstable_by_key(|value| value.span);
     result
 }
@@ -53,7 +62,7 @@ fn classify_call(
     syntax: &Syntax,
     bindings: &Bindings<'_>,
     low: bool,
-    proven: &FxHashMap<(usize, u8), Signature>,
+    proven: &FxHashMap<(usize, u8), Summary>,
     imports: &FxHashMap<usize, Option<(&str, &str)>>,
     out: &mut Prepared,
 ) {
@@ -87,15 +96,25 @@ fn classify_call(
         out.pending.push(Pending {
             span: call.span,
             builder: call.builder,
-            specifier: specifier.to_string(),
-            imported: imported.to_string(),
-            shape: call.shape,
+            required: vec![Import {
+                specifier: specifier.to_string(),
+                imported: imported.to_string(),
+                shape: call.shape,
+            }],
         });
-    } else if proven
+    } else if let Some(summary) = proven
         .get(&(callee.id, call.position))
-        .is_some_and(|signature| signature.accepts(call.shape))
+        .filter(|summary| summary.signature.accepts(call.shape))
     {
-        out.allowed.insert(call.builder);
+        if summary.required.is_empty() {
+            out.allowed.insert(call.builder);
+        } else {
+            out.pending.push(Pending {
+                span: call.span,
+                builder: call.builder,
+                required: summary.required.clone(),
+            });
+        }
     }
 }
 
@@ -118,8 +137,8 @@ fn imports(module: &TypeScriptModuleFacts) -> FxHashMap<usize, Option<(&str, &st
 
 fn exported(
     module: &TypeScriptModuleFacts,
-    proven: &FxHashMap<(usize, u8), Signature>,
-) -> BTreeMap<String, Signature> {
+    proven: &FxHashMap<(usize, u8), Summary>,
+) -> BTreeMap<String, Summary> {
     let roots = module
         .scopes
         .iter()
@@ -156,7 +175,7 @@ fn exported(
             .get(export.local.as_str())
             .copied()
             .flatten()
-            .and_then(|id| proven.get(&(id, 0)).copied())
+            .and_then(|id| proven.get(&(id, 0)).cloned())
         else {
             continue;
         };

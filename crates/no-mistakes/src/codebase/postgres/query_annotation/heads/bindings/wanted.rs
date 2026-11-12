@@ -10,6 +10,7 @@ pub(super) fn references(syntax: &Syntax) -> FxHashSet<Span> {
         .chain(syntax.constants.values().copied())
         .filter_map(|head| head.reference())
         .chain(syntax.append_tags.values().copied())
+        .chain(syntax.fresh_builders.references())
         .chain(
             syntax
                 .loop_candidates
@@ -30,6 +31,7 @@ pub(super) fn references(syntax: &Syntax) -> FxHashSet<Span> {
                 .map(|call| call.reference),
         )
         .chain(syntax.helper_arguments.values().copied())
+        .chain(syntax.effect_returns.values().flatten().flatten().copied())
         .chain(
             syntax
                 .branch_assignments
