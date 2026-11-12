@@ -163,5 +163,5 @@ fn synchronous_statement(statement: &Statement<'_>, depth: usize) -> bool {
 mod completion_tests;
 
 #[cfg(test)]
-#[path = "callbacks/test_support.rs"]
+#[path = "callbacks/preparation_tests.rs"]
 mod test_support;
