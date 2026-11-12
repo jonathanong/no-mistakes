@@ -1,0 +1,45 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "callback-captures": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/non-owned-helper.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/non-owned-helper.test.mts:9 passes `root`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const names = readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/reassigned-root.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/reassigned-root.test.mts:16 passes `root`, an unproven variable. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const names = readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "src/shadowed-root.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but tests/shadowed-root.test.mts:17 passes `root`, a live path. Fix: pass a const fixture path or an owned mkdtemp root from that caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const names = readdirSync(root);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

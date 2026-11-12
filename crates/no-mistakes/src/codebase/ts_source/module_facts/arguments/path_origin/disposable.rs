@@ -16,7 +16,7 @@ impl<'a> Projector<'a, '_> {
             .then(|| super::super::composite::disposable_origin(call))
     }
 
-    pub(super) fn disposable_factory(
+    pub(in super::super) fn disposable_factory(
         &mut self,
         call: &CallExpression<'a>,
         asynchronous: bool,

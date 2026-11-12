@@ -170,4 +170,5 @@ mod captured_wrapper_edges;
 
 mod getter_import_kinds;
 
+mod callback_roots;
 mod env_diagnostic;

@@ -755,6 +755,38 @@ An indirect test reference through a barrel remains unproven even when unrelated
 production code also consumes the scanner. Call the scanner directly with an
 owned root so every test-originating route can be checked.
 
+Same-file helpers can supply owned roots to an inline callback. The helper must
+create the temporary directory locally, pass it to every callback invocation,
+and remove it in an enclosing `finally`, or own a disposable temporary directory
+with `using` / `await using`. A missing cleanup, a live root in any invocation,
+or an escaping callback or temporary root retains the finding. Async callbacks
+and callbacks with a returned expression must finish before cleanup; await
+their invocation inside the protected scope. A synchronous callback without
+`await` uses a block containing expression or variable statements, nested blocks,
+or synchronous `for...of` loops. Read-only captures retain the parameter's owned
+root inside nested closures, including callbacks passed to `expect` inside a
+loop. A shadowing binding has its own provenance; reassigning the captured root
+retains the finding.
+
+A spread before the callback's root argument leaves its parameter position
+unproven. Pass that argument explicitly; spreads after the root do not shift its
+position.
+
+```ts
+function withTempDirectory(run: (root: string) => void) {
+  const root = mkdtempSync(join(tmpdir(), "scan-"));
+  try {
+    run(root);
+  } finally {
+    rmSync(root, { recursive: true });
+  }
+}
+
+withTempDirectory((root) => {
+  scanRepository(root);
+});
+```
+
 ## Pass-through mocks
 
 A wrapper may capture a Node filesystem enumerator in a `const`, replace that

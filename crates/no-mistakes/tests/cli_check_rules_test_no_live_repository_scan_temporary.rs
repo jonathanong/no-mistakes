@@ -71,3 +71,126 @@ fn owned_temporary_roots_check_json_snapshot() {
         )],
     );
 }
+
+#[test]
+fn callback_roots_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "test-no-live-repository-scan",
+        "callback-roots",
+        "",
+    );
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--format", "json", "--root"])
+        .arg(&root)
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let mut files: Vec<_> = ["rules", "advisories"]
+        .into_iter()
+        .flat_map(|key| report[key].as_array().unwrap())
+        .map(|finding| finding["file"].as_str().unwrap())
+        .collect();
+    files.sort_unstable();
+    assert_eq!(
+        files,
+        [
+            "src/after-cleanup.mts",
+            "src/async-unawaited.mts",
+            "src/buffer-root.mts",
+            "src/callback-alias.mts",
+            "src/callback-call.mts",
+            "src/callback-escape.mts",
+            "src/conditional-cleanup.mts",
+            "src/escape.mts",
+            "src/helper-reassignment.mts",
+            "src/missing-cleanup.mts",
+            "src/mixed-invocations.mts",
+            "src/nested-cleanup.mts",
+            "src/non-owned.mts",
+            "src/nonrecursive-cleanup.mts",
+            "src/parameter-reassignment.mts",
+            "src/resource-escape.mts",
+            "src/resource-no-using.mts",
+            "src/returned-promise.mts",
+            "src/root-return.mts",
+            "src/unknown-sink.mts",
+            "src/wrong-cleanup.mts",
+        ],
+        "{report}"
+    );
+    crate::check_json_snapshot::assert_saved_fixture(
+        "test_no_live_repository_scan_callback_roots",
+        &[(
+            "callback-roots",
+            root.clone(),
+            root.join(".no-mistakes.yml"),
+        )],
+    );
+}
+
+#[test]
+fn callback_captures_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "test-no-live-repository-scan",
+        "callback-captures",
+        "",
+    );
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--format", "json", "--root"])
+        .arg(&root)
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let mut files: Vec<_> = ["rules", "advisories"]
+        .into_iter()
+        .flat_map(|key| report[key].as_array().unwrap())
+        .map(|finding| finding["file"].as_str().unwrap())
+        .collect();
+    files.sort_unstable();
+    assert_eq!(
+        files,
+        [
+            "src/non-owned-helper.mts",
+            "src/reassigned-root.mts",
+            "src/shadowed-root.mts",
+        ],
+        "{report}"
+    );
+    crate::check_json_snapshot::assert_saved_fixture(
+        "test_no_live_repository_scan_callback_captures",
+        &[(
+            "callback-captures",
+            root.clone(),
+            root.join(".no-mistakes.yml"),
+        )],
+    );
+}
+
+#[test]
+fn callback_spreads_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "test-no-live-repository-scan",
+        "callback-spreads",
+        "",
+    );
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--format", "json", "--root"])
+        .arg(&root)
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let files: Vec<_> = ["rules", "advisories"]
+        .into_iter()
+        .flat_map(|key| report[key].as_array().unwrap())
+        .map(|finding| finding["file"].as_str().unwrap())
+        .collect();
+    assert_eq!(files, ["src/spread-before-root.mts"], "{report}");
+    crate::check_json_snapshot::assert_saved_fixture(
+        "test_no_live_repository_scan_callback_spreads",
+        &[(
+            "callback-spreads",
+            root.clone(),
+            root.join(".no-mistakes.yml"),
+        )],
+    );
+}
