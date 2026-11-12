@@ -99,6 +99,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-require-query-annotation",
           "sourceLine": "client.query(copyFrom(`COPY ${dynamic} FROM STDIN`));",
           "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 23,
+          "message": "src/query.mts:23: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ /* named */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
         }
       ],
       "warnings": []
@@ -127,6 +135,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "src/query.mts:22: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
           "sourceLine": "client.query(copyFrom(`COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 23,
+          "message": "src/query.mts:23: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ /* named */ COPY ${dynamic} FROM STDIN`));",
           "target": "annotation"
         }
       ],
@@ -228,6 +244,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "src/query.mts:22: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
           "sourceLine": "client.query(copyFrom(`COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 23,
+          "message": "src/query.mts:23: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ /* named */ COPY ${dynamic} FROM STDIN`));",
           "target": "annotation"
         }
       ],
@@ -331,6 +355,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-require-query-annotation",
           "sourceLine": "client.query(copyFrom(`COPY ${dynamic} FROM STDIN`));",
           "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 23,
+          "message": "src/query.mts:23: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ /* named */ COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
         }
       ],
       "warnings": []
@@ -359,6 +391,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "src/query.mts:22: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
           "sourceLine": "client.query(copyFrom(`COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 23,
+          "message": "src/query.mts:23: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ /* named */ COPY ${dynamic} FROM STDIN`));",
           "target": "annotation"
         }
       ],
@@ -460,6 +500,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "src/query.mts:22: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
           "sourceLine": "client.query(copyFrom(`COPY ${dynamic} FROM STDIN`));",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 23,
+          "message": "src/query.mts:23: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query(copyFrom(`/* */ /* named */ COPY ${dynamic} FROM STDIN`));",
           "target": "annotation"
         }
       ],

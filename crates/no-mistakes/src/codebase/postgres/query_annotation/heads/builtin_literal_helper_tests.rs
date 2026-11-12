@@ -122,6 +122,7 @@ fn builtin_template_heads_preserve_exact_helper_and_namespace_key_grammar() {
         Some(Unproven),
         Some(Unproven),
         Some(Missing),
+        Some(Missing),
     ];
     crate::ast::with_program(&path, &source, |program, source| {
         let file = collect_file_facts_from_program(

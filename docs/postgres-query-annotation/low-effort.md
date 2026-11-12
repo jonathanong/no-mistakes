@@ -243,7 +243,8 @@ client.query(copyTo(`/* export members */ COPY (${selectSql}) TO STDOUT`));
 The wrapper must be a direct non-optional call with exactly one string literal
 or ordinary template argument. For these built-in wrappers, a template's first
 static segment can prove a complete `/* name */` annotation before later SQL
-interpolations. The closing `*/` must precede the first interpolation.
+interpolations. The closing `*/` must precede the first interpolation. An empty
+first block comment cannot be repaired by a later named comment.
 ``copyFrom(`/* ${name} */ COPY users FROM STDIN`)`` and a template starting with
 an interpolation remain unresolved. This proves the annotation only; it does
 not validate the SQL tail, identifier safety, or parameter binding.

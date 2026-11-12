@@ -20,4 +20,5 @@ export function run(client: PoolClient, dynamic: string) {
   client.query(copyFrom(dynamic));
   client.query(copyFrom?.(`/* named */ COPY ${dynamic} FROM STDIN`));
   client.query(copyFrom(`COPY ${dynamic} FROM STDIN`));
+  client.query(copyFrom(`/* */ /* named */ COPY ${dynamic} FROM STDIN`));
 }

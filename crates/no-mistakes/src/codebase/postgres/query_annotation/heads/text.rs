@@ -92,7 +92,7 @@ fn classify(text: &str) -> (HeadProof, HeadProof) {
 }
 
 pub(super) fn annotation_prefix(text: &str) -> HeadProof {
-    if crate::codebase::postgres::leading_query_annotation(text).is_some() {
+    if super::syntax::literals::named(text) {
         HeadProof::Literal
     } else {
         classify(text).1

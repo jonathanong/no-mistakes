@@ -496,7 +496,8 @@ exactly one string literal or template literal. For the built-in wrappers, a
 complete named block comment in the first static template segment proves the
 annotation even when later SQL contains interpolations. The closing `*/` must
 precede the first interpolation; an interpolated comment name or delimiter does
-not qualify. This proves only the leading annotation, not the interpolated SQL
+not qualify. An empty first block comment cannot be repaired by a later named
+comment. This proves only the leading annotation, not the interpolated SQL
 tail, identifier safety, or parameter binding. Its SQL comment must occur
 **inside the literal**;
 `copyFrom(/* import users */ 'COPY users FROM STDIN')` is a definite missing
