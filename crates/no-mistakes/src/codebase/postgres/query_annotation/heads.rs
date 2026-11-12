@@ -70,7 +70,7 @@ pub(crate) struct AnnotationHeads {
     pub(crate) conditional_effects: Vec<effects::Conditional>,
     pub(crate) import_gated_finite: Vec<Span>,
     pub(crate) loop_carried_missing: BTreeMap<Span, Vec<Option<String>>>,
-    helper_calls: Option<BTreeMap<Span, (String, HeadProof)>>,
+    helper_calls: Option<BTreeMap<Span, literal_helpers::HelperProof>>,
     pub(crate) trusted_append_calls: crate::fx::FxHashSet<Span>,
 }
 pub(crate) use collect::collect_prepared;

@@ -322,3 +322,38 @@ fn postgres_annotation_excluded_callers_check_json_snapshot() {
     });
     assert_saved_fixture("postgres_annotation_excluded_callers", &cases);
 }
+
+#[test]
+fn postgres_copy_streams_workspace_prefix_check_json_snapshot() {
+    let root = rules_path(RULE, "fixture", "copy-streams-workspace-prefix");
+    let cases = [
+        "low-report",
+        "low-advise",
+        "low-ignore",
+        "max-report",
+        "max-advise",
+        "max-ignore",
+    ]
+    .map(|name| (name, root.clone(), root.join(format!("{name}.yml"))));
+    assert_saved_fixture("postgres_copy_streams_workspace_prefix", &cases);
+}
+
+#[test]
+fn postgres_copy_streams_prefix_boundaries_check_json_snapshot() {
+    let cases = [
+        "copy-streams-low-report",
+        "copy-streams-low-advise",
+        "copy-streams-low-ignore",
+        "copy-streams-max-report",
+        "copy-streams-max-advise",
+        "copy-streams-max-ignore",
+    ]
+    .map(|name| {
+        (
+            name,
+            rules_path(RULE, "fixture", "copy-streams-prefix-boundaries"),
+            rules_path(RULE, "configs", &format!("{name}.yml")),
+        )
+    });
+    assert_saved_fixture("postgres_copy_streams_prefix_boundaries", &cases);
+}

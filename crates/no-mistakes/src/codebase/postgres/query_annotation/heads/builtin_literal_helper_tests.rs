@@ -96,3 +96,64 @@ fn builtin_helpers_require_runtime_imports_and_selected_annotation_profiles() {
         );
     }
 }
+
+#[test]
+fn builtin_template_heads_preserve_exact_helper_and_namespace_key_grammar() {
+    use super::HeadProof::{Literal, Missing, Unproven};
+    let root = crate::test_support::rule_fixture_root("postgres-require-query-annotation");
+    let path = root.join("copy-streams-prefix-boundaries/src/query.mts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let profile = EmbeddedSqlOptions::configured("pg", &[])
+        .with_scoped_executors(&[], &["PoolClient".into()]);
+    let expected = [
+        Some(Literal),
+        Some(Literal),
+        Some(Literal),
+        Some(Literal),
+        Some(Literal),
+        Some(Unproven),
+        Some(Unproven),
+        Some(Unproven),
+        Some(Unproven),
+        Some(Missing),
+        Some(Unproven),
+        None,
+        None,
+        Some(Unproven),
+        Some(Unproven),
+        Some(Missing),
+    ];
+    crate::ast::with_program(&path, &source, |program, source| {
+        let file = collect_file_facts_from_program(
+            &root,
+            &path,
+            &CheckFactPlan {
+                query_annotation: true,
+                query_annotation_options: Some(vec![profile.clone()]),
+                embedded_sql_options: vec![profile],
+                ..Default::default()
+            },
+            None,
+            source,
+            program,
+            None,
+        );
+        let heads = file.query_annotation_heads.as_ref().unwrap();
+        let spans = &file.embedded_sql[0].1.call_spans;
+        assert_eq!(spans.len(), expected.len());
+        for (index, (&span, expected)) in spans.iter().zip(expected).enumerate() {
+            assert_eq!(heads.annotation_helper(span, &[]), expected, "case {index}");
+            if index < 5 {
+                assert_eq!(
+                    heads.helper(
+                        span,
+                        &["pg-copy-streams#from".into(), "pg-copy-streams#to".into()]
+                    ),
+                    Some(Unproven),
+                    "annotation prefix proof must not widen exact helpers"
+                );
+            }
+        }
+    })
+    .unwrap();
+}

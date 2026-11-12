@@ -24,6 +24,7 @@ export function run(client: PoolClient, dynamic: string) {
   client.query(copyTo(`/* dynamic */ COPY ${dynamic} TO STDOUT`));
   client.query(copies.from(dynamic));
   client.query(copies.to(dynamic));
+  client.query(copyTo(`${dynamic} COPY users TO STDOUT`));
   client.query(otherFrom('/* unrelated */ COPY users FROM STDIN'));
   client.query(otherTo('/* unrelated */ COPY users TO STDOUT'));
   client.query(typeOnly('/* type only */ COPY users FROM STDIN'));

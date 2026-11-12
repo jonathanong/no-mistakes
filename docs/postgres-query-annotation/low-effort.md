@@ -236,13 +236,24 @@ namespace imports, including imports aliased as `copyFrom` and `copyTo`:
 import { from as copyFrom, to as copyTo } from "pg-copy-streams";
 client.query(copyFrom("/* copy/in */ COPY items FROM STDIN"));
 client.query(copyTo("/* copy/out */ COPY items TO STDOUT"));
+client.query(copyFrom(`/* import domains */ COPY ${table} (domain) FROM STDIN`));
+client.query(copyTo(`/* export members */ COPY (${selectSql}) TO STDOUT`));
 ```
 
-The wrapper must be a direct non-optional call with exactly one literal string
-or interpolation-free ordinary template argument. Unannotated literals report
-a missing annotation; dynamic arguments and optional calls remain unresolved.
-Matching uses import identity, not the local name. Use `sqlLiteralHelpers` to
-add other exact `module#export` wrapper identities.
+The wrapper must be a direct non-optional call with exactly one string literal
+or ordinary template argument. For these built-in wrappers, a template's first
+static segment can prove a complete `/* name */` annotation before later SQL
+interpolations. The closing `*/` must precede the first interpolation.
+``copyFrom(`/* ${name} */ COPY users FROM STDIN`)`` and a template starting with
+an interpolation remain unresolved. This proves the annotation only; it does
+not validate the SQL tail, identifier safety, or parameter binding.
+
+Unannotated static heads report a missing annotation; dynamic arguments and
+optional calls remain unresolved. Matching uses import identity, not the local
+name. Computed namespace keys must be string literals or templates without
+interpolation. Use `sqlLiteralHelpers` to add other exact `module#export` wrapper
+identities; these custom helpers still require one string literal or
+interpolation-free ordinary template.
 
 A conditional callee such as `(flag ? write : read)(sql)` qualifies when both
 arms are independently proven configured executors. An immutable local alias of

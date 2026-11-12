@@ -1,4 +1,4 @@
-//! Direct imported wrappers use their sole literal argument, never its aliases.
+//! Direct imported wrappers retain exact arguments and separate template heads.
 use super::{bindings::Bindings, syntax::Syntax, HeadProof, Span};
 use crate::codebase::ts_source::{facts::TsFileFacts, unwrap_ts_wrappers};
 use crate::fx::FxHashMap;
@@ -34,6 +34,14 @@ pub(super) struct Candidate {
     span: Span,
     export: Option<String>,
     proof: HeadProof,
+    prefix: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+pub(super) struct HelperProof {
+    pub identity: String,
+    pub exact: HeadProof,
+    pub prefix: Option<String>,
 }
 
 pub(super) fn candidate(outer: &CallExpression<'_>) -> Option<Candidate> {
@@ -70,6 +78,10 @@ pub(super) fn candidate(outer: &CallExpression<'_>) -> Option<Candidate> {
         }
         _ => return None,
     };
+    let prefix = match call.arguments.as_slice() {
+        [argument] if !optional => argument.as_expression().and_then(template_prefix),
+        _ => None,
+    };
     let text = match call.arguments.as_slice() {
         [argument] if !optional => argument.as_expression().and_then(literal_text),
         _ => None,
@@ -78,6 +90,7 @@ pub(super) fn candidate(outer: &CallExpression<'_>) -> Option<Candidate> {
         reference: (reference.start, reference.end),
         span: (outer.span.start, outer.span.end),
         export,
+        prefix,
         proof: text.map_or(HeadProof::Unproven, |sql| {
             if crate::codebase::postgres::sql_requires_query_annotation(&sql) {
                 HeadProof::Missing
@@ -86,6 +99,17 @@ pub(super) fn candidate(outer: &CallExpression<'_>) -> Option<Candidate> {
             }
         }),
     })
+}
+
+fn template_prefix(expression: &Expression<'_>) -> Option<String> {
+    let Expression::TemplateLiteral(template) = unwrap_ts_wrappers(expression) else {
+        return None;
+    };
+    (!template.expressions.is_empty())
+        .then(|| template.quasis.first())
+        .flatten()
+        .filter(|part| part.value.cooked.is_some())
+        .map(|part| crate::ast::template_quasi_text(part).into_owned())
 }
 
 // Share the exact literal grammar for SQL arguments and computed export keys.
@@ -107,7 +131,7 @@ pub(super) fn proofs(
     syntax: &Syntax,
     bindings: &Bindings<'_>,
     ts: &TsFileFacts,
-) -> Option<BTreeMap<Span, (String, HeadProof)>> {
+) -> Option<BTreeMap<Span, HelperProof>> {
     let candidates = syntax.literal_helpers.as_ref()?;
     if let Some(observer) = crate::diagnostics::current() {
         observer.increment(
@@ -143,7 +167,11 @@ pub(super) fn proofs(
                 };
                 Some((
                     candidate.span,
-                    (format!("{module}#{export}"), candidate.proof),
+                    HelperProof {
+                        identity: format!("{module}#{export}"),
+                        exact: candidate.proof,
+                        prefix: candidate.prefix.clone(),
+                    },
                 ))
             })
             .collect(),

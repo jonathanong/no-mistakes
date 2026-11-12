@@ -1,0 +1,10 @@
+version: 2
+effort: max
+unanalyzable: report
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: '@pkg/psql'
+      executorTypeNames: [PoolClient]
+      include: [packages/app/src/query.ts]
