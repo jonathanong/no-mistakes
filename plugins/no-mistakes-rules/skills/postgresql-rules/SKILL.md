@@ -58,12 +58,12 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT exceed 63-byte identifiers; PostgreSQL truncates them silently.
 - MUST NOT put `now()` or `timestamptz + interval` in generated or index expressions; they are not immutable.
 - MUST NOT run DDL or session settings from runtime or seed SQL; keep them in migrations.
-- MUST NOT raise `statement_timeout` or idle timeouts to make slow work fit; split, reorder, or shrink the work.
 - MUST NOT hand-sync a status column beside lifecycle timestamps; derive one from the other.
 - MUST NOT update or delete append-only history rows; reject it with a trigger.
 - MUST NOT add a `NOT NULL`, unique, or check constraint without first querying for rows that already violate it.
 - MUST NOT rename or renumber a migration after it has run in any shared environment.
 - MUST NOT run code that depends on a migration before that migration is applied; order the deploy so the migration runs first, or expand first.
+- SHOULD NOT raise `statement_timeout` or idle timeouts to make slow work fit; split, reorder, or shrink the work. A migration may raise it for its own session when one step, such as a concurrent index build on a large table, cannot be split.
 - SHOULD NOT build an index on a populated table without `CONCURRENTLY`, outside the migration's transaction; a failed build leaves an `INVALID` index to drop before retrying. A partitioned parent cannot build concurrently: build each partition's index concurrently, then create the parent index `ON ONLY` and attach them.
 - SHOULD NOT omit `ON DELETE`, constraint names, or `COMMENT ON` for tables and columns.
 - SHOULD NOT use free text for a finite set; use an enum or lookup table.
