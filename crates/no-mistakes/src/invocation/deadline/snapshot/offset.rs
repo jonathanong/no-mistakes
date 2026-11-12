@@ -1,3 +1,8 @@
+#![expect(
+    clippy::disallowed_methods,
+    reason = "The snapshot epoch owns deadline control time independently of optional analysis timings."
+)]
+
 use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 
@@ -8,7 +13,7 @@ const I64_MAGNITUDE_LIMIT: u64 = (i64::MAX as u64) + 1;
 static EPOCH: OnceLock<Instant> = OnceLock::new();
 
 pub(super) fn epoch() -> Instant {
-    *EPOCH.get_or_init(crate::invocation::clock::now)
+    *EPOCH.get_or_init(Instant::now)
 }
 
 pub(super) fn encode_timeout(timeout: Duration) -> (u64, u32) {
