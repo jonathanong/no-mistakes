@@ -26,7 +26,7 @@ fn standalone_and_prepared_dispatch_preserve_real_postgres_findings() {
     for (rule, location, options, paths, expected_file) in [
         (POSTGRES_LOCK_WRITTEN_ROWS_ONLY,
          "test-cases/rules/postgres-lock-written-rows-only/fixture/row-unwritten",
-         "importSpecifier: '@example/db'\nexecutorFactoryNames: [beginTransaction]\nexecutorTypeNames: [TransactionQuery]",
+         "importSpecifier: '@example/db'\nexecutorFactoryNames: [beginTransaction]\nexecutorTypeNames: [TransactionQuery]\nchecks: {row-lock-unwritten-relation: fail}",
          vec!["src/query.ts"], "src/query.ts"),
         (POSTGRES_NO_GENERATED_COLUMN_WRITES,
          "test-cases/rules/postgres-no-generated-column-writes/unit-fixture/do-write-lines",

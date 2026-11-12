@@ -137,7 +137,11 @@ fn invalid_source_demands_fail_instead_of_becoming_complete_checks() {
     let sources = crate::codebase::rules::source_store_for_files(&candidates);
     for (consumer, options, expected) in [
         (FINITE_SET_CONSISTENCY, "sets: false", "sets"),
-        ("postgres-no-offset", "include: ['[']", "invalid glob"),
+        (
+            "postgres-no-offset",
+            "importSpecifier: '@example/db'\ninclude: ['[']",
+            "invalid glob",
+        ),
     ] {
         let config: NoMistakesConfig = serde_yaml::from_str(&format!(
             "rules:\n  - rule: {consumer}\n    scope: repository\n"
