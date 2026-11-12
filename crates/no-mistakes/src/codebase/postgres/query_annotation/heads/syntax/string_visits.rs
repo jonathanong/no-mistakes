@@ -11,6 +11,10 @@ fn primitive(expression: &Expression<'_>) -> bool {
 }
 impl Syntax {
     pub(super) fn string_declaration(&mut self, value: &VariableDeclaration<'_>) {
+        if self.collect_helper_heads && !self.assignments.iteration_target {
+            self.fresh_builders
+                .declaration(value, self.assignments.context);
+        }
         if !self.collect_string_prefix || value.kind != VariableDeclarationKind::Let {
             return;
         }
@@ -25,6 +29,10 @@ impl Syntax {
         }
     }
     pub(super) fn string_assignment(&mut self, value: &AssignmentExpression<'_>) {
+        if self.collect_helper_heads {
+            self.fresh_builders
+                .assignment(value, self.assignments.discarded_assignment);
+        }
         self.assignments.assignment(value);
         if self.collect_string_prefix
             && value.operator == AssignmentOperator::Addition

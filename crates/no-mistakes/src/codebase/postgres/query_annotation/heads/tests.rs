@@ -18,6 +18,8 @@ mod finite_comment_tests;
 mod finite_conditional_head_tests;
 #[path = "finite_return_tests.rs"]
 mod finite_return_tests;
+#[path = "fresh_builder_tests.rs"]
+mod fresh_builder_tests;
 #[path = "gap_tests.rs"]
 mod gap_tests;
 #[path = "helper_binding_tests.rs"]

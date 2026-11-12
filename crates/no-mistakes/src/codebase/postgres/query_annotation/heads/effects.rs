@@ -1,15 +1,32 @@
 //! Prefix-preserving effects of a discarded call on a trusted local builder.
 use super::Span;
-use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{BindingPattern, Expression, Function, FunctionType};
+use oxc_ast::ast::{BindingPattern, Function, FunctionType};
 
+mod calls;
+pub(super) use calls::call;
+mod candidates;
 mod conditional;
 mod defaults;
 mod prepare;
+mod resolve;
 mod summary;
 pub(super) use conditional::collect as collect_conditionals;
 pub(crate) use prepare::Pending;
 pub(super) use prepare::{prepare, Prepared};
+pub(super) use resolve::Resolver;
+
+#[derive(Clone, Debug)]
+pub(crate) struct Import {
+    pub specifier: String,
+    pub imported: String,
+    pub shape: CallShape,
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct Summary {
+    pub signature: Signature,
+    pub required: Vec<Import>,
+}
 
 #[derive(Clone, Debug)]
 pub(crate) struct Conditional {
@@ -24,25 +41,28 @@ pub(super) struct FunctionSyntax {
     pub function: Span,
     pub body: Span,
     pub signature: Signature,
+    pub returned: Option<Span>,
 }
 
 #[derive(Clone, Copy, Debug, Default)]
 pub(crate) struct Signature {
     required_objects: u16,
     empty_defaults: u16,
+    returns_builder: bool,
 }
 
 impl Signature {
     pub(crate) fn accepts(self, shape: CallShape) -> bool {
-        (0..16)
-            .filter(|index| self.required_objects & (1 << index) != 0)
-            .all(|index| {
-                if index < shape.arg_count {
-                    shape.closed_objects & (1 << index) != 0
-                } else {
-                    self.empty_defaults & (1 << index) != 0
-                }
-            })
+        (!shape.returned_append || self.returns_builder)
+            && (0..16)
+                .filter(|index| self.required_objects & (1 << index) != 0)
+                .all(|index| {
+                    if index < shape.arg_count {
+                        shape.closed_objects & (1 << index) != 0
+                    } else {
+                        self.empty_defaults & (1 << index) != 0
+                    }
+                })
     }
 
     pub(super) fn plain(self) -> bool {
@@ -54,6 +74,7 @@ impl Signature {
 pub(crate) struct CallShape {
     arg_count: usize,
     closed_objects: u16,
+    returned_append: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -110,54 +131,15 @@ pub(super) fn function(value: &Function<'_>) -> [Option<FunctionSyntax>; 2] {
             function: (value.span.start, value.span.end),
             body: (body.span.start, body.span.end),
             signature,
-        })
-    })
-}
-
-pub(super) fn call(expression: &Expression<'_>) -> [Option<CallSyntax>; 2] {
-    let Expression::CallExpression(call) = unwrap_ts_wrappers(expression) else {
-        return [None, None];
-    };
-    if call.optional
-        || call
-            .arguments
-            .iter()
-            .any(|arg| arg.as_expression().is_none())
-    {
-        return [None, None];
-    }
-    let Expression::Identifier(callee) = unwrap_ts_wrappers(&call.callee) else {
-        return [None, None];
-    };
-    let shape =
-        CallShape {
-            arg_count: call.arguments.len(),
-            closed_objects: call.arguments.iter().take(16).enumerate().fold(
-                0,
-                |bits, (index, arg)| {
-                    if arg.as_expression().is_some_and(defaults::closed_object) {
-                        bits | (1 << index)
-                    } else {
-                        bits
-                    }
-                },
-            ),
-        };
-    std::array::from_fn(|position| {
-        if position == 1 && call.arguments.len() != 2 {
-            return None;
-        }
-        let Expression::Identifier(builder) =
-            unwrap_ts_wrappers(call.arguments.get(position)?.as_expression()?)
-        else {
-            return None;
-        };
-        Some(CallSyntax {
-            span: (call.span.start, call.span.end),
-            callee: (callee.span.start, callee.span.end),
-            builder: (builder.span.start, builder.span.end),
-            position: position as u8,
-            shape,
+            returned: body.statements.last().and_then(|statement| {
+                let oxc_ast::ast::Statement::ReturnStatement(value) = statement else {
+                    return None;
+                };
+                value
+                    .argument
+                    .as_ref()
+                    .and_then(super::append::prefix_reference)
+            }),
         })
     })
 }

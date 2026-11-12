@@ -288,27 +288,44 @@ export async function listThings(id: string) {
 ```
 
 This requires a literal head and the trusted `sql-template-strings` import
-shown above. Reassigned bindings, dynamic heads, and helpers that replace SQL
-text or call other builder methods remain unresolved.
+shown above. Dynamic heads, reassignments without a trusted literal annotation,
+and helpers that replace SQL text or call other builder methods remain unresolved.
 
-A proven append-only helper's first parameter may
-only appear as the receiver of discarded static append chains; defaults,
-aliases and used append results abstain. Captured uses qualify only when they
-are discarded static appends on the exact parameter; callbacks may run later
-or repeatedly without changing the head. Captured returns, implicit arrow
-append results, and nested helper calls stay unresolved.
+A proven append-only helper's first parameter may appear as the receiver of
+static append chains, including conditional suffixes, helper-produced suffixes,
+loops, and captured callbacks. A callback may run later or repeatedly because
+an append cannot replace the head. Passing the builder into an opaque suffix
+such as `q.append(opaque(q))` still escapes it and remains unresolved.
+Early bare returns are allowed when the caller discards the helper result.
+
 The helper may compose up to four exact same-file append-only calls on that
-parameter. A chain of more than four local edges is not proven: that helper
-effect stays unresolved, so the builder head is unresolved and reported under
-`unanalyzable`. It may return a static parameter-rooted append chain only when the
-caller discards the result. Nested helper calls, aliases, cycles, and used helper
-results remain unresolved.
-Inert Boolean or string defaults on later helper parameters can preserve the
-same fixed prefix. A defaulted object destructure may use an empty `{}` outer
-default and requires an exact caller object with only static primitive data properties;
-omitting that argument is also safe for the empty default. Getters, spreads,
-computed keys, `__proto__`, calls in defaults, and builder-parameter defaults
-remain unanalyzable. Type annotations do not establish runtime values.
+parameter. Prepared source facts and the configured resolver also prove named
+re-exports through workspace aliases and transitive imported append-only
+helpers. This import projection uses at most sixteen active helper or re-export
+lookup levels. Cycles, ambiguous exports, and unresolved targets remain
+unanalyzable.
+The analyzer does not evaluate complete SQL to establish these prefixes.
+
+A helper result may be consumed by a discarded static append chain, such as
+``addOrder(q).append(sql` LIMIT ${n}`); read(q)``, only when every return is proven
+to return the exact input builder and the helper ends with such a return.
+Returning a fresh builder, an early bare return, or storing the result in an
+alias does not qualify for that proof. Other uses of returned values remain
+unresolved.
+
+Inert Boolean, string, or empty-object defaults on later helper parameters can
+preserve the same fixed prefix. A defaulted object destructure requires an
+exact caller object with only static primitive data properties; omitting that
+argument is also safe with an empty default. Nonempty object defaults, getters,
+spreads, computed keys, `__proto__`, calls in defaults, and builder-parameter
+defaults remain unanalyzable. Type annotations do not establish runtime values.
+
+A function-local `let` or `const` may also start with finite conditional fresh
+builders. Every arm and every reassignment must have a literal annotation and
+use the trusted tag. Discarded appends and proven local append-only effects
+preserve that head. A missing annotation in any assignment, an alias, a store,
+an opaque call, a write to `strings[0]`, or another unsupported use prevents
+this proof across the binding's lifetime.
 A captured local trusted builder keeps its fixed head when every reference to
 its exact binding is a discarded static append, a configured executor read, or
 a proven local append-only effect. Closure execution order does not change this

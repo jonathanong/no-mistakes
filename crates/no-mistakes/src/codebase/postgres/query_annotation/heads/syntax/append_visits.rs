@@ -3,6 +3,24 @@ use super::{span, Syntax};
 use oxc_ast::ast::{BindingIdentifier, CallExpression, Expression, IdentifierReference};
 
 impl Syntax {
+    pub(super) fn effect_return(&mut self, value: &oxc_ast::ast::ReturnStatement<'_>) {
+        if !self.collect_helper_heads {
+            return;
+        }
+        let reference = value
+            .argument
+            .as_ref()
+            .and_then(super::super::append::prefix_reference);
+        if let Some(reference) = reference {
+            self.returned_effect_appends.insert(reference);
+        }
+        if let Some(function) = self.current_function {
+            self.effect_returns
+                .entry(function)
+                .or_default()
+                .push(reference);
+        }
+    }
     pub(super) fn record_reference(&mut self, value: &IdentifierReference<'_>) {
         self.contexts
             .insert(span(value.span), self.current_function);

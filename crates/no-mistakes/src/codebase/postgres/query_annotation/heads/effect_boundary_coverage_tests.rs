@@ -13,10 +13,10 @@ fn imported_second_position_and_destructured_first_effects_stay_unproven() {
     assert_eq!(assert_markers(&source, &heads), 1);
     assert!(heads.exported_effects.contains_key("appendLocal"));
     assert!(!heads.exported_effects.contains_key("invalidFirst"));
-    assert!(heads
-        .pending_effects
+    assert!(heads.pending_effects.iter().all(|pending| pending
+        .required
         .iter()
-        .all(|pending| pending.imported != "appendImported"));
+        .all(|required| required.imported != "appendImported")));
 }
 #[test]
 fn missing_or_duplicate_prepared_parameter_declarations_reject_effect_summary() {

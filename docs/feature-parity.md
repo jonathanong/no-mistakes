@@ -147,12 +147,16 @@ reuses prepared module facts and resolver identity for CLI and async Node checks
 Captured append-only closures also preserve a trusted builder's head at its
 own helper return when every exact-binding use is closed. Low and mixed-demand
 checks share this proof without composing SQL variants.
-The same APIs also share bounded same-file append-only helper composition and
-an exact returned parameter append chain when the helper result is discarded.
-They also preserve that parameter's fixed head through captured callbacks
+The same APIs share bounded append-only helper composition across prepared
+modules and named workspace re-exports. A discarded caller append chain may
+consume a helper result only when all returns preserve the exact input builder.
+Function-local fresh conditional builders and reassigned builders retain their
+head only when every arm and assignment has a trusted literal annotation.
+Append-only helper parameters also retain their fixed head through callbacks
 whose only parameter uses are discarded static appends, regardless of when
 those callbacks run.
-The same prepared low proof can follow one direct source import whose helper
+For helper results passed directly to an executor, the prepared low proof can
+follow one direct source import whose helper
 returns an immutable append alias of its first fresh tagged argument. It
 checks every parameter and alias reference and permits only an inert native
 default after the first argument; extra caller objects remain unresolved.

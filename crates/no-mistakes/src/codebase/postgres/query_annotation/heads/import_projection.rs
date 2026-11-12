@@ -15,6 +15,7 @@ pub(crate) fn project(
     resolve: impl Fn(&str, &Path) -> Option<PathBuf>,
 ) {
     let observer = crate::diagnostics::current();
+    let mut effect_resolver = super::effects::Resolver::new(files, &resolve);
     let mut completed: Vec<(PathBuf, Span, HeadProof)> = Vec::new();
     let mut effects: FxHashMap<PathBuf, FxHashSet<Span>> = FxHashMap::default();
     let mut callbacks = Vec::new();
@@ -109,18 +110,10 @@ pub(crate) fn project(
             }
         }
         for pending in &heads.pending_effects {
-            let Some(target) = resolve(&pending.specifier, path) else {
-                continue;
-            };
-            if source_failed(files, &target) {
-                failed_sources.push((path.clone(), pending.span, [target].into_iter().collect()));
-                continue;
+            let (proven, failed) = effect_resolver.project(path, pending);
+            if !failed.is_empty() {
+                failed_sources.push((path.clone(), pending.span, failed));
             }
-            let proven = files
-                .get(&target)
-                .and_then(|target| target.query_annotation_heads.as_deref())
-                .and_then(|heads| heads.exported_effects.get(&pending.imported))
-                .is_some_and(|signature| signature.accepts(pending.shape));
             if proven {
                 effects
                     .entry(path.clone())
@@ -129,6 +122,7 @@ pub(crate) fn project(
             }
         }
     }
+    drop(effect_resolver);
     failed_sources.extend(super::async_returns::project(files, &resolve));
     for (path, span, proof) in completed {
         let Some(heads) = files
