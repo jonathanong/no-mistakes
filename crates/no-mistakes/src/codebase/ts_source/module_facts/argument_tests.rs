@@ -18,6 +18,35 @@ fn read_fixture(rule: &str, name: &str, requested: bool) -> TypeScriptModuleFact
 }
 
 #[test]
+fn missing_path_arguments_stay_distinct_from_recorded_unknown_origins() {
+    use arguments::PathAnchor;
+
+    let facts = read_fixture(
+        "test-no-live-repository-scan/facts",
+        "missing-path-arguments.mjs",
+        true,
+    );
+    let calls = facts.call_arguments.unwrap();
+    let mut calls: Vec<_> = calls.iter().collect();
+    calls.sort_by_key(|(offset, _)| **offset);
+    assert_eq!(calls.len(), 7);
+    for (_, arguments) in &calls[..3] {
+        assert!(arguments.path.is_none(), "{arguments:?}");
+    }
+    let unknown = calls[3].1.path.as_ref().unwrap();
+    assert_eq!(unknown.anchor, PathAnchor::Unknown);
+    assert!(unknown.param.is_none());
+    for (index, segment) in [(4, "fixtures"), (5, "src")] {
+        let origin = calls[index].1.path.as_ref().unwrap();
+        assert_eq!(origin.anchor, PathAnchor::Relative);
+        assert_eq!(origin.segments.first().map(String::as_str), Some(segment));
+    }
+    let forwarded = calls[6].1.path.as_ref().unwrap();
+    assert_eq!(forwarded.param, Some(0));
+    assert!(forwarded.param_owner.is_some());
+}
+
+#[test]
 fn exported_aggregates_escape_but_primitive_alias_remains_known() {
     let facts = read("escape.mjs", true);
     let calls = facts.call_arguments.unwrap();

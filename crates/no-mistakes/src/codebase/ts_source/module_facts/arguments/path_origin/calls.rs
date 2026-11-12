@@ -36,10 +36,7 @@ impl<'a> Projector<'a, '_> {
         if !meta_glob && !self.imported_callee(&call.callee, imported, 0) {
             return None;
         }
-        call.arguments.first()?;
-        let mut origin = self
-            .argument_origin(call, 0)
-            .unwrap_or_else(PathOrigin::unknown);
+        let mut origin = self.argument_origin(call, 0)?;
         if meta_glob {
             // Vite patterns are relative to the module, not the process cwd.
             if origin.anchor == PathAnchor::Relative {

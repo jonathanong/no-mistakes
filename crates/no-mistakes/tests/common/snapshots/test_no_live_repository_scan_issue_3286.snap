@@ -1,0 +1,64 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "spread": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/path-arguments.test.ts",
+          "import": "readdirSync",
+          "line": 10,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(unknownRoot);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-arguments.test.ts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the path argument was not recorded (spread argument or unparsed module), so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(...missingPaths);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-arguments.test.ts",
+          "import": "readdirSync",
+          "line": 5,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the path argument was not recorded (spread argument or unparsed module), so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(...[]);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-arguments.test.ts",
+          "import": "readdirSync",
+          "line": 6,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the path argument was not recorded (spread argument or unparsed module), so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync();",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/path-arguments.test.ts",
+          "import": "readdirSync",
+          "line": 13,
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(...livePaths);",
+          "target": "live repository scan"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

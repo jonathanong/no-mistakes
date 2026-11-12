@@ -461,7 +461,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tests/pass-through.test.ts",
           "import": "original",
           "line": 15,
-          "message": "unresolved root: `original` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `original` enumerates a directory, but the path argument was not recorded (spread argument or unparsed module), so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "vi.spyOn(fs, \"readdirSync\").mockImplementation((...args) => original(...args.slice(1)));",
           "target": "unresolved root"
@@ -515,7 +515,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tests/pass-through.test.ts",
           "import": "original",
           "line": 33,
-          "message": "unresolved root: `original` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `original` enumerates a directory, but the path argument was not recorded (spread argument or unparsed module), so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return original(...args);",
           "target": "unresolved root"
@@ -524,7 +524,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tests/pass-through.test.ts",
           "import": "original",
           "line": 38,
-          "message": "unresolved root: `original` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `original` enumerates a directory, but the path argument was not recorded (spread argument or unparsed module), so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return original(...args);",
           "target": "unresolved root"
@@ -533,7 +533,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tests/pass-through.test.ts",
           "import": "original",
           "line": 45,
-          "message": "unresolved root: `original` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `original` enumerates a directory, but the path argument was not recorded (spread argument or unparsed module), so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return original(...args);",
           "target": "unresolved root"
@@ -2803,7 +2803,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tests/pass-through.test.ts",
           "import": "original",
           "line": 15,
-          "message": "unresolved root: `original` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `original` enumerates a directory, but the path argument was not recorded (spread argument or unparsed module), so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "vi.spyOn(fs, \"readdirSync\").mockImplementation((...args) => original(...args.slice(1)));",
           "target": "unresolved root"
@@ -2857,7 +2857,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tests/pass-through.test.ts",
           "import": "original",
           "line": 33,
-          "message": "unresolved root: `original` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `original` enumerates a directory, but the path argument was not recorded (spread argument or unparsed module), so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return original(...args);",
           "target": "unresolved root"
@@ -2866,7 +2866,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tests/pass-through.test.ts",
           "import": "original",
           "line": 38,
-          "message": "unresolved root: `original` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `original` enumerates a directory, but the path argument was not recorded (spread argument or unparsed module), so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return original(...args);",
           "target": "unresolved root"
@@ -2875,7 +2875,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tests/pass-through.test.ts",
           "import": "original",
           "line": 45,
-          "message": "unresolved root: `original` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "message": "unresolved root: `original` enumerates a directory, but the path argument was not recorded (spread argument or unparsed module), so it cannot be shown to be bounded. Fix: build a `const` fixture path or owned mkdtemp root inside the enumerating function, or supply it through every statically resolved test caller (use vi.stubEnv for env roots). As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return original(...args);",
           "target": "unresolved root"

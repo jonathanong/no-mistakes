@@ -172,6 +172,15 @@ or spread, or an unresolved enumeration receiver retains the finding. These go t
 `unresolvedRoot: report` to fail on them; the rule's `severity: advisory` still
 demotes them.
 
+When the path argument itself could not be recorded, such as a spread argument
+whose elements are unavailable or an unparsed module, the finding says `path
+argument was not recorded (spread argument or unparsed module)`. An empty spread
+and a call with no path argument have no recorded path either. Statically known
+array spreads are expanded: a spread containing a live path is still reported
+as a live path, and a spread containing a fixture path remains allowed. A
+recorded but otherwise unproven value retains its ordinary unresolved-root
+message.
+
 Statically recognized top-level `const` CommonJS bindings participate in path
 provenance, including namespace bindings and renamed destructured bindings.
 The loader must be the global runtime `require`. Runtime imports named
