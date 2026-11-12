@@ -341,14 +341,11 @@ fn original_heads_and_rejected_branch_locations_survive_cli_preparation() {
 
         assert_eq!(report["advisories"], serde_json::json!([]));
         let findings = report["rules"].as_array().unwrap();
-        // Two CREATE VIEW violations accompany the 35 failures per schema rule;
+        // The 35 failures per schema rule remain with statement-kind bans disabled;
         // the saved branch-local directive suppresses one postgres-fk-index finding.
-        assert_eq!(findings.len(), 386, "{report}");
+        assert_eq!(findings.len(), 384, "{report}");
         let mut by_rule = std::collections::BTreeMap::<String, Vec<_>>::new();
-        for finding in findings
-            .iter()
-            .filter(|finding| finding["target"] != "CREATE VIEW")
-        {
+        for finding in findings {
             let head = finding["target"].as_str().unwrap();
             assert!(finding["message"]
                 .as_str()
