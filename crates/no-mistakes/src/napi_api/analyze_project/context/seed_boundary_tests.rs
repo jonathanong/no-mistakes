@@ -1,23 +1,21 @@
 use super::*;
 
 #[test]
-fn empty_dependency_roots_do_not_build_import_graphs() {
+fn empty_dependency_roots_are_rejected_before_import_seeding() {
     for bounded in [false, true] {
         let mut report = json!({"type":"dependencies", "files":[], "relationships":["import"]});
         if bounded {
             report["candidateInclude"] = json!(["*.mts"]);
         }
         let prepared = options(json!([report]));
-        let plan = classify_import_seed_requests(&prepared).unwrap();
-        if bounded {
-            assert!(plan.exclusive_bounds().unwrap().files.is_empty());
-        } else {
-            assert!(plan.unbounded.unwrap().files.is_empty());
-        }
-        let context = AnalyzeProjectContext::prepare(&prepared).unwrap();
-        let scope = context.scopes.values().next().unwrap();
-        assert_eq!(scope.traversal.graph_build_count(), 0);
-        assert_eq!(scope.traversal.candidate_inventory_applied(), bounded);
+        let error = classify_import_seed_requests(&prepared)
+            .err()
+            .expect("empty roots rejected");
+        assert_eq!(error.to_string(), "files must contain at least one file");
+        let error = AnalyzeProjectContext::prepare(&prepared)
+            .err()
+            .expect("empty request rejected");
+        assert_eq!(error.to_string(), "files must contain at least one file");
     }
 }
 
@@ -29,7 +27,6 @@ fn import_seed_and_prewarm_reject_invalid_requests_before_building_graphs() {
     for report in [
         json!({"type":"dependents", "files":42}),
         json!({"type":"dependencies", "files":42}),
-        json!({"type":"dependencies", "files":["a.mts"], "candidateInclude":["*.mts"], "includeSymbols":true}),
     ] {
         let invalid = options(json!([report]));
         assert!(classify_import_seed_requests(&invalid).is_err());

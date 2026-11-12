@@ -86,16 +86,11 @@ impl PreparedScope {
         let plan = classify_import_seed_requests(&self.options)?;
         apply_exclusive_candidate_inventory(&self.options, &mut self.traversal)?;
         if let Some(mut args) = plan.unbounded {
-            if !args.files.is_empty() {
-                args.depth = None;
-                self.traversal
-                    .seed_lazy_import_graph_from_args(&args, &cwd)?;
-            }
+            args.depth = None;
+            self.traversal
+                .seed_lazy_import_graph_from_args(&args, &cwd)?;
         }
         for args in plan.bounded.into_values() {
-            if args.files.is_empty() {
-                continue;
-            }
             self.traversal
                 .seed_bounded_lazy_import_graph_from_args(&args, &cwd)?;
         }
