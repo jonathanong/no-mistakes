@@ -80,6 +80,19 @@ function benchmarkChangeScope(changes, forceAll = false) {
   };
 }
 
+const PULL_REQUEST_OPT_IN_MARKERS = [
+  "<!-- benchmarks: v1 -->",
+  "<!-- frontend-lifecycle-smoke: v1 -->",
+];
+
+function pullRequestBenchmarksSkipped(eventName, body) {
+  if (eventName !== "pull_request") {
+    return false;
+  }
+  const text = body || "";
+  return !PULL_REQUEST_OPT_IN_MARKERS.some((marker) => text.includes(marker));
+}
+
 function readChangedFiles() {
   const fields = readFileSync(0).toString("utf8").split("\0");
   if (fields.pop() !== "" || fields.length % 2 !== 0) {
@@ -99,8 +112,10 @@ function readChangedFiles() {
 
 if (require.main === module) {
   const forceAll = process.argv.includes("--all");
-  const result = benchmarkChangeScope(forceAll ? [] : readChangedFiles(), forceAll);
+  const result = pullRequestBenchmarksSkipped(process.env.GITHUB_EVENT_NAME, process.env.PR_BODY)
+    ? { changed: false, scope: NO_SHARDS }
+    : benchmarkChangeScope(forceAll ? [] : readChangedFiles(), forceAll);
   process.stdout.write(`changed=${result.changed}\nscope=${result.scope}\n`);
 }
 
-module.exports = { benchmarkChangeScope };
+module.exports = { benchmarkChangeScope, pullRequestBenchmarksSkipped };
