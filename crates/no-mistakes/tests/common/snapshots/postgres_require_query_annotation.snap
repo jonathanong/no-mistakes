@@ -5819,6 +5819,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-require-query-annotation",
           "sourceLine": "await read(`/* ${item} */ SELECT 1`); // reported: possibly empty name",
           "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 30,
+          "message": "query.mts:30: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(emptyQuery); // reported: const-bound empty name",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 32,
+          "message": "query.mts:32: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(earlyCloseQuery); // reported: const-bound early close",
+          "target": "annotation"
         }
       ],
       "warnings": []

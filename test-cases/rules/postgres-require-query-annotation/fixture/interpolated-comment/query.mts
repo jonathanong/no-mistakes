@@ -25,3 +25,20 @@ await read(`/* ${flag ? '' : 'named'} */ SELECT 1`); // reported: possibly empty
 for (const item of ['', 'named']) {
   await read(`/* ${item} */ SELECT 1`); // reported: possibly empty name
 }
+const emptyName = '';
+const emptyQuery = `/* ${emptyName} */ SELECT 1`;
+await read(emptyQuery); // reported: const-bound empty name
+const earlyCloseQuery = `/* ${'*/'} */ SELECT 1`;
+await read(earlyCloseQuery); // reported: const-bound early close
+const goodName = 'named';
+const goodQuery = `/* ${goodName} */ SELECT 1`;
+await read(goodQuery); // accepted: const-bound known valid name
+{
+  const emptyQuery = `/* shadowed */ SELECT 1`;
+  await read(emptyQuery); // accepted: shadowed valid const
+}
+const unusedBad = `/* ${''} */ SELECT 1`;
+{
+  const unusedBad = `/* shadowed again */ SELECT 1`;
+  await read(unusedBad); // accepted: unused outer bad const does not taint shadow
+}

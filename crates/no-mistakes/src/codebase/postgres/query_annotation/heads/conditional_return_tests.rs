@@ -8,12 +8,7 @@ fn finite_named_conditional_heads_keep_tag_lifetimes_and_unknown_arms() {
     assert!(!heads.calls.iter().any(|(span, proof)| {
         span.0 == source_after_escape && *proof == super::super::HeadProof::Literal
     }));
-    for section in [
-        "missingBranch",
-        "partialBranch",
-        "unknownBranch",
-        "transactionBoundary",
-    ] {
+    for section in ["missingBranch", "unknownBranch", "transactionBoundary"] {
         let start = source.find(&format!("function {section}")).unwrap();
         let call = start + source[start..].find("read(statement)").unwrap();
         assert_eq!(
@@ -26,4 +21,14 @@ fn finite_named_conditional_heads_keep_tag_lifetimes_and_unknown_arms() {
             "{section} must retain advisory uncertainty"
         );
     }
+    let partial = source.find("function partialBranch").unwrap();
+    let call = partial + source[partial..].find("read(statement)").unwrap();
+    assert_eq!(
+        heads
+            .calls
+            .iter()
+            .find(|(span, _)| span.0 == call as u32)
+            .map(|(_, proof)| *proof),
+        Some(super::super::HeadProof::Literal)
+    );
 }

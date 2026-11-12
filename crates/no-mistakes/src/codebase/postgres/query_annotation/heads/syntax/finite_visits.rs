@@ -71,6 +71,7 @@ impl Syntax {
             return;
         };
         self.record_closed_name(binding, init);
+        self.record_finite_const_name(binding, init);
         if let Some(function) = self.current_function {
             if let Some(root) = finite_comments::root(span(binding.span), function, init) {
                 self.finite_roots.push(root);

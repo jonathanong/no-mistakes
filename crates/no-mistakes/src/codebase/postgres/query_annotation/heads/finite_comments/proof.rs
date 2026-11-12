@@ -1,10 +1,12 @@
 //! Exact, bounded comment-name projection; no SQL variant composition.
 use super::TemplateUse;
 use crate::codebase::postgres::query_annotation::heads::{
-    bindings::Bindings, syntax::Syntax, HeadProof, Span,
+    bindings::Bindings,
+    syntax::{Head, Syntax},
+    HeadProof, Span,
 };
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
-use crate::fx::FxHashSet;
+use crate::fx::{FxHashMap, FxHashSet};
 use std::collections::BTreeMap;
 
 pub(in crate::codebase::postgres::query_annotation::heads) fn proofs(
@@ -18,13 +20,40 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn proofs(
     };
     if executors.is_empty()
         || !syntax.collect_finite
-        || (!syntax
-            .finite_templates
-            .iter()
-            .any(|v| executors.contains(&v.call))
-            && syntax.finite_roots.is_empty())
+        || (syntax.finite_templates.is_empty() && syntax.finite_roots.is_empty())
         || !module.diagnostics.is_empty()
         || !syntax.dynamic_refs.is_empty()
+    {
+        return (BTreeMap::new(), FxHashSet::default());
+    }
+    let const_candidates: FxHashSet<_> = syntax
+        .finite_templates
+        .iter()
+        .map(|candidate| candidate.call)
+        .filter(|span| syntax.constants.contains_key(span))
+        .collect();
+    let mut const_uses = FxHashMap::<Span, Vec<Span>>::default();
+    if !const_candidates.is_empty() {
+        for call in syntax
+            .calls
+            .iter()
+            .filter(|call| executors.contains(&call.span))
+        {
+            let Head::Reference(reference) = call.head else {
+                continue;
+            };
+            if let Some(owner) = bindings.owner(reference).filter(|owner| !owner.imported) {
+                let declaration = (owner.span.start, owner.span.end);
+                if const_candidates.contains(&declaration) {
+                    const_uses.entry(declaration).or_default().push(call.span);
+                }
+            }
+        }
+    }
+    if syntax.finite_roots.is_empty()
+        && !syntax.finite_templates.iter().any(|candidate| {
+            executors.contains(&candidate.call) || const_uses.contains_key(&candidate.call)
+        })
     {
         return (BTreeMap::new(), FxHashSet::default());
     }
@@ -32,7 +61,8 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn proofs(
     let mut found = BTreeMap::new();
     let mut gated = FxHashSet::default();
     for candidate in &syntax.finite_templates {
-        if !executors.contains(&candidate.call) {
+        let direct_call = executors.contains(&candidate.call);
+        if !direct_call && !const_uses.contains_key(&candidate.call) {
             continue;
         }
         let named = if candidate.inline {
@@ -45,6 +75,14 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn proofs(
             direct(syntax, bindings, &mut index, candidate)
         };
         if let Some(named) = named {
+            if !direct_call {
+                if !named {
+                    for &call in &const_uses[&candidate.call] {
+                        found.insert(call, HeadProof::Unproven);
+                    }
+                }
+                continue;
+            }
             let proof = if named {
                 HeadProof::Literal
             } else {

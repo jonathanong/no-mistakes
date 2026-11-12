@@ -31,7 +31,7 @@ fn finite_comment_heads_share_prepared_facts_without_sql_composition() {
             vec![
                 Some(HeadProof::Literal),
                 Some(HeadProof::Literal),
-                Some(HeadProof::Unproven),
+                Some(HeadProof::Literal),
                 Some(HeadProof::Unproven),
             ]
         );

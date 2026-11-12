@@ -34,7 +34,7 @@ fn direct_imported_string_heads_use_prepared_value_exports() {
             (9, Some(HeadProof::Literal)),
             (10, Some(HeadProof::Literal)),
             (11, Some(HeadProof::Missing)),
-            (12, Some(HeadProof::Unproven)),
+            (12, Some(HeadProof::Literal)),
             (13, Some(HeadProof::Unproven)),
             (14, Some(HeadProof::Unproven)),
             (15, Some(HeadProof::Unproven)),
