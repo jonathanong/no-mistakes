@@ -160,6 +160,20 @@ need a stable operation name rather than an opaque SQL string.
 Executed PostgreSQL SQL must begin with a non-empty block comment. At `max`,
 `BEGIN`, `COMMIT`, and `ROLLBACK` are exempt; line comments do not satisfy the contract.
 
+At `low`, an ordinary template can interpolate the annotation name when its
+literal text opens the first `/*` comment and a later literal part closes it
+with `*/` before SQL. Every interpolation before that closing delimiter belongs
+to the comment. For example, `` read(`/* ${name} */ SELECT 1`) `` and
+`` query(`/* listPage:${source} */ SELECT id FROM t`) `` have leading
+annotations, including when the template is held in one local `const` passed
+directly to the executor. An interpolated whole head, a later comment, an
+interpolated closing delimiter does not establish this proof. Once a literal
+part closes the first comment, later SQL-body interpolations do not affect the
+annotation proof. Known string-literal pieces and literal ternary arms
+inside the first comment must still form a non-empty name and cannot close it
+early. If those known values or bounded name analysis prove a possible empty
+name or early `*/`, the template remains unresolved under `unanalyzableSql`.
+
 ## Options and defaults
 
 `include` and `exclude` select files. `importSpecifier` has no default;
@@ -297,9 +311,10 @@ supply the same first comment name. An unresolved import anywhere in the file
 leaves those calls under `unanalyzable`. A local
 helper may also receive at most 16 direct literal names through a closed
 `select(name)` call set before appending that ordinary template to an empty
-trusted SQL builder. Each runtime name must close the first named comment;
-unknown names, aliases, extra calls, and tagged bind interpolations remain
-unanalyzable under the selected policy.
+trusted SQL builder. Each runtime name must close the first named comment.
+This finite-name proof does not cover aliases, extra calls, or tagged bind
+interpolations; those remain unanalyzable under the selected policy. Ordinary
+templates with an unknown name can use the structural comment proof above.
 Finite conditional literals qualify only when every arm has a complete named
 head; tagged arms retain mutable-builder escape checks. A function declaration
 also qualifies with explicit early `if` returns and a final top-level return,

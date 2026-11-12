@@ -1,0 +1,65 @@
+import { read, query } from "@bench/db";
+declare const name: string;
+declare const source: string;
+declare const head: string;
+declare const close: string;
+declare const suffix: string;
+declare const v: string;
+declare const flag: boolean;
+
+await read(`/* ${name} */ SELECT 1`); // accepted: interpolated name
+await query(`/* listPage:${source} */ SELECT id FROM t`); // accepted: literal prefix
+await read(`/* ${name}:${source} */ SELECT 1`); // accepted: multiple name expressions
+await read(`/* ${'list'}${'Page'} */ SELECT 1`); // accepted: known nonempty pieces
+await read(`/* literal${''} */ SELECT 1`); // accepted: literal name and empty piece
+await read(`/* ${flag ? 'left' : 'right'}${''} */ SELECT 1`); // accepted: every ternary name is nonempty
+await read(`/* prefix${flag ? '' : 'extra'}${''} */ SELECT 1`); // accepted: literal prefix survives empty arm
+await read(`\x2f* ${name} *\x2f SELECT 1`); // accepted: cooked delimiters
+await read(`/* literal */ SELECT ${v}`); // accepted: existing SQL interpolation
+const q = `/* ${name} */ SELECT id FROM t WHERE id = $1`;
+await read(q, [v]); // accepted: one local const
+
+await read(`${head} SELECT 1`); // reported: whole head interpolated
+await read(`SELECT 1 /* ${name} */`); // reported: comment is not first
+await read(`/* ${name} ${close} SELECT 1`); // reported: closing delimiter interpolated
+await read(`/* ${name} */ ${suffix} SELECT 1`); // accepted: interpolation outside comment
+await read(`/*${'name'}*/SELECT ${source}`); // accepted: known name followed by SQL interpolation
+await read(`/* ${'name*/'} */ SELECT 1`); // reported: known name closes before literal delimiter
+await read(`/* ${''}${''} */ SELECT 1`); // reported: multiple empty pieces
+await read(`/* ${'' as const}${''} */ SELECT 1`); // reported: wrapped empty piece
+await read(`/* ${'*/'}${name} */ SELECT 1`); // reported: known early close before unknown
+await read(`/* ${'*'}${'/'}${name} */ SELECT 1`); // reported: split known early close
+await read(`/* ${'*'}/${name} */ SELECT 1`); // reported: known close across expression and literal
+await read(`/* ${''} */ SELECT 1`); // reported: known empty name
+await read(`/* ${'*/'} */ SELECT 1`); // reported: known early close
+await read(`/* ${flag ? '' : 'named'} */ SELECT 1`); // reported: possibly empty name
+await read(`/* ${flag ? '' : 'named'}${''} */ SELECT 1`); // reported: empty ternary arm and empty piece
+await read(`/* ${flag ? '*/' : 'named'}${name} */ SELECT 1`); // reported: ternary arm closes comment early
+for (const item of ['', 'named']) {
+  await read(`/* ${item} */ SELECT 1`); // reported: possibly empty name
+}
+const emptyName = '';
+const emptyQuery = `/* ${emptyName} */ SELECT 1`;
+await read(emptyQuery); // reported: const-bound empty name
+const earlyCloseQuery = `/* ${'*/'} */ SELECT 1`;
+await read(earlyCloseQuery); // reported: const-bound early close
+const emptyPiecesQuery = `/* ${''}${''} */ SELECT 1`;
+await read(emptyPiecesQuery); // reported: const-bound empty pieces
+const knownNameSqlHole = `/*${'name'}*/SELECT ${source}`;
+await read(knownNameSqlHole); // accepted: const-bound known name with SQL interpolation
+const earlyNamedCloseQuery = `/* ${'name*/'} */ SELECT 1`;
+await read(earlyNamedCloseQuery); // reported: const-bound known name closes early
+const maybeEmptyQuery = `/* ${flag ? '' : 'named'}${''} */ SELECT 1`;
+await read(maybeEmptyQuery); // reported: const-bound empty ternary arm
+const goodName = 'named';
+const goodQuery = `/* ${goodName} */ SELECT 1`;
+await read(goodQuery); // accepted: const-bound known valid name
+{
+  const emptyQuery = `/* shadowed */ SELECT 1`;
+  await read(emptyQuery); // accepted: shadowed valid const
+}
+const unusedBad = `/* ${''} */ SELECT 1`;
+{
+  const unusedBad = `/* shadowed again */ SELECT 1`;
+  await read(unusedBad); // accepted: unused outer bad const does not taint shadow
+}

@@ -3,23 +3,23 @@ import sql from 'sql-template-strings'
 
 const aliasedRows = [['one', 'SELECT 1']] as const
 for (const [name, body] of aliasedRows) {
-  read(`/* ${name} */ ${body}`) // low: false
+  read(`/* ${name} */ ${body}`) // low: true
 }
 for (const [name, body] of [[...aliasedRows[0]]] as const) {
-  read(`/* ${name} */ ${body}`) // low: false
+  read(`/* ${name} */ ${body}`) // low: true
 }
 for (let [name, body] of [['mutable', 'SELECT 1']] as const) {
-  read(`/* ${name} */ ${body}`) // low: false
+  read(`/* ${name} */ ${body}`) // low: true
 }
 for (const [name = 'default', body] of [['provided', 'SELECT 1']] as const) {
-  read(`/* ${name} */ ${body}`) // low: false
+  read(`/* ${name} */ ${body}`) // low: true
 }
 for (const [name, body] of [['outer', 'SELECT 1']] as const) {
-  const callback = (name: string) => read(`/* ${name} */ ${body}`) // low: false
+  const callback = (name: string) => read(`/* ${name} */ ${body}`) // low: true
   callback('inner')
 }
 for (const [name, body] of [['valid', 'SELECT 1']] as const) {
-  read(`/* ${name} ${unknown} */ ${body}`) // low: false
+  read(`/* ${name} ${unknown} */ ${body}`) // low: true
   read(`/* ${name} missing close ${body}`) // low: false
 }
 for (const [name, body] of [['', 'SELECT 1']] as const) {

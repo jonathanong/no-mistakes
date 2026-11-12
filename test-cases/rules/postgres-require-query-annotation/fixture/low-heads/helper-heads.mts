@@ -36,7 +36,7 @@ read(missing()); // low: false
 function partial(value: string) {
   return `/* ${value} */ SELECT 1`;
 }
-read(partial('name')); // low: false
+read(partial('name')); // low: true
 
 function early(flag: boolean) {
   if (flag) return sql`/* early */ SELECT 1`;

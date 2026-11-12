@@ -173,7 +173,8 @@ parameter through one local `select` closure whose complete call set supplies
 at most 16 direct string literals. The helper may append an ordinary template
 with that name to an empty, exactly imported `sql-template-strings` builder;
 its later safe appends do not change the first comment. Every substituted
-prefix must close a nonempty `/* name */` before any other interpolation.
+prefix must close a nonempty `/* name */` in a literal part. Later SQL-body
+interpolations do not affect this proof.
 Aliases, writes, defaults, spreads, extra or dynamic calls, escaped helpers,
 untrusted builders, and tagged bind interpolation remain unresolved. This
 proof joins only the leading comment and does not compose the SQL suffix.
@@ -193,7 +194,8 @@ query(`/* ${operation} */ SELECT id FROM accounts WHERE id = ${id}`);
 ```
 
 The exact binding must remain read-only and unexported, and substitution must
-close a nonempty named comment before any other interpolation. A mutable name,
+close a nonempty named comment before any other comment-name interpolation.
+Interpolations in the SQL body after that literal close are allowed. A mutable name,
 shadowed parameter, alias, imported name, or dynamically computed initializer
 remains unresolved. This proof checks the comment only; it does not infer the
 SQL body or treat tagged interpolation as a literal name. Existing unresolved

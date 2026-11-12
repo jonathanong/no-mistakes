@@ -11,15 +11,31 @@ impl Syntax {
         let Some(expression) = call.arguments.first().and_then(|arg| arg.as_expression()) else {
             return;
         };
+        self.record_finite_expression(span(call.span), expression);
+    }
+
+    pub(super) fn record_finite_const_name(
+        &mut self,
+        binding: &BindingIdentifier<'_>,
+        init: &Expression<'_>,
+    ) {
+        self.record_finite_expression(span(binding.span), init);
+    }
+
+    fn record_finite_expression(
+        &mut self,
+        target: super::super::Span,
+        expression: &Expression<'_>,
+    ) {
         if let Some((reference, before, after)) = finite_comments::template(expression) {
-            self.record_identifier_name(call, expression, reference, before, after);
+            self.record_identifier_name(target, expression, reference, before, after);
             return;
         }
         let Some(inline) = finite_comments::inline_name(expression) else {
             return;
         };
         self.finite_templates.push(TemplateUse {
-            call: span(call.span),
+            call: target,
             reference: (0, 0),
             domain: Domain {
                 declaration: (0, 0),
@@ -83,7 +99,7 @@ impl Syntax {
 
     fn record_identifier_name(
         &mut self,
-        call: &CallExpression<'_>,
+        target: super::super::Span,
         expression: &Expression<'_>,
         reference: super::super::Span,
         before: String,
@@ -98,7 +114,7 @@ impl Syntax {
             .cloned();
         if let Some(domain) = matched {
             self.finite_templates.push(TemplateUse {
-                call: span(call.span),
+                call: target,
                 reference,
                 domain,
                 before,
@@ -111,7 +127,7 @@ impl Syntax {
             return;
         };
         self.pending_name_templates.push(PendingName {
-            call: span(call.span),
+            call: target,
             reference,
             name: name.to_string(),
             before,

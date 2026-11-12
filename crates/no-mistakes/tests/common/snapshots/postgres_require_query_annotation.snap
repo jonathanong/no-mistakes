@@ -2349,14 +2349,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "conditional-return-local.mts",
-          "line": 50,
-          "message": "conditional-return-local.mts:50: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(statement); // low: false",
-          "target": "annotation"
-        },
-        {
-          "file": "conditional-return-local.mts",
           "line": 55,
           "message": "conditional-return-local.mts:55: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
           "rule": "postgres-require-query-annotation",
@@ -2962,30 +2954,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "closed.mts",
-          "line": 20,
-          "message": "closed.mts:20: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(`/* ${dynamic} */ SELECT 1`) // low: false",
-          "target": "leading-annotation"
-        },
-        {
-          "file": "closed.mts",
-          "line": 25,
-          "message": "closed.mts:25: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(`/* ${table} */ SELECT 1`) // low: false",
-          "target": "leading-annotation"
-        },
-        {
-          "file": "closed.mts",
-          "line": 30,
-          "message": "closed.mts:30: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(`/* ${nested} */ SELECT 1`) // low: false",
-          "target": "leading-annotation"
-        },
-        {
-          "file": "closed.mts",
           "line": 33,
           "message": "closed.mts:33: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
           "rule": "postgres-require-query-annotation",
@@ -3006,62 +2974,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "closed.mts:50: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
           "rule": "postgres-require-query-annotation",
           "sourceLine": "read(`/* ${terminatedName} */ SELECT 1`) // low: false",
-          "target": "leading-annotation"
-        },
-        {
-          "file": "closed.mts",
-          "line": 53,
-          "message": "closed.mts:53: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(`/* ${mutableName} */ SELECT 1`) // low: false",
-          "target": "leading-annotation"
-        },
-        {
-          "file": "closed.mts",
-          "line": 56,
-          "message": "closed.mts:56: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(`/* ${fixedName} */ SELECT 1`) // low: false",
-          "target": "leading-annotation"
-        },
-        {
-          "file": "closed.mts",
-          "line": 60,
-          "message": "closed.mts:60: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(`/* ${aliasName} */ SELECT 1`) // low: false",
-          "target": "leading-annotation"
-        },
-        {
-          "file": "closed.mts",
-          "line": 63,
-          "message": "closed.mts:63: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(`/* ${exportedName} */ SELECT 1`) // low: false",
-          "target": "leading-annotation"
-        },
-        {
-          "file": "unresolved.mts",
-          "line": 10,
-          "message": "unresolved.mts:10: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(`/* ${table} */ SELECT 1`)",
-          "target": "leading-annotation"
-        },
-        {
-          "file": "unresolved.mts",
-          "line": 5,
-          "message": "unresolved.mts:5: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(`/* ${name} */ SELECT 1`)",
-          "target": "leading-annotation"
-        },
-        {
-          "file": "unresolved.mts",
-          "line": 7,
-          "message": "unresolved.mts:7: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(`/* ${enabled ? 'posts' : 'comments'} */ SELECT 1`)",
           "target": "leading-annotation"
         }
       ],
@@ -3105,58 +3017,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "finite-comment-names.mts",
-          "line": 30,
-          "message": "finite-comment-names.mts:30: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(`/* fixed:${branch} */ SELECT 1`) // low: false",
-          "target": "annotation"
-        },
-        {
-          "file": "finite-comment-names.mts",
           "line": 31,
           "message": "finite-comment-names.mts:31: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
           "rule": "postgres-require-query-annotation",
           "sourceLine": "read(sql`/* fixed:${branch} */ SELECT 1`) // low: false",
-          "target": "annotation"
-        },
-        {
-          "file": "finite-comment-overbudget.mts",
-          "line": 10,
-          "message": "finite-comment-overbudget.mts:10: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(`/* ${name} */ ${body}`) // low: false",
-          "target": "annotation"
-        },
-        {
-          "file": "finite-comment-unknown.mts",
-          "line": 12,
-          "message": "finite-comment-unknown.mts:12: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(`/* ${name} */ ${body}`) // low: false",
-          "target": "annotation"
-        },
-        {
-          "file": "finite-comment-unknown.mts",
-          "line": 15,
-          "message": "finite-comment-unknown.mts:15: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(`/* ${name} */ ${body}`) // low: false",
-          "target": "annotation"
-        },
-        {
-          "file": "finite-comment-unknown.mts",
-          "line": 18,
-          "message": "finite-comment-unknown.mts:18: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "const callback = (name: string) => read(`/* ${name} */ ${body}`) // low: false",
-          "target": "annotation"
-        },
-        {
-          "file": "finite-comment-unknown.mts",
-          "line": 22,
-          "message": "finite-comment-unknown.mts:22: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(`/* ${name} ${unknown} */ ${body}`) // low: false",
           "target": "annotation"
         },
         {
@@ -3201,14 +3065,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "finite-comment-unknown.mts",
-          "line": 6,
-          "message": "finite-comment-unknown.mts:6: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(`/* ${name} */ ${body}`) // low: false",
-          "target": "annotation"
-        },
-        {
-          "file": "finite-comment-unknown.mts",
           "line": 61,
           "message": "finite-comment-unknown.mts:61: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
           "rule": "postgres-require-query-annotation",
@@ -3237,14 +3093,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "finite-comment-unknown.mts:86: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
           "rule": "postgres-require-query-annotation",
           "sourceLine": "read(query) // low: false",
-          "target": "annotation"
-        },
-        {
-          "file": "finite-comment-unknown.mts",
-          "line": 9,
-          "message": "finite-comment-unknown.mts:9: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(`/* ${name} */ ${body}`) // low: false",
           "target": "annotation"
         },
         {
@@ -5764,14 +5612,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/query.mts",
-          "line": 12,
-          "message": "src/query.mts:12: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(partial)",
-          "target": "annotation"
-        },
-        {
-          "file": "src/query.mts",
           "line": 13,
           "message": "src/query.mts:13: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
           "rule": "postgres-require-query-annotation",
@@ -5848,6 +5688,191 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "interpolated_comment_body_low_report": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "interpolated_comment_low_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query.mts",
+          "line": 22,
+          "message": "query.mts:22: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(`${head} SELECT 1`); // reported: whole head interpolated",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 23,
+          "message": "query.mts:23: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(`SELECT 1 /* ${name} */`); // reported: comment is not first",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 24,
+          "message": "query.mts:24: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(`/* ${name} ${close} SELECT 1`); // reported: closing delimiter interpolated",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 27,
+          "message": "query.mts:27: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(`/* ${'name*/'} */ SELECT 1`); // reported: known name closes before literal delimiter",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 28,
+          "message": "query.mts:28: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(`/* ${''}${''} */ SELECT 1`); // reported: multiple empty pieces",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 29,
+          "message": "query.mts:29: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(`/* ${'' as const}${''} */ SELECT 1`); // reported: wrapped empty piece",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 30,
+          "message": "query.mts:30: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(`/* ${'*/'}${name} */ SELECT 1`); // reported: known early close before unknown",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 31,
+          "message": "query.mts:31: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(`/* ${'*'}${'/'}${name} */ SELECT 1`); // reported: split known early close",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 32,
+          "message": "query.mts:32: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(`/* ${'*'}/${name} */ SELECT 1`); // reported: known close across expression and literal",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 33,
+          "message": "query.mts:33: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(`/* ${''} */ SELECT 1`); // reported: known empty name",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 34,
+          "message": "query.mts:34: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(`/* ${'*/'} */ SELECT 1`); // reported: known early close",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 35,
+          "message": "query.mts:35: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(`/* ${flag ? '' : 'named'} */ SELECT 1`); // reported: possibly empty name",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 36,
+          "message": "query.mts:36: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(`/* ${flag ? '' : 'named'}${''} */ SELECT 1`); // reported: empty ternary arm and empty piece",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 37,
+          "message": "query.mts:37: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(`/* ${flag ? '*/' : 'named'}${name} */ SELECT 1`); // reported: ternary arm closes comment early",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 39,
+          "message": "query.mts:39: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(`/* ${item} */ SELECT 1`); // reported: possibly empty name",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 43,
+          "message": "query.mts:43: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(emptyQuery); // reported: const-bound empty name",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 45,
+          "message": "query.mts:45: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(earlyCloseQuery); // reported: const-bound early close",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 47,
+          "message": "query.mts:47: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(emptyPiecesQuery); // reported: const-bound empty pieces",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 51,
+          "message": "query.mts:51: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(earlyNamedCloseQuery); // reported: const-bound known name closes early",
+          "target": "annotation"
+        },
+        {
+          "file": "query.mts",
+          "line": 53,
+          "message": "query.mts:53: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await read(maybeEmptyQuery); // reported: const-bound empty ternary arm",
+          "target": "annotation"
+        }
+      ],
       "warnings": []
     }
   },

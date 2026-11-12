@@ -17,17 +17,17 @@ const deferred = enabled ? 'accounts' : 'sessions'
 
 function dynamicArm(other: string) {
   const dynamic = enabled ? 'accounts' : other
-  read(`/* ${dynamic} */ SELECT 1`) // low: false
+  read(`/* ${dynamic} */ SELECT 1`) // low: true
 }
 
 function dynamicList(names: string[]) {
   for (const table of names) {
-    read(`/* ${table} */ SELECT 1`) // low: false
+    read(`/* ${table} */ SELECT 1`) // low: true
   }
 }
 
 const nested = enabled ? 'accounts' : enabled ? 'sessions' : 'posts'
-read(`/* ${nested} */ SELECT 1`) // low: false
+read(`/* ${nested} */ SELECT 1`) // low: true
 
 for (const table of ['*/', 'accounts']) {
   read(`/* ${table} */ SELECT 1`) // low: false
@@ -50,14 +50,14 @@ const terminatedName = '*/'
 read(`/* ${terminatedName} */ SELECT 1`) // low: false
 
 let mutableName = 'accounts/list'
-read(`/* ${mutableName} */ SELECT 1`) // low: false
+read(`/* ${mutableName} */ SELECT 1`) // low: true
 
 function shadowedName(fixedName: string) {
-  read(`/* ${fixedName} */ SELECT 1`) // low: false
+  read(`/* ${fixedName} */ SELECT 1`) // low: true
 }
 
 const aliasName = fixedName
-read(`/* ${aliasName} */ SELECT 1`) // low: false
+read(`/* ${aliasName} */ SELECT 1`) // low: true
 
 export const exportedName = 'accounts/list'
-read(`/* ${exportedName} */ SELECT 1`) // low: false
+read(`/* ${exportedName} */ SELECT 1`) // low: true

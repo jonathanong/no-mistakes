@@ -47,7 +47,7 @@ function partialBranch(flag: boolean) {
   const statement = flag
     ? '/* named */ SELECT 1'
     : `/* ${flag} */ SELECT 2`;
-  read(statement); // low: false
+  read(statement); // low: true
 }
 
 function unknownBranch(flag: boolean) {

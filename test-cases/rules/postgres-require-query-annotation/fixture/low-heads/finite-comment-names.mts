@@ -25,8 +25,8 @@ async function findRows(branch: string) {
   read(query) // low: true
 }
 
-// A dynamic first comment remains unproven without a finite runtime source.
+// Ordinary templates accept a dynamic name; the tagged builder still needs a finite source.
 function unknown(branch: string) {
-  read(`/* fixed:${branch} */ SELECT 1`) // low: false
+  read(`/* fixed:${branch} */ SELECT 1`) // low: true
   read(sql`/* fixed:${branch} */ SELECT 1`) // low: false
 }
