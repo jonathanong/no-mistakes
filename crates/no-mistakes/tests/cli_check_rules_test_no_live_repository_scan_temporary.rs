@@ -127,3 +127,41 @@ fn callback_roots_check_json_snapshot() {
         )],
     );
 }
+
+#[test]
+fn callback_captures_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "test-no-live-repository-scan",
+        "callback-captures",
+        "",
+    );
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--format", "json", "--root"])
+        .arg(&root)
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let mut files: Vec<_> = ["rules", "advisories"]
+        .into_iter()
+        .flat_map(|key| report[key].as_array().unwrap())
+        .map(|finding| finding["file"].as_str().unwrap())
+        .collect();
+    files.sort_unstable();
+    assert_eq!(
+        files,
+        [
+            "src/non-owned-helper.mts",
+            "src/reassigned-root.mts",
+            "src/shadowed-root.mts",
+        ],
+        "{report}"
+    );
+    crate::check_json_snapshot::assert_saved_fixture(
+        "test_no_live_repository_scan_callback_captures",
+        &[(
+            "callback-captures",
+            root.clone(),
+            root.join(".no-mistakes.yml"),
+        )],
+    );
+}

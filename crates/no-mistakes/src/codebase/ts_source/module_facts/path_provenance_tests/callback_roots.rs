@@ -56,3 +56,20 @@ fn callback_roots_require_local_factories_cleanup_and_direct_uses() {
         assert_eq!(origin.anchor, PathAnchor::Unknown, "{case}: {origin:?}");
     }
 }
+
+#[test]
+fn readonly_callback_roots_survive_nested_closures_blocks_and_for_of_loops() {
+    let read = read("callback-captures.mts");
+    for case in ["nested-direct", "nested-loop", "nested-block"] {
+        let origin = read.origin(&format!(r#"readdirSync(root, "{case}")"#));
+        assert_eq!(origin.anchor, PathAnchor::Temp, "{case}: {origin:?}");
+    }
+    assert_eq!(
+        read.origin(r#"readdirSync(root, "shadowed")"#).anchor,
+        PathAnchor::Cwd
+    );
+    for case in ["reassigned", "loop-returned-promise", "non-owned"] {
+        let origin = read.origin(&format!(r#"readdirSync(root, "{case}")"#));
+        assert_eq!(origin.anchor, PathAnchor::Unknown, "{case}: {origin:?}");
+    }
+}

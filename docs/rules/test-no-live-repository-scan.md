@@ -762,7 +762,11 @@ with `using` / `await using`. A missing cleanup, a live root in any invocation,
 or an escaping callback or temporary root retains the finding. Async callbacks
 and callbacks with a returned expression must finish before cleanup; await
 their invocation inside the protected scope. A synchronous callback without
-`await` uses a block containing expression or variable statements.
+`await` uses a block containing expression or variable statements, nested blocks,
+or synchronous `for...of` loops. Read-only captures retain the parameter's owned
+root inside nested closures, including callbacks passed to `expect` inside a
+loop. A shadowing binding has its own provenance; reassigning the captured root
+retains the finding.
 
 ```ts
 function withTempDirectory(run: (root: string) => void) {

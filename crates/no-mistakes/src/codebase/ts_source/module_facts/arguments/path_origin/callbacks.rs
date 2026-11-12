@@ -119,12 +119,30 @@ impl<'a> Projector<'a, '_> {
 }
 
 fn synchronous_body(body: &FunctionBody<'_>) -> bool {
-    body.statements.iter().all(|statement| {
-        matches!(
-            statement,
-            Statement::ExpressionStatement(_)
-                | Statement::VariableDeclaration(_)
-                | Statement::EmptyStatement(_)
-        )
-    })
+    body.statements
+        .iter()
+        .all(|statement| synchronous_statement(statement, 0))
 }
+
+fn synchronous_statement(statement: &Statement<'_>, depth: usize) -> bool {
+    if depth >= 16 {
+        return false;
+    }
+    match statement {
+        Statement::ExpressionStatement(_)
+        | Statement::VariableDeclaration(_)
+        | Statement::EmptyStatement(_) => true,
+        Statement::BlockStatement(block) => block
+            .body
+            .iter()
+            .all(|statement| synchronous_statement(statement, depth + 1)),
+        Statement::ForOfStatement(looped) => {
+            !looped.r#await && synchronous_statement(&looped.body, depth + 1)
+        }
+        _ => false,
+    }
+}
+
+#[cfg(test)]
+#[path = "callbacks/completion_tests.rs"]
+mod completion_tests;
