@@ -71,3 +71,16 @@ fn owned_temporary_roots_check_json_snapshot() {
         )],
     );
 }
+
+#[test]
+fn callback_roots_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "test-no-live-repository-scan",
+        "callback-roots",
+        "",
+    );
+    crate::check_json_snapshot::assert_saved_fixture(
+        "test_no_live_repository_scan_callback_roots",
+        &[("callback-roots", root.clone(), root.join(".no-mistakes.yml"))],
+    );
+}
