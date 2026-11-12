@@ -6,6 +6,9 @@ use rayon::prelude::*;
 use serde::de::DeserializeOwned;
 use std::path::{Path, PathBuf};
 
+#[cfg(test)]
+mod entrypoint_parity_tests;
+
 mod scope;
 pub(crate) use scope::*;
 

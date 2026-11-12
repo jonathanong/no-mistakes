@@ -1,0 +1,1 @@
+CREATE FUNCTION f() RETURNS text LANGUAGE sql AS U&'SELECT !xyz, !+xyz' UESCAPE '!'

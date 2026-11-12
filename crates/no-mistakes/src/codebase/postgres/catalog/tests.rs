@@ -19,6 +19,7 @@ mod errors;
 mod expressions;
 mod findings;
 mod function_body;
+mod fixture_function_contracts;
 mod model;
 mod names;
 mod order;

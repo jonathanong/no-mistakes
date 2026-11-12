@@ -121,3 +121,71 @@ fn leaves_chr_without_call_parens_or_a_numeric_arg() {
         );
     }
 }
+
+#[test]
+fn saved_chr_boundaries_rewrite_only_complete_unicode_scalar_calls() {
+    let fixture = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/ddl-compat/chr-boundaries.sql"
+    ));
+    let mut lines = fixture.lines();
+    let mut valid = tokens(lines.next().unwrap());
+    rewrite_chr_calls(&mut valid);
+    let values: Vec<_> = valid
+        .iter()
+        .filter_map(|token| match token {
+            Token::SingleQuotedString(value) => Some(value.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(values, ["A", "😀"]);
+    for sql in lines {
+        let before = tokens(sql);
+        let mut after = before.clone();
+        rewrite_chr_calls(&mut after);
+        rewrite_drop_index_concurrently(&mut after);
+        assert_eq!(after, before, "{sql}");
+    }
+}
+
+#[test]
+fn located_delete_column_rewrite_keeps_source_spans_and_referential_actions() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/ddl-compat/located-delete-columns.sql"
+    ));
+    let mut located = Tokenizer::new(&PostgreSqlDialect {}, sql)
+        .tokenize_with_location()
+        .unwrap();
+    let spans: Vec<_> = located.iter().map(|token| token.span).collect();
+    rewrite_referential_set_column_lists_located(&mut located);
+    assert_eq!(
+        located.iter().map(|token| token.span).collect::<Vec<_>>(),
+        spans
+    );
+    let parsed = sqlparser::parser::Parser::new(&PostgreSqlDialect {})
+        .with_tokens_with_locations(located)
+        .parse_statements()
+        .unwrap();
+    let sqlparser::ast::Statement::AlterTable(table) = &parsed[0] else {
+        panic!("expected ALTER TABLE")
+    };
+    let actions: Vec<_> = table
+        .operations
+        .iter()
+        .filter_map(|operation| match operation {
+            sqlparser::ast::AlterTableOperation::AddConstraint {
+                constraint: sqlparser::ast::TableConstraint::ForeignKey(key),
+                ..
+            } => key.on_delete.as_ref(),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        actions,
+        [
+            &sqlparser::ast::ReferentialAction::SetNull,
+            &sqlparser::ast::ReferentialAction::SetDefault
+        ]
+    );
+}

@@ -62,6 +62,9 @@ fn needs_module_validators(config: &NoMistakesConfig) -> bool {
 }
 
 #[cfg(test)]
+#[path = "graph/resolve_fixture_tests.rs"]
+mod resolve_fixture_tests;
+#[cfg(test)]
 mod tests;
 #[cfg(test)]
 #[path = "graph/value_import_demand_tests.rs"]

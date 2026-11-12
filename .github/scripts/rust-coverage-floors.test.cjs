@@ -129,3 +129,19 @@ test("coverage summary remains available after a floor failure", () => {
   assert.match(step, /retention-days: 7/);
   assert.doesNotMatch(step, /continue-on-error|success\(\)/);
 });
+
+test("failed floors retain region locations for targeted behavior tests", () => {
+  const workflow = readFileSync(join(__dirname, "../workflows/ci.yml"), "utf8");
+  const step = workflow.split("- name: Write uncovered Rust region details\n")[1]
+    .split("\n      - name:")[0];
+  assert.match(workflow, /id: rust-coverage-floors/);
+  assert.match(step, /if: \$\{\{ !cancelled\(\) && steps\.rust-coverage-floors\.outcome == 'failure' \}\}/);
+  assert.match(step, /timeout-minutes: 5/);
+  assert.match(step, /cargo llvm-cov report --json --output-path target\/llvm-cov\/regions\.json/);
+  assert.doesNotMatch(step, /summary-only|ignore-filename-regex|continue-on-error/);
+  const upload = workflow.split("- name: Upload uncovered Rust region details\n")[1]
+    .split("\n      - name:")[0];
+  assert.match(upload, /hashFiles\('target\/llvm-cov\/regions\.json'\)/);
+  assert.match(upload, /name: rust-coverage-regions/);
+  assert.match(upload, /retention-days: 7/);
+});

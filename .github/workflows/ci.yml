@@ -941,6 +941,7 @@ jobs:
             "$RUNNER_TEMP/no-mistakes-profraw-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
 
       - name: Enforce Rust coverage floors
+        id: rust-coverage-floors
         if: ${{ !cancelled() && steps.rust-coverage.outcome == 'success' }}
         timeout-minutes: 5
         run: |
@@ -954,6 +955,24 @@ jobs:
             "${RUST_COVERAGE_FAIL_UNDER_LINES}" \
             "${RUST_COVERAGE_FAIL_UNDER_FUNCTIONS}" \
             "${RUST_COVERAGE_FAIL_UNDER_REGIONS}"
+
+      - name: Write uncovered Rust region details
+        if: ${{ !cancelled() && steps.rust-coverage-floors.outcome == 'failure' }}
+        timeout-minutes: 5
+        run: |
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
+          cargo llvm-cov report --json --output-path target/llvm-cov/regions.json
+
+      - name: Upload uncovered Rust region details
+        if: ${{ !cancelled() && hashFiles('target/llvm-cov/regions.json') != '' }}
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: rust-coverage-regions
+          path: target/llvm-cov/regions.json
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Upload Rust coverage summary
         if: ${{ !cancelled() && hashFiles('target/llvm-cov/summary.json') != '' }}

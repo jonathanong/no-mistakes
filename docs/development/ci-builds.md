@@ -318,6 +318,13 @@ quality gate fails, including CRAP. Both that failure and a coverage-floor failu
 remain job failures. Its per-file counts support diagnosis of uncovered
 regions without repeating the instrumented test run.
 
+When a floor fails, a separate five-minute export retains full region locations
+in the `rust-coverage-regions` artifact for seven days. This additional export
+reads existing CI profiles; it does not rerun tests. The passing path keeps the
+summary-only export. Use the per-file summary to rank gaps, then the full region
+locations to choose behavior fixtures for missed branches. Coverage floors stay
+at 98% when compiler changes alter region accounting.
+
 The lint/source job retains its 30-minute aggregate deadline and existing step
 deadlines. Before package verification moved to its own job, an observed combined
 run spent about twelve minutes on setup and checks before reaching the ten-minute

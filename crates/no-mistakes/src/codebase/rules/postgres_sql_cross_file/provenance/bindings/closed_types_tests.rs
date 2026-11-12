@@ -1,7 +1,10 @@
 use super::*;
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::codebase::dependencies::extract::{CallableId, ValueBinding};
+use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
+use crate::codebase::ts_resolver::{load_tsconfig, normalize_path};
 use crate::codebase::ts_source::facts::TsFileFacts;
+use crate::codebase::ts_source::facts::{collect_ts_facts, TsFactPlan};
 use crate::fx::fx_set;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -59,6 +62,71 @@ fn identifier_parameter_bounds_require_runtime_proof_for_catalog_types() {
         let alias = format!("alias{index}");
         assert_eq!(shared.flows_unbounded(&file, 1, &alias, 20), index == 3);
         assert_eq!(identifier.flows_unbounded(&file, 1, &alias, 20), index != 2);
+    }
+}
+
+#[test]
+fn saved_cross_file_catalog_types_require_a_unique_literal_export() {
+    let root = normalize_path(
+        &crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
+            .join("3304-crossfile-closed-types"),
+    );
+    let files: Vec<_> = ["src/catalog.ts", "src/query.ts"]
+        .iter()
+        .map(|file| root.join(file))
+        .collect();
+    let plan = TsFactPlan {
+        value_flow: true,
+        ..TsFactPlan::imports()
+    };
+    let facts = CheckFactMap {
+        files: files.clone(),
+        graph_plan: plan,
+        ts: collect_ts_facts(&files, plan)
+            .into_iter()
+            .map(|(file, ts)| {
+                assert!(ts.parse_error.is_none(), "{file:?}: {:?}", ts.parse_error);
+                (
+                    file,
+                    CheckFileFacts {
+                        ts: Arc::new(ts),
+                        ..Default::default()
+                    }
+                    .into(),
+                )
+            })
+            .collect(),
+        ..Default::default()
+    };
+    let graph = DepGraph::build_with_plan_file_list_and_check_facts(
+        &root,
+        &load_tsconfig(&root.join("tsconfig.json")).unwrap(),
+        GraphBuildPlan {
+            imports: true,
+            value_import_selectors: true,
+            ..Default::default()
+        },
+        files,
+        &facts,
+    )
+    .unwrap();
+    let query = root.join("src/query.ts");
+    let query_facts = facts.get_ts_facts(&query).unwrap();
+    let bindings = Bindings::new(&facts).with_graph(&graph);
+    for (name, expected) in [
+        ("importedType", true),
+        ("importedCatalogElement", true),
+        ("localCatalogAlias", true),
+        ("numeric", true),
+        ("openString", false),
+    ] {
+        let parameter = query_facts
+            .value_flow
+            .parameters
+            .iter()
+            .find(|parameter| parameter.name == name)
+            .unwrap_or_else(|| panic!("missing parameter {name}"));
+        assert_eq!(bindings.closed_type(&query, parameter), expected, "{name}");
     }
 }
 
