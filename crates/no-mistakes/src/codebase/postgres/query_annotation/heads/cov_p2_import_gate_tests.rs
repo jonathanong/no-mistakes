@@ -57,11 +57,7 @@ fn cov_p2_closed_names_require_resolvable_static_imports_only() {
         "@bench/db" | "./flags.mjs" => Some(root.join("flags.mts")),
         _ => None,
     });
-    for (name, accepted) in [
-        ("resolved", true),
-        ("unresolved", false),
-        ("computed", false),
-    ] {
+    for (name, accepted) in [("resolved", true), ("unresolved", false)] {
         let path = root.join(format!("{name}.mts"));
         let original = &before[&path];
         assert_eq!(original.import_gated_finite.len(), 1, "{name}");
@@ -75,6 +71,37 @@ fn cov_p2_closed_names_require_resolvable_static_imports_only() {
             }
         }
     }
+    let path = root.join("computed.mts");
+    let original = &before[&path];
+    let file = &files[&path];
+    assert!(file
+        .ts
+        .module_bindings
+        .as_ref()
+        .unwrap()
+        .diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.message == "Non-literal dynamic import specifier"));
+    assert!(original.import_gated_finite.is_empty());
+    let source = std::fs::read_to_string(&path).unwrap();
+    let start = source.find("read(").unwrap();
+    let span = original
+        .calls
+        .keys()
+        .find(|span| span.0 as usize == start)
+        .unwrap();
+    assert_eq!(original.calls[span], HeadProof::Unproven);
+    let start = source.find("read('/* ordinary").unwrap();
+    let span = original
+        .calls
+        .keys()
+        .find(|span| span.0 as usize == start)
+        .unwrap();
+    assert_eq!(original.calls[span], HeadProof::Literal);
+    assert_eq!(
+        file.query_annotation_heads.as_ref().unwrap().calls,
+        original.calls
+    );
     let path = root.join("ungated.mts");
     let original = &before[&path];
     assert!(original.import_gated_finite.is_empty());
@@ -101,10 +128,17 @@ fn cov_p2_destructuring_requires_plain_record_source_not_builder() {
         (specifier == "./producer.mjs").then(|| root.join("producer.mts"))
     });
     let heads = files[&path].query_annotation_heads.as_ref().unwrap();
-    let accepted = heads
-        .calls
-        .iter()
-        .map(|(span, _)| heads.accepts(*span))
+    let source = std::fs::read_to_string(&path).unwrap();
+    let accepted = source
+        .match_indices("read(")
+        .map(|(start, _)| {
+            let span = heads
+                .calls
+                .keys()
+                .find(|span| span.0 as usize == start)
+                .unwrap();
+            heads.accepts(*span)
+        })
         .collect::<Vec<_>>();
     assert_eq!(accepted, [true, false]);
 }
