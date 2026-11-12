@@ -1,10 +1,10 @@
-use super::{CompiledOptions, RuleFinding, RULE_ID};
+use super::{CompiledOptions, RULE_ID, RuleFinding};
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
     EmbeddedSqlKind, SqlEvidenceKind, SqlObligationVerdict, SqlVerdictStatus,
 };
 use crate::codebase::rules::{
-    postgres_require_query_annotation::UnanalyzableSql, PostgresFindings,
+    PostgresFindings, postgres_require_query_annotation::UnanalyzableSql,
 };
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{Context, Result};
@@ -37,8 +37,9 @@ pub(super) fn scan(
             observer.increment("postgres.annotation.low.calls", file.calls.len() as u64);
         }
         for (call, span) in file.calls.iter().zip(&file.call_spans) {
-            let helper =
-                heads.and_then(|heads| heads.helper(*span, &opts.embedded.sql_literal_helpers));
+            let helper = heads.and_then(|heads| {
+                heads.annotation_helper(*span, &opts.embedded.sql_literal_helpers)
+            });
             use crate::codebase::postgres::query_annotation::heads::HeadProof;
             let visible = helper.map_or_else(
                 || heads.is_some_and(|heads| heads.accepts(*span)),

@@ -1,9 +1,33 @@
-//! Direct configured wrappers use their sole literal argument, never its aliases.
-use super::{bindings::Bindings, syntax::Syntax, HeadProof, Span};
+//! Direct imported wrappers use their sole literal argument, never its aliases.
+use super::{HeadProof, Span, bindings::Bindings, syntax::Syntax};
 use crate::codebase::ts_source::{facts::TsFileFacts, unwrap_ts_wrappers};
 use crate::fx::FxHashMap;
 use oxc_ast::ast::{CallExpression, ChainElement, Expression};
 use std::collections::BTreeMap;
+
+pub(crate) fn has_builtin_import(program: &oxc_ast::ast::Program<'_>) -> bool {
+    use oxc_ast::ast::{ImportDeclarationSpecifier, ImportOrExportKind, Statement};
+    program.body.iter().any(|statement| {
+        let Statement::ImportDeclaration(import) = statement else {
+            return false;
+        };
+        import.import_kind != ImportOrExportKind::Type
+            && crate::ast::js_literal(&import.source) == "pg-copy-streams"
+            && import.specifiers.as_ref().is_some_and(|specifiers| {
+                specifiers.iter().any(|specifier| match specifier {
+                    ImportDeclarationSpecifier::ImportNamespaceSpecifier(_) => true,
+                    ImportDeclarationSpecifier::ImportSpecifier(named) => {
+                        named.import_kind != ImportOrExportKind::Type
+                            && matches!(
+                                crate::ast::module_export_name(&named.imported).as_ref(),
+                                "from" | "to"
+                            )
+                    }
+                    _ => false,
+                })
+            })
+    })
+}
 
 pub(super) struct Candidate {
     pub reference: Span,

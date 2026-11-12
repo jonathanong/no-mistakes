@@ -124,12 +124,6 @@ impl EmbeddedSqlOptions {
         self
     }
 
-    pub(crate) fn with_query_annotation_helpers(self, helpers: &[String]) -> Self {
-        let mut helpers = helpers.to_vec();
-        helpers.extend(["pg-copy-streams#from".into(), "pg-copy-streams#to".into()]);
-        self.with_sql_literal_helpers(&helpers)
-    }
-
     /// Opt in to parameterized tags. Order does not affect the profile key.
     pub fn with_trusted_sql_tags(mut self, tags: &[TrustedSqlTag]) -> Self {
         let mut tags = tags.to_vec();

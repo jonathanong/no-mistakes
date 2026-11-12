@@ -9,15 +9,12 @@ pub(super) fn proof(
     opts: &CompiledOptions,
     span: (u32, u32),
 ) -> Option<HeadProof> {
-    if opts.embedded.sql_literal_helpers.is_empty() {
-        return None;
-    }
     facts
         .ts
         .get(path)?
         .query_annotation_heads
         .as_deref()?
-        .helper(span, &opts.embedded.sql_literal_helpers)
+        .annotation_helper(span, &opts.embedded.sql_literal_helpers)
 }
 
 pub(super) fn verdict(

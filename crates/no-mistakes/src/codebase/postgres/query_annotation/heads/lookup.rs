@@ -17,6 +17,17 @@ impl AnnotationHeads {
         let (identity, proof) = self.helper_calls.as_ref()?.get(&span)?;
         helpers.contains(identity).then_some(*proof)
     }
+    pub(crate) fn annotation_helper(&self, span: Span, helpers: &[String]) -> Option<HeadProof> {
+        let (identity, proof) = self.helper_calls.as_ref()?.get(&span)?;
+        if matches!(
+            identity.as_str(),
+            "pg-copy-streams#from" | "pg-copy-streams#to"
+        ) {
+            Some(*proof)
+        } else {
+            self.helper(span, helpers)
+        }
+    }
     pub(crate) fn accepts(&self, span: Span) -> bool {
         matches!(self.calls.get(&span), Some(HeadProof::Literal))
     }

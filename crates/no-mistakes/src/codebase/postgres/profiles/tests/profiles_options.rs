@@ -69,8 +69,7 @@ fn configured_annotation_demand_merges_an_existing_explicit_profile() {
         ..RuleDef::default()
     });
     let read = EmbeddedSqlOptions::configured("@example/db", &["read".into()]);
-    let write = EmbeddedSqlOptions::configured("@example/db", &["write".into()])
-        .with_query_annotation_helpers(&[]);
+    let write = EmbeddedSqlOptions::configured("@example/db", &["write".into()]);
     let mut plan = crate::codebase::check_facts::CheckFactPlan {
         query_annotation: true,
         query_annotation_options: Some(vec![read.clone()]),
@@ -82,7 +81,7 @@ fn configured_annotation_demand_merges_an_existing_explicit_profile() {
 }
 
 #[test]
-fn copy_stream_helpers_only_widen_annotation_profiles() {
+fn configured_literal_helpers_only_widen_annotation_profiles() {
     let mut config = NoMistakesConfig::default();
     for rule in [
         "postgres-require-query-annotation",
@@ -110,13 +109,42 @@ fn copy_stream_helpers_only_widen_annotation_profiles() {
     assert_eq!(annotation.len(), 1);
     assert_eq!(
         annotation[0].sql_literal_helpers,
-        ["custom#copy", "pg-copy-streams#from", "pg-copy-streams#to"]
+        ["custom#copy", "pg-copy-streams#from"]
     );
     assert!(
         profiles
             .iter()
             .any(|profile| profile.sql_literal_helpers.is_empty())
     );
+}
+
+#[test]
+fn builtin_copy_wrappers_preserve_shared_executor_profiles() {
+    let mut config = NoMistakesConfig::default();
+    for rule in [
+        "postgres-require-query-annotation",
+        "postgres-lock-ordering",
+    ] {
+        config.rules.push(RuleDef {
+            rule: rule.into(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str("importSpecifier: pg\nexecutorTypeNames: [PoolClient]")
+                .unwrap(),
+            ..RuleDef::default()
+        });
+    }
+    let (profiles, annotation, scans) = configured_embedded_sql_options_with_annotation(
+        &config,
+        &[
+            "postgres-require-query-annotation",
+            "postgres-lock-ordering",
+        ],
+    )
+    .unwrap();
+    assert_eq!(profiles.len(), 1);
+    assert_eq!(annotation, profiles);
+    assert!(profiles[0].sql_literal_helpers.is_empty());
+    assert_eq!(scans.get(&profiles[0]).unwrap().len(), 2);
 }
 
 #[test]
