@@ -113,7 +113,7 @@ pub(crate) fn collect_prepared(
     } else {
         Vec::new()
     };
-    conditional_effects.extend(deferred_fresh_builders);
+    effects::merge_conditionals(&mut conditional_effects, deferred_fresh_builders);
     let helper_calls = literal_helpers::proofs(&syntax, &bindings, ts);
     let (exported_callbacks, pending_callbacks) = callback_heads::collect(
         include_all_calls,

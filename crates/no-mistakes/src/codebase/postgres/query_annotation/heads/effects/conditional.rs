@@ -1,7 +1,64 @@
 use super::super::{bindings::Bindings, syntax::Syntax, HeadProof, Span};
 use super::Conditional;
 use crate::fx::{FxHashMap, FxHashSet};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
+
+pub(in crate::codebase::postgres::query_annotation::heads) fn merge(
+    conditions: &mut Vec<Conditional>,
+    deferred: Vec<Conditional>,
+) {
+    if deferred.is_empty() {
+        return;
+    }
+    let mut per_call = BTreeMap::<Span, BTreeSet<Span>>::new();
+    for condition in conditions.drain(..).chain(deferred) {
+        for call in condition.spans {
+            per_call
+                .entry(call)
+                .or_default()
+                .extend(condition.required.iter().copied());
+        }
+    }
+    let mut groups = BTreeMap::<Vec<Span>, Vec<Span>>::new();
+    for (call, required) in per_call {
+        groups
+            .entry(required.into_iter().collect())
+            .or_default()
+            .push(call);
+    }
+    *conditions = groups
+        .into_iter()
+        .map(|(required, spans)| Conditional { spans, required })
+        .collect();
+    conditions.sort_unstable_by_key(|condition| condition.spans[0]);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{merge, Conditional};
+
+    #[test]
+    fn overlapping_groups_require_every_effect_only_at_the_shared_call() {
+        let mut conditions = vec![Conditional {
+            spans: vec![(1, 2), (3, 4)],
+            required: vec![(11, 12)],
+        }];
+        merge(
+            &mut conditions,
+            vec![Conditional {
+                spans: vec![(3, 4), (5, 6)],
+                required: vec![(13, 14)],
+            }],
+        );
+        assert_eq!(conditions.len(), 3);
+        assert_eq!(conditions[0].spans, vec![(1, 2)]);
+        assert_eq!(conditions[0].required, vec![(11, 12)]);
+        assert_eq!(conditions[1].spans, vec![(3, 4)]);
+        assert_eq!(conditions[1].required, vec![(11, 12), (13, 14)]);
+        assert_eq!(conditions[2].spans, vec![(5, 6)]);
+        assert_eq!(conditions[2].required, vec![(13, 14)]);
+    }
+}
 
 pub(in crate::codebase::postgres::query_annotation::heads) fn collect(
     syntax: &Syntax,
