@@ -78,6 +78,49 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "guarded_workspace": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/caller.mts",
+          "import": "stage.deletion",
+          "line": 7,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.deletion` reaches `postgres` via purge → deletion → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const deleted = await stage.deletion(query, id, n);",
+          "target": "postgres: purge → deletion → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.remaining",
+          "line": 12,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.remaining` reaches `postgres` via purge → remaining → query",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const remains = await stage.remaining(query, id);",
+          "target": "postgres: purge → remaining → query"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "guarded_workspace_typed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "imported_stages": {
     "exitCode": 1,
     "report": {

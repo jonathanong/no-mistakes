@@ -29,7 +29,11 @@ The shared graph follows visible function-valued methods on `const` object
 literals and closed `const` arrays of literal stage objects, including named
 imports of exported arrays. Rows may contain several literal function properties.
 Calls assigned to `const` results, such as `const result = await stage.run(...)`,
-retain the same reachability. For example,
+retain the same reachability. Read-only result guards followed by an early
+return also preserve the calls before and after the guard, including a checkpoint
+helper receiving ordinary identifier or literal arguments before that return.
+Conditions that call or mutate values, branches that fall through, stage/source
+arguments, and return expressions with calls or mutations prevent this proof. For example,
 `for (const stage of STAGES) await stage.run(query, id, size)` reaches queries
 inside the literal `run` functions, including calls through their executor
 parameters. Stage calls accept identifier or primitive literal arguments;
@@ -132,6 +136,8 @@ per invocation; its internal batch size does not exempt an outer loop.
 resolves to the configured imported type export. Explicit named and local type
 barrels preserve namespace members such as `Namespace.Query`, including renamed
 imports; unrelated local types and different module names remain unselected.
+Workspace package type barrels retain both their public module/export selector
+and the underlying type origin, so configured package aliases remain selectable.
 Static indexed property types, including `NonNullable<Options['query']>`, preserve
 the selected callable origin. Statically invoked async callbacks preserve returned
 executor metadata. A nullish choice between a typed executor and a configured

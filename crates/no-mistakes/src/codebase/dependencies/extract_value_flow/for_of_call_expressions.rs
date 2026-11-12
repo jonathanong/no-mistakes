@@ -43,7 +43,7 @@ pub(super) fn expression(
     }
 }
 
-fn safe_arguments(call: &CallExpression<'_>, name: &str, source: Option<&str>) -> bool {
+pub(super) fn safe_arguments(call: &CallExpression<'_>, name: &str, source: Option<&str>) -> bool {
     call.arguments.iter().all(|argument| {
         match argument
             .as_expression()

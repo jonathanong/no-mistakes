@@ -1,10 +1,18 @@
 use super::*;
 #[path = "for_of_call_expressions.rs"]
 mod expressions;
+#[path = "for_of_guards.rs"]
+mod guards;
 
-pub(super) fn collect(body: &Statement<'_>, name: &str, source: Option<&str>) -> Option<Vec<u32>> {
+pub(super) fn collect(
+    body: &Statement<'_>,
+    name: &str,
+    source: Option<&str>,
+) -> Option<(Vec<u32>, bool)> {
     let mut calls = Vec::new();
-    statements(body, name, source, true, &mut 128, &mut calls).then_some(calls)
+    let mut guarded = false;
+    statements(body, name, source, true, &mut 128, &mut calls, &mut guarded)
+        .then_some((calls, guarded))
 }
 
 fn statements(
@@ -14,6 +22,7 @@ fn statements(
     project: bool,
     budget: &mut usize,
     calls: &mut Vec<u32>,
+    guarded: &mut bool,
 ) -> bool {
     if *budget == 0 {
         return false;
@@ -23,7 +32,7 @@ fn statements(
         Statement::BlockStatement(block) => block
             .body
             .iter()
-            .all(|statement| statements(statement, name, source, project, budget, calls)),
+            .all(|statement| statements(statement, name, source, project, budget, calls, guarded)),
         Statement::ExpressionStatement(statement) => {
             expressions::expression(&statement.expression, name, source, project, calls)
         }
@@ -37,23 +46,23 @@ fn statements(
                         })
                 })
         }
+        Statement::IfStatement(statement) => {
+            *guarded = true;
+            guards::returning_guard(statement, name, source)
+        }
         Statement::TryStatement(statement) => {
             statement.finalizer.is_none()
-                && statement
-                    .block
-                    .body
-                    .iter()
-                    .all(|statement| statements(statement, name, source, project, budget, calls))
+                && statement.block.body.iter().all(|statement| {
+                    statements(statement, name, source, project, budget, calls, guarded)
+                })
                 && statement.handler.as_ref().is_none_or(|handler| {
                     handler.param.as_ref().is_none_or(|parameter| {
                         !binding_names(&parameter.pattern)
                             .iter()
                             .any(|bound| bound == name || Some(bound.as_str()) == source)
-                    }) && handler
-                        .body
-                        .body
-                        .iter()
-                        .all(|statement| statements(statement, name, source, false, budget, calls))
+                    }) && handler.body.body.iter().all(|statement| {
+                        statements(statement, name, source, false, budget, calls, guarded)
+                    })
                 })
         }
         _ => false,

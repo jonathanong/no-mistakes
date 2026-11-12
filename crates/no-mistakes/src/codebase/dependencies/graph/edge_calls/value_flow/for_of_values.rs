@@ -16,6 +16,14 @@ impl ValueFlowResolution<'_, '_> {
         else {
             return None;
         };
+        if self.cache.ownership_callbacks
+            && self
+                .facts
+                .get_ts_facts(path)
+                .is_none_or(|facts| facts.value_flow.for_of.guarded_calls.contains(offset))
+        {
+            return Some(FlowValue::Unknown);
+        }
         let file = self.indexes.file(self.facts, path)?;
         let iteration = file.values.for_of_calls.get(offset).filter(|binding| {
             binding.scope == *scope && binding.name == *name && binding.owner == *context

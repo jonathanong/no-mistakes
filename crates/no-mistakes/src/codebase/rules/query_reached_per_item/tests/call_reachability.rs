@@ -199,3 +199,58 @@ fn namespace_members_stars_cycles_and_unresolved_stars_prevent_imported_stage_pr
         assert!(site.target_nodes().next().is_none(), "{name}: {site:?}");
     }
 }
+
+#[test]
+fn workspace_stage_results_keep_query_reachability_across_terminal_checkpoint_guards() {
+    let root = root().with_file_name("guarded-workspace-stages-fixture");
+    for config in [".no-mistakes.yml", "typed.yml"] {
+        let findings =
+            crate::codebase::rules::run_check(&root, Some(&root.join(config)), None).unwrap();
+        assert_eq!(
+            findings
+                .iter()
+                .map(|finding| (
+                    finding.file.as_str(),
+                    finding.line,
+                    finding.import.as_deref()
+                ))
+                .collect::<Vec<_>>(),
+            [
+                ("src/caller.mts", 7, Some("stage.deletion")),
+                ("src/caller.mts", 12, Some("stage.remaining"))
+            ],
+            "{config}: {findings:#?}"
+        );
+    }
+}
+
+#[test]
+fn terminal_guards_do_not_prove_every_imported_scenario_row_executes() {
+    use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &root().with_file_name("guarded-workspace-stages-fixture"),
+    );
+    let config = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths_dir: root.clone(),
+        ..Default::default()
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &config,
+        GraphBuildPlan {
+            calls: true,
+            assertion_owners: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert!(graph.resolved_call_sites().iter().any(|site| {
+        site.file == root.join("src/ownership.mts") && site.source_callee == "stage.run"
+    }));
+    assert!(!graph.assertion_call_sites().iter().any(|site| {
+        site.file == root.join("src/ownership.mts")
+            && site.source_callee == "stage.run"
+            && site.target_nodes().next().is_some()
+    }));
+}
