@@ -1,7 +1,7 @@
 {
   "name": "no-mistakes",
   "description": "Deterministic impact maps, test plans, Playwright coverage, and repository checks for coding agents",
-  "version": "0.109.43",
+  "version": "0.109.44",
   "author": {
     "name": "Jonathan Ong",
     "email": "jonathanrichardong@gmail.com"
