@@ -36,12 +36,17 @@ fn interpolated_name(template: &TemplateLiteral<'_>, first: &str) -> bool {
         .zip(template.quasis.iter().skip(1))
         .enumerate()
     {
-        if let Expression::StringLiteral(value) = unwrap_ts_wrappers(expression) {
-            let text = crate::ast::js_literal(value);
-            if closes_comment(&text, &mut previous_star) {
-                return false;
+        if let Some(choices) = known_choices(expression) {
+            let mut possible_star = false;
+            for choice in &choices {
+                let mut ends_star = previous_star;
+                if closes_comment(choice, &mut ends_star) {
+                    return false;
+                }
+                possible_star |= ends_star;
             }
-            has_name |= !text.trim().is_empty();
+            previous_star = possible_star;
+            has_name |= choices.iter().all(|choice| !choice.trim().is_empty());
         } else {
             previous_star = false;
             has_name = true;
@@ -58,6 +63,13 @@ fn interpolated_name(template: &TemplateLiteral<'_>, first: &str) -> bool {
         has_name |= !text.trim().is_empty();
     }
     false
+}
+
+fn known_choices(expression: &Expression<'_>) -> Option<Vec<String>> {
+    match unwrap_ts_wrappers(expression) {
+        Expression::StringLiteral(value) => Some(vec![crate::ast::js_literal(value).into_owned()]),
+        _ => super::super::finite_comments::plain_ternary(expression),
+    }
 }
 
 fn closes_comment(text: &str, previous_star: &mut bool) -> bool {

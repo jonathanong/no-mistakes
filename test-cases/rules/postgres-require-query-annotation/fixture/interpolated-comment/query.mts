@@ -12,6 +12,8 @@ await query(`/* listPage:${source} */ SELECT id FROM t`); // accepted: literal p
 await read(`/* ${name}:${source} */ SELECT 1`); // accepted: multiple name expressions
 await read(`/* ${'list'}${'Page'} */ SELECT 1`); // accepted: known nonempty pieces
 await read(`/* literal${''} */ SELECT 1`); // accepted: literal name and empty piece
+await read(`/* ${flag ? 'left' : 'right'}${''} */ SELECT 1`); // accepted: every ternary name is nonempty
+await read(`/* prefix${flag ? '' : 'extra'}${''} */ SELECT 1`); // accepted: literal prefix survives empty arm
 await read(`\x2f* ${name} *\x2f SELECT 1`); // accepted: cooked delimiters
 await read(`/* literal */ SELECT ${v}`); // accepted: existing SQL interpolation
 const q = `/* ${name} */ SELECT id FROM t WHERE id = $1`;
@@ -31,6 +33,8 @@ await read(`/* ${'*'}/${name} */ SELECT 1`); // reported: known close across exp
 await read(`/* ${''} */ SELECT 1`); // reported: known empty name
 await read(`/* ${'*/'} */ SELECT 1`); // reported: known early close
 await read(`/* ${flag ? '' : 'named'} */ SELECT 1`); // reported: possibly empty name
+await read(`/* ${flag ? '' : 'named'}${''} */ SELECT 1`); // reported: empty ternary arm and empty piece
+await read(`/* ${flag ? '*/' : 'named'}${name} */ SELECT 1`); // reported: ternary arm closes comment early
 for (const item of ['', 'named']) {
   await read(`/* ${item} */ SELECT 1`); // reported: possibly empty name
 }
@@ -45,6 +49,8 @@ const knownNameSqlHole = `/*${'name'}*/SELECT ${source}`;
 await read(knownNameSqlHole); // reported: const-bound known name with SQL interpolation
 const earlyNamedCloseQuery = `/* ${'name*/'} */ SELECT 1`;
 await read(earlyNamedCloseQuery); // reported: const-bound known name closes early
+const maybeEmptyQuery = `/* ${flag ? '' : 'named'}${''} */ SELECT 1`;
+await read(maybeEmptyQuery); // reported: const-bound empty ternary arm
 const goodName = 'named';
 const goodQuery = `/* ${goodName} */ SELECT 1`;
 await read(goodQuery); // accepted: const-bound known valid name

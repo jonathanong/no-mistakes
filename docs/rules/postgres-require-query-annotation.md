@@ -169,10 +169,10 @@ annotations, including when the template is held in one local `const` passed
 directly to the executor. An interpolated whole head, a later comment, an
 interpolated closing delimiter, or an interpolation after the closing delimiter
 does not establish this proof. A complete literal annotation may still precede
-interpolated SQL text. Known string-literal pieces inside the first comment
-must still form a non-empty name and cannot close it early. If those pieces or
-bounded name analysis prove a possible empty name or early `*/`, the template
-remains unresolved under `unanalyzableSql`.
+interpolated SQL text. Known string-literal pieces and literal ternary arms
+inside the first comment must still form a non-empty name and cannot close it
+early. If those known values or bounded name analysis prove a possible empty
+name or early `*/`, the template remains unresolved under `unanalyzableSql`.
 
 ## Options and defaults
 
