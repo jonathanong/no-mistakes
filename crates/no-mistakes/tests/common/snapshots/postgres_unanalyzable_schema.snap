@@ -13154,14 +13154,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "migrations/branch-bodies.sql",
-          "line": 30,
-          "message": "migrations/branch-bodies.sql:30: SQL files matching this rule must not use CREATE VIEW",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "CREATE RECURSIVE VIEW do_valid (id) AS SELECT 1;",
-          "target": "CREATE VIEW"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
           "line": 31,
           "message": "migrations/branch-bodies.sql:31: SQL statement `FROBULATE 0b101` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
@@ -13223,14 +13215,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-sql-statement-policy",
           "sourceLine": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1;",
           "target": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 63,
-          "message": "migrations/branch-bodies.sql:63: SQL files matching this rule must not use CREATE VIEW",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "CREATE RECURSIVE VIEW function_valid (id) AS SELECT 1;",
-          "target": "CREATE VIEW"
         },
         {
           "file": "migrations/branch-bodies.sql",
@@ -16477,14 +16461,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "migrations/branch-bodies.sql",
-          "line": 30,
-          "message": "migrations/branch-bodies.sql:30: SQL files matching this rule must not use CREATE VIEW",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "CREATE RECURSIVE VIEW do_valid (id) AS SELECT 1;",
-          "target": "CREATE VIEW"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
           "line": 31,
           "message": "migrations/branch-bodies.sql:31: SQL statement `FROBULATE 0b101` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
@@ -16546,14 +16522,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-sql-statement-policy",
           "sourceLine": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1;",
           "target": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 63,
-          "message": "migrations/branch-bodies.sql:63: SQL files matching this rule must not use CREATE VIEW",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "CREATE RECURSIVE VIEW function_valid (id) AS SELECT 1;",
-          "target": "CREATE VIEW"
         },
         {
           "file": "migrations/branch-bodies.sql",
@@ -20951,22 +20919,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 15,
-          "message": "migrations/001.sql:15: SQL files matching this rule must not use CREATE VIEW",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "CREATE RECURSIVE VIEW valid (x) AS SELECT 1;",
-          "target": "CREATE VIEW"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 16,
-          "message": "migrations/001.sql:16: SQL files matching this rule must not use CREATE VIEW",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "CREATE OR REPLACE TEMP RECURSIVE VIEW valid_temp (x) AS SELECT 1;",
-          "target": "CREATE VIEW"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 18,
           "message": "migrations/001.sql:18: SQL statement `CREATE RECURSIVE VIEW suppressed AS SELECT 1` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
@@ -21985,22 +21937,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "migrations/001.sql",
-          "line": 15,
-          "message": "migrations/001.sql:15: SQL files matching this rule must not use CREATE VIEW",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "CREATE RECURSIVE VIEW valid (x) AS SELECT 1;",
-          "target": "CREATE VIEW"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 16,
-          "message": "migrations/001.sql:16: SQL files matching this rule must not use CREATE VIEW",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "CREATE OR REPLACE TEMP RECURSIVE VIEW valid_temp (x) AS SELECT 1;",
-          "target": "CREATE VIEW"
-        },
         {
           "file": "migrations/001.sql",
           "line": 18,

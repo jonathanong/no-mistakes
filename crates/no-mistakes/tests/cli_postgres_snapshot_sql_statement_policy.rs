@@ -274,3 +274,85 @@ fn postgres_sql_statement_policy_option_placement_check_json_snapshot() {
         assert_eq!(report[label]["exitCode"], 1, "{label}: {result}");
     }
 }
+
+#[test]
+fn issue_3311_empty_banned_statements_check_json_snapshot() {
+    let rule = "postgres-sql-statement-policy";
+    let root = rules_path(rule, "fixture", "issue-3311");
+    let cases = [
+        ("omitted_defaults", "issue-3311-omitted.yml"),
+        ("empty_with_settings", "issue-3311-empty-with-settings.yml"),
+        ("empty", "issue-3311-empty.yml"),
+        ("explicit_create_view", "issue-3311-explicit.yml"),
+    ]
+    .map(|(label, config)| (label, root.clone(), rules_path(rule, "configs", config)));
+    let reports =
+        assert_saved_fixture_report("postgres_sql_statement_policy_issue_3311", &cases, &[], &[]);
+
+    for (label, expected) in [
+        ("omitted_defaults", 18),
+        ("empty_with_settings", 4),
+        ("empty", 0),
+        ("explicit_create_view", 6),
+    ] {
+        let case = &reports[label];
+        let findings = case["report"]["rules"].as_array().unwrap();
+        assert_eq!(findings.len(), expected, "{label}: {case}");
+        assert!(
+            findings.iter().all(|finding| finding["rule"] == rule),
+            "{label}: {case}"
+        );
+        assert_eq!(
+            case["exitCode"],
+            if expected == 0 { 0 } else { 1 },
+            "{label}: {case}"
+        );
+    }
+
+    let targets = |label: &str| {
+        reports[label]["report"]["rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|finding| finding["target"].as_str().unwrap())
+            .collect::<Vec<_>>()
+    };
+    let defaults = targets("omitted_defaults");
+    for kind in [
+        "CREATE TABLE",
+        "ALTER TABLE",
+        "CREATE INDEX",
+        "CREATE VIEW",
+        "TRUNCATE",
+        "DROP INDEX",
+        "DROP VIEW",
+    ] {
+        assert_eq!(
+            defaults.iter().filter(|target| **target == kind).count(),
+            2,
+            "{defaults:?}"
+        );
+    }
+    for label in [
+        "omitted_defaults",
+        "empty_with_settings",
+        "explicit_create_view",
+    ] {
+        let actual = targets(label);
+        assert_eq!(
+            actual
+                .iter()
+                .filter(|target| **target == "setting:statement_timeout")
+                .count(),
+            4,
+            "{label}: {actual:?}"
+        );
+    }
+    assert_eq!(
+        targets("explicit_create_view")
+            .iter()
+            .filter(|target| **target == "CREATE VIEW")
+            .count(),
+        2
+    );
+}

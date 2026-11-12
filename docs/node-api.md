@@ -3,6 +3,12 @@
 The `no-mistakes` npm package exposes async functions backed by the same Rust
 analysis as the CLI. Use it for repeated structured queries without subprocess overhead.
 
+Configured [`postgres-sql-statement-policy`](rules/postgres-sql-statement-policy.md)
+runs through async `check({ root, config })` and `analyzeProject()` check reports.
+Omitting `options.bannedStatements` uses the seven default statement kinds;
+an explicit empty array bans no statement kinds. `bannedSettings` remains active
+independently. Set these rule options in the configuration file selected by `config`.
+
 `check()` and check reports in `analyzeProject()` share the CLI's
 [integration annotation discovery scope](cli/check.md#integration-annotation-discovery).
 Explicit integration-policy includes/excludes narrow test discovery while

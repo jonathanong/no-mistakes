@@ -4,11 +4,12 @@ use crate::codebase::postgres::{EmbeddedSqlOptions, PostgresSchemaOptions};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use serde::Deserialize;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
+mod options;
 mod scan;
+pub(crate) use options::Options;
 
 pub const RULE_ID: &str = "postgres-sql-statement-policy";
 
@@ -21,26 +22,6 @@ const DEFAULT_BANNED: &[&str] = &[
     "DROP INDEX",
     "DROP VIEW",
 ];
-
-#[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
-pub(crate) struct Options {
-    pub(crate) include: Vec<String>,
-    pub(crate) exclude: Vec<String>,
-    pub(crate) sql_include: Vec<String>,
-    #[serde(default)]
-    pub(crate) sql_include_locked: bool,
-    pub(crate) banned_statements: Vec<String>,
-    pub(crate) banned_settings: Vec<String>,
-    pub(crate) import_specifier: String,
-    pub(crate) executor_names: Vec<String>,
-    pub(crate) extra_executor_names: Option<Vec<String>>,
-    pub(crate) exclude_executor_names: Vec<String>,
-    pub(crate) executor_factory_names: Vec<String>,
-    pub(crate) executor_type_names: Vec<String>,
-    pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
-    pub(crate) unanalyzable_sql: String,
-}
 
 struct CompiledOptions {
     paths: super::RuleGlobFilter,
@@ -121,12 +102,7 @@ pub(crate) fn check_with_files_sources_and_facts(
 
 fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let mut banned = HashSet::new();
-    let values: Vec<String> = if opts.banned_statements.is_empty() {
-        DEFAULT_BANNED.iter().map(|value| (*value).into()).collect()
-    } else {
-        opts.banned_statements.clone()
-    };
-    for value in values {
+    for value in &opts.banned_statements {
         let kind = value
             .split_whitespace()
             .collect::<Vec<_>>()
