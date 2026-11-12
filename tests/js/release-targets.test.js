@@ -219,25 +219,34 @@ test("native CI jobs run only platform-specific Rust tests", () => {
 
   // Bash `\` continuations are one argv to cargo; a newline-limited regex
   // would miss `--all-features` on the next physical line.
-  const unfoldedNativeJob = body.replace(/\\\r?\n[ \t]*/g, " ");
+  const { commands } = require("../../.github/scripts/native-rust-tests.cjs");
+  const nativeCommands = ["Windows", "macOS"]
+    .flatMap((platform) =>
+      ["build", "run"].flatMap((mode) =>
+        commands(mode, platform).map((args) => `cargo ${args.join(" ")}`),
+      ),
+    )
+    .join("\n");
+  assert.match(body, /node \.github\/scripts\/native-rust-tests.cjs run/);
+  const unfoldedNativeJob = `${body.replace(/\\\r?\n[ \t]*/g, " ")}\n${nativeCommands}`;
   assert.doesNotMatch(
     unfoldedNativeJob,
     /cargo test\b[^\r\n]*--workspace\b/,
     "native jobs must not compile or run the Linux full suite",
   );
   assert.match(
-    body,
+    nativeCommands,
     /cargo test --locked -p no-mistakes --test macos_invocation/,
     "macOS native jobs must run the focused invocation test target",
   );
-  assert.doesNotMatch(body, /cargo test --locked -p no-mistakes --lib/);
+  assert.doesNotMatch(nativeCommands, /cargo test --locked -p no-mistakes --lib/);
   assert.doesNotMatch(
     unfoldedNativeJob,
     /cargo test\b[^\r\n]*--all-features\b/,
     "native jobs must not pass --all-features to cargo test, including across bash line continuations",
   );
   assert.match(
-    body,
+    nativeCommands,
     /cargo test --locked -p no-mistakes --test windows_job_object/,
     "Windows must run the Job Object regression as an integration test",
   );
@@ -314,8 +323,9 @@ test("native CI omits debug metadata without weakening runtime checks", () => {
     assert.doesNotMatch(stepEnv, /CARGO_PROFILE_(?:DEV|TEST)_DEBUG:/);
   }
   for (const [name, minutes] of [
-    ["Build native CLI and N-API addon", 15],
-    ["Run platform-specific Rust tests", 18],
+    ["Build native CLI and N-API addon", 25],
+    ["Run platform-specific Rust tests", 9],
+    ["Run real N-API API test", 10],
   ]) {
     const step = body.split(`- name: ${name}\n`)[1]?.split("\n      - name:")[0];
     assert.ok(step, `${name} must remain enabled`);

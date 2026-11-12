@@ -114,14 +114,61 @@ the `cli_rrb_snapshot_` subset in the package-config suite, so
 those jobs do not also compile `suite_cli_rules` inside the bounded native step.
 Linux runs the same cases in the full Rust coverage suite.
 
-Native macOS and Windows jobs have a 35-minute aggregate deadline, a
-15-minute build step, and an 18-minute platform Rust step. The shared 15-minute
-build cap keeps the bound literal and certifiable on both Windows and macOS; the
-new variance evidence is macOS-specific. The real-addon API step has a shared
-seven-minute literal deadline on Windows and macOS, so
-the repository checks can prove its bound. The Linux
-JavaScript job has 16 minutes overall and four minutes for its real-addon step.
-These deadlines retain every validation command.
+Native macOS and Windows jobs have a 50-minute aggregate deadline, a 25-minute
+build and precompile step, nine minutes for platform Rust execution, and ten
+minutes for the real-addon API step. Linux JavaScript keeps its 16-minute job and
+four-minute real-addon step.
+
+[Saved before and after observations](../../test-cases/rust-validation/fixture/macos-native-test-precompile-baseline.json)
+record about 415 seconds of test-profile compilation within the earlier
+635-second macOS Rust step. The first completed precompile run separated that
+work from execution on both platforms:
+
+| macOS phase | Before (`43130895963`) | After (`43136071692`) |
+| --- | ---: | ---: |
+| CLI/addon build, then precompile after the change | 406 s | 1,034 s |
+| Platform Rust step | 635 s, including compilation | 194 s, execution |
+| Real-addon API step | 191 s | 174 s |
+
+Compilation moved into the build step; these two hosted observations do
+not establish a total-work speedup. The first Windows run spent 548 seconds in
+build/precompile, 420 seconds executing Rust tests, and 338 seconds in the API
+step. Both execution logs had no `Compiling` lines; their Cargo `Finished`
+durations remained at or below 0.61 seconds on macOS and 0.47 seconds on Windows.
+The build cap leaves 466 seconds beyond the completed 1,034-second observation.
+A historical same-run build plus partial test-compilation projection reached
+about 1,263 seconds before the last harness was observed; the cap leaves another
+237 seconds beyond that partial workload, without treating it as a completed runtime.
+The execution cap reserves 120 seconds beyond Windows' 420-second observation.
+The full phase budgets total 2,640 seconds. Adding the largest measured
+non-workload overhead, 148 seconds, and another 120 seconds requires 2,908 seconds,
+within the 3,000-second job bound. This adds bounds and reserves, rather than
+summing unrelated observed phase maxima as a runtime prediction. One completed
+sample per platform does not establish a duration tail guarantee. The initial
+30/8/10-minute phase and 60-minute aggregate collection caps remain in the saved
+evidence as historical settings.
+
+The native build step first builds the CLI and addon, then precompiles precisely
+its platform test targets with `cargo test --no-run`, one target at a time.
+[The shared target list](../../.github/scripts/native-rust-tests.cjs) supplies both
+compilation selectors and every existing execution filter. All phases keep the
+same default features, manifest rewrite, flags, target directory, and
+`NO_MISTAKES_BUILD_NAPI=1`. Test execution remains in the following step. Separate
+per-target diagnostics retain each Cargo command, `Finished` timing, verbose
+output, process samples, and Cargo timing report, including partial failed builds.
+
+A compiled-artifact overlay caches `target/debug` and `target/.rustc_info.json`,
+then restores after the dependency cache and saves
+immediately after successful compilation, before the dependency action's post-job
+cleanup prunes workspace test artifacts. Its immutable source-SHA key also
+includes the platform, compiler cache key, Cargo manifests and lockfile, workflow,
+and build helpers. A matching configuration prefix may restore an older source
+entry; Cargo still validates source fingerprints and rebuilds stale inputs.
+Precompilation moves that work earlier within the job and does not promise that
+workspace artifacts survive changed source without recompilation. The dependency
+cache still warms a first overlay miss. The overlay excludes previous API reports, diagnostics, and Cargo timing reports.
+It retains test binaries,
+`deps`, and `.fingerprint` entries that the dependency cache otherwise prunes.
 
 Saved observations in `test-cases/rust-validation/fixture` record job metadata
 and log excerpts from the supplied hosted runs. Five green macOS builds took
@@ -133,10 +180,10 @@ image. This does not identify the source of the variance: CPU and RSS samples
 and linker phase timings are unavailable, and only the successful attempt
 reported a linker warning. The failed attempt is censored, not a completed
 runtime measurement. One completed and one censored sample do not establish a
-tail bound. Completed platform Rust steps reached 853 seconds. The 15-minute
-build cap adds headroom while keeping the build bounded and preserving native
-coverage; it is not a runtime guarantee or a diagnosis of the variance. The
-Rust step reserves 120 seconds beyond its completed observations.
+tail bound. Completed platform Rust steps reached 853 seconds. The former 15-minute
+build cap added headroom while keeping the build bounded and preserving native
+coverage; it is not a runtime guarantee or a diagnosis of the variance. The former
+Rust step reserved 120 seconds beyond those completed observations.
 
 The native build wrapper retains Cargo's verbose output and `--timings` report,
 the Rust cache-hit result, compiler/linker versions, runner image and CPU/memory
@@ -168,12 +215,11 @@ Normal completion retains all output and lets the log flush; compiler stderr is
 never redirected into stdout. Saved prolific-writer and slow-destination fixtures
 exercise these cases in `node --test .github/scripts/build-native.test.cjs`.
 
-A green macOS job spent 1,502 seconds before starting its API step; adding its
-420-second API budget and 120 seconds for reporting and cleanup requires
-2,042 seconds. This justifies the native job's narrow 35-minute exception to
-the repository's 30-minute CI job cap; the pre-existing benchmark build
-retains its separate 60-minute cap. Each job remains below its step sum,
-and every step remains within its job deadline.
+Earlier observations justified the former 35-minute native job exception. The
+current 50-minute exception covers the measured phase bounds and aggregate
+reserves above. It remains below the sum of every step deadline; each individual
+step remains within the aggregate. These budgets are safety bounds, not runtime
+guarantees or sums of independently observed maxima.
 
 Windows run `42660408988` passed 629 tests in 357.59 seconds but reached the
 six-minute API-step deadline. Its separate fixture requires 30 seconds for
@@ -364,3 +410,43 @@ CLI size fell from 1,219,707,480 to 308,865,720 bytes; addon size from
 outputs and async addon responses matched. Clean CLI builds were 34–39 seconds
 faster; the dependency-warm addon rebuild was 32–33 seconds faster. These are
 again two paired observations with the scope and limitations stated above.
+
+## Native macOS timeout progress
+
+[Saved hosted observations](../../test-cases/rust-validation/fixture/macos-native-20261112-timeouts.json)
+record seven runs. Recent macOS runs exceeded both the former 15-minute build cap and
+18-minute Rust cap. The Rust failure compiled its first test binary in 12 minutes
+58 seconds, then continued passing snapshot tests until cancellation. It did not
+stall between test binaries. The build failure remained in the native library
+compile/link command when it was cancelled. Existing symbol-free development and
+test profiles remain unchanged. The evidence does not establish a memory or
+linker root cause, and no automatic retries are added.
+
+| Run | Build step | Platform Rust step | API step | Outcome |
+| --- | ---: | ---: | ---: | --- |
+| `43119502783` | 437 s | 792 s | 171 s | Green main |
+| `43122608216` | 539 s | 712 s | 169 s | Green main |
+| `43115102036` | 570 s | 777 s | 260 s | Passed tests; timing gate failed |
+| `43119297972` | 586 s | 1,093 s | Skipped | Rust timeout |
+| `43122601344` | 416 s | 1,093 s | Skipped | Rust timeout |
+| `43121821452` | 337 s | 554 s | 433 s | API timeout |
+| `43123720380` | 913 s | Skipped | Skipped | Build timeout |
+
+These are step wall times, including cancellation grace for timed-out steps.
+The first Rust test compilation took 465 and 527 seconds in the two green runs,
+versus 778 seconds in `43122601344`. The green PostgreSQL snapshot groups took
+166.57 and 183.33 seconds; the failed run spent over 229 seconds replaying
+snapshots before cancellation, with more work still to run. The first test
+harness compilation dominated the Rust step and grew by several minutes.
+Precompilation separates that work while preserving serial snapshot execution.
+Both green API runs and the
+completed timing-gate failure ran 631 passing tests and two skipped tests; the
+comparison does not show a test-count increase explaining the variation.
+
+One API attempt reached 433 seconds without writing its JSON report; its
+missing-report check failed. A different completed report identified a 6,368.8 ms passing test that
+bundled seven production-export fixture scenarios. Those scenarios now register
+individually, retaining each async CJS, ESM, batch, and CLI assertion. The
+5,000 ms gate still fails Linux and macOS, Windows still reports threshold
+warnings, and missing or malformed reports still fail everywhere. The larger
+API step budget does not change any test deadline or the timing gate.

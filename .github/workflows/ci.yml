@@ -554,7 +554,9 @@ jobs:
     if: ${{ needs.changes.outputs.docs-only != 'true' }}
     runs-on: ${{ matrix.os }}
     # Native builds, snapshot replay, API tests and cleanup share this budget.
-    timeout-minutes: 35
+    timeout-minutes: 50
+    env:
+      NO_MISTAKES_BUILD_NAPI: "1"
     permissions:
       contents: read
       actions: read
@@ -604,6 +606,7 @@ jobs:
           install: false
 
       - name: Install Rust
+        id: native-rust-toolchain
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
@@ -615,6 +618,18 @@ jobs:
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
           key: native-${{ matrix.target }}
+
+      - name: Restore native test artifacts
+        id: native-test-cache
+        timeout-minutes: 5
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            target/debug
+            target/.rustc_info.json
+          key: native-test-artifacts-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'crates/**/Cargo.toml', 'rust-toolchain.toml', '.github/workflows/ci.yml', '.github/scripts/build-native.cjs', '.github/scripts/native-rust-tests.cjs') }}-${{ github.sha }}
+          restore-keys: |
+            native-test-artifacts-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'crates/**/Cargo.toml', 'rust-toolchain.toml', '.github/workflows/ci.yml', '.github/scripts/build-native.cjs', '.github/scripts/native-rust-tests.cjs') }}-
 
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -637,14 +652,16 @@ jobs:
       # Rewrite crate-type in this job only so one rustc emits the CLI rlib
       # and Node cdylib. Do not commit that crate-type: Linux coverage should
       # not also link a cdylib.
-      # The same macOS head passed in 7m42s, then exceeded the former 12-minute cap.
+      # Hosted macOS runs exceeded the former build and Rust step deadlines.
       - name: Build native CLI and N-API addon
-        timeout-minutes: 15
+        timeout-minutes: 25
         shell: bash
         env:
           NATIVE_RUST_CACHE_HIT: ${{ steps.native-rust-cache.outputs.cache-hit }}
+          NATIVE_TEST_CACHE_HIT: ${{ steps.native-test-cache.outputs.cache-hit }}
         run: |
           set -euo pipefail
+          rm -rf target/native-build-diagnostics target/native-test-build-diagnostics
           python - <<'PY'
           from pathlib import Path
           path = Path("crates/no-mistakes/Cargo.toml")
@@ -655,9 +672,19 @@ jobs:
               raise SystemExit(f"expected {old!r} in {path}")
           path.write_text(text.replace(old, new, 1))
           PY
-          echo "NO_MISTAKES_BUILD_NAPI=1" >> "$GITHUB_ENV"
-          NO_MISTAKES_BUILD_NAPI=1 node .github/scripts/build-native.cjs
+          node .github/scripts/build-native.cjs
+          node .github/scripts/native-rust-tests.cjs build
           cp "${{ matrix.addon }}" target/debug/no-mistakes.node
+
+      - name: Cache native test artifacts
+        if: ${{ steps.native-test-cache.outputs.cache-hit != 'true' }}
+        timeout-minutes: 5
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            target/debug
+            target/.rustc_info.json
+          key: ${{ steps.native-test-cache.outputs.cache-primary-key }}
 
       - name: Upload native build diagnostics
         if: ${{ always() }}
@@ -667,33 +694,14 @@ jobs:
           name: native-build-diagnostics-${{ runner.os }}
           if-no-files-found: warn
           retention-days: 7
-          path: target/native-build-diagnostics
+          path: |
+            target/native-build-diagnostics
+            target/native-test-build-diagnostics
 
       - name: Run platform-specific Rust tests
-        timeout-minutes: 18
+        timeout-minutes: 9
         shell: bash
-        env:
-          # Match the preceding build's N-API setting; Cargo may still
-          # compile a separate rlib for the integration-test profile.
-          NO_MISTAKES_BUILD_NAPI: "1"
-        run: |
-          set -euo pipefail
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            cargo test --locked -p no-mistakes --test windows_job_object -- --exact --test-threads=1
-          else
-            cargo test --locked -p no-mistakes --test macos_invocation
-            cargo test --locked -p no-mistakes --bin no-mistakes invocation::tests::blocked_check::
-          fi
-          # Compare the same committed JSON snapshots on both native platforms.
-          # Markdown, Rust, and file-rule snapshots live in this suite so native
-          # jobs do not compile suite_cli_rules inside this bounded native step.
-          cargo test --locked -p no-mistakes --test suite_cli_postgres cli_postgres_snapshot_
-          cargo test --locked -p no-mistakes --test suite_cli_postgres cli_mrf_snapshot_
-          cargo test --locked -p no-mistakes --test suite_cli_package_config cli_pkgcfg_snapshot_
-          # Small rule subset (incl. shellcheck empty-PATH) checks sourceLine
-          # determinism natively; it is linked into suite_cli_package_config
-          # so suite_cli_rules is still not compiled here.
-          cargo test --locked -p no-mistakes --test suite_cli_package_config cli_rrb_snapshot_
+        run: node .github/scripts/native-rust-tests.cjs run
 
       - name: Run native CLI smoke test
         timeout-minutes: 2
@@ -701,7 +709,7 @@ jobs:
         run: '"${{ matrix.binary }}" --version'
 
       - name: Run real N-API API test
-        timeout-minutes: 7
+        timeout-minutes: 10
         id: real-napi
         shell: bash
         run: |

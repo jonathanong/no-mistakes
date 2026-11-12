@@ -19,12 +19,12 @@ test("native workflow retains failure artifacts, literal deadlines and shared bu
   assert.match(upload, /if: \$\{\{ always\(\) \}\}/);
   assert.match(upload, /timeout-minutes: 2/);
   assert.match(upload, /uses: actions\/upload-artifact@[a-f0-9]{40} # v\d/);
-  assert.match(upload, /path: target\/native-build-diagnostics/);
+  assert.match(upload, /target\/native-build-diagnostics/);
   assert.match(
     native,
     /NATIVE_RUST_CACHE_HIT: \$\{\{ steps.native-rust-cache.outputs.cache-hit \}\}/,
   );
-  assert.match(native, /NO_MISTAKES_BUILD_NAPI=1 node \.github\/scripts\/build-native.cjs/);
+  assert.match(native, /node \.github\/scripts\/build-native.cjs/);
   assert.match(native, /crate-type = \["rlib", "cdylib"\]/);
   assert.match(native, /cp "\$\{\{ matrix.addon \}\}" target\/debug\/no-mistakes.node/);
   assert.match(workflow, /node --test[^\n]*\.github\/scripts\/build-native.test.cjs/);
@@ -220,3 +220,5 @@ for (const logFailure of ["open", "midwrite"]) {
     );
   }
 }
+
+require("./native-rust-tests.test.cjs");

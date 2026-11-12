@@ -1,0 +1,17 @@
+{
+  "Windows": [
+    ["--test", "windows_job_object", "--", "--exact", "--test-threads=1"],
+    ["--test", "suite_cli_postgres", "cli_postgres_snapshot_"],
+    ["--test", "suite_cli_postgres", "cli_mrf_snapshot_"],
+    ["--test", "suite_cli_package_config", "cli_pkgcfg_snapshot_"],
+    ["--test", "suite_cli_package_config", "cli_rrb_snapshot_"]
+  ],
+  "macOS": [
+    ["--test", "macos_invocation"],
+    ["--bin", "no-mistakes", "invocation::tests::blocked_check::"],
+    ["--test", "suite_cli_postgres", "cli_postgres_snapshot_"],
+    ["--test", "suite_cli_postgres", "cli_mrf_snapshot_"],
+    ["--test", "suite_cli_package_config", "cli_pkgcfg_snapshot_"],
+    ["--test", "suite_cli_package_config", "cli_rrb_snapshot_"]
+  ]
+}

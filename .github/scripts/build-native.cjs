@@ -4,7 +4,8 @@ const os = require("node:os");
 const path = require("node:path");
 const { captureBuildOutput } = require("./native-build-output.cjs");
 
-const directory = path.resolve("target/native-build-diagnostics");
+const { buildInvocation } = require("./native-rust-tests.cjs");
+const { directory, args: cargoArgs } = buildInvocation();
 
 function probe(command, args) {
   const result = spawnSync(command, args, { encoding: "utf8", timeout: 10000 });
@@ -26,6 +27,7 @@ function metadata() {
     "GITHUB_RUN_ID",
     "GITHUB_RUN_ATTEMPT",
     "NATIVE_RUST_CACHE_HIT",
+    "NATIVE_TEST_CACHE_HIT",
     "RUSTFLAGS",
     "CARGO_BUILD_JOBS",
     "CARGO_INCREMENTAL",
@@ -59,7 +61,7 @@ function metadata() {
       .readFileSync("Cargo.toml", "utf8")
       .split("\n")
       .filter((line) => /^\[profile\.|^(debug|opt-level|codegen-units|lto)\s*=/.test(line)),
-    command: ["cargo", "build", "--locked", "-p", "no-mistakes", "--timings", "--verbose"],
+    command: ["cargo", ...cargoArgs],
   };
 }
 
@@ -110,9 +112,7 @@ function main() {
       `${JSON.stringify(metadata(), null, 2)}\n`,
     ),
   );
-  const args = ["build", "--locked", "-p", "no-mistakes", "--timings", "--verbose"];
   const timed = process.platform === "darwin";
-  const command = timed ? "/usr/bin/time" : "cargo";
   // Normalize Cargo signals before BSD time handles them; see docs/development/ci-builds.md.
   const commandArgs = timed
     ? [
@@ -123,11 +123,11 @@ function main() {
         "-c",
         'cargo "$@"; status=$?; exit "$status"',
         "native-build",
-        ...args,
+        ...cargoArgs,
       ]
-    : args;
+    : cargoArgs;
   const started = Date.now();
-  const child = spawn(command, commandArgs, {
+  const child = spawn(timed ? "/usr/bin/time" : "cargo", commandArgs, {
     stdio: ["inherit", "pipe", "pipe"],
     detached: process.platform !== "win32",
   });
